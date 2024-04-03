@@ -1,5 +1,6 @@
 # BiliLottery
 
+照抄B站UI风格练手写个前端。
 This template should help get you started developing with Vue 3 in Vite.
 
 ## Recommended IDE Setup
