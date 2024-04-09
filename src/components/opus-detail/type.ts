@@ -15,7 +15,7 @@ type TAccountInfo = {
   face?: string
 }
 type TAccountDetail = {
-  account_name?: string
+  account_name: string
   lottery_setting?: Object
 }
 type TSession = {

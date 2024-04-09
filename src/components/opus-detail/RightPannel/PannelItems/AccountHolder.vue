@@ -1,41 +1,47 @@
+<!--
+ * @Author: 星瞳 1944637830@qq.com
+ * @Date: 2024-04-03 14:20:30
+ * @LastEditors: 星瞳 1944637830@qq.com
+ * @LastEditTime: 2024-04-04 15:57:19
+ * @FilePath: \BiliLottery\src\components\opus-detail\RightPannel\PannelItems\AccountHolder.vue
+ * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
+-->
 <template>
-  <div class="space-right-bottom ps">
-    <div class="message-list" ref="Message_box_show_div">
-      <div class="message-list-content min_h_100">
-        <div class="msg-more">
-          <span class="no-more" style="display: none">没有更多消息了～</span
-          ><span class="loading" style="display: none"
-            ><div class="lds-spinner">
-              <div></div>
-              <div></div>
-              <div></div>
-              <div></div>
-              <div></div>
-              <div></div>
-              <div></div>
-              <div></div>
-              <div></div>
-              <div></div>
-              <div></div>
-              <div></div></div></span
-          ><span class="error" style="display: none"
-            >消息加载失败，<span class="btn">点击重新加载</span></span
-          >
-        </div>
-        <SingleMessage
-          class="msg-item not-me"
-          v-for="item of MsgList"
-          :key="item.msg_key"
-          :session_msg="item"
-        />
+  <div class="message-list" ref="Message_box_show_div">
+    <div class="message-list-content min_h_100">
+      <div class="msg-more">
+        <span class="no-more" style="display: none">没有更多消息了～</span
+        ><span class="loading" style="display: none"
+          ><div class="lds-spinner">
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div></div></span
+        ><span class="error" style="display: none"
+          >消息加载失败，<span class="btn">点击重新加载</span></span
+        >
       </div>
+      <SingleMessage
+        class="msg-item not-me"
+        v-for="item of MsgList"
+        :key="item.msg_key"
+        :session_msg="item"
+      />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { onBeforeUpdate, onMounted, onUnmounted, onUpdated, ref, watch } from 'vue'
-import SettingPop from './AccountSettingPop.vue'
+import { onBeforeUpdate, onMounted, onUpdated, ref } from 'vue'
+import SettingComponent from './AccountSetting.vue'
 import SingleMessage from './MessageComponent/SingleMessage.vue'
 import { type TSession } from '@/components/opus-detail/type'
 const Message_box_show_div = ref()

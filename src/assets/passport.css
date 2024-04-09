@@ -175,45 +175,6 @@
   fill: #00a1d6 !important;
 }
 
-.forget-tip {
-  z-index: 100;
-  box-sizing: border-box;
-  width: 332px;
-  height: 120px;
-  background: #fff;
-  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.21);
-  border-radius: 5px;
-}
-
-.forget-tip .arrow {
-  position: absolute;
-  width: 34px;
-  left: 135px;
-  top: -14px;
-}
-
-.forget-tip .forget-tip-line {
-  padding: 11px 0 11px 18px;
-  cursor: pointer;
-}
-
-.forget-tip .forget-tip-line:first-child {
-  padding-bottom: 10px;
-  border-bottom: 1px solid #e7e7e7;
-}
-
-.forget-tip .title {
-  font-size: 14px;
-  line-height: 18px;
-  color: #212121;
-}
-
-.forget-tip .desc {
-  font-size: 12px;
-  color: #999;
-  line-height: 18px;
-}
-
 .btn_wp {
   display: flex;
   justify-content: space-between;
@@ -255,111 +216,6 @@
   border-radius: 8px;
 }
 
-.login-pwd {
-  position: relative;
-}
-
-.login-pwd .forget-tip {
-  position: absolute;
-  top: 110px;
-  left: 205px;
-}
-
-.tab-sms,
-.tab-sms__cid {
-  position: relative;
-}
-
-.tab-sms__cid {
-  width: 42px;
-  cursor: pointer;
-}
-
-.tab-sms__cid img {
-  position: absolute;
-  top: 5px;
-  left: 42px;
-  width: 12px;
-}
-
-.tab-sms__vertical-line {
-  width: 1px;
-  height: 26px;
-  border-left: 1px solid #e3e5e7;
-}
-
-.tab-sms .area-code-select {
-  position: absolute;
-  top: 46px;
-}
-
-.third-party-login-wrapper {
-  margin-top: 24px;
-}
-
-.third-party-login-wrapper .title {
-  font-size: 13px;
-  line-height: 16px;
-  text-align: center;
-  color: #999;
-  margin-bottom: 12px;
-}
-
-.third-party-login-wrapper .sns {
-  display: flex;
-  justify-content: center;
-}
-
-.third-party-login-wrapper .sns .btn {
-  margin-right: 30px;
-  cursor: pointer;
-  font-size: 12px;
-}
-
-.third-party-login-wrapper .sns .wechat {
-  display: flex;
-  align-items: center;
-}
-
-.third-party-login-wrapper .sns .wechat:before {
-  display: inline-block;
-  content: '';
-  width: 28px;
-  height: 28px;
-  margin-right: 8px;
-  background: url(//s1.hdslb.com/bfs/static/jinkela/passport-pc/assets/wechat.png) no-repeat;
-  background-size: cover;
-}
-
-.third-party-login-wrapper .sns .weibo {
-  display: flex;
-  align-items: center;
-}
-
-.third-party-login-wrapper .sns .weibo:before {
-  display: inline-block;
-  content: '';
-  width: 28px;
-  height: 28px;
-  margin-right: 8px;
-  background: url(//s1.hdslb.com/bfs/static/jinkela/passport-pc/assets/weibo.png) no-repeat;
-  background-size: cover;
-}
-
-.third-party-login-wrapper .sns .qq {
-  display: flex;
-  align-items: center;
-}
-
-.third-party-login-wrapper .sns .qq:before {
-  display: inline-block;
-  content: '';
-  width: 28px;
-  height: 28px;
-  margin-right: 8px;
-  background: url(//s1.hdslb.com/bfs/static/jinkela/passport-pc/assets/qq.png) no-repeat;
-  background-size: cover;
-}
 
 .dialog__mask {
   position: fixed;
@@ -511,7 +367,9 @@
 .login__main .clickable {
   color: #00a1d6;
 }
-
+.login__main .clickable:hover {
+  cursor: pointer;
+}
 .main__middle-line {
   margin: 44px 48px 0;
   width: 1px;

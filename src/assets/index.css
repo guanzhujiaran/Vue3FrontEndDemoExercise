@@ -122,19 +122,6 @@
   background: url(//s1.hdslb.com/bfs/static/blive/blfe-message-web/static/img/plane.c9984cf0.svg)
     center/contain no-repeat;
 }
-.title {
-  height: 62px;
-  display: -webkit-box;
-  display: -ms-flexbox;
-  display: flex;
-  -webkit-box-pack: center;
-  -ms-flex-pack: center;
-  justify-content: center;
-  -webkit-box-align: center;
-  -ms-flex-align: center;
-  align-items: center;
-  color: #333;
-}
 .item {
   height: 40px;
   display: -webkit-box;
@@ -1976,10 +1963,10 @@
   line-height: 24px;
   position: relative;
 }
-.title {
+/* .title {
   color: #333;
   font-weight: 700;
-}
+} */
 .bottom {
   color: #666;
   padding-left: 8px;
@@ -2956,12 +2943,12 @@
   color: #999;
   cursor: pointer;
 }
-.title {
+/* .title {
   padding: 15px;
   font-size: 14px;
   color: #222;
   text-align: left;
-}
+} */
 .move-in-enter-active {
   -webkit-transition: all 0.3s ease;
   transition: all 0.3s ease;
@@ -7519,7 +7506,7 @@
   height: 100%;
 }
 /*contain strict*/
-.title {
+/* .title {
   height: 36px;
   -ms-flex-negative: 0;
   flex-shrink: 0;
@@ -7537,7 +7524,7 @@
   text-align: center;
   color: #333;
   font-size: large;
-}
+} */
 .title span {
   font-size: 14px;
 }
@@ -8567,7 +8554,8 @@
   flex: 1;
   position: relative;
   background-color: #f4f5f7;
-  height: 70%;
+  height: 100%;
+  min-height:10%;
 }
 
 .dialog {
@@ -8584,7 +8572,7 @@
   height: 100%;
   contain: strict;
 }
-.title {
+/* .title {
   height: 36px;
   -ms-flex-negative: 0;
   flex-shrink: 0;
@@ -8601,7 +8589,7 @@
   position: relative;
   text-align: center;
   color: #333;
-}
+} */
 .title span {
   font-size: 14px;
   font-weight: 700;
