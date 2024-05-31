@@ -2,24 +2,20 @@
  * @Author: 星瞳 1944637830@qq.com
  * @Date: 2024-04-01 13:10:35
  * @LastEditors: 星瞳 1944637830@qq.com
- * @LastEditTime: 2024-04-03 14:46:30
+ * @LastEditTime: 2024-05-31 14:08:35
  * @FilePath: \BiliLottery\src\views\UserCenterView.vue
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
 -->
 <script setup lang="ts">
-import left_pannel from '../components/opus-detail/LeftPannel/PannelItem.vue'
+import left_pannel from '@/components/opus-detail/LeftPannel/PannelItem.vue'
 import { ref } from 'vue'
-import { type TAccountInfo } from '../components/opus-detail/type'
-import right_pannel from '../components/opus-detail/RightPannel/PannelItem.vue'
-// TODO 添加一个ajax用于获取账号的数据和数量
+import { type TAccountInfo } from '@/components/opus-detail/type'
+import right_pannel from '@/components/opus-detail/RightPannel/PannelItem.vue'
 import router from '@/router'
-let islogin = true
-if (islogin) {
-  let first_account_name: string = '1'
-  router.push(`/user-center/account_detail_${first_account_name}`)
-} else {
-  router.push({ path: '/' })
-}
+import { isLogin } from '@/api/user/utils'
+let islogin = (await isLogin())[0];
+islogin?router.push(`/user-center/`):router.push(`/`)
+
 //TODO 判断是否登录
 let test_AccountInfo = ref<Array<TAccountInfo>>([
   {

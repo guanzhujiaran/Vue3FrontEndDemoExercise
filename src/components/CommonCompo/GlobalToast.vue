@@ -11,8 +11,8 @@ const timmer = ref<number>(0)
 const getCls = computed(() => {
   return 'loading' === type.value
     ? {
-        background: 'rgba(0,0,0,0.3)'
-      }
+      background: 'rgba(0,0,0,0.3)'
+    }
     : ''
 })
 const methods = {
@@ -30,15 +30,16 @@ const methods = {
       a = void 0 === r ? 'center' : r
     this.closeDialog()
     var u = Math.random().toString(36).substring(3, 6)
-    ;(id.value = u),
-      (type.value = t),
-      (position.value = a),
-      (show.value = !0),
-      e && (text.value = e),
-      'loading' !== t &&
+      ; (id.value = u),
+        (type.value = t),
+        (position.value = a),
+        (show.value = !0),
+        e && (text.value = e),
+        'loading' !== t &&
         (timmer.value = setTimeout(function () {
           return n.closeDialog(u)
         }, o))
+    return true
   },
   /**
    *
@@ -84,6 +85,7 @@ defineExpose({
   }
 })
 </script>
+
 <template>
   <div v-if="show" class="toast__mask">
     <div class="toast_wp toast-pos_center">
@@ -168,6 +170,7 @@ defineExpose({
   line-height: 20px;
   color: #fff;
 }
+
 .toast-pos_center {
   top: 50%;
 }

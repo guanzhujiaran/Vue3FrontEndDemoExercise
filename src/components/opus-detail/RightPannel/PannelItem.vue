@@ -16,7 +16,7 @@ import { useRoute } from 'vue-router'
 const route = useRoute()
 const API_get_account_detail = async (account_name: string): Promise<TAccountDetail> => {
   if (!account_name) {
-    return {}
+    return {account_name:''}
   }
   // 发起ajax请求，获取账号详情
   if (account_name == '1') {
