@@ -2,12 +2,11 @@
  * @Author: 星瞳 1944637830@qq.com
  * @Date: 2024-05-29 23:52:55
  * @LastEditors: 星瞳 1944637830@qq.com
- * @LastEditTime: 2024-05-31 11:44:21
+ * @LastEditTime: 2024-06-04 17:50:12
  * @FilePath: \Vue3FrontEndDemoExercise\vite.config.ts
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
  */
-import { fileURLToPath, URL } from 'node:url'
-const path = require('path')
+import path from 'path'
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import vueJsx from '@vitejs/plugin-vue-jsx'
@@ -25,6 +24,14 @@ export default defineConfig({
       '@utils': path.resolve(__dirname, 'src/utils'),
       '@comp': path.resolve(__dirname, 'src/components'),
       '@assets': path.resolve(__dirname, 'src/assets')
+    }
+  },
+  server: {
+    proxy: {
+      '/api': {
+        target: 'http://127.0.0.1:9923',
+        changeOrigin: true, // 修改源
+      }
     }
   }
 })

@@ -16,8 +16,10 @@ export const useJwtStore = defineStore(
     function save_jwt_token(_jwt: string) {
       jwt.value = _jwt
     }
-
-    return { jwt, save_jwt_token }
+    function delete_jwt_token(){
+      jwt.value = ''
+    }
+    return { jwt, save_jwt_token ,delete_jwt_token}
   },
   {
     persist: {

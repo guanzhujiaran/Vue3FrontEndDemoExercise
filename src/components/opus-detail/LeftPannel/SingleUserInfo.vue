@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { type TAccountInfo } from '../type'
+import type { AccountInfoModel } from '@/models/account/account_model';
+
 defineProps<{
-  account_info: TAccountInfo
+  account_info: AccountInfoModel
 }>()
 </script>
 <template>
@@ -12,14 +13,14 @@ defineProps<{
         <div class="name-value">{{ account_info.account_name }}</div>
       </div>
       <div class="last-word" :title="`UID：` + account_info.uid">UID：{{ account_info.uid }}</div>
-      <div class="last-word" :title="`用户名：` + account_info.uname">
-        用户名：{{ account_info.uname }}
+      <div class="last-word" :title="`用户名：` + account_info.info?.uname">
+        用户名：{{ account_info.info?.uname }}
       </div>
-      <div class="last-word" :title="`等级：` + account_info.Level">
-        等级：{{ account_info.Level }}
+      <div class="last-word" :title="`等级：` + account_info.info?.level">
+        等级：{{ account_info.info?.level }}
       </div>
-      <div class="last-word" :title="`大会员：` + account_info.Vip">
-        大会员：{{ account_info.Vip }}
+      <div class="last-word" :title="`大会员：` + account_info.info?.vip">
+        大会员：{{ account_info.info?.vip }}
       </div>
     </div>
   </div>

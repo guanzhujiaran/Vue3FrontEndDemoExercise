@@ -2,13 +2,13 @@
  * @Author: 星瞳 1944637830@qq.com
  * @Date: 2024-05-30 22:46:46
  * @LastEditors: 星瞳 1944637830@qq.com
- * @LastEditTime: 2024-05-31 00:24:30
+ * @LastEditTime: 2024-06-04 18:06:19
  * @FilePath: \Vue3FrontEndDemoExercise\src\api\base_axios\base_axios.ts
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
  */
 // src/axios.js
 import { useJwtStore } from '@/stores/jwt_token'
-import axios, { Axios, type AxiosResponse, type AxiosRequestConfig } from 'axios'
+import axios from 'axios'
 declare module 'axios' {
   interface AxiosResponse<T = any> {
     // 这个地方放属性
@@ -20,15 +20,17 @@ declare module 'axios' {
   export function create(config?: AxiosRequestConfig): AxiosInstance
 }
 
-const JwtStore = useJwtStore()
 // 创建 Axios 实例
 const ajax = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL, // 设置基础 API 地址
-  timeout: 5000, // 设置请求超时时间
-  withCredentials: true,
+  timeout: 10e3, // 设置请求超时时间
   headers: {
-    // 设置后端需要的传参类型
-    'content-type': 'application/json;charset=UTF-8;'
+    'content-type': 'application/json'
+    // 'Access-Control-Allow-Headers': '*',
+    // 'Access-Control-Allow-Origin': '*',
+    // 'Access-Control-Allow-Credentials': '*',
+    // 'Access-Control-Expose-Headers': '*',
+    // 'Access-Control-Allow-Methods': '*'
   }
 })
 
@@ -36,6 +38,7 @@ const ajax = axios.create({
 ajax.interceptors.request.use(
   (config) => {
     // 比如添加 Authorization token
+    const JwtStore = useJwtStore()
     const token = JwtStore.jwt
     if (token) {
       config.headers.Authorization = `Bearer ${token}`

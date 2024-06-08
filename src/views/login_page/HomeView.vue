@@ -8,7 +8,7 @@
 -->
 <script setup lang="ts">
 import LoginCompo from '@/views/login_page/compo/LoginCompo.vue'
-import '../assets/passport.css'
+import '@/assets/passport.css'
 </script>
 
 <template>
