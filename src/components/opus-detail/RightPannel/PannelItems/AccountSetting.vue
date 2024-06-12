@@ -2,40 +2,61 @@
  * @Author: 星瞳 1944637830@qq.com
  * @Date: 2024-05-29 23:52:55
  * @LastEditors: 星瞳 1944637830@qq.com
+ * @LastEditTime: 2024-06-12 14:47:00
+ * @FilePath: \Vue3FrontEndDemoExercise\src\components\opus-detail\RightPannel\PannelItems\AccountSetting.vue
+ * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
+-->
+<!--
+ * @Author: 星瞳 1944637830@qq.com
+ * @Date: 2024-05-29 23:52:55
+ * @LastEditors: 星瞳 1944637830@qq.com
  * @LastEditTime: 2024-06-04 14:36:43
  * @FilePath: \Vue3FrontEndDemoExercise\src\components\opus-detail\RightPannel\PannelItems\AccountSetting.vue
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
 -->
 <script setup lang="ts">
-//TODO 这边需要ajax获取一下账号的设置，然后保存的时候再上传回去
-import LoadingCard from '@/components/CommonCompo/LoadingCard.vue'
 import LotterySettingModule from './SettingComponent/LotterySettingModule.vue'
-import { onMounted, ref } from 'vue';
-import type { AccountSettingModel } from '@/models/account/account_model';
-import accountApi from '@/api/account/account_api';
+import { ref } from 'vue';
+import type { ElDialog } from 'element-plus';
 
-const lottery_setting = ref<AccountSettingModel>()
-const is_loading_setting = ref<boolean>()
-const props = defineProps<{
+defineProps<{
   account_name: string
 }>()
 
-onMounted(
-  async () => {
-    //TODO 通过API获取账号设置
-    is_loading_setting.value = true;
-    let lot_setting_resp = await accountApi.GetAccountLotterySettingByAccountName(props.account_name)
-    lottery_setting.value = typeof lot_setting_resp.data !== 'string' ? lot_setting_resp.data : undefined
-    is_loading_setting.value = false;
-  }
-)
+
+
+const dialogVisible = ref(false)
 </script>
 
 <template>
-  <div class="config"> 
-    <!-- 做成控制台 -->
-    
-    <LotterySettingModule :title="`账号【${account_name}】设置`"></LotterySettingModule>
-  </div>
-  <LoadingCard v-show="is_loading_setting" />
+    <div class="el-btn-wrap">
+      <el-button plain @click="dialogVisible = true">
+        打开账号设置面板
+      </el-button>
+    </div>
+    <el-dialog v-model="dialogVisible" width="85%" draggable :show-close="false" :close-delay="100"
+      :center="true">
+      <template #header="{  titleClass }">
+        <div class="lottery-setting-header">
+          <h4 :class="titleClass">账号【{{account_name}}】的设置</h4>
+        </div>
+      </template>
+      <LotterySettingModule :account_name="account_name" @close_setting_modal="dialogVisible =false">
+      </LotterySettingModule>
+    </el-dialog>
 </template>
+<style>
+.lottery-setting-header{
+  background-color:#F1F2F3;
+  opacity: 1;
+  border-radius: 6px;
+}
+.el-btn-wrap {
+  padding: 16px;
+  display: flex;
+}
+
+.el-btn-wrap button {
+  width: 100%
+}
+</style>

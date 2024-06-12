@@ -2,7 +2,7 @@ import type { BaseSettingRadioList, BaseSettingTextList } from '@/models/base/ba
 
 export interface AccountSettingConfigItemModel {
   /**
-   * 按钮的设置属性名
+   * 设置键名
    */
   name: string
   /**

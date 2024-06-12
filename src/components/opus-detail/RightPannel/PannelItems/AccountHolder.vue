@@ -31,7 +31,7 @@
     </div>
   </div>
 </template>
-
+00
 <script setup lang="ts">
 import { onBeforeUpdate, onMounted, onUpdated, ref } from 'vue'
 import SettingComponent from './AccountSetting.vue'

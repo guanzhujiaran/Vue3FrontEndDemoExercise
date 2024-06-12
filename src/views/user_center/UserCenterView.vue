@@ -2,75 +2,97 @@
  * @Author: 星瞳 1944637830@qq.com
  * @Date: 2024-04-01 13:10:35
  * @LastEditors: 星瞳 1944637830@qq.com
- * @LastEditTime: 2024-06-08 18:24:46
+ * @LastEditTime: 2024-06-12 14:50:51
  * @FilePath: \BiliLottery\src\views\UserCenterView.vue
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
 -->
 <script setup lang="ts">
-import left_pannel from '@/components/opus-detail/LeftPannel/PannelItem.vue'
-import { onMounted, ref } from 'vue'
-import router from '@/router'
-import { isLogin } from '@/api/user/utils'
-import type { AccountInfoModel } from '@/models/account/account_model'
-import accountApi from '@/api/account/account_api'
-import GlobalToast from '@/components/CommonCompo/GlobalToast.vue'
-import RightPannelTopBar from '@/components/CommonCompo/RightPannelTopBar.vue'
-import Placeholder from '@/components/opus-detail/RightPannel/PannelItems/Placeholder.vue'
-import { useRoute } from 'vue-router'
-const route = useRoute()
-const toast = ref<InstanceType<typeof GlobalToast> | null>(null)
-const placeholder_props = ref<{
-  is_show: boolean;
-  inner_text: string;
-}>({
-  is_show: false,
-  inner_text: "选一个账号查看吧"
+import { isLogin } from '@/api/user/utils';
+import RightPannelTopBar from '@/components/CommonCompo/RightPannelTopBar.vue';
+import router from '@/router';
+import emitter from '@/utils/mitt'
+import { computed, onMounted, ref, watch } from 'vue';
+import LeftPannel from '@/components/opus-detail/LeftPannel/PannelItem.vue';
+import RightPannel from '@/components/opus-detail/RightPannel/PannelItem.vue';
+import GlobalToast from '@/components/CommonCompo/GlobalToast.vue';
+import accountApi from '@/api/account/account_api';
+import UserConfig from '@/components/opus-detail/RightPannel/PannelItems/SettingComponent/UserConfig.vue'
+import Placeholder from '@/components/opus-detail/RightPannel/PannelItems/Placeholder.vue';
+import { useRoute } from 'vue-router';
+import type { PageShowModel } from '@/models/account/page/model.ts'
+
+const route = useRoute();
+
+let AccountInfos = ref<PageShowModel[]>([])
+
+const placeholder_is_show = computed(() => (route.name === '账号详情' || route.name === '用户中心') && !AccountInfos.value.some(el => el.is_show))
+const placeholder_inner_text = ref('')
+const placeholder_model = computed<{ inner_text: string, is_show: boolean }>(() => {
+  return {
+    is_show: placeholder_is_show.value,
+    inner_text: placeholder_inner_text.value ? placeholder_inner_text.value : `选择一个账号康康`
+  }
 })
-let AccountInfos = ref<Array<AccountInfoModel>>([])
+
+
 onMounted(async () => {
-  let islogin = (await isLogin())[0];
-  if (islogin && ((placeholder_props.value.is_show = route.name === '用户中心') || AccountInfos.value.length === 0)) {
-    accountApi.GetAllAccounts().then(resp => {
-      if (resp.code) {
-        let ___ = `获取账号信息失败！${resp.msg}`
-        placeholder_props.value.is_show = true
-        placeholder_props.value.inner_text = ___;
-        return
+  await isLogin().then(resp => resp[0] ? null : router.push(`/`))
+  await accountApi.GetAllAccounts().then(resp => {
+    if (resp.code) {
+      placeholder_inner_text.value = `获取账号信息失败！${resp.msg}`
+      return
+    }
+    AccountInfos.value = resp.data.map(el => {
+      return {
+        info: el,
+        is_show: false,
+        actived: false
       }
-      AccountInfos.value = resp.data;
-      if (resp.data.length === 0) {
-        placeholder_props.value.is_show = true
-        let ___ = "您还没有添加账号，请先添加账号"
-        placeholder_props.value.inner_text = ___;
-        return
-      }
-    })
-    placeholder_props.value.is_show && toast.value!.info(placeholder_props.value.inner_text)
-  }
-  else {
-    !islogin && (toast.value!.info(`请先登录！`), router.push(`/`))
-  }
+    });
+    if (resp.data.length === 0) {
+      placeholder_inner_text.value = "您还没有添加账号，请先添加账号";
+      return
+    }
+  })
+  placeholder_inner_text.value && emitter.emit('toast', { t: placeholder_inner_text.value })
+})
+
+
+watch(route, (el) => {
+  AccountInfos.value.map(e => e.is_show = false);
+  AccountInfos.value.filter(e => e.info.account_name === el.params.account_name).map(e => {
+    e.is_show = true;
+    e.actived = true;
+  });
+
 })
 
 </script>
 
 <template>
-  <GlobalToast ref="toast"></GlobalToast>
   <div class="container">
+    <GlobalToast />
     <div class="space-left">
-      <left_pannel :account_info_list="AccountInfos" :side_bar_tittle="`我的账号`">
-      </left_pannel>
+      <LeftPannel v-model="AccountInfos" :side_bar_tittle="`我的账号`">
+      </LeftPannel>
     </div>
     <div class="space-right">
       <RightPannelTopBar
         :title="$route.params.account_name ? `账号【${$route.params.account_name}】` : `${$route.name?.toString()}`">
       </RightPannelTopBar>
       <div class="space-right-bottom ps">
-        <Placeholder v-if="$route.name === '用户中心'" v-model="placeholder_props" />
-        <RouterView />
+        <Placeholder v-model="placeholder_model"></Placeholder>
+        <RightPannel v-for="(account_info, idx) in AccountInfos" :key="idx" v-show="account_info.is_show"
+          v-model="AccountInfos[idx]">
+        </RightPannel>
+        <div v-show="$route.name === '用户设置'" class="user-config-wrap">
+          <UserConfig></UserConfig>
+        </div>
 
       </div>
     </div>
+
+
   </div>
-  <div>{{ placeholder_props }}</div>
 </template>
+<style></style>

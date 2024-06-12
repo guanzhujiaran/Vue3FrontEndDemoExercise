@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, ref } from 'vue'
-
+import emitter from '@/utils/mitt'
+import { computed, onBeforeUnmount, onMounted, onUnmounted, ref } from 'vue'
 const id = ref<string>('')
 const show = ref<boolean>(!1)
 const type = ref<string>('loading')
@@ -61,7 +61,7 @@ const showDialogSetting = {
 onBeforeUnmount(() => {
   methods.clear()
 })
-defineExpose({
+const toast_events = {
   info: function (t: string) {
     var e = arguments.length > 1 && void 0 !== arguments[1] ? arguments[1] : {}
     return (e = showDialogSetting), methods.showDialog('info', t, e)
@@ -83,7 +83,30 @@ defineExpose({
   stop: function () {
     methods.closeDialog()
   }
+}
+
+defineExpose(toast_events)
+
+
+onMounted(() => {
+  console.log('加载toast事件')
+  emitter.on('toast',  ( params ) =>{
+    let {t,e} = params;
+    switch (e) {
+      case 'info': toast_events.info(t); break
+      case 'success': toast_events.success(t); break;
+      case 'error': toast_events.error(t); break;
+      case 'loading': toast_events.loading(t); break;
+      default: toast_events.info(t);
+    }
+    return true
+  })
 })
+onUnmounted(() => {
+  emitter.off('toast')
+})
+
+
 </script>
 
 <template>

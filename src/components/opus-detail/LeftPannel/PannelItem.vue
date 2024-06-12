@@ -1,60 +1,44 @@
-<!--
- * @Author: 星瞳 1944637830@qq.com
- * @Date: 2024-04-01 15:41:21
- * @LastEditors: 星瞳 1944637830@qq.com
- * @LastEditTime: 2024-06-06 00:18:56
- * @FilePath: \BiliLottery\src\components\opus-detail\LeftPannel\PannelItem.vue
- * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
--->
-<!--
- * @Author: 星瞳 1944637830@qq.com
- * @Date: 2024-04-01 15:41:21
- * @LastEditors: 星瞳 1944637830@qq.com
- * @LastEditTime: 2024-04-02 22:33:31
- * @FilePath: \BiliLottery\src\components\opus-detail\LeftPannel\PannelItem.vue
- * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
--->
 
 <script setup lang="ts">
-import { onMounted, ref, watchEffect } from 'vue'
+import { onMounted, ref, watchEffect, type ComputedRef } from 'vue'
 import avatar from './SingleUserInfo.vue'
 import router from '@/router'
 import { useRoute } from 'vue-router'
 import type { AccountInfoModel } from '@/models/account/account_model';
+import type { PageShowModel } from '@/models/account/page/model.ts'
 const route = useRoute()
-const isActive_by_account_name = ref<string>(
-  route.params.account_name ? route.params.account_name.toString() : ''
-)
-watchEffect(() => {
-  // 当 route.params.account_name 变化时，isActive_by_account_name 的值会自动更新
-  isActive_by_account_name.value = route.params.account_name
-    ? route.params.account_name.toString()
-    : ''
-})
-const handleAccountAvatarClick = (account_name: string) => {
-  if (account_name) {
-    router.push(`/user-center/account_detail_${account_name}`)
-  }
-}
 
+
+const props = defineModel<PageShowModel[]>()
 
 defineProps<{
   side_bar_tittle: string
-  account_info_list: Array<AccountInfoModel>
 }>()
+const active_account_name = ref('')
+const handleAccountAvatarClick = (account_name: string) => {
+  if (active_account_name.value !== account_name) {
+    active_account_name.value = account_name
+    router.push({
+      path: '/user-center/account_detail/account_name'.concat(account_name)
+    },
+    )
+  }
+}
 </script>
 <template>
-  <div class="side-bar">
+  <div class="side-bar" v-if="props">
     <div class="title">
       {{ side_bar_tittle }}
     </div>
     <ul class="list">
-      <li v-for="account_info of account_info_list" :key="account_info.account_name"
-        @click="handleAccountAvatarClick(account_info.account_name)">
-        <avatar :account_info="account_info" :class="{ active: isActive_by_account_name === account_info.account_name }"
-          :style="account_info.info?.face ? { backgroundImage: `url(${account_info.info.face})` } : {}" />
+      <li v-for="account_info of props" :key="account_info.info.account_name"
+        @click="handleAccountAvatarClick(account_info.info.account_name)">
+        <avatar :account_info="account_info.info" :class="{ active: account_info.is_show }"
+          :style="account_info.info.info?.face ? { backgroundImage: `url(${account_info.info.info.face})` } : {}" />
       </li>
+
     </ul>
+
     <div class="divided-line"></div>
     <div class="setting item">
       <router-link to="/user-center/config" title="全局设置">
@@ -65,7 +49,9 @@ defineProps<{
         </svg>全局设置
       </router-link>
     </div>
+
   </div>
+
 </template>
 <style>
 .setting a {

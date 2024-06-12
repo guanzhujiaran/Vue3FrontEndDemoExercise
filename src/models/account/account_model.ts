@@ -11,16 +11,16 @@ export interface AccountInfoModel {
   account_name: string
   uid: string
   info?: {
-    uname: string
-    vip: string
-    level: number
+    uname?: string
+    vip?: string
+    level?: number
     face?: string | null,
-    settings: AccountSettingModel
+    settings?: AccountSettingModel
   } | null
 }
 
 export interface AccountSettingModel {
-  lottery_setting?: {
+  lottery_setting: {
     CONFIG: {
       COOKIENAME: string //就是account_name，不允许变更！
       AUTO_DailyReward: boolean

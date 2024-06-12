@@ -12,7 +12,7 @@ defineProps<{
       <div class="name" :title="account_info.account_name">
         <div class="name-value">{{ account_info.account_name }}</div>
       </div>
-      <div class="last-word" :title="`UID：` + account_info.uid">UID：{{ account_info.uid }}</div>
+      <div class="last-word" :title="`UID：` + account_info.info?.uid">UID：{{ account_info.info?.uid }}</div>
       <div class="last-word" :title="`用户名：` + account_info.info?.uname">
         用户名：{{ account_info.info?.uname }}
       </div>

@@ -1,17 +1,3 @@
-export interface BaseSettingModel {
-  /**
-   * 键名
-   */
-  name: string
-  /**
-   * 当前设置的值
-   */
-  value: any
-  /**
-   * 控件类型
-   */
-  type: BaseSettingType
-}
 
 export enum BaseSettingType {
   /**
@@ -27,6 +13,19 @@ export enum BaseSettingType {
   Switch //未实现
 }
 
+export interface BaseSettingModel {
+  /**
+   * 当前设置的值
+   */
+  value: any
+  /**
+   * 控件类型
+   */
+  type: BaseSettingType
+}
+
+
+
 export interface BaseSettingRadioList extends BaseSettingModel {
   radio_props: {
     /**
@@ -41,8 +40,7 @@ export interface BaseSettingRadioList extends BaseSettingModel {
 }
 export interface BaseSettingTextList extends BaseSettingModel {
   text_props: {
-    name:string,
-    value: string
+    readonly:boolean,
     label: string
     placeholder: string
   }[]

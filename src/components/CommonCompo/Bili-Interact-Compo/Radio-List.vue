@@ -2,7 +2,7 @@
 
     <div class="radio-list" v-if="props"><label v-for="(radio_prop, i) in props.radio_props" v-bind:key="i"
             class="type-selector radio-selector">
-            <input :name="props?.name" type="radio" class="radio" v-model="props.value" :value="radio_prop.value">
+            <input type="radio" class="radio" v-model="props.value" :value="radio_prop.value">
             <svg viewBox="0 0 40 40" class="radio-icon"
                 :class="radio_prop.value == props.value ? `css-o1815x` : `css-1xneiug`">
                 <path class="content"
