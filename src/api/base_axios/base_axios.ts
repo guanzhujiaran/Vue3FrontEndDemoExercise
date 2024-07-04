@@ -54,7 +54,10 @@ ajax.interceptors.response.use(
   (error) => {
     // 处理错误，比如根据错误码提示用户或跳转登录页
     console.error('API Error:', error)
-    return Promise.reject(error)
+    return {
+      code:-1,
+      msg:error.message
+    }
   }
 )
 

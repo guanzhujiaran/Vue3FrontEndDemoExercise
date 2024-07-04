@@ -18,10 +18,6 @@ const active_account_name = ref('')
 const handleAccountAvatarClick = (account_name: string) => {
   if (active_account_name.value !== account_name) {
     active_account_name.value = account_name
-    router.push({
-      path: '/user-center/account_detail/account_name'.concat(account_name)
-    },
-    )
   }
 }
 </script>
@@ -30,14 +26,14 @@ const handleAccountAvatarClick = (account_name: string) => {
     <div class="title">
       {{ side_bar_tittle }}
     </div>
-    <ul class="list">
-      <li v-for="account_info of props" :key="account_info.info.account_name"
+    <div class="list">
+      <router-link :to="{path:'/user-center/account_detail/account_name'.concat(account_info.info.account_name)}" v-for="account_info of props" :key="account_info.info.account_name" 
         @click="handleAccountAvatarClick(account_info.info.account_name)">
         <avatar :account_info="account_info.info" :class="{ active: account_info.is_show }"
           :style="account_info.info.info?.face ? { backgroundImage: `url(${account_info.info.info.face})` } : {}" />
-      </li>
+      </router-link>
 
-    </ul>
+    </div>
 
     <div class="divided-line"></div>
     <div class="setting item">
@@ -76,11 +72,6 @@ const handleAccountAvatarClick = (account_name: string) => {
 svg:not(:root) {
   overflow-clip-margin: content-box;
   overflow: hidden;
-}
-
-* {
-  margin: 0;
-  padding: 0;
 }
 
 .item:hover,

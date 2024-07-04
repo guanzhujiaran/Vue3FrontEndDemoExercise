@@ -2,7 +2,7 @@
  * @Author: 星瞳 1944637830@qq.com
  * @Date: 2024-05-29 23:52:55
  * @LastEditors: 星瞳 1944637830@qq.com
- * @LastEditTime: 2024-06-12 15:02:00
+ * @LastEditTime: 2024-06-12 21:28:48
  * @FilePath: \Vue3FrontEndDemoExercise\src\components\opus-detail\RightPannel\PannelItems\SettingComponent\ClickBar.vue
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
 -->
@@ -295,8 +295,8 @@ interface collapse_item {
    */
   content: AccountSettingConfigItemModel | collapse_item[]
 }
-const activeNames = ref(['0'])//最多三层！！！
-const activeNames1 = ref([])
+const activeNames = ref('1')//最多三层！！！
+const activeNames1 = ref('')
 const activeNames2 = ref([])
 const save_btn_model = ref({
   btn_text: '保存',
@@ -321,6 +321,8 @@ const save_lottery_setting = () => {
     }
     emitter.emit('toast',{t:'保存成功'})
     emit('close_setting_modal')
+  }).catch(e=>{
+    emitter.emit('toast',{t:`保存失败！${e}`,e:'error'})
   })
 
 
@@ -335,7 +337,9 @@ onMounted(
         return emitter.emit('toast',{t:resp.msg,e:'error'})
       }
       return resp.data.info.settings ? (formattedprops.value = fomat_setting(resp.data.info.settings)) && (is_loading_setting.value = false) : emitter.emit('toast',{t:`账号设置加载失败！`,e:'error'})
-    })
+    }).catch(e=>{
+    emitter.emit('toast',{t:`获取账号设置失败！${e}`,e:'error'})
+  })
 
 
 

@@ -2,7 +2,7 @@
  * @Author: 星瞳 1944637830@qq.com
  * @Date: 2024-06-06 00:05:53
  * @LastEditors: 星瞳 1944637830@qq.com
- * @LastEditTime: 2024-06-12 15:03:04
+ * @LastEditTime: 2024-07-01 19:19:45
  * @FilePath: \Vue3FrontEndDemoExercise\src\components\opus-detail\RightPannel\PannelItems\SettingComponent\UserConfig.vue
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
 -->
@@ -55,10 +55,7 @@ span {
     padding: 0;
 }
 
-* {
-    margin: 0;
-    padding: 0;
-}
+
 
 .tip {
     color: #999;
@@ -71,11 +68,13 @@ span {
  import emitter from '@/utils/mitt'
 
 import ConfigItem from '@/components/opus-detail/RightPannel/PannelItems/SettingComponent/ConfigItem.vue';
-import { computed, ref } from 'vue';
+import { computed, inject, ref } from 'vue';
 import { BaseSettingType } from '@/models/base/base_setting_model';
 import type { AccountSettingConfigItemModel } from '@/models/account/account_setting/account_setting_type_model';
 import BlueBtn from '@/components/CommonCompo/Bili-Interact-Compo/Blue-Btn.vue';
 import accountApi from '@/api/account/account_api';
+const reload = inject("account_left_pannel_reload");
+
 const create_account_settings = ref<AccountSettingConfigItemModel>({
     name: 'create_account_setting', // 按钮的设置属性名
     title: '创建账号',
@@ -118,8 +117,11 @@ const create_account = () => {
         resp => {
             if (resp.code !== 0) {
                 return emitter.emit('toast',{t:resp.msg,e:'error'})
+
             }
-            return emitter.emit('toast',{t:"账号创建成功！"})
+
+            emitter.emit('toast',{t:"账号创建成功！"})
+            reload()
         }).catch(e => {
             emitter.emit('toast',{t:`账号创建请求失败！${e}`,e:'error'})
         })

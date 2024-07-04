@@ -2,7 +2,7 @@
  * @Author: 星瞳 1944637830@qq.com
  * @Date: 2024-05-29 23:52:55
  * @LastEditors: 星瞳 1944637830@qq.com
- * @LastEditTime: 2024-06-12 14:47:00
+ * @LastEditTime: 2024-06-12 23:10:15
  * @FilePath: \Vue3FrontEndDemoExercise\src\components\opus-detail\RightPannel\PannelItems\AccountSetting.vue
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
 -->
@@ -15,9 +15,10 @@
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
 -->
 <script setup lang="ts">
-import LotterySettingModule from './SettingComponent/LotterySettingModule.vue'
+import LotterySettingModule from '@/components/opus-detail/RightPannel/PannelItems/SettingComponent/LotterySettingModule.vue'
 import { ref } from 'vue';
 import type { ElDialog } from 'element-plus';
+import {Setting} from '@element-plus/icons-vue'
 
 defineProps<{
   account_name: string
@@ -30,8 +31,8 @@ const dialogVisible = ref(false)
 
 <template>
     <div class="el-btn-wrap">
-      <el-button plain @click="dialogVisible = true">
-        打开账号设置面板
+      <el-button type="info" @click="dialogVisible = true">
+        <el-icon style="margin-right: 5px;"><Setting /></el-icon>打开账号设置面板
       </el-button>
     </div>
     <el-dialog v-model="dialogVisible" width="85%" draggable :show-close="false" :close-delay="100"

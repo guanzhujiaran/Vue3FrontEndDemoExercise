@@ -6,7 +6,7 @@
  * @FilePath: \Vue3FrontEndDemoExercise\src\api\base_axios\base_api.ts
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
  */
-import ajax from './base_axios'
+import ajax from '@/api/base_axios/base_axios'
 
 class BaseApi {
   path: String //路由路径
