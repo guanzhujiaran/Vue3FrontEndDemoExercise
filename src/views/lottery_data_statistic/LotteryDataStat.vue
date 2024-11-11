@@ -2,7 +2,7 @@
  * @Author: 星瞳 1944637830@qq.com
  * @Date: 2024-10-15 19:07:56
  * @LastEditors: 星瞳 1944637830@qq.com
- * @LastEditTime: 2024-11-11 18:41:04
+ * @LastEditTime: 2024-11-11 19:27:54
  * @FilePath: \Vue3FrontEndDemoExercise\src\views\lottery_data_statistic\LotteryDataStat.vue
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
 -->
@@ -28,8 +28,8 @@
         <div class="bili-overlay" style="background-color: rgba(0, 0, 0, 0.5);" @click="close_submit_lot_data_pannel">
         </div>
         <div class="lot-upload-popover">
-            <div class="lot-upload__pub" :v-loading="lot_upload_submit_props.loading">
-                <div class="lot-upload-publishing">
+            <div class="lot-upload__pub" >
+                <div class="lot-upload-publishing" v-loading="lot_upload_submit_props.loading">
                     <div class="lot-upload-publishing__closing" @click="close_submit_lot_data_pannel">
                         <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
                             viewBox="0 0 16 16" width="16" height="16" style="width: 16px; height: 16px;">
@@ -66,7 +66,6 @@
                         @click="handle_lot_upload_submit">提交</el-button>
                     <div style="clear:both;"></div>
                 </div>
-
             </div>
             <div class="lot-upload__done">
                 <div class="lot-upload-succ-tip" v-show="is_upload_succ">
