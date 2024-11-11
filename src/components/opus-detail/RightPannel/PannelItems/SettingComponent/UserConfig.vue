@@ -2,7 +2,7 @@
  * @Author: 星瞳 1944637830@qq.com
  * @Date: 2024-06-06 00:05:53
  * @LastEditors: 星瞳 1944637830@qq.com
- * @LastEditTime: 2024-07-01 19:19:45
+ * @LastEditTime: 2024-10-19 23:22:59
  * @FilePath: \Vue3FrontEndDemoExercise\src\components\opus-detail\RightPannel\PannelItems\SettingComponent\UserConfig.vue
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
 -->
@@ -13,7 +13,7 @@
         <ConfigItem v-model="create_account_settings">
         </ConfigItem>
         <div class="btn-wrap">
-            <BlueBtn v-model="create_account_btn_ref"  @click="create_account"/>
+            <BlueBtn v-model="create_account_btn_ref" @click="create_account" />
         </div>
     </div>
     <div v-if="test_config" class="config">
@@ -65,15 +65,17 @@ span {
 /**
  * 全局设置
  */
- import emitter from '@/utils/mitt'
+import emitter from '@/utils/mitt'
 
 import ConfigItem from '@/components/opus-detail/RightPannel/PannelItems/SettingComponent/ConfigItem.vue';
-import { computed, inject, ref } from 'vue';
+import { computed, inject, ref, type InjectionKey } from 'vue';
 import { BaseSettingType } from '@/models/base/base_setting_model';
 import type { AccountSettingConfigItemModel } from '@/models/account/account_setting/account_setting_type_model';
 import BlueBtn from '@/components/CommonCompo/Bili-Interact-Compo/Blue-Btn.vue';
 import accountApi from '@/api/account/account_api';
-const reload = inject("account_left_pannel_reload");
+import {account_left_pannel_reload_key} from '@/models/inject/inject_type'
+
+const reload = inject(account_left_pannel_reload_key)!;
 
 const create_account_settings = ref<AccountSettingConfigItemModel>({
     name: 'create_account_setting', // 按钮的设置属性名
@@ -83,7 +85,7 @@ const create_account_settings = ref<AccountSettingConfigItemModel>({
         type: BaseSettingType.Text,
         value: "",
         text_props: [{
-            readonly:false,
+            readonly: false,
             label: "账号名",
             placeholder: "请输入账号名"
         }
@@ -112,18 +114,18 @@ const create_account_btn_ref = ref({
 })
 const create_account = () => {
     let create_account_name = create_account_settings.value.setting_content.value;
-    if (!create_account_name) return emitter.emit('toast',{t:"请输入账号名！"})
+    if (!create_account_name) return emitter.emit('toast', { t: "请输入账号名！" })
     accountApi.AddAccount(create_account_name).then(
         resp => {
             if (resp.code !== 0) {
-                return emitter.emit('toast',{t:resp.msg,e:'error'})
+                return emitter.emit('toast', { t: resp.msg, e: 'error' })
 
             }
 
-            emitter.emit('toast',{t:"账号创建成功！"})
+            emitter.emit('toast', { t: "账号创建成功！" })
             reload()
         }).catch(e => {
-            emitter.emit('toast',{t:`账号创建请求失败！${e}`,e:'error'})
+            emitter.emit('toast', { t: `账号创建请求失败！${e}`, e: 'error' })
         })
 
 

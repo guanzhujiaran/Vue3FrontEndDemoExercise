@@ -1,15 +1,17 @@
+<script setup lang="ts">
+import Placeholder from '@/components/opus-detail/RightPannel/PannelItems/Placeholder.vue';
+import { ref } from 'vue';
+const placeholder_props = ref({
+  inner_text: "数据均采集自互联网公开内容",
+  is_show: true
+}
+)
+</script>
+
 <template>
-  <div class="about">
-    <h1>This is an about page</h1>
+  <div class="container">
+    <Placeholder v-model="placeholder_props"></Placeholder>
   </div>
 </template>
 
-<style>
-@media (min-width: 1024px) {
-  .about {
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-  }
-}
-</style>
+<style></style>

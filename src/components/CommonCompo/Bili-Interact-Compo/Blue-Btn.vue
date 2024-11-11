@@ -35,7 +35,6 @@ const props = defineModel<{
 
 .reply-box-send:hover,
 .reply-box-send .send-active {
-
     background-color: #1890ff;
 }
 

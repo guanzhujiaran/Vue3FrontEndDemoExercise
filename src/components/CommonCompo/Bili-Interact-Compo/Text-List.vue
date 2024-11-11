@@ -1,12 +1,3 @@
-<!--
- * @Author: 星瞳 1944637830@qq.com
- * @Date: 2024-06-07 18:31:09
- * @LastEditors: 星瞳 1944637830@qq.com
- * @LastEditTime: 2024-06-10 18:39:29
- * @FilePath: \Vue3FrontEndDemoExercise\src\components\CommonCompo\Bili-Interact-Compo\Text-List.vue
- * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
--->
-
 <template>
     <div class="text-list" v-if="props">
         <label v-for="(prop, i) in  props.text_props " v-bind:key="i" class="type-input text-inputer">
@@ -50,7 +41,7 @@ const vNoSpace = {
 </script>
 <style>
 
-textarea{
+.text-list textarea{
     margin-top:16px;
     display: block;
     position: relative;
@@ -66,15 +57,15 @@ textarea{
     resize: none;
     outline: none;
 }
-textarea:focus {
+.text-list textarea:focus {
   height: 100px; /* 焦点时的高度 */
     background-color: transparent;
 }
-input:focus {
+.text-list input:focus {
     width: 100%;
     background-color: transparent;
 }
-input {
+.text-list input {
     position: relative;
     height: 100%;
     width: 20%;
@@ -88,11 +79,11 @@ input {
     unicode-bidi: isolate;
 }
 
-input:hover,textarea:hover {
+.text-list input:hover,textarea:hover {
     background-color: transparent;
 }
 
-input:focus {
+.text-list input:focus {
     width: 30%;
     background-color: transparent;
 }

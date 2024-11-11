@@ -2,7 +2,7 @@
  * @Author: 星瞳 1944637830@qq.com
  * @Date: 2024-05-29 23:52:55
  * @LastEditors: 星瞳 1944637830@qq.com
- * @LastEditTime: 2024-06-12 21:28:48
+ * @LastEditTime: 2024-10-29 00:38:46
  * @FilePath: \Vue3FrontEndDemoExercise\src\components\opus-detail\RightPannel\PannelItems\SettingComponent\ClickBar.vue
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
 -->
@@ -278,8 +278,8 @@ const saved_props = computed(() => {
 
 watch(saved_props, (newVal, oldVal) => { // 需要保存的属性变化时弹出保存按钮
   if (Object.keys(oldVal).length !== 0) {
-    console.log(`formattedprops:`,formattedprops.value)
-    console.log(`saved_props:`,saved_props.value)
+    console.log(`formattedprops:`, formattedprops.value)
+    console.log(`saved_props:`, saved_props.value)
     save_btn_model.value.is_show = true
     cancel_btn_model.value.is_show = true
   }
@@ -316,13 +316,13 @@ const save_lottery_setting = () => {
   }
   accountApi.save_account_setting(post_data.account_name, post_data.settings).then((res) => {
     if (res.code !== 0) {
-      emitter.emit('toast',{t:`保存失败！${res.msg}`,e:'error'})
+      emitter.emit('toast', { t: `保存失败！${res.msg}`, e: 'error' })
       return
     }
-    emitter.emit('toast',{t:'保存成功'})
+    emitter.emit('toast', { t: '保存成功' })
     emit('close_setting_modal')
-  }).catch(e=>{
-    emitter.emit('toast',{t:`保存失败！${e}`,e:'error'})
+  }).catch(e => {
+    emitter.emit('toast', { t: `保存失败！${e}`, e: 'error' })
   })
 
 
@@ -334,12 +334,12 @@ onMounted(
     is_loading_setting.value = true;
     return await accountApi.GetAccountLotterySettingByAccountName(props.account_name).then(resp => {
       if (resp.code) {
-        return emitter.emit('toast',{t:resp.msg,e:'error'})
+        return emitter.emit('toast', { t: resp.msg, e: 'error' })
       }
-      return resp.data.info.settings ? (formattedprops.value = fomat_setting(resp.data.info.settings)) && (is_loading_setting.value = false) : emitter.emit('toast',{t:`账号设置加载失败！`,e:'error'})
-    }).catch(e=>{
-    emitter.emit('toast',{t:`获取账号设置失败！${e}`,e:'error'})
-  })
+      return resp.data.info.settings ? (formattedprops.value = fomat_setting(resp.data.info.settings)) && (is_loading_setting.value = false) : emitter.emit('toast', { t: `账号设置加载失败！`, e: 'error' })
+    }).catch(e => {
+      emitter.emit('toast', { t: `获取账号设置失败！${e}`, e: 'error' })
+    })
 
 
 
@@ -355,8 +355,10 @@ onMounted(
 .el-collapse-item button {
   background-color: #fb7299;
   opacity: 0.7;
-  border-radius: 6px;
-  height: 24px;
+  border-radius: 0.75rem;
+  height: 2rem;
+  padding: 1rem;
+  margin-top: 0.2rem;
 }
 
 .el-collapse-item .is-active {

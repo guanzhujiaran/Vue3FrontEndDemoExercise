@@ -26,11 +26,6 @@ const ajax = axios.create({
   timeout: 10e3, // 设置请求超时时间
   headers: {
     'content-type': 'application/json'
-    // 'Access-Control-Allow-Headers': '*',
-    // 'Access-Control-Allow-Origin': '*',
-    // 'Access-Control-Allow-Credentials': '*',
-    // 'Access-Control-Expose-Headers': '*',
-    // 'Access-Control-Allow-Methods': '*'
   }
 })
 

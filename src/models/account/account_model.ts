@@ -15,7 +15,8 @@ export interface AccountInfoModel {
     vip?: string
     level?: number
     face?: string | null,
-    settings?: AccountSettingModel
+    settings?: AccountSettingModel,
+    uid?: number|string,
   } | null
 }
 

@@ -72,7 +72,7 @@ const handleLoginBtn = async () => {
     const JwtStore = useJwtStore()
     JwtStore.save_jwt_token(resp.data.jwt_token)
     toastRef.value!.info(`登录成功！`)
-    router.push('/user-center')
+    router.push('/app/user-center')
   }).catch(e => {
     toastRef.value!.info(`登录失败！原因：${e}`)
     return
@@ -104,7 +104,7 @@ const check_login = () => {
   isLogin().then(res => {
     if (res[0]) {
       toastRef.value!.info('账号已登录，等待跳转！');
-      router.push('/user-center')
+      router.push('/app/user-center')
     } else {
       JwtStore.jwt ?
         toastRef.value!.info(res[1]) : null
