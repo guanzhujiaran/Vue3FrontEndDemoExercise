@@ -40,7 +40,7 @@
                     v-for="(data_key, idx) in Object.keys(preprocessed_data[0] ?? {}).slice(0, max_col_num)"
                     :prop="data_key" :label="translate_key_map[data_key] ?? data_key" :key="`${data_key}_${idx}`"
                     show-overflow-tooltip sortable
-                    :min-width="translate_key_map[data_key]?.includes('跳转') ? '50rem' : '180rem'">
+                    :min-width="translate_key_map[data_key]?.includes('链接') ? '80rem' : '180rem'" >
                     <template #default="scope">
                         <el-link v-if="/http|bili:\/\//gmi.test(scope.row[data_key])" :href="scope.row[data_key]"
                             target="_blank" type="primary">跳转</el-link>
@@ -49,7 +49,7 @@
                 </el-table-column>
             </el-table>
             <el-pagination size="small" background :layout="paginationLayout" :total="data4show.total"
-                v-model:current-page="current_page" style="padding-top: 0.5rem;padding-bottom:0.5rem;"
+                v-model:current-page="current_page" style="padding-top: 0.5rem;padding-bottom:1rem;"
                 :pager-count="5" />
         </div>
         <Placeholder v-model="placeholder_props" />
@@ -131,15 +131,15 @@ const translate_key_map = ref<{ [key: string]: string }>({
     "sender_uid": "抽奖up",
     "lottery_id": "抽奖id",
     "lottery_text": "奖品信息",
-    "jump_url": "网页跳转",
-    "app_sche": "app跳转",
+    "jump_url": "链接",
+    "app_sche": "app链接",
     "title": "标题",
     "end_date_str": "截止时间",
     "lot_type_text": "抽奖类型",
     "lottery_pool_text": "奖池信息（部分）",
     "lottery_sid": "抽奖id",
-    "live_room_url": "网页跳转",
-    "app_schema": "app跳转",
+    "live_room_url": "链接",
+    "app_schema": "app链接",
     "award_name": "奖品名称",
     "type": "抽奖类型",
     "end_time": "结束时间",
@@ -150,11 +150,11 @@ const translate_key_map = ref<{ [key: string]: string }>({
     "lot_id": "抽奖号",
     "require_type": "参与条件",
     "upower_level_str": "充电等级要求",
-    "reserve_url":"网页跳转（空间）",
-    "lottery_prize_info":"奖品信息",
-    "etime":"结束时间",
-    "reserve_sid":"预约sid",
-    "available":"是否可预约",
+    "reserve_url": "链接",
+    "lottery_prize_info": "奖品信息",
+    "etime": "结束时间",
+    "reserve_sid": "预约sid",
+    "available": "是否可预约",
 
 })
 const data4show = withDefaults(defineProps<{

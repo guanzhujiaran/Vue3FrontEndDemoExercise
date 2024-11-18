@@ -2,13 +2,13 @@
  * @Author: 星瞳 1944637830@qq.com
  * @Date: 2024-10-18 10:36:40
  * @LastEditors: 星瞳 1944637830@qq.com
- * @LastEditTime: 2024-11-10 22:36:34
+ * @LastEditTime: 2024-11-18 19:32:05
  * @FilePath: \Vue3FrontEndDemoExercise\src\views\lottery_data_statistic\bili_data\bili_data_wrapper.vue
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
 -->
 <template>
     <div class='lot-data-panel'>
-        <el-tabs class="lot-data-tabs" v-model="active_lot_data_name" type="border-card">
+        <el-tabs class="lot-data-tabs" v-model="activeLotDataName" type="border-card">
             <el-tab-pane label="官方转发抽奖" :name="official_lot_data_props.lot_name" id="data-official-lot" lazy>
                 <MyDataView :data="official_lot_data_props.lot_data?.items"
                     :total="official_lot_data_props.lot_data?.total" :page_size="page_size"
@@ -60,7 +60,7 @@ import { type LotDataWrapperProps } from '@/models/lottery/lotdata';
 import lotteryDataBaseApi from '@/api/lottery_data/bili/lottery_database_bili_api';
 import emitter from '@/utils/mitt'
 const page_size = ref(10)
-const active_lot_data_name = defineModel<any>('');
+const activeLotDataName = defineModel<any>('activeLotDataName');
 const empty_data = {
     items: [],
     total: 0

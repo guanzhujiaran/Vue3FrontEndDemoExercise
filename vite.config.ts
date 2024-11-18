@@ -2,7 +2,7 @@
  * @Author: 星瞳 1944637830@qq.com
  * @Date: 2024-05-29 23:52:55
  * @LastEditors: 星瞳 1944637830@qq.com
- * @LastEditTime: 2024-06-04 17:50:12
+ * @LastEditTime: 2024-11-11 23:27:04
  * @FilePath: \Vue3FrontEndDemoExercise\vite.config.ts
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
  */
@@ -14,7 +14,7 @@ import VueDevTools from 'vite-plugin-vue-devtools'
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [vue(), vueJsx(), VueDevTools()],
+  plugins: [vue(), vueJsx(), VueDevTools(),],
   resolve: {
     alias: {
       // '@': fileURLToPath(new URL('./src', import.meta.url))
@@ -30,10 +30,9 @@ export default defineConfig({
     proxy: {
       '/api': {
         target: 'http://127.0.0.1:9923',
-        changeOrigin: true, // 修改源
+        changeOrigin: true // 修改源
       }
     },
-    host:"0.0.0.0",
+    host: '0.0.0.0'
   },
-  
 })

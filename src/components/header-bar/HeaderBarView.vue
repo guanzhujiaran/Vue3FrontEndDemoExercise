@@ -28,7 +28,12 @@ import router from '@/router';
               </RouterLink>
             </li>
             <li class="nav-link-item">
-              <RouterLink to="/app/about" tabindex="3"
+              <RouterLink to="/app/communication" tabindex="3"
+                :class="{ 'router-active': router.currentRoute.value.name === '交流板块' }">交流区
+              </RouterLink>
+            </li>
+            <li class="nav-link-item">
+              <RouterLink to="/app/about" tabindex="4"
                 :class="{ 'router-active': router.currentRoute.value.name === 'about' }">关于
               </RouterLink>
             </li>

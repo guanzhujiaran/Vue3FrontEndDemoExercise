@@ -19,7 +19,7 @@ class BaseApi {
     })
   }
   async _post(uri: string, data?: Object) {
-    return await ajax.post(this.path.concat(uri), { ...data })
+    return await ajax.post(this.path.concat(uri), data)
   }
 }
 

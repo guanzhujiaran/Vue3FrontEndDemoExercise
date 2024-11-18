@@ -24,7 +24,7 @@
             </div>
         </el-affix>
     </div>
-    <div v-if="is_upload_popover_open" class="lot-upload__wrap" style="z-index: 2006;">
+    <div v-if="is_upload_popover_open" class="lot-upload__wrap">
         <div class="bili-overlay" style="background-color: rgba(0, 0, 0, 0.5);" @click="close_submit_lot_data_pannel">
         </div>
         <div class="lot-upload-popover">
@@ -101,7 +101,7 @@
 <script setup lang="ts">
 import { ArrowDown } from '@element-plus/icons-vue';
 import { ref, computed } from 'vue';
-import bili_lot_inner from '@/views/lottery_data_statistic/bili_data/bili_data_wrapper.vue';
+import bili_lot_inner from '@/components/lottery_data_statistic/bili_data/bili_data_wrapper.vue';
 import Placeholder from '@/components/opus-detail/RightPannel/PannelItems/Placeholder.vue';
 import { type LotDataView, type LotDataWrapperProps, type LotUploadAreaProps } from '@/models/lottery/lotdata';
 import lotteryDataBaseApi from '@/api/lottery_data/bili/lottery_database_bili_api';
@@ -348,6 +348,7 @@ const close_submit_lot_data_pannel = () => {
 
 .el-tabs__content {
     height: 80vh;
+    overflow:scroll;
 }
 
 .el-tabs__content::-webkit-scrollbar {
@@ -359,7 +360,8 @@ const close_submit_lot_data_pannel = () => {
     left: 0;
     position: fixed;
     right: 0;
-    top: 0
+    top: 0;
+    z-index: 2006;
 }
 
 .bili-overlay {
