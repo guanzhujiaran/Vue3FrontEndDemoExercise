@@ -118,7 +118,7 @@ onUnmounted(() => {
   </div>
 </template>
 
-<style>
+<style scoped>
 .toast__mask {
   position: fixed;
   left: 0;

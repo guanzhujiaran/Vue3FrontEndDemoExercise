@@ -142,7 +142,7 @@ const handle_open_drawer = () => {
 
   </div>
 </template>
-<style>
+<style scoped>
 @media screen and (max-width:620px) {
   .space-left {
     width: 15px;

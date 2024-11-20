@@ -206,7 +206,7 @@ const close_submit_lot_data_pannel = () => {
     is_upload_popover_open.value = false;
 }
 </script>
-<style>
+<style scoped>
 ::-webkit-scrollbar {
     width: 0;
     height: 0;

@@ -30,7 +30,7 @@ import type { BaseSettingRadioList } from '@/models/base/base_setting_model';
 const props = defineModel<BaseSettingRadioList>()
 
 </script>
-<style>
+<style scoped>
 .config .radio-list {
     display: -webkit-box;
     display: -ms-flexbox;

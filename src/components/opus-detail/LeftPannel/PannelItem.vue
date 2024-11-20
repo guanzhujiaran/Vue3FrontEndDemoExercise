@@ -49,7 +49,7 @@ const handleAccountAvatarClick = (account_name: string) => {
   </div>
 
 </template>
-<style>
+<style scoped>
 .setting a {
   display: inline-block;
   position: relative;

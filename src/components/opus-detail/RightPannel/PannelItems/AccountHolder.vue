@@ -1,11 +1,3 @@
-<!--
- * @Author: 星瞳 1944637830@qq.com
- * @Date: 2024-04-03 14:20:30
- * @LastEditors: 星瞳 1944637830@qq.com
- * @LastEditTime: 2024-06-08 17:29:12
- * @FilePath: \BiliLottery\src\components\opus-detail\RightPannel\PannelItems\AccountHolder.vue
- * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
--->
 <template>
   <div class="message-list" ref="Message_box_show_div">
     <div class="message-list-content min_h_100">
@@ -31,7 +23,6 @@
     </div>
   </div>
 </template>
-00
 <script setup lang="ts">
 import { onBeforeUpdate, onMounted, onUpdated, ref } from 'vue'
 import SettingComponent from './AccountSetting.vue'
@@ -74,19 +65,6 @@ onUpdated(() => {
 })
 </script>
 
-<style>
-.dialog {
-  display: -webkit-box;
-  display: -ms-flexbox;
-  display: flex;
-  -webkit-box-orient: vertical;
-  -webkit-box-direction: normal;
-  -ms-flex-direction: column;
-  flex-direction: column;
-  -webkit-box-align: stretch;
-  -ms-flex-align: stretch;
-  align-items: stretch;
-  height: 100%;
-  contain: strict;
-}
+<style scoped>
+
 </style>

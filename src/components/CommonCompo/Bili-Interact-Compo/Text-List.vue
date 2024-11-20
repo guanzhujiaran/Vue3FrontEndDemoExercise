@@ -39,7 +39,7 @@ const vNoSpace = {
 };
 
 </script>
-<style>
+<style scoped>
 
 .text-list textarea{
     margin-top:16px;

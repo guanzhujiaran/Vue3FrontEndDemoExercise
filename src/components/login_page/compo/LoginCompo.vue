@@ -200,7 +200,7 @@ onMounted(() => {
     </div>
   </div>
 </template>
-<style>
+<style scoped>
 .forget-tip {
   z-index: 100;
   box-sizing: border-box;

@@ -39,7 +39,7 @@
         </el-tabs>
     </div>
 </template>
-<style>
+<style scoped>
 .el-tabs__nav-scroll {
     overflow-x: scroll !important;
 

@@ -20,7 +20,7 @@
         <ConfigItem v-model="AUTO_DailyReward" />
     </div>
 </template>
-<style>
+<style scoped>
 .config .btn-wrap {
     position: relative;
     padding: 0px 16px 16px 16px;

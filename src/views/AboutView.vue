@@ -26,4 +26,4 @@ const placeholder_props = ref({
 
 </template>
 
-<style></style>
+<style scoped></style>

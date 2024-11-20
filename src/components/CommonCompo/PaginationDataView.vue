@@ -55,7 +55,7 @@
         <Placeholder v-model="placeholder_props" />
     </div>
 </template>
-<style>
+<style scoped>
 .data-table-wrapper {
     display: contents;
 }
@@ -86,7 +86,7 @@ import {
 } from '@element-plus/icons-vue'
 import Placeholder from '@/components/opus-detail/RightPannel/PannelItems/Placeholder.vue';
 import emitter from '@/utils/mitt';
-import utils from '@/utils/common_utils';
+import utils from '@/utils/mixin.ts';
 import { computed, onBeforeUnmount, onMounted, ref, useTemplateRef } from 'vue';
 import { useLotDataStore } from '@/stores/lot_data';
 import { storeToRefs } from 'pinia'

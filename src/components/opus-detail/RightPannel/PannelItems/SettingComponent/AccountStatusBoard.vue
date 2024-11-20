@@ -158,7 +158,7 @@ onMounted(() => {
 
 
 </script>
-<style>
+<style scoped>
 button:hover {
     opacity: 1;
 }

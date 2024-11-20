@@ -346,11 +346,7 @@ onMounted(
   }
 )
 </script>
-<style>
-.title {
-  padding: 20px;
-  position: relative;
-}
+<style scoped>
 
 .el-collapse-item button {
   background-color: #fb7299;

@@ -43,7 +43,7 @@ import router from '@/router';
     </div>
   </div>
 </template>
-<style>
+<style scoped>
 li {
   list-style: none;
   color: #222;

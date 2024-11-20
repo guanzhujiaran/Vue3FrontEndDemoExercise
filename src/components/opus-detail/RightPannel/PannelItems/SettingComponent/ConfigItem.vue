@@ -33,7 +33,7 @@ const props = defineModel<AccountSettingConfigItemModel>();
 
 
 </script>
-<style>
+<style scoped>
 .text {
     text-align: left;
 }
