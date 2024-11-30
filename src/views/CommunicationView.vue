@@ -46,60 +46,61 @@ const my_tool_bars = ref({
   subfield: true, // 单双栏模式
   preview: true // 预览
 })
-const user_reply_items = ref<ReplyResp[]>([
-  {
-    action: 0,
-    assist: 0,
-    content: '114514',
-    count: 114514, //子回复数量
-    ctime: 1919810, //秒级回复
-    like: 114514,
-    dislike: 114514,
-    member: {
-      avatar: 'https://i0.hdslb.com/bfs/garb/item/21e72a6812371baf9729dba58864780d33deb557.png',
-      level_info: {
-        current_exp: 0,
-        current_level: 0,
-        current_min: 0,
-        next_exp: 0
+const user_reply_items = ref<ReplyResp>({
+  replies: [
+    {
+      action: 0,
+      assist: 0,
+      content: '114514',
+      count: 114514, //子回复数量
+      ctime: 1919810, //秒级回复
+      like: 114514,
+      dislike: 114514,
+      member: {
+        avatar: 'https://i0.hdslb.com/bfs/garb/item/21e72a6812371baf9729dba58864780d33deb557.png',
+        level_info: {
+          current_exp: 0,
+          current_level: 0,
+          current_min: 0,
+          next_exp: 0
+        },
+        mid: 1,
+        uname: 'string',
+        sign: 'string',
+        sex: 'string',
+        vip: {
+          vip_due_date: 0,
+          vip_pay_type: 0,
+          vip_status: 0,
+          vip_type: 0
+        }
       },
-      mid: 4237378,
-      uname: 'string',
-      sign: 'string',
-      sex: 'string',
-      vip: {
-        vip_due_date: 0,
-        vip_pay_type: 0,
-        vip_status: 0,
-        vip_type: 0
-      }
-    },
-    mid: 114514,
-    oid: 114514, // 视频或者动态的id
-    oid_str: '114514',
-    rpid: 114514, // 评论的主键id
-    rpid_str: '114514',
-    root: 114514, // 根回复的主键id，也就是哪条回复底下的
-    root_str: '114514',
-    parent: 114514,
-    parent_str: '114514',
-    rcount: 114514,
-    up_action: {
-      like: true,
-      reply: true
-    },
-    replies: []
-  }
-])
+      mid: 114514,
+      oid: 114514, // 视频或者动态的id
+      oid_str: '114514',
+      rpid: 114514, // 评论的主键id
+      rpid_str: '114514',
+      root: 114514, // 根回复的主键id，也就是哪条回复底下的
+      root_str: '114514',
+      parent: 114514,
+      parent_str: '114514',
+      rcount: 114514,
+      up_action: {
+        like: true,
+        reply: true
+      },
+      replies: []
+    }
+  ],
+  cur_page: 1,
+  total_num: 1000
+})
 </script>
 
 <template>
   <div class="container" style="background-color: #ffffff">
-
     <div class="comment-list"></div>
   </div>
 </template>
 
-<style scoped>
-
-</style>
+<style scoped></style>

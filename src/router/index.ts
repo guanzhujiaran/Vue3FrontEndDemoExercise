@@ -17,12 +17,12 @@ const router = createRouter({
       component: HomeView
     },
     {
-      path: '/app/about',
-      name: 'about',
+      path: '/app/Feedback',
+      name: '反馈区',
       // route level code-splitting
       // this generates a separate chunk (About.[hash].js) for this route
       // which is lazy-loaded when the route is visited.
-      component: () => import('@/views/AboutView.vue')
+      component: () => import('@/views/FeedbackView.vue')
     },
     {
       path: '/app/user-center/',
@@ -50,11 +50,11 @@ const router = createRouter({
       name: '抽奖数据',
       component: () => import('@/views/LotteryDataStat.vue')
     },
-    {
-      path: '/app/communication',
-      name: '交流板块',
-      component: () => import('@/views/CommunicationView.vue')
-    }
+    // {
+    //   path: '/app/communication',
+    //   name: '交流板块',
+    //   component: () => import('@/views/CommunicationView.vue')
+    // }
   ]
 })
 

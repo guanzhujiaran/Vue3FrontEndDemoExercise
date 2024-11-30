@@ -4,10 +4,11 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "run-p type-check \"build-only {@}\" --",
+    "dev": "vite --mode development",
+    "build": "run-p type-check \"build-only {@}\"",
+    "test": "vite --mode prod",
     "preview": "vite preview",
-    "build-only": "vite build",
+    "build-only": "vite build --mode prod",
     "type-check": "vue-tsc --build --force",
     "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix --ignore-path .gitignore",
     "format": "prettier --write src/"
@@ -15,6 +16,7 @@
   "dependencies": {
     "axios": "^1.7.7",
     "element-plus": "^2.8.7",
+    "jsonp": "^0.2.1",
     "mavon-editor": "^3.0.1",
     "mitt": "^3.0.1",
     "pinia": "^2.2.6",
