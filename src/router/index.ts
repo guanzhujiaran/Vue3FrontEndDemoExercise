@@ -31,11 +31,19 @@ const router = createRouter({
       component: () => import('@/views/UserCenterView.vue'),
       children: [
         {
-          path: 'config',
-          name: '用户设置',
+          path: 'account-global-config',
+          name: '用户全局设置',
           component: () =>
             import(
-              '@/components/opus-detail/RightPannel/PannelItems/SettingComponent/UserConfig.vue'
+              '@/components/opus-detail/RightPannel/PannelItems/SettingComponent/UserGlobalConfig.vue'
+            )
+        },
+        {
+          path: 'account-base-info-config',
+          name: '用户基本信息设置',
+          component: () =>
+            import(
+              '@/components/opus-detail/RightPannel/PannelItems/SettingComponent/UserBaseInfoConfig.vue'
             )
         },
         {
@@ -49,7 +57,7 @@ const router = createRouter({
       path: '/app/lot-data',
       name: '抽奖数据',
       component: () => import('@/views/LotteryDataStat.vue')
-    },
+    }
     // {
     //   path: '/app/communication',
     //   name: '交流板块',

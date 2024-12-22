@@ -15,12 +15,14 @@ import { computed, nextTick, onMounted, provide, ref, watch } from 'vue'
 import LeftPannel from '@/components/opus-detail/LeftPannel/PannelItem.vue'
 import RightPannel from '@/components/opus-detail/RightPannel/PannelItem.vue'
 import accountApi from '@/api/account/account_api'
-import UserConfig from '@/components/opus-detail/RightPannel/PannelItems/SettingComponent/UserConfig.vue'
+import UserGlobalConfig from '@/components/opus-detail/RightPannel/PannelItems/SettingComponent/UserGlobalConfig.vue'
 import Placeholder from '@/components/opus-detail/RightPannel/PannelItems/Placeholder.vue'
 import { useRoute } from 'vue-router'
 import type { PageShowModel } from '@/models/account/page/model.ts'
 import { account_left_pannel_reload_key } from '@/models/inject/inject_type'
 import { KeysEnum, useInject } from '@/models/base/provide_model.ts'
+import type { UserNavModel } from '@/models/user/user_model.ts'
+import UserBaseInfoConfig from '@/components/opus-detail/RightPannel/PannelItems/SettingComponent/UserBaseInfoConfig.vue'
 
 const route = useRoute()
 
@@ -38,11 +40,16 @@ const placeholder_model = computed<{ inner_text: string; is_show: boolean }>(() 
     inner_text: placeholder_inner_text.value ? placeholder_inner_text.value : `选择一个账号康康`
   }
 })
-
+const user_nav = ref<UserNavModel>({
+  uid: 0,
+  user_name: '',
+  role: ''
+})
 onMounted(async () => {
   if (
     await isLogin().then((resp) => {
       if (resp[0]) {
+        if (resp[2]) user_nav.value = resp[2]
         return false
       }
       router.push(`/`)
@@ -98,7 +105,7 @@ provide(account_left_pannel_reload_key, () => {
     await handle_left_pannel_accounts()
   })
 })
-const globalVars = useInject(KeysEnum.globalVars);
+const globalVars = useInject(KeysEnum.globalVars)
 const isSmallScreen = computed(() => {
   return globalVars.value.screen_size !== 'large'
 })
@@ -110,10 +117,10 @@ const handle_open_drawer = () => {
 </script>
 
 <template>
-  <div class="container">
+  <div class="container" v-loading="!user_nav.uid">
     <div class="space-left">
       <div class="drawer-wrap" v-if="isSmallScreen">
-        <el-button class="open-drawer" @click="handle_open_drawer" type="primary"></el-button>
+        <el-button class="open-drawer" @click="handle_open_drawer" type="danger"></el-button>
         <el-drawer v-model="drawer" direction="ltr">
           <LeftPannel v-model="AccountInfos" :side_bar_tittle="`我的账号`"></LeftPannel>
         </el-drawer>
@@ -138,21 +145,26 @@ const handle_open_drawer = () => {
           v-model="AccountInfos[idx]"
         >
         </RightPannel>
-        <div v-show="$route.name === '用户设置'" class="user-config-wrap">
-          <UserConfig></UserConfig>
+        <div
+          v-if="$route.name === '用户全局设置' && user_nav.role === 'root'"
+          class="user-global-config-wrap"
+        >
+          <UserGlobalConfig></UserGlobalConfig>
+        </div>
+        <div v-if="$route.name === '用户基本信息设置'" class="user-base-info-config-wrap">
+          <UserBaseInfoConfig></UserBaseInfoConfig>
         </div>
       </div>
     </div>
   </div>
 </template>
 <style scoped>
-
-
 @media screen and (max-width: 620px) {
   .space-left {
     width: 15px;
     min-width: 0;
     padding: 0;
+    background: transparent;
   }
 
   .space-left :deep(.el-drawer) {

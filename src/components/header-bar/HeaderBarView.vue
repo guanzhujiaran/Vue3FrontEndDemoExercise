@@ -6,7 +6,7 @@ import router from '@/router'
 import { ScreenTypeEnum } from '@/models/global_var/global_var_model.ts'
 import { useInject, KeysEnum } from '@/models/base/provide_model.ts'
 
-const globalVars = useInject(KeysEnum.globalVars);
+const globalVars = useInject(KeysEnum.globalVars)
 const checkScreenSize = () => {
   const width = window.innerWidth
   if (width < 480) {
@@ -78,11 +78,11 @@ onUnmounted(() => {
       </div>
     </div>
     <div v-else class="el-mini-header" style="margin-bottom: 0.5rem">
-      <el-menu default-active="/" mode="horizontal" router>
-        <el-menu-item index="/">主页</el-menu-item>
-        <el-menu-item index="/app/user-center">用户中心</el-menu-item>
-        <el-menu-item index="/app/lot-data">抽奖数据</el-menu-item>
-        <el-menu-item index="/app/Feedback">反馈区</el-menu-item>
+      <el-menu :default-active="$route.path" mode="horizontal" router>
+        <el-menu-item index="/">主页 </el-menu-item>
+        <el-menu-item index="/app/user-center">用户中心 </el-menu-item>
+        <el-menu-item index="/app/lot-data">抽奖数据 </el-menu-item>
+        <el-menu-item index="/app/Feedback">反馈区 </el-menu-item>
       </el-menu>
     </div>
   </div>

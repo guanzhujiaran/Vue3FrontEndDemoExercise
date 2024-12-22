@@ -9,6 +9,8 @@
 // src/axios.js
 import { useJwtStore } from '@/stores/jwt_token'
 import axios from 'axios'
+import emitter from '@/utils/mitt.ts'
+
 declare module 'axios' {
   interface AxiosResponse<T = any> {
     // 这个地方放属性
@@ -17,13 +19,14 @@ declare module 'axios' {
     msg: string
     ttl: number
   }
+
   export function create(config?: AxiosRequestConfig): AxiosInstance
 }
 
 // 创建 Axios 实例
 const ajax = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL, // 设置基础 API 地址
-  timeout: 10e3, // 设置请求超时时间
+  timeout: 15e3, // 设置请求超时时间
   headers: {
     'content-type': 'application/json'
   }
@@ -48,10 +51,13 @@ ajax.interceptors.response.use(
   (response) => response.data,
   (error) => {
     // 处理错误，比如根据错误码提示用户或跳转登录页
-    console.error('API Error:', error)
+    if (import.meta.env.VITE_BILI_ENV === 'dev') {
+      console.error('API Error:', error)
+    }
+    emitter.emit('toast', { t: `请求发送失败！${error}`, e: 'error' })
     return {
-      code:-1,
-      msg:error.message
+      code: -1,
+      msg: error.message
     }
   }
 )

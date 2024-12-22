@@ -13,19 +13,15 @@ export interface ReplyItem {
   content: string
   count: number //二级评论条数
   ctime: number //秒级回复
-  like: number
-  dislike: number
+  dislike: number | string
+  like: number | string
   member: UserInfo
   mid: number
-  oid: number // 视频或者动态的id
-  oid_str: string
-  rpid: number // 评论的主键id
-  rpid_str: string
-  root: number // 根回复的主键id，也就是哪条回复底下的
-  root_str: string
-  parent: number //回复的评论的rpid
-  parent_str: string
-  rcount: number //回复评论条数
+  rid: number | string // 视频或者动态的id
+  rpid: number | string // 评论的主键id
+  root: number | string // 根回复的主键id，也就是哪条回复底下的
+  parent: number | string //回复的评论的rpid
+  rcount: number | string //回复评论条数
   up_action: {
     like: boolean
     reply: boolean
@@ -41,10 +37,15 @@ export interface ReplyResp {
 
 export interface CommentSectionStat {
   is_reply_section_active: boolean
-  replyTarget: string
-  rpidTarget: string
-  oid: string
-  root: string
-  parent: string
+  replyTarget: number | string
+  rpidTarget: number | string
+  rid: number | string
+  root: number | string
+  parent: number | string
   reply_content: string // 回复内容
+}
+
+export interface CommentSectionBaseInfo {
+  oid: number | string
+  type: number | string
 }

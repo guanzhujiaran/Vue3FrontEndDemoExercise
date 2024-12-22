@@ -1,4 +1,4 @@
-import { ref } from 'vue'
+import aes from 'crypto-js/aes'
 
 const utils = {
   // 将时间戳或日期字符串转换为格式化后的日期字符串
@@ -97,6 +97,12 @@ const utils = {
       : e >= 3600
         ? ''.concat(String(Math.floor(e / 3600)), '小时前')
         : void 0
+  },
+  homo_gen(n: number) {
+    return 2 * n - 1 + ((n - 1) * (n - 2) * (n - 3) * (n - 4) * 114505) / 24
+  },
+  encrypt_pwd(t: string, sec: string) {
+    return aes.encrypt(t + String(this.homo_gen(5)), sec).toString()
   }
 }
 

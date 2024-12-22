@@ -80,7 +80,7 @@ const comment_content = defineModel<string>('comment_content')
 .markdown-editor {
   max-height: 15rem;
   min-height: 10rem;
-  min-width: 15rem;
+  min-width: 0;
   transition: height 1s ease; /* 平滑过渡效果 */
 }
 

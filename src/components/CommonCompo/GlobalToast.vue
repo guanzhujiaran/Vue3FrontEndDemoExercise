@@ -11,8 +11,8 @@ const timmer = ref<number>(0)
 const getCls = computed(() => {
   return 'loading' === type.value
     ? {
-      background: 'rgba(0,0,0,0.3)'
-    }
+        background: 'rgba(0,0,0,0.3)'
+      }
     : ''
 })
 const methods = {
@@ -30,12 +30,12 @@ const methods = {
       a = void 0 === r ? 'center' : r
     this.closeDialog()
     var u = Math.random().toString(36).substring(3, 6)
-      ; (id.value = u),
-        (type.value = t),
-        (position.value = a),
-        (show.value = !0),
-        e && (text.value = e),
-        'loading' !== t &&
+    ;(id.value = u),
+      (type.value = t),
+      (position.value = a),
+      (show.value = !0),
+      e && (text.value = e),
+      'loading' !== t &&
         (timmer.value = setTimeout(function () {
           return n.closeDialog(u)
         }, o))
@@ -63,15 +63,15 @@ onBeforeUnmount(() => {
 })
 const toast_events = {
   info: function (t: string) {
-    var e = arguments.length > 1 && void 0 !== arguments[1] ? arguments[1] : {}
+    let e = arguments.length > 1 && void 0 !== arguments[1] ? arguments[1] : {}
     return (e = showDialogSetting), methods.showDialog('info', t, e)
   },
   success: function (t: string) {
-    var e = arguments.length > 1 && void 0 !== arguments[1] ? arguments[1] : {}
+    let e = arguments.length > 1 && void 0 !== arguments[1] ? arguments[1] : {}
     return (e = showDialogSetting), methods.showDialog('success', t, e)
   },
   error: function (t: string) {
-    var e = arguments.length > 1 && void 0 !== arguments[1] ? arguments[1] : {}
+    let e = arguments.length > 1 && void 0 !== arguments[1] ? arguments[1] : {}
     return (e = showDialogSetting), methods.showDialog('error', t, e)
   },
   /**
@@ -87,17 +87,26 @@ const toast_events = {
 
 defineExpose(toast_events)
 
-
 onMounted(() => {
   console.log('加载toast事件')
-  emitter.on('toast',  ( params ) =>{
-    let {t,e} = params;
+  emitter.on('toast', (params) => {
+    let { t, e } = params
+    console.log('收到toast事件', t, e)
     switch (e) {
-      case 'info': toast_events.info(t); break
-      case 'success': toast_events.success(t); break;
-      case 'error': toast_events.error(t); break;
-      case 'loading': toast_events.loading(t); break;
-      default: toast_events.info(t);
+      case 'info':
+        toast_events.info(t)
+        break
+      case 'success':
+        toast_events.success(t)
+        break
+      case 'error':
+        toast_events.error(t)
+        break
+      case 'loading':
+        toast_events.loading(t)
+        break
+      default:
+        toast_events.info(t)
     }
     return true
   })
@@ -105,8 +114,6 @@ onMounted(() => {
 onUnmounted(() => {
   emitter.off('toast')
 })
-
-
 </script>
 
 <template>

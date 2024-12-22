@@ -1,145 +1,177 @@
 <script setup lang="ts">
 import comment_item from '@/components/communicate_list/comment_item.vue'
-import type { CommentSectionStat, ReplyResp } from '@/models/communication/comment_model.ts'
+import type {
+  CommentSectionBaseInfo,
+  CommentSectionStat,
+  ReplyResp
+} from '@/models/communication/comment_model'
 import submit_comment_section from '@/components/communicate_list/submit_comment_section.vue'
-import { computed, ref, useShadowRoot } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
+import feedbackCommentApi from '@/api/feedback/comment.ts'
+import emitter from '@/utils/mitt.ts'
+import { KeysEnum, useInject } from '@/models/base/provide_model.ts'
+import { ScreenTypeEnum } from '@/models/global_var/global_var_model.ts'
 
-// const comment_list = defineModel<ReplyResp>('comment_list')
 const comment_content = ref<string>('')
+/**
+ * 直接传入一个待获取评论的content_id
+ */
+const comment_section_base_info = defineModel<CommentSectionBaseInfo>('comment_section_base_info', {
+  required: true
+})
+/**
+ * 当前页面数
+ */
+const is_loading_comment = ref<boolean>(false)
+const data = ref<{
+  current_page: number
+  sort_by: 'hot' | 'time'
+}>({
+  current_page: 1,
+  sort_by: 'hot'
+})
+watch(
+  () => ({ ...data.value }), // 监听整个对象的变化
+  (newVal, oldVal) => {
+    if (oldVal.sort_by !== newVal.sort_by && newVal.current_page !== 1) {
+      data.value.current_page = 1
+      return
+    }
+    hanle_get_reply_main()
+  },
+  { deep: true } // 确保组件初始化时也调用一次 API
+)
+const comment_list_resp = ref<ReplyResp>({
+  replies: [],
+  total_num: 0,
+  cur_page: 0
+})
+const hanle_get_reply_main = () => {
+  is_loading_comment.value = true
+  feedbackCommentApi
+    .reply_main(
+      comment_section_base_info.value.oid,
+      comment_section_base_info.value.type,
+      10,
+      data.value.current_page,
+      data.value.sort_by
+    )
+    .then((resp) => {
+      if (resp.code) {
+        return emitter.emit('toast', { t: resp.msg, e: 'error' })
+      }
+      comment_list_resp.value = resp.data
+    })
+    .finally(() => {
+      is_loading_comment.value = false
+    })
+}
+onMounted(() => {
+  hanle_get_reply_main()
+})
 const comment_section_stat = ref<CommentSectionStat>({
   is_reply_section_active: false,
   replyTarget: '',
   rpidTarget: '',
-  oid: '',
+  rid: '',
   root: '',
   parent: '',
   reply_content: ''
 })
+
 const comment_reply_input_placeholder = computed(() => {
-  return `回复 @`.concat(comment_section_stat.value.replyTarget).concat(': ')
+  return `回复 @`.concat(String(comment_section_stat.value.replyTarget ?? '')).concat(': ')
 })
 const submit_comment_reply = () => {
-  console.log(
-    `待实现对评论的回复`,
-    comment_section_stat.value.replyTarget,
-    comment_section_stat.value.oid,
-    comment_section_stat.value.parent,
-    comment_section_stat.value.reply_content
-  )
-}
-const submit_comment = () => {
-  console.log(comment_content.value)
-}
-
-const comment_list_resp = ref<ReplyResp>({
-  replies: Array.from({ length: 10 }).map((va, idx) => {
-    return {
-      action: 0,
-      assist: 0,
-      content: '114514aaaaaaaaaaaaaaaaaaaaaaaa',
-      count: 114514, //子回复数量
-      ctime: 1919810, //秒级回复
-      like: 114514,
-      dislike: 114514,
-      member: {
-        avatar: '',
-        level_info: {
-          current_exp: 0,
-          current_level: 0,
-          current_min: 0,
-          next_exp: 0
-        },
-        mid: 1,
-        uname: `${idx * Math.random()}`,
-        sign: '啊啊啊啊',
-        sex: '啊啊啊啊啊',
-        vip: {
-          vip_due_date: 0,
-          vip_pay_type: 0,
-          vip_status: 0,
-          vip_type: 0
-        }
-      },
-      mid: 1,
-      oid: 1, // 视频或者动态的id
-      oid_str: '1',
-      rpid: (idx + 1) * 10, // 评论的主键id
-      rpid_str: `${(idx + 1) * 10}`,
-      root: 0, // 根回复的主键id，也就是哪条回复底下的
-      root_str: '0',
-      parent: 0,
-      parent_str: '0',
-      rcount: 114514,
-      up_action: {
-        like: true,
-        reply: true
-      },
-      replies: Array.from({ length: 3 }).map((_, _idx) => {
-        return {
-          action: 0,
-          assist: 0,
-          content: '114514aaaaaaaaaaaaaaaaaaaaaaaa',
-          count: 114514, //子回复数量
-          ctime: 1919810, //秒级回复
-          like: 114514,
-          dislike: 114514,
-          member: {
-            avatar: '',
-            level_info: {
-              current_exp: 0,
-              current_level: 0,
-              current_min: 0,
-              next_exp: 0
-            },
-            mid: 2,
-            uname: `${idx}_${_idx}`,
-            sign: '啊啊啊啊',
-            sex: '啊啊啊啊啊',
-            vip: {
-              vip_due_date: 0,
-              vip_pay_type: 0,
-              vip_status: 0,
-              vip_type: 0
-            }
-          },
-          mid: 2,
-          oid: idx, // 视频或者动态的id
-          oid_str: `${idx}`,
-          rpid: (idx + _idx) * 1000, // 评论的主键id
-          rpid_str: `${(idx + _idx) * 1000}`,
-          root: (idx + 1) * 10, // 根回复的主键id，也就是哪条回复底下的
-          root_str: `${(idx + 1) * 10}`,
-          parent: (idx + 1) * 10,
-          parent_str: `${(idx + 1) * 10}`,
-          rcount: 1,
-          up_action: {
-            like: true,
-            reply: true
-          },
-          replies: []
+  let { root, rpidTarget, reply_content } = comment_section_stat.value
+  if (!reply_content?.trim()?.length) {
+    return emitter.emit('toast', { t: '评论内容不能为空', e: 'error' })
+  }
+  feedbackCommentApi
+    .add(
+      comment_section_base_info.value.oid,
+      comment_section_base_info.value.type,
+      BigInt(root) ? root : rpidTarget,
+      BigInt(root) ? rpidTarget : 0,
+      reply_content
+    )
+    .then((resp) => {
+      if (resp.code) {
+        return emitter.emit('toast', { t: resp.msg, e: 'error' })
+      }
+      comment_list_resp.value.replies.map((replies) => {
+        if (replies.rpid === rpidTarget || replies.rpid === root) {
+          replies.replies.unshift(resp.data)
+          replies.rcount = (BigInt(replies.rcount) + 1n).toString()
         }
       })
-    }
-  }),
-  cur_page: 1,
-  total_num: 1000
+
+      emitter.emit('toast', { t: '评论成功', e: 'success' })
+      comment_section_stat.value.is_reply_section_active = false
+      comment_section_stat.value.replyTarget = ''
+      comment_section_stat.value.rpidTarget = ''
+      comment_section_stat.value.rid = ''
+      comment_section_stat.value.root = ''
+      comment_section_stat.value.parent = ''
+      comment_section_stat.value.reply_content = ''
+    })
+}
+const submit_comment = () => {
+  if (!comment_content.value.trim().length) {
+    return emitter.emit('toast', { t: '评论内容不能为空', e: 'error' })
+  }
+  feedbackCommentApi
+    .add(
+      comment_section_base_info.value.oid,
+      comment_section_base_info.value.type,
+      0,
+      0,
+      comment_content.value
+    )
+    .then((resp) => {
+      if (resp.code) {
+        return emitter.emit('toast', { t: resp.msg, e: 'error' })
+      }
+      comment_list_resp.value.replies.unshift(resp.data)
+      emitter.emit('toast', { t: '评论成功', e: 'success' })
+      comment_content.value = ''
+      comment_list_resp.value.total_num = comment_list_resp.value.total_num + 1
+    })
+}
+const globalVars = useInject(KeysEnum.globalVars)
+const isSmallScreen = computed(() => {
+  return globalVars.value.screen_size !== ScreenTypeEnum.large
 })
-const sort_by = ref<'hot' | 'time'>('hot')
+const paginationLayout = computed(() => {
+  return isSmallScreen.value ? 'prev, pager, next, total' : 'prev, pager, next, jumper, total'
+})
 </script>
 
 <template>
-  <div class="comment-section">
+  <div class="comment-section" v-loading="is_loading_comment">
     <div class="navbar">
       <div class="comment-title">
         <h2>评论</h2>
         <div class="comment-count">
-          {{ comment_list_resp.total_num }}
+          {{ comment_list_resp?.total_num ?? 0 }}
         </div>
       </div>
       <div class="sort-actions">
-        <button class="sort-btn" :class="sort_by === 'hot' ? 'active' : ''">最热</button>
+        <button
+          class="sort-btn"
+          :class="data.sort_by === 'hot' ? 'active' : ''"
+          @click="() => (data.sort_by = 'hot')"
+        >
+          最热
+        </button>
         <div class="sort-div"></div>
-        <button class="sort-btn" :class="sort_by === 'time' ? 'active' : ''">最新</button>
+        <button
+          class="sort-btn"
+          :class="data.sort_by === 'time' ? 'active' : ''"
+          @click="() => (data.sort_by = 'time')"
+        >
+          最新
+        </button>
       </div>
     </div>
     <div class="submit-comment-section-wrap">
@@ -149,48 +181,72 @@ const sort_by = ref<'hot' | 'time'>('hot')
         v-model:comment_content="comment_content"
       />
     </div>
-    <ul class="comment-list" v-if="comment_list_resp">
-      <li v-for="(__comment_item, idx) in comment_list_resp.replies" :key="idx">
-        <comment_item
-          v-model:comment_section_stat="comment_section_stat"
-          v-model:reply_item="comment_list_resp.replies[idx]"
-        />
-        <ul v-if="comment_list_resp.replies[idx].replies.length > 0">
-          <li
-            v-for="(__comment_reply_item, cr_idx) in comment_list_resp.replies[idx].replies"
-            :key="`${idx}_${cr_idx}`"
-          >
-            <comment_item
-              v-model:comment_section_stat="comment_section_stat"
-              v-model:reply_item="comment_list_resp.replies[idx].replies[cr_idx]"
-            />
-          </li>
-          <div class="expander-footer">
-            <div class="view-more">
+    <div class="comment-list-section" v-if="comment_list_resp?.replies.length">
+      <ul class="comment-list">
+        <li v-for="(__comment_item, idx) in comment_list_resp.replies" :key="idx">
+          <comment_item
+            v-model:comment_section_stat="comment_section_stat"
+            v-model:reply_item="comment_list_resp.replies[idx]"
+          />
+          <ul v-if="comment_list_resp.replies[idx].replies.length > 0">
+            <li
+              v-for="(__comment_reply_item, cr_idx) in comment_list_resp.replies[idx].replies"
+              :key="`${idx}_${cr_idx}`"
+            >
+              <comment_item
+                v-model:comment_section_stat="comment_section_stat"
+                v-model:reply_item="comment_list_resp.replies[idx].replies[cr_idx]"
+              />
+            </li>
+            <div
+              class="expander-footer view-more"
+              v-if="
+                BigInt(comment_list_resp.replies[idx].rcount) >
+                BigInt(comment_list_resp.replies[idx].replies.length)
+              "
+            >
               <span>查看 {{ comment_list_resp.replies[idx].rcount }} 条回复，</span>
               <button>点击查看</button>
             </div>
-          </div>
-        </ul>
-        <div class="comment-reply-wrap">
-          <submit_comment_section
+          </ul>
+          <div
+            class="comment-reply-wrap"
             v-if="
               comment_section_stat.is_reply_section_active &&
-              (comment_section_stat.root === __comment_item.rpid_str ||
-                comment_section_stat.rpidTarget === __comment_item.rpid_str)
+              (comment_section_stat.root === __comment_item.rpid ||
+                comment_section_stat.rpidTarget === __comment_item.rpid)
             "
-            :submit_comment="submit_comment_reply"
-            :placeholder="comment_reply_input_placeholder"
-            v-model:comment_content="comment_section_stat.reply_content"
-          />
-        </div>
-        <div class="div-line"></div>
-      </li>
-    </ul>
+          >
+            <submit_comment_section
+              :submit_comment="submit_comment_reply"
+              :placeholder="comment_reply_input_placeholder"
+              v-model:comment_content="comment_section_stat.reply_content"
+            />
+          </div>
+          <div class="div-line"></div>
+        </li>
+      </ul>
+      <el-pagination
+        class="comment-pagination"
+        size="small"
+        background
+        :layout="paginationLayout"
+        :total="comment_list_resp.total_num"
+        v-model:current-page="data.current_page"
+        :pager-count="5"
+      />
+    </div>
   </div>
 </template>
 
 <style scoped>
+.comment-pagination {
+  padding-top: 0.5rem;
+  padding-bottom: 1rem;
+  margin: auto;
+  width: 50%;
+}
+
 .expander-footer {
   margin-left: 4rem;
   font-size: 0.875rem;
@@ -255,6 +311,10 @@ const sort_by = ref<'hot' | 'time'>('hot')
 
 .sort-btn.active {
   color: #18191c;
+}
+
+.sort-btn:hover {
+  cursor: pointer;
 }
 
 .sort-btn {

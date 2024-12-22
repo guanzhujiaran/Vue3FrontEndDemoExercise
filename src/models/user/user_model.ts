@@ -7,6 +7,7 @@ export interface LoginModel {
 export interface UserNavModel {
   uid: number
   user_name: string
+  role: string
 }
 
 export interface UserInfo {
