@@ -17,7 +17,7 @@ const is_root = computed(() => {
   return !BigInt(reply_item.value.root)
 })
 const comment_content = computed(() => {
-  return reply_item.value.content ?? ''
+  return reply_item.value.content.message ?? ''
 })
 const interaction_btn_clickable = ref<boolean>(true)
 /**
@@ -161,7 +161,7 @@ const handle_mouse_leave = () => {
               <img
                 width="30"
                 height="30"
-                :src="`https://i0.hdslb.com/bfs/seed/jinkela/short/webui/user-profile/img/level_${reply_item?.member.level_info.current_level ?? 0}.svg`"
+                :src="`https://i0.hdslb.com/bfs/seed/jinkela/short/webui/user-profile/img/level_${reply_item.member.level_info.current_level ?? 0}.svg`"
                 alt="加载失败"
                 referrerpolicy="no-referrer"
               />

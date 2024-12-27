@@ -1,4 +1,8 @@
-import type { BaseSettingRadioList, BaseSettingTextList } from '@/models/base/base_setting_model'
+import type {
+  BaseSettingDatePicker,
+  BaseSettingRadioList,
+  BaseSettingTextList
+} from '@/models/base/base_setting_model'
 
 export interface AccountSettingConfigItemModel {
   /**
@@ -8,14 +12,14 @@ export interface AccountSettingConfigItemModel {
   /**
    * 设置的标题
    */
-  title: string
+  title?: string
   /**
    * 设置的提示
    */
-  tips: string
+  tips?: string
 
   /**
    * 设置的内容，根据设置类型扩展
    */
-  setting_content: BaseSettingRadioList | BaseSettingTextList // 写各种不同的设置类型
+  setting_content: BaseSettingRadioList | BaseSettingTextList | BaseSettingDatePicker // 写各种不同的设置类型
 }

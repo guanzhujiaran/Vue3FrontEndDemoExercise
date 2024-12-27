@@ -71,6 +71,7 @@ const comment_content = defineModel<string>('comment_content')
       "
       v-model="comment_content"
       :placeholder="props.placeholder"
+      :autofocus="false"
     />
     <el-button class="submit-btn" type="primary" @click="props.submit_comment">发送</el-button>
   </el-card>

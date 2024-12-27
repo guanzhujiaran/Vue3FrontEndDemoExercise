@@ -27,7 +27,10 @@ const comment_section_base_info = ref<CommentSectionBaseInfo>({ oid: 2, type: 1 
           </el-link>
         </el-tooltip>
       </div>
-      <comment_section v-model:comment_section_base_info="comment_section_base_info" />
+      <comment_section
+        :sort_by="'time'"
+        v-model:comment_section_base_info="comment_section_base_info"
+      />
     </div>
   </div>
 </template>

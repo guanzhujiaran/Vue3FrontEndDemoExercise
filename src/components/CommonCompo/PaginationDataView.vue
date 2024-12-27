@@ -27,7 +27,7 @@
         ref="expandableTable"
         @row-click="handleRowClick"
       >
-        <el-table-column v-if="is_table_expand" type="expand">
+        <el-table-column v-if="is_table_expandable" type="expand">
           <template #default="props">
             <div class="more-info-view-card">
               <el-card :body-style="more_info_view_card_style" style="">
@@ -46,7 +46,7 @@
                       :href="props.row[da_key]"
                       target="_blank"
                       type="primary"
-                       rel="noreferrer"
+                      rel="noreferrer"
                       >{{ translate_key_map[da_key] ?? da_key }}: 跳转
                     </el-link>
                     <el-text
@@ -81,7 +81,7 @@
               :href="scope.row[data_key]"
               target="_blank"
               type="primary"
-               rel="noreferrer"
+              rel="noreferrer"
               >跳转
             </el-link>
             <el-text v-else type="primary" size="large" tag="b">{{ scope.row[data_key] }}</el-text>
@@ -146,7 +146,7 @@ import { KeysEnum, useInject } from '@/models/base/provide_model.ts'
 const more_info_view_card_style = ref<string>(
   `display: flex;justify-content: space-between;align-items: flex-start;gap: 0.5rem;flex-direction: column;`
 )
-const globalVars = useInject(KeysEnum.globalVars);
+const globalVars = useInject(KeysEnum.globalVars)
 const isSmallScreen = computed(() => {
   return globalVars.value.screen_size !== ScreenTypeEnum.large
 })
@@ -157,7 +157,7 @@ const paginationLayout = computed(() => {
 
 const expandableTable = useTemplateRef('expandableTable')
 const handleRowClick = (row: any, column: any, event: any) => {
-  expandableTable.value?.toggleRowExpansion(row)
+  if (is_table_expandable.value) expandableTable.value?.toggleRowExpansion(row)
 }
 const store = useLotDataStore()
 const { max_col_num } = storeToRefs(store)
@@ -172,7 +172,7 @@ const preprocess_data = (da_arr: any[]) => {
 const preprocessed_data = computed(() => {
   return preprocess_data(data4show.data)
 })
-const is_table_expand = computed(
+const is_table_expandable = computed(
   () => Object.keys(data4show.data[0] ?? {}).length > max_col_num.value
 )
 const translate_key_map = ref<{ [key: string]: string }>({

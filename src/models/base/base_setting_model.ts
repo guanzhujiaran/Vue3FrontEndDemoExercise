@@ -1,4 +1,3 @@
-
 export enum BaseSettingType {
   /**
    * 已实现  BaseSettingRadioList
@@ -8,9 +7,10 @@ export enum BaseSettingType {
   /**
    * 已实现  BaseSettingTextList
    */
-  Text, 
+  Text,
   Checkbox, //未实现
-  Switch //未实现
+  Switch, //未实现
+  Date = 5
 }
 
 export interface BaseSettingModel {
@@ -24,8 +24,6 @@ export interface BaseSettingModel {
   type: BaseSettingType
 }
 
-
-
 export interface BaseSettingRadioList extends BaseSettingModel {
   radio_props: {
     /**
@@ -36,12 +34,21 @@ export interface BaseSettingRadioList extends BaseSettingModel {
      * 显示在页面上的内容
      */
     content: string
+    label?: string
   }[]
 }
+
 export interface BaseSettingTextList extends BaseSettingModel {
   text_props: {
-    readonly:boolean,
+    readonly: boolean
     label: string
     placeholder: string
   }[]
+}
+
+export interface BaseSettingDatePicker extends BaseSettingModel {
+  date_props: {
+    format: string
+    label?: string
+  }
 }

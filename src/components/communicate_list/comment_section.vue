@@ -23,13 +23,18 @@ const comment_section_base_info = defineModel<CommentSectionBaseInfo>('comment_s
  * 当前页面数
  */
 const is_loading_comment = ref<boolean>(false)
+const init_page_data = defineProps<{
+  current_page?: number
+  sort_by?: 'hot' | 'time'
+}>()
 const data = ref<{
   current_page: number
   sort_by: 'hot' | 'time'
 }>({
-  current_page: 1,
-  sort_by: 'hot'
+  current_page: init_page_data.current_page ?? 1,
+  sort_by: init_page_data.sort_by ?? 'hot'
 })
+
 watch(
   () => ({ ...data.value }), // 监听整个对象的变化
   (newVal, oldVal) => {

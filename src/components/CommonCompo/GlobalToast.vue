@@ -88,10 +88,8 @@ const toast_events = {
 defineExpose(toast_events)
 
 onMounted(() => {
-  console.log('加载toast事件')
   emitter.on('toast', (params) => {
     let { t, e } = params
-    console.log('收到toast事件', t, e)
     switch (e) {
       case 'info':
         toast_events.info(t)

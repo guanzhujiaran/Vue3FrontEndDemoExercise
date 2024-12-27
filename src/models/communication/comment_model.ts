@@ -10,7 +10,17 @@ export interface ReplyItem {
    */
   action: number
   assist: number
-  content: string
+  content: {
+    message: string
+    members?: {
+      avatar: string
+      mid: string | number
+      sex: string
+      sign: string
+      uname: string
+    }[]
+  }
+  at_name_to_mid: { [key: string]: string | number }
   count: number //二级评论条数
   ctime: number //秒级回复
   dislike: number | string
