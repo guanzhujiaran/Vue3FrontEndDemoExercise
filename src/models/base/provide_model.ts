@@ -11,9 +11,8 @@ export const ProvideKeys = {
   [KeysEnum.globalVars]: Symbol(KeysEnum.globalVars) as InjectionKey<Ref<GlobalVarsType>>
 }
 const globalVarsDefaultRef = ref<GlobalVarsType>({
-        screen_size: ScreenTypeEnum.large
-      })
-
+  screen_size: ScreenTypeEnum.large
+})
 const default_val_gen = (key: KeysEnum) => {
   switch (key) {
     case KeysEnum.globalVars:

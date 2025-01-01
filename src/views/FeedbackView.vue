@@ -1,15 +1,21 @@
 <script setup lang="ts">
 import Placeholder from '@/components/opus-detail/RightPannel/PannelItems/Placeholder.vue'
 import comment_section from '@/components/communicate_list/comment_section.vue'
-import { ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import type { CommentSectionBaseInfo } from '@/models/communication/comment_model.ts'
+import { isLogin } from '@/api/user/utils.ts'
+import emitter from '@/utils/mitt.ts'
 
 const placeholder_props = ref({
   inner_text: '璞熤和AC站比较厉害，数据均采集自互联网公开内容',
   is_show: true
 })
-
 const comment_section_base_info = ref<CommentSectionBaseInfo>({ oid: 2, type: 1 })
+onMounted(() => {
+  isLogin().then((res) => {
+    emitter.emit('toast', { t: res[1], e: 'info' })
+  })
+})
 </script>
 
 <template>

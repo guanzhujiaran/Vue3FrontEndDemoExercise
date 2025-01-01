@@ -32,6 +32,9 @@ class FeedbackCommentApi extends BaseApi {
   async action(rpid: number | string, action: 0 | 1 | 2): Promise<RootObject<null>> {
     return await this._post('action', { rpid, action })
   }
+  async del(oid: number | string, type: number | string, rpid: number | string) {
+    return await this._post('del', { oid, type, rpid })
+  }
 }
 
 const feedbackCommentApi = new FeedbackCommentApi()

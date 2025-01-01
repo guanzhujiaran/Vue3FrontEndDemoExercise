@@ -41,8 +41,10 @@ export interface ReplyItem {
 
 export interface ReplyResp {
   replies: ReplyItem[]
+  top_replies: ReplyItem[]
   total_num: number
   cur_page: number
+  upper: { mid: string | number }
 }
 
 export interface CommentSectionStat {

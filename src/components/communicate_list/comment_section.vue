@@ -3,6 +3,7 @@ import comment_item from '@/components/communicate_list/comment_item.vue'
 import type {
   CommentSectionBaseInfo,
   CommentSectionStat,
+  ReplyItem,
   ReplyResp
 } from '@/models/communication/comment_model'
 import submit_comment_section from '@/components/communicate_list/submit_comment_section.vue'
@@ -42,16 +43,20 @@ watch(
       data.value.current_page = 1
       return
     }
-    hanle_get_reply_main()
+    handle_get_reply_main()
   },
   { deep: true } // 确保组件初始化时也调用一次 API
 )
 const comment_list_resp = ref<ReplyResp>({
   replies: [],
+  top_replies: [],
   total_num: 0,
-  cur_page: 0
+  cur_page: 0,
+  upper: {
+    mid: 0
+  }
 })
-const hanle_get_reply_main = () => {
+const handle_get_reply_main = () => {
   is_loading_comment.value = true
   feedbackCommentApi
     .reply_main(
@@ -72,7 +77,7 @@ const hanle_get_reply_main = () => {
     })
 }
 onMounted(() => {
-  hanle_get_reply_main()
+  handle_get_reply_main()
 })
 const comment_section_stat = ref<CommentSectionStat>({
   is_reply_section_active: false,
@@ -150,6 +155,47 @@ const isSmallScreen = computed(() => {
 const paginationLayout = computed(() => {
   return isSmallScreen.value ? 'prev, pager, next, total' : 'prev, pager, next, jumper, total'
 })
+const handle_top = (reply_item: ReplyItem) => {
+  console.log(reply_item)
+  emitter.emit('toast', { t: `待实现置顶评论功能${JSON.stringify(reply_item)}`, e: 'info' })
+}
+const handle_delete = (reply_item: ReplyItem) => {
+  feedbackCommentApi
+    .del(comment_section_base_info.value.oid, comment_section_base_info.value.type, reply_item.rpid)
+    .then((resp) => {
+      emitter.emit('toast', {
+        t: resp.msg,
+        e: resp.code === 0 ? 'info' : 'error'
+      })
+      if (resp.code === 0) {
+        comment_list_resp.value.replies = comment_list_resp.value.replies.filter((item) => {
+          let origin_length = item.replies.length
+          item.replies = item.replies.filter((_item) => _item.rpid !== reply_item.rpid)
+          if (origin_length > item.replies.length) {
+            item.rcount = (BigInt(item.rcount) - 1n).toString()
+          }
+          return item.rpid !== reply_item.rpid
+        })
+        comment_list_resp.value.top_replies = comment_list_resp.value.top_replies.filter((item) => {
+          let origin_length = item.replies.length
+          item.replies = item.replies.filter((_item) => _item.rpid !== reply_item.rpid)
+          if (origin_length > item.replies.length) {
+            item.rcount = (BigInt(item.rcount) - 1n).toString()
+          }
+          return item.rpid !== reply_item.rpid
+        })
+      }
+    })
+}
+
+const handle_black_list = (reply_item: ReplyItem) => {
+  console.log(reply_item)
+  emitter.emit('toast', { t: `待实现添加黑名单用户功能${JSON.stringify(reply_item)}`, e: 'info' })
+}
+const handle_report = (reply_item: ReplyItem) => {
+  console.log(reply_item)
+  emitter.emit('toast', { t: `待实现举报评论功能${JSON.stringify(reply_item)}`, e: 'info' })
+}
 </script>
 
 <template>
@@ -158,7 +204,7 @@ const paginationLayout = computed(() => {
       <div class="comment-title">
         <h2>评论</h2>
         <div class="comment-count">
-          {{ comment_list_resp?.total_num ?? 0 }}
+          {{ comment_list_resp.total_num }}
         </div>
       </div>
       <div class="sort-actions">
@@ -186,10 +232,17 @@ const paginationLayout = computed(() => {
         v-model:comment_content="comment_content"
       />
     </div>
-    <div class="comment-list-section" v-if="comment_list_resp?.replies.length">
+    <div class="comment-list-section" v-if="comment_list_resp.replies.length">
       <ul class="comment-list">
         <li v-for="(__comment_item, idx) in comment_list_resp.replies" :key="idx">
           <comment_item
+            :up_mid="comment_list_resp.upper.mid"
+            :methods="{
+              handle_top,
+              handle_delete,
+              handle_black_list,
+              handle_report
+            }"
             v-model:comment_section_stat="comment_section_stat"
             v-model:reply_item="comment_list_resp.replies[idx]"
           />
@@ -199,6 +252,13 @@ const paginationLayout = computed(() => {
               :key="`${idx}_${cr_idx}`"
             >
               <comment_item
+                :up_mid="comment_list_resp.upper.mid"
+                :methods="{
+                  handle_top,
+                  handle_delete,
+                  handle_black_list,
+                  handle_report
+                }"
                 v-model:comment_section_stat="comment_section_stat"
                 v-model:reply_item="comment_list_resp.replies[idx].replies[cr_idx]"
               />
@@ -275,8 +335,8 @@ const paginationLayout = computed(() => {
 }
 
 .div-line {
-  padding-bottom: 0.88rem;
-  margin-left: 5rem;
+  padding-bottom: 2rem;
+  margin-left: 1rem;
   border-bottom: 0.0625rem solid #e3e5e7;
 }
 

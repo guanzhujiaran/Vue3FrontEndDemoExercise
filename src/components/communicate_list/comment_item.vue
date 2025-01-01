@@ -6,11 +6,25 @@ import feedbackCommentApi from '@/api/feedback/comment.ts'
 import emitter from '@/utils/mitt.ts'
 import { useDebounceFn } from '@vueuse/core'
 import { SVG } from '@/assets/svgs.ts'
+import { useUserNavStore } from '@/stores/user_nav.ts'
 
+const { user_nav } = useUserNavStore()
 const reply_item = defineModel<ReplyItem>('reply_item', { required: true })
+const { up_mid, methods } = defineProps<{
+  up_mid: string | number
+  methods: {
+    handle_top: Function
+    handle_delete: Function
+    handle_black_list: Function
+    handle_report: Function
+  }
+}>()
+const { handle_top, handle_delete, handle_black_list, handle_report } = methods
+const is_up = computed(() => up_mid && user_nav.uid && String(up_mid) === String(user_nav.uid))
 const comment_section_stat = defineModel<CommentSectionStat>('comment_section_stat', {
   required: true
 })
+
 defineExpose({ comment_section_stat })
 
 const is_root = computed(() => {
@@ -129,16 +143,11 @@ const handle_pop_up_reply_area = () => {
 }
 const interact_btn_active = computed<number>(() => reply_item.value.action)
 const is_mouse_in = ref<boolean>(false)
-const handle_mouse_enter = () => {
-  is_mouse_in.value = true
-}
-const handle_mouse_leave = () => {
-  // is_mouse_in.value = false
-}
+const is_comment_menu_open = ref<boolean>(false)
 </script>
 
 <template>
-  <div class="comment-item" @mouseenter="handle_mouse_enter" @mouseleave="handle_mouse_leave">
+  <div class="comment-item" @mouseenter="is_mouse_in = true" @mouseleave="is_mouse_in = false">
     <el-avatar class="user-avater" :size="is_root ? 'large' : 'small'">
       <img
         :src="
@@ -239,10 +248,13 @@ const handle_mouse_leave = () => {
             </div>
             <div
               id="more"
-              v-show="is_mouse_in"
+              v-show="is_mouse_in || is_comment_menu_open"
               :style="{ 'padding-right': is_root ? '0' : '2rem' }"
             >
-              <button class="more-btn">
+              <button
+                class="more-btn"
+                @click="() => (is_comment_menu_open = !is_comment_menu_open)"
+              >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   xmlns:xlink="http://www.w3.org/1999/xlink"
@@ -253,6 +265,33 @@ const handle_mouse_leave = () => {
                   <path :d="SVG.more.path" fill="currentColor"></path>
                 </svg>
               </button>
+              <div
+                class="comment-menu"
+                v-show="is_comment_menu_open"
+                @mouseleave="is_comment_menu_open = false"
+              >
+                <ul id="options">
+                  <li v-if="is_up && is_root" @click="handle_top(reply_item)">置顶</li>
+                  <li
+                    v-if="String(reply_item.member.mid) === String(user_nav.uid) || is_up"
+                    @click="handle_delete(reply_item)"
+                  >
+                    删除
+                  </li>
+                  <li
+                    v-if="String(reply_item.member.mid) !== String(user_nav.uid) || is_up"
+                    @click="handle_black_list(reply_item)"
+                  >
+                    加入黑名单
+                  </li>
+                  <li
+                    v-if="String(reply_item.member.mid) !== String(user_nav.uid) || is_up"
+                    @click="handle_report(reply_item)"
+                  >
+                    举报
+                  </li>
+                </ul>
+              </div>
             </div>
           </div>
         </template>
@@ -263,6 +302,42 @@ const handle_mouse_leave = () => {
 </template>
 
 <style scoped>
+#options li {
+  box-sizing: border-box;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  height: 36px;
+  padding: 0 15px;
+  cursor: pointer;
+  user-select: none;
+}
+
+#options {
+  display: block;
+  position: absolute;
+  top: 20px;
+  right: 0;
+  margin: 0;
+  padding: 0;
+  z-index: 10;
+  width: 120px;
+  list-style: none;
+  border-radius: 4px;
+  font-size: 14px;
+  color: #61666d;
+  background-color: #ffffff;
+  box-shadow: rgba(0, 0, 0, 0.2) 0 0 5px;
+  overflow: hidden;
+}
+
+.comment-menu {
+  right: 0;
+  position: absolute;
+  top: 10px;
+  z-index: 2000;
+}
+
 #more {
   margin-left: auto;
   margin-right: 20px;
@@ -341,6 +416,7 @@ svg:not(:root) {
 }
 
 .comment-main :deep(.el-card) {
+  overflow: visible;
   border: none;
 }
 

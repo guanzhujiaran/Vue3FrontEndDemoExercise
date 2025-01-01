@@ -17,7 +17,8 @@
   <div v-if="test_config" class="config">
     <ConfigItem v-model="AUTO_DailyReward" />
   </div>
-</template><script setup lang="ts">
+</template>
+<script setup lang="ts">
 /**
  * 全局设置
  */
@@ -29,9 +30,9 @@ import { BaseSettingType } from '@/models/base/base_setting_model'
 import type { AccountSettingConfigItemModel } from '@/models/account/account_setting/account_setting_type_model'
 import BlueBtn from '@/components/CommonCompo/Bili-Interact-Compo/Blue-Btn.vue'
 import accountApi from '@/api/account/account_api'
-import { account_left_pannel_reload_key } from '@/models/inject/inject_type'
+import { account_left_panel_reload_key } from '@/models/inject/inject_type'
 
-const reload = inject(account_left_pannel_reload_key)!
+const reload = inject(account_left_panel_reload_key)!
 
 const create_account_settings = ref<AccountSettingConfigItemModel>({
   name: 'create_account_setting', // 按钮的设置属性名
@@ -161,4 +162,3 @@ span {
   color: #999;
 }
 </style>
-

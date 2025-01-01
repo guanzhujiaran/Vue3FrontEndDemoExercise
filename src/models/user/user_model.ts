@@ -5,7 +5,7 @@ export interface LoginModel {
 }
 
 export interface UserNavModel {
-  uid: number
+  uid: number | string
   user_name: string
   role: string
 }

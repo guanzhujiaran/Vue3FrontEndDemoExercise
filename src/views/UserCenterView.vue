@@ -19,7 +19,7 @@ import UserGlobalConfig from '@/components/opus-detail/RightPannel/PannelItems/S
 import Placeholder from '@/components/opus-detail/RightPannel/PannelItems/Placeholder.vue'
 import { useRoute } from 'vue-router'
 import type { PageShowModel } from '@/models/account/page/model.ts'
-import { account_left_pannel_reload_key } from '@/models/inject/inject_type'
+import { account_left_panel_reload_key } from '@/models/inject/inject_type'
 import { KeysEnum, useInject } from '@/models/base/provide_model.ts'
 import type { UserNavModel } from '@/models/user/user_model.ts'
 import UserBaseInfoConfig from '@/components/opus-detail/RightPannel/PannelItems/SettingComponent/UserBaseInfoConfig.vue'
@@ -100,7 +100,7 @@ const handle_route_change = (el: any) => {
 
 watch(route, handle_route_change)
 
-provide(account_left_pannel_reload_key, () => {
+provide(account_left_panel_reload_key, () => {
   nextTick(async () => {
     await handle_left_pannel_accounts()
   })
