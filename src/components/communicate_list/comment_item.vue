@@ -456,8 +456,9 @@ svg:not(:root) {
   position: relative;
   padding-left: 0.5rem;
   padding-top: 1rem;
-  width: 100%;
   line-height: 1.5;
+  word-wrap: break-word;
+  overflow: hidden;
 }
 
 .user-avater {

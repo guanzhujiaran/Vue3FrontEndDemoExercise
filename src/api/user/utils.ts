@@ -16,5 +16,5 @@ export const isLogin: () => Promise<[boolean, string, UserNavModel | null]> = as
     return [true, resp.msg, resp.data]
   }
   user_nav_store.delete_user_nav()
-  return [false, resp.msg, null]
+  return [false, '未登录', null]
 }

@@ -4,15 +4,17 @@ import type {
   CommentSectionBaseInfo,
   CommentSectionStat,
   ReplyItem,
-  ReplyResp
+  ReplyMainResp
 } from '@/models/communication/comment_model'
 import submit_comment_section from '@/components/communicate_list/submit_comment_section.vue'
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch, useTemplateRef } from 'vue'
 import feedbackCommentApi from '@/api/feedback/comment.ts'
 import emitter from '@/utils/mitt.ts'
 import { KeysEnum, useInject } from '@/models/base/provide_model.ts'
 import { ScreenTypeEnum } from '@/models/global_var/global_var_model.ts'
 
+const is_expander_active_set = ref<Set<string | number>>(new Set())
+const expander_reply_loading_set = ref<Set<string | number>>(new Set())
 const comment_content = ref<string>('')
 /**
  * 直接传入一个待获取评论的content_id
@@ -47,7 +49,7 @@ watch(
   },
   { deep: true } // 确保组件初始化时也调用一次 API
 )
-const comment_list_resp = ref<ReplyResp>({
+const comment_list_resp = ref<ReplyMainResp>({
   replies: [],
   top_replies: [],
   total_num: 0,
@@ -76,9 +78,7 @@ const handle_get_reply_main = () => {
       is_loading_comment.value = false
     })
 }
-onMounted(() => {
-  handle_get_reply_main()
-})
+
 const comment_section_stat = ref<CommentSectionStat>({
   is_reply_section_active: false,
   replyTarget: '',
@@ -155,6 +155,7 @@ const isSmallScreen = computed(() => {
 const paginationLayout = computed(() => {
   return isSmallScreen.value ? 'prev, pager, next, total' : 'prev, pager, next, jumper, total'
 })
+
 const handle_top = (reply_item: ReplyItem) => {
   console.log(reply_item)
   emitter.emit('toast', { t: `待实现置顶评论功能${JSON.stringify(reply_item)}`, e: 'info' })
@@ -187,7 +188,6 @@ const handle_delete = (reply_item: ReplyItem) => {
       }
     })
 }
-
 const handle_black_list = (reply_item: ReplyItem) => {
   console.log(reply_item)
   emitter.emit('toast', { t: `待实现添加黑名单用户功能${JSON.stringify(reply_item)}`, e: 'info' })
@@ -196,10 +196,38 @@ const handle_report = (reply_item: ReplyItem) => {
   console.log(reply_item)
   emitter.emit('toast', { t: `待实现举报评论功能${JSON.stringify(reply_item)}`, e: 'info' })
 }
+
+const handle_comment_reply_page_change = (reply_item: ReplyItem, page_num: number) => {
+  expander_reply_loading_set.value.add(reply_item.rpid)
+  feedbackCommentApi
+    .reply_reply(
+      comment_section_base_info.value.oid,
+      comment_section_base_info.value.type,
+      reply_item.rpid,
+      10,
+      page_num
+    )
+    .then((resp) => {
+      resp.code === 0
+        ? ((reply_item.replies = resp.data.replies),
+          (reply_item.rcount = resp.data.total_num),
+          (reply_item.current_page = resp.data.cur_page))
+        : {}
+      emitter.emit('toast', {
+        t: resp.msg,
+        e: resp.code === 0 ? 'info' : 'error'
+      })
+      expander_reply_loading_set.value.delete(reply_item.rpid)
+    })
+}
+const comment_section_ref = useTemplateRef('comment_section')
+onMounted(() => {
+  handle_get_reply_main()
+})
 </script>
 
 <template>
-  <div class="comment-section" v-loading="is_loading_comment">
+  <div class="comment-section" ref="comment_section" v-loading="is_loading_comment">
     <div class="navbar">
       <div class="comment-title">
         <h2>评论</h2>
@@ -246,34 +274,83 @@ const handle_report = (reply_item: ReplyItem) => {
             v-model:comment_section_stat="comment_section_stat"
             v-model:reply_item="comment_list_resp.replies[idx]"
           />
-          <ul v-if="comment_list_resp.replies[idx].replies.length > 0">
-            <li
-              v-for="(__comment_reply_item, cr_idx) in comment_list_resp.replies[idx].replies"
-              :key="`${idx}_${cr_idx}`"
-            >
-              <comment_item
-                :up_mid="comment_list_resp.upper.mid"
-                :methods="{
-                  handle_top,
-                  handle_delete,
-                  handle_black_list,
-                  handle_report
-                }"
-                v-model:comment_section_stat="comment_section_stat"
-                v-model:reply_item="comment_list_resp.replies[idx].replies[cr_idx]"
-              />
-            </li>
-            <div
-              class="expander-footer view-more"
-              v-if="
-                BigInt(comment_list_resp.replies[idx].rcount) >
-                BigInt(comment_list_resp.replies[idx].replies.length)
-              "
-            >
-              <span>查看 {{ comment_list_resp.replies[idx].rcount }} 条回复，</span>
-              <button>点击查看</button>
+          <div class="replies">
+            <div class="expander">
+              <div class="expander-contents">
+                <ul
+                  v-if="comment_list_resp.replies[idx].replies.length > 0"
+                  v-loading="expander_reply_loading_set.has(comment_list_resp.replies[idx].rpid)"
+                >
+                  <li
+                    v-for="(__comment_reply_item, cr_idx) in comment_list_resp.replies[idx].replies"
+                    :key="`${idx}_${cr_idx}`"
+                  >
+                    <comment_item
+                      :up_mid="comment_list_resp.upper.mid"
+                      :methods="{
+                        handle_top,
+                        handle_delete,
+                        handle_black_list,
+                        handle_report
+                      }"
+                      v-model:comment_section_stat="comment_section_stat"
+                      v-model:reply_item="comment_list_resp.replies[idx].replies[cr_idx]"
+                    />
+                  </li>
+                </ul>
+                <div class="expander-footer">
+                  <div
+                    class="view-more"
+                    v-if="
+                      BigInt(comment_list_resp.replies[idx].rcount) >
+                        BigInt(comment_list_resp.replies[idx].replies.length) &&
+                      !is_expander_active_set.has(comment_list_resp.replies[idx].rpid)
+                    "
+                  >
+                    <span>共 {{ comment_list_resp.replies[idx].rcount }} 条回复，</span>
+                    <button
+                      class="button"
+                      @click="
+                        () => {
+                          is_expander_active_set.add(comment_list_resp.replies[idx].rpid)
+                          handle_comment_reply_page_change(comment_list_resp.replies[idx], 1)
+                        }
+                      "
+                    >
+                      点击查看
+                    </button>
+                  </div>
+                  <el-pagination
+                    v-if="is_expander_active_set.has(comment_list_resp.replies[idx].rpid)"
+                    class="reply-pagination"
+                    size="small"
+                    :hide-on-single-page="true"
+                    :total="parseInt(BigInt(comment_list_resp.replies[idx].rcount).toString())"
+                    :page-size="10"
+                    :pager-count="5"
+                    layout="slot, prev, pager, next"
+                    prev-text="上一页"
+                    next-text="下一页"
+                    v-model:current-page="comment_list_resp.replies[idx].current_page"
+                    @update:current-page="
+                      (cur_page) => {
+                        handle_comment_reply_page_change(comment_list_resp.replies[idx], cur_page)
+                      }
+                    "
+                  >
+                    <slot name="default">
+                      共
+                      {{
+                        Math.ceil(
+                          parseInt(BigInt(comment_list_resp.replies[idx].rcount).toString()) / 10
+                        )
+                      }}页
+                    </slot>
+                  </el-pagination>
+                </div>
+              </div>
             </div>
-          </ul>
+          </div>
           <div
             class="comment-reply-wrap"
             v-if="
@@ -305,11 +382,66 @@ const handle_report = (reply_item: ReplyItem) => {
 </template>
 
 <style scoped>
+.comment-section {
+  display: flex;
+  flex-direction: column;
+}
+.comment-list-section {
+  width: 100%;
+}
+
+.reply-pagination {
+  display: flex;
+  align-items: center;
+  font-size: 13px;
+  color: #18191c;
+}
+
 .comment-pagination {
   padding-top: 0.5rem;
   padding-bottom: 1rem;
   margin: auto;
   width: 50%;
+}
+
+.expander-footer .button:not([disabled]):hover {
+  color: #00aeec;
+}
+
+.expander-footer .button:before {
+  background-color: transparent;
+  border-radius: inherit;
+  content: '';
+  inset: 0;
+  position: absolute;
+}
+
+.expander-footer .button {
+  text-rendering: auto;
+  letter-spacing: normal;
+  word-spacing: normal;
+  text-align: center;
+  text-transform: none;
+  text-indent: 0;
+  text-shadow: none;
+  margin: 0;
+  padding-block: 1px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  border: none;
+  outline: none;
+  user-select: none;
+  appearance: none;
+  background: rgba(0, 0, 0, 0);
+  text-decoration: none;
+  position: relative;
+  z-index: 0;
+  height: 100%;
+  font: inherit;
+  color: #9499a0;
+  cursor: pointer;
 }
 
 .expander-footer {
@@ -328,10 +460,6 @@ const handle_report = (reply_item: ReplyItem) => {
 
 .comment-list {
   margin-right: 3rem;
-}
-
-.comment-section {
-  width: 100%;
 }
 
 .div-line {

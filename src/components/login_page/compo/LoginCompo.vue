@@ -282,6 +282,99 @@ onMounted(() => {
   </div>
 </template>
 <style scoped>
+@media screen and (max-width: 600px) {
+  .btn_wp {
+    width: 95vw;
+  }
+}
+
+@media screen and (max-width: 400px) {
+  .btn_wp {
+    width: 95vw;
+  }
+}
+
+.btn_primary {
+  width: 49.39%;
+  height: 40px;
+  cursor: pointer;
+  color: #fff;
+  background: #00a1d6;
+  border-radius: 8px;
+}
+
+.btn_primary.disabled {
+  cursor: not-allowed;
+  background: #00a1d6 !important;
+  opacity: 0.5;
+}
+
+.btn_other {
+  width: 49.39%;
+  height: 40px;
+  cursor: pointer;
+  color: #18191c;
+  background: #fff;
+  border: 1px solid #e3e5e7;
+  border-radius: 8px;
+}
+
+.main__right {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background-color: #fff;
+  height: 100%;
+  padding: 1rem 1rem 3rem 1rem;
+}
+
+.main__right .tab__form {
+  width: fit-content;
+  height: 90px;
+  border: 1px solid #e3e5e7;
+  border-radius: 8px;
+  font-style: normal;
+  font-weight: 400;
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.main__right .tab__form .form__item {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  box-sizing: border-box;
+  width: 100%;
+  height: 44px;
+  padding: 12px 20px;
+}
+
+.main__right .tab__form .form__item div:not(:last-child) {
+  margin-right: 20px;
+}
+
+.main__right .tab__form .form__item input {
+  flex: 1;
+}
+
+.main__right .tab__form .form__separator-line {
+  display: block;
+  width: 100%;
+  height: 0;
+  border-bottom: 1px solid #e3e5e7;
+}
+
+.login_wp {
+  width: fit-content;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  max-width: 100vw;
+}
+
 .forget-tip {
   z-index: 100;
   box-sizing: border-box;

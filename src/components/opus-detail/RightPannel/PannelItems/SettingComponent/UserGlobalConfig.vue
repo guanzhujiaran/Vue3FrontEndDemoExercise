@@ -53,7 +53,7 @@ const create_account_settings = ref<AccountSettingConfigItemModel>({
 const create_account_btn_ref = ref({
   btn_text: computed({
     get: () => {
-      return create_account_settings.value.title
+      return create_account_settings.value.title ?? ''
     },
     set: () => {}
   }),

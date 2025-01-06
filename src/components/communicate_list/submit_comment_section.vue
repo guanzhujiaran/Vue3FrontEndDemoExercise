@@ -62,7 +62,11 @@ const comment_content = defineModel<string>('comment_content')
   <el-card
     class="submit-comment-section"
     shadow="hover"
-    body-style="padding-top:0.5rem;padding-bottom:0.5rem;padding:unset;"
+    :body-style="{
+      'padding-top': '0.5rem',
+      'padding-bottom': '0.5rem',
+      padding: 'unset'
+    }"
   >
     <mavon-editor
       class="markdown-editor"
@@ -79,9 +83,7 @@ const comment_content = defineModel<string>('comment_content')
 
 <style scoped>
 .markdown-editor {
-  max-height: 15rem;
   min-height: 10rem;
-  min-width: 0;
   transition: height 1s ease; /* 平滑过渡效果 */
 }
 
@@ -92,6 +94,5 @@ const comment_content = defineModel<string>('comment_content')
 
 .submit-comment-section {
   background: #ffffff;
-  width: 100%;
 }
 </style>

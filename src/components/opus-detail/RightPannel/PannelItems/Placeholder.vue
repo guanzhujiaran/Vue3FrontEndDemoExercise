@@ -39,7 +39,7 @@ const props = defineModel<{ inner_text: string; is_show: boolean }>()
 
 .placeholder .is-im {
   background-image: url(//s1.hdslb.com/bfs/static/blive/blfe-message-web/static/img/no_message.def5cf54.png);
-  background-size: 402px 204px;
+  background-size: contain;
   margin-bottom: 32px;
   height: 204px;
 }

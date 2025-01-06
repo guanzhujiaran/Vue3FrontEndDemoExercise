@@ -1,6 +1,7 @@
 import { type UserInfo } from '@/models/user/user_model'
 
 export interface ReplyItem {
+  current_page?: number
   /**
    * 需要登录(Cookie 或 APP)
    * 否则恒为 0
@@ -39,12 +40,18 @@ export interface ReplyItem {
   replies: ReplyItem[]
 }
 
-export interface ReplyResp {
+export interface ReplyMainResp {
   replies: ReplyItem[]
   top_replies: ReplyItem[]
   total_num: number
   cur_page: number
   upper: { mid: string | number }
+}
+export interface ReplyReplyResp {
+  replies: ReplyItem[]
+  upper: { mid: string | number }
+  total_num: number
+  cur_page: number
 }
 
 export interface CommentSectionStat {

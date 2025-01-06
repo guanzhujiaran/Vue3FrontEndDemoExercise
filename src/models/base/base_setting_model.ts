@@ -49,6 +49,7 @@ export interface BaseSettingTextList extends BaseSettingModel {
 export interface BaseSettingDatePicker extends BaseSettingModel {
   date_props: {
     format: string
+    disabled_date: number // 时间戳(ms
     label?: string
   }
 }

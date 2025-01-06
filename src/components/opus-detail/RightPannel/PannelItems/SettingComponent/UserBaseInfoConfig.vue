@@ -1,10 +1,13 @@
 <script setup lang="ts">
+import BiliDialog from '@/components/CommonCompo/Bili-Feedback-Compo/Bili-Dialog.vue'
 import type { User_base_info_config_form } from '@/models/user/user_setting/user_base_info_config_model.ts'
 import { computed, onMounted, ref } from 'vue'
 import ConfigItem from '@/components/opus-detail/RightPannel/PannelItems/SettingComponent/ConfigItem.vue'
 import BlueBtn from '@/components/CommonCompo/Bili-Interact-Compo/Blue-Btn.vue'
 import type { AccountSettingConfigItemModel } from '@/models/account/account_setting/account_setting_type_model.ts'
 import { BaseSettingType } from '@/models/base/base_setting_model.ts'
+import user_api from '@/api/user/user_api.ts'
+import emitter from '@/utils/mitt.ts'
 
 const user_base_info_data = ref<User_base_info_config_form>({
   uname: '',
@@ -13,6 +16,62 @@ const user_base_info_data = ref<User_base_info_config_form>({
   birthday: '',
   userid: ''
 })
+const origin_user_base_info_data = ref<User_base_info_config_form>({
+  uname: '',
+  usersign: '',
+  sex: '',
+  birthday: '',
+  userid: ''
+})
+const is_loading = ref(false)
+const show_update_dialog = ref(false)
+const handle_get_user_base_info = () => {
+  // 获取用户基本信息
+  is_loading.value = true
+  user_api.UserInfo().then((resp) => {
+    console.log(resp)
+    resp.code === 0
+      ? ((user_base_info_data.value = resp.data),
+        (origin_user_base_info_data.value = resp.data),
+        (is_loading.value = false))
+      : emitter.emit('toast', {
+          t: resp.msg,
+          e: 'error'
+        })
+  })
+}
+onMounted(() => {
+  handle_get_user_base_info()
+})
+const save_info_btn_props = ref({
+  btn_text: '保存',
+  is_active: true,
+  is_show: true
+})
+const handle_update_user_info = () => {
+  let { uname, usersign, sex, birthday } = user_base_info_data.value
+  user_api
+    .UpdateUserInfo({
+      uname,
+      usersign,
+      sex,
+      birthday: birthday.slice(0, 10)
+    })
+    .then((resp) => {
+      resp.code === 0
+        ? (emitter.emit('toast', {
+            e: 'info',
+            t: '更新成功！'
+          }),
+          (origin_user_base_info_data.value = user_base_info_data.value),
+          (show_update_dialog.value = true))
+        : ((user_base_info_data.value = origin_user_base_info_data.value),
+          emitter.emit('toast', {
+            e: 'error',
+            t: resp.msg
+          }))
+    })
+}
 
 const computedUname = computed({
   get: () => user_base_info_data.value.uname,
@@ -26,11 +85,12 @@ const computedUname = computed({
     uname_config.value.setting_content.value = value // 同步到配置对象中
   }
 })
+const computedUserid = computed(() => user_base_info_data.value.userid)
 const userid_config = ref<AccountSettingConfigItemModel>({
   name: 'userid_config', // 按钮的设置属性名
   setting_content: {
     type: BaseSettingType.Text,
-    value: computedUname,
+    value: computedUserid,
     text_props: [
       {
         readonly: true,
@@ -121,7 +181,7 @@ const sex_config = ref<AccountSettingConfigItemModel>({
   } // 写各种不同的设置类型
 })
 const computedBirthday = computed({
-  get: () => user_base_info_data.value.sex,
+  get: () => user_base_info_data.value.birthday,
   set: (value: string) => {
     if (
       user_base_info_data.value.birthday === value &&
@@ -137,38 +197,49 @@ const birthday_config = ref<AccountSettingConfigItemModel>({
   setting_content: {
     type: BaseSettingType.Date,
     value: computedBirthday,
-    date_props: { format: 'YYYY-MM-DD', label: '出生日期：' }
+    date_props: { format: 'YYYY-MM-DD', label: '出生日期：', disabled_date: Date.now() }
   } // 写各种不同的设置类型
-})
-
-const handle_get_user_base_info = () => {
-  // 获取用户基本信息
-  console.log('加载用户信息')
-  Object.assign(user_base_info_data.value, {
-    userid: 'zhangsan',
-    uname: '张三',
-    usersign: '我是张三',
-    sex: '男',
-    birthday: '1990-01-01'
-  })
-}
-onMounted(() => {
-  handle_get_user_base_info()
 })
 </script>
 
 <template>
-  <div class="config">
+  <div class="config" v-loading="is_loading">
     <ConfigItem v-model="uname_config"></ConfigItem>
     <ConfigItem v-model="userid_config"></ConfigItem>
     <ConfigItem v-model="usersign_config"></ConfigItem>
     <ConfigItem v-model="sex_config"></ConfigItem>
     <ConfigItem v-model="birthday_config"></ConfigItem>
-    <BlueBtn></BlueBtn>
+    <div class="padding-dom"></div>
+    <div class="user-my-btn-warp">
+      <BlueBtn v-model="save_info_btn_props" @click="handle_update_user_info"></BlueBtn>
+    </div>
+    <BiliDialog
+      v-model:dialogVisible="show_update_dialog"
+      title="提示"
+      content="已经成功更新你的资料"
+    />
   </div>
 </template>
 
 <style scoped>
+.padding-dom {
+  height: 39px;
+  border-bottom: 1px solid #e5e9ef;
+  margin-bottom: 40px;
+}
+
+.user-my-btn-warp {
+  width: fit-content;
+  height: 36px;
+  position: relative;
+  margin: auto auto 3rem;
+}
+
+.config {
+  width: auto;
+  padding: 20px 20px 0;
+}
+
 .config :deep(.config-item) {
   padding: 10px 16px;
 }

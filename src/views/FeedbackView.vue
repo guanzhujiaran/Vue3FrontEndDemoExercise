@@ -62,10 +62,10 @@ onMounted(() => {
   display: flex;
   gap: 1rem;
   flex-direction: column;
-  align-items: center;
   height: fit-content;
   padding-bottom: 5rem;
   margin: 0 auto;
+  overflow-x: scroll;
 }
 
 :deep(.placeholder) {

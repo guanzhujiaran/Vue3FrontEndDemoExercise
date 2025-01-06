@@ -2,6 +2,7 @@ import type { LoginModel, UserNavModel } from '@/models/user/user_model'
 import BaseApi from '../base_axios/base_api'
 import type { RootObject } from '@/models/base_model'
 import { useJwtStore } from '@/stores/jwt_token.ts'
+import type { User_base_info_config_form } from '@/models/user/user_setting/user_base_info_config_model.ts'
 
 class UserApi extends BaseApi {
   constructor() {
@@ -30,6 +31,14 @@ class UserApi extends BaseApi {
 
   async PwdSalt(): Promise<RootObject<string>> {
     return await this._get('pwd_salt')
+  }
+  async UserInfo(): Promise<RootObject<User_base_info_config_form>> {
+    return await this._get('user_info')
+  }
+  async UpdateUserInfo(
+    user_base_info_config_form: Omit<User_base_info_config_form, 'userid'>
+  ): Promise<RootObject<string>> {
+    return await this._post('user_info/update', user_base_info_config_form)
   }
 }
 
