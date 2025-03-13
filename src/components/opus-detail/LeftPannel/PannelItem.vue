@@ -1,24 +1,21 @@
 <script setup lang="ts">
-import { onMounted, ref, watchEffect, type ComputedRef } from 'vue'
+import { ref } from 'vue'
 import avatar from './SingleUserInfo.vue'
-import router from '@/router'
-import { useRoute } from 'vue-router'
-import type { AccountInfoModel } from '@/models/account/account_model'
 import type { PageShowModel } from '@/models/account/page/model.ts'
 import { SVG } from '@/assets/svgs.ts'
-
-const route = useRoute()
 const user_setting_route_model = ref([
   {
     to: '/app/user-center/account-global-config',
     path: 'account-global-config',
     title: '用户全局设置',
+    show_name: '用户全局设置',
     svg: SVG.setting.path
   },
   {
     to: '/app/user-center/account-base-info-config',
     path: 'account-base-info-config',
-    title: '用户基本信息设置',
+    title: '用户基本信息设置（设置昵称、性别等）',
+    show_name: '用户基本信息设置',
     svg: SVG.setting.path
   }
 ])
@@ -66,7 +63,7 @@ const handleAccountAvatarClick = (account_name: string) => {
         <svg viewBox="2 3 16 15" class="setting-icon css-1dtzbno">
           <path :d="da.svg"></path>
         </svg>
-        {{ da.title }}
+        {{ da.show_name }}
       </router-link>
     </div>
   </div>
@@ -76,7 +73,7 @@ const handleAccountAvatarClick = (account_name: string) => {
   display: block;
   position: relative;
   top: 2px;
-  margin: 1rem;
+  margin: 0.1rem;
 }
 
 .title {

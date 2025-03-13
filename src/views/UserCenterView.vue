@@ -159,6 +159,17 @@ const handle_open_drawer = () => {
   </div>
 </template>
 <style scoped>
+.space-left::-webkit-scrollbar {
+  display: none !important;
+}
+.space-left {
+  width: fit-content;
+  min-width: 0;
+  max-width: 30%;
+  background-color: #fff;
+  padding: 12px;
+  overflow-y: scroll;
+}
 @media screen and (max-width: 620px) {
   .space-left {
     width: 15px;
@@ -169,7 +180,7 @@ const handle_open_drawer = () => {
 
   .space-left :deep(.el-drawer) {
     width: 20rem;
-    min-width: 15rem;
+    min-width: 8rem;
     background-color: #fff;
     padding: 12px;
     overflow-y: scroll;

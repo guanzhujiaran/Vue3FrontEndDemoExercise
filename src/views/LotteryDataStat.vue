@@ -1,42 +1,59 @@
-<!--
- * @Author: 星瞳 1944637830@qq.com
- * @Date: 2024-10-15 19:07:56
- * @LastEditors: 星瞳 1944637830@qq.com
- * @LastEditTime: 2024-11-11 19:27:54
- * @FilePath: \Vue3FrontEndDemoExercise\src\views\lottery_data_statistic\LotteryDataStat.vue
- * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
--->
 <template>
   <div class="container">
     <div class="el-tabs-wrapper" style="overflow: hidden">
-      <el-tabs v-model="active_site_name" type="border-card" style="height: 100%">
-        <el-tab-pane label="数据页" name="no-data">
-          <Placeholder v-model="placeholder_props" />
+      <el-tabs
+        v-model="active_genre_name"
+        type="border-card"
+        style="height: 100%; min-height: 90vh"
+        @tab-change="
+          (name) => {
+            LotDataStore.last_show_lot_data_genre_tab = name as ParentLotDataTab
+          }
+        "
+      >
+        <el-tab-pane label="爬虫状态" :name="ParentLotDataTab.ScrapyStat" lazy>
+          <ScrapyStatus></ScrapyStatus>
         </el-tab-pane>
-        <el-tab-pane label="B站" name="bili" lazy>
-          <bili_lot_inner v-model:active_lot_data_name="active_lot_data_name" />
+        <el-tab-pane label="B站抽奖数据" :name="ParentLotDataTab.Bili" lazy>
+          <bili-data-wrapper v-model:active-lot-data-name="active_lot_data_name" />
+        </el-tab-pane>
+        <el-tab-pane label="B站中奖统计" :name="ParentLotDataTab.Bili_Atari_HOF" lazy>
+          <BiliAtariRanking />
         </el-tab-pane>
       </el-tabs>
     </div>
-    <div class="drag-upload-btn" style="position: absolute; right: 0.5rem">
-      <el-button type="primary" round size="large" @click="open_submit_lot_data_pannel"
-        >提交数据
-      </el-button>
-    </div>
   </div>
+  <Draggable
+    class="drag-upload-btn"
+    :initial-value="{ x: 16, y: 120 }"
+    v-slot="{ x, y }"
+    style="position: absolute; z-index: 9999"
+    prevent-default
+    storage-key="vueuse-draggable-upload-lot-data"
+    storage-type="session"
+    :on-move="handleDraggableMove"
+  >
+    <el-button
+      type="primary"
+      round
+      size="default"
+      @click="handleClickDraggableBtn"
+      ref="DraggableBtn"
+      >提交数据
+    </el-button>
+  </Draggable>
   <div v-if="is_upload_popover_open" class="lot-upload__wrap">
     <div
       class="bili-overlay"
       style="background-color: rgba(0, 0, 0, 0.5)"
-      @click="close_submit_lot_data_pannel"
+      @click="is_upload_popover_open = false"
     ></div>
     <div class="lot-upload-popover">
       <div class="lot-upload__pub">
         <div class="lot-upload-publishing" v-loading="lot_upload_submit_props.loading">
-          <div class="lot-upload-publishing__closing" @click="close_submit_lot_data_pannel">
+          <div class="lot-upload-publishing__closing" @click="is_upload_popover_open = false">
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              xmlns:xlink="http://www.w3.org/1999/xlink"
               viewBox="0 0 16 16"
               width="16"
               height="16"
@@ -145,23 +162,27 @@
 </template>
 <script setup lang="ts">
 import { ArrowDown } from '@element-plus/icons-vue'
-import { ref, computed } from 'vue'
-import bili_lot_inner from '@/components/lottery_data_statistic/bili_data/bili_data_wrapper.vue'
-import Placeholder from '@/components/opus-detail/RightPannel/PannelItems/Placeholder.vue'
+import { ref, computed, useTemplateRef } from 'vue'
+import BiliDataWrapper from '@/components/lottery_data_statistic/bili_data/BiliDataWrapper.vue'
 import {
-  type LotDataView,
   type LotDataWrapperProps,
-  type LotUploadAreaProps
+  type LotUploadAreaProps,
+  ParentLotDataTab
 } from '@/models/lottery/lotdata'
+import ScrapyStatus from '@/components/lottery_data_statistic/bili_data/ScrapyStatus.vue'
 import lotteryDataBaseApi from '@/api/lottery_data/bili/lottery_database_bili_api'
 import type { RootObject } from '@/models/base_model'
+import { useLotDataStore } from '@/stores/lot_data.ts'
+import BiliAtariRanking from '@/components/lottery_data_statistic/BiliAtariRanking.vue'
+import { UseDraggable as Draggable } from '@vueuse/components'
+import type { Position } from '@vueuse/core'
 
-const placeholder_props = ref({
-  inner_text: `选一个平台看看数据吧！`,
-  is_show: true
-})
-const active_site_name = ref('no-data')
-const active_lot_data_name = ref<LotDataWrapperProps['lot_name']>('')
+const DraggableBtn = useTemplateRef('DraggableBtn')
+const LotDataStore = useLotDataStore()
+const active_genre_name = ref(LotDataStore.last_show_lot_data_genre_tab)
+const active_lot_data_name = ref<LotDataWrapperProps['lot_name']>(
+  LotDataStore.last_show_bili_lot_data_tab
+)
 const lot_upload_drop_down_props = ref<{
   upload_dynamic_lottery: LotUploadAreaProps
   upload_space_reserve_lottery: LotUploadAreaProps
@@ -253,14 +274,34 @@ const handle_lot_upload_submit = async () => {
   lot_upload_submit_props.value.loading = false
   is_upload_succ.value = true
 }
-
+const handleClickDraggableBtn = (e: MouseEvent) => {
+  console.log(e)
+  if (Math.abs(e.movementX) <= 10 && Math.abs(e.movementY) <= 10) {
+    //只有不移动或者移动距离短的时候才触发
+    is_upload_popover_open.value = !is_upload_popover_open.value
+  }
+}
 const is_upload_popover_open = ref(false)
 const is_upload_succ = ref(false)
-const open_submit_lot_data_pannel = () => {
-  is_upload_popover_open.value = true
-}
-const close_submit_lot_data_pannel = () => {
-  is_upload_popover_open.value = false
+const handleDraggableMove = (position: Position) => {
+  window.scrollTo({
+    top: 0,
+    behavior: 'smooth' // 可选，使滚动平滑
+  })
+  let width = DraggableBtn.value?.ref?.offsetWidth ?? 90
+  let height = DraggableBtn.value?.ref?.offsetHeight ?? 40
+  if (position.x > window.innerWidth - width) {
+    position.x = window.innerWidth - width
+  }
+  if (position.x < 0) {
+    position.x = 0
+  }
+  if (position.y > window.innerHeight - height) {
+    position.y = window.innerHeight - height
+  }
+  if (position.y < 0) {
+    position.y = 0
+  }
 }
 </script>
 <style scoped>
@@ -400,6 +441,7 @@ const close_submit_lot_data_pannel = () => {
 .el-tabs-wrapper {
   width: 100%;
   height: 100%;
+  border-radius: 15px;
 }
 
 :deep(.el-tabs__content) {

@@ -11,8 +11,8 @@ const placeholder_props = ref({
   is_show: true
 })
 const comment_section_base_info = ref<CommentSectionBaseInfo>({ oid: 2, type: 1 })
-onMounted(() => {
-  isLogin().then((res) => {
+onMounted(async () => {
+  await isLogin().then((res) => {
     emitter.emit('toast', { t: res[1], e: 'info' })
   })
 })
@@ -38,6 +38,7 @@ onMounted(() => {
         v-model:comment_section_base_info="comment_section_base_info"
       />
     </div>
+    <el-backtop></el-backtop>
   </div>
 </template>
 
@@ -59,13 +60,16 @@ onMounted(() => {
 }
 
 .feedback-section-wrap {
-  display: flex;
-  gap: 1rem;
-  flex-direction: column;
   height: fit-content;
-  padding-bottom: 5rem;
   margin: 0 auto;
-  overflow-x: scroll;
+  display: flex;
+  justify-content: center;
+  box-sizing: content-box;
+  position: relative;
+  flex-direction: column;
+  width: auto;
+  padding: 0 10px 3rem;
+  max-width: 90vw;
 }
 
 :deep(.placeholder) {

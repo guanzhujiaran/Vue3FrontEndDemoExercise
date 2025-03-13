@@ -8,7 +8,7 @@
  */
 import BaseApi from '@/api/base_axios/base_api'
 import type { RootObject } from '@/models/base_model'
-import type { LotDataView } from '@/models/lottery/lotdata'
+import type { LotDataView, ScrapyStatusResp } from '@/models/lottery/lotdata'
 
 class LotteryDataBaseApi extends BaseApi {
   constructor() {
@@ -28,12 +28,23 @@ class LotteryDataBaseApi extends BaseApi {
   ): Promise<RootObject<LotDataView<any> | undefined>> {
     return await this._get(data_type, { page_num, page_size })
   }
+
   async handle_add_dynamic_lottery_data({
     dynamic_id_or_url
   }: {
     dynamic_id_or_url: string
-  }): Promise<RootObject<string|undefined>> {
-    return await this._post('AddDynamicLottery', { dynamic_id_or_url: dynamic_id_or_url })
+  }): Promise<RootObject<string | undefined>> {
+    return await this._post(
+      'AddDynamicLottery',
+      { dynamic_id_or_url: dynamic_id_or_url },
+      {
+        timeout: 0
+      }
+    )
+  }
+
+  async get_all_scrapy_status(): Promise<RootObject<ScrapyStatusResp>> {
+    return await this._get('GetAllScrapyStatus')
   }
 }
 

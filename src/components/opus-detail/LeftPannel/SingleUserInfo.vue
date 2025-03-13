@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { AccountInfoModel } from '@/models/account/account_model'
+import { BiliImg } from '@/assets/img/BiliImg.ts'
 
 defineProps<{
   account_info: AccountInfoModel
@@ -10,7 +11,7 @@ defineProps<{
     <el-avatar size="large" class="avatar" :title="account_info.account_name">
       <img
         size="32"
-        :src="account_info.info?.face ?? 'https://static.hdslb.com/images/member/noface.gif'"
+        :src="account_info.info?.face ?? BiliImg.face.noface"
         referrerpolicy="no-referrer"
         alt="头像加载失败"
       />

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import BiliDialog from '@/components/CommonCompo/Bili-Feedback-Compo/Bili-Dialog.vue'
+import BiliDialog from '@/components/CommonCompo/Bili-Feedback-Compo/BiliDialog.vue'
 import type { User_base_info_config_form } from '@/models/user/user_setting/user_base_info_config_model.ts'
 import { computed, onMounted, ref } from 'vue'
 import ConfigItem from '@/components/opus-detail/RightPannel/PannelItems/SettingComponent/ConfigItem.vue'
@@ -94,7 +94,7 @@ const userid_config = ref<AccountSettingConfigItemModel>({
     text_props: [
       {
         readonly: true,
-        label: '用户名：',
+        label: '用户名（不可修改）：',
         placeholder: ''
       }
     ]

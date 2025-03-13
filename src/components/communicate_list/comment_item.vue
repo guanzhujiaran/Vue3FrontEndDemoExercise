@@ -7,6 +7,8 @@ import emitter from '@/utils/mitt.ts'
 import { useDebounceFn } from '@vueuse/core'
 import { SVG } from '@/assets/svgs.ts'
 import { useUserNavStore } from '@/stores/user_nav.ts'
+import BiliVditorEdit from '@/components/CommonCompo/Bili-Markdown-Compo/BiliVditorEdit.vue'
+import { BiliImg } from '@/assets/img/BiliImg.ts'
 
 const { user_nav } = useUserNavStore()
 const reply_item = defineModel<ReplyItem>('reply_item', { required: true })
@@ -144,17 +146,19 @@ const handle_pop_up_reply_area = () => {
 const interact_btn_active = computed<number>(() => reply_item.value.action)
 const is_mouse_in = ref<boolean>(false)
 const is_comment_menu_open = ref<boolean>(false)
+const is_loading_md = ref<boolean>(true)
 </script>
 
 <template>
-  <div class="comment-item" @mouseenter="is_mouse_in = true" @mouseleave="is_mouse_in = false">
+  <div
+    class="comment-item"
+    @mouseenter="is_mouse_in = true"
+    @mouseleave="is_mouse_in = false"
+    v-loading="is_loading_md"
+  >
     <el-avatar class="user-avater" :size="is_root ? 'large' : 'small'">
       <img
-        :src="
-          reply_item.member.avatar
-            ? reply_item.member.avatar
-            : 'https://static.hdslb.com/images/member/noface.gif'
-        "
+        :src="reply_item.member.avatar ? reply_item.member.avatar : BiliImg.face.noface"
         referrerpolicy="no-referrer"
         alt="头像加载失败"
       />
@@ -168,10 +172,18 @@ const is_comment_menu_open = ref<boolean>(false)
             </div>
             <div class="user-level">
               <img
-                width="30"
-                height="30"
+                width="100%"
+                height="100%"
                 :src="`https://i0.hdslb.com/bfs/seed/jinkela/short/webui/user-profile/img/level_${reply_item.member.level_info.current_level ?? 0}.svg`"
-                alt="加载失败"
+                referrerpolicy="no-referrer"
+                :alt="JSON.stringify(reply_item.member.level_info.current_level)"
+              />
+            </div>
+            <div id="user-up" v-if="up_mid && String(up_mid) === String(reply_item.member.mid)">
+              <img
+                width="100%"
+                height="100%"
+                src="//i0.hdslb.com/bfs/seed/jinkela/short/webui/comments/img/icons/up_pb.svg"
                 referrerpolicy="no-referrer"
               />
             </div>
@@ -179,19 +191,12 @@ const is_comment_menu_open = ref<boolean>(false)
         </template>
         <template #default>
           <div class="comment-content">
-            <mavon-editor
-              :model-value="comment_content"
-              :subfield="false"
-              defaultOpen="preview"
-              :toolbarsFlag="false"
-              :editable="false"
-              :scrollStyle="true"
-              editor-background="transparent"
-              previewBackground="transparent"
-              :box-shadow="false"
-              style="min-height: 2rem; line-height: 2rem; min-width: 2rem; font-size: 1.25rem"
-            >
-            </mavon-editor>
+            <BiliVditorEdit
+              v-model="comment_content"
+              style="min-height: 2rem; line-height: 0.5rem; overflow: visible; font-size: 0.5rem"
+              v-model:is_loading="is_loading_md"
+              :is_preview="true"
+            />
           </div>
         </template>
         <template #footer>
@@ -203,7 +208,7 @@ const is_comment_menu_open = ref<boolean>(false)
               <button
                 class="like-btn"
                 @click="handleLike"
-                :style="{ color: interact_btn_active == 1 ? '#00AEEC' : '' }"
+                :style="{ color: String(interact_btn_active) === '1' ? '#00AEEC' : '' }"
               >
                 <svg
                   v-if="interact_btn_active == 1"
@@ -225,7 +230,7 @@ const is_comment_menu_open = ref<boolean>(false)
               <button
                 class="dislike-btn"
                 @click="handleHate"
-                :style="{ color: interact_btn_active == 2 ? '#00AEEC' : '' }"
+                :style="{ color: String(interact_btn_active) === '2' ? '#00AEEC' : '' }"
               >
                 <svg
                   v-if="interact_btn_active == 2"
@@ -272,12 +277,22 @@ const is_comment_menu_open = ref<boolean>(false)
               >
                 <ul id="options">
                   <li v-if="is_up && is_root" @click="handle_top(reply_item)">置顶</li>
-                  <li
-                    v-if="String(reply_item.member.mid) === String(user_nav.uid) || is_up"
-                    @click="handle_delete(reply_item)"
+                  <el-popconfirm
+                    :show-arrow="false"
+                    confirm-button-text="是"
+                    cancel-button-text="否"
+                    icon=""
+                    title="是否删除评论？"
+                    @confirm="handle_delete(reply_item)"
+                    placement="top"
+                    :offset="12"
                   >
-                    删除
-                  </li>
+                    <template #reference>
+                      <li v-if="String(reply_item.member.mid) === String(user_nav.uid) || is_up">
+                        删除
+                      </li>
+                    </template>
+                  </el-popconfirm>
                   <li
                     v-if="String(reply_item.member.mid) !== String(user_nav.uid) || is_up"
                     @click="handle_black_list(reply_item)"
@@ -344,6 +359,8 @@ const is_comment_menu_open = ref<boolean>(false)
   width: 24px;
   height: 24px;
   position: relative;
+  scale: 1.2;
+  z-index: 1600;
 }
 
 #count {
@@ -354,18 +371,16 @@ const is_comment_menu_open = ref<boolean>(false)
   width: fit-content;
   color: #757575;
   background-color: #f4f4f4;
-  padding: 0.375rem;
+  padding: 0.175rem;
   border-radius: 0.125rem;
   box-sizing: border-box;
-  font-size: 0.75rem;
+  font-size: 0.35rem;
   line-height: 1;
 }
 
 svg:not(:root) {
-  overflow-clip-margin: content-box;
-  overflow: hidden;
-  width: 1rem;
-  height: 1rem;
+  width: 0.675rem;
+  height: 0.675rem;
 }
 
 .like-btn:hover,
@@ -383,8 +398,8 @@ svg:not(:root) {
   outline: none;
   border: none;
   background: transparent;
-  height: 1.5rem;
-  font-size: 1rem;
+  height: 0.875rem;
+  font-size: 0.5rem;
   color: #9499a0;
   display: inline-flex;
   align-items: center;
@@ -393,15 +408,11 @@ svg:not(:root) {
 }
 
 .comment-footer > :not(:first-child) {
-  margin-left: 1.25rem;
+  margin-left: 0.7rem;
 }
 
 .comment-content :deep(.v-note-wrapper) {
   border: unset;
-}
-
-.comment-content :deep(.v-show-content) {
-  padding: 0 !important;
 }
 
 .comment-footer {
@@ -410,9 +421,14 @@ svg:not(:root) {
   align-items: center;
   position: relative;
   margin-top: 0.2rem;
-  font-size: 1rem;
+  font-size: 0.5rem;
   color: #9499a0;
   height: 100%;
+  flex-wrap: wrap;
+}
+
+.comment-footer .pubdate {
+  white-space: nowrap;
 }
 
 .comment-main :deep(.el-card) {
@@ -433,13 +449,19 @@ svg:not(:root) {
 
 .user-level {
   margin-left: 0.3125rem;
-  width: 1.875rem;
-  height: 1.875rem;
+  width: 0.7rem;
+  height: 0.7rem;
+}
+
+.user-info #user-up {
+  margin-left: 0.3125rem;
+  width: 0.7rem;
+  height: 0.7rem;
 }
 
 .user-name {
   color: #61666d;
-  font-size: 0.9rem;
+  font-size: 0.5rem;
   font-weight: 500;
 }
 
@@ -453,20 +475,19 @@ svg:not(:root) {
 }
 
 .comment-main {
+  width: 100%;
   position: relative;
-  padding-left: 0.5rem;
-  padding-top: 1rem;
+  padding-left: 0.25rem;
+  padding-top: 0.2rem;
   line-height: 1.5;
-  word-wrap: break-word;
-  overflow: hidden;
 }
 
 .user-avater {
   position: relative;
-  left: 0.5rem;
-  top: 0.5rem;
-  width: 3.5rem;
-  height: 3.5rem;
+  left: 0.25rem;
+  top: 0.25rem;
+  width: 1.5rem;
+  height: 1.5rem;
   transform-origin: left top;
   transform: scale(0.83333333);
   flex-shrink: 0;

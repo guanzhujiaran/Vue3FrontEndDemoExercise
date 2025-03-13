@@ -1,14 +1,15 @@
-<!--
- * @Author: 星瞳 1944637830@qq.com
- * @Date: 2024-10-18 10:36:40
- * @LastEditors: 星瞳 1944637830@qq.com
- * @LastEditTime: 2024-11-18 19:32:05
- * @FilePath: \Vue3FrontEndDemoExercise\src\views\lottery_data_statistic\bili_data\bili_data_wrapper.vue
- * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
--->
 <template>
   <div class="lot-data-panel">
-    <el-tabs class="lot-data-tabs" v-model="activeLotDataName" type="border-card">
+    <el-tabs
+      class="lot-data-tabs"
+      v-model="activeLotDataName"
+      type="border-card"
+      @tab-change="
+        (name: TabPaneName) => {
+          LotDataStore.last_show_bili_lot_data_tab = name as string
+        }
+      "
+    >
       <el-tab-pane
         label="官方转发抽奖"
         :name="official_lot_data_props.lot_name"
@@ -89,7 +90,7 @@
 .lot-data-panel :deep(.el-tabs__content) {
   position: relative;
   margin: 0.5rem 0.5rem 5rem;
-  min-height: 80vh;
+  min-height: 65vh;
 }
 </style>
 <script setup lang="ts">
@@ -98,7 +99,10 @@ import MyDataView from '@/components/CommonCompo/PaginationDataView.vue'
 import { type LotDataWrapperProps } from '@/models/lottery/lotdata'
 import lotteryDataBaseApi from '@/api/lottery_data/bili/lottery_database_bili_api'
 import emitter from '@/utils/mitt'
+import { useLotDataStore } from '@/stores/lot_data.ts'
+import type { TabPaneName } from 'element-plus'
 
+const LotDataStore = useLotDataStore()
 const page_size = ref(10)
 const activeLotDataName = defineModel<any>('activeLotDataName')
 const empty_data = {

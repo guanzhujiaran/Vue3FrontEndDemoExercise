@@ -1,11 +1,3 @@
-/*
- * @Author: 星瞳 1944637830@qq.com
- * @Date: 2024-05-30 23:07:22
- * @LastEditors: 星瞳 1944637830@qq.com
- * @LastEditTime: 2024-05-30 23:21:41
- * @FilePath: \Vue3FrontEndDemoExercise\src\stores\jwt_token.ts
- * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
- */
 import { ref } from 'vue'
 import { defineStore } from 'pinia'
 
@@ -13,13 +5,27 @@ export const useJwtStore = defineStore(
   'biliExplosion-jwt',
   () => {
     const jwt = ref('')
+    const jwt_refresh_ms = ref(0) //刷新jwt token的时间戳，尽量每天刷新一次
+
+    /**
+     * 刷新日期不是今天的就开刷
+     */
+    function is_need_jwt_refresh() {
+      if (!jwt_refresh_ms.value) return true
+      return new Date(jwt_refresh_ms.value).toDateString() !== new Date().toDateString()
+    }
+
     function save_jwt_token(_jwt: string) {
       jwt.value = _jwt
+      jwt_refresh_ms.value = Date.now()
     }
-    function delete_jwt_token(){
+
+    function delete_jwt_token() {
       jwt.value = ''
+      jwt_refresh_ms.value = 0
     }
-    return { jwt, save_jwt_token ,delete_jwt_token}
+
+    return { jwt, jwt_refresh_ms, save_jwt_token, delete_jwt_token, is_need_jwt_refresh }
   },
   {
     persist: {

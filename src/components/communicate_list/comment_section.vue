@@ -7,11 +7,12 @@ import type {
   ReplyMainResp
 } from '@/models/communication/comment_model'
 import submit_comment_section from '@/components/communicate_list/submit_comment_section.vue'
-import { computed, onMounted, ref, watch, useTemplateRef } from 'vue'
+import { computed, onMounted, ref, watch, useTemplateRef, onUnmounted } from 'vue'
 import feedbackCommentApi from '@/api/feedback/comment.ts'
 import emitter from '@/utils/mitt.ts'
 import { KeysEnum, useInject } from '@/models/base/provide_model.ts'
 import { ScreenTypeEnum } from '@/models/global_var/global_var_model.ts'
+import { useDebounceFn } from '@vueuse/core'
 
 const is_expander_active_set = ref<Set<string | number>>(new Set())
 const expander_reply_loading_set = ref<Set<string | number>>(new Set())
@@ -92,12 +93,12 @@ const comment_section_stat = ref<CommentSectionStat>({
 const comment_reply_input_placeholder = computed(() => {
   return `回复 @`.concat(String(comment_section_stat.value.replyTarget ?? '')).concat(': ')
 })
-const submit_comment_reply = () => {
+const submit_comment_reply = async () => {
   let { root, rpidTarget, reply_content } = comment_section_stat.value
   if (!reply_content?.trim()?.length) {
-    return emitter.emit('toast', { t: '评论内容不能为空', e: 'error' })
+    return emitter.emit('toast', { t: '评论内容不能为空', e: 'error' }), false
   }
-  feedbackCommentApi
+  return await feedbackCommentApi
     .add(
       comment_section_base_info.value.oid,
       comment_section_base_info.value.type,
@@ -107,11 +108,11 @@ const submit_comment_reply = () => {
     )
     .then((resp) => {
       if (resp.code) {
-        return emitter.emit('toast', { t: resp.msg, e: 'error' })
+        return emitter.emit('toast', { t: resp.msg, e: 'error' }), false
       }
       comment_list_resp.value.replies.map((replies) => {
         if (replies.rpid === rpidTarget || replies.rpid === root) {
-          replies.replies.unshift(resp.data)
+          replies.replies.push(resp.data)
           replies.rcount = (BigInt(replies.rcount) + 1n).toString()
         }
       })
@@ -124,13 +125,14 @@ const submit_comment_reply = () => {
       comment_section_stat.value.root = ''
       comment_section_stat.value.parent = ''
       comment_section_stat.value.reply_content = ''
+      return true
     })
 }
-const submit_comment = () => {
+const submit_comment = async () => {
   if (!comment_content.value.trim().length) {
-    return emitter.emit('toast', { t: '评论内容不能为空', e: 'error' })
+    return emitter.emit('toast', { t: '评论内容不能为空', e: 'error' }), false
   }
-  feedbackCommentApi
+  return await feedbackCommentApi
     .add(
       comment_section_base_info.value.oid,
       comment_section_base_info.value.type,
@@ -140,12 +142,13 @@ const submit_comment = () => {
     )
     .then((resp) => {
       if (resp.code) {
-        return emitter.emit('toast', { t: resp.msg, e: 'error' })
+        return emitter.emit('toast', { t: resp.msg, e: 'error' }), false
       }
       comment_list_resp.value.replies.unshift(resp.data)
       emitter.emit('toast', { t: '评论成功', e: 'success' })
       comment_content.value = ''
       comment_list_resp.value.total_num = comment_list_resp.value.total_num + 1
+      return true
     })
 }
 const globalVars = useInject(KeysEnum.globalVars)
@@ -153,7 +156,7 @@ const isSmallScreen = computed(() => {
   return globalVars.value.screen_size !== ScreenTypeEnum.large
 })
 const paginationLayout = computed(() => {
-  return isSmallScreen.value ? 'prev, pager, next, total' : 'prev, pager, next, jumper, total'
+  return isSmallScreen.value ? 'prev, pager, next, slot' : 'prev, pager, next, jumper, slot'
 })
 
 const handle_top = (reply_item: ReplyItem) => {
@@ -185,6 +188,8 @@ const handle_delete = (reply_item: ReplyItem) => {
           }
           return item.rpid !== reply_item.rpid
         })
+        if (!reply_item.root && reply_item.parent)
+          comment_list_resp.value.total_num = comment_list_resp.value.total_num - 1
       }
     })
 }
@@ -220,9 +225,22 @@ const handle_comment_reply_page_change = (reply_item: ReplyItem, page_num: numbe
       expander_reply_loading_set.value.delete(reply_item.rpid)
     })
 }
-const comment_section_ref = useTemplateRef('comment_section')
 onMounted(() => {
   handle_get_reply_main()
+  window.addEventListener('resize', handle_view_width_change)
+  handle_view_width_change()
+})
+const comment_list_width = ref(0)
+const handle_view_width_change = useDebounceFn(() => {
+  let expected_width = Math.ceil(
+    globalVars.value.screen_size === 'large' || globalVars.value.screen_size === 'medium'
+      ? 0.7 * innerWidth
+      : 0.75 * innerWidth
+  )
+  comment_list_width.value = expected_width > 1920 ? 1920 : expected_width
+}, 200)
+onUnmounted(() => {
+  window.removeEventListener('resize', handle_view_width_change)
 })
 </script>
 
@@ -258,10 +276,18 @@ onMounted(() => {
         :submit_comment="submit_comment"
         placeholder="输入提交反馈评论..."
         v-model:comment_content="comment_content"
+        :style="{
+          'max-width': `${comment_list_width}px`
+        }"
       />
     </div>
     <div class="comment-list-section" v-if="comment_list_resp.replies.length">
-      <ul class="comment-list">
+      <ul
+        class="comment-list"
+        :style="{
+          width: comment_list_width + 'px'
+        }"
+      >
         <li v-for="(__comment_item, idx) in comment_list_resp.replies" :key="idx">
           <comment_item
             :up_mid="comment_list_resp.upper.mid"
@@ -323,7 +349,7 @@ onMounted(() => {
                   <el-pagination
                     v-if="is_expander_active_set.has(comment_list_resp.replies[idx].rpid)"
                     class="reply-pagination"
-                    size="small"
+                    size="default"
                     :hide-on-single-page="true"
                     :total="parseInt(BigInt(comment_list_resp.replies[idx].rcount).toString())"
                     :page-size="10"
@@ -370,13 +396,18 @@ onMounted(() => {
       </ul>
       <el-pagination
         class="comment-pagination"
-        size="small"
+        :size="isSmallScreen ? 'small' : 'large'"
         background
         :layout="paginationLayout"
         :total="comment_list_resp.total_num"
         v-model:current-page="data.current_page"
         :pager-count="5"
-      />
+      >
+        <slot name="default">
+          共
+          {{ Math.ceil(parseInt(BigInt(comment_list_resp.total_num).toString()) / 10) }}页
+        </slot>
+      </el-pagination>
     </div>
   </div>
 </template>
@@ -385,9 +416,6 @@ onMounted(() => {
 .comment-section {
   display: flex;
   flex-direction: column;
-}
-.comment-list-section {
-  width: 100%;
 }
 
 .reply-pagination {
@@ -402,6 +430,7 @@ onMounted(() => {
   padding-bottom: 1rem;
   margin: auto;
   width: 50%;
+  font-size: 0.5rem;
 }
 
 .expander-footer .button:not([disabled]):hover {
@@ -445,40 +474,40 @@ onMounted(() => {
 }
 
 .expander-footer {
-  margin-left: 4rem;
-  font-size: 0.875rem;
+  margin-left: 3rem;
+  font-size: 0.4rem;
   color: #9499a0;
+  margin-top: 0.2rem;
 }
 
-.navbar,
-.comment-reply-wrap,
-.submit-comment-section-wrap {
+.comment-reply-wrap {
   margin-right: 3rem;
   margin-left: 3rem;
   margin-top: 1rem;
 }
 
 .comment-list {
-  margin-right: 3rem;
+  padding-inline-start: 0;
+  min-width: fit-content;
 }
 
 .div-line {
-  padding-bottom: 2rem;
-  margin-left: 1rem;
+  padding-bottom: 0.5rem;
+  margin-left: 0.1rem;
   border-bottom: 0.0625rem solid #e3e5e7;
 }
 
 .sort-actions .sort-div {
   display: inline-block;
-  height: 1rem;
+  height: 0.75rem;
   margin: 0 0.1875rem;
-  border-left: solid 0.1875rem #9499a0;
-  vertical-align: -0.125rem;
+  border-left: solid 0.0875rem #9499a0;
+  vertical-align: bottom;
 }
 
 .comment-title .comment-count {
-  margin: 0 1.875rem 0 0.375rem;
-  font-size: 0.8125rem;
+  margin: 0 1.875rem 0 0.675rem;
+  font-size: 0.5125rem;
   font-weight: 400;
   color: #9499a0;
 }
@@ -486,8 +515,8 @@ onMounted(() => {
 .comment-title h2 {
   margin: 0;
   color: #18191c;
-  font-weight: 500;
-  font-size: 1.25rem;
+  font-weight: 700;
+  font-size: 0.375rem;
 }
 
 .comment-title {
@@ -497,8 +526,7 @@ onMounted(() => {
 
 .navbar {
   display: flex;
-  align-items: center;
-  height: 1.75rem;
+  height: 100%;
   margin-bottom: 1.375rem;
 }
 
@@ -511,10 +539,10 @@ onMounted(() => {
 }
 
 .sort-btn {
-  height: 1.75rem;
+  height: 100%;
   padding-inline-start: 0.375rem;
   padding-inline-end: 0.375rem;
-  font-size: 0.8125rem;
+  font-size: 0.375rem;
   color: #9499a0;
 }
 </style>

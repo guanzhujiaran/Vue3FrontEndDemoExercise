@@ -988,44 +988,6 @@
     padding: 0 20px 20px;
 }
 
-.avatar {
-    display: block;
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    -ms-flex-negative: 0;
-    flex-shrink: 0;
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    background-image: url('//static.hdslb.com/images/member/noface.gif');
-}
-
-.avatar:hover {
-    cursor: pointer;
-}
-
-.group-avatar {
-    display: block;
-    width: 80px;
-    height: 80px;
-    border-radius: 50%;
-    -ms-flex-negative: 0;
-    flex-shrink: 0;
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    background-image: url('//static.hdslb.com/images/member/noface.gif');
-    cursor: default;
-}
-
-.group-avatar:hover {
-    cursor: pointer;
-}
-
-.group-avatar:hover {
-    cursor: default;
-}
 
 .group-item {
     position: relative;
@@ -1265,15 +1227,6 @@
     .container {
         width: 95vw;
     }
-}
-
-.space-left {
-    width: fit-content;
-    min-width: 15rem;
-    max-width: 30%;
-    background-color: #fff;
-    padding: 12px;
-    overflow-y: scroll;
 }
 
 .space-left::-webkit-scrollbar {
@@ -1519,18 +1472,6 @@
     margin: 0 15px 0 0;
 }
 
-.avatar {
-    display: block;
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    -ms-flex-negative: 0;
-    flex-shrink: 0;
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    background-image: url('//static.hdslb.com/images/member/noface.gif');
-}
 
 .count-2 {
     position: relative;
@@ -1699,18 +1640,6 @@
     cursor: pointer;
 }
 
-.my-avatar {
-    display: block;
-    width: 46px;
-    height: 46px;
-    border-radius: 50%;
-    -ms-flex-negative: 0;
-    flex-shrink: 0;
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    background-image: url('//static.hdslb.com/images/member/noface.gif');
-}
 
 .my-avatar:hover {
     cursor: pointer;
@@ -2494,20 +2423,6 @@
     border-bottom: 0;
 }
 
-.list-item .avatar {
-    display: block;
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    -ms-flex-negative: 0;
-    flex-shrink: 0;
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    background-image: url('//static.hdslb.com/images/member/noface.gif');
-    margin-right: 8px;
-    position: relative;
-}
 
 .list-item .avatar:hover {
     cursor: pointer;
@@ -7438,19 +7353,6 @@
     width: 80%;
 }
 
-.avatar {
-    display: block;
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    -ms-flex-negative: 0;
-    flex-shrink: 0;
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    background-image: url('//static.hdslb.com/images/member/noface.gif');
-    float: left;
-}
 
 .avatar:hover {
     cursor: pointer;
@@ -7535,10 +7437,6 @@
     color: #fff;
 }
 
-.is-me .avatar {
-    float: right;
-    background-image: url('//static.hdslb.com/images/member/noface.gif');
-}
 
 .is-me .message {
     position: relative;
@@ -8859,20 +8757,6 @@
     border-bottom: 0;
 }
 
-.list-item .avatar {
-    display: block;
-    width: 42px;
-    height: 42px;
-    border-radius: 50%;
-    -ms-flex-negative: 0;
-    flex-shrink: 0;
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    background-image: url('//static.hdslb.com/images/member/noface.gif');
-    margin-right: 8px;
-    position: relative;
-}
 
 .list-item .avatar:hover {
     cursor: pointer;
@@ -9340,19 +9224,6 @@
     float: left;
 }
 
-.avatar {
-    display: block;
-    width: 80px;
-    height: 80px;
-    border-radius: 50%;
-    -ms-flex-negative: 0;
-    flex-shrink: 0;
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    background-image: url('//static.hdslb.com/images/member/noface.gif');
-    float: left;
-}
 
 .avatar:hover {
     cursor: pointer;
@@ -9429,10 +9300,6 @@
     color: #fff;
 }
 
-.is-me .avatar {
-    float: right;
-    background-image: url('//static.hdslb.com/images/member/noface.gif');
-}
 
 .is-me .message {
     position: relative;
@@ -10520,7 +10387,10 @@
 }
 
 body {
-    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+    font-family: Open Sans, -apple-system, BlinkMacSystemFont, Helvetica Neue, Helvetica, Segoe UI, Arial, Roboto, PingFang SC, miui, Hiragino Sans GB, Microsoft Yahei, sans-serif;
+    overflow-x: auto;
+
 }
 
 #internationalHeader {
@@ -10546,7 +10416,8 @@ body {
 .container {
     margin-top: 10px;
     margin: 0 auto;
-    height: calc(90vh);
+    height: auto;
+    min-height: 85vh;
     max-width: 95vw;
     display: flex;
     position: relative;

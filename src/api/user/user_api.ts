@@ -10,6 +10,10 @@ class UserApi extends BaseApi {
     this.path = '/api/v1/user/'
   }
 
+  async RefreshToken(): Promise<RootObject<LoginModel>> {
+    return await this._post('refresh_token')
+  }
+
   async Login(user_name: String, pwd: String): Promise<RootObject<LoginModel>> {
     return await this._post('login', { user_name: user_name, pwd: pwd })
   }
@@ -32,9 +36,11 @@ class UserApi extends BaseApi {
   async PwdSalt(): Promise<RootObject<string>> {
     return await this._get('pwd_salt')
   }
+
   async UserInfo(): Promise<RootObject<User_base_info_config_form>> {
     return await this._get('user_info')
   }
+
   async UpdateUserInfo(
     user_base_info_config_form: Omit<User_base_info_config_form, 'userid'>
   ): Promise<RootObject<string>> {

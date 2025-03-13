@@ -7,6 +7,7 @@
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
 -->
 <script setup lang="ts">
+import { useDebounceFn } from '@vueuse/core'
 import { computed, onMounted, ref } from 'vue'
 import userApi from '@/api/user/user_api'
 import { isLogin } from '@/api/user/utils'
@@ -65,7 +66,8 @@ const login_info = ref({
 const tabChange = (t: string) => {
   login_info.value.checked !== t && (login_info.value.checked = t)
 }
-const handleLoginBtn = async () => {
+const handleLoginBtn = useDebounceFn(async () => {
+  if (login_able.value.disabled) return
   if (tab__form.value.user_name.length * tab__form.value.pwd.length == 0) {
     emitter.emit('toast', { t: '请输入账号和密码！', e: 'info' })
     return
@@ -91,8 +93,9 @@ const handleLoginBtn = async () => {
       emitter.emit('toast', { t: `登录失败！原因：${e}`, e: 'error' })
       return
     })
-}
-const handleRegBtn = async () => {
+}, 1e3)
+const handleRegBtn = useDebounceFn(async () => {
+  if (reg_able.value.disabled) return
   if (tab__form.value.reg_user_name.length * tab__form.value.reg_pwd.length == 0) {
     emitter.emit('toast', { t: `请输入账号和密码！`, e: 'error' })
     return
@@ -116,7 +119,7 @@ const handleRegBtn = async () => {
       emitter.emit('toast', { t: `注册失败！原因：${e}`, e: 'error' })
       return
     })
-}
+}, 1e3)
 const clickSpaceArea = (t: any) => {
   let r = document.getElementsByClassName('forget-tip')[0]
   showForgetTips.value && t && !r.contains(t.target) && (showForgetTips.value = !1)
@@ -129,7 +132,7 @@ const check_login = () => {
         emitter.emit('toast', { t: `账号已登录，等待跳转！`, e: 'info' })
         router.push('/app/user-center')
       } else {
-        JwtStore.jwt ? emitter.emit('toast', { t: res[1], e: 'error' }) : null
+        emitter.emit('toast', { t: res[1], e: 'error' })
       }
     })
     .catch((e) => {
@@ -174,6 +177,7 @@ onMounted(() => {
                 type="text"
                 v-model.trim="tab__form.user_name"
                 v-no-space
+                @keydown.enter="handleLoginBtn"
               />
             </div>
             <div class="form__separator-line"></div>
@@ -187,6 +191,7 @@ onMounted(() => {
                 :type="show_pwd ? `text` : `password`"
                 v-model.trim="tab__form.pwd"
                 v-no-space
+                @keydown.enter="handleLoginBtn"
               />
               <div class="eye-btn">
                 <svg
@@ -227,6 +232,7 @@ onMounted(() => {
           </div>
           <div class="btn_wp">
             <div class="btn_other" @click="tabChange('reg')">没有账号立即注册</div>
+
             <div class="btn_primary" :class="login_able" @click="handleLoginBtn">登录</div>
           </div>
           <div class="forget-tip" v-show="showForgetTips" @click="showForgetTips = !showForgetTips">
@@ -327,11 +333,11 @@ onMounted(() => {
   align-items: center;
   background-color: #fff;
   height: 100%;
-  padding: 1rem 1rem 3rem 1rem;
+  padding: 1rem 1rem 1.25rem 1rem;
 }
 
 .main__right .tab__form {
-  width: fit-content;
+  width: 100%;
   height: 90px;
   border: 1px solid #e3e5e7;
   border-radius: 8px;

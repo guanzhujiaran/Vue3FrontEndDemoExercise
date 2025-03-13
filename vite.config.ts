@@ -14,10 +14,9 @@ import VueDevTools from 'vite-plugin-vue-devtools'
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [vue(), vueJsx(), VueDevTools(),],
+  plugins: [vue(), vueJsx(), VueDevTools()],
   resolve: {
     alias: {
-      // '@': fileURLToPath(new URL('./src', import.meta.url))
       '@': path.resolve(__dirname, 'src'),
       '@api': path.resolve(__dirname, 'src/api'),
       '@views': path.resolve(__dirname, 'src/views'),
@@ -34,5 +33,8 @@ export default defineConfig({
       }
     },
     host: '0.0.0.0'
-  },
+  }
+  // esbuild: {
+  //   drop: ['console', 'debugger']
+  // }
 })

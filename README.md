@@ -1,6 +1,7 @@
 # BiliLottery
 
-照抄B站UI风格练手写个前端。
+照抄B站UI风格练手写个前端。 \
+整个网站在 [serena.dynv6.net](https://serena.dynv6.net) \
 This template should help get you started developing with Vue 3 in Vite.
 
 ## Recommended IDE Setup

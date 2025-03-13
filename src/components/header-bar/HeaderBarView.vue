@@ -30,7 +30,7 @@ onUnmounted(() => {
 //好看的粉色#fb7299
 </script>
 <template>
-  <div id="internationalHeader">
+  <div id="bili-header">
     <GlobalToast />
     <div v-if="globalVars?.screen_size === 'large'" class="mini-header m-header mini-type">
       <div class="mini-header__content mini-header--login">
@@ -79,10 +79,10 @@ onUnmounted(() => {
     </div>
     <div v-else class="el-mini-header" style="margin-bottom: 0.5rem">
       <el-menu :default-active="$route.path" mode="horizontal" router>
-        <el-menu-item index="/">主页 </el-menu-item>
-        <el-menu-item index="/app/user-center">用户中心 </el-menu-item>
-        <el-menu-item index="/app/lot-data">抽奖数据 </el-menu-item>
-        <el-menu-item index="/app/Feedback">反馈区 </el-menu-item>
+        <el-menu-item index="/">主页</el-menu-item>
+        <el-menu-item index="/app/user-center">用户中心</el-menu-item>
+        <el-menu-item index="/app/lot-data">抽奖数据</el-menu-item>
+        <el-menu-item index="/app/Feedback">反馈区</el-menu-item>
       </el-menu>
     </div>
   </div>
@@ -105,11 +105,12 @@ a {
 }
 
 .nav-link .nav-link-ul {
-  font-size: clamp(1rem, 3vw, 1.5rem);
+  font-size: 0.4rem;
   margin-top: 2vh;
   height: 5vh;
   width: 90%;
   display: flex;
+  white-space: nowrap;
 }
 
 .nav-link .nav-link-ul li:hover {

@@ -51,12 +51,11 @@ ajax.interceptors.response.use(
   (response) => response.data,
   (error) => {
     // 处理错误，比如根据错误码提示用户或跳转登录页
-    if (import.meta.env.VITE_BILI_ENV === 'dev') {
-      console.error('API Error:', error)
-    }
+    console.error('API Error:', error)
     emitter.emit('toast', { t: `请求发送失败！${error}`, e: 'error' })
     return {
-      code: -1,
+      code: -9999,
+      data: null,
       msg: error.message
     }
   }
