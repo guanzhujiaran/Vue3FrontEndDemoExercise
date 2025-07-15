@@ -1,4 +1,5 @@
 import aes from 'crypto-js/aes'
+import * as echarts from 'echarts/core'
 
 const utils = {
   // 将时间戳或日期字符串转换为格式化后的日期字符串
@@ -103,6 +104,33 @@ const utils = {
   },
   encrypt_pwd(t: string, sec: string) {
     return aes.encrypt(t + String(this.homo_gen(5)), sec).toString()
+  },
+  arabicToChinese(num: number) {
+    const chineseDigits = ['零', '一', '二', '三', '四', '五', '六', '七', '八', '九']
+    const units = ['', '十', '百', '千', '万', '十', '百', '千', '亿']
+
+    if (num === 0) return chineseDigits[0]
+
+    let result = ''
+    let unitIndex = 0
+
+    while (num > 0) {
+      const digit = num % 10
+      if (digit !== 0) {
+        result = chineseDigits[digit] + units[unitIndex] + result
+      } else {
+        // 处理连续零的情况
+        if (result[0] !== '零' && result[0] !== '') {
+          result = '零' + result
+        }
+      }
+      num = Math.floor(num / 10)
+      unitIndex++
+    }
+
+    // 去掉多余的“零”和“一十”
+    result = result.replace(/零+$/, '').replace(/^一十/, '十')
+    return result
   }
 }
 

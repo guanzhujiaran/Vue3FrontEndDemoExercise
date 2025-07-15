@@ -1223,11 +1223,7 @@
     width: 100%;
 }
 
-@media screen and (max-width: 1400px) {
-    .container {
-        width: 95vw;
-    }
-}
+
 
 .space-left::-webkit-scrollbar {
     display: none !important;
@@ -5029,16 +5025,6 @@
     max-height: 2.769230769230769em;
 }
 
-@media screen and (max-width: 1400px) {
-    .msg-push .video-content .left {
-        width: 270px;
-        height: 180px;
-    }
-
-    .msg-push .video-content .right {
-        height: 180px;
-    }
-}
 
 .msg-push hr {
     border: none;
@@ -5081,11 +5067,6 @@
     height: 200px;
 }
 
-@media screen and (max-width: 1400px) {
-    .msg-push .cv-images {
-        height: 156px;
-    }
-}
 
 .msg-push .cv-img-3 {
     display: -webkit-box;
@@ -5141,12 +5122,7 @@
     height: 352px;
 }
 
-@media screen and (max-width: 1400px) {
-    .abnormal-card {
-        width: 540px;
-        height: 270px;
-    }
-}
+
 
 .abnormal-card .placeholder {
     display: -webkit-box;
@@ -10411,23 +10387,6 @@ body {
     position: fixed;
     top: 0;
     z-index: 999;
-}
-
-.container {
-    margin-top: 10px;
-    margin: 0 auto;
-    height: auto;
-    min-height: 85vh;
-    max-width: 95vw;
-    display: flex;
-    position: relative;
-    -webkit-box-orient: horizontal;
-    -webkit-box-direction: normal;
-    -ms-flex-direction: row;
-    flex-direction: row;
-    -webkit-box-align: stretch;
-    -ms-flex-align: stretch;
-    align-items: stretch;
 }
 
 html {

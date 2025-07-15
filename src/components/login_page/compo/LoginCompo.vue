@@ -1,11 +1,3 @@
-<!--
- * @Author: 星瞳 1944637830@qq.com
- * @Date: 2024-04-02 21:17:47
- * @LastEditors: 星瞳 1944637830@qq.com
- * @LastEditTime: 2024-06-07 19:10:00
- * @FilePath: \BiliLottery\src\components\LoginCompo.vue
- * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
--->
 <script setup lang="ts">
 import { useDebounceFn } from '@vueuse/core'
 import { computed, onMounted, ref } from 'vue'
@@ -288,18 +280,6 @@ onMounted(() => {
   </div>
 </template>
 <style scoped>
-@media screen and (max-width: 600px) {
-  .btn_wp {
-    width: 95vw;
-  }
-}
-
-@media screen and (max-width: 400px) {
-  .btn_wp {
-    width: 95vw;
-  }
-}
-
 .btn_primary {
   width: 49.39%;
   height: 40px;
@@ -333,7 +313,7 @@ onMounted(() => {
   align-items: center;
   background-color: #fff;
   height: 100%;
-  padding: 1rem 1rem 1.25rem 1rem;
+  padding: 1rem 5rem 1.25rem 5rem;
 }
 
 .main__right .tab__form {
@@ -373,15 +353,15 @@ onMounted(() => {
 }
 
 .login_wp {
-  width: fit-content;
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  max-width: 100vw;
+  margin-top: 100px;
+  white-space: nowrap;
+  width: 100%;
 }
 
 .forget-tip {
+  position: absolute;
+  top: 16rem;
+  left: 17rem;
   z-index: 100;
   box-sizing: border-box;
   width: 332px;
@@ -421,13 +401,7 @@ onMounted(() => {
 }
 
 .login-pwd {
-  position: relative;
-}
-
-.login-pwd .forget-tip {
-  position: absolute;
-  top: 110px;
-  left: 205px;
+  padding: 1rem;
 }
 
 .tab-sms,

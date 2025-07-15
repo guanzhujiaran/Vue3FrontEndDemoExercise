@@ -1,10 +1,9 @@
 <template>
-  <div class="container">
+  <CommContainer>
     <div class="el-tabs-wrapper" style="overflow: hidden">
       <el-tabs
         v-model="active_genre_name"
         type="border-card"
-        style="height: 100%; min-height: 90vh"
         @tab-change="
           (name) => {
             LotDataStore.last_show_lot_data_genre_tab = name as ParentLotDataTab
@@ -22,108 +21,107 @@
         </el-tab-pane>
       </el-tabs>
     </div>
-  </div>
-  <Draggable
-    class="drag-upload-btn"
-    :initial-value="{ x: 16, y: 120 }"
-    v-slot="{ x, y }"
-    style="position: absolute; z-index: 9999"
-    prevent-default
-    storage-key="vueuse-draggable-upload-lot-data"
-    storage-type="session"
-    :on-move="handleDraggableMove"
-  >
-    <el-button
-      type="primary"
-      round
-      size="default"
-      @click="handleClickDraggableBtn"
-      ref="DraggableBtn"
-      >提交数据
-    </el-button>
-  </Draggable>
-  <div v-if="is_upload_popover_open" class="lot-upload__wrap">
-    <div
-      class="bili-overlay"
-      style="background-color: rgba(0, 0, 0, 0.5)"
-      @click="is_upload_popover_open = false"
-    ></div>
-    <div class="lot-upload-popover">
-      <div class="lot-upload__pub">
-        <div class="lot-upload-publishing" v-loading="lot_upload_submit_props.loading">
-          <div class="lot-upload-publishing__closing" @click="is_upload_popover_open = false">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 16 16"
-              width="16"
-              height="16"
-              style="width: 16px; height: 16px"
+    <Draggable
+      class="drag-upload-btn"
+      :initial-value="{ x: 50, y: 120 }"
+      v-slot="{ x, y }"
+      style="position: fixed; z-index: 9999"
+      prevent-default
+      storage-key="vueuse-draggable-upload-lot-data"
+      storage-type="session"
+      :on-move="handleDraggableMove"
+    >
+      <el-button
+        type="primary"
+        round
+        size="default"
+        @click="handleClickDraggableBtn"
+        ref="DraggableBtn"
+        >提交数据
+      </el-button>
+    </Draggable>
+    <div v-if="is_upload_popover_open" class="lot-upload__wrap">
+      <div
+        class="bili-overlay"
+        style="background-color: rgba(0, 0, 0, 0.5)"
+        @click="is_upload_popover_open = false"
+      ></div>
+      <div class="lot-upload-popover">
+        <div class="lot-upload__pub">
+          <div class="lot-upload-publishing" v-loading="lot_upload_submit_props.loading">
+            <div class="lot-upload-publishing__closing" @click="is_upload_popover_open = false">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 16 16"
+                width="16"
+                height="16"
+                style="width: 16px; height: 16px"
+              >
+                <path
+                  d="M3.1082399999999994 3.110086666666666C3.4011333333333327 2.81719 3.876006666666667 2.81719 4.168896666666666 3.110086666666666L7.9989333333333335 6.94015L11.830066666666667 3.108993333333333C12.12295 2.8160966666666667 12.597849999999998 2.8160966666666667 12.890716666666664 3.108993333333333C13.183683333333335 3.401883333333334 13.183683333333335 3.8767599999999995 12.890716666666664 4.169649999999999L9.059583333333332 8.0008L12.88985 11.831083333333334C13.182816666666668 12.12395 13.182816666666668 12.598849999999999 12.88985 12.891716666666664C12.59698333333333 13.1846 12.12208333333333 13.1846 11.8292 12.891716666666664L7.9989333333333335 9.06145L4.169766666666666 12.890666666666664C3.876866666666667 13.183533333333333 3.4019999999999997 13.183533333333333 3.1091 12.890666666666664C2.816209999999999 12.597699999999998 2.816209999999999 12.122883333333334 3.1091 11.830016666666667L6.938283333333333 8.0008L3.1082399999999994 4.170743333333332C2.8153433333333333 3.877853333333333 2.8153433333333333 3.4029766666666674 3.1082399999999994 3.110086666666666z"
+                  fill="currentColor"
+                ></path>
+              </svg>
+            </div>
+            <div class="lot-upload-publishing__title">
+              <span>提交抽奖数据</span>
+            </div>
+            <el-dropdown
+              class="lot-upload-publishing__selector"
+              @command="handle_command"
+              popper-class="lot-upload-publishing__selector-popper"
+              :teleported="false"
             >
-              <path
-                d="M3.1082399999999994 3.110086666666666C3.4011333333333327 2.81719 3.876006666666667 2.81719 4.168896666666666 3.110086666666666L7.9989333333333335 6.94015L11.830066666666667 3.108993333333333C12.12295 2.8160966666666667 12.597849999999998 2.8160966666666667 12.890716666666664 3.108993333333333C13.183683333333335 3.401883333333334 13.183683333333335 3.8767599999999995 12.890716666666664 4.169649999999999L9.059583333333332 8.0008L12.88985 11.831083333333334C13.182816666666668 12.12395 13.182816666666668 12.598849999999999 12.88985 12.891716666666664C12.59698333333333 13.1846 12.12208333333333 13.1846 11.8292 12.891716666666664L7.9989333333333335 9.06145L4.169766666666666 12.890666666666664C3.876866666666667 13.183533333333333 3.4019999999999997 13.183533333333333 3.1091 12.890666666666664C2.816209999999999 12.597699999999998 2.816209999999999 12.122883333333334 3.1091 11.830016666666667L6.938283333333333 8.0008L3.1082399999999994 4.170743333333332C2.8153433333333333 3.877853333333333 2.8153433333333333 3.4029766666666674 3.1082399999999994 3.110086666666666z"
-                fill="currentColor"
-              ></path>
-            </svg>
-          </div>
-          <div class="lot-upload-publishing__title">
-            <span>提交抽奖数据</span>
-          </div>
-          <el-dropdown
-            class="lot-upload-publishing__selector"
-            @command="handle_command"
-            popper-class="lot-upload-publishing__selector-popper"
-            :teleported="false"
-          >
-            <el-button type="primary" style="width: 100%">
-              {{ lot_upload_selected_drop_down_props.title }}
-              <el-icon class="el-icon--right">
-                <arrow-down />
-              </el-icon>
+              <el-button type="primary" style="width: 100%">
+                {{ lot_upload_selected_drop_down_props.title }}
+                <el-icon class="el-icon--right">
+                  <arrow-down />
+                </el-icon>
+              </el-button>
+              <template #dropdown>
+                <el-dropdown-menu>
+                  <el-dropdown-item :command="lot_upload_drop_down_props.upload_dynamic_lottery"
+                    >{{ lot_upload_drop_down_props.upload_dynamic_lottery.title }}
+                  </el-dropdown-item>
+                  <el-dropdown-item
+                    disabled
+                    :command="lot_upload_drop_down_props.upload_space_reserve_lottery"
+                    >{{ lot_upload_drop_down_props.upload_space_reserve_lottery.title }}
+                  </el-dropdown-item>
+                </el-dropdown-menu>
+              </template>
+            </el-dropdown>
+            <el-input
+              class="lot-upload-publishing__textarea"
+              v-model="lot_upload_submit_props.textarea"
+              :autosize="{ minRows: 6, maxRows: 12 }"
+              type="textarea"
+              :placeholder="lot_upload_selected_drop_down_props.placeholder"
+              :disabled="!lot_upload_selected_drop_down_props.is_textarea_able"
+              resize="none"
+            />
+            <el-button
+              type="primary"
+              class="lot-upload-publishing__submit"
+              :disabled="
+                !(
+                  lot_upload_selected_drop_down_props.is_textarea_able &&
+                  lot_upload_submit_props.textarea.length > 0
+                )
+              "
+              @click="handle_lot_upload_submit"
+              >提交
             </el-button>
-            <template #dropdown>
-              <el-dropdown-menu>
-                <el-dropdown-item :command="lot_upload_drop_down_props.upload_dynamic_lottery"
-                  >{{ lot_upload_drop_down_props.upload_dynamic_lottery.title }}
-                </el-dropdown-item>
-                <el-dropdown-item
-                  disabled
-                  :command="lot_upload_drop_down_props.upload_space_reserve_lottery"
-                  >{{ lot_upload_drop_down_props.upload_space_reserve_lottery.title }}
-                </el-dropdown-item>
-              </el-dropdown-menu>
-            </template>
-          </el-dropdown>
-          <el-input
-            class="lot-upload-publishing__textarea"
-            v-model="lot_upload_submit_props.textarea"
-            :autosize="{ minRows: 6, maxRows: 12 }"
-            type="textarea"
-            :placeholder="lot_upload_selected_drop_down_props.placeholder"
-            :disabled="!lot_upload_selected_drop_down_props.is_textarea_able"
-            resize="none"
-          />
-          <el-button
-            type="primary"
-            class="lot-upload-publishing__submit"
-            :disabled="
-              !(
-                lot_upload_selected_drop_down_props.is_textarea_able &&
-                lot_upload_submit_props.textarea.length > 0
-              )
-            "
-            @click="handle_lot_upload_submit"
-            >提交
-          </el-button>
-          <div style="clear: both"></div>
+            <div style="clear: both"></div>
+          </div>
         </div>
-      </div>
-      <div class="lot-upload__done">
-        <div class="lot-upload-succ-tip" v-show="is_upload_succ">
-          <div class="lot-upload-succ-tip__img"></div>
-          <div class="lot-upload-succ-tip__tips" style="width: 100%">
-            反馈信息：<br /><br />
-            <el-card
-              body-style="
+        <div class="lot-upload__done">
+          <div class="lot-upload-succ-tip" v-show="is_upload_succ">
+            <div class="lot-upload-succ-tip__img"></div>
+            <div class="lot-upload-succ-tip__tips" style="width: 100%">
+              反馈信息：<br /><br />
+              <el-card
+                body-style="
                         overflow-y:scroll;
                         display: flex;
                         flex-wrap: nowrap;
@@ -132,38 +130,38 @@
                         row-gap:0.2rem;
                         max-height: 50vh;
                         "
-            >
-              <el-tooltip
-                v-for="(el, idx) in lot_upload_submit_props.submit.result_data"
-                :key="idx"
-                :content="el.msg"
-                placement="top"
               >
-                <el-tag :type="el.code === 0 ? `success` : `danger`" hit style="min-height: 2rem">
-                  {{ lot_upload_submit_props.submit.req_data[idx] }}
-                </el-tag>
-              </el-tooltip>
-            </el-card>
+                <el-tooltip
+                  v-for="(el, idx) in lot_upload_submit_props.submit.result_data"
+                  :key="idx"
+                  :content="el.msg"
+                  placement="top"
+                >
+                  <el-tag :type="el.code === 0 ? `success` : `danger`" hit style="min-height: 2rem">
+                    {{ lot_upload_submit_props.submit.req_data[idx] }}
+                  </el-tag>
+                </el-tooltip>
+              </el-card>
+            </div>
+            <button
+              class="lot-upload-succ-tip__btn bili-button bili-button--medium"
+              @click="
+                () => {
+                  is_upload_succ = false
+                }
+              "
+            >
+              关闭
+            </button>
           </div>
-          <button
-            class="lot-upload-succ-tip__btn bili-button bili-button--medium"
-            @click="
-              () => {
-                is_upload_succ = false
-              }
-            "
-          >
-            关闭
-          </button>
         </div>
       </div>
     </div>
-  </div>
+  </CommContainer>
 </template>
 <script setup lang="ts">
 import { ArrowDown } from '@element-plus/icons-vue'
 import { ref, computed, useTemplateRef } from 'vue'
-import BiliDataWrapper from '@/components/lottery_data_statistic/bili_data/BiliDataWrapper.vue'
 import {
   type LotDataWrapperProps,
   type LotUploadAreaProps,
@@ -176,6 +174,7 @@ import { useLotDataStore } from '@/stores/lot_data.ts'
 import BiliAtariRanking from '@/components/lottery_data_statistic/BiliAtariRanking.vue'
 import { UseDraggable as Draggable } from '@vueuse/components'
 import type { Position } from '@vueuse/core'
+import { isMobileDevice } from '@/utils/Browser/useDeviceDetect.ts'
 
 const DraggableBtn = useTemplateRef('DraggableBtn')
 const LotDataStore = useLotDataStore()
@@ -274,10 +273,14 @@ const handle_lot_upload_submit = async () => {
   lot_upload_submit_props.value.loading = false
   is_upload_succ.value = true
 }
+
 const handleClickDraggableBtn = (e: MouseEvent) => {
-  console.log(e)
-  if (Math.abs(e.movementX) <= 10 && Math.abs(e.movementY) <= 10) {
-    //只有不移动或者移动距离短的时候才触发
+  if (isMobileDevice() == 2) {
+    if (Math.abs(e.movementX) <= 10 && Math.abs(e.movementY) <= 10) {
+      //只有不移动或者移动距离短的时候才触发
+      is_upload_popover_open.value = !is_upload_popover_open.value
+    }
+  } else {
     is_upload_popover_open.value = !is_upload_popover_open.value
   }
 }
@@ -290,14 +293,14 @@ const handleDraggableMove = (position: Position) => {
   })
   let width = DraggableBtn.value?.ref?.offsetWidth ?? 90
   let height = DraggableBtn.value?.ref?.offsetHeight ?? 40
-  if (position.x > window.innerWidth - width) {
-    position.x = window.innerWidth - width
+  if (position.x > window.innerWidth - width - 20) {
+    position.x = window.innerWidth - width - 20
   }
   if (position.x < 0) {
     position.x = 0
   }
-  if (position.y > window.innerHeight - height) {
-    position.y = window.innerHeight - height
+  if (position.y > window.innerHeight - height - 20) {
+    position.y = window.innerHeight - height - 20
   }
   if (position.y < 0) {
     position.y = 0
@@ -305,6 +308,11 @@ const handleDraggableMove = (position: Position) => {
 }
 </script>
 <style scoped>
+:deep(.el-tabs),
+:deep(.el-tab-pane) {
+  height: 100%;
+}
+
 ::-webkit-scrollbar {
   width: 0;
   height: 0;
@@ -440,7 +448,6 @@ const handleDraggableMove = (position: Position) => {
 
 .el-tabs-wrapper {
   width: 100%;
-  height: 100%;
   border-radius: 15px;
 }
 

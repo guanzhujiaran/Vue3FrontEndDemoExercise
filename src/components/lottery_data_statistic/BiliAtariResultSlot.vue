@@ -334,6 +334,7 @@ const biliRankUserAtariDetailTip = computed(
 .prize-item-row {
   display: flex; /* 确保内部内容按需排列 */
   width: 100%;
+  flex-direction: column;
 }
 
 @keyframes hueRotate {

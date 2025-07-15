@@ -11,12 +11,12 @@ const emit = defineEmits(['clickRetry'])
 </script>
 
 <template>
-  <div>
+  <el-space direction="vertical" alignment="center" style="width: 100%">
     <img :src="BiliImg.ranking.status.error" class="pic" alt="" referrerpolicy="no-referrer" />
     <div class="txt">
       {{ props.txt }}，<span @click="emit('clickRetry')">点击重试</span>（T-T）~
     </div>
-  </div>
+  </el-space>
 </template>
 
 <style scoped>

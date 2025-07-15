@@ -26,5 +26,8 @@ export const BiliImg = {
       bg3: 'https://i0.hdslb.com/bfs/live-activity/nuwa/navigation_rank_2023/static/img/bg3.5490c983.png',
       bg4: 'https://i0.hdslb.com/bfs/live-activity/nuwa/navigation_rank_2023/static/img/bg4.68c18166.png'
     }
+  },
+  infoCenter: {
+    bg: 'https://s1.hdslb.com/bfs/static/blive/blfe-message-web/static/img/infocenterbg.a1a0d152.jpg'
   }
 }

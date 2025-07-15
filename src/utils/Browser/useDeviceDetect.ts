@@ -1,4 +1,8 @@
 // 导出一个函数，用于判断当前设备是否为移动设备
+/**
+ * 判断当前设备是否为移动设备
+ * * @returns {2|1} 如果是移动设备，则返回2，否则返回1
+ */
 export function isMobileDevice() {
   // 获取当前浏览器的用户代理信息，并将其转换为小写
   const t = navigator.userAgent.toLowerCase(),

@@ -9,6 +9,10 @@
         }
     ],
     "compilerOptions": {
+        "lib": [
+            "ES2024",
+            "dom"
+        ],
         "baseUrl": "./",
         "paths": {
             "@": [
@@ -18,5 +22,11 @@
                 "src/*"
             ]
         },
+        "plugins": [
+            {
+                "name": "@0no-co/graphql",
+                "schema": "./schema.graphql"
+            }
+        ]
     }
 }

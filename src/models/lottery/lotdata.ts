@@ -25,6 +25,7 @@ export interface LotUploadAreaProps {
   is_textarea_able: boolean
 }
 
+//region 爬虫状态响应类型
 export interface ScrapyStatus {
   succ_count: number
   cur_stop_num: number
@@ -52,7 +53,9 @@ export interface ScrapyStatusResp {
   topic_scrapy_status: ScrapyStatus
   reserve_scrapy_status: ScrapyStatus
 }
+//endregion
 
+//region B站抽奖统计数据响应类型
 export enum LotteryRankLotType {
   official = 'official',
   reserve = 'reserve',
@@ -90,6 +93,7 @@ export type LotteryResultResp = {
   prize_result: PrizeResult[]
   total: number
 }
+//endregion
 
 export enum ParentLotDataTab {
   Bili = 'bili',

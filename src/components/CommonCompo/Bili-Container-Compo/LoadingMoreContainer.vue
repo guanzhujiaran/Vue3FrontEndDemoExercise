@@ -3,7 +3,7 @@ import { type PropType, ref } from 'vue'
 
 const props = defineProps({
   handleLoad: {
-    type: Function as PropType<(payload: MouseEvent) => void>,
+    type: Function as PropType<() => void>,
     required: true
   }
 })
@@ -24,7 +24,7 @@ const isMore = defineModel('isMore', {
       <slot name="content"></slot>
     </div>
     <slot name="footer">
-      <div class="loading-more" style="background-color: transparent" @click="props.handleLoad">
+      <div v-if="isMore" class="loading-more" style="background-color: transparent" @click="props.handleLoad">
         <span>查看更多</span>
       </div>
     </slot>
@@ -50,6 +50,8 @@ const isMore = defineModel('isMore', {
 }
 
 .with-loading-more {
+      background-color: var(--el-bg-color);
+
   position: relative;
   display: flex;
   flex-direction: column;

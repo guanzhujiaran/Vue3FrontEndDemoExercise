@@ -33,14 +33,13 @@
               :score_suffix="props.score_suffix"
               @score_click="handleScoreClick"
             />
-            <div v-if="!isMore">没有更多的了</div>
+            <div v-if="!isMore" style="text-align: center">没有更多的了</div>
           </div>
-          <div class="rank-empty" v-if="rankItems.length === 0">
+          <div class="rank-empty" v-if="rankItems.length === 0 && !isError">
             <BiliEmpty />
           </div>
-          <div class="rank-error" v-if="isError">
-            <BiliError @click-retry="handleLoad" />
-          </div>
+
+          <BiliError class="rank-error" v-if="isError" @click-retry="handleLoad"></BiliError>
         </div>
       </template>
     </LoadingMoreContainer>
@@ -125,10 +124,10 @@ const handleLoad = useDebounceFn(async () => {
     activedParams.value
   )
   let i: any[]
-  rankItems.value.length
+  ;(rankItems.value.length
     ? (i = resp_rank_items)
     : ((topItems.value = resp_rank_items.slice(0, 3)), (i = resp_rank_items.slice(3))),
-    (rankItems.value = [...rankItems.value, ...i])
+    (rankItems.value = [...rankItems.value, ...i]))
   resp_rank_items.length <= 0 && (isMore.value = !1)
   cur_offset.value += resp_rank_items.length
   isLoading.value = false
@@ -151,6 +150,7 @@ const handleScoreClick = (item: BaseRankItem) => {
 .rank-panel :deep(.score) {
   cursor: pointer;
 }
+
 .rank-header-panel {
   height: 1.226667rem;
   padding: 0 0.32rem;
@@ -192,7 +192,8 @@ const handleScoreClick = (item: BaseRankItem) => {
   height: 21.6rem;
   padding-bottom: 0.906667rem;
   border: 1px solid #42485e;
-  background: linear-gradient(180deg, rgba(24, 25, 38, 0.95), rgba(17, 17, 28, 0.95) 96.22%),
+  background:
+    linear-gradient(180deg, rgba(24, 25, 38, 0.95), rgba(17, 17, 28, 0.95) 96.22%),
     linear-gradient(0, rgba(66, 72, 94, 0.5), rgba(66, 72, 94, 0.5));
   position: relative;
 }

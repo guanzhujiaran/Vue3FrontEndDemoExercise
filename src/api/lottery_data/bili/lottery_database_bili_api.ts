@@ -46,6 +46,10 @@ class LotteryDataBaseApi extends BaseApi {
   async get_all_scrapy_status(): Promise<RootObject<ScrapyStatusResp>> {
     return await this._get('GetAllScrapyStatus')
   }
+
+  async handle_search_lottery_data({ keyword }: { keyword: string }): Promise<RootObject<any[]>> {
+    return await this._get('SearchLotteryByKeyword', { keyword })
+  }
 }
 
 const lotteryDataBaseApi = new LotteryDataBaseApi()

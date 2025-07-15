@@ -8,6 +8,7 @@
  */
 import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '@/views/HomeView.vue'
+
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
@@ -57,6 +58,11 @@ const router = createRouter({
       path: '/app/lot-data',
       name: '抽奖数据',
       component: () => import('@/views/LotteryDataStat.vue')
+    },
+    {
+      path: '/samsclub/info',
+      name: 'samsclub',
+      component: () => import('@/views/SamsClubView.vue')
     }
     // {
     //   path: '/app/communication',

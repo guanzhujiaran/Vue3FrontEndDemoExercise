@@ -1,5 +1,6 @@
 <template>
-  <div class="lot-data-panel">
+  <FlexContainer class="lot-data-panel">
+    <BiliLotteryDataSearchBox></BiliLotteryDataSearchBox>
     <el-tabs
       class="lot-data-tabs"
       v-model="activeLotDataName"
@@ -16,7 +17,7 @@
         id="data-official-lot"
         lazy
       >
-        <MyDataView
+        <BiliPaginationDataView
           :data="official_lot_data_props.lot_data?.items"
           :total="official_lot_data_props.lot_data?.total"
           :page_size="page_size"
@@ -30,7 +31,7 @@
         id="data-charge-lot"
         lazy
       >
-        <MyDataView
+        <BiliPaginationDataView
           :data="charge_lot_data_props.lot_data?.items"
           :total="charge_lot_data_props.lot_data?.total"
           :page_size="page_size"
@@ -44,7 +45,7 @@
         id="data-reserve-lot"
         lazy
       >
-        <MyDataView
+        <BiliPaginationDataView
           :data="reserve_lot_data_props.lot_data?.items"
           :total="reserve_lot_data_props.lot_data?.total"
           :page_size="page_size"
@@ -58,7 +59,7 @@
         id="data-topic-lot"
         lazy
       >
-        <MyDataView
+        <BiliPaginationDataView
           :data="topic_lot_data_props.lot_data?.items"
           :total="topic_lot_data_props.lot_data?.total"
           :page_size="page_size"
@@ -67,18 +68,22 @@
         />
       </el-tab-pane>
       <el-tab-pane label="直播抽奖" :name="live_lot_data_props.lot_name" id="data-live-lot" lazy>
-        <MyDataView
-          :data="live_lot_data_props.lot_data?.items"
-          :total="live_lot_data_props.lot_data?.total"
+        <BiliPaginationDataView
+          :data="live_lot_data_props.lot_data.items"
+          :total="live_lot_data_props.lot_data.total"
           :page_size="page_size"
           v-model:CurrentPage="live_lot_data_props.lot_page"
           v-model:Loading="live_lot_data_props.loading"
         />
       </el-tab-pane>
     </el-tabs>
-  </div>
+  </FlexContainer>
 </template>
 <style scoped>
+.search-box-wrapper {
+  margin-bottom: 0.3rem;
+}
+
 :deep(.el-tabs__nav-scroll) {
   overflow-x: scroll !important;
 }
@@ -89,14 +94,13 @@
 
 .lot-data-panel :deep(.el-tabs__content) {
   position: relative;
-  margin: 0.5rem 0.5rem 5rem;
-  min-height: 65vh;
+  padding: 0.4rem 0.1rem 3rem;
 }
 </style>
 <script setup lang="ts">
 import { ref, watch, type Ref } from 'vue'
-import MyDataView from '@/components/CommonCompo/PaginationDataView.vue'
-import { type LotDataWrapperProps } from '@/models/lottery/lotdata'
+import BiliPaginationDataView from '@/components/CommonCompo/Bili-DataTable-Compo/BiliPaginationDataView.vue'
+import { type LotDataView, type LotDataWrapperProps } from '@/models/lottery/lotdata'
 import lotteryDataBaseApi from '@/api/lottery_data/bili/lottery_database_bili_api'
 import emitter from '@/utils/mitt'
 import { useLotDataStore } from '@/stores/lot_data.ts'
@@ -105,38 +109,49 @@ import type { TabPaneName } from 'element-plus'
 const LotDataStore = useLotDataStore()
 const page_size = ref(10)
 const activeLotDataName = defineModel<any>('activeLotDataName')
-const empty_data = {
-  items: [],
-  total: 0
-}
 const init_pg = -1
 const official_lot_data_props = ref<LotDataWrapperProps>({
   lot_name: 'GetOfficialLottery',
-  lot_data: empty_data,
+  lot_data: {
+    items: [],
+    total: 0
+  },
   lot_page: init_pg,
   loading: true
 })
 const charge_lot_data_props = ref<LotDataWrapperProps>({
   lot_name: 'GetChargeLottery',
-  lot_data: empty_data,
+  lot_data: {
+    items: [],
+    total: 0
+  },
   lot_page: init_pg,
   loading: true
 })
 const reserve_lot_data_props = ref<LotDataWrapperProps>({
   lot_name: 'GetReserveLottery',
-  lot_data: empty_data,
+  lot_data: {
+    items: [],
+    total: 0
+  },
   lot_page: init_pg,
   loading: true
 })
 const live_lot_data_props = ref<LotDataWrapperProps>({
   lot_name: 'GetLiveLottery',
-  lot_data: empty_data,
+  lot_data: {
+    items: [],
+    total: 0
+  },
   lot_page: init_pg,
   loading: true
 })
 const topic_lot_data_props = ref<LotDataWrapperProps>({
   lot_name: 'GetTopicLottery',
-  lot_data: empty_data,
+  lot_data: {
+    items: [],
+    total: 0
+  },
   lot_page: init_pg,
   loading: true
 })
@@ -156,19 +171,34 @@ const get_lot_data = (
       .then((resp) => {
         switch (data_type) {
           case 'GetOfficialLottery':
-            official_lot_data_props.value.lot_data = resp.data ?? empty_data
+            official_lot_data_props.value.lot_data = resp.data ?? {
+              items: [],
+              total: 0
+            }
             break
           case 'GetReserveLottery':
-            reserve_lot_data_props.value.lot_data = resp.data ?? empty_data
+            reserve_lot_data_props.value.lot_data = resp.data ?? {
+              items: [],
+              total: 0
+            }
             break
           case 'GetChargeLottery':
-            charge_lot_data_props.value.lot_data = resp.data ?? empty_data
+            charge_lot_data_props.value.lot_data = resp.data ?? {
+              items: [],
+              total: 0
+            }
             break
           case 'GetLiveLottery':
-            live_lot_data_props.value.lot_data = resp.data ?? empty_data
+            live_lot_data_props.value.lot_data = resp.data ?? {
+              items: [],
+              total: 0
+            }
             break
           case 'GetTopicLottery':
-            topic_lot_data_props.value.lot_data = resp.data ?? empty_data
+            topic_lot_data_props.value.lot_data = resp.data ?? {
+              items: [],
+              total: 0
+            }
             break
         }
         if (resp.code !== 0) return { is_succ: false, msg: resp.msg }

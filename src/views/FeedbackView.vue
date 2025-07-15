@@ -19,7 +19,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="container">
+  <CommContainer>
     <div class="feedback-section-wrap">
       <div class="link-wrap">
         <el-tooltip content="点击跳转大佬空间" placement="bottom-end">
@@ -39,19 +39,10 @@ onMounted(async () => {
       />
     </div>
     <el-backtop></el-backtop>
-  </div>
+  </CommContainer>
 </template>
 
 <style scoped>
-.container {
-  background-color: #ffffff;
-  overflow-y: scroll;
-}
-
-.container::-webkit-scrollbar {
-  display: none;
-}
-
 .link-wrap {
   margin-top: 1rem;
   width: 100%;
@@ -69,7 +60,7 @@ onMounted(async () => {
   flex-direction: column;
   width: auto;
   padding: 0 10px 3rem;
-  max-width: 90vw;
+  background-color: #ffffff;
 }
 
 :deep(.placeholder) {

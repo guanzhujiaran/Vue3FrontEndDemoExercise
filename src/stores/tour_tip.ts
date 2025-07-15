@@ -1,6 +1,5 @@
 import { ref } from 'vue'
 import { defineStore } from 'pinia'
-import { Device, Theme } from '@/models/store/device_system.ts'
 
 export const useTourTipStore = defineStore(
   'tour-tip',

@@ -117,7 +117,7 @@ const handle_open_drawer = () => {
 </script>
 
 <template>
-  <div class="container" v-loading="!user_nav.uid">
+  <CommContainer v-loading="!user_nav.uid">
     <div class="space-left">
       <div class="drawer-wrap" v-if="isSmallScreen">
         <el-button class="open-drawer" @click="handle_open_drawer" type="danger"></el-button>
@@ -130,9 +130,9 @@ const handle_open_drawer = () => {
     <div class="space-right">
       <RightPannelTopBar
         :title="
-          $route.params.account_name
-            ? `账号【${$route.params.account_name}】`
-            : `${$route.name?.toString()}`
+          route.params.account_name
+            ? `账号【${route.params.account_name}】`
+            : `${route.name?.toString()}`
         "
       >
       </RightPannelTopBar>
@@ -146,17 +146,17 @@ const handle_open_drawer = () => {
         >
         </RightPannel>
         <div
-          v-if="$route.name === '用户全局设置' && user_nav.role === 'root'"
+          v-if="route.name === '用户全局设置' && user_nav.role === 'root'"
           class="user-global-config-wrap"
         >
           <UserGlobalConfig></UserGlobalConfig>
         </div>
-        <div v-if="$route.name === '用户基本信息设置'" class="user-base-info-config-wrap">
+        <div v-if="route.name === '用户基本信息设置'" class="user-base-info-config-wrap">
           <UserBaseInfoConfig></UserBaseInfoConfig>
         </div>
       </div>
     </div>
-  </div>
+  </CommContainer>
 </template>
 <style scoped>
 .space-left::-webkit-scrollbar {

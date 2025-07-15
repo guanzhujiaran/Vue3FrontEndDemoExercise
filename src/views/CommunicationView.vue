@@ -8,9 +8,9 @@
 -->
 <script setup lang="ts"></script>
 <template>
-  <div class="container" style="background-color: #ffffff">
+  <CommContainer style="background-color: #ffffff">
     <div class="comment-list"></div>
-  </div>
+  </CommContainer>
 </template>
 
 <style scoped></style>
