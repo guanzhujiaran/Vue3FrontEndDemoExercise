@@ -56,6 +56,6 @@ const isOpenDrawer = ref(false)
 <style scoped>
 :deep(.el-drawer__body) {
   padding: 0;
-  min-width: 950px;
+  min-width: 100%;
 }
 </style>

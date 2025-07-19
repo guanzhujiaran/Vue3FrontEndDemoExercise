@@ -82,7 +82,7 @@ body {
     sans-serif !important;
   font-weight: 400;
   background-color: #f4f4f4; /* 给 body 也加个背景色可能更好 */
-  min-width: 950px;
+  min-width: 500px;
   overflow-x: auto;
 }
 

@@ -24,10 +24,4 @@
   flex-grow: 1;
 }
 
-@media screen and (max-width: 880px) {
-  .container {
-    padding: 0;
-    margin: 0.3rem auto;
-  }
-}
 </style>
