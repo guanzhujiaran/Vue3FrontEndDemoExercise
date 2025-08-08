@@ -9,13 +9,14 @@ const props = defineProps({
 </script>
 
 <template>
-  <div>
+  <el-space direction="vertical" alignment="center" style="width: 100%">
     <img :src="BiliImg.ranking.status.empty" class="pic" alt="" referrerpolicy="no-referrer" />
     <div class="txt">{{ props.txt }}</div>
-  </div>
+  </el-space>
 </template>
 
 <style scoped>
+
 .pic {
   margin-bottom: 0.16rem;
 }

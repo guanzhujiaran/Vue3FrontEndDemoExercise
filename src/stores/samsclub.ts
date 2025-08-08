@@ -1,13 +1,18 @@
 import { ref } from 'vue'
 import { defineStore } from 'pinia'
-import { type LotDataWrapperProps, ParentLotDataTab } from '@/models/lottery/lotdata.ts'
-
 export const useSamsclubStore = defineStore(
   'samsclub',
   () => {
     const isShowPriceEcharts = ref(false)
+    
+    // 切换价格图表显示状态
+    const togglePriceEcharts = () => {
+      isShowPriceEcharts.value = !isShowPriceEcharts.value
+    }
+    
     return {
-      isShowPriceEcharts
+      isShowPriceEcharts,
+      togglePriceEcharts
     }
   },
   {

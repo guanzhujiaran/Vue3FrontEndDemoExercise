@@ -38,6 +38,8 @@ export type Query = {
 
 
 export type QueryGetSpuInfosArgs = {
+  lastUpdateAfterTss?: InputMaybe<Scalars['Int']['input']>;
+  lastUpdateBeforeTss?: InputMaybe<Scalars['Int']['input']>;
   pn?: Scalars['Int']['input'];
   priceAsc?: InputMaybe<Scalars['Boolean']['input']>;
   priceDiffCurAsc?: InputMaybe<Scalars['Boolean']['input']>;
@@ -47,6 +49,7 @@ export type QueryGetSpuInfosArgs = {
   priceMin?: InputMaybe<Scalars['Int']['input']>;
   ps?: Scalars['Int']['input'];
   spuId?: InputMaybe<Scalars['Int']['input']>;
+  spuInfoCreateAsc?: InputMaybe<Scalars['Boolean']['input']>;
   spuInfoTitle?: InputMaybe<Scalars['String']['input']>;
   spuInfoUpdateAsc?: InputMaybe<Scalars['Boolean']['input']>;
   spuNewTagTagMarkList?: InputMaybe<Array<Scalars['String']['input']>>;

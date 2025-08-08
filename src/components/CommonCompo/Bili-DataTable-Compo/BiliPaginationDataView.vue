@@ -37,7 +37,9 @@ const isSmallScreen = computed(() => {
 })
 
 const paginationLayout = computed(() => {
-  return isSmallScreen.value ? 'prev, pager, next, total' : 'prev, pager, next, jumper, total'
+  return isSmallScreen.value
+    ? 'prev, pager, next, total, jumper'
+    : 'prev, pager, next, jumper, total'
 })
 const data4show = withDefaults(
   defineProps<{
@@ -59,7 +61,6 @@ const placeholder_props = ref({
 })
 onMounted(() => {
   emitter.emit('toast', { t: '加载数据中！', e: 'info' })
-  current_page.value = 1
 })
 const refresh_data = () => {
   current_page.value = current_page.value === 1 ? 0 : 1

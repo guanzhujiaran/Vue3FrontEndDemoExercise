@@ -2,7 +2,12 @@
   <FlexContainer style="padding: 10px">
     <SamsClubFilter
       v-model:query-params="samsClubFilterOpt"
-      :submit-form="handle_fetch_gql"
+      :submit-form="
+        () => {
+          samsClubFilterOpt.pn = 1
+          handle_fetch_gql()
+        }
+      "
     ></SamsClubFilter>
     <el-divider></el-divider>
     <BiliPaginationDataView
@@ -32,8 +37,8 @@
         </el-space>
       </template>
     </BiliPaginationDataView>
-    <BiliEmpty v-if="isEmpty" txt="没有商品数据"></BiliEmpty>
-    <BiliError v-if="isError" @click-retry="handle_fetch_gql"></BiliError>
+    <BiliEmpty v-if="isEmpty && !isError" txt="没有商品数据" v-loading="isLoading"></BiliEmpty>
+    <BiliError v-if="isError" @click-retry="handle_fetch_gql" v-loading="isLoading"></BiliError>
   </FlexContainer>
 </template>
 
@@ -45,7 +50,7 @@ import type { PageInfoType, QueryGetSpuInfosArgs, SpuInfoType } from '@/gql/sams
 import emitter from '@/utils/mitt.ts'
 
 const GET_SAMSCLUB_SPU = gql`
-  query MyQuery(
+  query getSpuInfos(
     $priceAsc: Boolean
     $priceDiffCurAsc: Boolean
     $priceDiffMaxAsc: Boolean
@@ -209,7 +214,9 @@ const samsClubFilterOpt = ref<QueryGetSpuInfosArgs>({
   spuId: undefined,
   spuInfoTitle: undefined,
   spuInfoUpdateAsc: undefined,
-  spuNewTagTagMarkList: undefined
+  spuNewTagTagMarkList: undefined,
+  lastUpdateAfterTss: undefined,
+  lastUpdateBeforeTss: undefined
 })
 const isError = ref(false)
 const isEmpty = ref(false)
@@ -230,6 +237,7 @@ const handle_fetch_gql = () => {
         pageInfo.value = data.data.getSpuInfos.pageInfo
         isError.value = false
         isEmpty.value = data.data.getSpuInfos.items.length === 0
+        window.scrollTo(0, 0)
         return
       }
       throw data
@@ -238,7 +246,7 @@ const handle_fetch_gql = () => {
       isError.value = true
       dataItems.value = []
       console.error(err)
-      emitter.emit('toast', { t: err, e: 'error' })
+      emitter.emit('toast', { t: err.error.message, e: 'error' })
     })
     .finally(() => {
       isLoading.value = false
