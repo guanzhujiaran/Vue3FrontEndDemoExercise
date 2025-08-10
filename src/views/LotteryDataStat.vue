@@ -1,6 +1,6 @@
 <template>
   <CommContainer>
-    <div class="el-tabs-wrapper" style="overflow: hidden">
+    <div class="el-tabs-wrapper">
       <el-tabs
         v-model="active_genre_name"
         type="border-card"
@@ -308,10 +308,6 @@ const handleDraggableMove = (position: Position) => {
 }
 </script>
 <style scoped>
-:deep(.el-tabs),
-:deep(.el-tab-pane) {
-  height: 100%;
-}
 
 ::-webkit-scrollbar {
   width: 0;
@@ -450,11 +446,9 @@ const handleDraggableMove = (position: Position) => {
   width: 100%;
   border-radius: 15px;
 }
-
 :deep(.el-tabs__content) {
-  overflow: scroll;
+  overflow: auto;
 }
-
 :deep(.el-tabs__content::-webkit-scrollbar) {
   display: none !important;
 }

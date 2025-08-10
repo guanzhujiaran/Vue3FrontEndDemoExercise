@@ -7,6 +7,7 @@
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
  */
 import { createRouter, createWebHistory } from 'vue-router'
+import { useGlobalLoadingStore } from '@/stores/global_loading'
 import HomeView from '@/views/HomeView.vue'
 
 const router = createRouter({
@@ -70,6 +71,22 @@ const router = createRouter({
     //   component: () => import('@/views/CommunicationView.vue')
     // }
   ]
+})
+
+// 路由守卫 - 全局加载遮罩
+router.beforeEach((to, from, next) => {
+  // 如果不是首次访问（from.name存在），且不是登录页面，则显示加载遮罩
+  if (from.name && to.path !== '/' && from.path !== '/') {
+    const globalLoadingStore = useGlobalLoadingStore()
+    globalLoadingStore.showLoading('页面切换中...')
+  }
+  next()
+})
+
+router.afterEach(() => {
+  // 路由切换完成后隐藏加载遮罩
+  const globalLoadingStore = useGlobalLoadingStore()
+  globalLoadingStore.hideLoading()
 })
 
 export default router

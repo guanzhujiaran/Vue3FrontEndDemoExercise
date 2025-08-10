@@ -1,37 +1,64 @@
 <script setup lang="ts">
 import { RouterView } from 'vue-router'
 import HeaderView from '@/components/header-bar/HeaderBarView.vue'
+import ThemeToggle from '@/components/CommonCompo/ThemeToggle.vue'
+import SponsorNotification from '@/components/sponsor/sponsor-notification.vue'
 import { onMounted, onUnmounted, ref } from 'vue'
-import { useDeviceSystemStore } from '@/stores/device_system.ts'
-import { Theme } from '@/models/store/device_system.ts'
-import { setFontSize, setThemeClassWithSystem } from '@/utils/Browser/systemSetting.ts'
+import { useThemeStore } from '@/stores/theme'
+import { setupAutoScale } from '@/utils/Browser/systemSetting.ts'
 import zhCn from 'element-plus/es/locale/lang/zh-cn'
 
 const isInit = ref(false)
-const deviceSystemStore = useDeviceSystemStore()
+const themeStore = useThemeStore()
+
+// 存储清理函数
+let themeCleanup = () => {}
+let autoScaleCleanup = () => {}
+
 onMounted(() => {
   isInit.value = true
-  setFontSize()
-  setThemeClassWithSystem()
-  const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
-  const themeChangeListener = () => setThemeClassWithSystem()
-  mediaQuery.addEventListener('change', themeChangeListener)
-  window.addEventListener('resize', setFontSize)
-  onUnmounted(() => {
-    mediaQuery.removeEventListener('change', themeChangeListener)
-    window.removeEventListener('resize', setFontSize)
-  })
+  
+  // 初始化主题
+  themeStore.initTheme()
+
+  // 设置系统主题监听
+  themeCleanup = themeStore.setupSystemThemeListener()
+  
+  // 设置自动缩放功能
+  autoScaleCleanup = setupAutoScale()
+})
+
+onUnmounted(() => {
+  themeCleanup()
+  autoScaleCleanup() // 清理自动缩放相关的事件监听器
 })
 </script>
 
 <template>
+  <el-image
+    :src="
+      themeStore.currentTheme === 'dark'
+        ? 'https://i0.hdslb.com/bfs/seed/jinkela/short/message/img/dark_bg.png'
+        : 'https://i0.hdslb.com/bfs/seed/jinkela/short/message/img/light_bg.png'
+    "
+    referrerpolicy="no-referrer"
+    style="
+      z-index: -9999;
+      position: fixed;
+      object-fit: cover;
+      pointer-events: none;
+      height: 100%;
+      width: 100%;
+    "
+    lazy
+  ></el-image>
   <el-config-provider :locale="zhCn">
     <el-container
       style="min-height: 98.8vh"
       v-if="isInit"
       :class="{
-        dark: deviceSystemStore.systemTheme === Theme.dark,
-        light: deviceSystemStore.systemTheme === Theme.light
+        dark: themeStore.currentTheme === 'dark',
+        light: themeStore.currentTheme === 'light'
       }"
       id="i_cecream"
     >
@@ -47,6 +74,8 @@ onMounted(() => {
       </el-main>
     </el-container>
     <SponsorNotification></SponsorNotification>
+    <GlobalLoadingMask />
+    <ThemeToggle />
   </el-config-provider>
 </template>
 
@@ -55,22 +84,40 @@ onMounted(() => {
   margin: 0 auto;
   max-width: 2560px;
   line-height: 1.5;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 .el-header,
 .el-main {
   padding: 0;
+  width: 100%;
 }
 
 .el-main {
   flex: 1;
-  padding: 10px;
+  padding: 20px;
   display: flex;
   margin: 0 auto;
+  overflow-y: auto;
+}
+
+.el-container {
   width: 100%;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.3s ease;
 }
 
 /* 全局样式 */
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
 body {
   margin: 0 auto;
   overflow-anchor: none;
@@ -81,9 +128,37 @@ body {
     Microsoft YaHei,
     sans-serif !important;
   font-weight: 400;
-  background-color: #f4f4f4; /* 给 body 也加个背景色可能更好 */
   min-width: 500px;
-  overflow-x: auto;
+  transition: background-color 0.3s ease;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 响应式样式 */
+@media (max-width: 768px) {
+  .el-main {
+    padding: 10px;
+  }
+}
+
+/* 缩放视图样式 */
+html.scaled-view,
+html.scaled-view body {
+  width: 100%;
+  overflow-x: hidden;
+}
+
+html.scaled-view #app {
+  height: auto;
+  min-height: 100vh;
+}
+
+html.scaled-view .el-container {
+  min-height: 100vh;
 }
 
 /* 过渡动画 (保持不变) */

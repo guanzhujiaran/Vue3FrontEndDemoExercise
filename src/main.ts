@@ -1,4 +1,3 @@
-import '@/assets/index.css'
 import { createApp } from 'vue'
 import MavonEditor from 'mavon-editor'
 import 'md-editor-v3/lib/style.css'

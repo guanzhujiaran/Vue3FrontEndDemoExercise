@@ -8,9 +8,50 @@
 -->
 <script setup lang="ts">
 import LoginCompo from '@/components/login_page/compo/LoginCompo.vue'
-import '@/assets/passport.css'
+import { showGlobalLoading, hideGlobalLoading, withGlobalLoading } from '@/utils/globalLoading'
+import '@/assets/mobile-login.css'
+import { ElContainer } from 'element-plus'
+
+// 测试基本加载功能
+const testBasicLoading = async () => {
+  showGlobalLoading('测试加载中...')
+  setTimeout(() => {
+    hideGlobalLoading()
+  }, 2000)
+}
+
+// 测试包装器功能
+const testWrapperLoading = async () => {
+  const asyncOperation = async () => {
+    await new Promise(resolve => setTimeout(resolve, 3000))
+    return '操作完成'
+  }
+  
+  const operationWithLoading = withGlobalLoading(asyncOperation, '包装器测试中...')
+  const result = await operationWithLoading()
+  console.log('结果:', result)
+}
+
+// 测试长时间加载
+const testLongLoading = async () => {
+  showGlobalLoading('长时间操作中...')
+  setTimeout(() => {
+    hideGlobalLoading()
+  }, 5000)
+}
+const isTest = import.meta.env.VITE_BILI_ENV === 'dev'
 </script>
 
 <template>
-  <LoginCompo />
+  <ElContainer class="home-container">
+    <LoginCompo />
+  </ElContainer>
 </template>
+
+<style scoped>
+.home-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  }
+</style>

@@ -20,7 +20,7 @@
           target="_blank"
           rel="noreferrer"
           referrerpolicy="no-referrer"
-          :underline="false"
+          underline="never"
         >
           查看详情
         </el-link>
@@ -33,7 +33,7 @@
       </div>
     </template>
     <template #default>
-      <!-- --- Key Info --- -->
+      <div class="main-content-wrapper">
       <el-descriptions :column="2" border size="small" class="key-info-desc">
         <el-descriptions-item label="状态" :span="1">
           <BiliStatusIcon
@@ -102,11 +102,10 @@
             <div class="prize-image-wrapper">
               <el-image
                 style="width: 100%; height: 100%"
-                v-if="prize.img"
                 alt="加载失败"
                 class="prize-image"
-                :src="prize.img"
-                :preview-src-list="[prize.img]"
+                :src="prize.img || BiliImg.ranking.prize_default"
+                :preview-src-list="prize.img ? [prize.img] : [BiliImg.ranking.prize_default]"
                 :max-scale="7"
                 :min-scale="0.2"
                 fit="fill"
@@ -140,8 +139,8 @@
                 :href="req.link"
                 target="_blank"
                 type="primary"
-                style="margin-left: 4px; vertical-align: middle; font-size: 1em"
-                :underline="false"
+                style="margin-left: 4px; vertical-align: middle"
+                underline="never"
                 class="condition-link"
                 rel="noreferrer"
                 referrerpolicy="no-referrer"
@@ -169,6 +168,8 @@
         </el-descriptions-item>
       </el-descriptions>
 
+      </div> <!-- 结束 main-content-wrapper -->
+      
       <!-- --- Collapsible: More Details / Raw Data --- -->
       <el-collapse v-model="activeCollapseNames" class="details-collapse">
         <el-collapse-item name="details">
@@ -201,7 +202,7 @@
 </template>
 
 <script setup lang="ts">
-import { Flag } from '@element-plus/icons-vue'
+import { Flag, InfoFilled, TrophyBase, Trophy, Medal } from '@element-plus/icons-vue'
 import { ref, computed } from 'vue'
 import type { PropType } from 'vue'
 import type { TagProps } from 'element-plus'
@@ -655,11 +656,11 @@ const typeInfo = computed(() => {
 <style scoped>
 .card-header {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
   font-weight: 500;
-  gap: 5px;
+  gap: 15px;
   flex-wrap: wrap;
+  align-items: stretch;
+  align-content: stretch;
 }
 
 :deep(.el-card__header),
@@ -668,12 +669,18 @@ const typeInfo = computed(() => {
   display: flex;
   flex-direction: column;
   flex-wrap: nowrap;
-  justify-content: center;
+  justify-content: flex-start;
   align-items: stretch;
 }
 
 :deep(.el-card__body) {
   flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start; /* 改为从顶部开始布局 */
+  padding: 12px; /* 增加内边距 */
+  overflow: auto; /* 允许内容滚动 */
+  min-height: 0; /* 修复flex容器滚动问题 */
 }
 
 .card-header > span,
@@ -690,7 +697,6 @@ const typeInfo = computed(() => {
 }
 
 .card-title {
-  font-weight: 600;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -699,7 +705,6 @@ const typeInfo = computed(() => {
 }
 
 .card-id {
-  font-size: 0.8em;
   color: #909399;
   white-space: nowrap;
   flex-shrink: 0;
@@ -726,10 +731,9 @@ const typeInfo = computed(() => {
 }
 
 .prize-label {
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  gap: 5px;
-  font-weight: 500;
+  flex-wrap: nowrap;
 
   span {
     white-space: nowrap;
@@ -777,6 +781,7 @@ const typeInfo = computed(() => {
 :deep(.el-descriptions__content),
 :deep(.el-descriptions__label) {
   word-break: break-all;
+  padding: 0;
 }
 
 :deep(.prize-info-desc .el-descriptions-item__content) {
@@ -788,7 +793,6 @@ const typeInfo = computed(() => {
   padding: 10px;
   border-radius: 4px;
   font-family: 'Courier New', Courier, monospace;
-  font-size: 0.8em;
   color: #5f6368;
   white-space: pre-wrap;
   word-break: break-all;
@@ -797,15 +801,24 @@ const typeInfo = computed(() => {
   margin-top: 10px;
 }
 
+.main-content-wrapper {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0; /* 修复flex容器滚动问题 */
+  overflow: auto; /* 允许内容滚动 */
+  gap: 12px; /* 增加子元素间距 */
+}
+
 .details-collapse {
   border-top: none;
-  margin-top: auto;
+  margin-top: auto; /* 确保在底部 */
+  margin-bottom: 0;
 }
 
 :deep(.el-collapse-item__header) {
   border-top: 1px solid var(--el-border-color-lighter);
   padding-top: 10px;
-  font-size: 0.95em;
   font-weight: normal;
   order: 2; /* 标题放在后面 */
 }
@@ -843,10 +856,6 @@ const typeInfo = computed(() => {
   vertical-align: middle;
 }
 
-.el-tag .el-link .el-icon svg {
-  font-size: inherit; /* Make icon size consistent with tag text */
-}
-
 .condition-link {
   :hover {
     cursor: pointer;
@@ -855,9 +864,14 @@ const typeInfo = computed(() => {
 
 .lottery-card {
   width: 100%;
-  height: 100%;
+  max-width: 600px; /* 限制最大宽度 */
+  min-width: 400px; /* 设置最小宽度 */
+  height: auto; /* 改为自动高度 */
   display: flex;
   flex-direction: column;
+  margin: 0 auto; /* 水平居中 */
+  box-sizing: border-box;
+  overflow: hidden; /* 处理内容溢出 */
 }
 
 :deep(.el-descriptions__table) {
