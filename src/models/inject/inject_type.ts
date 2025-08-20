@@ -8,11 +8,17 @@
  */
 import type { InjectionKey } from 'vue'
 
-export interface account_left_panel_reload {
+export interface accountLeftPanelReload {
   (): void
 }
-const account_left_panel_reload_key: InjectionKey<account_left_panel_reload> = Symbol(
+
+export interface openGlobalLoginModal {
+  (): void
+}
+
+const accountLeftPanelReloadKey: InjectionKey<accountLeftPanelReload> = Symbol(
   'account_left_panel_reload'
 )
+const openGlobalLoginModalKey: InjectionKey<openGlobalLoginModal> = Symbol('openGlobalLoginModal')
 
-export { account_left_panel_reload_key }
+export { accountLeftPanelReloadKey, openGlobalLoginModalKey }

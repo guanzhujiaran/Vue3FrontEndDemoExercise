@@ -9,7 +9,8 @@
 <style scoped>
 .container {
   background-color: var(--el-bg-color);
-  width: 100%;
+  width: -webkit-fill-available;
+  height: -webkit-fill-available;
   margin: 0.5rem auto;
   display: flex;
   position: relative;

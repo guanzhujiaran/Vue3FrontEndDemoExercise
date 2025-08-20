@@ -11,15 +11,26 @@ const emit = defineEmits(['clickRetry'])
 </script>
 
 <template>
-  <el-space direction="vertical" alignment="center" style="width: 100%">
-    <img :src="BiliImg.ranking.status.error" class="pic" alt="" referrerpolicy="no-referrer" />
-    <div class="txt">
-      {{ props.txt }}，<span @click="emit('clickRetry')">点击重试</span>（T-T）~
-    </div>
-  </el-space>
+  <div class="error-container">
+    <el-space direction="vertical" alignment="center">
+      <img :src="BiliImg.ranking.status.error" class="pic" alt="" referrerpolicy="no-referrer" />
+      <div class="txt">
+        {{ props.txt }}，<span @click="emit('clickRetry')">点击重试</span>（T-T）~
+      </div>
+    </el-space>
+  </div>
 </template>
 
 <style scoped>
+.error-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  flex: 1;
+}
+
 .pic {
   margin-bottom: 0.16rem;
 }
@@ -30,7 +41,6 @@ const emit = defineEmits(['clickRetry'])
   align-items: center;
   justify-content: center;
   color: #9499a0;
-  font-size: 0.32rem;
   font-weight: 400;
 }
 

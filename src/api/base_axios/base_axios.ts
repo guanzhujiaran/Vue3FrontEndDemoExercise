@@ -25,7 +25,7 @@ declare module 'axios' {
 
 // 创建 Axios 实例
 const ajax = axios.create({
-  // baseURL: import.meta.env.VITE_API_BASE_URL, // 设置基础 API 地址
+  baseURL: import.meta.env.VITE_PROXY_URL, // 设置基础 API 地址
   timeout: 15e3, // 设置请求超时时间
   headers: {
     'content-type': 'application/json'
@@ -48,7 +48,15 @@ ajax.interceptors.request.use(
 
 // 响应拦截器，处理响应数据，例如错误统一处理
 ajax.interceptors.response.use(
-  (response) => response.data,
+  (response) => {
+    const data = response.data
+    // 检查是否是未登录状态
+    if (data.code === -101) {
+      // 触发未登录事件
+      emitter.emit('needLogin')
+    }
+    return data
+  },
   (error) => {
     // 处理错误，比如根据错误码提示用户或跳转登录页
     console.error('API Error:', error)

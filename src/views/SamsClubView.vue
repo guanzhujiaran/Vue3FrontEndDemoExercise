@@ -43,7 +43,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { gql } from '@urql/vue'
 import { query } from '@/api/samsclub/gql.ts'
 import type { PageInfoType, QueryGetSpuInfosArgs, SpuInfoType } from '@/gql/samsclub/graphql.ts'
@@ -62,7 +62,12 @@ const GET_SAMSCLUB_SPU = gql`
     $spuInfoTitle: String
     $priceMin: Int
     $spuInfoUpdateAsc: Boolean
+    $spuInfoCreateAsc: Boolean
     $spuNewTagTagMarkList: [String!]
+    $lastUpdateAfterTss: Int
+    $lastUpdateBeforeTss: Int
+    $lastCreateAfterTss: Int
+    $lastCreateBeforeTss: Int
   ) {
     getSpuInfos(
       priceAsc: $priceAsc
@@ -76,7 +81,12 @@ const GET_SAMSCLUB_SPU = gql`
       ps: $ps
       priceMin: $priceMin
       spuInfoUpdateAsc: $spuInfoUpdateAsc
+      spuInfoCreateAsc: $spuInfoCreateAsc
       spuNewTagTagMarkList: $spuNewTagTagMarkList
+      lastUpdateAfterTss: $lastUpdateAfterTss
+      lastUpdateBeforeTss: $lastUpdateBeforeTss
+      lastCreateAfterTss: $lastCreateAfterTss
+      lastCreateBeforeTss: $lastCreateBeforeTss
     ) {
       items {
         zoneTypeList
@@ -214,9 +224,12 @@ const samsClubFilterOpt = ref<QueryGetSpuInfosArgs>({
   spuId: undefined,
   spuInfoTitle: undefined,
   spuInfoUpdateAsc: undefined,
+  spuInfoCreateAsc: undefined,
   spuNewTagTagMarkList: undefined,
   lastUpdateAfterTss: undefined,
-  lastUpdateBeforeTss: undefined
+  lastUpdateBeforeTss: undefined,
+  lastCreateAfterTss: undefined,
+  lastCreateBeforeTss: undefined
 })
 const isError = ref(false)
 const isEmpty = ref(false)

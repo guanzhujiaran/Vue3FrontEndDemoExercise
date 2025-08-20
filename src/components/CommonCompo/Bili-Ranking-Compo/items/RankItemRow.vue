@@ -2,19 +2,52 @@
 import type { BaseRankItem } from '@/models/compo/ranking/Ranking.ts'
 import UserAvatarBox from '@/components/CommonCompo/Bili-User-Compo/UserAvatarBox.vue'
 import { gotoBiliUserSpace } from '@/utils/PageOpen/BiliJump.ts'
+import { useAnimate } from '@vueuse/core'
 
 const Item = defineModel<BaseRankItem>('item', { required: true })
 const props = defineProps<{
   score_prefix: string
   score_suffix: string
+  animation: {
+    duration: number
+  }
 }>()
 const emit = defineEmits<{
   (e: 'score_click', item: BaseRankItem): void
 }>()
+const from_right_key_frames = [
+  {
+    transform: 'translateX(100%)',
+    opacity: 0
+  },
+  {
+    transform: 'translateX(0)',
+    opacity: 1
+  }
+]
+const el = useTemplateRef('el')
+const {
+  isSupported,
+  animate,
+  // actions
+  play,
+  pause,
+  reverse,
+  finish,
+  cancel,
+  // states
+  pending,
+  playState,
+  replaceState,
+  startTime,
+  currentTime,
+  timeline,
+  playbackRate
+} = useAnimate(el, from_right_key_frames, { duration: props.animation.duration })
 </script>
 
 <template>
-  <div class="rank-item-row">
+  <div class="rank-item-row" ref="el">
     <div class="rank-num">
       <div class="num">{{ Item.rank }}</div>
     </div>
@@ -40,7 +73,7 @@ const emit = defineEmits<{
     </div>
     <div class="score" @click="emit('score_click', Item)">
       {{ props.score_prefix }}
-      <span>{{ item.score }}</span>
+      <span>{{ Item.score }}</span>
       {{ props.score_suffix }}
     </div>
   </div>
@@ -48,7 +81,7 @@ const emit = defineEmits<{
 
 <style scoped>
 .rank-item-row {
-  height: 2.293333rem;
+  height: -webkit-fill-available;
   padding: 0 0.186667rem 0 0.333333rem;
   margin-bottom: 0.213333rem;
   background: rgba(75, 77, 122, 0.2);
@@ -61,9 +94,8 @@ const emit = defineEmits<{
 }
 
 .rank-item-row .rank-num {
-  width: 0.8rem;
-  margin-right: 0.106667rem;
-  height: 1.066667rem;
+  width: 30px;
+  margin-right: 20px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -91,7 +123,6 @@ const emit = defineEmits<{
 }
 
 .rank-item-row .rank-num .num {
-  font-size: 0.533333rem;
   font-weight: 500;
   color: #9499a0;
 }
@@ -102,18 +133,15 @@ const emit = defineEmits<{
 
 .rank-item-row .name-box .name {
   width: 100%;
-  height: 0.64rem;
   color: #fff;
   font-weight: 600;
-  line-height: 0.64rem;
-  font-size: 0.48rem;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  padding-left: 5px;
 }
 
 .rank-item-row .score {
-  font-size: 0.426667rem;
   color: #9499a0;
   font-weight: 500;
   display: flex;

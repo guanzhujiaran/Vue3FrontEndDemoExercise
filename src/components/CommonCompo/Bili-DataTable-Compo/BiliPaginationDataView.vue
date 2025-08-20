@@ -15,24 +15,82 @@
         :total="data4show.total"
         v-model:current-page="current_page"
         style="padding-top: 0.5rem; padding-bottom: 1rem; margin: 0 auto"
-        :pager-count="3"
+        :pager-count="5"
       />
       <bili-empty :txt="empty_msg" v-if="empty && !error"></bili-empty>
       <bili-error v-if="error" @click-retry="emits('retryOnError')"></bili-error>
     </FlexContainer>
   </div>
 </template>
-<style scoped></style>
+<style scoped>
+.pagination-container-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  border-radius: 8px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+  padding: 1rem;
+  border: 1px solid var(--el-border-color-lighter);
+}
+
+.pagination-data-container-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 0.5rem;
+}
+
+:deep(.el-pagination) {
+  margin-top: 1rem;
+  padding: 0.5rem;
+  border-radius: 8px;
+  justify-content: center;
+  border: 1px solid var(--el-border-color-lighter);
+}
+
+:deep(.el-pagination .el-pagination__total) {
+  font-size: 0.9rem;
+  color: #606266;
+}
+
+:deep(.el-pagination .btn-prev),
+:deep(.el-pagination .btn-next) {
+  border-radius: 4px;
+  border: 1px solid var(--el-border-color);
+}
+
+:deep(.el-pagination .el-pager li) {
+  border: 1px solid var(--el-border-color);
+  border-radius: 4px;
+  margin: 0 2px;
+  font-weight: normal;
+}
+
+:deep(.el-pagination .el-pager li.is-active) {
+  color: var(--el-color-white);
+  border-color: var(--el-color-primary);
+}
+
+@media (max-width: 768px) {
+  .pagination-container-wrapper {
+    padding: 0.5rem;
+  }
+
+  :deep(.el-pagination) {
+    padding: 0.25rem;
+  }
+}
+</style>
 <script setup lang="ts">
 import emitter from '@/utils/mitt.ts'
 import { computed, onMounted, ref } from 'vue'
-import { ScreenTypeEnum } from '@/models/global_var/global_var_model.ts'
+import { type GlobalVarsType, ScreenTypeEnum } from '@/models/global_var/global_var_model.ts'
 import { KeysEnum, useInject } from '@/models/base/provide_model.ts'
 import BiliDataTableToolbar from '@/components/CommonCompo/Bili-DataTable-Compo/BiliDataTableToolbar.vue'
 import BiliLotteryCardContainer from '@/components/lottery_data_statistic/bili_data/BiliLotteryCardContainer.vue'
 import FlexContainer from '@/components/CommonCompo/Bili-Container-Compo/FlexContainer.vue'
 const empty = computed(() => data4show.data.length === 0)
-const globalVars = useInject(KeysEnum.globalVars)
+const globalVars = useInject(KeysEnum.globalVars) as Ref<GlobalVarsType>
 const isSmallScreen = computed(() => {
   return globalVars.value.screen_size !== ScreenTypeEnum.large
 })

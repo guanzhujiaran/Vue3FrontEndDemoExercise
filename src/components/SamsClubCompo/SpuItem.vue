@@ -2,6 +2,7 @@
 import VChart from 'vue-echarts'
 import { computed, type PropType, ref, watch } from 'vue'
 import type { SpuInfoType } from '@/gql/samsclub/graphql.ts'
+import { useTimeAgo } from '@vueuse/core'
 import {
   Calendar,
   Coin,
@@ -201,6 +202,27 @@ const formatDateTime = (timestamp: any) => {
   const date = new Date(timestamp)
   return date.toLocaleString()
 }
+
+// 使用VueUse的useTimeAgo获取相对时间
+const getTimeAgo = (timestamp: any) => {
+  if (!timestamp) return '未知时间'
+  return useTimeAgo(new Date(timestamp), {
+    showSecond: false,
+    messages: {
+      justNow: '刚刚',
+      past: (n: string) => n.match(/\d/) ? `${n}前` : n,
+      future: (n: string) => n.match(/\d/) ? `${n}后` : n,
+      month: (n: number, past: boolean) => n === 1 ? past ? '上个月' : '下个月' : `${n} 个月`,
+      year: (n: number, past: boolean) => n === 1 ? past ? '去年' : '明年' : `${n} 年`,
+      day: (n: number, past: boolean) => n === 1 ? past ? '昨天' : '明天' : `${n} 天`,
+      week: (n: number, past: boolean) => n === 1 ? past ? '上周' : '下周' : `${n} 周`,
+      hour: (n: number) => `${n} 小时`,
+      minute: (n: number) => `${n} 分钟`,
+      second: (n: number) => `${n} 秒`,
+    } as any
+  }).value
+}
+
 // 图表配置
 use([
   TitleComponent,
@@ -418,8 +440,11 @@ const echartsOption = ref<EChartsOption>({
               <el-text type="primary">当前价格</el-text>
               <el-tooltip
                 placement="top"
-                :content="`更新时间: ${new Date(props.spuInfo.latestPriceInfo!.updateTime).toLocaleString()}`"
+                :content="`更新时间: ${formatDateTime(props.spuInfo.latestPriceInfo!.updateTime)}`"
               >
+                <el-text type="info" size="small" style="margin-left: 5px;">
+                  ({{ getTimeAgo(props.spuInfo.latestPriceInfo!.updateTime) }})
+                </el-text>
                 <el-icon><QuestionFilled /></el-icon>
               </el-tooltip>
             </div>
@@ -521,17 +546,29 @@ const echartsOption = ref<EChartsOption>({
       class="attributes-descriptions"
     >
       <el-descriptions-item label="创建时间">
-        <el-tag size="small" type="info">
-          <el-icon><Calendar /></el-icon>
-          {{ formatDateTime(props.spuInfo.createTime) }}
-        </el-tag>
+        <el-tooltip
+          placement="top"
+          :content="formatDateTime(props.spuInfo.createTime)"
+          effect="light"
+        >
+          <el-tag size="small" type="info">
+            <el-icon><Calendar /></el-icon>
+            {{ getTimeAgo(props.spuInfo.createTime) }}
+          </el-tag>
+        </el-tooltip>
       </el-descriptions-item>
 
       <el-descriptions-item label="更新时间">
-        <el-tag size="small" type="info">
-          <el-icon><Calendar /></el-icon>
-          {{ formatDateTime(props.spuInfo.updateTime) }}
-        </el-tag>
+        <el-tooltip
+          placement="top"
+          :content="formatDateTime(props.spuInfo.updateTime)"
+          effect="light"
+        >
+          <el-tag size="small" type="info">
+            <el-icon><Calendar /></el-icon>
+            {{ getTimeAgo(props.spuInfo.updateTime) }}
+          </el-tag>
+        </el-tooltip>
       </el-descriptions-item>
 
       <el-descriptions-item v-if="props.spuInfo?.categories?.length" label="商品分类">
@@ -585,11 +622,18 @@ const echartsOption = ref<EChartsOption>({
             <template #content>
               <el-descriptions size="small" border>
                 <el-descriptions-item label="有效时间段" v-if="tag.beginTime && tag.endTime">
-                  {{ formatDateTime(tag.beginTime) }} ~
-                  {{ formatDateTime(tag.endTime) }}
+                  <el-tooltip :content="formatDateTime(tag.beginTime)" placement="top">
+                    <span>{{ getTimeAgo(tag.beginTime) }}</span>
+                  </el-tooltip>
+                  ~
+                  <el-tooltip :content="formatDateTime(tag.endTime)" placement="top">
+                    <span>{{ getTimeAgo(tag.endTime) }}</span>
+                  </el-tooltip>
                 </el-descriptions-item>
                 <el-descriptions-item label="标签更新时间">
-                  {{ formatDateTime(tag.updateTime) }}
+                  <el-tooltip :content="formatDateTime(tag.updateTime)" placement="top">
+                    <span>{{ getTimeAgo(tag.updateTime) }}</span>
+                  </el-tooltip>
                 </el-descriptions-item>
                 <el-descriptions-item label="标签代码">
                   {{ tag.tagMark }}

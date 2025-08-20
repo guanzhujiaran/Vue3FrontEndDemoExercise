@@ -13,20 +13,27 @@ const props = defineProps({
     default: 'default'
   }
 })
+const size = computed(() => {
+  if (props.size === 'large') {
+    return 64
+  } else if (props.size === 'small') {
+    return 16
+  } else {
+    return 32
+  }
+})
 </script>
 
 <template>
-  <div class="avatar-box">
-    <div class="avatar border">
-      <img :src="props.src" class="url" referrerpolicy="no-referrer" alt="" />
+  <div class="avatar-box" :style="{ width: size + 'px', height: size + 'px' }">
+    <div class="avatar border" :style="{ width: size + 'px', height: size + 'px' }">
+      <el-image :src="props.src" :size="size" class="url" referrerpolicy="no-referrer" alt="" />
     </div>
   </div>
 </template>
 
 <style scoped>
 .avatar-box {
-  width: 1.333333rem;
-  height: 1.333333rem;
   position: relative;
   display: flex;
   align-items: center;
@@ -39,8 +46,6 @@ const props = defineProps({
 }
 
 .avatar-box .avatar {
-  width: 1.066667rem;
-  height: 1.066667rem;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -49,8 +54,6 @@ const props = defineProps({
 }
 
 .avatar-box .url {
-  width: 0.96rem;
-  height: 0.96rem;
   border-radius: 50%;
 }
 </style>

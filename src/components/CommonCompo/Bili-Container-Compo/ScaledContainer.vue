@@ -164,7 +164,7 @@ onUnmounted(() => {
    * It takes up the necessary width but doesn't scale itself.
    * It needs to allow overflow so the scaled content isn't clipped.
    */
-  width: 100%;
+  width: -webkit-fill-available;
   overflow-x: hidden; /* Be careful with this - might clip scaled content if origin isn't perfect */
   display: flex; /* Use flex to help center the inner container */
   justify-content: center; /* Center the flex item horizontally */

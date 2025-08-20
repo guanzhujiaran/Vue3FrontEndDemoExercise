@@ -16,11 +16,12 @@ import IconsResolver from 'unplugin-icons/resolver'
 import AutoImport from 'unplugin-auto-import/vite'
 import Components from 'unplugin-vue-components/vite'
 import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
-
+import Sitemap from 'vite-plugin-sitemap'
 const pathSrc = path.resolve(__dirname, 'src')
 export default defineConfig({
   plugins: [
     vue(),
+    Sitemap({ hostname: 'https://serena.dynv6.net', exclude: ['google22ac62fc624759d1.html'] }),
     AutoImport({
       // Auto import functions from Vue, e.g. ref, reactive, toRef...
       // 自动导入 Vue 相关函数，如：ref, reactive, toRef 等
@@ -39,7 +40,6 @@ export default defineConfig({
 
       dts: path.resolve(pathSrc, 'auto-imports.d.ts')
     }),
-
     Components({
       resolvers: [
         // Auto register icon components
@@ -77,9 +77,9 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'http://127.0.0.1:9923',
+        target: 'http://127.0.0.1:9926',
         secure: false,
-        changeOrigin: true
+        changeOrigin: true,
       }
     },
     host: '0.0.0.0'

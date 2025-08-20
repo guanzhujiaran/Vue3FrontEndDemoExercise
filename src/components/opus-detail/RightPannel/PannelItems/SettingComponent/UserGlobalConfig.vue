@@ -30,9 +30,9 @@ import { BaseSettingType } from '@/models/base/base_setting_model'
 import type { AccountSettingConfigItemModel } from '@/models/account/account_setting/account_setting_type_model'
 import BlueBtn from '@/components/CommonCompo/Bili-Interact-Compo/Blue-Btn.vue'
 import accountApi from '@/api/account/account_api'
-import { account_left_panel_reload_key } from '@/models/inject/inject_type'
+import { accountLeftPanelReloadKey } from '@/models/inject/inject_type'
 
-const reload = inject(account_left_panel_reload_key)!
+const reload = inject(accountLeftPanelReloadKey)!
 
 const create_account_settings = ref<AccountSettingConfigItemModel>({
   name: 'create_account_setting', // 按钮的设置属性名

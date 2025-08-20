@@ -8,7 +8,8 @@ export const useUserNavStore = defineStore(
     const user_nav = ref<UserNavModel>({
       uid: 0,
       user_name: '',
-      role: ''
+      role: '',
+      face: ''
     })
 
     function save_user_nav(val: UserNavModel) {
@@ -19,7 +20,8 @@ export const useUserNavStore = defineStore(
       user_nav.value = {
         uid: 0,
         user_name: '',
-        role: ''
+        role: '',
+        face: ''
       }
     }
 

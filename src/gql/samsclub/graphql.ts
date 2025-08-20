@@ -38,6 +38,8 @@ export type Query = {
 
 
 export type QueryGetSpuInfosArgs = {
+  lastCreateAfterTss?: InputMaybe<Scalars['Int']['input']>;
+  lastCreateBeforeTss?: InputMaybe<Scalars['Int']['input']>;
   lastUpdateAfterTss?: InputMaybe<Scalars['Int']['input']>;
   lastUpdateBeforeTss?: InputMaybe<Scalars['Int']['input']>;
   pn?: Scalars['Int']['input'];

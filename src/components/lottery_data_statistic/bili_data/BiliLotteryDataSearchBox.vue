@@ -58,4 +58,36 @@ const isOpenDrawer = ref(false)
   padding: 0;
   min-width: 100%;
 }
+
+.search-box-wrapper {
+  width: 100%;
+  margin-bottom: 1rem;
+  position: relative;
+}
+
+:deep(.el-input__wrapper) {
+  border-radius: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+}
+
+:deep(.el-input__wrapper:hover) {
+  box-shadow: 0 4px 12px rgba(0, 161, 214, 0.15);
+}
+
+:deep(.el-input__wrapper.is-focus) {
+  box-shadow: 0 0 0 1px #00a1d6 inset;
+}
+
+:deep(.el-drawer__header) {
+  margin-bottom: 0;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--el-border-color-lighter);
+  color: var(--el-color-primary);
+  font-weight: bold;
+}
+
+:deep(.el-drawer) {
+  border-radius: 16px 16px 0 0;
+}
 </style>

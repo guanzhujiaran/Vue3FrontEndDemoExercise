@@ -1,35 +1,34 @@
-/*
- * @Author: 星瞳 1944637830@qq.com
- * @Date: 2024-12-19 10:00:00
- * @LastEditors: 星瞳 1944637830@qq.com
- * @LastEditTime: 2024-12-19 10:00:00
- * @FilePath: \Vue3FrontEndDemoExercise\src\stores\theme.ts
- * @Description: 主题管理store
- */
 import { defineStore } from 'pinia'
-import { ref, watch } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { Sunny, Moon, Monitor } from '@element-plus/icons-vue'
+import { useDark, useToggle, usePreferredDark, useStorage } from '@vueuse/core'
 export type ThemeMode = 'light' | 'dark' | 'auto'
 
 export const useThemeStore = defineStore(
   'theme',
   () => {
-    // 主题模式
-    const themeMode = ref<ThemeMode>('auto')
+    // 使用VueUse的useDark，自动处理暗色模式切换
+    const isDark = useDark({
+      selector: 'html',
+      valueDark: 'dark',
+      valueLight: 'light',
+      storageKey: 'vueuse-theme-appearance'
+    })
+    const toggleDark = useToggle(isDark)
 
-    // 当前实际主题
-    const currentTheme = ref<'light' | 'dark'>('light')
+    // 使用useStorage持久化主题模式设置
+    const themeMode = useStorage<ThemeMode>('theme-mode', 'auto')
+
+    // 系统偏好
+    const prefersDark = usePreferredDark()
+
+    // 当前实际主题 - 从isDark计算得出
+    const currentTheme = computed<'light' | 'dark'>(() => (isDark.value ? 'dark' : 'light'))
 
     // 初始化主题
     const initTheme = () => {
-      // 从本地存储读取主题设置
-      const savedTheme = localStorage.getItem('theme-mode')
-      if (savedTheme && ['light', 'dark', 'auto'].includes(savedTheme)) {
-        themeMode.value = savedTheme as ThemeMode
-      }
-
-      // 应用主题
-      applyTheme()
+      // 根据当前主题模式设置暗色/亮色
+      applyThemeMode()
     }
 
     // 切换主题
@@ -41,71 +40,37 @@ export const useThemeStore = defineStore(
       } else {
         themeMode.value = 'light'
       }
-
-      // 保存到本地存储
-      localStorage.setItem('theme-mode', themeMode.value)
-
-      // 应用主题
-      applyTheme()
+      // 应用新的主题模式
+      applyThemeMode()
     }
 
     // 设置主题
     const setTheme = (theme: ThemeMode) => {
       themeMode.value = theme
-      localStorage.setItem('theme-mode', theme)
-      applyTheme()
+      // 应用新的主题模式
+      applyThemeMode()
     }
 
-    // 应用主题
-    const applyTheme = () => {
-      let targetTheme: 'light' | 'dark' = 'light'
-
-      if (themeMode.value === 'auto') {
-        // 跟随系统主题
-        const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
-        targetTheme = mediaQuery.matches ? 'dark' : 'light'
-      } else {
-        targetTheme = themeMode.value as 'light' | 'dark'
-      }
-
-      currentTheme.value = targetTheme
-
-      // 应用到DOM
-      const html = document.documentElement
-      const body = document.body
-
-      // 移除现有主题类
-      html.classList.remove('light', 'dark')
-      body.classList.remove('light', 'dark')
-
-      // 添加新主题类
-      html.classList.add(targetTheme)
-      body.classList.add(targetTheme)
-
-      // 设置Element Plus主题
-      if (targetTheme === 'dark') {
-        html.setAttribute('data-theme', 'dark')
-      } else {
-        html.setAttribute('data-theme', 'light')
+    // 应用主题模式
+    const applyThemeMode = () => {
+      if (themeMode.value === 'light') {
+        toggleDark(false)
+      } else if (themeMode.value === 'dark') {
+        toggleDark(true)
+      } else if (themeMode.value === 'auto') {
+        // 自动模式下根据系统偏好设置
+        toggleDark(prefersDark.value)
       }
     }
 
     // 监听系统主题变化
     const setupSystemThemeListener = () => {
-      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
-
-      const handleChange = () => {
+      // 使用watch监听系统偏好变化
+      return watch(prefersDark, (newValue) => {
         if (themeMode.value === 'auto') {
-          applyTheme()
+          toggleDark(newValue)
         }
-      }
-
-      mediaQuery.addEventListener('change', handleChange)
-
-      // 返回清理函数
-      return () => {
-        mediaQuery.removeEventListener('change', handleChange)
-      }
+      })
     }
 
     // 获取主题图标
@@ -136,10 +101,12 @@ export const useThemeStore = defineStore(
       initTheme,
       toggleTheme,
       setTheme,
-      applyTheme,
       setupSystemThemeListener,
       getThemeIcon,
-      getThemeText
+      getThemeText,
+      isDark,
+      toggleDark,
+      applyThemeMode
     }
   },
   {

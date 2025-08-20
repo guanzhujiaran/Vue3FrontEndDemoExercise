@@ -27,26 +27,28 @@ export interface LotUploadAreaProps {
 }
 
 //region 爬虫状态响应类型
+export interface ScrapyParams {
+  rid?: number
+  topic_id?: number
+  reserve_id?: number
+  extra_fields: null
+}
+
 export interface ScrapyStatus {
-  succ_count: number
-  cur_stop_num: number
-  start_ts: number
-  freq: number
+  crawling_speed: number
+  end_params: ScrapyParams
+  end_success_params: ScrapyParams
+  init_params: ScrapyParams
   is_running: boolean
-  latest_rid?: number
-  latest_succ_dyn_id?: number
-  first_dyn_id?: string
-  update_ts: number
-  latest_succ_dyn_id_str?: string
-  first_dyn_id_str?: string
-  latest_succ_topic_id?: number
-  first_topic_id?: number
-  latest_topic_id?: number
-  latest_succ_first_topic_id_str?: string
-  first_topic_id_str?: string
-  latest_succ_reserve_id?: number
-  first_reserve_id?: number
-  latest_reserve_id?: number
+  last_update_time: number
+  last_update_time_str: string
+  null_count: number
+  processed_items_count: number
+  running_params_set: ScrapyParams[]
+  start_time: number
+  start_time_str: string
+  succ_count: number
+  total_run_duration: number
 }
 
 export interface ScrapyStatusResp {

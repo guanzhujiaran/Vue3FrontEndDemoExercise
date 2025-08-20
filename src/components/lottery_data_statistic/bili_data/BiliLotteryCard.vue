@@ -202,7 +202,7 @@
 </template>
 
 <script setup lang="ts">
-import { Flag, InfoFilled, TrophyBase, Trophy, Medal } from '@element-plus/icons-vue'
+import { Flag, InfoFilled, TrophyBase, Trophy, Medal, Link } from '@element-plus/icons-vue'
 import { ref, computed } from 'vue'
 import type { PropType } from 'vue'
 import type { TagProps } from 'element-plus'
@@ -659,13 +659,23 @@ const typeInfo = computed(() => {
   font-weight: 500;
   gap: 15px;
   flex-wrap: wrap;
-  align-items: stretch;
-  align-content: stretch;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem;
 }
 
-:deep(.el-card__header),
+:deep(.el-card__header) {
+  padding: 0.8rem 1rem;
+  display: flex;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  justify-content: flex-start;
+  align-items: stretch;
+  border-bottom: 1px solid var(--el-border-color-lighter);
+}
+
 :deep(.el-card__body) {
-  padding: 0.2rem 0.2rem;
+  padding: 1rem;
   display: flex;
   flex-direction: column;
   flex-wrap: nowrap;
@@ -694,6 +704,11 @@ const typeInfo = computed(() => {
 
 .type-tag {
   flex-shrink: 0;
+  font-weight: bold;
+  padding: 0 8px;
+  height: 24px;
+  line-height: 22px;
+  border-radius: 12px;
 }
 
 .card-title {
@@ -702,12 +717,19 @@ const typeInfo = computed(() => {
   text-overflow: ellipsis;
   flex-grow: 1;
   min-width: 50px;
+  font-size: 1.1rem;
+  color: var(--el-text-color-primary);
+  margin: 0 8px;
 }
 
 .card-id {
-  color: #909399;
+  color: var(--el-text-color-secondary);
   white-space: nowrap;
   flex-shrink: 0;
+  font-size: 0.85rem;
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid var(--el-border-color-lighter);
 }
 
 .key-info-desc,
@@ -716,18 +738,37 @@ const typeInfo = computed(() => {
 .details-collapse {
   margin-top: 12px;
   width: 100%;
+  border-radius: 8px;
+  overflow: hidden;
 }
 
 .key-info-desc {
   margin-top: 0;
+  box-shadow: var(--el-box-shadow-light);
+}
+
+:deep(.el-descriptions__header) {
+  padding: 8px 12px;
+  font-weight: bold;
+  color: var(--el-color-primary);
+  border-bottom: 1px solid var(--el-border-color-lighter);
+}
+
+:deep(.el-descriptions__body) {
+  /* 移除背景色 */
+}
+
+:deep(.el-descriptions-item__label) {
+  font-weight: 500;
 }
 
 .no-prize-info {
   margin-top: 12px;
-  padding: 10px;
-  background-color: #f9f9f9;
-  border-radius: 4px;
+  padding: 16px;
+  border-radius: 8px;
   text-align: center;
+  box-shadow: var(--el-box-shadow-light);
+  border: 1px solid var(--el-border-color-lighter);
 }
 
 .prize-label {
@@ -742,40 +783,75 @@ const typeInfo = computed(() => {
 
 .prize-details {
   display: flex;
-  gap: 10px;
+  gap: 16px;
   align-items: flex-start;
   width: 100%;
+  padding: 8px;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  border: 1px solid var(--el-border-color-lighter);
+
+  &:hover {
+    border-color: var(--el-border-color);
+  }
 
   .prize-image-wrapper {
-    width: 64px;
-    height: 64px;
-    border-radius: 4px;
+    width: 80px;
+    height: 80px;
+    border-radius: 8px;
     display: inline-block;
-    border: 1px solid #ebeef5;
-    background-color: #fafafa;
+    border: 1px solid var(--el-border-color-lighter);
     flex-shrink: 0;
     box-sizing: border-box;
+    overflow: hidden;
+    box-shadow: var(--el-box-shadow-light);
+    transition: all 0.3s ease;
+    
+    &:hover {
+      transform: scale(1.05);
+      box-shadow: var(--el-box-shadow);
+    }
   }
 
   :deep(.el-image__inner) {
     width: 100%;
     height: 100%;
+    object-fit: cover;
   }
 }
 
 .prize-details p {
   margin: 0;
-  line-height: 1.5;
+  line-height: 1.6;
   flex-grow: 1;
   align-self: center;
   white-space: break-spaces;
+  font-size: 0.95rem;
+  color: var(--el-text-color-primary);
 }
 
 .conditions {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 10px;
   align-items: center;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid var(--el-border-color-lighter);
+}
+
+.conditions :deep(.el-tag) {
+  padding: 0 10px;
+  height: 28px;
+  line-height: 26px;
+  border-radius: 14px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--el-box-shadow-light);
+  }
 }
 
 :deep(.el-descriptions__content),
@@ -789,16 +865,16 @@ const typeInfo = computed(() => {
 }
 
 .raw-data-pre {
-  background-color: #f8f8f9;
   padding: 10px;
   border-radius: 4px;
   font-family: 'Courier New', Courier, monospace;
-  color: #5f6368;
+  color: var(--el-text-color-regular);
   white-space: pre-wrap;
   word-break: break-all;
   max-height: 250px;
   overflow-y: auto;
   margin-top: 10px;
+  border: 1px solid var(--el-border-color-lighter);
 }
 
 .main-content-wrapper {
@@ -807,7 +883,38 @@ const typeInfo = computed(() => {
   flex-direction: column;
   min-height: 0; /* 修复flex容器滚动问题 */
   overflow: auto; /* 允许内容滚动 */
-  gap: 12px; /* 增加子元素间距 */
+  gap: 16px; /* 增加子元素间距 */
+  padding: 0.5rem;
+  border-radius: 8px;
+}
+
+/* 为不同类型的抽奖卡片添加不同的顶部边框颜色 */
+.lottery-type-dynamic :deep(.el-card__header) {
+  border-top: 3px solid #67c23a;
+}
+
+.lottery-type-charging :deep(.el-card__header) {
+  border-top: 3px solid #e6a23c;
+}
+
+.lottery-type-reservation :deep(.el-card__header) {
+  border-top: 3px solid #409eff;
+}
+
+.lottery-type-anchor :deep(.el-card__header) {
+  border-top: 3px solid #67c23a;
+}
+
+.lottery-type-red_packet :deep(.el-card__header) {
+  border-top: 3px solid #f56c6c;
+}
+
+.lottery-type-topic :deep(.el-card__header) {
+  border-top: 3px solid #909399;
+}
+
+.lottery-type-unknown :deep(.el-card__header) {
+  border-top: 3px solid #909399;
 }
 
 .details-collapse {
@@ -865,13 +972,16 @@ const typeInfo = computed(() => {
 .lottery-card {
   width: 100%;
   max-width: 600px; /* 限制最大宽度 */
-  min-width: 400px; /* 设置最小宽度 */
+  min-width: 300px; /* 减小最小宽度以适应移动设备 */
   height: auto; /* 改为自动高度 */
   display: flex;
   flex-direction: column;
   margin: 0 auto; /* 水平居中 */
   box-sizing: border-box;
   overflow: hidden; /* 处理内容溢出 */
+  border-radius: 12px;
+  box-shadow: var(--el-box-shadow-light);
+  transition: all 0.3s ease;
 }
 
 :deep(.el-descriptions__table) {

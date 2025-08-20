@@ -11,7 +11,7 @@ import { computed, onMounted, ref, watch, useTemplateRef, onUnmounted } from 'vu
 import feedbackCommentApi from '@/api/feedback/comment.ts'
 import emitter from '@/utils/mitt.ts'
 import { KeysEnum, useInject } from '@/models/base/provide_model.ts'
-import { ScreenTypeEnum } from '@/models/global_var/global_var_model.ts'
+import { type GlobalVarsType, ScreenTypeEnum } from '@/models/global_var/global_var_model.ts'
 import { useDebounceFn } from '@vueuse/core'
 
 const is_expander_active_set = ref<Set<string | number>>(new Set())
@@ -96,7 +96,7 @@ const comment_reply_input_placeholder = computed(() => {
 const submit_comment_reply = async () => {
   let { root, rpidTarget, reply_content } = comment_section_stat.value
   if (!reply_content?.trim()?.length) {
-    return emitter.emit('toast', { t: '评论内容不能为空', e: 'error' }), false
+    return (emitter.emit('toast', { t: '评论内容不能为空', e: 'error' }), false)
   }
   return await feedbackCommentApi
     .add(
@@ -108,7 +108,7 @@ const submit_comment_reply = async () => {
     )
     .then((resp) => {
       if (resp.code) {
-        return emitter.emit('toast', { t: resp.msg, e: 'error' }), false
+        return (emitter.emit('toast', { t: resp.msg, e: 'error' }), false)
       }
       comment_list_resp.value.replies.map((replies) => {
         if (replies.rpid === rpidTarget || replies.rpid === root) {
@@ -130,7 +130,7 @@ const submit_comment_reply = async () => {
 }
 const submit_comment = async () => {
   if (!comment_content.value.trim().length) {
-    return emitter.emit('toast', { t: '评论内容不能为空', e: 'error' }), false
+    return (emitter.emit('toast', { t: '评论内容不能为空', e: 'error' }), false)
   }
   return await feedbackCommentApi
     .add(
@@ -142,7 +142,7 @@ const submit_comment = async () => {
     )
     .then((resp) => {
       if (resp.code) {
-        return emitter.emit('toast', { t: resp.msg, e: 'error' }), false
+        return (emitter.emit('toast', { t: resp.msg, e: 'error' }), false)
       }
       comment_list_resp.value.replies.unshift(resp.data)
       emitter.emit('toast', { t: '评论成功', e: 'success' })
@@ -151,7 +151,7 @@ const submit_comment = async () => {
       return true
     })
 }
-const globalVars = useInject(KeysEnum.globalVars)
+const globalVars = useInject(KeysEnum.globalVars) as Ref<GlobalVarsType>
 const isSmallScreen = computed(() => {
   return globalVars.value.screen_size !== ScreenTypeEnum.large
 })

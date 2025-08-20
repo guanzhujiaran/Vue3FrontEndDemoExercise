@@ -12,6 +12,7 @@ import { useDeviceSystemStore } from '@/stores/device_system'
 import { Theme } from '@/models/store/device_system'
 import emitter from '@/utils/mitt'
 import { useClipboard } from '@vueuse/core'
+import type { GlobalVarsType } from '@/models/global_var/global_var_model.ts'
 
 const handle_image_render = (node: any, entering: boolean): [string, number] => {
   if (entering) {
@@ -32,7 +33,7 @@ const is_dark = computed(() => {
   return false
 })
 const clipBoard = useClipboard()
-const globalVars = useInject(KeysEnum.globalVars)
+const globalVars = useInject(KeysEnum.globalVars) as Ref<GlobalVarsType>
 const vditor = useTemplateRef('vditor')
 const is_loading = defineModel('is_loading', {
   type: Boolean,

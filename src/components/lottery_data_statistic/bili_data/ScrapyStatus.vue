@@ -21,29 +21,22 @@ interface KeyToChineseMap {
 
 const keyToChineseMap: KeyToChineseMap = {
   succ_count: '成功数量',
-  start_ts: '开始时间',
-  freq: '获取成功频率（秒/个）',
+  start_time: '开始时间',
+  start_time_str: '开始时间(字符串)',
+  crawling_speed: '爬取速度（秒/个）',
   is_running: '是否运行中',
-  latest_rid: '最新获取的图片动态RID',
-  update_ts: '更新时间',
-  latest_succ_dyn_id_str: '最新成功动态ID',
-  first_dyn_id_str: '第一个动态ID',
-  latest_succ_topic_id: '最新获取成功的话题ID',
-  first_topic_id: '第一个话题ID',
-  latest_topic_id: '最新获取的话题ID',
-  latest_succ_reserve_id: '最新获取成功预约ID',
-  first_reserve_id: '第一个预约ID',
-  latest_reserve_id: '最新获取的预约ID',
+  last_update_time: '最后更新时间',
+  last_update_time_str: '最后更新时间(字符串)',
+  null_count: '空值数量',
+  processed_items_count: '处理项目数量',
+  total_run_duration: '总运行时长(秒)',
   dyn_scrapy_status: '动态',
   topic_scrapy_status: '话题',
   reserve_scrapy_status: '直播预约',
-  scrapy_proxy_pool_status: '爬虫代理池',
-  free_proxy_fetch_ts: '获取免费代理时间',
-  mysql_sync_redis_ts: 'mysql同步redis时间',
-  proxy_black_count: '黑名单代理数量',
-  proxy_total_count: '代理总数',
-  proxy_unknown_count: '未知状态代理数量',
-  sync_ts: '同步时间'
+  end_params: '结束参数',
+  end_success_params: '成功结束参数',
+  init_params: '初始参数',
+  running_params_set: '运行中参数集'
 }
 
 const getKeyName = (key: string): undefined | string => {
@@ -52,44 +45,95 @@ const getKeyName = (key: string): undefined | string => {
 const { width: windowWidth } = useWindowSize()
 const data = ref<ScrapyStatusResp>({
   dyn_scrapy_status: {
-    succ_count: -1,
-    cur_stop_num: -1,
-    start_ts: -1,
-    freq: -1,
+    crawling_speed: 0,
+    end_params: { extra_fields: null },
+    end_success_params: { extra_fields: null },
+    init_params: { extra_fields: null },
     is_running: false,
-    update_ts: -1
+    last_update_time: 0,
+    last_update_time_str: '',
+    null_count: 0,
+    processed_items_count: 0,
+    running_params_set: [],
+    start_time: 0,
+    start_time_str: '',
+    succ_count: 0,
+    total_run_duration: 0
   },
   topic_scrapy_status: {
-    succ_count: -1,
-    cur_stop_num: -1,
-    start_ts: -1,
-    freq: -1,
+    crawling_speed: 0,
+    end_params: { extra_fields: null },
+    end_success_params: { extra_fields: null },
+    init_params: { extra_fields: null },
     is_running: false,
-    update_ts: -1
+    last_update_time: 0,
+    last_update_time_str: '',
+    null_count: 0,
+    processed_items_count: 0,
+    running_params_set: [],
+    start_time: 0,
+    start_time_str: '',
+    succ_count: 0,
+    total_run_duration: 0
   },
   reserve_scrapy_status: {
-    succ_count: -1,
-    cur_stop_num: -1,
-    start_ts: -1,
-    freq: -1,
+    crawling_speed: 0,
+    end_params: { extra_fields: null },
+    end_success_params: { extra_fields: null },
+    init_params: { extra_fields: null },
     is_running: false,
-    update_ts: -1
+    last_update_time: 0,
+    last_update_time_str: '',
+    null_count: 0,
+    processed_items_count: 0,
+    running_params_set: [],
+    start_time: 0,
+    start_time_str: '',
+    succ_count: 0,
+    total_run_duration: 0
   }
 })
 
 const formatValue = (key: string, value: any) => {
   const formatters = {
-    ts: (v: number) => (v ? dayjs.unix(v).format('MM月DD日 HH:mm') : '未启动'),
-    freq: (v: number) => `${v.toFixed(1)}（秒/个）`,
+    time: (v: number) => (v ? dayjs.unix(v).format('MM月DD日 HH:mm:ss') : '未启动'),
+    timeStr: (v: string) => v || '未启动',
+    speed: (v: number) => `${v.toFixed(4)}（秒/个）`,
     count: (v: number) => v.toLocaleString(),
     bool: (v: boolean) => (v ? '✅' : '❌'),
-    default: (v: any) => v
+    duration: (v: number) => {
+      const hours = Math.floor(v / 3600)
+      const minutes = Math.floor((v % 3600) / 60)
+      const seconds = Math.floor(v % 60)
+      return `${hours}小时${minutes}分${seconds}秒`
+    },
+    params: (v: any) => {
+      if (!v) return '无'
+      const parts = []
+      if (v.rid) parts.push(`RID: ${v.rid}`)
+      if (v.topic_id) parts.push(`话题ID: ${v.topic_id}`)
+      if (v.reserve_id) parts.push(`预约ID: ${v.reserve_id}`)
+      return parts.length ? parts.join(', ') : '无参数'
+    },
+    paramsList: (v: any[]) => {
+      if (!v || !v.length) return '无'
+      return `${v.length}个参数`
+    },
+    default: (v: any) => {
+      if (v === null || v === undefined) return '无'
+      if (typeof v === 'object') return JSON.stringify(v)
+      return v
+    }
   }
 
-  if (/_(ts|time)$/.test(key)) return formatters.ts(value)
-  if (key === 'freq') return formatters.freq(value)
+  if (key === 'start_time' || key === 'last_update_time') return formatters.time(value)
+  if (key === 'start_time_str' || key === 'last_update_time_str') return formatters.timeStr(value)
+  if (key === 'crawling_speed') return formatters.speed(value)
   if (/_(count|num)$/.test(key)) return formatters.count(value)
   if (key === 'is_running') return formatters.bool(value)
+  if (key === 'total_run_duration') return formatters.duration(value)
+  if (key === 'end_params' || key === 'end_success_params' || key === 'init_params') return formatters.params(value)
+  if (key === 'running_params_set') return formatters.paramsList(value)
   return formatters.default(value)
 }
 const handle_get_scrapy_status = () => {
@@ -109,7 +153,23 @@ const handle_get_scrapy_status = () => {
     })
 }
 const handle_show_scrapy_data = (scrapy_data: ScrapyStatus | any) => {
-  return Object.entries(scrapy_data).filter(([k, v]) => getKeyName(k))
+  // 过滤并排序显示的字段，确保重要信息优先显示
+  const priorityOrder = [
+    'is_running', 'succ_count', 'processed_items_count', 'null_count',
+    'crawling_speed', 'start_time_str', 'last_update_time_str', 
+    'total_run_duration', 'init_params', 'end_params', 'end_success_params'
+  ]
+  
+  return Object.entries(scrapy_data)
+    .filter(([k, v]) => getKeyName(k) && k !== 'running_params_set') // 排除参数集合，太长了
+    .sort((a, b) => {
+      const indexA = priorityOrder.indexOf(a[0])
+      const indexB = priorityOrder.indexOf(b[0])
+      if (indexA === -1 && indexB === -1) return 0
+      if (indexA === -1) return 1
+      if (indexB === -1) return -1
+      return indexA - indexB
+    })
 }
 onMounted(() => {
   handle_get_scrapy_status()
@@ -121,7 +181,7 @@ const startAutoRefresh = () => {
   if (!autoRefreshTimer && isAutoRefresh.value) {
     autoRefreshTimer = window.setInterval(() => {
       handle_get_scrapy_status()
-    }, 10e3) // 每隔60秒刷新一次，时间可以根据需求调整
+    }, 10e3) // 每隔10秒刷新一次
   }
 }
 const stopAutoRefresh = () => {
@@ -143,110 +203,125 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <el-card class="status-wrapper" v-loading="is_loading">
-    <template #header>
-      <h2 v-if="data">BiliBili</h2>
-    </template>
-    <template #default>
-      <div v-if="data" class="status-panel">
-        <el-carousel
-          height="70vh"
-          :autoplay="false"
-          :direction="windowWidth > 768 ? 'horizontal' : 'vertical'"
-          type="card"
-          class="marquee-panel"
-          indicator-position="none"
-          arrow="never"
-        >
-          <el-carousel-item
-            v-for="([category, scrapy_data], idx) in Object.entries(data).filter((el) =>
-              getKeyName(el[0])
-            )"
-            :key="category"
+  <FlexContainer>
+    <el-card class="status-wrapper" v-loading="is_loading">
+      <template #header>
+        <h2 v-if="data">BiliBili</h2>
+      </template>
+      <template #default>
+        <div v-if="data" class="status-panel">
+          <el-carousel
+            height="70vh"
+            :autoplay="false"
+            :direction="windowWidth > 768 ? 'horizontal' : 'vertical'"
+            type="card"
+            class="marquee-panel"
+            indicator-position="none"
+            arrow="never"
           >
-            <div class="marquee-card">
-              <div class="card-header">
-                <h3 class="title">{{ getKeyName(category) }}</h3>
-                <div
-                  class="status-indicator"
-                  :class="scrapy_data.is_running ? 'running' : 'stopped'"
-                  v-if="scrapy_data.is_running !== undefined"
-                >
-                  {{ scrapy_data.is_running ? '运行中' : '已停止' }}
-                </div>
-                <div
-                  class="refresh-sec"
-                  style="margin-left: auto; gap: 10px; display: flex; align-items: center"
-                >
-                  <el-switch
-                    v-model="isAutoRefresh"
-                    inline-prompt
-                    active-text="自动刷新中"
-                    inactive-text="开启自动刷新"
-                    size="large"
-                    style="--el-switch-off-color: var(--el-text-color-primary)"
-                  />
-                  <el-button
-                    type="info"
-                    @click="handle_get_scrapy_status"
-                    :disabled="isAutoRefresh"
+            <el-carousel-item
+              v-for="([category, scrapy_data], idx) in Object.entries(data).filter((el) =>
+                getKeyName(el[0])
+              )"
+              :key="category"
+            >
+              <div class="marquee-card">
+                <div class="card-header">
+                  <h3 class="title">{{ getKeyName(category) }}</h3>
+                  <div
+                    class="status-indicator"
+                    :class="scrapy_data.is_running ? 'running' : 'stopped'"
+                    v-if="scrapy_data.is_running !== undefined"
                   >
-                    <el-icon>
-                      <Refresh />
-                    </el-icon>
-                  </el-button>
+                    {{ scrapy_data.is_running ? '运行中' : '已停止' }}
+                  </div>
+                  <div
+                    class="refresh-sec"
+                    style="margin-left: auto; gap: 10px; display: flex; align-items: center"
+                  >
+                    <el-switch
+                      v-model="isAutoRefresh"
+                      inline-prompt
+                      active-text="自动刷新中"
+                      inactive-text="开启自动刷新"
+                      size="large"
+                      style="--el-switch-off-color: var(--el-text-color-primary)"
+                    />
+                    <el-button
+                      type="info"
+                      @click="handle_get_scrapy_status"
+                      :disabled="isAutoRefresh"
+                    >
+                      <el-icon>
+                        <Refresh />
+                      </el-icon>
+                    </el-button>
+                  </div>
+                </div>
+
+                <div class="card-body">
+                  <div
+                    v-for="([key, value], i) in handle_show_scrapy_data(scrapy_data)"
+                    :key="key"
+                    class="data-row"
+                    :class="{'highlight': key === 'is_running' && value}"
+                  >
+                    <div class="row-label">
+                      {{ getKeyName(key) }}
+                    </div>
+                    <div class="row-value">
+                      <template v-if="key === 'end_params' || key === 'end_success_params' || key === 'init_params'">
+                        <el-popover
+                          placement="top"
+                          :width="300"
+                          trigger="hover"
+                        >
+                          <template #reference>
+                            <span class="params-link">{{ formatValue(key, value) }}</span>
+                          </template>
+                          <div class="params-detail">
+                            <pre>{{ JSON.stringify(value, null, 2) }}</pre>
+                          </div>
+                        </el-popover>
+                      </template>
+                      <template v-else>
+                        {{ formatValue(key, value) }}
+                      </template>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="card-footer">
+                  <el-icon>
+                    <Clock />
+                  </el-icon>
+                  <span
+                    >持续运行：{{ formatValue('total_run_duration', scrapy_data.total_run_duration) }}</span
+                  >
                 </div>
               </div>
-
-              <div class="card-body">
-                <div
-                  v-for="([key, value], i) in handle_show_scrapy_data(scrapy_data)"
-                  :key="key"
-                  class="data-row"
-                >
-                  <div class="row-label">
-                    {{ getKeyName(key) }}
-                  </div>
-                  <div class="row-value">
-                    {{ formatValue(key, value) }}
-                  </div>
-                </div>
-              </div>
-
-              <div class="card-footer">
-                <el-icon>
-                  <Clock />
-                </el-icon>
-                <span
-                  >持续运行：{{
-                    scrapy_data.start_ts && scrapy_data.update_ts
-                      ? dayjs.unix(scrapy_data.update_ts - scrapy_data.start_ts).format('HH:mm:ss')
-                      : '未启动'
-                  }}</span
-                >
-              </div>
-            </div>
-          </el-carousel-item>
-        </el-carousel>
-      </div>
-      <Placeholder v-else v-model="placeholder_props" />
-    </template>
-  </el-card>
+            </el-carousel-item>
+          </el-carousel>
+        </div>
+        <Placeholder v-else v-model="placeholder_props" />
+      </template>
+    </el-card>
+  </FlexContainer>
 </template>
 
 <style scoped>
 .status-panel {
   display: flex;
-  background-color: #f5f7fa;
+  background-color: var(--el-bg-color-page);
   justify-content: center;
   align-items: center;
   padding-bottom: 3rem;
 }
 
 .marquee-panel {
-  --card-bg: linear-gradient(145deg, #f8f9fa 0%, #ffffff 100%);
-  --running-color: rgba(103, 194, 58, 0.1);
-  --stopped-color: rgba(245, 108, 108, 0.1);
+  --card-bg: linear-gradient(145deg, var(--el-bg-color) 0%, var(--el-bg-color-overlay) 100%);
+  --running-color: var(--el-color-success-light-9);
+  --stopped-color: var(--el-color-danger-light-9);
 }
 
 .marquee-card {
@@ -263,13 +338,13 @@ onBeforeUnmount(() => {
   justify-content: space-between;
   align-items: center;
   padding: 16px 24px;
-  background: rgba(255, 255, 255, 0.6);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  background: var(--el-bg-color-overlay);
+  border-bottom: 1px solid var(--el-border-color-light);
 
   .title {
     margin: 0;
     font-size: 2em;
-    color: #18191c;
+    color: var(--el-text-color-primary);
   }
 
   .status-indicator {
@@ -280,12 +355,12 @@ onBeforeUnmount(() => {
 
     &.running {
       background: var(--running-color);
-      color: #67c23a;
+      color: var(--el-color-success);
     }
 
     &.stopped {
       background: var(--stopped-color);
-      color: #f56c6c;
+      color: var(--el-color-danger);
     }
   }
 }
@@ -301,21 +376,22 @@ onBeforeUnmount(() => {
 
 .data-row {
   padding: 12px;
-  background: rgba(245, 247, 250, 0.6);
+  background: var(--el-fill-color-light);
   border-radius: 8px;
 
   .row-label {
-    font-size: 0.325rem;
-    color: #18191c;
+    font-size: 0.9rem;
+    color: var(--el-text-color-primary);
     margin-bottom: 6px;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    font-weight: 500;
   }
 
   .row-value {
     font-family: 'Roboto Mono', monospace;
-    font-size: 0.625rem;
+    font-size: 0.85rem;
     color: var(--el-text-color-primary);
     word-break: break-all;
     line-height: 1.4;
@@ -324,13 +400,40 @@ onBeforeUnmount(() => {
 
 .card-footer {
   padding: 12px 24px;
-  background: rgba(0, 0, 0, 0.03);
-  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  background: var(--el-fill-color-lighter);
+  border-top: 1px solid var(--el-border-color-light);
   font-size: 0.9em;
   color: #191919;
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+.params-link {
+  color: var(--el-color-primary);
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.params-detail {
+  max-height: 300px;
+  overflow-y: auto;
+  font-family: 'Roboto Mono', monospace;
+  font-size: 0.8rem;
+}
+
+.param-item {
+  padding: 4px 0;
+  border-bottom: 1px dashed #eee;
+}
+
+.param-item:last-child {
+  border-bottom: none;
+}
+
+.highlight {
+  border-left: 3px solid var(--el-color-success);
+  background: var(--el-color-success-light-9);
 }
 
 @media (max-width: 768px) {
@@ -363,11 +466,11 @@ onBeforeUnmount(() => {
 }
 
 .marquee-card:nth-child(2n) {
-  background-color: #bebcbc;
+  background-color: var(--el-bg-color);
 }
 
 .marquee-card:nth-child(2n + 1) {
-  background-color: #01ddff;
+  background-color: var(--el-color-primary-light-5);
 }
 
 :deep(.el-carousel) {

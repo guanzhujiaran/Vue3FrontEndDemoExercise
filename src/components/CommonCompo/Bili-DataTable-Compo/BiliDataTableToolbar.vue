@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ref } from 'vue'
 import { Refresh, Setting } from '@element-plus/icons-vue'
 import { useBiliLotteryRecord } from '@/stores/bili_lottery_record.ts'
 
@@ -43,15 +44,63 @@ const onSubmit = () => {
 </template>
 
 <style scoped>
+.data-table-toolbar {
+  padding: 0.5rem 0.5rem 0.8rem;
+  margin: 0 auto 1rem;
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+  border: 1px solid var(--el-border-color-lighter);
+}
+
 .data-table-toolbar .refresh-btn,
 .data-table-toolbar .setting-btn {
   width: auto;
+  border-radius: 20px;
+  padding: 8px 16px;
+  transition: all 0.3s ease;
 }
 
-.data-table-toolbar {
-  padding: 0.2rem 0.1rem 0.3rem;
-  margin: auto;
-  display: flex;
-  justify-content: center;
+.data-table-toolbar .refresh-btn {
+  border-color: var(--el-color-primary);
+}
+
+.data-table-toolbar .refresh-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 161, 214, 0.2);
+}
+
+.data-table-toolbar .setting-btn {
+  border-color: var(--el-border-color);
+  color: var(--el-text-color-regular);
+}
+
+.data-table-toolbar .setting-btn:hover {
+  border-color: var(--el-border-color-darker);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+:deep(.el-dialog__header) {
+  border-bottom: 1px solid #eaeaea;
+  padding-bottom: 15px;
+}
+
+:deep(.el-dialog__body) {
+  padding-top: 20px;
+}
+
+:deep(.el-slider__runway) {
+  margin: 16px 0;
+}
+
+:deep(.el-slider__button) {
+  border-color: #00a1d6;
+}
+
+:deep(.el-slider__bar) {
+  background-color: #00a1d6;
 }
 </style>

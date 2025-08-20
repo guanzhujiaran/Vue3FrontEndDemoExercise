@@ -1,23 +1,29 @@
 # BiliLottery - B站抽奖数据管理平台
 
-[![Vue](https://img.shields.io/badge/Vue-3.x-green.svg)](https://vuejs.org/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-4.x-blue.svg)](https://www.typescriptlang.org/)
-[![Element Plus](https://img.shields.io/badge/Element_Plus-2.x-purple.svg)](https://element-plus.org/)
+[![Vue](https://img.shields.io/badge/Vue-3.5-green.svg)](https://vuejs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.8-blue.svg)](https://www.typescriptlang.org/)
+[![Element Plus](https://img.shields.io/badge/Element_Plus-2.10-purple.svg)](https://element-plus.org/)
+[![Vite](https://img.shields.io/badge/Vite-7.1-yellow.svg)](https://vitejs.dev/)
+[![Pinia](https://img.shields.io/badge/Pinia-3.0-orange.svg)](https://pinia.vuejs.org/)
 
-一个基于 Vue 3 的前端项目,模仿 B 站 UI 风格，用于管理和分析 B 站抽奖数据。
+一个基于 Vue 3 的前端项目，模仿 B 站 UI 风格，用于管理和分析 B 站抽奖数据。支持响应式设计、深色/浅色主题切换和多种设备适配。
 
 🌐 在线演示: [serena.dynv6.net](https://serena.dynv6.net)  
-🔙 后端项目: [BilibiliExplosion](https://github.com/guanzhujiaran/BilibiliExplosion)
+🔙 后端项目: [BilibiliExplosion](https://github.com/guanzhujiaran/BilibiliExplosion)  
+📋 更新日志: [CHANGELOG.md](./CHANGELOG.md)
 
 ## 功能特点
 
-- **用户认证系统**：支持登录\注册和账号管理
+- **用户认证系统**：支持登录/注册和账号管理
 - **抽奖数据统计**：可视化展示 B 站各类抽奖数据
 - **数据爬取管理**：管理和监控 B 站抽奖数据爬取任务
 - **中奖统计**：分析用户中奖情况和概率
 - **用户中心**：个人信息设置和账号管理
 - **反馈系统**：用户反馈和建议收集
-- **山姆会员店信息**：相关会员店信息查询
+- **主题切换**：支持深色/浅色/自动三种主题模式
+- **全局加载遮罩**：统一的路由切换加载效果
+- **响应式设计**：适配从手机到大屏幕的各种设备
+- **性能优化**：使用 Vite 构建，Element Plus 优化组件
 
 ## 技术栈
 
@@ -30,6 +36,10 @@
 - **GraphQL**: @urql/vue
 - **Markdown 编辑器**: mavon-editor + md-editor-v3
 - **构建工具**: Vite
+- **CSS 预处理器**: Sass
+- **代码格式化**: Prettier
+- **代码检查**: ESLint
+- **类型检查**: vue-tsc
 
 ## 项目结构
 
@@ -46,8 +56,10 @@ BiliLottery/
 │   ├── utils/          # 工具函数
 │   └── views/          # 页面级组件
 ├── public/            # 公共资源
+├── docs/              # 项目文档
 ├── vite.config.ts     # Vite 配置
-└── package.json        # 项目依赖
+├── package.json       # 项目依赖
+└── CHANGELOG.md       # 更新日志
 ```
 
 ## 开发指南

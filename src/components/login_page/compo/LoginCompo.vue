@@ -9,6 +9,17 @@ import utils from '@/utils/mixin.ts'
 import { ElMessage } from 'element-plus'
 import { View, Hide } from '@element-plus/icons-vue'
 
+// 定义props
+const props = defineProps({
+  isModal: {
+    type: Boolean,
+    default: false
+  }
+})
+
+// 定义事件
+const emit = defineEmits(['login-success'])
+
 // 输入框禁止输入空格
 const pwd_sec = ref<string>()
 const vNoSpace = {
@@ -84,7 +95,16 @@ const handleLoginBtn = useDebounceFn(async () => {
       const JwtStore = useJwtStore()
       JwtStore.save_jwt_token(resp.data.jwt_token)
       ElMessage.success('登录成功！')
-      router.push('/app/user-center')
+      
+      // 发出登录成功事件，让父组件可以关闭模态框
+      emit('login-success')
+      
+      // 如果是在模态框中登录，不自动跳转，而是刷新当前页面
+      if (props.isModal) {
+        window.location.reload()
+      } else {
+        router.push('/app/user-center')
+      }
     })
     .catch((e) => {
       ElMessage.error(`登录失败！原因：${e}`)
@@ -125,6 +145,11 @@ const clickSpaceArea = (t: any) => {
 }
 
 const check_login = () => {
+  // 如果是在模态框中，不需要自动检查登录状态
+  if (props.isModal) {
+    return
+  }
+  
   const JwtStore = useJwtStore()
   isLogin()
     .then((res) => {

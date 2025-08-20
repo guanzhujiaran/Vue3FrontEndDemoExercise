@@ -33,12 +33,9 @@ const activeName = ref('1')
       <el-collapse v-model="activeName" accordion >
         <el-collapse-item title="账号运行状况" name="1">
           <AccountStatusBoard v-model="props" style="overflow:scroll;"></AccountStatusBoard>
-            
         </el-collapse-item>
         <el-collapse-item title="账号记录" name="2">
           <DashBoard></DashBoard>
-
-            
         </el-collapse-item>
     </el-collapse>
   </div>

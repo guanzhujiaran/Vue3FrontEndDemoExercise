@@ -15,4 +15,8 @@ export type GlobalEvents = {
    * 发送toast事件
    */
   toast: { t: string; e?: 'info' | 'success' | 'error' | 'loading' }
+  /**
+   * 未登录事件
+   */
+  needLogin: void
 }

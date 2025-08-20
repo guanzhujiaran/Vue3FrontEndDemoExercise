@@ -1,57 +1,68 @@
 <script setup lang="ts">
-import { type PropType, ref } from 'vue'
+import { type PropType} from 'vue'
 
 const props = defineProps({
   handleLoad: {
     type: Function as PropType<() => void>,
-    required: true
+    required: true,
+    default: () => {}
   }
 })
 const isMore = defineModel('isMore', {
   required: true,
   type: Boolean
 })
+const handleLoad = () => {
+  props.handleLoad()
+}
 </script>
 
 <template>
   <div class="with-loading-more with-scroll loading-more-pc">
     <div
       class="with-loading-more-container"
-      v-infinite-scroll="props.handleLoad"
+      v-infinite-scroll="handleLoad"
       :infinite-scroll-disabled="!isMore"
-      :infinite-scroll-delay="1e3"
+      :infinite-scroll-delay="500"
+      :infinite-scroll-immediate="true"
+      :infinite-scroll-distance="0"
     >
       <slot name="content"></slot>
-    </div>
-    <slot name="footer">
-      <div v-if="isMore" class="loading-more" style="background-color: transparent" @click="props.handleLoad">
-        <span>查看更多</span>
+      <div v-if="isMore" class="loading-more" style="background-color: transparent">
+        <span @click="handleLoad">查看更多</span>
       </div>
-    </slot>
+    </div>
   </div>
 </template>
 
 <style scoped>
-.loading-more {
-  position: relative;
-  font-size: 0.32rem;
-  width: 100%;
-  min-width: 100%;
-  text-align: center;
-  cursor: pointer;
-  height: 1.066667rem;
-  line-height: 1.066667rem;
-  background-color: #606060;
-}
-
-.with-loading-more.with-scroll {
-  height: inherit;
+.with-loading-more-container {
+  max-height: 85vh;
+  padding: 0;
+  margin: 0;
   overflow-y: auto;
 }
 
-.with-loading-more {
-      background-color: var(--el-bg-color);
+.loading-more {
+  position: relative;
+  width: -webkit-fill-available;
+  text-align: center;
 
+  background-color: var(--el-bg-color);
+  height: 600px;
+  & span {
+    cursor: pointer;
+  }
+}
+
+.with-loading-more.with-scroll {
+  flex: 1;
+  overflow: auto;
+  height: 90vh;
+}
+
+.with-loading-more {
+  background-color: var(--el-bg-color);
   position: relative;
   display: flex;
   flex-direction: column;
@@ -59,22 +70,6 @@ const isMore = defineModel('isMore', {
 }
 
 .with-loading-more.with-scroll ::-webkit-scrollbar {
-  width: 0.133333rem;
-  background: hsla(0, 0%, 100%, 0);
-}
-
-.with-loading-more.with-scroll.loading-more-pc::-webkit-scrollbar-button {
   display: none;
-}
-
-.with-loading-more.with-scroll.loading-more-pc::-webkit-scrollbar {
-  width: 0.133333rem;
-  background: hsla(0, 0%, 100%, 0);
-  border-radius: 0.133333rem;
-}
-
-.with-loading-more.with-scroll.loading-more-pc::-webkit-scrollbar-thumb {
-  background: hsla(0, 2%, 41%, 0.5);
-  border-radius: 0.133333rem;
 }
 </style>

@@ -18,16 +18,25 @@ export const BiliImg = {
     prize_default:
       'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALQAAAC0CAMAAAAKE/YAAAAABGdBTUEAALGPC/xhBQAAAFRQTFRFAAAAAMz/AKLYAKLXAKLXAKLWAKTWAKHWAKHWAP//AKPWAKHWAKHXAKLXAKLZAKHXAKrdAKLYAKLXAKPXAKLXAKHWAKTbAKHXAKLXAKHWAKHXAKHYmyaRZAAAABx0Uk5TAAVVpdnzUdz/Aorak3NKvg/ckmakoxym5u34iJwbm5wAAAFpSURBVHgB7dqLCtpAEEbhyf03m8TUrSaa93/PhiqlsjYgAR3o+bgPtwMYdmA0/OcAAAAAAAAAAAAAAAAAAECWF2VVlUWevZg4VTd6aOp/TZw5tJJC1/ddkNQeXk3caaUw2G9DkNpXE29q6Tjaw3iU6nRizmSNwmh/jEE/kkmTmS+5NNhfBimd5OZLoWBPgtJJYb6UOtmTTumkNF8q9fakVzqpvEdHKXqPLtWl0d5/HoVCGu39Q8ylYTt6kHKXj0sS7fFxSZ7xJNrjM54sTEm0w4UpWU1Pfbz7KZ3jnafV9DLN2mGeLl9ovmqn6+erJ92WuEGruGG5abJPm7XYFq1sy6LZPk2K+6KjRDTRRBNNNI+Lg2fc88LEapqQzu//PM6SfZMU3/8QI9FEE0000UQTTTTRRBNNNNFEE0000UQTTfSue4BWPm4Ab9wDtHJ0A9h/D7hevP5VZccNAAAAAAAAAAAAAAAAAACAX7z/O0Cy8Q1HAAAAAElFTkSuQmCC'
   },
-  dark: {
-    background: {
+  infoCenter: {
+    bg: 'https://s1.hdslb.com/bfs/static/blive/blfe-message-web/static/img/infocenterbg.a1a0d152.jpg'
+  },
+  error: {
+    not_found: 'https://static.hdslb.com/error/very_sorry.png',
+    un_authorized:'https://activity.hdslb.com/blackboard/activity4487/img/banner-front.b1926c28.png',
+
+  },
+  background: {
+    home: {
+      light: 'https://i0.hdslb.com/bfs/seed/jinkela/short/message/img/light_bg.png',
+      dark: 'https://i0.hdslb.com/bfs/seed/jinkela/short/message/img/dark_bg.png'
+    },
+    ranking: {
       kv: 'https://i0.hdslb.com/bfs/live-activity/nuwa/navigation_rank_2023/static/img/kv.1d3c4806.png',
       kv2: 'https://i0.hdslb.com/bfs/live-activity/nuwa/navigation_rank_2023/static/img/kv2.1b2b741a.png',
       bg2: 'https://i0.hdslb.com/bfs/live-activity/nuwa/navigation_rank_2023/static/img/bg2.eb163196.png',
       bg3: 'https://i0.hdslb.com/bfs/live-activity/nuwa/navigation_rank_2023/static/img/bg3.5490c983.png',
       bg4: 'https://i0.hdslb.com/bfs/live-activity/nuwa/navigation_rank_2023/static/img/bg4.68c18166.png'
     }
-  },
-  infoCenter: {
-    bg: 'https://s1.hdslb.com/bfs/static/blive/blfe-message-web/static/img/infocenterbg.a1a0d152.jpg'
   }
 }

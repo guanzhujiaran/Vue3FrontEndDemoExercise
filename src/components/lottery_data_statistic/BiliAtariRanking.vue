@@ -1,80 +1,54 @@
 <template>
-  <BiliBaseRanking
-    :page_size="10"
-    score_prefix="中奖"
-    score_suffix="次"
-    :load_func="load_func"
-    :ranking_partitions="ranking_partitions"
-    v-model:is-error="isError"
-    v-model:sync-ts="syncTs"
-  >
-    <template #DetailDrawer="{ ActivedUserLotteryResult, activedParams }">
-      <div class="lottery-result-drawer" v-loading.fullscreen="isLoadingLotteryResult">
-        <el-drawer
-          v-model="ActivedUserLotteryResult.isOpenDrawer"
-          size="81%"
-          direction="btt"
-          style="
-            background: linear-gradient(
-                180deg,
-                rgba(24, 25, 38, 0.95),
-                rgba(17, 17, 28, 0.95) 96.22%
-              ),
-              linear-gradient(0, rgba(66, 72, 94, 0.5), rgba(66, 72, 94, 0.5));
-          "
-        >
-          <template #header>
-            <div class="user-title">
-              <UserAvatarBox
-                :size="'large'"
-                :src="ActivedUserLotteryResult.user_info.face"
-                @click="gotoBiliUserSpace(ActivedUserLotteryResult.user_info.uid)"
-              ></UserAvatarBox>
-              <p>
-                {{ ActivedUserLotteryResult.user_info.name }}
-              </p>
-              <p>UID: {{ ActivedUserLotteryResult.user_info.uid }}</p>
-            </div>
-          </template>
-          <template #default>
-            <BiliAtariResultSlot
-              :limit="10"
-              :rank_type="activedParams['rank_type'] as LotteryRankType"
-              :lot_type="activedParams['lot_type'] as LotteryRankLotType"
-              :date="activedParams['date'] as LotteryRankDateType"
-              :uid="ActivedUserLotteryResult.user_info.uid"
-              v-model:is-loading="isLoadingLotteryResult"
-            ></BiliAtariResultSlot>
-          </template>
-        </el-drawer>
-      </div>
-    </template>
-  </BiliBaseRanking>
-  <el-tour
-    v-model="biliRankTourTip"
-    :z-index="114514"
-    @close="useTourTipStore().isBiliRankTourActivated = false"
-  >
-    <el-tour-step target=".rank-header-info" title="中奖用户名人堂">
-      <template #default>
-        <span
-          >数据库里面保存并统计的中奖用户，可以按多个条件筛选，往下滚动可以无限加载内容，用redis作为缓存，定时从数据库同步到redis中。<br />
-          拼尽全力，无法获取所有动态，排行榜数据存在误差</span
-        >
-      </template>
-    </el-tour-step>
-    <el-tour-step
-      target=".rank-header-panel"
-      title="筛选条件"
-      description="允许按照抽奖类型，奖品等级，统计时间范围进行筛选。"
+  <CommContainer>
+    <BiliBaseRanking
+      :page_size="10"
+      score_prefix="中奖"
+      score_suffix="次"
+      :load_func="load_func"
+      :ranking_partitions="ranking_partitions"
+      v-model:is-error="isError"
+      v-model:sync-ts="syncTs"
     >
-    </el-tour-step>
-    <el-tour-step
-      target=".rank-item"
-      title="用户信息"
-      description="点击用户头像可以跳转对应B站用户空间，点击 ##中奖x次## 可以查看当前筛选条件下该用户的中奖记录"
-    ></el-tour-step>
-  </el-tour>
+      <template #DetailDrawer="{ ActivedUserLotteryResult, activedParams }">
+        <div class="lottery-result-drawer" v-loading.fullscreen="isLoadingLotteryResult">
+          <el-drawer
+            v-model="ActivedUserLotteryResult.isOpenDrawer"
+            size="81.0%"
+            direction="btt"
+            style="
+              background:
+                linear-gradient(180deg, rgba(24, 25, 38, 0.95), rgba(17, 17, 28, 0.95) 96.22%),
+                linear-gradient(0, rgba(66, 72, 94, 0.5), rgba(66, 72, 94, 0.5));
+            "
+          >
+            <template #header>
+              <div class="user-title">
+                <UserAvatarBox
+                  :size="'large'"
+                  :src="ActivedUserLotteryResult.user_info.face"
+                  @click="gotoBiliUserSpace(ActivedUserLotteryResult.user_info.uid)"
+                ></UserAvatarBox>
+                <p>
+                  {{ ActivedUserLotteryResult.user_info.name }}
+                </p>
+                <p>UID: {{ ActivedUserLotteryResult.user_info.uid }}</p>
+              </div>
+            </template>
+            <template #default>
+              <BiliAtariResultSlot
+                :limit="10"
+                :rank_type="activedParams['rank_type'] as LotteryRankType"
+                :lot_type="activedParams['lot_type'] as LotteryRankLotType"
+                :date="activedParams['date'] as LotteryRankDateType"
+                :uid="ActivedUserLotteryResult.user_info.uid"
+                v-model:is-loading="isLoadingLotteryResult"
+              ></BiliAtariResultSlot>
+            </template>
+          </el-drawer>
+        </div>
+      </template>
+    </BiliBaseRanking>
+  </CommContainer>
 </template>
 
 <script setup lang="ts">
@@ -176,37 +150,44 @@ const syncTs = ref(0)
 const load_func = async (
   cur_offset: number,
   page_size: number,
-  filter_params: Record<RankingPartition['partitionValue'], RankingPartition['activeValue']>
+  filter_params: Record<string, string>
 ): Promise<BaseRankItem[]> => {
   isLoading.value = true
   isError.value = false
-  let resp = await lotteryDataStatisticApi.handle_lottery_rank(
-    {
-      offset: cur_offset,
-      limit: page_size
-    },
-    filter_params['date'] as LotteryRankDateType,
-    filter_params['lot_type'] as LotteryRankLotType,
-    filter_params['rank_type'] as LotteryRankType
-  )
-  isLoading.value = false
-  if (resp.code) {
-    emitter.emit('toast', {
-      t: resp.msg,
-      e: 'error'
+  try {
+    const resp = await lotteryDataStatisticApi.handle_lottery_rank(
+      {
+        offset: cur_offset,
+        limit: page_size
+      },
+      filter_params['date'] as LotteryRankDateType,
+      filter_params['lot_type'] as LotteryRankLotType,
+      filter_params['rank_type'] as LotteryRankType
+    )
+    
+    if (resp.code) {
+      emitter.emit('toast', {
+        t: resp.msg,
+        e: 'error'
+      })
+      isError.value = true
+      return []
+    }
+    
+    syncTs.value = resp?.data?.sync_ts ?? 0
+    return resp.data.winners.map((el) => {
+      return {
+        score: el.count,
+        ...el
+      }
     })
+  } catch (err) {
     isError.value = true
     return []
+  } finally {
+    isLoading.value = false
   }
-  syncTs.value = resp?.data?.sync_ts ?? 0
-  return resp.data.winners.map((el) => {
-    return {
-      score: el.count,
-      ...el
-    }
-  })
 }
-const biliRankTourTip = ref<boolean>(useTourTipStore().isBiliRankTourActivated)
 </script>
 
 <style scoped>

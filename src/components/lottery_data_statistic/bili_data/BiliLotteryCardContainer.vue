@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import BiliLotteryCard from '@/components/lottery_data_statistic/bili_data/BiliLotteryCard.vue'
 import type { DynamicLotteryData, ReservationLotteryData } from '@/models/lottery/lottery_card.ts'
 
@@ -15,7 +16,12 @@ const parsedData = computed(() => {
 
 <template>
   <div class="bili-lottery-card-arr-container">
-    <div class="bili-lottery-card-wrapper" v-for="(item, idx) in parsedData" :key="idx">
+    <div 
+      class="bili-lottery-card-wrapper" 
+      v-for="(item, idx) in parsedData" 
+      :key="idx"
+      :style="{'--card-index': idx}"
+    >
       <BiliLotteryCard class="lottery-card" :lottery-data="item"></BiliLotteryCard>
       <el-divider></el-divider>
     </div>
@@ -26,19 +32,35 @@ const parsedData = computed(() => {
 .bili-lottery-card-arr-container {
   display: flex;
   flex-wrap: wrap;
-  gap: 1rem;
+  gap: 1.5rem;
   justify-content: center;
+  padding: 1rem 0.5rem;
 }
 
 .bili-lottery-card-wrapper {
-  flex: 0 1 320px; /* 改为0，防止拉伸 */
-  max-width: calc(50% - 0.5rem);
-  min-height: 200px; /* 添加最小高度确保一致性 */
+  flex: 0 1 340px; /* 稍微增加宽度 */
+  max-width: calc(50% - 1rem);
+  min-height: 200px;
+  margin-bottom: 1rem;
+  border-radius: 8px;
+  overflow: hidden;
+  position: relative;
+}
+
+@media (max-width: 1200px) {
+  .bili-lottery-card-wrapper {
+    flex: 0 1 320px;
+  }
 }
 
 @media (max-width: 768px) {
   .bili-lottery-card-wrapper {
     max-width: 100%;
+    margin-bottom: 1.5rem;
+  }
+  
+  .bili-lottery-card-arr-container {
+    gap: 1rem;
   }
 }
 
@@ -46,14 +68,33 @@ const parsedData = computed(() => {
   display: flex;
   flex-direction: column;
   transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
 .lottery-card {
   flex-grow: 1;
+  border-radius: 8px;
 }
 
 .bili-lottery-card-wrapper:hover {
-  transform: translateY(-10px);
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+  transform: translateY(-8px);
+  box-shadow: 0 12px 24px rgba(0, 161, 214, 0.15);
+}
+
+/* 添加卡片加载动画 */
+@keyframes cardFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.bili-lottery-card-wrapper {
+  animation: cardFadeIn 0.5s ease forwards;
+  animation-delay: calc(0.05s * var(--card-index, 0));
 }
 </style>

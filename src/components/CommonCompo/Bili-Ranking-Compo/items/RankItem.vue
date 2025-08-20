@@ -17,8 +17,13 @@ const emit = defineEmits<{
 
 <template>
   <div class="rank-item">
-    <img
+    <el-image
       class="full-bg-img"
+      :class="{
+        one: Item.rank === 1,
+        two: Item.rank === 2,
+        three: Item.rank === 3
+      }"
       :src="
         Item.rank === 1
           ? BiliImg.ranking.background.one
@@ -51,7 +56,7 @@ const emit = defineEmits<{
     </el-popover>
     <div class="number" @click="emit('score_click', Item)">
       {{ props.score_prefix }}
-      <span>{{ item.score }}</span>
+      <span>{{ Item.score }}</span>
       {{ props.score_suffix }}
     </div>
   </div>
@@ -59,13 +64,13 @@ const emit = defineEmits<{
 
 <style scoped>
 .rank-item {
-  width: 1.919rem;
-  height: 2.63rem;
   display: flex;
   flex-direction: column;
   align-items: center;
   box-sizing: border-box;
   position: relative;
+  width: 150px;
+  height: 200px;
 }
 
 .hall-avatar {
@@ -75,12 +80,10 @@ const emit = defineEmits<{
 .rank-item :deep(.avatar-box) {
   margin-right: 0;
   padding-top: 0.1rem;
-  width: 0.96rem;
-  height: 0.96rem;
 }
 
 .hall-avatar :deep(.border) {
-  border: 0.053333rem solid #e2d4a4;
+  border: 2px solid #e2d4a4;
 }
 
 .hall-avatar :deep(.avatar) {
@@ -100,20 +103,22 @@ const emit = defineEmits<{
 }
 
 .full-bg-img {
-  width: 100%;
-  height: 100%;
+  width: 120px;
+  height: 150px;
   object-fit: cover; /* 这会保证图片按比例缩放并覆盖整个 div */
   position: absolute;
+}
+.full-bg-img.one {
+  width: 150px;
+  height: 200px;
 }
 
 .rank-item .uname {
   z-index: 1;
   padding: 0.266667rem;
-  height: 0.693333rem;
-  font-size: 0.25rem;
   width: 100%;
   color: #ffefdc;
-  font-weight: 500;
+  font-weight: 1000;
   text-align: center;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -123,14 +128,11 @@ const emit = defineEmits<{
 
 .rank-item .number {
   z-index: 1;
-  height: 0.586667rem;
-  font-size: 0.25rem;
   color: hsla(0, 0%, 100%, 0.6);
 }
 
 .rank-item .number span {
   color: #fff;
-  font-size: 0.426667rem;
   font-weight: 1000;
 }
 </style>
