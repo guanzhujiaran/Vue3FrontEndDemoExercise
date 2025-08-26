@@ -9,7 +9,6 @@
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
-import { BiliImg } from '@/assets/img/BiliImg.ts'
 import { type BiliErrorDetailType, BiliErrorRouteToTxt } from '@/assets/text/BiliErrorTxt.ts'
 
 const router = useRouter()
@@ -34,9 +33,14 @@ onMounted(() => {
 onBeforeUnmount(() => {
   clearInterval(timer)
 })
-withDefaults(defineProps<{ props: BiliErrorDetailType }>(), {
-  props: BiliErrorRouteToTxt.unknown
-})
+withDefaults(
+  defineProps<{
+    props: BiliErrorDetailType
+  }>(),
+  {
+    props: () => BiliErrorRouteToTxt.unknown
+  }
+)
 </script>
 
 <template>
