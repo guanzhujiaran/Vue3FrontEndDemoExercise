@@ -95,10 +95,10 @@ const handleLoginBtn = useDebounceFn(async () => {
       const JwtStore = useJwtStore()
       JwtStore.save_jwt_token(resp.data.jwt_token)
       ElMessage.success('登录成功！')
-      
+
       // 发出登录成功事件，让父组件可以关闭模态框
       emit('login-success')
-      
+
       // 如果是在模态框中登录，不自动跳转，而是刷新当前页面
       if (props.isModal) {
         window.location.reload()
@@ -139,18 +139,11 @@ const handleRegBtn = useDebounceFn(async () => {
     })
 }, 1e3)
 
-const clickSpaceArea = (t: any) => {
-  let r = document.getElementsByClassName('forget-tip')[0]
-  showForgetTips.value && t && !r.contains(t.target) && (showForgetTips.value = !1)
-}
-
 const check_login = () => {
   // 如果是在模态框中，不需要自动检查登录状态
   if (props.isModal) {
     return
   }
-  
-  const JwtStore = useJwtStore()
   isLogin()
     .then((res) => {
       if (res[0]) {
@@ -172,18 +165,10 @@ const get_pwd_sec = () => {
   })
 }
 
-import { useGlobalLoadingStore } from '@/stores/global_loading'
-
-const globalLoading = useGlobalLoadingStore()
-
-import { forceHideGlobalLoading } from '@/utils/globalLoading'
-
 onMounted(() => {
   get_pwd_sec()
   check_login()
-  document.addEventListener('click', clickSpaceArea, !0)
   // 强制隐藏全局加载遮罩
-  forceHideGlobalLoading()
 })
 </script>
 

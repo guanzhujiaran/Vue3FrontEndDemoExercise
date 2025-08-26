@@ -1,26 +1,22 @@
 <template>
   <transition name="fade">
-    <div v-if="isLoading" class="global-loading-mask">
+    <div v-show="globalLoading.isLoading" class="global-loading-mask">
       <div class="loading-box">
-        页面跳转中...
+        {{ globalLoading.loadingText }}
       </div>
     </div>
   </transition>
 </template>
 
 <script setup>
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
-
-const isLoading = ref(false)
-const router = useRouter()
-
-router.beforeEach(() => {
-  isLoading.value = true
+import emitter from '@/utils/mitt.js'
+const globalLoading = ref({
+  isLoading: false,
+  loadingText: '加载中...'
 })
-
-router.afterEach(() => {
-  isLoading.value = false
+emitter.on('loading', (isLoading, loadingText) => {
+  globalLoading.value.isLoading = isLoading
+  globalLoading.value.loadingText = loadingText ?? '加载中...'
 })
 </script>
 

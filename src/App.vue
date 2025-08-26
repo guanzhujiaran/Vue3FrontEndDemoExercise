@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { RouterView } from 'vue-router'
 import SponsorNotification from '@/components/sponsor/sponsor-notification.vue'
-import { onMounted, onUnmounted, ref } from 'vue'
+import { onMounted, onUnmounted, provide, ref } from 'vue'
 import { useThemeStore } from '@/stores/theme'
 import { setupAutoScale } from '@/utils/Browser/systemSetting.ts'
 import { useHead } from '@vueuse/head'
@@ -23,7 +23,7 @@ import Clarity from '@microsoft/clarity'
 import { BiliImg } from '@/assets/img/BiliImg.ts'
 import HeaderBarView from '@/views/HeaderBarView.vue'
 import LoginModal from '@/components/login_page/compo/LoginModal.vue'
-import { openGlobalLoginModalKey } from '@/models/inject/inject_type.ts'
+import {openGlobalLoginModalKey } from '@/models/inject/inject_type.ts'
 import.meta.env.VITE_API_BASE_URL && Clarity.init(import.meta.env.VITE_CLARITY_ID ?? '')
 const isInit = ref(false)
 const themeStore = useThemeStore()
@@ -39,8 +39,8 @@ const openGlobalLoginModal = () => {
     loginModalRef.value.openLoginModal()
   }
 }
-
 provide(openGlobalLoginModalKey, openGlobalLoginModal)
+
 onMounted(() => {
   isInit.value = true
 
@@ -61,6 +61,7 @@ onUnmounted(() => {
   // 清理事件监听
   emitter.off('needLogin')
 })
+
 </script>
 
 <template>

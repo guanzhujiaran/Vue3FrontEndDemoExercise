@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { type PropType} from 'vue'
+import { type PropType } from 'vue'
+import { useDebounceFn, useElementSize, useScroll } from '@vueuse/core'
 
 const props = defineProps({
   handleLoad: {
@@ -12,23 +13,33 @@ const isMore = defineModel('isMore', {
   required: true,
   type: Boolean
 })
-const handleLoad = () => {
+const scrollContainer = useTemplateRef('scrollContainer')
+
+const { width, height } = useElementSize(scrollContainer)
+const { x, y, isScrolling, arrivedState, directions, measure } = useScroll(scrollContainer, {
+  behavior: 'smooth'
+})
+
+const handleLoad = useDebounceFn(() => {
   props.handleLoad()
-}
+  y.value += 600
+  nextTick(() => {
+    measure()
+  })
+}, 2e3)
 </script>
 
 <template>
-  <div class="with-loading-more with-scroll loading-more-pc">
+  <div class="with-loading-more-container-wrapper" ref="scrollContainer">
     <div
       class="with-loading-more-container"
       v-infinite-scroll="handleLoad"
       :infinite-scroll-disabled="!isMore"
-      :infinite-scroll-delay="500"
       :infinite-scroll-immediate="true"
-      :infinite-scroll-distance="0"
+      :infinite-scroll-distance="10"
     >
       <slot name="content"></slot>
-      <div v-if="isMore" class="loading-more" style="background-color: transparent">
+      <div v-if="isMore" class="loading-more-txt" style="background-color: transparent">
         <span @click="handleLoad">查看更多</span>
       </div>
     </div>
@@ -36,40 +47,25 @@ const handleLoad = () => {
 </template>
 
 <style scoped>
+.with-loading-more-container-wrapper {
+  width: -webkit-fill-available;
+  overflow-y: scroll;
+  overflow-x: hidden;
+}
 .with-loading-more-container {
-  max-height: 85vh;
   padding: 0;
   margin: 0;
-  overflow-y: auto;
+  height: 600px;
 }
 
-.loading-more {
+.loading-more-txt {
   position: relative;
   width: -webkit-fill-available;
   text-align: center;
-
-  background-color: var(--el-bg-color);
+  background-color: transparent;
   height: 600px;
   & span {
     cursor: pointer;
   }
-}
-
-.with-loading-more.with-scroll {
-  flex: 1;
-  overflow: auto;
-  height: 90vh;
-}
-
-.with-loading-more {
-  background-color: var(--el-bg-color);
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  margin: 0 auto;
-}
-
-.with-loading-more.with-scroll ::-webkit-scrollbar {
-  display: none;
 }
 </style>

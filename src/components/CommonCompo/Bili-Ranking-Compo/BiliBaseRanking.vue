@@ -117,7 +117,7 @@ const activedParams = computed(() => {
   })
   return filter_params
 })
-const handleLoad = useDebounceFn(() => {
+const handleLoad = () => {
   isLoading.value = true
   props
     .load_func(cur_offset.value, props.page_size, activedParams.value)
@@ -145,7 +145,7 @@ const handleLoad = useDebounceFn(() => {
     .finally(() => {
       isLoading.value = false
     })
-}, 2e3)
+}
 
 const handlePartitionChange = () => {
   cur_offset.value = 0
@@ -215,7 +215,6 @@ const handleScoreClick = (item: BaseRankItem) => {
 
 .rank-main {
   padding-bottom: 0.906667rem;
-  border: 1px solid #42485e;
   background:
     linear-gradient(180deg, rgba(24, 25, 38, 0.95), rgba(17, 17, 28, 0.95) 96.22%),
     linear-gradient(0, rgba(66, 72, 94, 0.5), rgba(66, 72, 94, 0.5));

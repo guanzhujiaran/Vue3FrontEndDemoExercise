@@ -7,7 +7,6 @@
  * @Description: 路由配置文件，整合了所有路由信息和元数据
  */
 import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
-import { useGlobalLoadingStore } from '@/stores/global_loading'
 import HomeView from '@/views/HomeView.vue'
 import {
   Location as IconLocation,
@@ -21,7 +20,7 @@ import {
   CreditCard as IconCreditCard
 } from '@element-plus/icons-vue'
 import type { Component } from 'vue'
-
+import emitter from '@/utils/mitt.ts'
 /**
  * 自定义路由元数据类型定义
  */
@@ -110,7 +109,6 @@ const routes: CustomRouteRecordRaw[] = [
   {
     path: '/app/user-center/',
     name: '用户中心',
-    sensitive: true,
     component: () => import('@/views/UserCenterView.vue'),
     meta: {
       id: 'user',
@@ -179,6 +177,7 @@ const routes: CustomRouteRecordRaw[] = [
       order: 1,
       isHeaderShow: true
     },
+    component: () => import('@/views/LotteryHome.vue'),
     children: [
       {
         path: 'scrapy-stat',
@@ -211,6 +210,7 @@ const routes: CustomRouteRecordRaw[] = [
       {
         path: 'bili-data',
         name: 'B站抽奖数据',
+        component: () => import('@/views/LotteryHome.vue'),
         meta: {
           title: 'B站抽奖数据',
           description: 'B站各类抽奖数据汇总',
@@ -300,20 +300,17 @@ const router = createRouter({
 })
 // 路由守卫 - 全局加载遮罩
 router.beforeEach((to, from, next) => {
-  // 如果不是首次访问（from.name存在），且不是登录页面，则显示加载遮罩
-  if (from.name && to.path !== '/' && from.path !== '/') {
-    const globalLoadingStore = useGlobalLoadingStore()
-    globalLoadingStore.showLoading('页面切换中...')
+  // 如果不是首次访问（from.name存在）
+  if (from.name) {
+    emitter.emit('loading', true, `正在前往：${to.meta.title}中。。。`)
   }
   next()
 })
 
 router.afterEach(() => {
   // 路由切换完成后隐藏加载遮罩
-  const globalLoadingStore = useGlobalLoadingStore()
-  globalLoadingStore.hideLoading()
+  emitter.emit('loading', false)
 })
-
 export default router
 export { routes }
 export type { CustomRouteRecordRaw, CustomRouteMeta }

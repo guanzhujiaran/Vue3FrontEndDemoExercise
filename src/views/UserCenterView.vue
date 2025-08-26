@@ -1,11 +1,3 @@
-<!--
- * @Author: 星瞳 1944637830@qq.com
- * @Date: 2024-04-01 13:10:35
- * @LastEditors: 星瞳 1944637830@qq.com
- * @LastEditTime: 2024-11-01 22:13:39
- * @FilePath: \BiliLottery\src\views\UserCenterView.vue
- * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
--->
 <script setup lang="ts">
 import { isLogin } from '@/api/user/utils'
 import router from '@/router'
@@ -17,9 +9,10 @@ import { useRoute } from 'vue-router'
 import type { PageShowModel } from '@/models/account/page/model.ts'
 import { accountLeftPanelReloadKey } from '@/models/inject/inject_type'
 import UserBaseInfoConfig from '@/components/opus-detail/RightPannel/PannelItems/SettingComponent/UserBaseInfoConfig.vue'
-import BiliUnauthorizedError from '@/components/CommonCompo/Bili-Feedback-Compo/BiliUnauthorizedError.vue'
 import { ElMessage, ElIcon } from 'element-plus'
 import { Avatar, Setting, Tickets, Histogram, DataAnalysis } from '@element-plus/icons-vue'
+import { RouterLink } from 'vue-router'
+import { BiliErrorRouteToTxt } from '@/assets/text/BiliErrorTxt.ts'
 
 // 添加 inheritAttrs: false 以避免将属性传递给根节点
 defineOptions({
@@ -50,14 +43,14 @@ const loginCheckCompleted = ref(false)
 const checkLoginStatus = async () => {
   try {
     const [isLoggedInStatus, message, userData] = await isLogin()
-    
+
     if (!isLoggedInStatus) {
       // 用户未登录
       isLoggedIn.value = false
       loginCheckCompleted.value = true
       return false
     }
-    
+
     // 用户已登录，设置用户信息
     if (userData) {
       userInfo.value = {
@@ -66,7 +59,7 @@ const checkLoginStatus = async () => {
         role: userData.role
       }
     }
-    
+
     isLoggedIn.value = true
     loginCheckCompleted.value = true
     return true
@@ -130,20 +123,20 @@ provide(accountLeftPanelReloadKey, () => {
 const activeTab = ref('accounts')
 
 const navigationItems = computed(() => [
-  { 
-    id: 'accounts', 
-    name: '我的账号', 
+  {
+    id: 'accounts',
+    name: '我的账号',
     icon: Avatar,
     count: AccountInfos.value.length
   },
-  { 
-    id: 'profile', 
-    name: '基本信息', 
-    icon: Setting 
+  {
+    id: 'profile',
+    name: '基本信息',
+    icon: Setting
   },
-  { 
-    id: 'global', 
-    name: '全局设置', 
+  {
+    id: 'global',
+    name: '全局设置',
     icon: Setting,
     role: 'root'
   }
@@ -151,9 +144,9 @@ const navigationItems = computed(() => [
 
 const selectTab = (tabId: string) => {
   activeTab.value = tabId
-  
+
   // 根据选择的标签导航到相应页面
-  switch(tabId) {
+  switch (tabId) {
     case 'accounts':
       if (AccountInfos.value.length > 0) {
         const firstAccount = AccountInfos.value[0].info.account_name
@@ -197,10 +190,10 @@ onMounted(async () => {
                 <div class="user-role">{{ userInfo.role === 'root' ? '管理员' : '普通用户' }}</div>
               </div>
             </div>
-            
+
             <div class="nav-menu">
-              <div 
-                v-for="item in navigationItems" 
+              <div
+                v-for="item in navigationItems"
                 :key="item.id"
                 :class="['nav-item', { active: activeTab === item.id }]"
                 @click="selectTab(item.id)"
@@ -212,7 +205,7 @@ onMounted(async () => {
               </div>
             </div>
           </div>
-          
+
           <!-- 主内容区 -->
           <div class="main-content">
             <div class="content-header">
@@ -223,83 +216,93 @@ onMounted(async () => {
                 <template v-else>账号详情</template>
               </h1>
             </div>
-            
+
             <div class="content-body">
               <!-- 账号列表视图 -->
-              <div v-if="route.name === '用户中心' || route.name === '账号详情'" class="accounts-view">
+              <div
+                v-if="route.name === '用户中心' || route.name === '账号详情'"
+                class="accounts-view"
+              >
                 <div v-if="AccountInfos.length === 0" class="empty-state">
                   <el-icon :size="48"><Tickets /></el-icon>
                   <p>您还没有添加账号</p>
-                  <el-button type="primary" @click="$router.push('/app/user-center/account-base-info-config')">
-                    添加账号
-                  </el-button>
+                  <RouterLink to="/app/user-center/account-base-info-config">
+                    <el-button type="primary"> 添加账号 </el-button>
+                  </RouterLink>
                 </div>
-                
+
                 <div v-else class="accounts-content">
                   <div class="account-list">
-                    <div 
-                      v-for="account in AccountInfos" 
+                    <RouterLink
+                      v-for="account in AccountInfos"
                       :key="account.info.account_name"
-                      :class="['account-item', { active: account.is_show }]"
-                      @click="$router.push(`/app/user-center/account_detail/${account.info.account_name}`)"
+                      :to="`/app/user-center/account_detail/${account.info.account_name}`"
+                      custom
+                      v-slot="{ navigate }"
                     >
-                      <div class="account-avatar">
-                        <el-avatar :size="40">{{ account.info.account_name.charAt(0).toUpperCase() }}</el-avatar>
-                      </div>
-                      <div class="account-info">
-                        <div class="account-name">{{ account.info.account_name }}</div>
-                        <div class="account-status">
-                          <el-tag 
-                            :type="account.info.info ? 'success' : 'danger'" 
-                            size="small"
-                          >
-                            {{ account.info.info ? '有效' : '无效' }}
-                          </el-tag>
+                      <div :class="['account-item', { active: account.is_show }]" @click="navigate">
+                        <div class="account-avatar">
+                          <el-avatar :size="40">{{
+                            account.info.account_name.charAt(0).toUpperCase()
+                          }}</el-avatar>
+                        </div>
+                        <div class="account-info">
+                          <div class="account-name">{{ account.info.account_name }}</div>
+                          <div class="account-status">
+                            <el-tag :type="account.info.info ? 'success' : 'danger'" size="small">
+                              {{ account.info.info ? '有效' : '无效' }}
+                            </el-tag>
+                          </div>
                         </div>
                       </div>
-                    </div>
+                    </RouterLink>
                   </div>
-                  
+
                   <div class="account-detail">
                     <router-view />
                   </div>
                 </div>
               </div>
-              
+
               <!-- 用户基本信息设置视图 -->
               <div v-else-if="route.name === '用户基本信息设置'" class="settings-view">
                 <UserBaseInfoConfig />
               </div>
-              
+
               <!-- 用户全局设置视图 -->
-              <div v-else-if="route.name === '用户全局设置' && userInfo.role === 'root'" class="settings-view">
+              <div
+                v-else-if="route.name === '用户全局设置' && userInfo.role === 'root'"
+                class="settings-view"
+              >
                 <UserGlobalConfig />
               </div>
-              
+
               <!-- 404 页面 -->
               <div v-else class="not-found">
                 <el-icon :size="48"><DataAnalysis /></el-icon>
                 <h3>页面未找到</h3>
                 <p>您访问的页面不存在</p>
-                <el-button type="primary" @click="$router.push('/app/user-center/')">返回用户中心</el-button>
+                <RouterLink to="/app/user-center/">
+                  <el-button type="primary">返回用户中心</el-button>
+                </RouterLink>
               </div>
             </div>
           </div>
         </div>
       </template>
-      
+
       <!-- 未登录时显示未授权错误提示 -->
       <template v-else>
-        <BiliUnauthorizedError />
+        <BiliErrorRouteTo :props="BiliErrorRouteToTxt.unauthorized" />
       </template>
     </template>
-    
+
     <!-- 登录检查未完成时显示加载状态 -->
     <template v-else>
       <div class="loading-state">
         <el-skeleton animated>
           <template #template>
-            <el-skeleton-item variant="circle" style="width: 60px; height: 60px;" />
+            <el-skeleton-item variant="circle" style="width: 60px; height: 60px" />
             <el-skeleton-item variant="h3" style="width: 50%" />
             <el-skeleton-item variant="text" style="width: 30%" />
           </template>
@@ -315,6 +318,7 @@ onMounted(async () => {
   height: 100%;
   display: flex;
   flex-direction: column;
+  align-self: center;
 }
 
 .user-center-layout {
@@ -528,35 +532,35 @@ onMounted(async () => {
   .sidebar {
     width: 70px;
   }
-  
+
   .user-details,
   .nav-text,
   .user-name,
   .user-role {
     display: none;
   }
-  
+
   .nav-item {
     justify-content: center;
     padding: 16px 0;
   }
-  
+
   .nav-count {
     position: absolute;
     right: 8px;
     top: 8px;
   }
-  
+
   .accounts-content {
     flex-direction: column;
   }
-  
+
   .account-list {
     width: 100%;
     height: auto;
     max-height: 300px;
   }
-  
+
   .account-detail {
     flex: 1;
   }

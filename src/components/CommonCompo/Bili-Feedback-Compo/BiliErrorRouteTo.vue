@@ -10,6 +10,7 @@
 import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
 import { BiliImg } from '@/assets/img/BiliImg.ts'
+import { type BiliErrorDetailType, BiliErrorRouteToTxt } from '@/assets/text/BiliErrorTxt.ts'
 
 const router = useRouter()
 const countdown = ref(10)
@@ -28,52 +29,42 @@ const startCountdown = () => {
 
 // 组件挂载时启动倒计时
 onMounted(() => {
-  startCountdown()
+  import.meta.env.VITE_BILI_ENV === 'dev' ? null : startCountdown()
 })
-
-// 组件卸载前清除定时器
-onBeforeUnmount(() => {
-  if (timer) {
-    clearInterval(timer)
-  }
-})
-
-// 立即跳转到首页
-const goHome = () => {
-  if (timer) {
-    clearInterval(timer)
-  }
-  router.push('/')
-}
 onBeforeUnmount(() => {
   clearInterval(timer)
+})
+withDefaults(defineProps<{ props: BiliErrorDetailType }>(), {
+  props: BiliErrorRouteToTxt.unknown
 })
 </script>
 
 <template>
-  <div class="unauthorized-content">
-    <el-image :src="BiliImg.error.un_authorized" referrerpolicy="no-referrer"> </el-image>
-    <h2 class="error-message">未授权访问</h2>
-    <p class="error-description">抱歉，您需要登录后才能访问此页面</p>
+  <div class="error-content">
+    <el-image :src="props.error_img_src" referrerpolicy="no-referrer"> </el-image>
+    <h2 class="error-message">{{ props.error_msg }}</h2>
+    <p class="error-description">{{ props.error_description }}</p>
     <div class="countdown-container">
       <p class="countdown-text">{{ countdown }}秒后自动跳转到首页</p>
-      <el-button type="primary" @click="goHome">立即返回首页</el-button>
+      <router-link :to="props.route_link">
+        <el-button type="primary">{{ props.btn_text }}</el-button>
+      </router-link>
     </div>
   </div>
 </template>
 
 <style scoped>
-.unauthorized-content {
+.error-content {
   justify-self: center;
   align-self: center;
   text-align: center;
   padding: 2rem;
   border-radius: 8px;
-  background-color: var(--el-bg-color);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   max-width: 500px;
-  width: 100%;
+  width: -webkit-fill-available;
   margin: 0 auto;
+  background-color: var(--el-bg-color);
 }
 
 .error-message {

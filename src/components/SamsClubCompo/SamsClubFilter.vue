@@ -672,7 +672,6 @@ defineExpose({
             </div>
           </div>
         </div>
-
         <div class="advanced-search-toggle">
           <el-tooltip
             :content="showAdvancedSearch ? '收起更多信息' : '展开更多信息'"
@@ -948,10 +947,8 @@ defineExpose({
 
 /* 快捷查询行样式 */
 .quick-search-row {
-  display: flex;
-  justify-content: space-between;
   align-items: center;
-  width: 100%;
+  width: -webkit-fill-available;
 }
 
 /* 快捷查询区域样式 */
@@ -961,11 +958,6 @@ defineExpose({
   flex-wrap: wrap;
   gap: 8px;
   flex: 1;
-}
-
-.quick-search-title {
-  font-weight: bold;
-  margin-right: 10px;
 }
 
 .quick-search-grid {
@@ -1009,8 +1001,8 @@ defineExpose({
 /* 高级查询切换按钮样式 */
 .advanced-search-toggle {
   display: flex;
-  justify-content: flex-end;
   margin-left: 15px;
+  justify-content: flex-end;
 }
 
 /* 高级查询区域样式 */

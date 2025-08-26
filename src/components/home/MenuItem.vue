@@ -1,6 +1,6 @@
 <template>
-  <el-menu-item 
-    v-if="!item.children || item.children.length === 0" 
+  <el-menu-item
+    v-if="!item.children || item.children.length === 0"
     :index="item.path"
     @click="handleMenuItemClick"
   >
@@ -43,7 +43,5 @@ const handleMenuItemClick = () => {
       return
     }
   }
-  
-  // 对于不需要登录的路由，正常跳转（由 el-menu 的 router 属性处理）
 }
 </script>

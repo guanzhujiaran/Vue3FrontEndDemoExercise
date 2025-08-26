@@ -19,4 +19,8 @@ export type GlobalEvents = {
    * 未登录事件
    */
   needLogin: void
+  /**
+   * 登录成功事件
+   */
+  loading: { isLoading: boolean; loadingText?: string }
 }
