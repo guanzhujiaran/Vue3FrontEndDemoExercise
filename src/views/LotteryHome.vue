@@ -1,7 +1,12 @@
 <template>
   <FlexContainer>
     <div class="lottery-home">
-      <el-page-header title="返回" content="B站抽奖数据" @back="() => $router.back()" />
+      <el-page-header
+        style="margin-bottom: 20px"
+        title="返回"
+        content="B站抽奖数据"
+        @back="() => $router.back()"
+      />
       <router-view v-slot="{ Component }">
         <keep-alive>
           <component :is="Component" v-if="Component" />

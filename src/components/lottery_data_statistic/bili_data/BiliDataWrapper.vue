@@ -34,12 +34,6 @@
   </FlexContainer>
 </template>
 <style scoped>
-.lot-data-panel {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-}
 
 .search-box-wrapper {
   margin-bottom: 0.5rem;

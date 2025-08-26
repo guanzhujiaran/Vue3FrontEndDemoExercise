@@ -5,8 +5,8 @@ import { useInject, KeysEnum } from '@/models/base/provide_model.ts'
 import { useRoute } from 'vue-router'
 import { routes } from '@/router'
 import { ElMessage } from 'element-plus'
-import { isLogin } from '@/api/user/utils'
-import { processRoutesForHeader } from '@/utils/routeUtils'
+import { isLogin } from '@/api/user/utils.ts'
+import { processRoutesForHeader } from '@/utils/routeUtils.ts'
 import { openGlobalLoginModalKey } from '@/models/inject/inject_type.ts'
 import type { UserNavModel } from '@/models/user/user_model.ts'
 
@@ -95,7 +95,7 @@ provide('headerBarView', {
 <template>
   <div id="bili-header">
     <div class="header-container">
-      <el-menu :default-active="route.path" mode="horizontal" router class="header-menu">
+      <el-menu :default-active="route.path" mode="horizontal" class="header-menu">
         <template v-for="item in navigationData" :key="item.path">
           <MenuItem :item="item" />
         </template>
@@ -111,7 +111,7 @@ provide('headerBarView', {
 .header-container {
   display: flex;
   align-items: center;
-  width: 100%;
+  width: -webkit-fill-available;
 }
 
 .header-menu {

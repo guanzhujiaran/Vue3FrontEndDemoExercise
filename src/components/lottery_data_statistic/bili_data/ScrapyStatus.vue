@@ -245,7 +245,6 @@ onBeforeUnmount(() => {
                       active-text="自动刷新中"
                       inactive-text="开启自动刷新"
                       size="large"
-                      style="--el-switch-off-color: var(--el-text-color-primary)"
                     />
                     <el-button
                       type="info"

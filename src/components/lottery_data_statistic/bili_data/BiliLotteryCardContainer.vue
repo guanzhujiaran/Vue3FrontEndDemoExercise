@@ -38,32 +38,13 @@ const parsedData = computed(() => {
 }
 
 .bili-lottery-card-wrapper {
-  flex: 0 1 340px; /* 稍微增加宽度 */
-  max-width: calc(50% - 1rem);
+  flex: 0 1 400px; /* 稍微增加宽度 */
   min-height: 200px;
   margin-bottom: 1rem;
   border-radius: 8px;
   overflow: hidden;
   position: relative;
 }
-
-@media (max-width: 1200px) {
-  .bili-lottery-card-wrapper {
-    flex: 0 1 320px;
-  }
-}
-
-@media (max-width: 768px) {
-  .bili-lottery-card-wrapper {
-    max-width: 100%;
-    margin-bottom: 1.5rem;
-  }
-  
-  .bili-lottery-card-arr-container {
-    gap: 1rem;
-  }
-}
-
 .bili-lottery-card-wrapper {
   display: flex;
   flex-direction: column;
@@ -95,6 +76,6 @@ const parsedData = computed(() => {
 
 .bili-lottery-card-wrapper {
   animation: cardFadeIn 0.5s ease forwards;
-  animation-delay: calc(0.05s * var(--card-index, 0));
+  animation-delay: calc(0.1s * var(--card-index, 0));
 }
 </style>

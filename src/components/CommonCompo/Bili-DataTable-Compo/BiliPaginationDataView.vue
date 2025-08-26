@@ -3,41 +3,40 @@
     <slot name="toolbar">
       <BiliDataTableToolbar :refresh_data="refresh_data"></BiliDataTableToolbar>
     </slot>
-    <FlexContainer class="pagination-data-container-wrapper">
+    <FlexContainer>
       <slot name="contents">
         <BiliLotteryCardContainer :data="data4show.data"></BiliLotteryCardContainer>
       </slot>
       <el-pagination
+        class="pagination"
         v-if="!(empty || error)"
         size="small"
         background
         :layout="paginationLayout"
         :total="data4show.total"
         v-model:current-page="current_page"
-        style="padding-top: 0.5rem; padding-bottom: 1rem; margin: 0 auto"
         :pager-count="5"
       />
       <bili-empty :txt="empty_msg" v-if="empty && !error"></bili-empty>
       <bili-error v-if="error" @click-retry="emits('retryOnError')"></bili-error>
     </FlexContainer>
+    <ScrollButtons :top-threshold="300" :bottom-threshold="100" />
   </div>
 </template>
 <style scoped>
+.pagination {
+  padding-top: 10px;
+  padding-bottom: 1rem;
+  margin: 0 auto;
+}
 .pagination-container-wrapper {
   flex: 1;
   display: flex;
   flex-direction: column;
   border-radius: 8px;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
-  padding: 1rem;
+  padding: 5px;
   border: 1px solid var(--el-border-color-lighter);
-}
-
-.pagination-data-container-wrapper {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  padding: 0.5rem;
 }
 
 :deep(.el-pagination) {
@@ -69,16 +68,6 @@
 :deep(.el-pagination .el-pager li.is-active) {
   color: var(--el-color-white);
   border-color: var(--el-color-primary);
-}
-
-@media (max-width: 768px) {
-  .pagination-container-wrapper {
-    padding: 0.5rem;
-  }
-
-  :deep(.el-pagination) {
-    padding: 0.25rem;
-  }
 }
 </style>
 <script setup lang="ts">

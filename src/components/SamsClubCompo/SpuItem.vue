@@ -210,15 +210,15 @@ const getTimeAgo = (timestamp: any) => {
     showSecond: false,
     messages: {
       justNow: '刚刚',
-      past: (n: string) => n.match(/\d/) ? `${n}前` : n,
-      future: (n: string) => n.match(/\d/) ? `${n}后` : n,
-      month: (n: number, past: boolean) => n === 1 ? past ? '上个月' : '下个月' : `${n} 个月`,
-      year: (n: number, past: boolean) => n === 1 ? past ? '去年' : '明年' : `${n} 年`,
-      day: (n: number, past: boolean) => n === 1 ? past ? '昨天' : '明天' : `${n} 天`,
-      week: (n: number, past: boolean) => n === 1 ? past ? '上周' : '下周' : `${n} 周`,
+      past: (n: string) => (n.match(/\d/) ? `${n}前` : n),
+      future: (n: string) => (n.match(/\d/) ? `${n}后` : n),
+      month: (n: number, past: boolean) => (n === 1 ? (past ? '上个月' : '下个月') : `${n} 个月`),
+      year: (n: number, past: boolean) => (n === 1 ? (past ? '去年' : '明年') : `${n} 年`),
+      day: (n: number, past: boolean) => (n === 1 ? (past ? '昨天' : '明天') : `${n} 天`),
+      week: (n: number, past: boolean) => (n === 1 ? (past ? '上周' : '下周') : `${n} 周`),
       hour: (n: number) => `${n} 小时`,
       minute: (n: number) => `${n} 分钟`,
-      second: (n: number) => `${n} 秒`,
+      second: (n: number) => `${n} 秒`
     } as any
   }).value
 }
@@ -376,12 +376,7 @@ const echartsOption = ref<EChartsOption>({
 </script>
 
 <template>
-  <el-card
-    shadow="hover"
-    class="spu-card-extended"
-    style="width: 450px; display: flex; flex-direction: column"
-    body-style="flex-grow: 1; padding: 15px;"
-  >
+  <el-card shadow="hover" class="spu-card-extended" body-style="flex-grow: 1; padding: 0;">
     <template #header>
       <div class="card-header">
         <el-badge
@@ -406,349 +401,375 @@ const echartsOption = ref<EChartsOption>({
         </el-link>
       </div>
     </template>
-
-    <!-- 重要信息直接显示 -->
-    <div class="info-container">
-      <div class="left-column">
-        <div class="spu-image-container">
-          <el-image
-            v-if="props.spuInfo.image"
-            :src="props.spuInfo.image"
-            referrerpolicy="no-referrer"
-            lazy
-            fit="cover"
-            class="spu-image"
-            :preview-src-list="[props.spuInfo.image]"
-          />
-          <div v-else class="no-image">暂无图片</div>
+    <FlexContainer class="spu-container">
+      <!-- 重要信息直接显示 -->
+      <div class="info-container">
+        <div class="left-column">
+          <div class="spu-image-container">
+            <el-image
+              v-if="props.spuInfo.image"
+              :src="props.spuInfo.image"
+              referrerpolicy="no-referrer"
+              lazy
+              fit="cover"
+              class="spu-image"
+              :preview-src-list="[props.spuInfo.image]"
+            />
+            <div v-else class="no-image">暂无图片</div>
+          </div>
+          <!-- 添加商品副标题显示 -->
+          <div v-if="props.spuInfo?.subTitle" class="spu-subtitle">
+            <el-text type="info" size="small">{{ props.spuInfo?.subTitle }}</el-text>
+          </div>
         </div>
-        <!-- 添加商品副标题显示 -->
-        <div v-if="props.spuInfo?.subTitle" class="spu-subtitle">
-          <el-text type="info" size="small">{{ props.spuInfo?.subTitle }}</el-text>
-        </div>
-      </div>
 
-      <div class="price-info">
-        <el-statistic
-          :precision="2"
-          :value="(props.spuInfo.latestPriceInfo?.price || 0) / 100"
-          class="current-price"
-        >
-          <template #title>
-            <div class="price-title">
-              <el-icon><PriceTag /></el-icon>
-              <el-text type="primary">当前价格</el-text>
-              <el-tooltip
-                placement="top"
-                :content="`更新时间: ${formatDateTime(props.spuInfo.latestPriceInfo!.updateTime)}`"
-              >
-                <el-text type="info" size="small" style="margin-left: 5px;">
-                  ({{ getTimeAgo(props.spuInfo.latestPriceInfo!.updateTime) }})
-                </el-text>
-                <el-icon><QuestionFilled /></el-icon>
-              </el-tooltip>
-            </div>
-          </template>
-          <template #suffix>
-            <el-icon><Coin /></el-icon>
-          </template>
-        </el-statistic>
-
-        <el-divider content-position="center">价格分析</el-divider>
-
-        <div class="price-stats">
+        <div class="price-info">
           <el-statistic
-            :value-style="{ color: handlePriceValueTextColor(props.spuInfo.curPriceDiff ?? 0) }"
             :precision="2"
-            :value="(props.spuInfo.curPriceDiff || 0) / 100"
-            class="price-stat-item"
+            :value="(props.spuInfo.latestPriceInfo?.price || 0) / 100"
+            class="current-price"
           >
             <template #title>
               <div class="price-title">
-                <el-text :type="handlePriceTitleTextColor(props.spuInfo.curPriceDiff ?? 0)"
-                  >当前差价</el-text
-                >
-                <el-tooltip placement="top" content="历史最高价格 - 当前价格">
-                  <el-icon><QuestionFilled /></el-icon>
-                </el-tooltip>
-              </div>
-            </template>
-          </el-statistic>
-
-          <el-statistic
-            :value-style="{ color: handlePriceValueTextColor(props.spuInfo.latestPriceDiff ?? 0) }"
-            :precision="2"
-            :value="(props.spuInfo.latestPriceDiff || 0) / 100"
-            class="price-stat-item"
-          >
-            <template #title>
-              <div class="price-title">
-                <el-text :type="handlePriceTitleTextColor(props.spuInfo.latestPriceDiff ?? 0)"
-                  >最新差价</el-text
-                >
-                <el-tooltip placement="top" content="当前价格 - 上一次价格 (负数是涨价)">
-                  <el-icon><QuestionFilled /></el-icon>
-                </el-tooltip>
-              </div>
-            </template>
-          </el-statistic>
-
-          <el-statistic
-            :value-style="{ color: handlePriceValueTextColor(props.spuInfo.maxPriceDiff ?? 0) }"
-            :precision="2"
-            :value="(props.spuInfo.maxPriceDiff || 0) / 100"
-            class="price-stat-item"
-          >
-            <template #title>
-              <div class="price-title">
-                <el-text :type="handlePriceTitleTextColor(props.spuInfo.maxPriceDiff ?? 0)"
-                  >最大差价</el-text
-                >
-                <el-tooltip placement="top" content="历史最高价 - 历史最低价">
-                  <el-icon><QuestionFilled /></el-icon>
-                </el-tooltip>
-              </div>
-            </template>
-          </el-statistic>
-
-          <el-statistic
-            class="price-stat-item"
-            :value="parseFloat(priceStats.percentile)"
-            :value-style="{ color: getPricePositionColor(parseFloat(priceStats.percentile)) }"
-          >
-            <template #suffix>
-              <el-text :type="getPricePositionType(parseFloat(priceStats.percentile))">%</el-text>
-            </template>
-            <template #title>
-              <div class="price-title">
-                <el-text :type="getPricePositionType(parseFloat(priceStats.percentile))"
-                  >价格位置</el-text
-                >
+                <el-icon><PriceTag /></el-icon>
+                <el-text type="primary">当前价格</el-text>
                 <el-tooltip
                   placement="top"
-                  :content="`当前价格在历史价格中的位置: ${priceStats.percentile}%`"
+                  :content="`更新时间: ${formatDateTime(props.spuInfo.latestPriceInfo!.updateTime)}`"
                 >
+                  <el-text type="info" size="small" style="margin-left: 5px">
+                    ({{ getTimeAgo(props.spuInfo.latestPriceInfo!.updateTime) }} 更新)
+                  </el-text>
                   <el-icon><QuestionFilled /></el-icon>
                 </el-tooltip>
               </div>
             </template>
+            <template #suffix>
+              <el-icon><Coin /></el-icon>
+            </template>
           </el-statistic>
+
+          <el-divider content-position="center">价格分析</el-divider>
+
+          <div class="price-stats">
+            <el-statistic
+              :value-style="{ color: handlePriceValueTextColor(props.spuInfo.curPriceDiff ?? 0) }"
+              :precision="2"
+              :value="(props.spuInfo.curPriceDiff || 0) / 100"
+              class="price-stat-item"
+            >
+              <template #title>
+                <div class="price-title">
+                  <el-text :type="handlePriceTitleTextColor(props.spuInfo.curPriceDiff ?? 0)"
+                    >当前差价</el-text
+                  >
+                  <el-tooltip placement="top" content="历史最高价格 - 当前价格">
+                    <el-icon><QuestionFilled /></el-icon>
+                  </el-tooltip>
+                </div>
+              </template>
+            </el-statistic>
+
+            <el-statistic
+              :value-style="{
+                color: handlePriceValueTextColor(props.spuInfo.latestPriceDiff ?? 0)
+              }"
+              :precision="2"
+              :value="(props.spuInfo.latestPriceDiff || 0) / 100"
+              class="price-stat-item"
+            >
+              <template #title>
+                <div class="price-title">
+                  <el-text :type="handlePriceTitleTextColor(props.spuInfo.latestPriceDiff ?? 0)"
+                    >最新差价</el-text
+                  >
+                  <el-tooltip placement="top" content="当前价格 - 上一次价格 (负数是涨价)">
+                    <el-icon><QuestionFilled /></el-icon>
+                  </el-tooltip>
+                </div>
+              </template>
+            </el-statistic>
+
+            <el-statistic
+              :value-style="{ color: handlePriceValueTextColor(props.spuInfo.maxPriceDiff ?? 0) }"
+              :precision="2"
+              :value="(props.spuInfo.maxPriceDiff || 0) / 100"
+              class="price-stat-item"
+            >
+              <template #title>
+                <div class="price-title">
+                  <el-text :type="handlePriceTitleTextColor(props.spuInfo.maxPriceDiff ?? 0)"
+                    >最大差价</el-text
+                  >
+                  <el-tooltip placement="top" content="历史最高价 - 历史最低价">
+                    <el-icon><QuestionFilled /></el-icon>
+                  </el-tooltip>
+                </div>
+              </template>
+            </el-statistic>
+
+            <el-statistic
+              class="price-stat-item"
+              :value="parseFloat(priceStats.percentile)"
+              :value-style="{ color: getPricePositionColor(parseFloat(priceStats.percentile)) }"
+            >
+              <template #suffix>
+                <el-text :type="getPricePositionType(parseFloat(priceStats.percentile))">%</el-text>
+              </template>
+              <template #title>
+                <div class="price-title">
+                  <el-text :type="getPricePositionType(parseFloat(priceStats.percentile))"
+                    >价格位置</el-text
+                  >
+                  <el-tooltip
+                    placement="top"
+                    :content="`当前价格在历史价格中的位置: ${priceStats.percentile}%`"
+                  >
+                    <el-icon><QuestionFilled /></el-icon>
+                  </el-tooltip>
+                </div>
+              </template>
+            </el-statistic>
+          </div>
         </div>
       </div>
-    </div>
 
-    <!-- 基本属性信息直接显示 -->
-    <el-descriptions
-      :column="1"
-      border
-      size="small"
-      label-class-name="label-bold"
-      class="attributes-descriptions"
-    >
-      <el-descriptions-item label="创建时间">
-        <el-tooltip
-          placement="top"
-          :content="formatDateTime(props.spuInfo.createTime)"
-          effect="light"
-        >
-          <el-tag size="small" type="info">
-            <el-icon><Calendar /></el-icon>
-            {{ getTimeAgo(props.spuInfo.createTime) }}
-          </el-tag>
-        </el-tooltip>
-      </el-descriptions-item>
-
-      <el-descriptions-item label="更新时间">
-        <el-tooltip
-          placement="top"
-          :content="formatDateTime(props.spuInfo.updateTime)"
-          effect="light"
-        >
-          <el-tag size="small" type="info">
-            <el-icon><Calendar /></el-icon>
-            {{ getTimeAgo(props.spuInfo.updateTime) }}
-          </el-tag>
-        </el-tooltip>
-      </el-descriptions-item>
-
-      <el-descriptions-item v-if="props.spuInfo?.categories?.length" label="商品分类">
-        <el-tag
-          size="small"
-          type="success"
-          v-for="(cate, idx) in props.spuInfo.categories"
-          :key="idx"
-          >{{ cate.categoryId }}</el-tag
-        >
-      </el-descriptions-item>
-
-      <el-descriptions-item v-if="props.spuInfo.unknowField?.brandInfo" label="品牌">
-        <el-tag size="small" type="warning">{{ props.spuInfo.unknowField.brandInfo.name }}</el-tag>
-      </el-descriptions-item>
-    </el-descriptions>
-
-    <!-- 次要信息使用折叠面板 -->
-    <el-collapse v-model="activeContentSections" class="content-collapse">
-      <!-- 属性信息 -->
-      <el-collapse-item
-        v-if="props.spuInfo.unknowField?.attrInfo?.length"
-        title="商品属性"
-        name="attributes"
+      <!-- 基本属性信息直接显示 -->
+      <el-descriptions
+        :column="1"
+        border
+        size="small"
+        label-class-name="label-bold"
+        class="attributes-descriptions"
       >
-        <div class="attributes-list">
-          <el-tag
-            v-for="attr in props.spuInfo.unknowField?.attrInfo"
-            :key="attr.attrId"
-            class="attribute-tag"
-            effect="light"
-            size="small"
-          >
-            <b>{{ attr.title }}:</b>
-            <span v-for="(value, index) in attr.attrValueList" :key="index">
-              {{ value.value }}{{ index < attr.attrValueList.length - 1 ? ',' : '' }}
-            </span>
-          </el-tag>
-        </div>
-      </el-collapse-item>
-
-      <!-- 标签信息 -->
-      <el-collapse-item v-if="props.spuInfo.newTagInfos?.length" title="商品标签" name="tags">
-        <div class="tags-container">
+        <el-descriptions-item label="创建时间">
           <el-tooltip
-            v-for="tag in props.spuInfo.newTagInfos"
-            :key="tag.pk"
             placement="top"
-            :effect="handleSpuInfoTagType(tag?.tagMark ?? '') === 'danger' ? 'light' : 'dark'"
+            :content="formatDateTime(props.spuInfo.createTime)"
+            effect="light"
           >
-            <template #content>
-              <el-descriptions size="small" border>
-                <el-descriptions-item label="有效时间段" v-if="tag.beginTime && tag.endTime">
-                  <el-tooltip :content="formatDateTime(tag.beginTime)" placement="top">
-                    <span>{{ getTimeAgo(tag.beginTime) }}</span>
-                  </el-tooltip>
-                  ~
-                  <el-tooltip :content="formatDateTime(tag.endTime)" placement="top">
-                    <span>{{ getTimeAgo(tag.endTime) }}</span>
-                  </el-tooltip>
-                </el-descriptions-item>
-                <el-descriptions-item label="标签更新时间">
-                  <el-tooltip :content="formatDateTime(tag.updateTime)" placement="top">
-                    <span>{{ getTimeAgo(tag.updateTime) }}</span>
-                  </el-tooltip>
-                </el-descriptions-item>
-                <el-descriptions-item label="标签代码">
-                  {{ tag.tagMark }}
-                </el-descriptions-item>
-              </el-descriptions>
-            </template>
-            <el-tag :type="handleSpuInfoTagType(tag.tagMark!)" effect="dark" class="info-tag">
-              {{ tag.title }}
+            <el-tag size="small" type="info">
+              <el-icon><Calendar /></el-icon>
+              {{ getTimeAgo(props.spuInfo.createTime) }}
             </el-tag>
           </el-tooltip>
-        </div>
-      </el-collapse-item>
+        </el-descriptions-item>
 
-      <!-- 销售信息 -->
-      <el-collapse-item v-if="hasSalesInfo" title="销售信息" name="sales">
-        <el-descriptions :column="1" border size="small">
-          <el-descriptions-item
-            v-if="props.spuInfo.unknowField?.monthSales !== undefined"
-            label="月销量"
+        <el-descriptions-item label="更新时间">
+          <el-tooltip
+            placement="top"
+            :content="formatDateTime(props.spuInfo.updateTime)"
+            effect="light"
           >
-            {{ props.spuInfo.unknowField.monthSales }}
-          </el-descriptions-item>
-          <el-descriptions-item
-            v-if="props.spuInfo.unknowField?.stockNum !== undefined"
-            label="库存"
-          >
-            {{ props.spuInfo.unknowField.stockNum }}
-          </el-descriptions-item>
-          <el-descriptions-item
-            v-if="props.spuInfo.unknowField?.commentCount !== undefined"
-            label="评论数"
-          >
-            {{ props.spuInfo.unknowField.commentCount }}
-          </el-descriptions-item>
-          <el-descriptions-item
-            v-if="props.spuInfo.unknowField?.rebuyCount !== undefined"
-            label="复购次数"
-          >
-            {{ props.spuInfo.unknowField.rebuyCount }}
-          </el-descriptions-item>
-        </el-descriptions>
-      </el-collapse-item>
+            <el-tag size="small" type="info">
+              <el-icon><Calendar /></el-icon>
+              {{ getTimeAgo(props.spuInfo.updateTime) }}
+            </el-tag>
+          </el-tooltip>
+        </el-descriptions-item>
 
-      <!-- 其他信息 -->
-      <el-collapse-item v-if="hasOtherInfo" title="其他信息" name="others">
-        <el-descriptions :column="1" border size="small">
-          <el-descriptions-item
-            v-if="props.spuInfo.unknowField?.purchaseLimit !== undefined"
-            label="购买限制"
+        <el-descriptions-item v-if="props.spuInfo?.categories?.length" label="商品分类">
+          <el-tag
+            size="small"
+            type="success"
+            v-for="(cate, idx) in props.spuInfo.categories"
+            :key="idx"
+            >{{ cate.categoryId }}</el-tag
           >
-            {{ props.spuInfo.unknowField.purchaseLimit }}
-          </el-descriptions-item>
-          <el-descriptions-item
-            v-if="props.spuInfo.unknowField?.purchaseMin !== undefined"
-            label="最小购买量"
-          >
-            {{ props.spuInfo.unknowField.purchaseMin }}
-          </el-descriptions-item>
-          <el-descriptions-item
-            v-if="props.spuInfo.unknowField?.shareCount !== undefined"
-            label="分享次数"
-          >
-            {{ props.spuInfo.unknowField.shareCount }}
-          </el-descriptions-item>
-          <el-descriptions-item
-            v-if="props.spuInfo.unknowField?.memberRecommendCount !== undefined"
-            label="会员推荐数"
-          >
-            {{ props.spuInfo.unknowField.memberRecommendCount }}
-          </el-descriptions-item>
-        </el-descriptions>
-      </el-collapse-item>
-    </el-collapse>
+        </el-descriptions-item>
 
-    <!-- 图表部分 - 使用折叠面板 -->
-    <el-collapse v-if="hasPriceData" v-model="activePriceChartPanel" class="price-chart-collapse">
-      <el-collapse-item name="priceChart">
-        <template #title>
-          <div class="collapse-title">
-            <el-icon><TrendCharts /></el-icon>
-            <span>价格趋势分析</span>
-            <el-tag size="small" type="info" effect="plain" class="price-count-tag">
-              {{ priceHistory.length }}条记录
+        <el-descriptions-item v-if="props.spuInfo.unknowField?.brandInfo" label="品牌">
+          <el-tag size="small" type="warning">{{
+            props.spuInfo.unknowField.brandInfo.name
+          }}</el-tag>
+        </el-descriptions-item>
+      </el-descriptions>
+
+      <!-- 次要信息使用折叠面板 -->
+      <el-collapse v-model="activeContentSections" class="content-collapse">
+        <!-- 属性信息 -->
+        <el-collapse-item
+          v-if="props.spuInfo.unknowField?.attrInfo?.length"
+          title="商品属性"
+          name="attributes"
+        >
+          <div class="attributes-list">
+            <el-tag
+              v-for="attr in props.spuInfo.unknowField?.attrInfo"
+              :key="attr.attrId"
+              class="attribute-tag"
+              effect="light"
+              size="small"
+            >
+              <b>{{ attr.title }}:</b>
+              <span v-for="(value, index) in attr.attrValueList" :key="index">
+                {{ value.value }}{{ index < attr.attrValueList.length - 1 ? ',' : '' }}
+              </span>
             </el-tag>
           </div>
-        </template>
-        <v-chart
-          v-if="isShowPriceEcharts"
-          class="chart-lines"
-          :option="echartsOption"
-          style="height: 300px; width: 100%"
-        ></v-chart>
-      </el-collapse-item>
-    </el-collapse>
+        </el-collapse-item>
 
-    <div class="action-buttons">
-      <el-button @click="dialogTableVisible = true" type="info" size="small">
-        <el-icon><InfoFilled /></el-icon>查看原始数据
-      </el-button>
-      <el-dialog v-model="dialogTableVisible" :title="props.spuInfo.title" width="75%" draggable>
-        <VueJsonPretty
-          :showDoubleQuotes="false"
-          :data="props.spuInfo"
-          :indent="2"
-          :deep="3"
-          showIcon
-          showLineNumber
-          showLength
-        ></VueJsonPretty>
-      </el-dialog>
-    </div>
+        <!-- 标签信息 -->
+        <el-collapse-item v-if="props.spuInfo.newTagInfos?.length" title="商品标签" name="tags">
+          <div class="tags-container">
+            <el-tooltip
+              v-for="tag in props.spuInfo.newTagInfos"
+              :key="tag.pk"
+              placement="top"
+              :effect="handleSpuInfoTagType(tag?.tagMark ?? '') === 'danger' ? 'light' : 'dark'"
+            >
+              <template #content>
+                <el-descriptions size="small" border>
+                  <el-descriptions-item label="有效时间段" v-if="tag.beginTime && tag.endTime">
+                    <el-tooltip :content="formatDateTime(tag.beginTime)" placement="top">
+                      <span>{{ getTimeAgo(tag.beginTime) }}</span>
+                    </el-tooltip>
+                    ~
+                    <el-tooltip :content="formatDateTime(tag.endTime)" placement="top">
+                      <span>{{ getTimeAgo(tag.endTime) }}</span>
+                    </el-tooltip>
+                  </el-descriptions-item>
+                  <el-descriptions-item label="标签更新时间">
+                    <el-tooltip :content="formatDateTime(tag.updateTime)" placement="top">
+                      <span>{{ getTimeAgo(tag.updateTime) }}</span>
+                    </el-tooltip>
+                  </el-descriptions-item>
+                  <el-descriptions-item label="标签代码">
+                    {{ tag.tagMark }}
+                  </el-descriptions-item>
+                </el-descriptions>
+              </template>
+              <el-tag :type="handleSpuInfoTagType(tag.tagMark!)" effect="dark" class="info-tag">
+                {{ tag.title }}
+              </el-tag>
+            </el-tooltip>
+          </div>
+        </el-collapse-item>
+
+        <!-- 销售信息 -->
+        <el-collapse-item v-if="hasSalesInfo" title="销售信息" name="sales">
+          <el-descriptions :column="1" border size="small">
+            <el-descriptions-item
+              v-if="props.spuInfo.unknowField?.monthSales !== undefined"
+              label="月销量"
+            >
+              {{ props.spuInfo.unknowField.monthSales }}
+            </el-descriptions-item>
+            <el-descriptions-item
+              v-if="props.spuInfo.unknowField?.stockNum !== undefined"
+              label="库存"
+            >
+              {{ props.spuInfo.unknowField.stockNum }}
+            </el-descriptions-item>
+            <el-descriptions-item
+              v-if="props.spuInfo.unknowField?.commentCount !== undefined"
+              label="评论数"
+            >
+              {{ props.spuInfo.unknowField.commentCount }}
+            </el-descriptions-item>
+            <el-descriptions-item
+              v-if="props.spuInfo.unknowField?.rebuyCount !== undefined"
+              label="复购次数"
+            >
+              {{ props.spuInfo.unknowField.rebuyCount }}
+            </el-descriptions-item>
+          </el-descriptions>
+        </el-collapse-item>
+
+        <!-- 其他信息 -->
+        <el-collapse-item v-if="hasOtherInfo" title="其他信息" name="others">
+          <el-descriptions :column="1" border size="small">
+            <el-descriptions-item
+              v-if="props.spuInfo.unknowField?.purchaseLimit !== undefined"
+              label="购买限制"
+            >
+              {{ props.spuInfo.unknowField.purchaseLimit }}
+            </el-descriptions-item>
+            <el-descriptions-item
+              v-if="props.spuInfo.unknowField?.purchaseMin !== undefined"
+              label="最小购买量"
+            >
+              {{ props.spuInfo.unknowField.purchaseMin }}
+            </el-descriptions-item>
+            <el-descriptions-item
+              v-if="props.spuInfo.unknowField?.shareCount !== undefined"
+              label="分享次数"
+            >
+              {{ props.spuInfo.unknowField.shareCount }}
+            </el-descriptions-item>
+            <el-descriptions-item
+              v-if="props.spuInfo.unknowField?.memberRecommendCount !== undefined"
+              label="会员推荐数"
+            >
+              {{ props.spuInfo.unknowField.memberRecommendCount }}
+            </el-descriptions-item>
+          </el-descriptions>
+        </el-collapse-item>
+      </el-collapse>
+
+      <div class="spu-item-footer">
+        <!-- 图表部分 - 使用折叠面板 -->
+        <el-collapse
+          v-if="hasPriceData && isShowPriceEcharts"
+          v-model="activePriceChartPanel"
+          class="price-chart-collapse"
+        >
+          <el-collapse-item name="priceChart">
+            <template #title>
+              <div class="collapse-title">
+                <el-icon><TrendCharts /></el-icon>
+                <span>价格趋势分析</span>
+                <el-tag size="small" type="info" effect="plain" class="price-count-tag">
+                  {{ priceHistory.length }}条记录
+                </el-tag>
+              </div>
+            </template>
+            <v-chart
+              v-if="isShowPriceEcharts"
+              class="chart-lines"
+              :option="echartsOption"
+              style="height: 300px; width: 100%"
+            ></v-chart>
+          </el-collapse-item>
+        </el-collapse>
+        <div class="action-buttons">
+          <el-button @click="dialogTableVisible = true" type="info" size="small">
+            <el-icon><InfoFilled /></el-icon>查看原始数据
+          </el-button>
+          <el-dialog
+            v-model="dialogTableVisible"
+            :title="props.spuInfo.title"
+            width="75%"
+            draggable
+          >
+            <VueJsonPretty
+              :showDoubleQuotes="false"
+              :data="props.spuInfo"
+              :indent="2"
+              :deep="3"
+              showIcon
+              showLineNumber
+              showLength
+            ></VueJsonPretty>
+          </el-dialog>
+        </div>
+      </div>
+    </FlexContainer>
   </el-card>
 </template>
 
 <style scoped>
+.spu-card-extended {
+  width: 450px;
+  display: flex;
+  flex-direction: column;
+}
+.spu-container {
+  padding: 10px;
+}
+.spu-item-footer {
+  margin-top: auto;
+}
 .card-header {
   display: flex;
   justify-content: space-between;
@@ -884,42 +905,9 @@ const echartsOption = ref<EChartsOption>({
   margin-top: 15px;
 }
 
-.chart-tabs {
-  width: 100%;
-}
-
-.chart-tabs :deep(.el-tabs__item.is-active) {
-  color: var(--el-color-primary);
-}
-
-.chart-lines,
-.chart-bars {
+.chart-lines {
   margin-top: 10px;
 }
-
-.charts-container {
-  margin-top: 20px;
-  padding: 10px;
-  border: 1px solid var(--el-border-color-lighter);
-  border-radius: 8px;
-  background-color: var(--el-bg-color-page);
-}
-
-.label-bold {
-  font-weight: bold;
-}
-
-.spu-tabs {
-  width: 100%;
-}
-
-/* 属性与标签样式 */
-.attribute-collapse {
-  margin-top: 15px;
-  border-radius: 4px;
-  overflow: hidden;
-}
-
 .attributes-descriptions {
   margin-bottom: 15px;
 }
@@ -941,22 +929,17 @@ const echartsOption = ref<EChartsOption>({
 }
 
 /* 响应式设计 */
-@media (max-width: 500px) {
+@media (max-width: 768px) {
+  :deep(.el-space__item),
+  .spu-card-extended {
+    width: -webkit-fill-available;
+  }
   .info-container {
     flex-direction: column;
     align-items: center;
   }
-
   .left-column {
     margin-bottom: 15px;
-  }
-
-  .price-info {
-    width: 100%;
-  }
-
-  .price-stats {
-    flex-direction: column;
   }
 }
 </style>

@@ -30,7 +30,7 @@ export const processRoutesForHeader = (
   parentPath = '',
   showAll = true
 ): any[] => {
-  return routes
+  const processedRoutes = routes
     .filter(r => {
       // 过滤条件：
       // 1. 必须有 meta 且 isHeaderShow 为 true
@@ -46,9 +46,13 @@ export const processRoutesForHeader = (
         path: fullPath,
         title: meta?.title || '',
         requiresLogin: meta?.requiresLogin || false,
+        order: meta?.order || 0,
         children: r.children ? processRoutesForHeader(r.children, fullPath, showAll) : undefined
       }
     })
+    
+  // 对路由按order排序
+  return processedRoutes.sort((a, b) => (a.order || 0) - (b.order || 0))
 }
 
 /**

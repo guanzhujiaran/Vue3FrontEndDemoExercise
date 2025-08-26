@@ -19,8 +19,10 @@ import {
   Lightning as IconLightning,
   CreditCard as IconCreditCard
 } from '@element-plus/icons-vue'
+import UserCenterView from '@/views/UserCenterView.vue'
 import type { Component } from 'vue'
 import emitter from '@/utils/mitt.ts'
+import LotteryHome from '@/views/LotteryHome.vue'
 /**
  * 自定义路由元数据类型定义
  */
@@ -109,7 +111,7 @@ const routes: CustomRouteRecordRaw[] = [
   {
     path: '/app/user-center/',
     name: '用户中心',
-    component: () => import('@/views/UserCenterView.vue'),
+    component: UserCenterView,
     meta: {
       id: 'user',
       title: '用户中心',
@@ -118,7 +120,7 @@ const routes: CustomRouteRecordRaw[] = [
       color: '#409EFF',
       requiresLogin: true,
       showInHome: true,
-      order: 2,
+      order: 4,
       isHeaderShow: true
     },
     children: [
@@ -166,6 +168,7 @@ const routes: CustomRouteRecordRaw[] = [
   {
     path: '/app/lot-data',
     name: '抽奖数据',
+    component: LotteryHome,
     meta: {
       id: 'lottery',
       title: 'B站抽奖数据',
@@ -177,7 +180,6 @@ const routes: CustomRouteRecordRaw[] = [
       order: 1,
       isHeaderShow: true
     },
-    component: () => import('@/views/LotteryHome.vue'),
     children: [
       {
         path: 'scrapy-stat',
@@ -210,7 +212,6 @@ const routes: CustomRouteRecordRaw[] = [
       {
         path: 'bili-data',
         name: 'B站抽奖数据',
-        component: () => import('@/views/LotteryHome.vue'),
         meta: {
           title: 'B站抽奖数据',
           description: 'B站各类抽奖数据汇总',
@@ -276,7 +277,7 @@ const routes: CustomRouteRecordRaw[] = [
       color: '#909399',
       requiresLogin: false,
       showInHome: true,
-      order: 4,
+      order: 2,
       isHeaderShow: true
     }
   },

@@ -3,13 +3,12 @@ import { ref, onMounted, onUnmounted } from 'vue'
 import { query } from '@/api/samsclub/gql.ts'
 import { gql } from '@urql/vue'
 import { ElCollapseTransition } from 'element-plus'
+import ScrollButtons from '@/components/common/ScrollButtons.vue'
 import {
   SortUp,
   SortDown,
   Search,
   RemoveFilled,
-  Top,
-  Bottom,
   ArrowDown,
   ArrowUp,
   Calendar,
@@ -50,37 +49,7 @@ const priceMax = ref()
 const oderBySelect = ref<string>('')
 const updateTimeRange = ref<[Date | string, Date | string] | undefined>(undefined)
 const createTimeRange = ref<[Date | string, Date | string] | undefined>(undefined)
-const showBackToTop = ref(false)
-const showScrollToBottom = ref(false)
 const showAdvancedSearch = ref(false) // 控制高级查询的显示/隐藏
-// 监听滚动事件，控制按钮的显示
-const handleScroll = () => {
-  const scrollY = window.scrollY
-  const windowHeight = window.innerHeight
-  const documentHeight = document.documentElement.scrollHeight
-
-  // 当滚动超过300px时显示回到顶部按钮
-  showBackToTop.value = scrollY > 300
-
-  // 当没有滚动到底部时显示一键到底按钮（距离底部100px以上）
-  showScrollToBottom.value = documentHeight - (scrollY + windowHeight) > 100
-}
-
-// 回到顶部
-const scrollToTop = () => {
-  window.scrollTo({
-    top: 0,
-    behavior: 'smooth'
-  })
-}
-
-// 滚动到底部
-const scrollToBottom = () => {
-  window.scrollTo({
-    top: document.documentElement.scrollHeight,
-    behavior: 'smooth'
-  })
-}
 
 const handleResetForm = () => {
   Object.assign(queryParams.value, {
@@ -415,35 +384,21 @@ onMounted(() => {
       new Date(queryParams.value.lastCreateBeforeTss * 1000)
     ] as [Date | string, Date | string]
   }
-
-  // 添加滚动事件监听
-  window.addEventListener('scroll', handleScroll)
-})
-
-onUnmounted(() => {
-  // 移除滚动事件监听
-  window.removeEventListener('scroll', handleScroll)
-})
-
-// 暴露方法给父组件
-defineExpose({
-  scrollToTop,
-  scrollToBottom
 })
 </script>
 
 <template>
   <!-- 基本查询部分 -->
   <el-descriptions :column="2" border>
-    <el-descriptions-item label="SPU ID">
+    <el-descriptions-item label-class-name="samsclub-filter-label" label="SPU ID">
       <el-input v-model.number="queryParams.spuId" placeholder="请输入SPU ID" />
     </el-descriptions-item>
-    <el-descriptions-item label="SPU标题">
+    <el-descriptions-item label-class-name="samsclub-filter-label" label="SPU标题">
       <el-input v-model="queryParams.spuInfoTitle" placeholder="请输入SPU标题" />
     </el-descriptions-item>
 
     <!-- 快捷查询按钮组和高级查询切换按钮 -->
-    <el-descriptions-item :span="2" label="快捷查询">
+    <el-descriptions-item :span="2" label-class-name="samsclub-filter-label" label="快捷查询">
       <div class="quick-search-row">
         <div class="quick-search-area">
           <div class="quick-search-grid">
@@ -842,7 +797,6 @@ defineExpose({
                       format="YYYY-MM-DD HH:mm:ss"
                       value-format="YYYY-MM-DD HH:mm:ss"
                       @change="handleUpdateTimeRangeChange"
-                      style="width: 100%"
                       class="update-time-picker"
                     />
                   </div>
@@ -866,7 +820,6 @@ defineExpose({
                       format="YYYY-MM-DD HH:mm:ss"
                       value-format="YYYY-MM-DD HH:mm:ss"
                       @change="handleCreateTimeRangeChange"
-                      style="width: 100%"
                       class="create-time-picker"
                     />
                   </div>
@@ -908,37 +861,11 @@ defineExpose({
       </div>
     </el-descriptions-item>
   </el-descriptions>
-
-  <!-- 高级查询部分已移至按钮下方 -->
-
-  <!-- 回到顶部按钮 -->
-  <div v-show="showBackToTop" class="back-to-top" @click="scrollToTop">
-    <el-button type="primary" circle :icon="Top" size="large" />
-  </div>
-
-  <!-- 一键到底按钮 -->
-  <div v-show="showScrollToBottom" class="scroll-to-bottom" @click="scrollToBottom">
-    <el-button type="success" circle :icon="Bottom" size="large" />
-  </div>
 </template>
 
 <style scoped>
-.back-to-top {
-  position: fixed;
-  right: 40px;
-  bottom: 40px;
-  cursor: pointer;
-  z-index: 999;
-  transition: opacity 0.3s;
-}
-
-.scroll-to-bottom {
-  position: fixed;
-  right: 40px;
-  bottom: 100px; /* 放在回到顶部按钮上方 */
-  cursor: pointer;
-  z-index: 999;
-  transition: opacity 0.3s;
+:deep(.samsclub-filter-label) {
+  white-space: nowrap;
 }
 
 .op-area .op + .op {
@@ -962,9 +889,8 @@ defineExpose({
 
 .quick-search-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 12px;
-  width: 100%;
+  grid-template-columns: repeat(3, 1fr);
+  grid-gap: 12px;
 }
 
 .quick-search-column {

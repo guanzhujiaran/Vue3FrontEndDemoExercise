@@ -15,5 +15,6 @@
   flex: 1;
   align-items: stretch;
   height: -webkit-fill-available;
+  box-sizing: border-box;
 }
 </style>

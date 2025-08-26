@@ -1,5 +1,5 @@
 <template>
-  <FlexContainer style="padding: 10px">
+  <FlexContainer v-loading="isLoading" style="padding: 10px">
     <SamsClubFilter
       v-model:query-params="samsClubFilterOpt"
       :submit-form="

@@ -21,9 +21,9 @@ useHead({
 import zhCn from 'element-plus/es/locale/lang/zh-cn'
 import Clarity from '@microsoft/clarity'
 import { BiliImg } from '@/assets/img/BiliImg.ts'
-import HeaderBarView from '@/views/HeaderBarView.vue'
+import HeaderBarView from '@/components/CommonCompo/Bili-Header-Compo/HeaderBarView.vue'
 import LoginModal from '@/components/login_page/compo/LoginModal.vue'
-import {openGlobalLoginModalKey } from '@/models/inject/inject_type.ts'
+import { openGlobalLoginModalKey } from '@/models/inject/inject_type.ts'
 import.meta.env.VITE_API_BASE_URL && Clarity.init(import.meta.env.VITE_CLARITY_ID ?? '')
 const isInit = ref(false)
 const themeStore = useThemeStore()
@@ -61,7 +61,6 @@ onUnmounted(() => {
   // 清理事件监听
   emitter.off('needLogin')
 })
-
 </script>
 
 <template>
@@ -165,7 +164,7 @@ body {
     Microsoft YaHei,
     sans-serif !important;
   font-weight: 400;
-  min-width: 500px;
+  min-width: 550px;
   transition: background-color 0.3s ease;
   background-size: cover;
   background-position: center;
