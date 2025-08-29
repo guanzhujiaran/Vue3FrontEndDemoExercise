@@ -303,7 +303,7 @@ const router = createRouter({
 router.beforeEach((to, from, next) => {
   // 如果不是首次访问（from.name存在）
   if (from.name) {
-    emitter.emit('loading', { isLoading: true, loadingText: `正在前往：${to.meta.title}中。。。` })
+    emitter.emit('loading', { isLoading: true, loadingText: `正在前往：【${to.meta.title}】中` })
   }
   next()
 })

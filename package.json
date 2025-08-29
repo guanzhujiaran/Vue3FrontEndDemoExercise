@@ -1,13 +1,13 @@
 {
     "name": "bililottery",
-    "version": "0.0.0",
+    "version": "0.0.1",
     "private": true,
     "type": "module",
     "scripts": {
         "dev": "vite --mode development",
         "build": "run-p type-check \"build-only {@}\"",
         "test": "vite --mode prod",
-        "preview": "vite preview",
+        "preview": "vite preview --mode prod",
         "build-only": "vite build --mode prod",
         "type-check": "vue-tsc --build --force",
         "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix --ignore-path .gitignore",

@@ -156,7 +156,7 @@ const is_loading_md = ref<boolean>(true)
     @mouseleave="is_mouse_in = false"
     v-loading="is_loading_md"
   >
-    <el-avatar class="user-avater" :size="is_root ? 'large' : 'small'">
+    <el-avatar class="user-avater" :size="is_root ? 60 : 40">
       <img
         :src="reply_item.member.avatar ? reply_item.member.avatar : BiliImg.face.noface"
         referrerpolicy="no-referrer"
@@ -177,6 +177,7 @@ const is_loading_md = ref<boolean>(true)
                 :src="`https://i0.hdslb.com/bfs/seed/jinkela/short/webui/user-profile/img/level_${reply_item.member.level_info.current_level ?? 0}.svg`"
                 referrerpolicy="no-referrer"
                 :alt="JSON.stringify(reply_item.member.level_info.current_level)"
+                style="max-width: 19px; max-height: 19px"
               />
             </div>
             <div id="user-up" v-if="up_mid && String(up_mid) === String(reply_item.member.mid)">
@@ -185,6 +186,7 @@ const is_loading_md = ref<boolean>(true)
                 height="100%"
                 src="//i0.hdslb.com/bfs/seed/jinkela/short/webui/comments/img/icons/up_pb.svg"
                 referrerpolicy="no-referrer"
+                style="max-width: 19px; max-height: 19px"
               />
             </div>
           </div>
@@ -193,7 +195,7 @@ const is_loading_md = ref<boolean>(true)
           <div class="comment-content">
             <BiliVditorEdit
               v-model="comment_content"
-              style="min-height: 2rem; line-height: 0.5rem; overflow: visible; font-size: 0.5rem"
+              style="min-height: 40px; line-height: 16px; overflow: visible; font-size: 16px"
               v-model:is_loading="is_loading_md"
               :is_preview="true"
             />
@@ -208,14 +210,16 @@ const is_loading_md = ref<boolean>(true)
               <button
                 class="like-btn"
                 @click="handleLike"
-                :style="{ color: String(interact_btn_active) === '1' ? '#00AEEC' : '' }"
+                :style="{
+                  color: String(interact_btn_active) === '1' ? 'var(--el-color-primary)' : ''
+                }"
               >
                 <svg
                   v-if="interact_btn_active == 1"
                   xmlns="http://www.w3.org/2000/svg"
                   xmlns:xlink="http://www.w3.org/1999/xlink"
-                  width="16"
-                  height="16"
+                  width="20"
+                  height="20"
                   viewBox="0 0 16 16"
                 >
                   <path :d="SVG.like_active.path" fill="currentColor"></path>
@@ -230,14 +234,16 @@ const is_loading_md = ref<boolean>(true)
               <button
                 class="dislike-btn"
                 @click="handleHate"
-                :style="{ color: String(interact_btn_active) === '2' ? '#00AEEC' : '' }"
+                :style="{
+                  color: String(interact_btn_active) === '2' ? 'var(--el-color-primary)' : ''
+                }"
               >
                 <svg
                   v-if="interact_btn_active == 2"
                   xmlns="http://www.w3.org/2000/svg"
                   xmlns:xlink="http://www.w3.org/1999/xlink"
-                  width="16"
-                  height="16"
+                  width="20"
+                  height="20"
                   viewBox="0 0 16 16"
                 >
                   <path :d="SVG.dislike_active.path" fill="currentColor"></path>
@@ -254,7 +260,7 @@ const is_loading_md = ref<boolean>(true)
             <div
               id="more"
               v-show="is_mouse_in || is_comment_menu_open"
-              :style="{ 'padding-right': is_root ? '0' : '2rem' }"
+              :style="{ 'padding-right': is_root ? '0' : '32px' }"
             >
               <button
                 class="more-btn"
@@ -263,8 +269,8 @@ const is_loading_md = ref<boolean>(true)
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   xmlns:xlink="http://www.w3.org/1999/xlink"
-                  width="16"
-                  height="16"
+                  width="20"
+                  height="20"
                   viewBox="0 0 16 16"
                 >
                   <path :d="SVG.more.path" fill="currentColor"></path>
@@ -322,8 +328,8 @@ const is_loading_md = ref<boolean>(true)
   width: 100%;
   display: flex;
   align-items: center;
-  height: 36px;
-  padding: 0 15px;
+  height: 42px;
+  padding: 0 20px;
   cursor: pointer;
   user-select: none;
 }
@@ -331,63 +337,63 @@ const is_loading_md = ref<boolean>(true)
 #options {
   display: block;
   position: absolute;
-  top: 20px;
+  top: 25px;
   right: 0;
   margin: 0;
   padding: 0;
   z-index: 10;
-  width: 120px;
+  width: 150px;
   list-style: none;
-  border-radius: 4px;
-  font-size: 14px;
-  color: #61666d;
-  background-color: #ffffff;
-  box-shadow: rgba(0, 0, 0, 0.2) 0 0 5px;
+  border-radius: 6px;
+  font-size: 16px;
+  color: var(--el-text-color-primary);
+  background-color: var(--el-bg-color);
+  box-shadow: var(--el-box-shadow-light);
   overflow: hidden;
 }
 
 .comment-menu {
   right: 0;
   position: absolute;
-  top: 10px;
+  top: 15px;
   z-index: 2000;
 }
 
 #more {
   margin-left: auto;
-  margin-right: 20px;
-  width: 24px;
-  height: 24px;
+  margin-right: 30px;
+  width: 32px;
+  height: 32px;
   position: relative;
-  scale: 1.2;
+  scale: 1.4;
   z-index: 1600;
 }
 
 #count {
-  margin-left: 5px;
+  margin-left: 8px;
 }
 
 .comment-tag {
   width: fit-content;
-  color: #757575;
-  background-color: #f4f4f4;
-  padding: 0.175rem;
-  border-radius: 0.125rem;
+  color: var(--el-text-color-regular);
+  background-color: var(--el-fill-color-light);
+  padding: 5px;
+  border-radius: 3px;
   box-sizing: border-box;
-  font-size: 0.35rem;
+  font-size: 11px;
   line-height: 1;
 }
 
 svg:not(:root) {
-  width: 0.675rem;
-  height: 0.675rem;
+  width: 16px;
+  height: 16px;
 }
 
 .like-btn:hover,
 .dislike-btn:hover,
 .reply-btn:hover,
 .more-btn:hover {
-  color: #00aeec;
+  color: var(--el-color-primary);
 }
 
 .like-btn,
@@ -398,9 +404,9 @@ svg:not(:root) {
   outline: none;
   border: none;
   background: transparent;
-  height: 0.875rem;
-  font-size: 0.5rem;
-  color: #9499a0;
+  height: 24px;
+  font-size: 14px;
+  color: var(--el-text-color-secondary);
   display: inline-flex;
   align-items: center;
   cursor: pointer;
@@ -408,7 +414,7 @@ svg:not(:root) {
 }
 
 .comment-footer > :not(:first-child) {
-  margin-left: 0.7rem;
+  margin-left: 19px;
 }
 
 .comment-content :deep(.v-note-wrapper) {
@@ -416,14 +422,14 @@ svg:not(:root) {
 }
 
 .comment-footer {
-  width: 100%;
+  width: -webkit-fill-available;
   display: flex;
   align-items: center;
   position: relative;
-  margin-top: 0.2rem;
-  font-size: 0.5rem;
-  color: #9499a0;
-  height: 100%;
+  margin-top: 8px;
+  font-size: 14px;
+  color: var(--el-text-color-secondary);
+  height: 50px;
   flex-wrap: wrap;
 }
 
@@ -443,25 +449,25 @@ svg:not(:root) {
 
 .comment-main :deep(.el-card__header) {
   border-bottom: none;
-  margin-bottom: 0.2rem;
+  margin-bottom: 8px;
   padding: 0;
 }
 
 .user-level {
-  margin-left: 0.3125rem;
-  width: 0.7rem;
-  height: 0.7rem;
+  margin-left: 8px;
+  width: 19px;
+  height: 19px;
 }
 
 .user-info #user-up {
-  margin-left: 0.3125rem;
-  width: 0.7rem;
-  height: 0.7rem;
+  margin-left: 8px;
+  width: 19px;
+  height: 19px;
 }
 
 .user-name {
-  color: #61666d;
-  font-size: 0.5rem;
+  color: var(--el-text-color-primary);
+  font-size: 16px;
   font-weight: 500;
 }
 
@@ -472,24 +478,25 @@ svg:not(:root) {
 
 .comment-item {
   display: flex;
+  margin-bottom: 24px;
 }
 
 .comment-main {
   width: 100%;
   position: relative;
-  padding-left: 0.25rem;
-  padding-top: 0.2rem;
-  line-height: 1.5;
+  padding-left: 13px;
+  padding-top: 8px;
+  line-height: 1.8;
 }
 
 .user-avater {
   position: relative;
-  left: 0.25rem;
-  top: 0.25rem;
-  width: 1.5rem;
-  height: 1.5rem;
+  left: 8px;
+  top: 8px;
+  width: 40px;
+  height: 40px;
   transform-origin: left top;
-  transform: scale(0.83333333);
+  transform: scale(1);
   flex-shrink: 0;
 }
 </style>

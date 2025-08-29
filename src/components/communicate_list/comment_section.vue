@@ -421,20 +421,20 @@ onUnmounted(() => {
 .reply-pagination {
   display: flex;
   align-items: center;
-  font-size: 13px;
-  color: #18191c;
+  font-size: 16px;
+  color: var(--el-text-color-primary);
 }
 
 .comment-pagination {
-  padding-top: 0.5rem;
-  padding-bottom: 1rem;
+  padding-top: 16px;
+  padding-bottom: 24px;
   margin: auto;
   width: 50%;
-  font-size: 0.5rem;
+  font-size: 16px;
 }
 
 .expander-footer .button:not([disabled]):hover {
-  color: #00aeec;
+  color: var(--el-color-primary);
 }
 
 .expander-footer .button:before {
@@ -469,21 +469,21 @@ onUnmounted(() => {
   z-index: 0;
   height: 100%;
   font: inherit;
-  color: #9499a0;
+  color: var(--el-text-color-secondary);
   cursor: pointer;
 }
 
 .expander-footer {
-  margin-left: 3rem;
-  font-size: 0.4rem;
-  color: #9499a0;
-  margin-top: 0.2rem;
+  margin-left: 60px;
+  font-size: 14px;
+  color: var(--el-text-color-secondary);
+  margin-top: 8px;
 }
 
 .comment-reply-wrap {
-  margin-right: 3rem;
-  margin-left: 3rem;
-  margin-top: 1rem;
+  margin-right: 60px;
+  margin-left: 60px;
+  margin-top: 24px;
 }
 
 .comment-list {
@@ -492,31 +492,30 @@ onUnmounted(() => {
 }
 
 .div-line {
-  padding-bottom: 0.5rem;
-  margin-left: 0.1rem;
-  border-bottom: 0.0625rem solid #e3e5e7;
+  padding-bottom: 16px;
+  margin-left: 4px;
+  border-bottom: 2px solid var(--el-border-color-lighter);
 }
 
 .sort-actions .sort-div {
   display: inline-block;
-  height: 0.75rem;
-  margin: 0 0.1875rem;
-  border-left: solid 0.0875rem #9499a0;
+  height: 18px;
+  margin: 0 6px;
+  border-left: solid 2px var(--el-text-color-secondary);
   vertical-align: bottom;
 }
 
 .comment-title .comment-count {
-  margin: 0 1.875rem 0 0.675rem;
-  font-size: 0.5125rem;
+  margin: 0 30px 0 10.8px;
+  font-size: 18px;
   font-weight: 400;
-  color: #9499a0;
+  color: var(--el-text-color-secondary);
 }
 
 .comment-title h2 {
   margin: 0;
-  color: #18191c;
   font-weight: 700;
-  font-size: 0.375rem;
+  font-size: 32px;
 }
 
 .comment-title {
@@ -527,11 +526,11 @@ onUnmounted(() => {
 .navbar {
   display: flex;
   height: 100%;
-  margin-bottom: 1.375rem;
+  margin-bottom: 32px;
 }
 
 .sort-btn.active {
-  color: #18191c;
+  color: var(--el-text-color-primary);
 }
 
 .sort-btn:hover {
@@ -540,9 +539,15 @@ onUnmounted(() => {
 
 .sort-btn {
   height: 100%;
-  padding-inline-start: 0.375rem;
-  padding-inline-end: 0.375rem;
-  font-size: 0.375rem;
-  color: #9499a0;
+  padding-inline-start: 12px;
+  padding-inline-end: 12px;
+  font-size: 18px;
+  color: var(--el-text-color-secondary);
+}
+ul,
+li {
+  list-style: none; /* 去除项目符号 */
+  margin: 0; /* 去除外边距 */
+  padding: 0; /* 去除内边距 */
 }
 </style>

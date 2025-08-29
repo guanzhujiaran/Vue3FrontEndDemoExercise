@@ -14,7 +14,7 @@ const globalLoading = ref({
   isLoading: false,
   loadingText: '加载中...'
 })
-emitter.on('loading', (isLoading, loadingText) => {
+emitter.on('loading', ({ isLoading, loadingText }) => {
   globalLoading.value.isLoading = isLoading
   globalLoading.value.loadingText = loadingText ?? '加载中...'
 })

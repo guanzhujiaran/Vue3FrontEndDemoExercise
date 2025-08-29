@@ -94,13 +94,7 @@ const toolbars = defineModel('toolbars', {
 const props = defineProps({
   is_preview: { type: Boolean, default: false }
 })
-const handle_preview_theme = () => {
-  if (vditor.value) {
-    is_dark.value
-      ? vditor.value.setAttribute('style', 'background-color: #24292e;')
-      : vditor.value.setAttribute('style', 'background-color: #fff;')
-  }
-}
+
 const viditor_factory = async () => {
   if (!vditor.value) return null
   if (props.is_preview) {
@@ -110,7 +104,6 @@ const viditor_factory = async () => {
         renderImage: handle_image_render
       },
       after: () => {
-        handle_preview_theme()
         is_loading.value = false
       }
     })

@@ -62,7 +62,7 @@ const comment_content = defineModel<string>('comment_content')
 }
 
 .submit-comment-section {
-  background: #ffffff;
+  background: var(--el-bg-color);
   min-width: fit-content;
 }
 </style>

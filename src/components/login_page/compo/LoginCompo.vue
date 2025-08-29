@@ -33,6 +33,7 @@ const vNoSpace = {
         pwd: string
         reg_user_name: string
         reg_pwd: string
+        reg_check_pwd: string
       }
     }
   }
@@ -42,10 +43,13 @@ const tab__form = ref({
   user_name: '',
   pwd: '',
   reg_user_name: '',
-  reg_pwd: ''
+  reg_pwd: '',
+  reg_check_pwd: ''
 })
 
 const show_pwd = ref<boolean>(false)
+const show_reg_pwd = ref<boolean>(false)
+const show_reg_check_pwd = ref<boolean>(false)
 const showForgetTips = ref<boolean>(false)
 const router = useRouter()
 const login_able = computed(() => ({
@@ -118,6 +122,10 @@ const handleRegBtn = useDebounceFn(async () => {
     ElMessage.error('请输入账号和密码！')
     return
   }
+  if (tab__form.value.reg_pwd !== tab__form.value.reg_check_pwd) {
+    ElMessage.error('两次密码不一致！')
+    return
+  }
   if (!pwd_sec.value) {
     ElMessage.error('缺少加密盐！')
     return
@@ -131,7 +139,7 @@ const handleRegBtn = useDebounceFn(async () => {
         return
       }
       ElMessage.success('注册成功！请登录')
-      setTimeout(() => router.go(0), 1e3)
+      login_info.value.checked = 'pwd'
     })
     .catch((e) => {
       ElMessage.error(`注册失败！原因：${e}`)
@@ -244,15 +252,19 @@ onMounted(() => {
                 <template #reference>
                   <div></div>
                 </template>
-                <div class="forget-tip-content">
-                  <div class="forget-tip-line">
-                    <p class="title">发送短信快速登录</p>
-                    <p class="desc">未注册或绑定哔哩哔哩的手机号，将帮你注册新账号</p>
-                  </div>
-                  <div class="forget-tip-line">
-                    <p class="title">去找回密码</p>
-                    <p class="desc">通过绑定的手机号/邮箱重置密码</p>
-                  </div>
+                <!--                <div class="forget-tip-content">-->
+                <!--                  <div class="forget-tip-line">-->
+                <!--                    <p class="title">发送短信快速登录</p>-->
+                <!--                    <p class="desc">未注册或绑定哔哩哔哩的手机号，将帮你注册新账号</p>-->
+                <!--                  </div>-->
+                <!--                  <div class="forget-tip-line">-->
+                <!--                    <p class="title">去找回密码</p>-->
+                <!--                    <p class="desc">通过绑定的手机号/邮箱重置密码</p>-->
+                <!--                  </div>-->
+                <!--                </div>-->
+                <div class="forget-tip-line">
+                  <p class="title">忘了就忘了吧</p>
+                  <p class="desc">重新注册一个就是了，反正也没要求绑邮箱</p>
                 </div>
               </el-popover>
             </div>
@@ -262,6 +274,7 @@ onMounted(() => {
             <div class="tab-sms">
               <div class="tab__form">
                 <div class="form__item">
+                  <div class="form-label">注册账号名</div>
                   <el-input
                     v-model.trim="tab__form.reg_user_name"
                     placeholder="请输入需要注册的账号名"
@@ -273,15 +286,46 @@ onMounted(() => {
                 </div>
                 <div class="form__separator-line"></div>
                 <div class="form__item">
+                  <div class="form-label">注册密码</div>
                   <el-input
                     v-model.trim="tab__form.reg_pwd"
                     placeholder="请输入注册密码"
                     maxlength="32"
-                    type="password"
+                    :type="show_reg_pwd ? 'text' : 'password'"
                     clearable
                     @input="(value) => (value = value.replace(/\s+/g, ''))"
                     v-no-space
-                  />
+                    ><template #suffix>
+                      <el-icon
+                        class="eye-btn"
+                        @click="show_reg_pwd = !show_reg_pwd"
+                        style="cursor: pointer"
+                      >
+                        <View v-if="show_reg_pwd" />
+                        <Hide v-else />
+                      </el-icon> </template
+                  ></el-input>
+                </div>
+                <div class="form__item">
+                  <div class="form-label">确认注册密码</div>
+                  <el-input
+                    v-model.trim="tab__form.reg_check_pwd"
+                    placeholder="请再次输入相同内容，确认注册密码"
+                    maxlength="32"
+                    :type="show_reg_check_pwd ? 'text' : 'password'"
+                    clearable
+                    @input="(value) => (value = value.replace(/\s+/g, ''))"
+                    v-no-space
+                    ><template #suffix>
+                      <el-icon
+                        class="eye-btn"
+                        @click="show_reg_check_pwd = !show_reg_check_pwd"
+                        style="cursor: pointer"
+                      >
+                        <View v-if="show_reg_check_pwd" />
+                        <Hide v-else />
+                      </el-icon> </template
+                  ></el-input>
                 </div>
               </div>
               <div class="btn_wp" style="justify-content: center">

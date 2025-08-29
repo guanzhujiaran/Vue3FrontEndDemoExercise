@@ -19,27 +19,25 @@ onMounted(async () => {
 </script>
 
 <template>
-  <CommContainer>
-    <div class="feedback-section-wrap">
-      <div class="link-wrap">
-        <el-tooltip content="点击跳转大佬空间" placement="bottom-end">
-          <el-link
-            type="primary"
-            href="https://space.bilibili.com/4265321"
-            target="_blank"
-            rel="noreferrer"
-          >
-            <Placeholder v-model="placeholder_props"></Placeholder>
-          </el-link>
-        </el-tooltip>
-      </div>
-      <comment_section
-        :sort_by="'time'"
-        v-model:comment_section_base_info="comment_section_base_info"
-      />
+  <FlexContainer>
+    <div class="link-wrap">
+      <el-tooltip content="点击跳转大佬空间" placement="bottom-end">
+        <el-link
+          type="primary"
+          href="https://space.bilibili.com/4265321"
+          target="_blank"
+          rel="noreferrer"
+        >
+          <Placeholder v-model="placeholder_props"></Placeholder>
+        </el-link>
+      </el-tooltip>
     </div>
-    <el-backtop></el-backtop>
-  </CommContainer>
+    <comment_section
+      :sort_by="'time'"
+      v-model:comment_section_base_info="comment_section_base_info"
+    />
+    <ScrollButtons></ScrollButtons>
+  </FlexContainer>
 </template>
 
 <style scoped>
@@ -48,19 +46,6 @@ onMounted(async () => {
   width: 100%;
   display: flex;
   justify-content: center;
-}
-
-.feedback-section-wrap {
-  height: fit-content;
-  margin: 0 auto;
-  display: flex;
-  justify-content: center;
-  box-sizing: content-box;
-  position: relative;
-  flex-direction: column;
-  width: auto;
-  padding: 0 10px 3rem;
-  background-color: #ffffff;
 }
 
 :deep(.placeholder) {
