@@ -30,12 +30,11 @@ const dropdownVisible = ref(false)
     ref="headerAvatarDropdown"
     @visible-change="dropdownVisible = $event"
   >
-    <div 
+    <div
       class="header-avatar-wrapper"
       :class="{ 'header-avatar-wrapper--expanded': dropdownVisible }"
     >
       <UserAvatarBox
-        class="header-entry-avatar"
         v-if="isLoggedIn"
         :src="user_face_src"
         size="default"
@@ -104,13 +103,12 @@ const dropdownVisible = ref(false)
 }
 </style>
 <style scoped>
-.header-entry-avatar,
 .header-login-entry {
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
-  color: #fff;
-  background: #00aeec;
+  color: var(--el-text-color-primary);
+  background: var(--el-color-primary);
   text-align: center;
   letter-spacing: 0;
   font-size: 14px;

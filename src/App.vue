@@ -24,6 +24,10 @@ import { BiliImg } from '@/assets/img/BiliImg.ts'
 import HeaderBarView from '@/components/CommonCompo/Bili-Header-Compo/HeaderBarView.vue'
 import LoginModal from '@/components/login_page/compo/LoginModal.vue'
 import { openGlobalLoginModalKey } from '@/models/inject/inject_type.ts'
+import { KeysEnum, useInject } from '@/models/base/provide_model.ts'
+import type { UserNavModel } from '@/models/user/user_model.ts'
+import { isLogin } from '@/api/user/utils.ts'
+import userApi from '@/api/user/user_api.ts'
 import.meta.env.VITE_API_BASE_URL && Clarity.init(import.meta.env.VITE_CLARITY_ID ?? '')
 const isInit = ref(false)
 const themeStore = useThemeStore()
@@ -39,9 +43,27 @@ const openGlobalLoginModal = () => {
     loginModalRef.value.openLoginModal()
   }
 }
+
 provide(openGlobalLoginModalKey, openGlobalLoginModal)
+const biliUser = useInject(KeysEnum.__Bili_User__) as Ref<UserNavModel>
+const pwd_sec = useInject(KeysEnum.__Bili_Pwd_Sec__)
+const get_pwd_sec = () => {
+  userApi.PwdSalt().then((resp) => {
+    pwd_sec.value = resp.data
+  })
+}
+// 检查登录状态
+const checkLoginStatus = () => {
+  isLogin().then(([isLoggedInStatus, message, user_nav]) => {
+    user_nav ? (biliUser.value = user_nav) : null
+    if (!isLoggedInStatus && message) {
+      get_pwd_sec()
+    }
+  }).catch(()=>get_pwd_sec())
+}
 
 onMounted(() => {
+  checkLoginStatus()
   isInit.value = true
 
   // 初始化主题

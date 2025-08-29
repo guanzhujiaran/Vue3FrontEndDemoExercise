@@ -11,7 +11,6 @@ import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { routes } from '@/router'
 import { useJwtStore } from '@/stores/jwt_token'
-import { isLogin } from '@/api/user/utils'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   CoffeeCup,
@@ -22,9 +21,10 @@ import {
 } from '@element-plus/icons-vue'
 import { processRoutesForHome } from '@/utils/routeUtils'
 import { openGlobalLoginModalKey } from '@/models/inject/inject_type.ts'
+import { KeysEnum, useInject } from '@/models/base/provide_model.ts'
+import type { UserNavModel } from '@/models/user/user_model.ts'
 const router = useRouter()
 const jwtStore = useJwtStore()
-const isLoggedIn = ref(false)
 const activeTab = ref('all')
 const openGlobalLoginModal = inject(openGlobalLoginModalKey, () => {})
 // 从路由配置中提取功能模块
@@ -41,7 +41,7 @@ const routeModules = computed(() => {
     title: '购物助手',
     icon: IconShoppingCart,
     description: '购物相关功能和信息查询',
-    color: '#909399',
+    color: 'var(--el-color-info)',
     requiresLogin: false,
     order: 4,
     children: modules
@@ -74,20 +74,8 @@ const filteredModules = computed(() => {
   }
   return routeModules.value.filter((module: any) => module.id === activeTab.value)
 })
-
-// 检查登录状态
-const checkLoginStatus = async () => {
-  try {
-    const [isLoggedInStatus, message] = await isLogin()
-    isLoggedIn.value = isLoggedInStatus
-    if (!isLoggedInStatus && message) {
-      // console.log('未登录:', message)
-    }
-  } catch (error) {
-    // console.error('检查登录状态出错:', error)
-  }
-}
-
+const biliUser = useInject(KeysEnum.__Bili_User__) as Ref<UserNavModel>
+const isLoggedIn = computed(() => !!biliUser.value.uid)
 // 处理登录按钮点击
 const handleLoginClick = () => {
   openGlobalLoginModal()
@@ -102,16 +90,10 @@ const handleLogoutClick = () => {
   })
     .then(() => {
       jwtStore.delete_jwt_token()
-      isLoggedIn.value = false
+      biliUser.value = { uid: 0, user_name: '', role: '', face: '' }
       ElMessage.success('已成功退出登录')
     })
     .catch(() => {})
-}
-
-// 处理登录成功
-const handleLoginSuccess = () => {
-  checkLoginStatus()
-  ElMessage.success('登录成功！欢迎回来')
 }
 
 // 处理卡片点击
@@ -130,10 +112,6 @@ const handleCardClick = (path: string | undefined, requiresLogin = false) => {
   }
   path && router.push(path)
 }
-
-onMounted(() => {
-  checkLoginStatus()
-})
 </script>
 
 <template>
@@ -335,7 +313,7 @@ onMounted(() => {
   font-size: 48px;
   font-weight: 700;
   margin-bottom: 16px;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  text-shadow: 0 2px 4px var(--el-color-primary);
 }
 
 .hero-subtitle {
@@ -377,7 +355,7 @@ onMounted(() => {
 .section-title {
   font-size: 28px;
   font-weight: 600;
-  color: #303133;
+  color: var(--el-text-color-primary);
   margin: 0;
 }
 
@@ -433,9 +411,9 @@ onMounted(() => {
   cursor: pointer;
   transition: all 0.2s ease;
   border: 1px solid;
-  opacity: 0.5;
+  opacity: 1;
   &:hover {
-    opacity: 1;
+    opacity: 0.7;
     transform: translateX(5px);
   }
 }
@@ -447,7 +425,7 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
+  color: var(--el-color-white);
   margin-right: 12px;
   flex-shrink: 0;
 }
@@ -459,7 +437,7 @@ onMounted(() => {
 .child-info h4 {
   margin: 0 0 4px 0;
   font-size: 16px;
-  font-weight: 500;
+  font-weight: 1000;
 }
 
 .child-info p {
@@ -468,7 +446,7 @@ onMounted(() => {
 }
 
 .arrow-icon {
-  color: #c0c4cc;
+  color: var(--el-text-color-placeholder);
 }
 
 .module-action {
@@ -491,8 +469,8 @@ onMounted(() => {
 
 /* 页脚 */
 .footer {
-  background-color: #303133;
-  color: #909399;
+  background-color: var(--el-color-black);
+  color: var(--el-text-color-secondary);
   margin-top: 60px;
 }
 
@@ -506,7 +484,7 @@ onMounted(() => {
 }
 
 .footer-section h3 {
-  color: #e6e6e6;
+  color: var(--el-color-white);
   margin-top: 0;
   margin-bottom: 16px;
   font-size: 18px;
@@ -527,18 +505,18 @@ onMounted(() => {
 }
 
 .footer-section ul li a {
-  color: #909399;
+  color: var(--el-text-color-secondary);
   text-decoration: none;
   cursor: pointer;
   transition: color 0.2s;
 }
 
 .footer-section ul li a:hover {
-  color: #41b883;
+  color: var(--el-color-primary);
 }
 
 .footer-bottom {
-  background-color: #252525;
+  background-color: var(--el-bg-color-page);
   text-align: center;
   padding: 16px;
   font-size: 14px;

@@ -6,18 +6,20 @@ import type { UserNavModel } from '@/models/user/user_model.ts'
 
 export enum KeysEnum {
   globalVars = 'globalVars',
-  __Bili_User__ = '__Bili_User__'
+  __Bili_User__ = '__Bili_User__',
+  __Bili_Pwd_Sec__ = '__Bili_Pwd_Sec__'
 }
 
 export const ProvideKeys = {
   [KeysEnum.globalVars]: Symbol(KeysEnum.globalVars) as InjectionKey<Ref<GlobalVarsType>>,
-  [KeysEnum.__Bili_User__]: Symbol(KeysEnum.__Bili_User__) as InjectionKey<Ref<UserNavModel>>
+  [KeysEnum.__Bili_User__]: Symbol(KeysEnum.__Bili_User__) as InjectionKey<Ref<UserNavModel>>,
+  [KeysEnum.__Bili_Pwd_Sec__]: Symbol(KeysEnum.__Bili_Pwd_Sec__) as InjectionKey<Ref<string>>
 }
 const globalVarsDefaultRef = ref<GlobalVarsType>({
   screen_size: ScreenTypeEnum.large
 })
 const __Bili_User__DefaultRef = ref<UserNavModel>({ uid: 0, user_name: '', role: '', face: '' })
-
+const __Bili_Pwd_Sec__DefaultRef = ref<string>('')
 const default_val_gen = (key: KeysEnum) => {
   switch (key) {
     case KeysEnum.globalVars:
@@ -26,6 +28,9 @@ const default_val_gen = (key: KeysEnum) => {
     case KeysEnum.__Bili_User__:
       provide(ProvideKeys[KeysEnum.__Bili_User__], __Bili_User__DefaultRef)
       return __Bili_User__DefaultRef
+    case KeysEnum.__Bili_Pwd_Sec__:
+      provide(ProvideKeys[KeysEnum.__Bili_Pwd_Sec__], __Bili_Pwd_Sec__DefaultRef)
+      return __Bili_Pwd_Sec__DefaultRef
     default:
       throw new Error(`未知provide！`)
   }

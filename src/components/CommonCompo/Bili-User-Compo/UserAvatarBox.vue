@@ -27,7 +27,7 @@ const size = computed(() => {
 <template>
   <div class="avatar-box" :style="{ width: size + 'px', height: size + 'px' }">
     <div class="avatar border" :style="{ width: size + 'px', height: size + 'px' }">
-      <el-image :src="props.src" :size="size" class="url" referrerpolicy="no-referrer" alt="" />
+      <el-image :src="props.src" :size="size" fit="fill" class="url" referrerpolicy="no-referrer" alt="" />
     </div>
   </div>
 </template>
@@ -38,11 +38,10 @@ const size = computed(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-right: 0.32rem;
 }
 
 .avatar-box .avatar.border {
-  border: 1px solid #f69;
+  border: 1px solid var(--el-color-danger-dark-2);
 }
 
 .avatar-box .avatar {

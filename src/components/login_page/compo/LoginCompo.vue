@@ -7,7 +7,8 @@ import { useRouter } from 'vue-router'
 import { useJwtStore } from '@/stores/jwt_token'
 import utils from '@/utils/mixin.ts'
 import { ElMessage } from 'element-plus'
-import { View, Hide } from '@element-plus/icons-vue'
+import { Hide, View } from '@element-plus/icons-vue'
+import { KeysEnum, useInject } from '@/models/base/provide_model.ts'
 
 // 定义props
 const props = defineProps({
@@ -21,7 +22,7 @@ const props = defineProps({
 const emit = defineEmits(['login-success'])
 
 // 输入框禁止输入空格
-const pwd_sec = ref<string>()
+const pwd_sec = useInject(KeysEnum.__Bili_Pwd_Sec__)
 const vNoSpace = {
   updated(el: Ref<string>, binding: any, vnode: any, prevVnode: any) {
     if (el?.value?.includes(' ')) {
@@ -167,14 +168,8 @@ const check_login = () => {
     })
 }
 
-const get_pwd_sec = () => {
-  userApi.PwdSalt().then((resp) => {
-    pwd_sec.value = resp.data
-  })
-}
 
 onMounted(() => {
-  get_pwd_sec()
   check_login()
   // 强制隐藏全局加载遮罩
 })
