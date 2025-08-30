@@ -6,7 +6,7 @@
  * @FilePath: \Vue3FrontEndDemoExercise\src\router\index.ts
  * @Description: 路由配置文件，整合了所有路由信息和元数据
  */
-import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
+import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '@/views/HomeView.vue'
 import {
   Location as IconLocation,
@@ -20,60 +20,9 @@ import {
   CreditCard as IconCreditCard
 } from '@element-plus/icons-vue'
 import UserCenterView from '@/views/UserCenterView.vue'
-import type { Component } from 'vue'
 import emitter from '@/utils/mitt.ts'
 import LotteryHome from '@/views/LotteryHome.vue'
-/**
- * 自定义路由元数据类型定义
- */
-interface CustomRouteMeta {
-  /** 模块唯一标识符 */
-  id?: string
-  /** 路由标题 */
-  title?: string
-  /** 图标组件 */
-  icon?: Component
-  /** 路由描述信息 */
-  description?: string
-  /** 颜色（十六进制颜色代码） */
-  color?: string
-  /** 是否需要登录才能访问 */
-  requiresLogin?: boolean
-  /** 权限级别 */
-  permissionLevel?: number
-  /** 是否在菜单中显示 */
-  hideInMenu?: boolean
-  /** 是否在面包屑中显示 */
-  hideInBreadcrumb?: boolean
-  /** 是否缓存该路由页面 */
-  keepAlive?: boolean
-  /** 路由排序权重 */
-  order?: number
-  /** 是否在首页显示 */
-  showInHome?: boolean
-  /** 是否在头部显示 */
-  isHeaderShow?: boolean
-  /** 自定义标签 */
-  tags?: string[]
-}
-
-/**
- * 扩展Vue Router的RouteRecordRaw类型，添加自定义属性
- * 注意：这里使用类型交叉而不是继承，以保持与原始RouteRecordRaw的兼容性
- */
-type CustomRouteRecordRaw = RouteRecordRaw & {
-  /** 是否为外部链接 */
-  isExternal?: boolean
-  /** 外部链接地址 */
-  externalLink?: string
-  /** 路由转场动画名称 */
-  transition?: string
-  /** 路由加载优先级 */
-  priority?: number
-  /** 子路由（重写以支持CustomRouteRecordRaw类型） */
-  children?: CustomRouteRecordRaw[]
-}
-
+import { type CustomRouteRecordRaw, RouteName } from '@/models/router/index.ts'
 /**
  * 路由配置数组
  * 包含所有路由信息和元数据，如图标、描述、权限等
@@ -81,7 +30,7 @@ type CustomRouteRecordRaw = RouteRecordRaw & {
 const routes: CustomRouteRecordRaw[] = [
   {
     path: '/',
-    name: 'home',
+    name: RouteName.HOME, // 使用 enum
     component: HomeView,
     meta: {
       title: '首页',
@@ -91,10 +40,7 @@ const routes: CustomRouteRecordRaw[] = [
   },
   {
     path: '/app/Feedback',
-    name: '反馈区',
-    // route level code-splitting
-    // this generates a separate chunk (About.[hash].js) for this route
-    // which is lazy-loaded when the route is visited.
+    name: RouteName.FEEDBACK, // 使用 enum
     component: () => import('@/views/FeedbackView.vue'),
     meta: {
       id: 'feedback',
@@ -110,7 +56,7 @@ const routes: CustomRouteRecordRaw[] = [
   },
   {
     path: '/app/user-center/',
-    name: '用户中心',
+    name: RouteName.USER_CENTER, // 使用 enum
     component: UserCenterView,
     meta: {
       id: 'user',
@@ -126,7 +72,7 @@ const routes: CustomRouteRecordRaw[] = [
     children: [
       {
         path: 'account-global-config',
-        name: '用户全局设置',
+        name: RouteName.USER_GLOBAL_CONFIG, // 使用 enum
         component: () =>
           import(
             '@/components/opus-detail/RightPannel/PannelItems/SettingComponent/UserGlobalConfig.vue'
@@ -140,7 +86,7 @@ const routes: CustomRouteRecordRaw[] = [
       },
       {
         path: 'account-base-info-config',
-        name: '用户基本信息设置',
+        name: RouteName.USER_BASE_INFO_CONFIG, // 使用 enum
         component: () =>
           import(
             '@/components/opus-detail/RightPannel/PannelItems/SettingComponent/UserBaseInfoConfig.vue'
@@ -154,7 +100,7 @@ const routes: CustomRouteRecordRaw[] = [
       },
       {
         path: 'account_detail/account_name:account_name',
-        name: '账号详情',
+        name: RouteName.ACCOUNT_DETAIL, // 使用 enum
         component: () => import('@/components/opus-detail/RightPannel/PannelItem.vue'),
         meta: {
           title: '账号详情',
@@ -167,7 +113,7 @@ const routes: CustomRouteRecordRaw[] = [
   },
   {
     path: '/app/lot-data',
-    name: '抽奖数据',
+    name: RouteName.LOTTERY_DATA, // 使用 enum
     component: LotteryHome,
     meta: {
       id: 'lottery',
@@ -183,7 +129,7 @@ const routes: CustomRouteRecordRaw[] = [
     children: [
       {
         path: 'scrapy-stat',
-        name: '爬虫状态',
+        name: RouteName.SCRAPY_STAT, // 使用 enum
         component: () => import('@/components/lottery_data_statistic/bili_data/ScrapyStatus.vue'),
         meta: {
           title: '爬虫状态',
@@ -197,7 +143,7 @@ const routes: CustomRouteRecordRaw[] = [
       },
       {
         path: 'bili-atari-ranking',
-        name: 'B站中奖名人堂',
+        name: RouteName.BILI_ATARI_RANKING, // 使用 enum
         component: () => import('@/components/lottery_data_statistic/BiliAtariRanking.vue'),
         meta: {
           title: 'B站中奖名人堂',
@@ -211,7 +157,7 @@ const routes: CustomRouteRecordRaw[] = [
       },
       {
         path: 'bili-data',
-        name: 'B站抽奖数据',
+        name: RouteName.BILI_DATA, // 使用 enum
         meta: {
           title: 'B站抽奖数据',
           description: 'B站各类抽奖数据汇总',
@@ -221,7 +167,7 @@ const routes: CustomRouteRecordRaw[] = [
         children: [
           {
             path: 'official',
-            name: '官方抽奖',
+            name: RouteName.OFFICIAL_LOTTERY, // 使用 enum
             component: () => import('@/views/bili-data/OfficialLottery.vue'),
             meta: {
               title: '官方抽奖',
@@ -235,7 +181,7 @@ const routes: CustomRouteRecordRaw[] = [
           },
           {
             path: 'reserve',
-            name: '预约抽奖',
+            name: RouteName.RESERVE_LOTTERY, // 使用 enum
             component: () => import('@/views/bili-data/ReserveLottery.vue'),
             meta: {
               title: '预约抽奖',
@@ -249,7 +195,7 @@ const routes: CustomRouteRecordRaw[] = [
           },
           {
             path: 'charge',
-            name: '充电抽奖',
+            name: RouteName.CHARGE_LOTTERY, // 使用 enum
             component: () => import('@/views/bili-data/ChargeLottery.vue'),
             meta: {
               title: '充电抽奖',
@@ -267,7 +213,7 @@ const routes: CustomRouteRecordRaw[] = [
   },
   {
     path: '/samsclub/info',
-    name: 'samsclub',
+    name: RouteName.SAMSCLUB, // 使用 enum
     component: () => import('@/views/SamsClubView.vue'),
     meta: {
       id: 'shopping',
@@ -284,14 +230,9 @@ const routes: CustomRouteRecordRaw[] = [
   // 404页面路由配置
   {
     path: '/:pathMatch(.*)*',
-    name: 'NotFound',
+    name: RouteName.NOT_FOUND, // 使用 enum
     component: () => import('@/components/CommonCompo/Bili-Feedback-Compo/BiliNotFoundError.vue')
   }
-  // {
-  //   path: '/app/communication',
-  //   name: '交流板块',
-  //   component: () => import('@/views/CommunicationView.vue')
-  // }
 ]
 // 将自定义路由类型转换为Vue Router所需的RouteRecordRaw类型
 // 由于我们使用了类型交叉，TypeScript会自动兼容这两种类型
@@ -314,4 +255,3 @@ router.afterEach(() => {
 })
 export default router
 export { routes }
-export type { CustomRouteRecordRaw, CustomRouteMeta }

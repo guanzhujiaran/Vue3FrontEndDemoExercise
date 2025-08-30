@@ -10,9 +10,9 @@
       <div class="footer-section">
         <h3>快速链接</h3>
         <ul>
-          <li><a @click="router.push('/app/Feedback')">反馈建议</a></li>
-          <li><a @click="router.push('/app/user-center')">用户中心</a></li>
-          <li><a @click="router.push('/app/lot-data/bili-data/official')">抽奖数据</a></li>
+          <li><router-link to="/app/Feedback">反馈建议</router-link></li>
+          <li><router-link to="/app/user-center">用户中心</router-link></li>
+          <li><router-link to="/app/lot-data/bili-data/official">抽奖数据</router-link></li>
         </ul>
       </div>
       <div class="footer-section">
@@ -27,9 +27,7 @@
 </template>
 
 <script setup lang="ts">
-import { useRouter } from 'vue-router'
-
-const router = useRouter()
+// 不再需要导入 useRouter，因为我们使用了 RouterLink 组件
 </script>
 
 <style scoped>
@@ -69,14 +67,16 @@ const router = useRouter()
   margin-bottom: 8px;
 }
 
-.footer-section ul li a {
+.footer-section ul li a,
+.footer-section ul li router-link {
   color: #909399;
   text-decoration: none;
   cursor: pointer;
   transition: color 0.2s;
 }
 
-.footer-section ul li a:hover {
+.footer-section ul li a:hover,
+.footer-section ul li router-link:hover {
   color: #41b883;
 }
 

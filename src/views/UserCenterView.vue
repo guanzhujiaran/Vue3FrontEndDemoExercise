@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { isLogin } from '@/api/user/utils'
 import router from '@/router'
-import emitter from '@/utils/mitt'
 import { computed, nextTick, onMounted, provide, ref, watch } from 'vue'
 import accountApi from '@/api/account/account_api'
 import UserGlobalConfig from '@/components/opus-detail/RightPannel/PannelItems/SettingComponent/UserGlobalConfig.vue'
@@ -10,10 +9,10 @@ import type { PageShowModel } from '@/models/account/page/model.ts'
 import { accountLeftPanelReloadKey } from '@/models/inject/inject_type'
 import UserBaseInfoConfig from '@/components/opus-detail/RightPannel/PannelItems/SettingComponent/UserBaseInfoConfig.vue'
 import { ElMessage, ElIcon } from 'element-plus'
-import { Avatar, Setting, Tickets, Histogram, DataAnalysis } from '@element-plus/icons-vue'
+import { Avatar, Setting, Tickets } from '@element-plus/icons-vue'
 import { RouterLink } from 'vue-router'
 import { BiliErrorRouteToTxt } from '@/assets/text/BiliErrorTxt.ts'
-
+import { RouteName } from '@/models/router/index.ts'
 // 添加 inheritAttrs: false 以避免将属性传递给根节点
 defineOptions({
   inheritAttrs: false
@@ -175,7 +174,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="user-center-container">
+  <FlexContainer>
     <!-- 登录检查完成后再显示内容 -->
     <template v-if="loginCheckCompleted">
       <!-- 只有在已登录时才显示页面内容 -->
@@ -236,7 +235,10 @@ onMounted(async () => {
                     <RouterLink
                       v-for="account in AccountInfos"
                       :key="account.info.account_name"
-                      :to="`/app/user-center/account_detail/${account.info.account_name}`"
+                      :to="{
+                        name: RouteName.ACCOUNT_DETAIL,
+                        params: { account_name: account.info.account_name }
+                      }"
                       custom
                       v-slot="{ navigate }"
                     >
@@ -278,14 +280,8 @@ onMounted(async () => {
               </div>
 
               <!-- 404 页面 -->
-              <div v-else class="not-found">
-                <el-icon :size="48"><DataAnalysis /></el-icon>
-                <h3>页面未找到</h3>
-                <p>您访问的页面不存在</p>
-                <RouterLink to="/app/user-center/">
-                  <el-button type="primary">返回用户中心</el-button>
-                </RouterLink>
-              </div>
+              <BiliErrorRouteTo :props="BiliErrorRouteToTxt.not_found_account_detail" v-else>
+              </BiliErrorRouteTo>
             </div>
           </div>
         </div>
@@ -309,18 +305,10 @@ onMounted(async () => {
         </el-skeleton>
       </div>
     </template>
-  </div>
+  </FlexContainer>
 </template>
 
 <style scoped>
-.user-center-container {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  align-self: center;
-}
-
 .user-center-layout {
   display: flex;
   flex: 1;

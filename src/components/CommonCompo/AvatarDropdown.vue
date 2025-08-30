@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { User } from '@element-plus/icons-vue'
-import router from '@/router'
 import { type ThemeMode, useThemeStore } from '@/stores/theme.ts'
 import { BiliImg } from '@/assets/img/BiliImg.ts'
 import { KeysEnum, useInject } from '@/models/base/provide_model.ts'
 import type { UserNavModel } from '@/models/user/user_model.ts'
+import { useRouter } from 'vue-router'
+import { RouteName } from '@/models/router'
+const router = useRouter()
 const isLoggedIn = computed<boolean>(() => !!user_nav_model.value.uid)
 const user_nav_model = useInject(KeysEnum.__Bili_User__) as Ref<UserNavModel>
 const themeStore = useThemeStore()
@@ -34,11 +36,7 @@ const dropdownVisible = ref(false)
       class="header-avatar-wrapper"
       :class="{ 'header-avatar-wrapper--expanded': dropdownVisible }"
     >
-      <UserAvatarBox
-        v-if="isLoggedIn"
-        :src="user_face_src"
-        size="default"
-      />
+      <UserAvatarBox v-if="isLoggedIn" :src="user_face_src" size="default" />
       <div class="header-login-entry" v-else>
         <span> 登录 </span>
       </div>
@@ -48,7 +46,13 @@ const dropdownVisible = ref(false)
         <el-dropdown-item v-if="!isLoggedIn">
           <HeaderDropdownLoginTip></HeaderDropdownLoginTip>
         </el-dropdown-item>
-        <el-dropdown-item :icon="User" v-else @click="router.push('/user-center')">
+        <el-dropdown-item
+          :icon="User"
+          v-else
+          @click="
+            (headerAvatarDropdown?.handleClose(), router.push({ name: RouteName.USER_CENTER }))
+          "
+        >
           <HeaderAvatarDropdownItem>
             <template #text>个人中心</template>
           </HeaderAvatarDropdownItem>
