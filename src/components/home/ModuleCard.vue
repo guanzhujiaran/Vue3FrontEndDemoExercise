@@ -51,7 +51,7 @@
 <script setup lang="ts">
 import { ElCard, ElIcon, ElButton } from 'element-plus'
 import { ArrowRight as ElIconArrowRight } from '@element-plus/icons-vue'
-import type { CustomRouteMeta } from '@/router'
+import type { CustomRouteMeta } from '@/models/router'
 
 interface Props {
   module: CustomRouteMeta & {

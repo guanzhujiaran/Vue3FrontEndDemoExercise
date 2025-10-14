@@ -10,6 +10,8 @@ export enum KeysEnum {
   __Bili_Pwd_Sec__ = '__Bili_Pwd_Sec__'
 }
 
+type ProvideValTypes = Ref<GlobalVarsType | UserNavModel | string>
+
 export const ProvideKeys = {
   [KeysEnum.globalVars]: Symbol(KeysEnum.globalVars) as InjectionKey<Ref<GlobalVarsType>>,
   [KeysEnum.__Bili_User__]: Symbol(KeysEnum.__Bili_User__) as InjectionKey<Ref<UserNavModel>>,
@@ -20,7 +22,7 @@ const globalVarsDefaultRef = ref<GlobalVarsType>({
 })
 const __Bili_User__DefaultRef = ref<UserNavModel>({ uid: 0, user_name: '', role: '', face: '' })
 const __Bili_Pwd_Sec__DefaultRef = ref<string>('')
-const default_val_gen = (key: KeysEnum) => {
+const default_val_gen = (key: KeysEnum): ProvideValTypes => {
   switch (key) {
     case KeysEnum.globalVars:
       provide(ProvideKeys[KeysEnum.globalVars], globalVarsDefaultRef)
@@ -36,6 +38,6 @@ const default_val_gen = (key: KeysEnum) => {
   }
 }
 
-export const useInject = (key: KeysEnum) => {
+export const useInject = (key: KeysEnum): ProvideValTypes => {
   return inject(key, default_val_gen(key), true)
 }

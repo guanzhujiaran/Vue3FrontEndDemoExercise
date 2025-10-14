@@ -22,7 +22,7 @@ const props = defineProps({
 const emit = defineEmits(['login-success'])
 
 // 输入框禁止输入空格
-const pwd_sec = useInject(KeysEnum.__Bili_Pwd_Sec__)
+const pwd_sec = useInject(KeysEnum.__Bili_Pwd_Sec__) as Ref<string>
 const vNoSpace = {
   updated(el: Ref<string>, binding: any, vnode: any, prevVnode: any) {
     if (el?.value?.includes(' ')) {
@@ -168,9 +168,16 @@ const check_login = () => {
     })
 }
 
+const check_pwd_sec = () => {
+  !pwd_sec.value &&
+    userApi.PwdSalt().then((el) => {
+      !el.code && (pwd_sec.value = el.data)
+    })
+}
 
 onMounted(() => {
   check_login()
+  check_pwd_sec()
   // 强制隐藏全局加载遮罩
 })
 </script>

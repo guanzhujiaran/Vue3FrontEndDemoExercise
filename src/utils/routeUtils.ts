@@ -1,5 +1,5 @@
 import { type RouteRecordRaw } from 'vue-router'
-import { type CustomRouteMeta } from '@/router'
+import { type CustomRouteMeta } from '@/models/router/index.ts'
 
 /**
  * 处理路由路径，确保格式正确
@@ -31,17 +31,17 @@ export const processRoutesForHeader = (
   showAll = true
 ): any[] => {
   const processedRoutes = routes
-    .filter(r => {
+    .filter((r) => {
       // 过滤条件：
       // 1. 必须有 meta 且 isHeaderShow 为 true
       const meta = r.meta as CustomRouteMeta
       return meta?.isHeaderShow
     })
-    .map(r => {
+    .map((r) => {
       const meta = r.meta as CustomRouteMeta
       // 正确处理路径拼接，避免多余的斜杠
       const fullPath = processRoutePath(parentPath, r.path)
-      
+
       return {
         path: fullPath,
         title: meta?.title || '',
@@ -50,7 +50,7 @@ export const processRoutesForHeader = (
         children: r.children ? processRoutesForHeader(r.children, fullPath, showAll) : undefined
       }
     })
-    
+
   // 对路由按order排序
   return processedRoutes.sort((a, b) => (a.order || 0) - (b.order || 0))
 }
@@ -61,25 +61,20 @@ export const processRoutesForHeader = (
  * @param parentPath 父级路径
  * @returns 处理后的路由项数组
  */
-export const processRoutesForHome = (
-  routes: RouteRecordRaw[],
-  parentPath = ''
-): any[] => {
+export const processRoutesForHome = (routes: RouteRecordRaw[], parentPath = ''): any[] => {
   return routes
-    .filter(r => {
+    .filter((r) => {
       // 过滤条件：
       // 1. 必须有 meta 且 id 和 showInHome 为 true
       // 2. 不显示根路径
       const meta = r.meta as CustomRouteMeta
-      return meta?.id && 
-             meta?.showInHome && 
-             r.path !== '/'
+      return meta?.id && meta?.showInHome && r.path !== '/'
     })
-    .map(r => {
+    .map((r) => {
       const { path, meta } = r
       const typedMeta = meta as CustomRouteMeta
       const fullPath = processRoutePath(parentPath, path)
-      
+
       const module: CustomRouteMeta & {
         path?: string
         children?: (CustomRouteMeta & { path?: string; order?: number })[]
@@ -98,7 +93,7 @@ export const processRoutesForHome = (
       // 处理子路由
       if (r.children && r.children.length > 0) {
         const children: (CustomRouteMeta & { path?: string; order?: number })[] = []
-        
+
         const processChildren = (childRoutes: RouteRecordRaw[], currentParentPath: string) => {
           childRoutes.forEach((childRoute) => {
             if (childRoute.meta && (childRoute.meta as CustomRouteMeta).showInHome) {
@@ -116,7 +111,10 @@ export const processRoutesForHome = (
 
             // 处理更深层次的子路由
             if (childRoute.children && childRoute.children.length > 0) {
-              processChildren(childRoute.children, processRoutePath(currentParentPath, childRoute.path))
+              processChildren(
+                childRoute.children,
+                processRoutePath(currentParentPath, childRoute.path)
+              )
             }
           })
         }

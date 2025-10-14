@@ -28,7 +28,7 @@
 import { computed } from 'vue'
 import { ElRadioGroup, ElRadioButton } from 'element-plus'
 import ModuleCard from './ModuleCard.vue'
-import type { CustomRouteMeta } from '@/router'
+import type { CustomRouteMeta } from '@/models/router'
 
 interface Props {
   activeTab: string

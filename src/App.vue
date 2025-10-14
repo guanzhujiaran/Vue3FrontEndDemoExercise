@@ -137,6 +137,8 @@ onUnmounted(() => {
 </template>
 
 <style>
+@import "tailwindcss";
+
 #app {
   margin: 0 auto;
   max-width: 2560px;
