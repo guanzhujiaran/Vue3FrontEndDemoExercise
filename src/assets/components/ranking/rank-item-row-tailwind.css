@@ -1,0 +1,66 @@
+@import '@/assets/tailwind.css';
+
+.rank-item-row {
+  height: -webkit-fill-available;
+  padding: 0 calc(var(--component-size) * 0.1167) 0 calc(var(--component-size) * 0.2083);
+  margin-bottom: calc(var(--component-size) * 0.1333);
+  background: rgba(75, 77, 122, 0.2);
+  border-radius: calc(var(--component-size) * 0.1667);
+  width: 100%;
+  @apply flex items-center box-border whitespace-nowrap;
+}
+
+.rank-item-row .rank-num {
+  width: calc(var(--component-size) * 1.875);
+  margin-right: calc(var(--component-size) * 1.25);
+  @apply flex items-center justify-center;
+}
+
+.hall-avatar {
+  @apply cursor-pointer;
+  width: calc(var(--component-size) * 0.60625);
+  height: calc(var(--component-size) * 0.60625);
+  margin-right: calc(var(--component-size) * 0.0833);
+}
+
+.hall-avatar :deep(.avatar.border) {
+  border: calc(var(--component-size) * 0.0333) solid #42485e;
+}
+
+.hall-avatar :deep(.avatar) {
+  @apply w-full h-full;
+}
+
+.hall-avatar :deep(.url) {
+  @apply w-full h-full;
+}
+
+.rank-item-row .rank-num .num {
+  font-weight: 500;
+  color: #9499a0;
+}
+
+.rank-item-row .name-box {
+  min-width: calc(var(--component-size) * 0.625);
+}
+
+.rank-item-row .name-box .name {
+  width: 100%;
+  color: #fff;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding-left: calc(var(--component-size) * 0.3125);
+}
+
+.rank-item-row .score {
+  color: #9499a0;
+  font-weight: 500;
+  @apply flex items-center justify-center ml-auto;
+}
+
+.rank-item-row .score span {
+  color: #fff;
+  font-size: larger;
+}

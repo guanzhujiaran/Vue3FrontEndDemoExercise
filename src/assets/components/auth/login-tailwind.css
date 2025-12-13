@@ -1,0 +1,156 @@
+@reference '@/assets/tailwind.css';
+
+/* 登录容器基础样式 */
+.login_wp {
+    @apply bg-transparent px-[calc(var(--component-size)*1.25)] md:px-[calc(var(--component-size)*1.875)] sm:px-[calc(var(--component-size)*0.9375)] p-[calc(var(--component-size)*0.3125)];
+}
+
+/* 主容器样式 */
+.login__main {
+    @apply flex items-center justify-center w-full md:items-center;
+    min-height: auto;
+}
+
+/* 右侧内容区域样式 */
+.main__right {
+    @apply pt-3 pb-15 w-full max-w-[calc(var(--component-size)*26.25)] mx-auto px-[calc(var(--component-size)*0.1)_calc(var(--component-size)*0.1)] rounded-[var(--component-size)] bg-[var(--el-bg-color)] border border-[var(--el-border-color-light)] backdrop-blur-[calc(var(--component-size)*0.25)] transition-all duration-300 sm:max-w-[calc(var(--component-size)*28.75)] sm:px-[calc(var(--component-size)*0)_calc(var(--component-size)*0.0375)] md:max-w-[calc(var(--component-size)*31.25)] md:px-[calc(var(--component-size)*0.25)_calc(var(--component-size)*0.3)] lg:max-w-[calc(var(--component-size)*35)] lg:px-[calc(var(--component-size)*0.5)_calc(var(--component-size)*0.8)];
+    box-shadow: 0 calc(var(--component-size) * 0.375) calc(var(--component-size) * 1.5) rgba(0, 0, 0, 0.12);
+}
+
+.dark .main__right {
+    box-shadow: 0 calc(var(--component-size) * 0.5) calc(var(--component-size) * 2) rgba(0, 0, 0, 0.3);
+}
+
+.main__right:hover {
+    @apply shadow-[0_calc(var(--component-size)*0.75)_calc(var(--component-size)*2.5)_rgba(0,0,0,0.15)];
+}
+
+/* 标签页样式 */
+.tabs_wp {
+    @apply flex justify-center mb-[calc(var(--component-size)*1.5)];
+}
+
+.tabs_wp div:nth-child(odd) {
+    @apply text-[var(--component-size)] p-[calc(var(--component-size)*0.5)_var(--component-size)] min-w-[calc(var(--component-size)*6.25)] text-center rounded-[calc(var(--component-size)*0.5)] transition-all duration-200 sm:text-[calc(var(--component-size)*0.9375)] sm:p-[calc(var(--component-size)*0.4375)_calc(var(--component-size)*0.875)] md:text-[var(--component-size)] md:p-[calc(var(--component-size)*0.5)_var(--component-size)] lg:text-[calc(var(--component-size)*1.125)] lg:p-[calc(var(--component-size)*0.5625)_calc(var(--component-size)*1.125)];
+}
+
+.tabs_wp div:nth-child(odd):active {
+    @apply scale-95;
+}
+
+/* 表单样式 */
+.main__right .tab__form {
+    @apply h-auto min-h-[calc(var(--component-size)*6.25)] rounded-[calc(var(--component-size)*0.75)] p-[calc(var(--component-size)*0.1)] sm:p-[calc(var(--component-size)*0.125)] md:p-[calc(var(--component-size)*0.15)] lg:p-[calc(var(--component-size)*0.2)];
+}
+
+.main__right .tab__form .form__item {
+    @apply inline-block w-full p-[calc(var(--component-size)*0.75)_calc(var(--component-size)*0.9375)] h-auto min-h-[calc(var(--component-size)*3.25)] mb-[var(--component-size)] sm:mb-[calc(var(--component-size)*1.125)] md:mb-[var(--component-size)*1.25] lg:mb-[calc(var(--component-size)*1.5)];
+}
+
+.main__right .tab__form .form__item input {
+    @apply text-[var(--component-size)] min-h-[var(--component-size)] p-[calc(var(--component-size)*0.75)_calc(var(--component-size)*0.9375)] sm:h-[calc(var(--component-size)*1.125)] sm:text-[calc(var(--component-size)*0.9375)] md:h-[calc(var(--component-size)*1.25)] lg:h-[calc(var(--component-size)*1.5)];
+}
+
+.form__separator-line {
+    @apply h-px bg-[var(--el-border-color-light)] my-[calc(var(--component-spacing)*0.1)];
+}
+
+.clickable {
+    @apply text-[var(--el-color-primary)] cursor-pointer;
+}
+
+.clickable:hover {
+    @apply underline;
+}
+
+/* 按钮容器样式 */
+.btn_wp {
+    @apply flex w-full mt-[calc(var(--component-spacing)*2)] justify-between items-center gap-[calc(var(--component-size)*0.5)] sm:justify-center sm:flex-wrap sm:gap-[calc(var(--component-size)*0.75)] md:gap-[calc(var(--component-spacing)*1.2)] lg:gap-[calc(var(--component-size)*1)];
+}
+
+.btn_primary,
+.btn_other {
+    @apply text-[var(--component-size)] rounded-[calc(var(--component-size)*0.75)] px-[calc(var(--component-size)*1.5)] transition-all duration-300 font-bold sm:w-auto sm:min-w-[calc(var(--component-size)*10)] sm:text-[calc(var(--component-size)*0.9375)] md:min-w-[calc(var(--component-size)*12)] lg:text-[calc(var(--component-size)*1.125)];
+}
+
+.btn_primary {
+    @apply bg-gradient-to-r from-[var(--el-color-primary)] to-[var(--el-color-error)] text-white shadow-xl;
+}
+
+.btn_other {
+    @apply bg-gradient-to-r from-[var(--el-fill-color-lighter)] to-[var(--el-fill-color-light)] text-[var(--el-text-color-primary)] border border-[var(--el-border-color)];
+}
+
+.btn_primary:active,
+.btn_other:active {
+    @apply scale-95;
+}
+
+.btn_primary:hover {
+    @apply translate-y-[-0.0625rem] shadow-[0_calc(var(--component-size)*0.375)_calc(var(--component-size)*1.25)_rgba(59,130,246,0.5)] brightness-110;
+}
+
+.btn_other:hover {
+    @apply translate-y-[-0.0625rem] shadow-[0_calc(var(--component-size)*0.375)_calc(var(--component-size)*1.25)_rgba(0,0,0,0.1)] bg-[var(--el-fill-color-extra-light)];
+}
+
+.btn_primary:disabled,
+.btn_other:disabled {
+    @apply opacity-50 cursor-not-allowed translate-y-0 shadow-none;
+}
+
+.btn_primary:disabled:hover,
+.btn_other:disabled:hover {
+    @apply translate-y-0 shadow-none brightness-100;
+}
+
+/* 忘记密码提示样式 */
+.forget-tip {
+    @apply fixed top-1/2 left-1/2 w-[90vw] max-w-[calc(var(--component-size)*20)] z-[1001] bg-[var(--el-bg-color)] border border-[var(--el-border-color-light)];
+    transform: translate(-50%, -50%) !important;
+}
+
+.forget-tip-content {
+    @apply p-[calc(var(--component-spacing)*3.2)];
+}
+
+.forget-tip-line {
+    @apply py-[calc(var(--component-spacing)*1.6)] cursor-pointer border-b border-[var(--el-border-color-light)];
+}
+
+.forget-tip-line:last-child {
+    @apply border-b-0;
+}
+
+.forget-tip-line:hover {
+    @apply bg-[var(--el-fill-color-light)];
+}
+
+.forget-tip-line .title {
+    @apply text-[calc(var(--component-size)*1.35)] text-[var(--el-text-color-primary)] my-0 mx-0 mb-[calc(var(--component-spacing)*0.8)] font-medium;
+}
+
+.forget-tip-line .desc {
+    @apply text-[calc(var(--component-size)*0.8)] text-[var(--el-text-color-regular)] m-0 leading-[var(--component-line-height)];
+}
+
+/* Element UI 样式覆盖 */
+.login-tabs {
+    @apply w-full;
+}
+
+/* 覆盖 Element Plus 按钮默认间距 */
+.btn_wp .el-button + .el-button {
+    @apply ml-0;
+}
+
+/* 高分辨率屏幕优化 */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+    .main__right {
+        border-width: 0.5px;
+    }
+
+    .main__right .tab__form {
+        border-width: 0.5px;
+    }
+}

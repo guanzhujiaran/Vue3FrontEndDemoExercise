@@ -1,0 +1,75 @@
+@reference '@/assets/tailwind.css';
+.bili-data-table-toolbar {
+  @apply mb-4 flex justify-center gap-4 rounded-lg border border-[var(--el-border-color-lighter)] shadow-sm;
+  padding: var(--component-spacing);
+}
+
+.bili-data-table-toolbar .refresh-btn,
+.bili-data-table-toolbar .setting-btn {
+  @apply w-auto rounded-[20px] transition-all duration-300;
+  padding: calc(var(--component-spacing) * 0.5) var(--component-spacing);
+}
+
+.bili-data-table-toolbar .refresh-btn {
+  border-color: var(--el-color-primary);
+}
+
+.bili-data-table-toolbar .refresh-btn:hover {
+  @apply translate-y-[-2px];
+  box-shadow: 0 4px 8px rgba(0, 161, 214, 0.2);
+}
+
+.bili-data-table-toolbar .setting-btn {
+  border-color: var(--el-border-color);
+  color: var(--el-text-color-regular);
+}
+
+.bili-data-table-toolbar .setting-btn:hover {
+  border-color: var(--el-border-color-darker);
+  @apply translate-y-[-2px] shadow-sm;
+}
+
+:deep(.el-dialog__header) {
+  border-bottom: 1px solid #eaeaea;
+  padding-bottom: 15px;
+}
+
+:deep(.el-dialog__body) {
+  padding-top: 20px;
+}
+
+:deep(.el-slider__runway) {
+  margin: 16px 0;
+}
+
+:deep(.el-slider__button) {
+  border-color: #00a1d6;
+}
+
+:deep(.el-slider__bar) {
+  background-color: #00a1d6;
+}
+
+:deep(.el-form-item) {
+  margin-bottom: 20px;
+}
+
+:deep(.el-form-item__label) {
+  font-weight: 500;
+}
+
+.setting-dialog {
+  min-width: 500px;
+}
+
+.dialog-content {
+  @apply flex flex-col justify-center p-6;
+}
+
+.button-group {
+  @apply flex justify-center gap-4 mt-8;
+}
+
+.button-group :deep(.el-form-item__content) {
+  @apply justify-center;
+}

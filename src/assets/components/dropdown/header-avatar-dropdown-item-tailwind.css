@@ -1,0 +1,7 @@
+@reference '@/assets/tailwind.css';
+.header-dropdown-item {
+  display: inline-flex;
+  margin-left: calc(var(--component-spacing) * 2);
+  width: -webkit-fill-available;
+  align-items: center;
+}

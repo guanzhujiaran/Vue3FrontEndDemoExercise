@@ -1,0 +1,102 @@
+@reference '@/assets/tailwind.css';
+
+.status-wrapper {
+  @apply w-full;
+}
+
+.status-panel {
+  @apply flex bg-[var(--el-bg-color-page)] justify-center items-center pb-12;
+}
+
+.marquee-panel {
+  max-width: 900px;
+  width: 100%;
+  overflow: visible;
+}
+
+:deep(.el-carousel__item) {
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.marquee-card {
+  @apply h-full rounded-xl shadow-lg flex flex-col overflow-hidden bg-gradient-to-br from-[var(--el-bg-color)] to-[var(--el-fill-color-extra-light)] dark:from-[var(--el-bg-color-overlay)] dark:to-[var(--el-bg-color-page)] border border-[var(--el-border-color-light)] dark:border-[var(--el-border-color)];
+}
+
+.card-header {
+  @apply flex justify-between items-center p-5 md:p-6 bg-[var(--el-bg-color)]/80 dark:bg-[var(--el-bg-color-overlay)]/80 backdrop-blur-sm border-b border-[var(--el-border-color-light)] dark:border-[var(--el-border-color)];
+}
+
+.title {
+  @apply text-lg md:text-xl font-semibold text-[var(--el-text-color-primary)];
+}
+
+.status-indicator {
+  @apply px-3 py-1 rounded-full text-sm font-bold;
+}
+
+.status-indicator.running {
+  @apply bg-[var(--el-color-success-light-9)] text-[var(--el-color-success-dark-2)] dark:bg-[var(--el-color-success-light-9)]/30 dark:text-[var(--el-color-success-light-3)];
+}
+
+.status-indicator.stopped {
+  @apply bg-[var(--el-color-danger-light-9)] text-[var(--el-color-danger-dark-2)] dark:bg-[var(--el-color-danger-light-9)]/30 dark:text-[var(--el-color-danger-light-3)];
+}
+
+.refresh-sec {
+  @apply ml-auto flex items-center gap-2;
+}
+
+.card-body {
+  @apply flex-1 p-5 md:p-6 grid grid-cols-1 sm:grid-cols-2 gap-3 overflow-y-auto;
+}
+
+.data-row {
+  @apply p-4 rounded-lg bg-[var(--el-fill-color-lighter)] dark:bg-[var(--el-bg-color-overlay)]/50;
+}
+
+.data-row.highlight {
+  @apply border-l-4 border-l-[var(--el-color-success)] bg-[var(--el-color-success-light-9)]/50 dark:bg-[var(--el-color-success-light-9)]/10 dark:border-l-[var(--el-color-success)];
+}
+
+.row-label {
+  @apply flex justify-between items-center font-medium text-[var(--el-text-color-regular)] mb-2;
+}
+
+.row-value {
+  @apply font-mono text-sm text-[var(--el-text-color-primary)] break-all;
+}
+
+.params-link {
+  @apply text-[var(--el-color-primary)] dark:text-[var(--el-color-primary-light-3)] cursor-pointer underline;
+}
+
+.params-detail {
+  @apply max-h-[300px] overflow-y-auto font-mono text-xs;
+}
+
+.card-footer {
+  @apply p-4 md:p-5 bg-[var(--el-fill-color-light)] dark:bg-[var(--el-bg-color-overlay)]/50 border-t border-[var(--el-border-color-light)] dark:border-[var(--el-border-color)] flex items-center gap-2 text-[var(--el-text-color-regular)];
+}
+
+@media (max-width: 768px) {
+  .status-panel {
+    @apply p-2;
+  }
+
+  .card-header {
+    @apply p-4;
+  }
+
+  .title {
+    @apply text-base;
+  }
+
+  .card-body {
+    @apply grid-cols-1 gap-2 p-4;
+  }
+  
+  .data-row {
+    @apply p-3;
+  }
+}

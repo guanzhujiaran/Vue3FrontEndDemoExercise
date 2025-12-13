@@ -1,0 +1,16 @@
+@reference '@/assets/tailwind.css';
+.avatar-box {
+    @apply relative flex items-center rounded-full justify-center;
+}
+
+.avatar-box .avatar.border {
+    @apply border border-solid border-[var(--el-color-danger-dark-2)];
+}
+
+.avatar-box .avatar {
+    @apply flex items-center justify-center rounded-full box-border  hover:cursor-pointer;
+}
+
+.avatar-box .url {
+    @apply rounded-full;
+}

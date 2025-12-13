@@ -1,0 +1,16 @@
+@reference '@/assets/tailwind.css';
+.bili-error {
+  @apply flex h-full w-full flex-1 items-center justify-center;
+}
+
+.pic {
+  @apply mb-4;
+}
+
+.txt {
+  @apply flex h-8 items-center justify-center p-4 font-normal text-[var(--el-text-color-placeholder)];
+}
+
+.txt span {
+  @apply cursor-pointer text-[var(--el-color-error)];
+}

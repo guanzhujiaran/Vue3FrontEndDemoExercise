@@ -1,0 +1,18 @@
+@reference '@/assets/tailwind.css';
+.global-loading-mask {
+  @apply fixed inset-0 z-[9999] flex items-center justify-center bg-black/50;
+}
+
+.loading-box {
+  @apply rounded-lg bg-[var(--el-bg-color)] p-5 text-base text-[var(--el-text-color-regular)] shadow-sm;
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  @apply transition-opacity duration-300 ease-in-out;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  @apply opacity-0;
+}

@@ -1,0 +1,43 @@
+/* SVG图标默认大小样式 */
+/* 使用Tailwind的w-和h-类设置默认大小，基于项目中的--component-size变量 */
+
+svg:not(:root) {
+  @apply inline-block;
+  width: var(--component-size);
+  height: var(--component-size);
+}
+
+.svg-icon {
+  @apply inline-block;
+}
+
+/* 针对不同尺寸主题的适配 */
+.size-xs svg:not(:root),
+.size-xs .svg-icon {
+  width: var(--component-size);
+  height: var(--component-size);
+}
+
+.size-sm svg:not(:root),
+.size-sm .svg-icon {
+  width: var(--component-size);
+  height: var(--component-size);
+}
+
+.size-base svg:not(:root),
+.size-base .svg-icon {
+  width: var(--component-size);
+  height: var(--component-size);
+}
+
+.size-lg svg:not(:root),
+.size-lg .svg-icon {
+  width: var(--component-size);
+  height: var(--component-size);
+}
+
+.size-xl svg:not(:root),
+.size-xl .svg-icon {
+  width: var(--component-size);
+  height: var(--component-size);
+}

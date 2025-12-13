@@ -1,0 +1,17 @@
+@import '@/assets/tailwind.css';
+
+.card {
+  display: block;
+}
+
+.loading {
+  /* 样式保持不变 */
+}
+
+.link-progress-tv {
+  /* 样式保持不变 */
+}
+
+.text {
+  /* 样式保持不变 */
+}

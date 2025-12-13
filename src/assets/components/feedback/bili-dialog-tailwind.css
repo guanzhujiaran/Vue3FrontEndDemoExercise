@@ -1,0 +1,40 @@
+@reference '@/assets/tailwind.css';
+.bili-dialog :deep(.el-dialog__header) {
+  border-bottom: 1px solid var(--el-border-color-light);
+}
+
+.bili-dialog .dialog-btn-warp {
+  text-align: center;
+}
+
+.bili-dialog .dialog-btn {
+  width: calc(var(--component-size) * 7.5);
+  height: calc(var(--component-size) * 2);
+  background: var(--el-color-primary);
+  border-radius: calc(var(--component-size) * 0.25);
+  color: #fff;
+  line-height: calc(var(--component-size) * 2);
+  text-align: center;
+  font-size: calc(var(--component-size) * 0.875);
+  margin: calc(var(--component-size) * 2) auto 0;
+  cursor: pointer;
+}
+
+.bili-dialog .dialog-success-explain {
+  margin-top: calc(var(--component-size) * 2);
+  text-align: center;
+  font-size: calc(var(--component-size) * 0.875);
+  color: var(--el-text-color-primary);
+}
+
+.bili-dialog .dialog-success-img {
+  width: calc(var(--component-size) * 7.375);
+  height: calc(var(--component-size) * 7.75);
+  margin: 0 auto;
+  background: url(//s1.hdslb.com/bfs/static/jinkela/account/assets/success.png) no-repeat;
+  background-size: 100% 100%;
+}
+
+.bili-dialog .dialog-content {
+  padding: calc(var(--component-spacing) * 2) var(--component-spacing);
+}

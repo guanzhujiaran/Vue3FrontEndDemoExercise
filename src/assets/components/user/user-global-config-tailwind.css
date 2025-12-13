@@ -1,0 +1,37 @@
+@import '@/assets/tailwind.css';
+
+.user-global-config {
+  @apply p-6 rounded-lg bg-[var(--el-bg-color)] shadow-sm;
+}
+
+.user-global-config .config-header {
+  @apply mb-6;
+}
+
+.user-global-config .config-header h2 {
+  @apply text-2xl font-bold mb-4 text-[var(--el-text-color-primary)];
+}
+
+.user-global-config .local-storage-notice {
+  @apply mb-6;
+}
+
+.user-global-config .config-section {
+  @apply mb-8;
+}
+
+.user-global-config .config-section h3 {
+  @apply text-lg font-semibold mb-4 text-[var(--el-text-color-regular)] border-b pb-2;
+}
+
+.user-global-config .config-item {
+  @apply flex items-center mb-4;
+}
+
+.user-global-config .config-item label {
+  @apply w-24 text-[var(--el-text-color-regular)] mr-4;
+}
+
+.user-global-config .config-actions {
+  @apply flex justify-start space-x-4 pt-4 border-t;
+}

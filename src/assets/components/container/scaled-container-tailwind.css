@@ -1,0 +1,23 @@
+@reference '@/assets/tailwind.css';
+.scaling-outer-wrapper {
+  /*
+   * This wrapper helps center the scaled element.
+   * It takes up the necessary width but doesn't scale itself.
+   * It needs to allow overflow so the scaled content isn't clipped.
+   */
+  width: -webkit-fill-available;
+  overflow-x: hidden; /* Be careful with this - might clip scaled content if origin isn't perfect */
+  display: flex; /* Use flex to help center the inner container */
+  justify-content: center; /* Center the flex item horizontally */
+  background: transparent;
+  padding: calc(var(--component-spacing) * 0.75); /* 减小内边距 */
+}
+
+.proportional-scaling-container {
+  box-sizing: border-box;
+  background-color: var(--el-bg-color);
+  flex-shrink: 0;
+  border-radius: calc(var(--component-size) * 0.1875); /* 3px */
+  border: 1px solid var(--el-border-color-lighter);
+  padding: calc(var(--component-spacing) * 0.75); /* 减小内边距 */
+}

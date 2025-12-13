@@ -1,0 +1,27 @@
+@reference '@/assets/tailwind.css';
+.header-bar-view {
+    @apply flex w-full items-center;
+}
+
+.header-container {
+    @apply inline-flex justify-end w-full;
+}
+
+.header-menu {
+    @apply flex;
+}
+
+.avatar-container {
+    @apply flex items-center pr-5 pl-5 justify-end ml-auto w-full;
+}
+
+@media (max-width: 768px) {
+    .header-menu :deep(.el-sub-menu__title),
+    .header-menu :deep(.el-menu-item) {
+        @apply text-sm;
+    }
+
+    .avatar-container {
+        @apply p-0;
+    }
+}

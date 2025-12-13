@@ -1,0 +1,79 @@
+@reference '@/assets/tailwind.css';
+.radio-list-container {
+  @apply flex flex-wrap gap-2.5;
+}
+
+.type-selector .radio-icon {
+  @apply absolute top-0 left-0 w-[var(--component-size)] h-[var(--component-size)];
+}
+
+.css-1xneiug {
+  fill: currentcolor;
+  @apply w-[var(--component-size)] h-[var(--component-size)];
+}
+
+svg:not(:root) {
+  overflow-clip-margin: content-box;
+  overflow: hidden;
+}
+
+.config .radio-selector {
+  @apply block w-auto;
+  line-height: var(--component-line-height);
+}
+
+.type-selector {
+  @apply w-1/2 cursor-pointer relative;
+  margin-top: var(--component-spacing);
+  padding-left: calc(var(--component-size) * 1.2);
+}
+
+.radio-selector {
+  @apply block w-auto relative;
+  line-height: var(--component-line-height);
+  color: var(--el-text-color-primary);
+}
+
+.radio {
+  @apply absolute opacity-0 z-10 w-[var(--component-size)] h-[var(--component-size)] cursor-pointer;
+}
+
+.radio-label {
+  @apply ml-2 align-middle;
+}
+
+:not(svg) {
+  transform-origin: 0px 0px;
+}
+
+.css-1xneiug .content {
+  fill: var(--el-fill-color-light);
+  fill-opacity: 0.3;
+}
+
+.css-1xneiug .border {
+  fill: var(--el-border-color-light);
+}
+
+.css-1xneiug .dot {
+  fill: none;
+}
+
+.css-o1815x {
+  fill: currentcolor;
+  @apply w-[var(--component-size)] h-[var(--component-size)];
+}
+
+.css-o1815x .content {
+  fill: none;
+}
+
+.css-o1815x .border,
+.css-o1815x .dot {
+  fill: var(--el-color-primary);
+}
+
+.css-o1815x .border,
+.css-o1815x .dot {
+  fill: var(--el-color-primary);
+}

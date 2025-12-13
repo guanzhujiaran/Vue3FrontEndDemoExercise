@@ -1,0 +1,97 @@
+@import '@/assets/tailwind.css';
+
+.bili-base-ranking .top-rank-panel :deep(.number),
+.bili-base-ranking .rank-panel :deep(.score) {
+    @apply cursor-pointer;
+    font-size: calc(var(--component-size) * 1.125); /* 增加分数文字大小 */
+}
+
+/* 增加排名项的文字大小和间距 */
+.bili-base-ranking .top-rank-panel :deep(.name),
+.bili-base-ranking .rank-panel :deep(.name) {
+    @apply text-base my-2 leading-normal;
+    font-size: var(--component-size);
+    color: var(--el-text-color-primary);
+}
+
+.bili-base-ranking .top-rank-panel :deep(.info),
+.bili-base-ranking .rank-panel :deep(.info) {
+    @apply mt-1.5 leading-normal;
+    font-size: calc(var(--component-size) * 0.875);
+    color: var(--el-text-color-secondary);
+}
+
+.bili-base-ranking .rank-header-panel {
+    @apply flex items-center justify-center flex-wrap box-border rounded-b-md mb-3.5;
+    min-height: calc(var(--component-size) * 0.9375); /* 增加最小高度 */
+    padding: calc(var(--component-size) * 0.3125) calc(var(--component-size) * 0.625); /* 增加内边距 */
+    gap: calc(var(--component-size) * 0.75); /* 添加间距 */
+    background-color: hsla(var(--el-color-primary), 0.4); /* 使用 Element Plus 主色 */
+}
+
+.bili-base-ranking .top-rank-panel {
+    @apply w-full px-1 mb-3.5 flex justify-around box-border gap-3.5;
+}
+
+.bili-base-ranking .rank-main :deep(.with-loading-more) {
+    @apply h-full overflow-x-hidden static;
+}
+
+.bili-base-ranking .rank-main {
+    @apply relative pb-2.5 text-base leading-relaxed;
+    padding-bottom: calc(var(--component-size) * 0.5667);
+    background: linear-gradient(180deg, var(--el-bg-color-page), var(--el-fill-color-dark) 96.22%),
+    linear-gradient(0, var(--el-border-color), var(--el-border-color));
+    font-size: var(--component-size); /* 增加基础字体大小 */
+}
+
+.bili-base-ranking .rank-empty :deep(.pic) {
+    @apply mb-0.5;
+    margin-bottom: calc(var(--component-size) * 0.1);
+}
+
+@keyframes slideInFromRight {
+    0% {
+        right: calc(var(--component-size) * -6.25);
+        transform: translateX(100%);
+    }
+    100% {
+        right: 0;
+        transform: translateX(0%);
+    }
+}
+
+.bili-base-ranking .rank-empty :deep(.txt) {
+    @apply h-1.5 flex items-center justify-center font-normal;
+    color: var(--el-text-color-placeholder);
+}
+
+.bili-base-ranking .rank-header-info {
+    @apply py-1.5 px-2.5 opacity-70 mb-1.5 rounded-t-3xl relative shadow-md;
+}
+
+.bili-base-ranking .header-title {
+    @apply text-xl font-bold mb-3 text-center text-shadow-md tracking-wider;
+    font-size: calc(var(--component-size) * 1.5);
+    color: var(--el-text-color-primary);
+    text-shadow: 0 calc(var(--component-size) * 0.125) calc(var(--component-size) * 0.25) var(--el-box-shadow-light);
+    letter-spacing: calc(var(--component-size) * 0.125);
+}
+
+.bili-base-ranking .sync-time {
+    @apply text-center mx-auto rounded-md leading-normal text-sm py-1.5 px-3 opacity-60 inline-block font-normal tracking-wide shadow-sm border;
+}
+
+.bili-base-ranking .sync-label {
+    @apply font-medium;
+}
+
+/* 添加排名面板样式 */
+.bili-base-ranking .rank-panel {
+    @apply w-full p-1.5 box-border text-base;
+    font-size: var(--component-size);
+}
+
+.bili-base-ranking .rank-panel > * {
+    margin-bottom: calc(var(--component-size) * 0.75); /* 增加每个排名项之间的间距 */
+}

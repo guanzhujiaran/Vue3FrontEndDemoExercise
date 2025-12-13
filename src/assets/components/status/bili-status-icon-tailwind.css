@@ -1,0 +1,18 @@
+@reference '@/assets/tailwind.css';
+.result {
+  @apply flex flex-col items-center justify-center text-center box-border p-4;
+}
+
+.result__icon {
+  @apply flex;
+}
+
+.result__icon svg {
+  @apply w-9 h-9;
+}
+
+@each $type in (success, primary, warning, error, info) {
+  .icon-$(type) {
+    @apply text-$(type);
+  }
+}

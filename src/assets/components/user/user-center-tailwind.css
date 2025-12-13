@@ -1,0 +1,136 @@
+@reference "@/assets/tailwind.css"
+
+.user-center-layout {
+    @apply min-h-[80vh]
+}
+
+.sidebar {
+    @apply transition-all duration-300 ease-in-out;
+    width: 200px;
+    height: 100%;
+}
+
+.sidebar-collapsed {
+    width: 64px;
+}
+
+.sidebar-content {
+    @apply h-full;
+}
+
+.sidebar-menu {
+    @apply h-full border-r border-[var(--el-border-color-light)];
+}
+
+.sidebar-toggle-wrapper {
+    @apply flex p-2;
+}
+
+.user-info {
+    @apply mb-5 flex items-center border-b border-[var(--el-border-color)] px-5 pb-5;
+}
+
+.sidebar-collapsed .user-info {
+    @apply justify-center px-2;
+}
+
+.user-details {
+    @apply ml-3;
+}
+
+.sidebar-collapsed .user-details {
+    @apply hidden;
+}
+
+.content-header {
+    @apply p-0;
+}
+
+.content-header h2 {
+    @apply text-2xl font-bold mb-4 text-[var(--el-text-color-primary)] mt-3;
+}
+
+.user-name {
+    @apply text-base font-semibold text-[var(--el-text-color-primary)];
+}
+
+.user-role {
+    @apply mt-1 text-xs text-[var(--el-text-color-secondary)];
+}
+
+.nav-menu {
+    @apply flex-1 px-3;
+}
+
+.nav-item {
+    @apply mb-2 flex cursor-pointer items-center rounded-lg px-4 py-3 text-[var(--el-text-color-secondary)] transition-all duration-300 hover:bg-[var(--el-fill-color-light)] hover:text-[var(--el-text-color-primary)];
+}
+
+.nav-item.active {
+    @apply bg-[var(--el-color-primary-light-9)] font-medium text-[var(--el-color-primary-dark-2)];
+}
+
+.nav-text {
+    @apply ml-3 flex-1;
+}
+
+.nav-count {
+    @apply rounded-lg bg-[var(--el-color-danger)] px-2 py-1 text-xs text-white;
+}
+
+.content-header h1 {
+    @apply m-0 text-lg font-medium text-[var(--el-text-color-primary)];
+}
+
+.content-body {
+    @apply flex-1 overflow-auto p-5;
+}
+
+.accounts-panel,
+.settings-view {
+    @apply h-full;
+}
+
+.empty-state {
+    @apply p-5 text-center text-[var(--el-text-color-secondary)];
+}
+
+.empty-state p {
+    @apply my-4 text-base;
+}
+
+.accounts-content {
+    @apply flex h-full gap-5;
+}
+
+.account-list {
+    @apply h-auto w-75 rounded-lg bg-[var(--el-bg-color)] p-3 shadow-sm;
+}
+
+.account-item {
+    @apply mb-2 flex cursor-pointer items-center rounded-lg px-3 py-3 transition-all duration-300 hover:bg-[var(--el-fill-color-light)];
+}
+
+.account-item.active {
+    @apply border border-[var(--el-color-primary)] bg-[var(--el-color-primary-light-9)];
+}
+
+.account-info {
+    @apply ml-3 flex-1;
+}
+
+.account-name {
+    @apply mb-1 text-sm font-medium text-[var(--el-text-color-primary)];
+}
+
+.account-status .el-tag {
+    @apply h-5 leading-4;
+}
+
+.account-detail {
+    @apply flex-1 overflow-auto rounded-lg bg-[var(--el-bg-color)] p-5 shadow-sm;
+}
+
+.menu-item-wrapper {
+    @apply cursor-pointer;
+}

@@ -1,0 +1,190 @@
+@import '@/assets/tailwind.css';
+
+/* SpuItem 组件的 Tailwind CSS 样式 */
+
+.spu-card-extended {
+    @apply w-full max-w-md flex flex-col;
+}
+
+.spu-container {
+    @apply p-3.5;
+}
+
+.spu-item-footer {
+    @apply mt-auto;
+}
+
+.card-header {
+    @apply flex justify-between items-center w-full;
+}
+
+.spu-title {
+    @apply max-w-[180px] inline-block;
+}
+
+.spu-id-link {
+    @apply ml-auto;
+}
+
+.price-history-badge {
+    @apply mr-1.5;
+}
+
+.info-container {
+    @apply flex flex-row gap-5 mb-5 items-center justify-center h-full w-full;
+}
+
+.left-column {
+    @apply flex flex-col items-center w-full flex-shrink-0;
+}
+
+.spu-image-container {
+    @apply w-full h-full flex justify-center items-center border border-[var(--el-border-color-dark)] rounded-sm overflow-hidden shadow-sm;
+}
+
+.spu-image {
+    @apply object-cover transition-transform duration-300;
+}
+
+.spu-image:hover {
+    @apply scale-120;
+}
+
+.no-image {
+    @apply text-xs text-[var(--el-text-color-placeholder)] text-center;
+}
+
+.spu-subtitle {
+    @apply mt-2.5 p-1 text-center break-all;
+}
+
+.price-info {
+    @apply flex-1 min-w-[120px];
+}
+
+.current-price {
+    @apply mb-5;
+}
+
+.price-title {
+    @apply flex items-center gap-2;
+}
+
+.price-stats {
+    @apply flex flex-wrap gap-3.5 mb-5;
+}
+
+.price-stat-item {
+    @apply flex-1 min-w-[50px];
+}
+
+.attributes-descriptions {
+    @apply mt-3.5 mb-5;
+}
+
+.attributes-list {
+    @apply flex flex-wrap gap-3;
+}
+
+.attribute-tag {
+    @apply mb-2;
+}
+
+.tags-container {
+    @apply flex flex-wrap gap-3;
+}
+
+.info-tag {
+    @apply mb-2;
+}
+
+.action-buttons {
+    @apply flex justify-end mt-5;
+}
+
+.chart-lines {
+    @apply mt-3.5;
+}
+
+/* 价格图表折叠面板样式 */
+.price-chart-collapse {
+    @apply mt-5 rounded-sm overflow-hidden;
+}
+
+.collapse-title {
+    @apply flex items-center gap-3;
+}
+
+.price-count-tag {
+    @apply ml-3.5;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    :deep(.el-space__item),
+    .spu-card-extended {
+        @apply w-full max-w-none;
+    }
+
+    .info-container {
+        @apply flex-col items-center;
+    }
+
+
+    .spu-image-container,
+    .spu-image {
+        @apply w-120 h-120;
+    }
+}
+
+/* 中等屏幕适配 */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .spu-card-extended {
+        @apply max-w-sm;
+    }
+
+    .spu-title {
+        @apply max-w-[160px];
+    }
+
+    .info-container {
+        @apply gap-3;
+    }
+
+    .spu-image-container,
+    .spu-image {
+        @apply w-[155px] h-[155px];
+    }
+
+    .price-info {
+        @apply min-w-[110px];
+    }
+
+    .price-stat-item {
+        @apply min-w-[45px];
+    }
+}
+
+/* 大屏幕适配 */
+@media (min-width: 1025px) {
+    .spu-card-extended {
+        @apply max-w-lg;
+    }
+
+    .spu-title {
+        @apply max-w-[200px];
+    }
+
+    .spu-image-container,
+    .spu-image {
+        @apply w-[165px] h-[165px];
+    }
+
+    .price-info {
+        @apply min-w-[130px];
+    }
+
+    .price-stat-item {
+        @apply min-w-[55px];
+    }
+}

@@ -1,0 +1,79 @@
+@reference '@/assets/tailwind.css';
+
+.header-login-entry {
+    @apply items-center tracking-tight text-base text-center rounded-full bg-[var(--el-color-primary-light-3)] w-9 h-9 leading-9
+}
+
+.hue-theme-content {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    align-items: center;
+}
+
+.hue-theme-content:hover .delete-theme-btn {
+    opacity: 100;
+}
+
+.delete-theme-btn {
+    opacity: 0;
+    width: 1.25rem;
+    height: 1.25rem;
+    transition: opacity 0.3s ease;
+}
+
+.delete-theme-btn:hover {
+    transform: scale(1.1);
+    background-color: var(--el-color-danger);
+}
+
+.delete-theme-btn i {
+    margin-right: 0;
+}
+
+.popover-reference {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.el-dropdown__popper, :root {
+    --el-dropdown-menu-box-shadow: var(--el-box-shadow-light) !important;
+    --el-dropdown-menuItem-hover-fill: var(--el-color-info) !important;
+    --el-dropdown-menuItem-hover-color: var(--el-text-color-primary) !important;
+}
+
+.header-avatar-dropdown-popover li {
+    border-radius: 0.75rem;
+}
+
+.header-avatar-dropdown-popover .activated {
+    background-color: var(--el-dropdown-menuItem-hover-fill);
+    color: var(--el-dropdown-menuItem-hover-color);
+}
+
+.header-avatar-dropdown-popover :hover {
+    color: var(--el-dropdown-menuItem-hover-color);
+}
+
+.dropdown-menu {
+    padding: 0 0.75rem 0.75rem 0.75rem;
+}
+
+.dropdown-item {
+    font-size: 0.875rem;
+    border-radius: 0.75rem;
+    margin: 1rem;
+}
+
+.login-tip:hover {
+    color: inherit !important;
+    background-color: inherit !important;
+}
+
+.dropdown-arrow {
+    margin-left: auto;
+    height: 1rem;
+    width: 1rem;
+    font-size: 0.75rem;
+}

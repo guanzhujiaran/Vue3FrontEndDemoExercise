@@ -1,0 +1,8 @@
+@reference '@/assets/tailwind.css';
+.date-picker {
+  @apply flex items-center;
+}
+
+.date-picker span {
+  @apply mr-4;
+}

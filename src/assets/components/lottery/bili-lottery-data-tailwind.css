@@ -1,0 +1,45 @@
+@import '@assets/tailwind.css';
+
+.bili-lottery-data-panel {
+    @apply flex flex-col h-auto p-1 sm:p-4 md:p-6 lg:p-8  rounded-md overflow-auto ;
+    background-color: var(--el-bg-color-overlay);
+}
+
+.bili-lottery-data-panel .page-header {
+    @apply mb-12 pb-8 border-b border-solid;
+    border-color: var(--el-border-color-lighter);
+}
+
+.bili-lottery-data-panel .page-title {
+    @apply text-2xl m-0 mb-4;
+    color: var(--el-color-primary);
+}
+
+.bili-lottery-data-panel .page-description {
+    @apply flex items-center gap-4 mt-4;
+}
+
+.bili-lottery-data-panel .description-text {
+    color: var(--el-text-color-secondary);
+}
+
+.bili-lottery-data-panel .search-section {
+    @apply mb-8 p-8 rounded-md shadow-sm;
+    background-color: var(--el-bg-color);
+    box-shadow: 0 calc(var(--component-size) * 0.0625) calc(var(--component-size) * 0.375) 0 rgba(0, 0, 0, 0.05);
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+    .bili-lottery-data-panel {
+        @apply p-4;
+    }
+
+    .bili-lottery-data-panel .page-title {
+        @apply text-lg;
+    }
+
+    .bili-lottery-data-panel .search-section {
+        @apply p-4;
+    }
+}
