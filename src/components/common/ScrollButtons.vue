@@ -75,8 +75,8 @@ defineExpose({
       circle
       type="info"
       @click="scrollToTop"
+      :icon="Top"
     >
-      <el-icon><Top /></el-icon>
     </el-button>
 
     <!-- 滚动到底部按钮 -->
@@ -86,8 +86,8 @@ defineExpose({
       circle
       type="primary"
       @click="scrollToBottom"
+      :icon="Bottom"
     >
-      <el-icon><Bottom /></el-icon>
     </el-button>
   </div>
 </template>
@@ -95,17 +95,17 @@ defineExpose({
 <style scoped>
 .scroll-buttons {
   position: fixed;
-  right: 20px;
-  bottom: 20px;
+  right: calc(var(--component-spacing) * 4);
+  bottom: calc(var(--component-spacing) * 4);
   z-index: 1000;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: calc(var(--component-spacing) * 2);
   align-items: flex-end;
 }
 
 .back-to-top-btn,
 .scroll-to-bottom-btn {
-  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+  box-shadow: 0 calc(var(--component-size) * 0.0625) calc(var(--component-size) * 0.375) 0 rgba(0, 0, 0, 0.1);
 }
 </style>

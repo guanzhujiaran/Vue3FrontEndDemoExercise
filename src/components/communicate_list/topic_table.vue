@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { TopicItem } from '@/models/communication/topic_model.ts'
+import type { TopicItem } from '@/models/api/communication/topic_model.ts'
 
 const topic_items = defineModel<TopicItem[]>({
   required: true

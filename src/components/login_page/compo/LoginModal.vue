@@ -41,8 +41,9 @@ emitter.on('needLogin', () => {
     :show-close="true"
     :close-on-click-modal="true"
     :close-on-press-escape="true"
-    :lock-scroll="false"
+    :lock-scroll="true"
     @close="closeLoginModal"
+    :destroy-on-close="true"
   >
     <LoginCompo :is-modal="true" @login-success="handleLoginSuccess" />
     <template #footer>
@@ -57,6 +58,6 @@ emitter.on('needLogin', () => {
 .dialog-footer {
   display: flex;
   justify-content: flex-end;
-  margin-top: 20px;
+  margin-top: calc(var(--component-spacing) * 0.5);
 }
 </style>

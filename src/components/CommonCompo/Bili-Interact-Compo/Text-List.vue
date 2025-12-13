@@ -48,55 +48,5 @@ const vNoSpace = {
 }
 </script>
 <style scoped>
-.text-list textarea {
-  margin-top: 16px;
-  display: block;
-  position: relative;
-  width: 100%; /* 初始宽度 */
-  height: 80px; /* 初始高度 */
-  transition: all 0.3s ease;
-  border: 1px solid #e3e5e7;
-  border-radius: 6px;
-  background-color: #f1f2f3;
-  overflow-x: hidden;
-  unicode-bidi: isolate;
-  line-height: 32px;
-  resize: none;
-  outline: none;
-}
-
-.text-list textarea:focus {
-  height: 100px; /* 焦点时的高度 */
-  background-color: transparent;
-}
-
-.text-list input:focus {
-  width: 100%;
-  background-color: transparent;
-}
-
-.text-list input {
-  position: relative;
-  height: 100%;
-  width: 20%;
-  min-width: 3rem;
-  transition: 0.2s;
-  border: 1px solid #e3e5e7;
-  border-radius: 6px;
-  background-color: #f1f2f3;
-  overflow-x: hidden;
-  margin: 0;
-  padding: 0;
-  unicode-bidi: isolate;
-}
-
-.text-list input:hover,
-textarea:hover {
-  background-color: transparent;
-}
-
-.text-list input:focus {
-  width: fit-content;
-  background-color: transparent;
-}
+@import '@/assets/components/interact/text-list-tailwind.css';
 </style>

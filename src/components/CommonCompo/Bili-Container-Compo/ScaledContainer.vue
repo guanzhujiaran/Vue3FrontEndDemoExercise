@@ -158,22 +158,5 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-.scaling-outer-wrapper {
-  /*
-   * This wrapper helps center the scaled element.
-   * It takes up the necessary width but doesn't scale itself.
-   * It needs to allow overflow so the scaled content isn't clipped.
-   */
-  width: -webkit-fill-available;
-  overflow-x: hidden; /* Be careful with this - might clip scaled content if origin isn't perfect */
-  display: flex; /* Use flex to help center the inner container */
-  justify-content: center; /* Center the flex item horizontally */
-  background: transparent;
-}
-
-.proportional-scaling-container {
-  box-sizing: border-box;
-  background-color: var(--el-bg-color);
-  flex-shrink: 0;
-}
+@import '@/assets/components/container/scaled-container-tailwind.css';
 </style>

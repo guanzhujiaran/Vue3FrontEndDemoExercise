@@ -1,11 +1,11 @@
-import { fetchExchange, createClient } from '@urql/core'
+import { fetchExchange, cacheExchange, createClient } from '@urql/core'
 import type { DocumentInput } from '@urql/vue'
 
-const client = createClient({
+export const client = createClient({
   url: import.meta.env.VITE_GRAPH_API,
-  requestPolicy: 'network-only',
-  exchanges: [fetchExchange]
+  requestPolicy: 'cache-and-network',
+  exchanges: [cacheExchange, fetchExchange]
 })
-export const query = async (query: DocumentInput<any, {}>, params = {}) => {
-  return client.query(query, params).toPromise()
+export const query = async (query: DocumentInput<any, {}>, variables = {}) => {
+  return client.query(query, variables).toPromise()
 }

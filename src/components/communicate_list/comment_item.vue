@@ -1,11 +1,15 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import type { CommentSectionStat, ReplyItem } from '@/models/communication/comment_model.ts'
+import type { CommentSectionStat, ReplyItem } from '@/models/api/communication/comment_model.ts'
 import utils from '@/utils/mixin.ts'
 import feedbackCommentApi from '@/api/feedback/comment.ts'
 import emitter from '@/utils/mitt.ts'
 import { useDebounceFn } from '@vueuse/core'
-import { SVG } from '@/assets/svgs.ts'
+import likeSvg from '@/assets/svgs/like.svg?url'
+import likeActiveSvg from '@/assets/svgs/like_active.svg?url'
+import dislikeSvg from '@/assets/svgs/dislike.svg?url'
+import dislikeActiveSvg from '@/assets/svgs/dislike_active.svg?url'
+import moreSvg from '@/assets/svgs/more.svg?url'
 import { useUserNavStore } from '@/stores/user_nav.ts'
 import BiliVditorEdit from '@/components/CommonCompo/Bili-Markdown-Compo/BiliVditorEdit.vue'
 import { BiliImg } from '@/assets/img/BiliImg.ts'
@@ -214,19 +218,8 @@ const is_loading_md = ref<boolean>(true)
                   color: String(interact_btn_active) === '1' ? 'var(--el-color-primary)' : ''
                 }"
               >
-                <svg
-                  v-if="interact_btn_active == 1"
-                  xmlns="http://www.w3.org/2000/svg"
-                  xmlns:xlink="http://www.w3.org/1999/xlink"
-                  width="20"
-                  height="20"
-                  viewBox="0 0 16 16"
-                >
-                  <path :d="SVG.like_active.path" fill="currentColor"></path>
-                </svg>
-                <svg v-else viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
-                  <path :d="SVG.like.path" fill="currentColor" />
-                </svg>
+                <img :src="likeActiveSvg" v-if="interact_btn_active == 1" class="svg-icon" />
+                <img :src="likeSvg" v-else class="svg-icon" />
                 <span id="count">{{ reply_item.like }}</span>
               </button>
             </div>
@@ -238,19 +231,8 @@ const is_loading_md = ref<boolean>(true)
                   color: String(interact_btn_active) === '2' ? 'var(--el-color-primary)' : ''
                 }"
               >
-                <svg
-                  v-if="interact_btn_active == 2"
-                  xmlns="http://www.w3.org/2000/svg"
-                  xmlns:xlink="http://www.w3.org/1999/xlink"
-                  width="20"
-                  height="20"
-                  viewBox="0 0 16 16"
-                >
-                  <path :d="SVG.dislike_active.path" fill="currentColor"></path>
-                </svg>
-                <svg v-else xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
-                  <path :d="SVG.dislike.path" fill="currentColor" />
-                </svg>
+                <img :src="dislikeActiveSvg" fill="currentColor" v-if="interact_btn_active == 2" class="svg-icon" />
+                <img :src="dislikeSvg" v-else class="svg-icon" />
                 <span id="count">{{ reply_item.dislike }}</span>
               </button>
             </div>
@@ -266,15 +248,7 @@ const is_loading_md = ref<boolean>(true)
                 class="more-btn"
                 @click="() => (is_comment_menu_open = !is_comment_menu_open)"
               >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  xmlns:xlink="http://www.w3.org/1999/xlink"
-                  width="20"
-                  height="20"
-                  viewBox="0 0 16 16"
-                >
-                  <path :d="SVG.more.path" fill="currentColor"></path>
-                </svg>
+                <img :src="moreSvg" fill="currentColor" class="svg-icon" />
               </button>
               <div
                 class="comment-menu"
@@ -328,8 +302,8 @@ const is_loading_md = ref<boolean>(true)
   width: 100%;
   display: flex;
   align-items: center;
-  height: 42px;
-  padding: 0 20px;
+  height: calc(var(--component-size) * 1.3125);
+  padding: 0 calc(var(--component-spacing) * 4);
   cursor: pointer;
   user-select: none;
 }
@@ -337,15 +311,15 @@ const is_loading_md = ref<boolean>(true)
 #options {
   display: block;
   position: absolute;
-  top: 25px;
+  top: calc(var(--component-spacing) * 5);
   right: 0;
   margin: 0;
   padding: 0;
   z-index: 10;
-  width: 150px;
+  width: calc(var(--component-size) * 4.6875);
   list-style: none;
-  border-radius: 6px;
-  font-size: 16px;
+  border-radius: calc(var(--component-size) * 0.1875);
+  font-size: var(--component-size);
   color: var(--el-text-color-primary);
   background-color: var(--el-bg-color);
   box-shadow: var(--el-box-shadow-light);
@@ -355,38 +329,33 @@ const is_loading_md = ref<boolean>(true)
 .comment-menu {
   right: 0;
   position: absolute;
-  top: 15px;
+  top: calc(var(--component-spacing) * 3);
   z-index: 2000;
 }
 
 #more {
   margin-left: auto;
-  margin-right: 30px;
-  width: 32px;
-  height: 32px;
+  margin-right: calc(var(--component-spacing) * 6);
+  width: calc(var(--component-size) * 1);
+  height: calc(var(--component-size) * 1);
   position: relative;
   scale: 1.4;
   z-index: 1600;
 }
 
 #count {
-  margin-left: 8px;
+  margin-left: calc(var(--component-spacing) * 1.6);
 }
 
 .comment-tag {
   width: fit-content;
   color: var(--el-text-color-regular);
   background-color: var(--el-fill-color-light);
-  padding: 5px;
-  border-radius: 3px;
+  padding: calc(var(--component-spacing) * 1);
+  border-radius: calc(var(--component-size) * 0.09375);
   box-sizing: border-box;
-  font-size: 11px;
+  font-size: calc(var(--component-size) * 0.34375);
   line-height: 1;
-}
-
-svg:not(:root) {
-  width: 16px;
-  height: 16px;
 }
 
 .like-btn:hover,
@@ -404,8 +373,8 @@ svg:not(:root) {
   outline: none;
   border: none;
   background: transparent;
-  height: 24px;
-  font-size: 14px;
+  height: calc(var(--component-size) * 0.75);
+  font-size: calc(var(--component-size) * 0.4375);
   color: var(--el-text-color-secondary);
   display: inline-flex;
   align-items: center;
@@ -414,7 +383,7 @@ svg:not(:root) {
 }
 
 .comment-footer > :not(:first-child) {
-  margin-left: 19px;
+  margin-left: calc(var(--component-spacing) * 3.8);
 }
 
 .comment-content :deep(.v-note-wrapper) {
@@ -426,10 +395,10 @@ svg:not(:root) {
   display: flex;
   align-items: center;
   position: relative;
-  margin-top: 8px;
-  font-size: 14px;
+  margin-top: calc(var(--component-spacing) * 1.6);
+  font-size: calc(var(--component-size) * 0.4375);
   color: var(--el-text-color-secondary);
-  height: 50px;
+  height: calc(var(--component-size) * 1.5625);
   flex-wrap: wrap;
 }
 
@@ -449,25 +418,25 @@ svg:not(:root) {
 
 .comment-main :deep(.el-card__header) {
   border-bottom: none;
-  margin-bottom: 8px;
+  margin-bottom: calc(var(--component-spacing) * 1.6);
   padding: 0;
 }
 
 .user-level {
-  margin-left: 8px;
-  width: 19px;
-  height: 19px;
+  margin-left: calc(var(--component-spacing) * 1.6);
+  width: calc(var(--component-size) * 0.59375);
+  height: calc(var(--component-size) * 0.59375);
 }
 
 .user-info #user-up {
-  margin-left: 8px;
-  width: 19px;
-  height: 19px;
+  margin-left: calc(var(--component-spacing) * 1.6);
+  width: calc(var(--component-size) * 0.59375);
+  height: calc(var(--component-size) * 0.59375);
 }
 
 .user-name {
   color: var(--el-text-color-primary);
-  font-size: 16px;
+  font-size: var(--component-size);
   font-weight: 500;
 }
 
@@ -478,23 +447,23 @@ svg:not(:root) {
 
 .comment-item {
   display: flex;
-  margin-bottom: 24px;
+  margin-bottom: calc(var(--component-spacing) * 4.8);
 }
 
 .comment-main {
   width: 100%;
   position: relative;
-  padding-left: 13px;
-  padding-top: 8px;
-  line-height: 1.8;
+  padding-left: calc(var(--component-spacing) * 2.6);
+  padding-top: calc(var(--component-spacing) * 1.6);
+  line-height: var(--component-line-height);
 }
 
 .user-avater {
   position: relative;
-  left: 8px;
-  top: 8px;
-  width: 40px;
-  height: 40px;
+  left: calc(var(--component-spacing) * 1.6);
+  top: calc(var(--component-spacing) * 1.6);
+  width: calc(var(--component-size) * 1.25);
+  height: calc(var(--component-size) * 1.25);
   transform-origin: left top;
   transform: scale(1);
   flex-shrink: 0;

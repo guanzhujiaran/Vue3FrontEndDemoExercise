@@ -35,12 +35,12 @@ const dialogVisible = ref(false)
 </template>
 <style scoped>
 .lottery-setting-header {
-  background-color: #f1f2f3;
+  background-color: var(--el-fill-color-light);
   opacity: 1;
-  border-radius: 6px;
+  border-radius: calc(var(--component-size) * 0.1875);
 }
 .el-btn-wrap {
-  padding: 16px;
+  padding: calc(var(--component-spacing) * 3.2);
   display: flex;
 }
 

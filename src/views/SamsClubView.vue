@@ -2,12 +2,7 @@
   <FlexContainer v-loading="isLoading" style="padding: 10px">
     <SamsClubFilter
       v-model:query-params="samsClubFilterOpt"
-      :submit-form="
-        () => {
-          samsClubFilterOpt.pn = 1
-          handle_fetch_gql()
-        }
-      "
+      :submit-form="handleSubmitForm"
     ></SamsClubFilter>
     <el-divider></el-divider>
     <BiliPaginationDataView
@@ -22,196 +17,27 @@
         <div></div>
       </template>
       <template #contents>
-        <el-space
-          wrap
-          size="large"
-          :fill-ratio="20"
-          alignment="stretch"
-          style="justify-content: center"
-        >
+        <grid-container item-width="400px">
           <SpuItem
             :spu-info="spu_item"
             :key="spu_item.spuId"
             v-for="(spu_item, idx) in dataItems"
           ></SpuItem>
-        </el-space>
+        </grid-container>
       </template>
     </BiliPaginationDataView>
     <BiliEmpty v-if="isEmpty && !isError" txt="没有商品数据" v-loading="isLoading"></BiliEmpty>
-    <BiliError v-if="isError" @click-retry="handle_fetch_gql" v-loading="isLoading"></BiliError>
+    <BiliError v-if="isError" @click-retry="handleSubmitForm" v-loading="isLoading"></BiliError>
   </FlexContainer>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
-import { gql } from '@urql/vue'
-import { query } from '@/api/samsclub/gql.ts'
+import { ref } from 'vue'
 import type { PageInfoType, QueryGetSpuInfosArgs, SpuInfoType } from '@/gql/samsclub/graphql.ts'
 import emitter from '@/utils/mitt.ts'
+import { GET_SAMSCLUB_SPU } from '@/gql/samsclub/queries.ts'
+import { useQuery } from '@urql/vue'
 
-const GET_SAMSCLUB_SPU = gql`
-  query getSpuInfos(
-    $priceAsc: Boolean
-    $priceDiffCurAsc: Boolean
-    $priceDiffMaxAsc: Boolean
-    $priceDiffLatestAsc: Boolean
-    $pn: Int
-    $ps: Int
-    $priceMax: Int
-    $spuId: Int
-    $spuInfoTitle: String
-    $priceMin: Int
-    $spuInfoUpdateAsc: Boolean
-    $spuInfoCreateAsc: Boolean
-    $spuNewTagTagMarkList: [String!]
-    $lastUpdateAfterTss: Int
-    $lastUpdateBeforeTss: Int
-    $lastCreateAfterTss: Int
-    $lastCreateBeforeTss: Int
-  ) {
-    getSpuInfos(
-      priceAsc: $priceAsc
-      priceDiffCurAsc: $priceDiffCurAsc
-      priceDiffMaxAsc: $priceDiffMaxAsc
-      priceDiffLatestAsc: $priceDiffLatestAsc
-      pn: $pn
-      priceMax: $priceMax
-      spuId: $spuId
-      spuInfoTitle: $spuInfoTitle
-      ps: $ps
-      priceMin: $priceMin
-      spuInfoUpdateAsc: $spuInfoUpdateAsc
-      spuInfoCreateAsc: $spuInfoCreateAsc
-      spuNewTagTagMarkList: $spuNewTagTagMarkList
-      lastUpdateAfterTss: $lastUpdateAfterTss
-      lastUpdateBeforeTss: $lastUpdateBeforeTss
-      lastCreateAfterTss: $lastCreateAfterTss
-      lastCreateBeforeTss: $lastCreateBeforeTss
-    ) {
-      items {
-        zoneTypeList
-        viceBizType
-        venderCode
-        updateTime
-        unknowField
-        title
-        subTitle
-        storeId
-        spuSpecInfo
-        spuId
-        specList
-        specInfo
-        smallPackagePriceDisplay
-        seriesId
-        serialId
-        onlyStoreSale
-        newTagInfos {
-          beginTime
-          endTime
-          createTime
-          id
-          logoImageCn
-          logoImageEn
-          logoImageWide
-          originalPrice
-          logoImageHigh
-          logoImageZhCn
-          placeType
-          priorityValue
-          promotionPrice
-          promotionTag
-          savedMoney
-          styleType
-          styleCode
-          tagMark
-          tagManageId
-          tagPlace
-          tagStyleId
-          titleCn
-          tagSortType
-          title
-          updateTime
-          unknowField
-        }
-        commonOuterService
-        maxPriceDiff
-        masterBizType
-        limitInfo
-        latestPriceDiff
-        isStoreExtent
-        isShowXPlusTag
-        isSerial
-        isImport
-        isGlobalDirectPurchase
-        isAvailable
-        image
-        hostItemId
-        hasVideo
-        giveSpuList
-        exclusiveSpu
-        deliveryMethod
-        deliveryAttr
-        curPriceDiff
-        createTime
-        cityCodes
-        categoryOuterService
-        brandId
-        beltInfo
-        availableStores
-        latestPriceInfo {
-          price
-          priceType
-          priceTypeName
-          unknowField
-          updateTime
-          createTime
-        }
-        allPriceInfos {
-          price
-          priceType
-          priceTypeName
-          unknowField
-          updateTime
-        }
-        categories {
-          categoryId
-        }
-        stockInfo {
-          safeStockQuantity
-          soldQuantity
-          stockQuantity
-          unknowField
-          updateTime
-        }
-        tagInfos {
-          beginTime
-          createTime
-          priorityValue
-          promotionTag
-          tagMark
-          tagPlace
-          tagSortType
-          title
-          unknowField
-          updateTime
-        }
-        videoInfos {
-          duration
-          unknowField
-          updateTime
-          videoCover
-          videoUrl
-        }
-      }
-      pageInfo {
-        hasNextPage
-        page
-        pageSize
-        total
-      }
-    }
-  }
-`
 const samsClubFilterOpt = ref<QueryGetSpuInfosArgs>({
   pn: 1,
   priceAsc: undefined,
@@ -231,50 +57,50 @@ const samsClubFilterOpt = ref<QueryGetSpuInfosArgs>({
   lastCreateAfterTss: undefined,
   lastCreateBeforeTss: undefined
 })
-const isError = ref(false)
-const isEmpty = ref(false)
-const dataItems = ref<Array<SpuInfoType>>([])
-const pageInfo = ref<PageInfoType>({
-  hasNextPage: true,
-  page: 1,
-  pageSize: 10,
-  total: 0
+const shouldPause = ref<boolean>(true)
+const getSamsclubSpuResult = useQuery({
+  query: GET_SAMSCLUB_SPU,
+  variables: samsClubFilterOpt,
+  pause: shouldPause
 })
-const isLoading = ref(true)
-const handle_fetch_gql = () => {
-  isLoading.value = true
-  query(GET_SAMSCLUB_SPU, samsClubFilterOpt.value)
-    .then((data) => {
-      if (data && data.data) {
-        dataItems.value = data.data.getSpuInfos.items
-        pageInfo.value = data.data.getSpuInfos.pageInfo
-        isError.value = false
-        isEmpty.value = data.data.getSpuInfos.items.length === 0
-        window.scrollTo(0, 0)
-        return
-      }
-      throw data
-    })
-    .catch((err) => {
-      isError.value = true
-      dataItems.value = []
-      console.error(err)
-      emitter.emit('toast', { t: err.error.message, e: 'error' })
-    })
-    .finally(() => {
-      isLoading.value = false
-    })
-}
-
-onMounted(() => {
-  handle_fetch_gql()
-})
-watch(
-  () => samsClubFilterOpt.value.pn,
-  () => {
-    handle_fetch_gql()
+const dataItems = computed<SpuInfoType[]>(() => {
+  if (getSamsclubSpuResult.data.value && getSamsclubSpuResult.data.value.getSpuInfos) {
+    return getSamsclubSpuResult.data.value.getSpuInfos.items
   }
-)
+  return []
+})
+const isError = computed<boolean>(() => {
+  if (getSamsclubSpuResult.error.value) {
+    console.error(getSamsclubSpuResult.error.value)
+    emitter.emit('toast', { t: JSON.stringify(getSamsclubSpuResult.error.value), e: 'error' })
+    return true
+  }
+  return false
+})
+const isEmpty = computed<boolean>(() => {
+  if (getSamsclubSpuResult.data.value && getSamsclubSpuResult.data.value.getSpuInfos) {
+    return getSamsclubSpuResult.data.value.getSpuInfos.items.length === 0
+  }
+  return false
+})
+const isLoading = computed<boolean>(() => getSamsclubSpuResult.fetching.value)
+const pageInfo = computed<PageInfoType>(() => {
+  if (getSamsclubSpuResult.data.value && getSamsclubSpuResult.data.value.getSpuInfos) {
+    return getSamsclubSpuResult.data.value.getSpuInfos.pageInfo
+  }
+  return {
+    hasNextPage: true,
+    page: 1,
+    pageSize: 10,
+    total: 0
+  }
+})
+const handleSubmitForm = () => {
+  getSamsclubSpuResult.executeQuery()
+}
 </script>
 
-<style scoped></style>
+<style scoped>
+@import '@/assets/components/samsclub/samsclub-filter-tailwind.css';
+@import '@/assets/components/samsclub/spu-item-tailwind.css';
+</style>

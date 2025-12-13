@@ -1,0 +1,5 @@
+schema: fastapi.graphql
+extensions:
+  endpoints:
+    samsclub:
+      url: http://192.168.81.172:10005/api/v1/samsClub/graphql

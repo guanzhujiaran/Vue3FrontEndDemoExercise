@@ -1,5 +1,5 @@
 import BaseApi from '../base_axios/base_api'
-import type { RootObject } from '@/models/base_model'
+import type { RootObject } from '@/models/api/base_model.ts'
 import type { AccountInfoModel, AccountRunningStatus, AccountSettingModel } from '@/models/account/account_model'
 
 /*

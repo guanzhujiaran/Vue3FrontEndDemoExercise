@@ -33,7 +33,7 @@ const is_dark = computed(() => {
   return false
 })
 const clipBoard = useClipboard()
-const globalVars = useInject(KeysEnum.globalVars) as Ref<GlobalVarsType>
+const globalVars = useInject(KeysEnum.GlobalVars) as Ref<GlobalVarsType>
 const vditor = useTemplateRef('vditor')
 const is_loading = defineModel('is_loading', {
   type: Boolean,
@@ -232,5 +232,5 @@ defineExpose({ setValue })
 </script>
 
 <style scoped>
-/* 根据需要添加样式 */
+@import '@/assets/components/markdown/bili-vditor-edit-tailwind.css';
 </style>

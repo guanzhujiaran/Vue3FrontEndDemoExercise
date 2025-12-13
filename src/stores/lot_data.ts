@@ -1,6 +1,6 @@
 import { ref } from 'vue'
 import { defineStore } from 'pinia'
-import { type LotDataWrapperProps, ParentLotDataTab } from '@/models/lottery/lotdata.ts'
+import { type LotDataWrapperProps, ParentLotDataTab } from '@/models/api/lottery/lotdata.ts'
 
 export const useLotDataStore = defineStore(
   'lot-data-setting',

@@ -1,11 +1,3 @@
-/*
- * @Author: 星瞳 1944637830@qq.com
- * @Date: 2024-05-29 23:52:55
- * @LastEditors: 星瞳 1944637830@qq.com
- * @LastEditTime: 2024-11-11 23:27:04
- * @FilePath: \Vue3FrontEndDemoExercise\vite.config.ts
- * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
- */
 import path from 'path'
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
@@ -18,11 +10,18 @@ import Components from 'unplugin-vue-components/vite'
 import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
 import Sitemap from 'vite-plugin-sitemap'
 import tailwindcss from '@tailwindcss/vite'
+import svgLoader from 'vite-svg-loader'
 
 const pathSrc = path.resolve(__dirname, 'src')
 export default defineConfig({
   plugins: [
     vue(),
+    svgLoader({
+      svgoConfig: {
+        multipass: true
+      },
+      defaultImport: 'url'
+    }),
     Sitemap({ hostname: 'https://serena.dynv6.net', exclude: ['google22ac62fc624759d1.html'] }),
     AutoImport({
       // Auto import functions from Vue, e.g. ref, reactive, toRef...
@@ -56,14 +55,13 @@ export default defineConfig({
 
       dts: path.resolve(pathSrc, 'components.d.ts')
     }),
-
     Icons({
       autoInstall: true
     }),
     vueJsx(),
     VueDevTools({
       componentInspector: true,
-      launchEditor: 'C:\\Program Files\\JetBrains\\WebStorm 2025.1.3\\bin\\webstorm64.exe'
+      launchEditor: 'H:\\jetbrains\\WebStorm 2\\bin\\webstorm64.exe'
     }),
     tailwindcss()
   ],

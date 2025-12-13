@@ -1,6 +1,6 @@
 /* eslint-disable */
 export type Maybe<T> = T | null;
-export type InputMaybe<T> = Maybe<T>;
+export type InputMaybe<T> = T | null | undefined;
 export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
 export type MakeOptional<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]?: Maybe<T[SubKey]> };
 export type MakeMaybe<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]: Maybe<T[SubKey]> };
@@ -69,6 +69,9 @@ export type SpuCategoryType = {
 export type SpuInfoType = {
   __typename?: 'SpuInfoType';
   allPriceInfos: Array<SpuPriceInfoType>;
+  arrivalEndTimeDesc?: Maybe<Scalars['String']['output']>;
+  attrGroupInfo?: Maybe<Scalars['JSON']['output']>;
+  attrInfo?: Maybe<Scalars['JSON']['output']>;
   availableStores?: Maybe<Scalars['JSON']['output']>;
   beltInfo?: Maybe<Scalars['JSON']['output']>;
   brandId?: Maybe<Scalars['String']['output']>;
@@ -76,22 +79,47 @@ export type SpuInfoType = {
   categoryOuterService?: Maybe<Scalars['JSON']['output']>;
   cityCodes?: Maybe<Scalars['JSON']['output']>;
   commonOuterService?: Maybe<Scalars['JSON']['output']>;
+  complianceInfo?: Maybe<Scalars['JSON']['output']>;
+  couponContentList?: Maybe<Scalars['JSON']['output']>;
+  couponList?: Maybe<Scalars['JSON']['output']>;
   createTime: Scalars['DateTime']['output'];
   /** 历史最高价与当前最新价之差 */
   curPriceDiff?: Maybe<Scalars['Int']['output']>;
+  customTabList?: Maybe<Scalars['JSON']['output']>;
   deliveryAttr?: Maybe<Scalars['Int']['output']>;
+  deliveryCapacityCountList?: Maybe<Scalars['JSON']['output']>;
   deliveryMethod?: Maybe<Scalars['String']['output']>;
+  desc?: Maybe<Scalars['String']['output']>;
+  descVideo?: Maybe<Scalars['JSON']['output']>;
+  detailVideos?: Maybe<Scalars['JSON']['output']>;
   exclusiveSpu?: Maybe<Scalars['Int']['output']>;
+  extendedWarrantyList?: Maybe<Scalars['JSON']['output']>;
+  favorite?: Maybe<Scalars['Int']['output']>;
   giveSpuList?: Maybe<Scalars['JSON']['output']>;
+  giveaway?: Maybe<Scalars['Int']['output']>;
+  globalShoppingTaxRateExplain?: Maybe<Scalars['String']['output']>;
   hasVideo?: Maybe<Scalars['Int']['output']>;
+  hostItem?: Maybe<Scalars['String']['output']>;
   hostItemId?: Maybe<Scalars['String']['output']>;
   image?: Maybe<Scalars['String']['output']>;
+  imageSizeThreeFour?: Maybe<Scalars['JSON']['output']>;
+  images?: Maybe<Scalars['JSON']['output']>;
+  intro?: Maybe<Scalars['String']['output']>;
+  isAllowDelivery?: Maybe<Scalars['Int']['output']>;
   isAvailable?: Maybe<Scalars['Int']['output']>;
+  isCollectOrder?: Maybe<Scalars['Int']['output']>;
+  isCompare?: Maybe<Scalars['Int']['output']>;
+  isCrabCard?: Maybe<Scalars['Int']['output']>;
   isGlobalDirectPurchase?: Maybe<Scalars['Int']['output']>;
+  isGlobalOwnPickUp?: Maybe<Scalars['Int']['output']>;
+  isGovSpu?: Maybe<Scalars['Int']['output']>;
   isImport?: Maybe<Scalars['Int']['output']>;
+  isPutOnSale?: Maybe<Scalars['Int']['output']>;
   isSerial?: Maybe<Scalars['Int']['output']>;
   isShowXPlusTag?: Maybe<Scalars['Int']['output']>;
+  isStoreAvailable?: Maybe<Scalars['Int']['output']>;
   isStoreExtent?: Maybe<Scalars['Int']['output']>;
+  isTicket?: Maybe<Scalars['Int']['output']>;
   /** 最新两次价格之差 */
   latestPriceDiff?: Maybe<Scalars['Int']['output']>;
   latestPriceInfo?: Maybe<SpuPriceInfoType>;
@@ -99,25 +127,39 @@ export type SpuInfoType = {
   masterBizType?: Maybe<Scalars['Int']['output']>;
   /** 历史最高价与历史最低价之差 */
   maxPriceDiff?: Maybe<Scalars['Int']['output']>;
+  netWeight?: Maybe<Scalars['Float']['output']>;
   newTagInfos: Array<SpuNewTagInfoType>;
+  onlyBarSale?: Maybe<Scalars['Int']['output']>;
   onlyStoreSale?: Maybe<Scalars['Int']['output']>;
+  preSellList?: Maybe<Scalars['JSON']['output']>;
+  promotionDetailList?: Maybe<Scalars['JSON']['output']>;
+  promotionList?: Maybe<Scalars['JSON']['output']>;
+  purchaseLimitMinNum?: Maybe<Scalars['Int']['output']>;
+  purchaseLimitText?: Maybe<Scalars['String']['output']>;
   serialId?: Maybe<Scalars['String']['output']>;
   seriesId?: Maybe<Scalars['String']['output']>;
+  serviceInfo?: Maybe<Scalars['JSON']['output']>;
+  sevenDaysReturn?: Maybe<Scalars['Int']['output']>;
   smallPackagePriceDisplay?: Maybe<Scalars['String']['output']>;
   specInfo?: Maybe<Scalars['JSON']['output']>;
   specList?: Maybe<Scalars['JSON']['output']>;
+  spuExtDTO?: Maybe<Scalars['JSON']['output']>;
   spuId: Scalars['String']['output'];
   spuSpecInfo?: Maybe<Scalars['JSON']['output']>;
+  standardForIntactGoodsUrl?: Maybe<Scalars['String']['output']>;
   stockInfo?: Maybe<SpuStockInfoType>;
   storeId?: Maybe<Scalars['String']['output']>;
   subTitle?: Maybe<Scalars['String']['output']>;
   tagInfos: Array<SpuTagInfoType>;
+  temperature?: Maybe<Scalars['Int']['output']>;
   title: Scalars['String']['output'];
   unknowField?: Maybe<Scalars['JSON']['output']>;
   updateTime: Scalars['DateTime']['output'];
+  valuable?: Maybe<Scalars['Int']['output']>;
   venderCode?: Maybe<Scalars['String']['output']>;
   viceBizType?: Maybe<Scalars['Int']['output']>;
   videoInfos: Array<SpuVideoInfoType>;
+  weight?: Maybe<Scalars['Float']['output']>;
   zoneTypeList?: Maybe<Scalars['JSON']['output']>;
 };
 

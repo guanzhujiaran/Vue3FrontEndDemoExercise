@@ -1,6 +1,6 @@
 import type { CodegenConfig } from '@graphql-codegen/cli'
 const config: CodegenConfig = {
-  schema: 'http://127.0.0.1:23333/api/v1/samsClub/graphql',
+  schema: 'http://192.168.81.172:10005/api/v1/samsClub/graphql',
   documents: [],
   ignoreNoDocuments: true, // for better experience with the watcher
   generates: {

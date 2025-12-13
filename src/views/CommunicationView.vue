@@ -8,7 +8,7 @@
 -->
 <script setup lang="ts"></script>
 <template>
-  <CommContainer style="background-color: #ffffff">
+  <CommContainer style="background-color: var(--el-color-white)">
     <div class="comment-list"></div>
   </CommContainer>
 </template>

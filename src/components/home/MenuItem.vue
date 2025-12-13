@@ -1,13 +1,11 @@
 <template>
-  <el-menu-item
-    v-if="!item.children || item.children.length === 0"
-    :index="item.path"
-    @click="handleMenuItemClick"
-  >
-    {{ item.title }}
+  <el-menu-item v-if="!item.children || item.children.length === 0" :index="item.path">
+    <span @click="handleMenuItemClick">{{ item.title }}</span>
   </el-menu-item>
-  <el-sub-menu v-else :index="item.path" @click="handleSubMenuClick">
-    <template #title>{{ item.title }}</template>
+  <el-sub-menu v-else :index="item.path">
+    <template #title
+      ><span @click="handleSubMenuClick">{{ item.title }}</span></template
+    >
     <template v-for="child in item.children" :key="child.path">
       <MenuItem :item="child" />
     </template>
@@ -15,9 +13,12 @@
 </template>
 
 <script setup lang="ts">
-import { inject } from 'vue'
+import { inject, type Ref } from 'vue'
 import { ElMenuItem, ElSubMenu } from 'element-plus'
 import { useRouter } from 'vue-router'
+import { KeysEnum, useInject } from '@/models/base/provide_model.ts'
+import type { UserNavModel } from '@/models/user/user_model.ts'
+import type { MenuItemRegistered } from 'element-plus/es/components/menu/src/types'
 
 interface MenuItem {
   path: string
@@ -31,14 +32,14 @@ interface Props {
 }
 
 const props = defineProps<Props>()
-
+const bili_user = useInject(KeysEnum.BiliUser) as Ref<UserNavModel>
 // 获取父组件的处理方法
 const headerBarView: any = inject('headerBarView', null)
 const router = useRouter()
 
-const handleMenuItemClick = () => {
+const handleMenuItemClick = (item: MenuItemRegistered) => {
   // 如果路由需要登录但用户未登录，则不跳转，显示登录提示
-  if (props.item.requiresLogin) {
+  if (props.item.requiresLogin && !bili_user.value?.uid) {
     // 调用父组件的方法处理需要登录的路由点击
     if (headerBarView && headerBarView.handleProtectedRouteClick) {
       headerBarView.handleProtectedRouteClick(props.item.title)
@@ -51,19 +52,16 @@ const handleMenuItemClick = () => {
 
 // 处理子菜单点击事件
 const handleSubMenuClick = (e: Event) => {
-  // 阻止事件冒泡，防止触发子菜单的点击事件
-  e.stopPropagation()
-  
   // 如果路由需要登录但用户未登录，则不跳转，显示登录提示
-  if (props.item.requiresLogin) {
+  if (props.item.requiresLogin && !bili_user.value?.uid) {
     // 调用父组件的方法处理需要登录的路由点击
     if (headerBarView && headerBarView.handleProtectedRouteClick) {
       headerBarView.handleProtectedRouteClick(props.item.title)
       return
     }
   }
-  
-  // 正常路由跳转
-  router.push(props.item.path)
+  if (e.target === e.currentTarget) {
+    router.push(props.item.path)
+  }
 }
 </script>

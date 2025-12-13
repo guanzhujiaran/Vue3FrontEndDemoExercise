@@ -10,34 +10,42 @@
 import Placeholder from '@/components/opus-detail/RightPannel/PannelItems/Placeholder.vue'
 import AccountHolder from '@/components/opus-detail/RightPannel/PannelItems/AccountHolder.vue'
 import AccountSetting from '@/components/opus-detail/RightPannel/PannelItems/AccountSetting.vue'
-import { useRoute } from 'vue-router';
+import { useRoute } from 'vue-router'
 import DashBoard from '@/components/opus-detail/RightPannel/PannelItems/SettingComponent/DashBoard.vue'
 import AccountStatusBoard from '@/components/opus-detail/RightPannel/PannelItems/SettingComponent/AccountStatusBoard.vue'
 import type { PageShowModel } from '@/models/account/page/model'
-import { ref } from 'vue';
+import { ref } from 'vue'
 
 const props = defineModel<PageShowModel>()
 const activeName = ref('1')
-
-
 </script>
 
 <template>
-  <Placeholder v-if="!props"
-    :inner_text="$router.currentRoute.value.params.account_name ? `没有当前账号【${$router.currentRoute.value.params.account_name} 】的信息！！( ゜- ゜)つロ` : `快选一个账号康康吧 ( ゜- ゜)つロ`">
+  <Placeholder
+    v-if="!props"
+    :inner_text="
+      $router.currentRoute.value.params.account_name
+        ? `没有当前账号【${$router.currentRoute.value.params.account_name} 】的信息！！( ゜- ゜)つロ`
+        : `快选一个账号康康吧 ( ゜- ゜)つロ`
+    "
+  >
   </Placeholder>
-  <div class="dialog" v-else :class="{ hide: $route.params.account_name !== props.info.account_name }">
+  <div
+    class="dialog"
+    v-else
+    :class="{ hide: $route.params.account_name !== props.info.account_name }"
+  >
     <AccountHolder v-if="props.actived"></AccountHolder>
     <div class="send-box" v-if="props.actived">
       <AccountSetting :account_name="props.info.account_name"></AccountSetting>
-      <el-collapse v-model="activeName" accordion >
+      <el-collapse v-model="activeName" accordion>
         <el-collapse-item title="账号运行状况" name="1">
-          <AccountStatusBoard v-model="props" style="overflow:scroll;"></AccountStatusBoard>
+          <AccountStatusBoard v-model="props" style="overflow: scroll"></AccountStatusBoard>
         </el-collapse-item>
         <el-collapse-item title="账号记录" name="2">
           <DashBoard></DashBoard>
         </el-collapse-item>
-    </el-collapse>
-  </div>
+      </el-collapse>
+    </div>
   </div>
 </template>

@@ -7,7 +7,7 @@
           <el-radio-button label="all" value="all">全部</el-radio-button>
           <el-radio-button label="lottery" value="lottery">抽奖数据</el-radio-button>
           <el-radio-button label="user" value="user">用户中心</el-radio-button>
-          <el-radio-button label="shopping" value="shopping">购物助手</el-radio-button>
+          <el-radio-button label="shopping" value="shopping">山姆会员商店</el-radio-button>
         </el-radio-group>
       </div>
     </div>
@@ -66,44 +66,5 @@ const handleCardClick = (path: string | undefined, requiresLogin: boolean | unde
 </script>
 
 <style scoped>
-.features-section {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 40px 20px;
-  width: -webkit-fill-available;
-}
-
-.section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 32px;
-  flex-wrap: wrap;
-  gap: 20px;
-}
-
-.section-title {
-  font-size: 28px;
-  font-weight: 600;
-  margin: 0;
-}
-
-.modules-container {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-  gap: 24px;
-  margin-bottom: 40px;
-}
-
-/* 响应式调整 */
-@media (max-width: 768px) {
-  .section-header {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .modules-container {
-    grid-template-columns: 1fr;
-  }
-}
+@import '@/assets/components/navigation/feature-navigation-tailwind.css';
 </style>

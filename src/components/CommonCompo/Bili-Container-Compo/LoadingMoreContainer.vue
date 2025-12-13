@@ -13,7 +13,15 @@ const isMore = defineModel('isMore', {
   required: true,
   type: Boolean
 })
-const scrollContainer = useTemplateRef('scrollContainer')
+const isLoading = defineModel('isLoading', {
+  required: true,
+  type: Boolean
+})
+const isError = defineModel('isError', {
+  required: true,
+  type: Boolean
+})
+const scrollContainer = useTemplateRef<HTMLElement>('scrollContainer')
 
 const { width, height } = useElementSize(scrollContainer)
 const { x, y, isScrolling, arrivedState, directions, measure } = useScroll(scrollContainer, {
@@ -21,6 +29,7 @@ const { x, y, isScrolling, arrivedState, directions, measure } = useScroll(scrol
 })
 
 const handleLoad = useDebounceFn(() => {
+  if (!isMore.value || isError.value) return
   props.handleLoad()
   y.value += 600
   nextTick(() => {
@@ -30,42 +39,17 @@ const handleLoad = useDebounceFn(() => {
 </script>
 
 <template>
-  <div class="with-loading-more-container-wrapper" ref="scrollContainer">
-    <div
-      class="with-loading-more-container"
-      v-infinite-scroll="handleLoad"
-      :infinite-scroll-disabled="!isMore"
-      :infinite-scroll-immediate="true"
-      :infinite-scroll-distance="10"
-    >
+  <div class="with-loading-more-container-wrapper" ref="scrollContainer" v-loading="isLoading">
+    <el-scrollbar class="with-loading-more-container" @end-reached="handleLoad" :distance="10">
       <slot name="content"></slot>
-      <div v-if="isMore" class="loading-more-txt" style="background-color: transparent">
-        <span @click="handleLoad">查看更多</span>
+      <div class="loading-more-txt" style="background-color: transparent">
+        <span v-if="isMore" @click="handleLoad">查看更多</span>
+        <span v-else-if="!isError">到底了喵~</span>
       </div>
-    </div>
+    </el-scrollbar>
   </div>
 </template>
 
 <style scoped>
-.with-loading-more-container-wrapper {
-  width: -webkit-fill-available;
-  overflow-y: scroll;
-  overflow-x: hidden;
-}
-.with-loading-more-container {
-  padding: 0;
-  margin: 0;
-  height: 600px;
-}
-
-.loading-more-txt {
-  position: relative;
-  width: -webkit-fill-available;
-  text-align: center;
-  background-color: transparent;
-  height: 600px;
-  & span {
-    cursor: pointer;
-  }
-}
+@import '@/assets/components/container/loading-more-container-tailwind.css';
 </style>

@@ -1,11 +1,11 @@
 import type { LoginModel } from '@/models/user/user_model'
 import BaseApi from '../base_axios/base_api'
-import type { RootObject } from '@/models/base_model'
+import type { RootObject } from '@/models/api/base_model.ts'
 import type {
   ReplyItem,
   ReplyMainResp,
   ReplyReplyResp
-} from '@/models/communication/comment_model.ts'
+} from '@/models/api/communication/comment_model.ts'
 
 class FeedbackCommentApi extends BaseApi {
   constructor() {

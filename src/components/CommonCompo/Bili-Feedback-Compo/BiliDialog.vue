@@ -31,45 +31,5 @@ const props = defineProps<{
 </template>
 
 <style scoped>
-.dialog-wrap:deep(.el-dialog__header) {
-  border-bottom: 1px solid #e5e9ef;
-}
-
-.dialog-btn-warp {
-  text-align: center;
-}
-
-.dialog-btn {
-  width: 120px;
-  height: 32px;
-  background: #00a1d6;
-  border-radius: 4px;
-  color: #fff;
-  line-height: 32px;
-  text-align: center;
-  font-size: 14px;
-  margin: 32px auto 0;
-  cursor: pointer;
-}
-
-.dialog-success-explain {
-  margin-top: 32px;
-  text-align: center;
-  font-size: 14px;
-  color: #212121;
-}
-
-.dialog-success-img {
-  width: 118px;
-  height: 124px;
-  margin: 0 auto;
-  background: url(//s1.hdslb.com/bfs/static/jinkela/account/assets/success.png) no-repeat;
-  background-size: 100% 100%;
-}
-
-.dialog-content {
-  padding-top: 15px;
-  padding-left: 20px;
-  padding-right: 20px;
-}
+@import '@/assets/components/feedback/bili-dialog-tailwind.css';
 </style>

@@ -63,8 +63,8 @@ const handleLoginClick = () => {
 /* 顶部横幅 */
 .hero-banner {
   background: linear-gradient(135deg, var(--el-color-danger) 0%, var(--el-color-info) 100%);
-  padding: 60px 20px;
-  color: white;
+  padding: calc(var(--component-spacing) * 12) calc(var(--component-spacing) * 4);
+  color: var(--el-color-white);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -84,45 +84,45 @@ const handleLoginClick = () => {
 }
 
 .hero-content {
-  max-width: 800px;
+  max-width: calc(var(--component-size) * 25);
   position: relative;
   z-index: 1;
 }
 
 .hero-title {
-  font-size: 48px;
+  font-size: calc(var(--component-size) * 1.5);
   font-weight: 700;
-  margin-bottom: 16px;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  margin-bottom: calc(var(--component-spacing) * 3.2);
+  text-shadow: 0 calc(var(--component-size) * 0.0625) calc(var(--component-size) * 0.125) rgba(0, 0, 0, 0.2);
 }
 
 .hero-subtitle {
-  font-size: 20px;
-  margin-bottom: 32px;
+  font-size: calc(var(--component-size) * 0.625);
+  margin-bottom: calc(var(--component-spacing) * 6.4);
   opacity: 0.9;
 }
 
 .hero-actions {
   display: flex;
-  gap: 16px;
+  gap: calc(var(--component-spacing) * 3.2);
   justify-content: center;
-  margin-bottom: 24px;
+  margin-bottom: calc(var(--component-spacing) * 4.8);
 }
 
 .hero-stats {
   display: flex;
-  gap: 40px;
-  margin-top: 32px;
+  gap: calc(var(--component-spacing) * 8);
+  margin-top: calc(var(--component-spacing) * 6.4);
 }
 
 /* 响应式调整 */
 @media (max-width: 768px) {
   .hero-title {
-    font-size: 32px;
+    font-size: calc(var(--component-size) * 1);
   }
 
   .hero-subtitle {
-    font-size: 16px;
+    font-size: var(--component-size);
   }
 
   .hero-actions {
@@ -132,7 +132,7 @@ const handleLoginClick = () => {
 
   .hero-stats {
     flex-direction: column;
-    gap: 20px;
+    gap: calc(var(--component-spacing) * 4);
   }
 }
 </style>

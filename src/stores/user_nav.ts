@@ -6,7 +6,7 @@ export const useUserNavStore = defineStore(
   'user-nav',
   () => {
     const user_nav = ref<UserNavModel>({
-      uid: 0,
+      uid: '',
       user_name: '',
       role: '',
       face: ''
@@ -18,7 +18,7 @@ export const useUserNavStore = defineStore(
 
     function delete_user_nav() {
       user_nav.value = {
-        uid: 0,
+        uid: '',
         user_name: '',
         role: '',
         face: ''

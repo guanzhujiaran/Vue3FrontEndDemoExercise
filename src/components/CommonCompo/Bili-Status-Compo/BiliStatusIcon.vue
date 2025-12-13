@@ -59,31 +59,5 @@ const resultIcon = computed(() => {
 </template>
 
 <style scoped lang="scss">
-@use 'element-plus/theme-chalk/src/common/var' as *;
-@use 'element-plus/theme-chalk/src/mixins/var' as *;
-@use 'element-plus/theme-chalk/src/mixins/mixins' as *;
-
-@include b(result) {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  flex-direction: column;
-  text-align: center;
-  box-sizing: border-box;
-  padding: getCssVar('tag-padding');
-  @include e(icon) {
-    display: flex;
-    svg {
-      width: 36px;
-      height: 36px;
-    }
-  }
-
-  @each $type in $types {
-    .icon-#{$type} {
-      @include css-var-from-global(('result', 'color'), ('color', $type));
-      color: getCssVar('result-color');
-    }
-  }
-}
+@import '@/assets/components/status/bili-status-icon-tailwind.css';
 </style>

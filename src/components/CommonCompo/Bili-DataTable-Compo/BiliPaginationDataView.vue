@@ -1,5 +1,5 @@
 <template>
-  <div class="pagination-container-wrapper" v-loading="loading">
+  <div class="pagination-container-wrapper" ref="paginationContainer" v-loading="loading">
     <slot name="toolbar">
       <BiliDataTableToolbar :refresh_data="refresh_data"></BiliDataTableToolbar>
     </slot>
@@ -24,66 +24,23 @@
   </div>
 </template>
 <style scoped>
-.pagination {
-  padding-top: 10px;
-  padding-bottom: 1rem;
-  margin: 0 auto;
-}
-.pagination-container-wrapper {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  border-radius: 8px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
-  padding: 5px;
-  border: 1px solid var(--el-border-color-lighter);
-}
-
-:deep(.el-pagination) {
-  margin-top: 1rem;
-  padding: 0.5rem;
-  border-radius: 8px;
-  justify-content: center;
-  border: 1px solid var(--el-border-color-lighter);
-}
-
-:deep(.el-pagination .el-pagination__total) {
-  font-size: 0.9rem;
-  color: #606266;
-}
-
-:deep(.el-pagination .btn-prev),
-:deep(.el-pagination .btn-next) {
-  border-radius: 4px;
-  border: 1px solid var(--el-border-color);
-}
-
-:deep(.el-pagination .el-pager li) {
-  border: 1px solid var(--el-border-color);
-  border-radius: 4px;
-  margin: 0 2px;
-  font-weight: normal;
-}
-
-:deep(.el-pagination .el-pager li.is-active) {
-  color: var(--el-color-white);
-  border-color: var(--el-color-primary);
-}
+@import '@/assets/components/data-table/bili-pagination-data-view-tailwind.css';
 </style>
 <script setup lang="ts">
 import emitter from '@/utils/mitt.ts'
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted } from 'vue'
 import { type GlobalVarsType, ScreenTypeEnum } from '@/models/global_var/global_var_model.ts'
 import { KeysEnum, useInject } from '@/models/base/provide_model.ts'
 import BiliDataTableToolbar from '@/components/CommonCompo/Bili-DataTable-Compo/BiliDataTableToolbar.vue'
-import BiliLotteryCardContainer from '@/components/lottery_data_statistic/bili_data/BiliLotteryCardContainer.vue'
+import BiliLotteryCardContainer from '@/components/lottery_data/bili_data/BiliLotteryCardContainer.vue'
 import FlexContainer from '@/components/CommonCompo/Bili-Container-Compo/FlexContainer.vue'
+import { useScroll } from '@vueuse/core'
 const empty = computed(() => data4show.data.length === 0)
-const globalVars = useInject(KeysEnum.globalVars) as Ref<GlobalVarsType>
+const globalVars = useInject(KeysEnum.GlobalVars) as Ref<GlobalVarsType>
 const isSmallScreen = computed(() => {
   return globalVars.value.screen_size !== ScreenTypeEnum.large
 })
-
+const paginationContainer = useTemplateRef<HTMLElement>('paginationContainer')
 const paginationLayout = computed(() => {
   return isSmallScreen.value
     ? 'prev, pager, next, total, jumper'
@@ -113,4 +70,10 @@ onMounted(() => {
 const refresh_data = () => {
   current_page.value = current_page.value === 1 ? 0 : 1
 }
+const { x, y } = useScroll(paginationContainer, { behavior: 'smooth' })
+watch(loading, (newVal) => {
+  if (newVal === false) {
+    y.value = 0
+  }
+})
 </script>

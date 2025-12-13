@@ -7,9 +7,7 @@
  * @Description: 路由配置文件，整合了所有路由信息和元数据
  */
 import { createRouter, createWebHistory } from 'vue-router'
-import HomeView from '@/views/HomeView.vue'
 import {
-  Location as IconLocation,
   Setting as IconSetting,
   User as IconUser,
   DataAnalysis as IconDataAnalysis,
@@ -17,12 +15,72 @@ import {
   ShoppingCart as IconShoppingCart,
   Promotion as IconPromotion,
   Lightning as IconLightning,
-  CreditCard as IconCreditCard
+  CreditCard as IconCreditCard,
+  List as IconList,
+  Trophy as IconTrophy,
+  Monitor as IconMonitor
 } from '@element-plus/icons-vue'
-import UserCenterView from '@/views/UserCenterView.vue'
 import emitter from '@/utils/mitt.ts'
-import LotteryHome from '@/views/LotteryHome.vue'
 import { type CustomRouteRecordRaw, RouteName } from '@/models/router/index.ts'
+const user_center_routes = [
+  {
+    path: 'user-info-config',
+    name: RouteName.USER_INFO_CONFIG,
+    component: () =>
+      import(
+        '@/components/opus-detail/RightPannel/PannelItems/SettingComponent/UserBaseInfoConfig.vue'
+      ),
+    meta: {
+      title: RouteName.USER_INFO_CONFIG,
+      description: '管理用户基本信息',
+      isHeaderShow: true,
+      requiresLogin: true,
+      icon: IconSetting
+    }
+  },
+  {
+    path: 'all_accounts',
+    name: RouteName.ACCOUNT_DETAIL,
+    component: () => import('@/components/opus-detail/RightPannel/PannelItem.vue'),
+    meta: {
+      title: '所有账号',
+      description: '查看所有账号信息',
+      isHeaderShow: false,
+      requiresLogin: true,
+      icon: IconUser
+    },
+    children: [
+      {
+        path: 'rpa-control',
+        name: RouteName.RPA_CONTROL,
+        component: () => import('@/views/RPAControlView.vue'),
+        meta: {
+          title: 'RPA控制',
+          icon: IconSetting,
+          description: 'RPA 任务编排与控制台',
+          color:
+            'linear-gradient(225deg, var(--el-color-info) 0%, var(--el-color-primary) 40%, var(--el-color-danger) 80%)',
+          requiresLogin: false,
+          showInHome: false,
+          order: 1,
+          isHeaderShow: false
+        }
+      },
+      {
+        path: 'account_name:account_name',
+        name: RouteName.ACCOUNT_NAME_DETAIL_PAGE,
+        component: () => import('@/components/opus-detail/RightPannel/PannelItem.vue'),
+        meta: {
+          title: '账号详情',
+          description: '查看单个账号详细信息',
+          isHeaderShow: false,
+          requiresLogin: true,
+          icon: IconUser
+        }
+      }
+    ]
+  }
+]
 /**
  * 路由配置数组
  * 包含所有路由信息和元数据，如图标、描述、权限等
@@ -30,24 +88,26 @@ import { type CustomRouteRecordRaw, RouteName } from '@/models/router/index.ts'
 const routes: CustomRouteRecordRaw[] = [
   {
     path: '/',
-    name: RouteName.HOME, // 使用 enum
-    component: HomeView,
+    name: RouteName.HOME,
+    component: () => import('@/views/HomeView.vue'),
     meta: {
       title: '首页',
       description: '应用首页',
-      isHeaderShow: true
+      isHeaderShow: true,
+      order: 0
     }
   },
   {
     path: '/app/Feedback',
-    name: RouteName.FEEDBACK, // 使用 enum
+    name: RouteName.FEEDBACK,
     component: () => import('@/views/FeedbackView.vue'),
     meta: {
       id: 'feedback',
       title: '反馈区',
       icon: IconChat,
       description: '提交问题反馈和建议',
-      color: 'var(--el-color-purple)',
+      color:
+        'linear-gradient(225deg, var(--el-color-primary) 0%, var(--el-color-info) 40%, var(--el-color-warning) 70%, var(--el-color-danger) 100%)',
       requiresLogin: false,
       showInHome: true,
       order: 3,
@@ -56,71 +116,36 @@ const routes: CustomRouteRecordRaw[] = [
   },
   {
     path: '/app/user-center/',
-    name: RouteName.USER_CENTER, // 使用 enum
-    component: UserCenterView,
+    name: RouteName.USER_CENTER,
+    component: () => import('@/views/UserCenterView.vue'),
     meta: {
       id: 'user',
       title: '用户中心',
       icon: IconUser,
       description: '管理您的账户信息和个人设置',
-      color: 'var(--el-color-primary)',
+      color:
+        'linear-gradient(225deg, var(--el-color-primary) 0%, var(--el-color-info) 40%, var(--el-color-warning) 70%, var(--el-color-danger) 100%)',
       requiresLogin: true,
       showInHome: true,
       order: 4,
       isHeaderShow: true
     },
-    children: [
-      {
-        path: 'account-global-config',
-        name: RouteName.USER_GLOBAL_CONFIG, // 使用 enum
-        component: () =>
-          import(
-            '@/components/opus-detail/RightPannel/PannelItems/SettingComponent/UserGlobalConfig.vue'
-          ),
-        meta: {
-          title: '用户全局设置',
-          description: '管理全局用户设置',
-          isHeaderShow: true,
-          requiresLogin: true
-        }
-      },
-      {
-        path: 'account-base-info-config',
-        name: RouteName.USER_BASE_INFO_CONFIG, // 使用 enum
-        component: () =>
-          import(
-            '@/components/opus-detail/RightPannel/PannelItems/SettingComponent/UserBaseInfoConfig.vue'
-          ),
-        meta: {
-          title: '用户基本信息设置',
-          description: '管理用户基本信息',
-          isHeaderShow: true,
-          requiresLogin: true
-        }
-      },
-      {
-        path: 'account_detail/account_name:account_name',
-        name: RouteName.ACCOUNT_DETAIL, // 使用 enum
-        component: () => import('@/components/opus-detail/RightPannel/PannelItem.vue'),
-        meta: {
-          title: '账号详情',
-          description: '查看账号详细信息',
-          isHeaderShow: false,
-          requiresLogin: true
-        }
-      }
-    ]
+    children: user_center_routes
   },
   {
     path: '/app/lot-data',
-    name: RouteName.LOTTERY_DATA, // 使用 enum
-    component: LotteryHome,
+    name: RouteName.LOTTERY_DATA,
+    component: () => import('@/views/LotteryView.vue'),
+    redirect: {
+      name: RouteName.LOTTERY_HOME
+    },
     meta: {
       id: 'lottery',
       title: 'B站抽奖数据',
       icon: IconDataAnalysis,
       description: '查看和分析B站各类抽奖数据',
-      color: 'var(--el-color-success-light-8)',
+      color:
+        'linear-gradient(225deg, var(--el-color-danger) 0%, var(--el-color-primary) 45%, var(--el-color-info) 100%)',
       requiresLogin: false,
       showInHome: true,
       order: 1,
@@ -128,14 +153,30 @@ const routes: CustomRouteRecordRaw[] = [
     },
     children: [
       {
+        path: 'home',
+        name: RouteName.LOTTERY_HOME,
+        component: () => import('@/components/lottery_data/LotteryHome.vue'),
+        meta: {
+          title: RouteName.LOTTERY_HOME,
+          icon: IconMonitor,
+          description: '查看抽奖数据首页',
+          color:
+            'linear-gradient(225deg, var(--el-color-danger) 0%, var(--el-color-warning) 40%, var(--el-color-info) 80%, var(--el-color-success) 100%)',
+          order: 1,
+          showInHome: false,
+          isHeaderShow: false
+        }
+      },
+      {
         path: 'scrapy-stat',
-        name: RouteName.SCRAPY_STAT, // 使用 enum
-        component: () => import('@/components/lottery_data_statistic/bili_data/ScrapyStatus.vue'),
+        name: RouteName.SCRAPY_STAT,
+        component: () => import('@/components/lottery_data/bili_data/ScrapyStatus.vue'),
         meta: {
           title: '爬虫状态',
-          icon: IconSetting,
+          icon: IconMonitor,
           description: '查看数据爬虫的运行状态',
-          color: 'var(--el-color-danger)',
+          color:
+            'linear-gradient(225deg, var(--el-color-danger) 0%, var(--el-color-warning) 40%, var(--el-color-info) 80%, var(--el-color-success) 100%)',
           order: 1,
           showInHome: true,
           isHeaderShow: true
@@ -143,13 +184,14 @@ const routes: CustomRouteRecordRaw[] = [
       },
       {
         path: 'bili-atari-ranking',
-        name: RouteName.BILI_ATARI_RANKING, // 使用 enum
-        component: () => import('@/components/lottery_data_statistic/BiliAtariRanking.vue'),
+        name: RouteName.BILI_ATARI_RANKING,
+        component: () => import('@/components/lottery_data/BiliAtariRanking.vue'),
         meta: {
           title: 'B站中奖名人堂',
-          icon: IconLocation,
+          icon: IconTrophy,
           description: '查看B站中奖排行榜',
-          color: 'var(--el-color-warning)',
+          color:
+            'linear-gradient(225deg, var(--el-color-warning) 0%, var(--el-color-success) 40%, var(--el-color-primary) 80%, var(--el-color-info) 100%)',
           showInHome: true,
           order: 2,
           isHeaderShow: true
@@ -157,23 +199,27 @@ const routes: CustomRouteRecordRaw[] = [
       },
       {
         path: 'bili-data',
-        name: RouteName.BILI_DATA, // 使用 enum
+        name: RouteName.BILI_DATA,
         meta: {
           title: 'B站抽奖数据',
+          icon: IconList,
           description: 'B站各类抽奖数据汇总',
           showInHome: true,
-          isHeaderShow: true
+          isHeaderShow: true,
+          color:
+            'linear-gradient(225deg, var(--el-color-danger) 0%, var(--el-color-warning) 40%, var(--el-color-primary) 80%, var(--el-color-success) 100%)'
         },
         children: [
           {
             path: 'official',
-            name: RouteName.OFFICIAL_LOTTERY, // 使用 enum
-            component: () => import('@/views/bili-data/OfficialLottery.vue'),
+            name: RouteName.OFFICIAL_LOTTERY,
+            component: () => import('@/components/lottery_data/bili_data/OfficialLottery.vue'),
             meta: {
               title: '官方抽奖',
               icon: IconPromotion,
               description: 'B站官方活动抽奖数据',
-              color: 'var(--el-color-success)',
+              color:
+                'linear-gradient(225deg, var(--el-color-success) 0%, var(--el-color-info) 35%, var(--el-color-primary) 70%, var(--el-color-warning) 100%)',
               showInHome: true,
               order: 1,
               isHeaderShow: true
@@ -181,13 +227,14 @@ const routes: CustomRouteRecordRaw[] = [
           },
           {
             path: 'reserve',
-            name: RouteName.RESERVE_LOTTERY, // 使用 enum
-            component: () => import('@/views/bili-data/ReserveLottery.vue'),
+            name: RouteName.RESERVE_LOTTERY,
+            component: () => import('@/components/lottery_data/bili_data/ReserveLottery.vue'),
             meta: {
               title: '预约抽奖',
               icon: IconLightning,
               description: 'B站预约活动抽奖数据',
-              color: 'var(--el-color-success)',
+              color:
+                'linear-gradient(225deg, var(--el-color-success) 0%, var(--el-color-info) 35%, var(--el-color-primary) 70%, var(--el-color-warning) 100%)',
               showInHome: true,
               order: 2,
               isHeaderShow: true
@@ -195,13 +242,14 @@ const routes: CustomRouteRecordRaw[] = [
           },
           {
             path: 'charge',
-            name: RouteName.CHARGE_LOTTERY, // 使用 enum
-            component: () => import('@/views/bili-data/ChargeLottery.vue'),
+            name: RouteName.CHARGE_LOTTERY,
+            component: () => import('@/components/lottery_data/bili_data/ChargeLottery.vue'),
             meta: {
               title: '充电抽奖',
               icon: IconCreditCard,
               description: 'B站充电活动抽奖数据',
-              color: 'var(--el-color-success)',
+              color:
+                'linear-gradient(225deg, var(--el-color-success) 0%, var(--el-color-info) 35%, var(--el-color-primary) 70%, var(--el-color-warning) 100%)',
               showInHome: true,
               order: 3,
               isHeaderShow: true
@@ -212,26 +260,40 @@ const routes: CustomRouteRecordRaw[] = [
     ]
   },
   {
-    path: '/samsclub/info',
-    name: RouteName.SAMSCLUB, // 使用 enum
+    path: '/app/samsclub/info',
+    name: RouteName.SAMSCLUB,
     component: () => import('@/views/SamsClubView.vue'),
     meta: {
       id: 'shopping',
       title: '山姆会员店',
       icon: IconShoppingCart,
       description: '山姆会员店信息查询',
-      color: 'var(--el-color-info)',
+      color:
+        'linear-gradient(225deg, var(--el-color-info) 0%, var(--el-color-primary) 40%, var(--el-color-danger) 80%, var(--el-color-success) 100%)',
       requiresLogin: false,
       showInHome: true,
       order: 2,
       isHeaderShow: true
     }
   },
-  // 404页面路由配置
   {
+    path: '/app/changelog',
+    name: RouteName.CHANGE_LOG,
+    component: () => import('@/views/ChangelogView.vue'),
+    meta: {
+      title: '更新日志',
+      description: '查看项目更新日志',
+      isHeaderShow: true,
+      order: 5
+    }
+  },
+
+  {
+    // 404页面路由配置
     path: '/:pathMatch(.*)*',
-    name: RouteName.NOT_FOUND, // 使用 enum
-    component: () => import('@/components/CommonCompo/Bili-Feedback-Compo/BiliNotFoundError.vue')
+    name: RouteName.NOT_FOUND,
+    component: () =>
+      import('@/components/CommonCompo/Bili-Feedback-Compo/items/BiliNotFoundError.vue')
   }
 ]
 // 将自定义路由类型转换为Vue Router所需的RouteRecordRaw类型
@@ -254,4 +316,4 @@ router.afterEach(() => {
   emitter.emit('loading', { isLoading: false, loadingText: '' })
 })
 export default router
-export { routes }
+export { routes, user_center_routes }

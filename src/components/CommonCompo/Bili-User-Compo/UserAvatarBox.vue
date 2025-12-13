@@ -33,26 +33,5 @@ const size = computed(() => {
 </template>
 
 <style scoped>
-.avatar-box {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.avatar-box .avatar.border {
-  border: 1px solid var(--el-color-danger-dark-2);
-}
-
-.avatar-box .avatar {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  box-sizing: border-box;
-}
-
-.avatar-box .url {
-  border-radius: 50%;
-}
+@import '@/assets/components/user/user-avatar-box-tailwind.css';
 </style>

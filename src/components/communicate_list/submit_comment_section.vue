@@ -30,8 +30,8 @@ const comment_content = defineModel<string>('comment_content')
     class="submit-comment-section"
     shadow="hover"
     :body-style="{
-      'padding-top': '0.5rem',
-      'padding-bottom': '0.5rem',
+      'padding-top': 'calc(var(--component-spacing) * 1)',
+      'padding-bottom': 'calc(var(--component-spacing) * 1)',
       padding: 'unset'
     }"
     v-loading="is_loading || is_submitting"
@@ -52,13 +52,13 @@ const comment_content = defineModel<string>('comment_content')
 
 <style scoped>
 .markdown-editor {
-  min-height: 5rem;
+  min-height: calc(var(--component-size) * 1.5625);
   transition: height 1s ease; /* 平滑过渡效果 */
 }
 
 .submit-btn {
   float: right;
-  margin: 0.3rem 0.3rem 0.1rem 0;
+  margin: calc(var(--component-spacing) * 0.6) calc(var(--component-spacing) * 0.6) calc(var(--component-spacing) * 0.2) 0;
 }
 
 .submit-comment-section {

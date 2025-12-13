@@ -1,9 +1,8 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted } from 'vue'
 import { query } from '@/api/samsclub/gql.ts'
-import { gql } from '@urql/vue'
 import { ElCollapseTransition } from 'element-plus'
-import ScrollButtons from '@/components/common/ScrollButtons.vue'
+import { useQuery } from '@urql/vue'
 import {
   SortUp,
   SortDown,
@@ -11,16 +10,12 @@ import {
   RemoveFilled,
   ArrowDown,
   ArrowUp,
-  Calendar,
-  PriceTag,
-  Box,
-  Warning,
-  Close,
-  Clock,
   QuestionFilled
 } from '@element-plus/icons-vue'
 import type { QueryGetSpuInfosArgs } from '@/gql/samsclub/graphql.ts'
 import { useSamsclubStore } from '@/stores/samsclub.ts'
+import UniversalSearchBox from '@/components/CommonCompo/Bili-Search-Compo/UniversalSearchBox.vue'
+import { GET_MAX_PRICE, GET_TAG_GROUPS } from '@/gql/samsclub/queries.ts'
 const queryParams = defineModel<QueryGetSpuInfosArgs>('queryParams', { required: true })
 const props = defineProps<{
   submitForm: () => void
@@ -42,15 +37,82 @@ const orderByOptions = [
 
 const selectedSorts = ref<{ key: string; order: 'asc' | 'desc' }[]>([])
 const orderByAsc = ref(true)
-const spuInfoMaxPrice = ref(0)
-const spuNewTagTagMarkSelectOptions = ref<ListItem[]>([])
 const priceMin = ref()
 const priceMax = ref()
 const oderBySelect = ref<string>('')
-const updateTimeRange = ref<[Date | string, Date | string] | undefined>(undefined)
-const createTimeRange = ref<[Date | string, Date | string] | undefined>(undefined)
+const updateTimeRange = ref()
+const createTimeRange = ref()
 const showAdvancedSearch = ref(false) // 控制高级查询的显示/隐藏
 
+// SPU标题搜索引用
+const spuTitleSearchRef = ref<InstanceType<typeof UniversalSearchBox> | null>(null)
+const spuTitleInput = ref('') // 用于绑定SPU标题输入框的值
+const get_tag_groups_result = useQuery({
+  query: GET_TAG_GROUPS
+})
+const get_max_price_result = useQuery({
+  query: GET_MAX_PRICE
+})
+
+const spuInfoMaxPrice = computed<number>(() => {
+  return Math.round(get_max_price_result.data.value.getMaxPrice / 100) + 1
+})
+const spuNewTagTagMarkSelectOptions = computed<ListItem[]>(() => {
+  return get_tag_groups_result.data.value
+    ? get_tag_groups_result.data.value.SpuNewTagInfoTagMarkGroup.map((el: any) => {
+        return { value: el.tagMark, label: el.title.replace(/\d+(?:\.\d+)?/g, ' xx ') }
+      })
+    : []
+})
+// 初始化时加载搜索历史
+onMounted(() => {
+  // 初始化更新时间范围
+  if (queryParams.value.lastUpdateAfterTss && queryParams.value.lastUpdateBeforeTss) {
+    updateTimeRange.value = [
+      new Date(queryParams.value.lastUpdateAfterTss * 1000),
+      new Date(queryParams.value.lastUpdateBeforeTss * 1000)
+    ]
+  }
+
+  // 初始化创建时间范围
+  if (queryParams.value.lastCreateAfterTss && queryParams.value.lastCreateBeforeTss) {
+    createTimeRange.value = [
+      new Date(queryParams.value.lastCreateAfterTss * 1000),
+      new Date(queryParams.value.lastCreateBeforeTss * 1000)
+    ]
+  }
+
+  // 初始化SPU标题输入框的值
+  spuTitleInput.value = queryParams.value.spuInfoTitle || ''
+})
+
+/**
+ * 处理SPU标题搜索
+ * @param query - 搜索关键字
+ */
+const handleSpuTitleSearch = (query: string | number): void => {
+  if (!String(query).trim()) return
+  handleResetForm() // 单独查询SPU标题时不需要其他参数
+  // 更新查询参数
+  queryParams.value.spuInfoTitle = String(query)
+  props.submitForm() // 触发查询
+}
+
+/**
+ * 处理SPU ID搜索
+ * @param query - 搜索spu_id
+ */
+const handleSpuIdSearch = (query: string | number): void => {
+  if (!query) {
+    queryParams.value.spuId = undefined
+  } else {
+    queryParams.value.spuId = Number(query)
+  }
+  handleResetForm() //单独查询SPU ID时不需要其他参数
+  props.submitForm() // 触发查询
+}
+
+// 重置表单
 const handleResetForm = () => {
   Object.assign(queryParams.value, {
     pn: 1,
@@ -74,10 +136,16 @@ const handleResetForm = () => {
   selectedSorts.value = []
   updateTimeRange.value = undefined
   createTimeRange.value = undefined
+  spuTitleInput.value = '' // 重置SPU标题输入框
+
+  // 重置搜索框
+  if (spuTitleSearchRef.value) {
+    spuTitleSearchRef.value.loadHistory()
+  }
 }
 
 // 处理更新时间范围变化
-const handleUpdateTimeRangeChange = (val: [Date | string, Date | string] | undefined) => {
+const handleUpdateTimeRangeChange = (val: any) => {
   if (val && val.length === 2) {
     // 将日期转换为时间戳（秒）
     const startDate = typeof val[0] === 'string' ? new Date(val[0]) : val[0]
@@ -92,7 +160,7 @@ const handleUpdateTimeRangeChange = (val: [Date | string, Date | string] | undef
 }
 
 // 处理创建时间范围变化
-const handleCreateTimeRangeChange = (val: [Date | string, Date | string] | undefined) => {
+const handleCreateTimeRangeChange = (val: any) => {
   if (val && val.length === 2) {
     // 将日期转换为时间戳（秒）
     const startDate = typeof val[0] === 'string' ? new Date(val[0]) : val[0]
@@ -104,29 +172,6 @@ const handleCreateTimeRangeChange = (val: [Date | string, Date | string] | undef
     queryParams.value.lastCreateAfterTss = undefined
     queryParams.value.lastCreateBeforeTss = undefined
   }
-}
-const handleRemoteTagGroup = () => {
-  query(gql`
-    query GetTagGroups {
-      SpuNewTagInfoTagMarkGroup {
-        tagMark
-        title
-      }
-    }
-  `).then((data) => {
-    spuNewTagTagMarkSelectOptions.value = data.data?.SpuNewTagInfoTagMarkGroup.map((el: any) => {
-      return { value: el.tagMark, label: el.title.replace(/\d+(?:\.\d+)?/g, ' xx ') }
-    })
-  })
-}
-const handleGetMaxPrice = () => {
-  query(gql`
-    query GetMaxPrice {
-      getMaxPrice
-    }
-  `).then((data) => {
-    spuInfoMaxPrice.value = Math.round(data.data?.getMaxPrice / 100) + 1
-  })
 }
 const handlePriceLimit = () => {
   if (priceMin.value > priceMax.value) {
@@ -173,7 +218,7 @@ const handleQueryParamsOrderBy = () => {
 const toggleSortOrder = (key: string) => {
   const index = selectedSorts.value.findIndex((s) => s.key === key)
   if (index >= 0) {
-    const sort = selectedSorts.value[index]
+    const sort = selectedSorts.value[index]!
     sort.order = sort.order === 'asc' ? 'desc' : 'asc'
   } else {
     selectedSorts.value.push({ key, order: 'asc' })
@@ -205,7 +250,7 @@ const queryRecentCreated = (days: number) => {
   oderBySelect.value = 'spuInfoCreateAsc'
   orderByAsc.value = false
   queryParams.value.spuInfoCreateAsc = false
-
+  queryParams.value.pn = 1
   // 提交查询
   props.submitForm()
 }
@@ -230,6 +275,7 @@ const queryRecentUpdated = (days: number) => {
   oderBySelect.value = 'spuInfoUpdateAsc'
   orderByAsc.value = false
   queryParams.value.spuInfoUpdateAsc = false
+  queryParams.value.pn = 1
 
   // 提交查询
   props.submitForm()
@@ -255,6 +301,7 @@ const queryMaxDiscountInPrice = (maxPrice: number) => {
   oderBySelect.value = 'priceDiffMaxAsc'
   orderByAsc.value = false
   queryParams.value.priceDiffMaxAsc = false
+  queryParams.value.pn = 1
 
   // 提交查询
   props.submitForm()
@@ -280,6 +327,7 @@ const queryCurrentDiscountInPrice = (maxPrice: number) => {
   oderBySelect.value = 'priceDiffCurAsc'
   orderByAsc.value = false
   queryParams.value.priceDiffCurAsc = false
+  queryParams.value.pn = 1
 
   // 提交查询
   props.submitForm()
@@ -305,6 +353,7 @@ const queryLatestDiscountInPrice = (maxPrice: number) => {
   oderBySelect.value = 'priceDiffLatestAsc'
   orderByAsc.value = false
   queryParams.value.priceDiffLatestAsc = false
+  queryParams.value.pn = 1
 
   // 提交查询
   props.submitForm()
@@ -331,6 +380,7 @@ const queryLongTimeNoUpdate = (maxPrice?: number) => {
   oderBySelect.value = 'spuInfoUpdateAsc'
   orderByAsc.value = true
   queryParams.value.spuInfoUpdateAsc = true
+  queryParams.value.pn = 1
 
   // 提交查询
   props.submitForm()
@@ -356,6 +406,7 @@ const queryLowPriceWithDiscount = (maxPrice: number) => {
   oderBySelect.value = 'priceAsc'
   orderByAsc.value = true
   queryParams.value.priceAsc = true
+  queryParams.value.pn = 1
 
   // 提交查询
   props.submitForm()
@@ -365,10 +416,11 @@ const queryLowPriceWithDiscount = (maxPrice: number) => {
 const toggleAdvancedSearch = () => {
   showAdvancedSearch.value = !showAdvancedSearch.value
 }
+const handleSearchBtnClick = () => {
+  queryParams.value.pn = 1
+  props.submitForm()
+}
 onMounted(() => {
-  handleRemoteTagGroup()
-  handleGetMaxPrice()
-
   // 初始化更新时间范围
   if (queryParams.value.lastUpdateAfterTss && queryParams.value.lastUpdateBeforeTss) {
     updateTimeRange.value = [
@@ -376,7 +428,6 @@ onMounted(() => {
       new Date(queryParams.value.lastUpdateBeforeTss * 1000)
     ] as [Date | string, Date | string]
   }
-
   // 初始化创建时间范围
   if (queryParams.value.lastCreateAfterTss && queryParams.value.lastCreateBeforeTss) {
     createTimeRange.value = [
@@ -391,10 +442,25 @@ onMounted(() => {
   <!-- 基本查询部分 -->
   <el-descriptions :column="2" border>
     <el-descriptions-item label-class-name="samsclub-filter-label" label="SPU ID">
-      <el-input v-model.number="queryParams.spuId" placeholder="请输入SPU ID" />
+      <UniversalSearchBox
+        v-model="queryParams.spuId as number"
+        mode="numeric"
+        placeholder="请输入SPU ID"
+        @search="handleSpuIdSearch"
+        :show-search-button="false"
+        :max-length="20"
+        history-key="spuIdSearchHistory"
+      />
     </el-descriptions-item>
     <el-descriptions-item label-class-name="samsclub-filter-label" label="SPU标题">
-      <el-input v-model="queryParams.spuInfoTitle" placeholder="请输入SPU标题" />
+      <UniversalSearchBox
+        ref="spuTitleSearchRef"
+        v-model="spuTitleInput"
+        history-key="spuTitleSearchHistory"
+        placeholder="请输入SPU标题"
+        @search="handleSpuTitleSearch"
+        :max-length="50"
+      />
     </el-descriptions-item>
 
     <!-- 快捷查询按钮组和高级查询切换按钮 -->
@@ -413,14 +479,14 @@ onMounted(() => {
                   </el-tooltip>
                 </div>
                 <el-button-group>
-                  <el-button size="small" @click="queryRecentCreated(7)" type="primary" plain>
-                    <el-icon><Calendar /></el-icon>近7天新品
+                  <el-button size="small" @click="queryRecentCreated(7)" type="primary" text bg>
+                    近7天新品
                   </el-button>
-                  <el-button size="small" @click="queryRecentCreated(15)" type="primary" plain>
-                    <el-icon><Calendar /></el-icon>近15天新品
+                  <el-button size="small" @click="queryRecentCreated(15)" type="primary" text bg>
+                    近15天新品
                   </el-button>
-                  <el-button size="small" @click="queryRecentCreated(30)" type="primary" plain>
-                    <el-icon><Calendar /></el-icon>近30天新品
+                  <el-button size="small" @click="queryRecentCreated(30)" type="primary" text bg>
+                    近30天新品
                   </el-button>
                 </el-button-group>
               </div>
@@ -434,14 +500,14 @@ onMounted(() => {
                   </el-tooltip>
                 </div>
                 <el-button-group>
-                  <el-button size="small" @click="queryRecentUpdated(3)" type="warning" plain>
-                    <el-icon><Clock /></el-icon>近3天更新
+                  <el-button size="small" @click="queryRecentUpdated(3)" type="warning" text bg>
+                    近3天更新
                   </el-button>
-                  <el-button size="small" @click="queryRecentUpdated(7)" type="warning" plain>
-                    <el-icon><Clock /></el-icon>近7天更新
+                  <el-button size="small" @click="queryRecentUpdated(7)" type="warning" text bg>
+                    近7天更新
                   </el-button>
-                  <el-button size="small" @click="queryRecentUpdated(15)" type="warning" plain>
-                    <el-icon><Clock /></el-icon>近15天更新
+                  <el-button size="small" @click="queryRecentUpdated(15)" type="warning" text bg>
+                    近15天更新
                   </el-button>
                 </el-button-group>
               </div>
@@ -461,19 +527,32 @@ onMounted(() => {
                   </el-tooltip>
                 </div>
                 <el-button-group>
-                  <el-button size="small" @click="queryMaxDiscountInPrice(30)" type="success" plain>
-                    <el-icon><PriceTag /></el-icon>30元内
+                  <el-button
+                    size="small"
+                    @click="queryMaxDiscountInPrice(30)"
+                    type="default"
+                    text
+                    bg
+                  >
+                    30元内
                   </el-button>
-                  <el-button size="small" @click="queryMaxDiscountInPrice(50)" type="success" plain>
-                    <el-icon><PriceTag /></el-icon>50元内
+                  <el-button
+                    size="small"
+                    @click="queryMaxDiscountInPrice(50)"
+                    type="default"
+                    text
+                    bg
+                  >
+                    50元内
                   </el-button>
                   <el-button
                     size="small"
                     @click="queryMaxDiscountInPrice(100)"
-                    type="success"
-                    plain
+                    type="default"
+                    text
+                    bg
                   >
-                    <el-icon><PriceTag /></el-icon>100元内
+                    100元内
                   </el-button>
                 </el-button-group>
               </div>
@@ -494,25 +573,28 @@ onMounted(() => {
                     size="small"
                     @click="queryCurrentDiscountInPrice(30)"
                     type="danger"
-                    plain
+                    text
+                    bg
                   >
-                    <el-icon><PriceTag /></el-icon>30元内
+                    30元内
                   </el-button>
                   <el-button
                     size="small"
                     @click="queryCurrentDiscountInPrice(50)"
                     type="danger"
-                    plain
+                    text
+                    bg
                   >
-                    <el-icon><PriceTag /></el-icon>50元内
+                    50元内
                   </el-button>
                   <el-button
                     size="small"
                     @click="queryCurrentDiscountInPrice(100)"
                     type="danger"
-                    plain
+                    text
+                    bg
                   >
-                    <el-icon><PriceTag /></el-icon>100元内
+                    100元内
                   </el-button>
                 </el-button-group>
               </div>
@@ -535,26 +617,29 @@ onMounted(() => {
                   <el-button
                     size="small"
                     @click="queryLatestDiscountInPrice(30)"
-                    type="success"
-                    plain
+                    type="primary"
+                    text
+                    bg
                   >
-                    <el-icon><PriceTag /></el-icon>30元内
+                    30元内
                   </el-button>
                   <el-button
                     size="small"
                     @click="queryLatestDiscountInPrice(50)"
-                    type="success"
-                    plain
+                    type="primary"
+                    text
+                    bg
                   >
-                    <el-icon><PriceTag /></el-icon>50元内
+                    50元内
                   </el-button>
                   <el-button
                     size="small"
                     @click="queryLatestDiscountInPrice(100)"
-                    type="success"
-                    plain
+                    type="primary"
+                    text
+                    bg
                   >
-                    <el-icon><PriceTag /></el-icon>100元内
+                    100元内
                   </el-button>
                 </el-button-group>
               </div>
@@ -575,25 +660,28 @@ onMounted(() => {
                     size="small"
                     @click="queryLowPriceWithDiscount(10)"
                     type="danger"
-                    plain
+                    text
+                    bg
                   >
-                    <el-icon><PriceTag /></el-icon>10元内
+                    10元内
                   </el-button>
                   <el-button
                     size="small"
                     @click="queryLowPriceWithDiscount(20)"
                     type="danger"
-                    plain
+                    text
+                    bg
                   >
-                    <el-icon><PriceTag /></el-icon>20元内
+                    20元内
                   </el-button>
                   <el-button
                     size="small"
                     @click="queryLowPriceWithDiscount(30)"
                     type="danger"
-                    plain
+                    text
+                    bg
                   >
-                    <el-icon><PriceTag /></el-icon>30元内
+                    30元内
                   </el-button>
                 </el-button-group>
               </div>
@@ -612,15 +700,15 @@ onMounted(() => {
                     <el-icon><QuestionFilled /></el-icon>
                   </el-tooltip>
                 </div>
-                <el-button-group>
-                  <el-button size="small" @click="queryLongTimeNoUpdate()" type="info" plain>
-                    <el-icon><Warning /></el-icon>全部
+                <el-button-group type="info">
+                  <el-button size="small" @click="queryLongTimeNoUpdate()" text bg>
+                    全部
                   </el-button>
-                  <el-button size="small" @click="queryLongTimeNoUpdate(30)" type="info" plain>
-                    <el-icon><Warning /></el-icon>30元内
+                  <el-button size="small" @click="queryLongTimeNoUpdate(30)" text bg>
+                    30元内
                   </el-button>
-                  <el-button size="small" @click="queryLongTimeNoUpdate(50)" type="info" plain>
-                    <el-icon><Warning /></el-icon>50元内
+                  <el-button size="small" @click="queryLongTimeNoUpdate(50)" text bg>
+                    50元内
                   </el-button>
                 </el-button-group>
               </div>
@@ -798,6 +886,7 @@ onMounted(() => {
                       value-format="YYYY-MM-DD HH:mm:ss"
                       @change="handleUpdateTimeRangeChange"
                       class="update-time-picker"
+                      :clearable="true"
                     />
                   </div>
                 </div>
@@ -821,7 +910,9 @@ onMounted(() => {
                       value-format="YYYY-MM-DD HH:mm:ss"
                       @change="handleCreateTimeRangeChange"
                       class="create-time-picker"
-                    />
+                      :clearable="true"
+                    >
+                    </el-date-picker>
                   </div>
                 </div>
               </template>
@@ -841,8 +932,8 @@ onMounted(() => {
           active-text="展示价格图"
           inactive-text="隐藏价格图"
           style="
-            --el-switch-on-color: var(--el-color-success-light-5);
-            --el-switch-off-color: var(--el-color-danger-light-7);
+            --el-switch-on-color: var(--el-color-success);
+            --el-switch-off-color: var(--el-color-danger);
           "
         ></el-switch>
         <el-button class="op" size="large" @click="handleResetForm" :icon="RemoveFilled"
@@ -852,10 +943,10 @@ onMounted(() => {
           class="op"
           size="large"
           type="primary"
-          @click="props.submitForm()"
+          @click="handleSearchBtnClick"
           :autofocus="true"
           :icon="Search"
-          @keydown.enter="props.submitForm()"
+          @keydown.enter="handleSearchBtnClick"
           >查询
         </el-button>
       </div>
@@ -864,124 +955,5 @@ onMounted(() => {
 </template>
 
 <style scoped>
-:deep(.samsclub-filter-label) {
-  white-space: nowrap;
-}
-
-.op-area .op + .op {
-  margin-left: 15px;
-}
-
-/* 快捷查询行样式 */
-.quick-search-row {
-  align-items: center;
-  width: -webkit-fill-available;
-}
-
-/* 快捷查询区域样式 */
-.quick-search-area {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 8px;
-  flex: 1;
-}
-
-.quick-search-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  grid-gap: 12px;
-}
-
-.quick-search-column {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.quick-search-group {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-}
-
-.group-title {
-  font-size: 14px;
-  font-weight: bold;
-  color: #606266;
-  margin-bottom: 2px;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.group-title .el-icon {
-  color: #909399;
-  cursor: help;
-}
-
-.group-title .el-icon:hover {
-  color: #409eff;
-}
-
-/* 高级查询切换按钮样式 */
-.advanced-search-toggle {
-  display: flex;
-  margin-left: 15px;
-  justify-content: flex-end;
-}
-
-/* 高级查询区域样式 */
-.advanced-search {
-  margin-top: 15px;
-  border-top: 1px dashed #dcdfe6;
-  padding-top: 15px;
-  width: 100%;
-}
-
-/* 更多信息标题样式 */
-.more-info-header {
-  font-size: 16px;
-  font-weight: bold;
-  margin-bottom: 15px;
-  color: #409eff;
-}
-
-/* 表格单元格内容样式 */
-.table-cell-content {
-  display: flex;
-  align-items: flex-start;
-  width: 100%;
-}
-
-.cell-label {
-  width: 120px;
-  font-weight: bold;
-  padding: 8px 0;
-}
-
-.cell-content {
-  flex: 1;
-  padding: 5px 0;
-}
-
-/* 过渡动画 */
-.el-collapse-transition {
-  transition: all 0.3s ease-in-out;
-}
-
-/* 创建时间和更新时间的配色 */
-:deep(.update-time-picker) {
-  --el-datepicker-border-color: #409eff;
-  --el-datepicker-text-color: #409eff;
-  --el-datepicker-inner-border-color: #409eff;
-  --el-datepicker-active-color: #409eff;
-}
-
-:deep(.create-time-picker) {
-  --el-datepicker-border-color: #67c23a;
-  --el-datepicker-text-color: #67c23a;
-  --el-datepicker-inner-border-color: #67c23a;
-  --el-datepicker-active-color: #67c23a;
-}
+@import '@/assets/components/samsclub/samsclub-filter-tailwind.css';
 </style>

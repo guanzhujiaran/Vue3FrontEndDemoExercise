@@ -12,7 +12,7 @@
 import type { AccountSettingConfigItemModel } from '@/models/account/account_setting/account_setting_type_model';
 import { BaseSettingType } from '@/models/base/base_setting_model';
 import { computed, onMounted, ref, toRef, watch } from 'vue';
-import LoadingCard from '@/components/CommonCompo/LoadingCard.vue';
+import LoadingCard from '@/components/CommonCompo/Bili-Feedback-Compo/items/LoadingCard.vue';
 import ConfigItem from '@/components/opus-detail/RightPannel/PannelItems/SettingComponent/ConfigItem.vue';
 import BlueBtn from '@/components/CommonCompo/Bili-Interact-Compo/Blue-Btn.vue';
 import accountApi from '@/api/account/account_api';
@@ -184,7 +184,7 @@ const fomat_setting = (obj: any): collapse_item[] => {
     }
     else {
       if (Object.keys(setting_map).includes(key)) { // 如果是属性
-        let content: AccountSettingConfigItemModel = setting_map[key]
+        let content: AccountSettingConfigItemModel = setting_map[key]!
         content.setting_content.value = toRef(val)
         content.name = key
         ret_obj_list.push({
@@ -349,12 +349,12 @@ onMounted(
 <style scoped>
 
 .el-collapse-item button {
-  background-color: #fb7299;
+  background-color: var(--el-color-danger);
   opacity: 0.7;
-  border-radius: 0.75rem;
-  height: 2rem;
-  padding: 1rem;
-  margin-top: 0.2rem;
+  border-radius: calc(var(--component-size) * 0.234375);
+  height: calc(var(--component-size) * 0.625);
+  padding: calc(var(--component-size) * 0.3125);
+  margin-top: calc(var(--component-spacing) * 0.4);
 }
 
 .el-collapse-item .is-active {
@@ -374,15 +374,15 @@ onMounted(
   <el-collapse v-else v-model="activeNames" accordion>
     <el-collapse-item v-for="(value, idx) in formattedprops" :key="idx" :title="value.title" :name="idx">
       <ConfigItem v-if="!Array.isArray(value.content)"
-        v-model="formattedprops[idx].content as AccountSettingConfigItemModel" />
+        v-model="(formattedprops![idx] as collapse_item).content as AccountSettingConfigItemModel" />
       <el-collapse v-else v-model="activeNames1" style="padding-left: 20px; padding-top:3px" accordion>
         <el-collapse-item v-for="(v1, idx1) in value.content" :key="idx1" :title="v1.title" :name="`${idx}.${idx1}`">
           <ConfigItem v-if="!Array.isArray(v1.content)"
-            v-model="value.content[idx1].content as AccountSettingConfigItemModel" />
+            v-model="(value.content![idx1] as collapse_item).content as AccountSettingConfigItemModel" />
           <el-collapse v-else v-model="activeNames2" style="padding-left: 20px; padding-top:3px">
             <el-collapse-item v-for="(v2, idx2) in v1.content" :key="idx2" :title="v2.title"
               :name="`${idx}.${idx1}.${idx2}`">
-              <ConfigItem v-model="v1.content[idx2].content as AccountSettingConfigItemModel" />
+              <ConfigItem v-model="(v1.content![idx2] as collapse_item).content as AccountSettingConfigItemModel" />
             </el-collapse-item>
           </el-collapse>
         </el-collapse-item>

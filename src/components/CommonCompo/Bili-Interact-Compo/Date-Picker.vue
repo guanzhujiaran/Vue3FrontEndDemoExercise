@@ -26,4 +26,6 @@ const props = defineModel<BaseSettingDatePicker>({
   </div>
 </template>
 
-<style scoped></style>
+<style scoped>
+@import '@/assets/components/interact/date-picker-tailwind.css';
+</style>

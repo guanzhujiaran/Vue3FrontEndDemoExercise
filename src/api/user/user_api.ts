@@ -1,6 +1,6 @@
 import type { LoginModel, UserNavModel } from '@/models/user/user_model'
 import BaseApi from '../base_axios/base_api'
-import type { RootObject } from '@/models/base_model'
+import type { RootObject } from '@/models/api/base_model.ts'
 import { useJwtStore } from '@/stores/jwt_token.ts'
 import type { User_base_info_config_form } from '@/models/user/user_setting/user_base_info_config_model.ts'
 

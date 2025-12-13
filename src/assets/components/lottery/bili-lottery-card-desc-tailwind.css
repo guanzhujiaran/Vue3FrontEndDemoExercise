@@ -1,0 +1,37 @@
+@import '@/assets/tailwind.css';
+
+.lottery__desc {
+    @apply inline-flex items-center gap-2;
+}
+
+.lottery__section.prize {
+    @apply flex flex-col py-2;
+
+    .prizes {
+        @apply mt-4;
+
+        .prizes__list {
+            @apply flex justify-around;
+
+            .prize {
+                @apply w-25 text-center;
+
+                .prize__picture {
+                    @apply w-25 h-25
+                }
+
+                .prize__level {
+                    @apply mb-1 mt-2;
+                }
+
+                .prize__desc {
+                    @apply wrap-break-word text-[var(--el-color-info-light-3)];
+                }
+            }
+        }
+    }
+}
+
+.title {
+    @apply w-full text-center font-bold text-lg;
+}

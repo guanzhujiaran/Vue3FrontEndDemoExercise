@@ -1,6 +1,6 @@
 <template>
   <div class="radio-list">
-    <span v-if="props.radio_props[0] && props.radio_props[0].label" style="align-self: center">{{
+    <span v-if="props.radio_props[0] && props.radio_props[0].label" class="self-center">{{
       props.radio_props[0] && props.radio_props[0].label
     }}</span>
     <label
@@ -8,10 +8,10 @@
       v-bind:key="i"
       class="type-selector radio-selector"
     >
-      <input type="radio" class="radio" v-model="props.value" :value="radio_prop.value" />
+      <input type="radio" class="radio absolute opacity-0 z-10 w-[var(--component-size)] h-[var(--component-size)] cursor-pointer" v-model="props.value" :value="radio_prop.value" />
       <svg
         viewBox="0 0 40 40"
-        class="radio-icon"
+        class="radio-icon absolute top-0 left-0 w-[var(--component-size)] h-[var(--component-size)]"
         :class="radio_prop.value == props.value ? `css-o1815x` : `css-1xneiug`"
       >
         <path
@@ -27,14 +27,9 @@
           d="M20,10h0A10,10,0,0,1,30,20h0A10,10,0,0,1,20,30h0A10,10,0,0,1,10,20h0A10,10,0,0,1,20,10Z"
         ></path>
       </svg>
-      {{ radio_prop.content }}</label
-    >
+      <span class="radio-label ml-2 align-middle">{{ radio_prop.content }}</span>
+    </label>
   </div>
-
-  <!-- 测试用代码 -->
-  <!-- <div>
-        {{ props }}
-    </div> -->
 </template>
 
 <script setup lang="ts">
@@ -43,86 +38,5 @@ import type { BaseSettingRadioList } from '@/models/base/base_setting_model'
 const props = defineModel<BaseSettingRadioList>({ required: true })
 </script>
 <style scoped>
-.config .radio-list {
-  display: -webkit-box;
-  display: -ms-flexbox;
-  display: flex;
-  -ms-flex-wrap: wrap;
-  flex-wrap: wrap;
-}
-
-.type-selector .radio-icon {
-  position: absolute;
-  top: 0;
-  left: 0;
-  font-size: 22px;
-}
-
-.css-1xneiug {
-  fill: currentcolor;
-  width: 1em;
-  height: 1em;
-}
-
-svg:not(:root) {
-  overflow-clip-margin: content-box;
-  overflow: hidden;
-}
-
-.config .radio-selector {
-  display: block;
-  line-height: 22px;
-  width: auto !important;
-}
-
-.type-selector {
-  width: 50%;
-  cursor: pointer;
-  margin-top: 20px;
-  position: relative;
-}
-
-.radio-selector {
-  display: block;
-  line-height: 22px;
-  width: auto !important;
-  color: #222;
-}
-
-:not(svg) {
-  transform-origin: 0px 0px;
-}
-
-.css-1xneiug .content {
-  fill: rgb(227, 232, 236);
-  fill-opacity: 0.3;
-}
-
-.css-1xneiug .border {
-  fill: rgb(208, 215, 221);
-}
-
-.css-1xneiug .dot {
-  fill: none;
-}
-
-.css-o1815x {
-  fill: currentcolor;
-  width: 1em;
-  height: 1em;
-}
-
-.css-o1815x .content {
-  fill: none;
-}
-
-.css-o1815x .border,
-.css-o1815x .dot {
-  fill: rgb(35, 173, 229);
-}
-
-.css-o1815x .border,
-.css-o1815x .dot {
-  fill: rgb(35, 173, 229);
-}
+@import '@/assets/components/interact/radio-list-tailwind.css';
 </style>

@@ -1,0 +1,222 @@
+# This file was generated. Do not edit manually.
+
+schema {
+    query: Query
+}
+
+type PageInfoType {
+    hasNextPage: Boolean!
+    page: Int!
+    pageSize: Int!
+    total: Int!
+}
+
+type Query {
+    SpuNewTagInfoTagMarkGroup: [SpuNewTagInfoTagMarkGroupType!]!
+    getMaxPrice: Int!
+    getSpuInfos(lastCreateAfterTss: Int, lastCreateBeforeTss: Int, lastUpdateAfterTss: Int, lastUpdateBeforeTss: Int, pn: Int! = 1, priceAsc: Boolean, priceDiffCurAsc: Boolean, priceDiffLatestAsc: Boolean, priceDiffMaxAsc: Boolean, priceMax: Int, priceMin: Int, ps: Int! = 10, spuId: Int, spuInfoCreateAsc: Boolean = false, spuInfoTitle: String, spuInfoUpdateAsc: Boolean = false, spuNewTagTagMarkList: [String!]): SpuInfoTypeSpuInfoPaginator!
+}
+
+type SpuCategoryType {
+    categoryId: String!
+    createTime: DateTime!
+    pk: BigInt!
+    spuId: String
+    updateTime: DateTime!
+}
+
+type SpuInfoType {
+    allPriceInfos(limit: Int! = 100): [SpuPriceInfoType!]!
+    arrivalEndTimeDesc: String
+    attrGroupInfo: JSON
+    attrInfo: JSON
+    availableStores: JSON
+    beltInfo: JSON
+    brandId: String
+    categories: [SpuCategoryType!]!
+    categoryOuterService: JSON
+    cityCodes: JSON
+    commonOuterService: JSON
+    complianceInfo: JSON
+    couponContentList: JSON
+    couponList: JSON
+    createTime: DateTime!
+    "历史最高价与当前最新价之差"
+    curPriceDiff: Int
+    customTabList: JSON
+    deliveryAttr: Int
+    deliveryCapacityCountList: JSON
+    deliveryMethod: String
+    desc: String
+    descVideo: JSON
+    detailVideos: JSON
+    exclusiveSpu: Int
+    extendedWarrantyList: JSON
+    favorite: Int
+    giveSpuList: JSON
+    giveaway: Int
+    globalShoppingTaxRateExplain: String
+    hasVideo: Int
+    hostItem: String
+    hostItemId: String
+    image: String
+    imageSizeThreeFour: JSON
+    images: JSON
+    intro: String
+    isAllowDelivery: Int
+    isAvailable: Int
+    isCollectOrder: Int
+    isCompare: Int
+    isCrabCard: Int
+    isGlobalDirectPurchase: Int
+    isGlobalOwnPickUp: Int
+    isGovSpu: Int
+    isImport: Int
+    isPutOnSale: Int
+    isSerial: Int
+    isShowXPlusTag: Int
+    isStoreAvailable: Int
+    isStoreExtent: Int
+    isTicket: Int
+    "最新两次价格之差"
+    latestPriceDiff: Int
+    latestPriceInfo: SpuPriceInfoType
+    limitInfo: JSON
+    masterBizType: Int
+    "历史最高价与历史最低价之差"
+    maxPriceDiff: Int
+    netWeight: Float
+    newTagInfos: [SpuNewTagInfoType!]!
+    onlyBarSale: Int
+    onlyStoreSale: Int
+    preSellList: JSON
+    promotionDetailList: JSON
+    promotionList: JSON
+    purchaseLimitMinNum: Int
+    purchaseLimitText: String
+    serialId: String
+    seriesId: String
+    serviceInfo: JSON
+    sevenDaysReturn: Int
+    smallPackagePriceDisplay: String
+    specInfo: JSON
+    specList: JSON
+    spuExtDTO: JSON
+    spuId: String!
+    spuSpecInfo: JSON
+    standardForIntactGoodsUrl: String
+    stockInfo: SpuStockInfoType
+    storeId: String
+    subTitle: String
+    tagInfos: [SpuTagInfoType!]!
+    temperature: Int
+    title: String!
+    unknowField: JSON
+    updateTime: DateTime!
+    valuable: Int
+    venderCode: String
+    viceBizType: Int
+    videoInfos: [SpuVideoInfoType!]!
+    weight: Float
+    zoneTypeList: JSON
+}
+
+type SpuInfoTypeSpuInfoPaginator {
+    items: [SpuInfoType!]!
+    pageInfo: PageInfoType!
+}
+
+type SpuNewTagInfoTagMarkGroupType {
+    tagMark: String!
+    title: String!
+}
+
+type SpuNewTagInfoType {
+    beginTime: BigInt
+    createTime: DateTime!
+    endTime: BigInt
+    id: String
+    logoImageCn: String
+    logoImageEn: String
+    logoImageHigh: Int
+    logoImageWide: Int
+    logoImageZhCn: String
+    originalPrice: String
+    pk: BigInt!
+    placeType: Int
+    priorityValue: Int
+    promotionPrice: String
+    promotionTag: String
+    savedMoney: Int
+    spuId: String
+    styleCode: String
+    styleType: Int
+    tagManageId: String
+    tagMark: String
+    tagMarkGroup: [String!]!
+    tagPlace: Int
+    tagSortType: Int
+    tagStyleId: String
+    title: String
+    titleCn: String
+    unknowField: JSON
+    updateTime: DateTime!
+}
+
+type SpuPriceInfoType {
+    createTime: DateTime!
+    pk: BigInt!
+    price: Int
+    priceType: Int
+    priceTypeName: String
+    spuId: String
+    unknowField: JSON
+    updateTime: DateTime!
+}
+
+type SpuStockInfoType {
+    createTime: DateTime!
+    pk: BigInt!
+    safeStockQuantity: Int
+    soldQuantity: Int
+    spuId: String!
+    stockQuantity: Int
+    unknowField: JSON
+    updateTime: DateTime!
+}
+
+type SpuTagInfoType {
+    beginTime: BigInt
+    createTime: DateTime!
+    id: String
+    pk: BigInt!
+    priorityValue: Int
+    promotionTag: String
+    spuId: String
+    tagMark: String
+    tagPlace: Int
+    tagSortType: Int
+    title: String
+    unknowField: JSON
+    updateTime: DateTime!
+}
+
+type SpuVideoInfoType {
+    createTime: DateTime!
+    duration: Int
+    pk: BigInt!
+    spuId: String
+    unknowField: JSON
+    updateTime: DateTime!
+    videoCover: String
+    videoUrl: String
+}
+
+"BigInt field"
+scalar BigInt
+
+"Date with time (isoformat)"
+scalar DateTime
+
+"The `JSON` scalar type represents JSON values as specified by [ECMA-404](https://ecma-international.org/wp-content/uploads/ECMA-404_2nd_edition_december_2017.pdf)."
+scalar JSON

@@ -1,6 +1,6 @@
 import type { LoginModel, UserNavModel } from '@/models/user/user_model'
 import BaseApi from '../base_axios/base_api'
-import type { RootObject } from '@/models/base_model'
+import type { RootObject } from '@/models/api/base_model.ts'
 
 class FeedbackContentApi extends BaseApi {
   constructor() {

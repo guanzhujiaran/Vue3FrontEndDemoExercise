@@ -5,10 +5,10 @@ export interface LoginModel {
 }
 
 export interface UserNavModel {
-  uid: number
+  uid: string // 这里是string，因为有可能是bigint，所以直接用string表示
   user_name: string
   role: string
-  face:string
+  face: string
 }
 
 export interface UserInfo {

@@ -1,250 +1,152 @@
-<script setup lang="ts">
-import BiliDialog from '@/components/CommonCompo/Bili-Feedback-Compo/BiliDialog.vue'
-import type { User_base_info_config_form } from '@/models/user/user_setting/user_base_info_config_model.ts'
-import { computed, onMounted, ref } from 'vue'
-import ConfigItem from '@/components/opus-detail/RightPannel/PannelItems/SettingComponent/ConfigItem.vue'
-import BlueBtn from '@/components/CommonCompo/Bili-Interact-Compo/Blue-Btn.vue'
-import type { AccountSettingConfigItemModel } from '@/models/account/account_setting/account_setting_type_model.ts'
-import { BaseSettingType } from '@/models/base/base_setting_model.ts'
-import user_api from '@/api/user/user_api.ts'
-import emitter from '@/utils/mitt.ts'
-
-const user_base_info_data = ref<User_base_info_config_form>({
-  uname: '',
-  usersign: '',
-  sex: '',
-  birthday: '',
-  userid: ''
-})
-const origin_user_base_info_data = ref<User_base_info_config_form>({
-  uname: '',
-  usersign: '',
-  sex: '',
-  birthday: '',
-  userid: ''
-})
-const is_loading = ref(false)
-const show_update_dialog = ref(false)
-const handle_get_user_base_info = () => {
-  // 获取用户基本信息
-  is_loading.value = true
-  user_api.UserInfo().then((resp) => {
-    console.log(resp)
-    resp.code === 0
-      ? ((user_base_info_data.value = resp.data),
-        (origin_user_base_info_data.value = resp.data),
-        (is_loading.value = false))
-      : emitter.emit('toast', {
-          t: resp.msg,
-          e: 'error'
-        })
-  })
-}
-onMounted(() => {
-  handle_get_user_base_info()
-})
-const save_info_btn_props = ref({
-  btn_text: '保存',
-  is_active: true,
-  is_show: true
-})
-const handle_update_user_info = () => {
-  let { uname, usersign, sex, birthday } = user_base_info_data.value
-  user_api
-    .UpdateUserInfo({
-      uname,
-      usersign,
-      sex,
-      birthday: birthday.slice(0, 10)
-    })
-    .then((resp) => {
-      resp.code === 0
-        ? (emitter.emit('toast', {
-            e: 'info',
-            t: '更新成功！'
-          }),
-          (origin_user_base_info_data.value = user_base_info_data.value),
-          (show_update_dialog.value = true))
-        : ((user_base_info_data.value = origin_user_base_info_data.value),
-          emitter.emit('toast', {
-            e: 'error',
-            t: resp.msg
-          }))
-    })
-}
-
-const computedUname = computed({
-  get: () => user_base_info_data.value.uname,
-  set: (value: string) => {
-    if (
-      user_base_info_data.value.uname === value &&
-      uname_config.value.setting_content.value === value
-    )
-      return
-    user_base_info_data.value.uname = value
-    uname_config.value.setting_content.value = value // 同步到配置对象中
-  }
-})
-const computedUserid = computed(() => user_base_info_data.value.userid)
-const userid_config = ref<AccountSettingConfigItemModel>({
-  name: 'userid_config', // 按钮的设置属性名
-  setting_content: {
-    type: BaseSettingType.Text,
-    value: computedUserid,
-    text_props: [
-      {
-        readonly: true,
-        label: '用户名（不可修改）：',
-        placeholder: ''
-      }
-    ]
-  } // 写各种不同的设置类型
-})
-const uname_config = ref<AccountSettingConfigItemModel>({
-  name: 'uname_config', // 按钮的设置属性名
-  tips: '注：修改一次昵称一个硬币都不需要',
-  setting_content: {
-    type: BaseSettingType.Text,
-    value: computedUname,
-    text_props: [
-      {
-        readonly: false,
-        label: '昵称：',
-        placeholder: '你的昵称'
-      }
-    ]
-  } // 写各种不同的设置类型
-})
-const computedUsersign = computed({
-  get: () => user_base_info_data.value.usersign,
-  set: (value: string) => {
-    if (
-      user_base_info_data.value.usersign === value &&
-      usersign_config.value.setting_content.value === value
-    )
-      return
-    user_base_info_data.value.usersign = value
-    usersign_config.value.setting_content.value = value // 同步到配置对象中
-  }
-})
-const usersign_config = ref<AccountSettingConfigItemModel>({
-  name: 'usersign_config', // 按钮的设置属性名
-  setting_content: {
-    type: BaseSettingType.Text,
-    value: computedUsersign,
-    text_props: [
-      {
-        readonly: false,
-        label: '我的签名：',
-        placeholder: '设置您的签名- ( ゜- ゜)つロ'
-      }
-    ]
-  } // 写各种不同的设置类型
-})
-const computedSex = computed({
-  get: () => user_base_info_data.value.sex,
-  set: (value: string) => {
-    if (user_base_info_data.value.sex === value && sex_config.value.setting_content.value === value)
-      return
-    user_base_info_data.value.sex = value
-    sex_config.value.setting_content.value = value // 同步到配置对象中
-  }
-})
-const sex_config = ref<AccountSettingConfigItemModel>({
-  name: 'sex_config', // 按钮的设置属性名
-  setting_content: {
-    type: BaseSettingType.Radio,
-    value: computedSex,
-    radio_props: [
-      {
-        value: '男',
-        content: '男',
-        label: '性别：'
-      },
-      {
-        value: '女',
-        content: '女'
-      },
-      {
-        value: '保密',
-        content: '保密'
-      },
-      {
-        value: '武装直升机',
-        content: '武装直升机'
-      },
-      {
-        value: '永雏塔菲',
-        content: '永雏塔菲'
-      }
-    ]
-  } // 写各种不同的设置类型
-})
-const computedBirthday = computed({
-  get: () => user_base_info_data.value.birthday,
-  set: (value: string) => {
-    if (
-      user_base_info_data.value.birthday === value &&
-      birthday_config.value.setting_content.value === value
-    )
-      return
-    user_base_info_data.value.birthday = value
-    birthday_config.value.setting_content.value = value // 同步到配置对象中
-  }
-})
-const birthday_config = ref<AccountSettingConfigItemModel>({
-  name: 'birthday_config', // 按钮的设置属性名
-  setting_content: {
-    type: BaseSettingType.Date,
-    value: computedBirthday,
-    date_props: { format: 'YYYY-MM-DD', label: '出生日期：', disabled_date: Date.now() }
-  } // 写各种不同的设置类型
-})
-</script>
-
 <template>
-  <div class="config" v-loading="is_loading">
-    <ConfigItem v-model="uname_config"></ConfigItem>
-    <ConfigItem v-model="userid_config"></ConfigItem>
-    <ConfigItem v-model="usersign_config"></ConfigItem>
-    <ConfigItem v-model="sex_config"></ConfigItem>
-    <ConfigItem v-model="birthday_config"></ConfigItem>
-    <div class="padding-dom"></div>
-    <div class="user-my-btn-warp">
-      <BlueBtn v-model="save_info_btn_props" @click="handle_update_user_info"></BlueBtn>
+  <div class="user-base-info-config">
+    <div class="config-section">
+      <h3>个人信息</h3>
+      <div class="config-item">
+        <label>用户名</label>
+        <el-input 
+          v-model="userName" 
+          placeholder="请输入用户名（2-24个字符）" 
+          :maxlength="24"
+          show-word-limit
+        />
+      </div>
+      
+      <div class="config-item">
+        <label>个性签名</label>
+        <el-input 
+          v-model="userSign" 
+          placeholder="请输入个性签名（最多70个字符）" 
+          type="textarea"
+          :maxlength="70"
+          show-word-limit
+          :rows="3"
+        />
+      </div>
+      
+      <div class="config-item">
+        <label>性别</label>
+        <el-select v-model="sex" placeholder="请选择性别">
+          <el-option label="男" value="男" />
+          <el-option label="女" value="女" />
+          <el-option label="保密" value="保密" />
+          <el-option label="武装直升机" value="武装直升机" />
+          <el-option label="永雏塔菲" value="永雏塔菲" />
+        </el-select>
+      </div>
+      
+      <div class="config-item">
+        <label>生日</label>
+        <el-date-picker
+          v-model="birthday"
+          type="date"
+          placeholder="请选择生日"
+          format="YYYY-MM-DD"
+          value-format="YYYY-MM-DD"
+        />
+      </div>
     </div>
-    <BiliDialog
-      v-model:dialogVisible="show_update_dialog"
-      title="提示"
-      content="已经成功更新你的资料"
-    />
+    
+    <div class="config-actions">
+      <el-button type="primary" @click="saveSettings" :loading="saving">保存设置</el-button>
+      <el-button @click="loadUserInfo">重新加载</el-button>
+    </div>
   </div>
 </template>
 
-<style scoped>
-.padding-dom {
-  height: 39px;
-  border-bottom: 1px solid #e5e9ef;
-  margin-bottom: 40px;
+<script setup lang="ts">
+import { ref, onMounted } from 'vue'
+import { ElMessage } from 'element-plus'
+import userApi from '@/api/user/user_api.ts'
+import type { User_base_info_config_form } from '@/models/user/user_setting/user_base_info_config_model.ts'
+import '@/assets/components/user/user-base-info-config-tailwind.css'
+
+// 设置项
+const userName = ref('')
+const userSign = ref('')
+const sex = ref('保密')
+const birthday = ref('')
+const saving = ref(false)
+
+// 保存设置
+const saveSettings = async () => {
+  // 验证用户名长度
+  if (userName.value.length < 2) {
+    ElMessage.error('用户名不能少于2个字符')
+    return
+  }
+  
+  if (userName.value.length > 24) {
+    ElMessage.error('用户名不能超过24个字符')
+    return
+  }
+  
+  // 验证签名长度
+  if (userSign.value.length > 70) {
+    ElMessage.error('个性签名不能超过70个字符')
+    return
+  }
+  
+  // 验证性别选项
+  const validSexOptions = ['男', '女', '保密', '武装直升机', '永雏塔菲']
+  if (!validSexOptions.includes(sex.value)) {
+    ElMessage.error('性别选项不正确')
+    return
+  }
+  
+  // 验证生日
+  if (birthday.value && isNaN(Date.parse(birthday.value))) {
+    ElMessage.error('生日必须是有效日期')
+    return
+  }
+  
+  try {
+    saving.value = true
+    const userInfo: Omit<User_base_info_config_form, 'userid'> = {
+      uname: userName.value,
+      usersign: userSign.value,
+      sex: sex.value,
+      birthday: birthday.value || '' // 如果没有选择生日，则发送空字符串
+    }
+    
+    const response = await userApi.UpdateUserInfo(userInfo)
+    if (response.code === 0) {
+      ElMessage.success('用户信息已更新')
+    } else {
+      ElMessage.error(response.msg || '保存失败')
+    }
+  } catch (error) {
+    ElMessage.error('保存设置时出错')
+    console.error('保存设置时出错:', error)
+  } finally {
+    saving.value = false
+  }
 }
 
-.user-my-btn-warp {
-  width: fit-content;
-  height: 36px;
-  position: relative;
-  margin: auto auto 3rem;
+// 加载用户信息
+const loadUserInfo = async () => {
+  try {
+    const response = await userApi.UserInfo()
+    if (response.code === 0 && response.data) {
+      userName.value = response.data.uname.toString()
+      userSign.value = response.data.usersign
+      sex.value = response.data.sex
+      birthday.value = response.data.birthday
+    } else {
+      ElMessage.error(response.msg || '加载用户信息失败')
+    }
+  } catch (error) {
+    ElMessage.error('加载用户信息时出错')
+    console.error('加载用户信息时出错:', error)
+  }
 }
 
-.config {
-  width: auto;
-  padding: 20px 20px 0;
-}
+// 组件挂载时加载用户信息
+onMounted(() => {
+  loadUserInfo()
+})
+</script>
 
-.config :deep(.config-item) {
-  padding: 10px 16px;
-}
-
-.config :deep(.text) {
-  line-height: 19px;
-}
+<style>
+@import '@/assets/components/user/user-base-info-config-tailwind.css';
 </style>

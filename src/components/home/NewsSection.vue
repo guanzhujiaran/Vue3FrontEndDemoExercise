@@ -43,21 +43,5 @@ import { ElTimeline, ElTimelineItem, ElCard } from 'element-plus'
 </script>
 
 <style scoped>
-.news-section {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 20px;
-  width: -webkit-fill-available;
-}
-
-.news-container {
-  margin-top: 24px;
-}
-
-.section-title {
-  font-size: 28px;
-  font-weight: 600;
-  color: #303133;
-  margin: 0;
-}
+@import '@/assets/components/home/news-section-tailwind.css';
 </style>

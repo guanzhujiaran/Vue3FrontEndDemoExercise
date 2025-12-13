@@ -5,7 +5,7 @@ import { useDark, useToggle, usePreferredDark, useStorage } from '@vueuse/core'
 export type ThemeMode = 'light' | 'dark' | 'auto'
 
 export const useThemeStore = defineStore(
-  'theme',
+  'pref_theme',
   () => {
     // 使用VueUse的useDark，自动处理暗色模式切换
     const isDark = useDark({

@@ -13,7 +13,7 @@ import { type BiliErrorDetailType, BiliErrorRouteToTxt } from '@/assets/text/Bil
 
 const router = useRouter()
 const countdown = ref(10)
-let timer: number | undefined
+let timer: number | undefined | ReturnType<typeof setInterval>
 
 // 倒计时函数
 const startCountdown = () => {
@@ -31,7 +31,7 @@ onMounted(() => {
   import.meta.env.VITE_BILI_ENV === 'dev' ? null : startCountdown()
 })
 onBeforeUnmount(() => {
-  clearInterval(timer)
+  if (timer) clearInterval(timer)
 })
 withDefaults(
   defineProps<{
@@ -44,54 +44,19 @@ withDefaults(
 </script>
 
 <template>
-  <div class="error-content">
+  <centered-container class="error-content">
     <el-image :src="props.error_img_src" referrerpolicy="no-referrer"> </el-image>
     <h2 class="error-message">{{ props.error_msg }}</h2>
     <p class="error-description">{{ props.error_description }}</p>
     <div class="countdown-container">
-      <p class="countdown-text">{{ countdown }}秒后自动跳转到首页</p>
+      <p class="countdown-text">{{ countdown }}秒后自动跳转到 {{ props.route_link.name}}</p>
       <router-link :to="props.route_link">
         <el-button type="primary">{{ props.btn_text }}</el-button>
       </router-link>
     </div>
-  </div>
+  </centered-container>
 </template>
 
 <style scoped>
-.error-content {
-  justify-self: center;
-  align-self: center;
-  text-align: center;
-  padding: 2rem;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  max-width: 500px;
-  width: -webkit-fill-available;
-  margin: 0 auto;
-  background-color: var(--el-bg-color);
-}
-
-.error-message {
-  font-size: 2rem;
-  color: var(--el-text-color-regular);
-  margin: 1rem 0;
-}
-
-.error-description {
-  font-size: 1rem;
-  color: var(--el-text-color-secondary);
-  margin-bottom: 2rem;
-}
-
-.countdown-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1rem;
-}
-
-.countdown-text {
-  font-size: 1rem;
-  color: var(--el-text-color-primary);
-}
+@import '@/assets/components/feedback/bili-error-route-to-tailwind.css';
 </style>

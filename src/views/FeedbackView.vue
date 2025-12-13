@@ -2,7 +2,7 @@
 import Placeholder from '@/components/opus-detail/RightPannel/PannelItems/Placeholder.vue'
 import comment_section from '@/components/communicate_list/comment_section.vue'
 import { ref } from 'vue'
-import type { CommentSectionBaseInfo } from '@/models/communication/comment_model.ts'
+import type { CommentSectionBaseInfo } from '@/models/api/communication/comment_model.ts'
 
 const placeholder_props = ref({
   inner_text: '璞熤和AC站比较厉害，数据均采集自互联网公开内容',

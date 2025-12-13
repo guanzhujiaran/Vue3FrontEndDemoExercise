@@ -117,7 +117,7 @@ const utils = {
     while (num > 0) {
       const digit = num % 10
       if (digit !== 0) {
-        result = chineseDigits[digit] + units[unitIndex] + result
+        result = chineseDigits[digit]! + units[unitIndex]! + result
       } else {
         // 处理连续零的情况
         if (result[0] !== '零' && result[0] !== '') {
