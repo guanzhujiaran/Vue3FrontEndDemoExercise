@@ -5,16 +5,15 @@ import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
 import { createHead } from '@vueuse/head'
 import App from './App.vue'
 import router from './router'
+import 'element-plus/dist/index.css'
 import 'element-plus/theme-chalk/dark/css-vars.css'
-// 引入mavon-editor样式
 import 'mavon-editor/dist/css/index.css'
-// 引入markdown编辑器样式
 import 'md-editor-v3/lib/style.css'
-// 引入用户偏好存储
 import { useUserPrefStore } from '@/stores/user_pref'
 import { useHueThemeStore } from '@/stores/hue_theme.ts'
 import urql, { cacheExchange, fetchExchange } from '@urql/vue'
 import Clarity from '@microsoft/clarity'
+import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 
 const app = createApp(App)
 const head = createHead()
@@ -39,6 +38,9 @@ userPrefStore.applyThemes()
 // 初始化 Clarity
 if (import.meta.env.VITE_CLARITY_ID) {
   Clarity.init(import.meta.env.VITE_CLARITY_ID ?? '')
+}
+for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
+  app.component(key, component)
 }
 // 添加全局属性
 app.mount('#app')

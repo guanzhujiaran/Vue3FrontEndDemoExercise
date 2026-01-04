@@ -2,12 +2,6 @@
 import { ref, computed } from 'vue'
 import { useJwtStore } from '@/stores/jwt_token'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import {
-  CoffeeCup,
-  User as IconUser,
-  ChatSquare as IconChat,
-  DataAnalysis as IconDataAnalysis
-} from '@element-plus/icons-vue'
 import { processRoutesForHome } from '@/utils/routeUtils'
 import { openGlobalLoginModalKey } from '@/models/inject/inject_type.ts'
 import { KeysEnum, useInject } from '@/models/base/provide_model.ts'
@@ -16,7 +10,7 @@ import { routes } from '@/router'
 import router from '@/router'
 const jwtStore = useJwtStore()
 const activeTab = ref('all')
-const openGlobalLoginModal = inject(openGlobalLoginModalKey, () => {})
+const openGlobalLoginModal = inject(openGlobalLoginModalKey, () => { })
 
 // 从路由配置中提取功能模块
 const routeModules = computed(() => {
@@ -55,7 +49,7 @@ const handleLogoutClick = () => {
       biliUser.value = { uid: '', user_name: '', role: '', face: '' }
       ElMessage.success('已成功退出登录')
     })
-    .catch(() => {})
+    .catch(() => { })
 }
 
 // 处理卡片点击
@@ -69,7 +63,7 @@ const handleCardClick = (path: string | undefined, requiresLogin = false) => {
       .then(() => {
         openGlobalLoginModal()
       })
-      .catch(() => {})
+      .catch(() => { })
     return
   }
   path && router.push(path)
@@ -80,30 +74,28 @@ const handleCardClick = (path: string | undefined, requiresLogin = false) => {
   <div>
     <el-main>
       <!-- 顶部横幅 -->
-      <section
-        class="relative overflow-hidden px-5 py-16 text-center text-[var(--el-color-white)]"
-        :style="{
-          background:
-            'linear-gradient(135deg, var(--el-color-primary) 0%, var(--el-color-warning) 35%, var(--el-color-success) 68%, var(--el-color-info) 100%)'
-        }"
-      >
+      <section class="relative overflow-hidden px-5 py-16 text-center text-[var(--el-color-white)]" :style="{
+        background:
+          'linear-gradient(135deg, var(--el-color-primary) 0%, var(--el-color-warning) 35%, var(--el-color-success) 68%, var(--el-color-info) 100%)'
+      }">
         <div class="relative z-10 mx-auto max-w-3xl">
           <h1 class="mb-4 text-4xl font-bold drop-shadow-lg md:text-5xl">BiliExplosion</h1>
           <p class="mb-8 text-base opacity-90 md:text-lg">Bilibili本社爆破</p>
           <div class="mb-6 flex flex-wrap justify-center gap-4">
             <el-button type="primary" size="large" @click="handleLoginClick" v-if="!isLoggedIn">
-              <el-icon class="el-icon--left"><IconUser /></el-icon>立即登录
+              <el-icon class="el-icon--left">
+                <User />
+              </el-icon>立即登录
             </el-button>
-            <el-button
-              type="warning"
-              size="large"
-              @click="router.push('/app/lot-data/bili-data/official')"
-              v-else
-            >
-              <el-icon class="el-icon--left"><IconDataAnalysis /></el-icon>查看抽奖数据
+            <el-button type="warning" size="large" @click="router.push('/app/lot-data/bili-data/official')" v-else>
+              <el-icon class="el-icon--left">
+                <DataAnalysis />
+              </el-icon>查看抽奖数据
             </el-button>
             <el-button type="info" size="large" @click="router.push('/app/Feedback')">
-              <el-icon class="el-icon--left"><IconChat /></el-icon>提交反馈
+              <el-icon class="el-icon--left">
+                <ChatSquare />
+              </el-icon>提交反馈
             </el-button>
           </div>
         </div>
@@ -126,16 +118,13 @@ const handleCardClick = (path: string | undefined, requiresLogin = false) => {
 
         <!-- 模块列表 -->
         <grid-container item-width="300px">
-          <el-card
-            v-for="(module, moduleIndex) in filteredModules"
-            :key="moduleIndex"
-            class="module-card"
-            :body-style="{ padding: '0px' }"
-            shadow="hover"
-          >
+          <el-card v-for="(module, moduleIndex) in filteredModules" :key="moduleIndex" class="module-card"
+            :body-style="{ padding: '0px' }" shadow="hover">
             <template #header style="padding: 0">
               <div class="flex items-center gap-3 px-5 py-4" :style="{ background: module.color }">
-                <el-icon :size="24"><component :is="module.icon || CoffeeCup" /></el-icon>
+                <el-icon :size="24">
+                  <component :is="module.icon || CoffeeCup" />
+                </el-icon>
                 <h3 class="m-0 text-base font-semibold">{{ module.title }}</h3>
               </div>
             </template>
@@ -146,17 +135,15 @@ const handleCardClick = (path: string | undefined, requiresLogin = false) => {
                 </p>
                 <!-- 如果有子项，显示子项列表 -->
                 <div v-if="module.children && module.children.length" class="flex flex-col gap-3">
-                  <div
-                    v-for="(child, childIndex) in module.children"
-                    :key="childIndex"
+                  <div v-for="(child, childIndex) in module.children" :key="childIndex"
                     class="flex cursor-pointer items-center rounded-md border border-[var(--el-border-color)] p-3 transition hover:translate-x-1 hover:opacity-80"
-                    @click="handleCardClick(child.path, module.requiresLogin)"
-                  >
+                    @click="handleCardClick(child.path, module.requiresLogin)">
                     <div
                       class="mr-3 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[var(--el-color-white)]"
-                      :style="{ background: child.color }"
-                    >
-                      <el-icon :size="16"><component :is="child.icon || CoffeeCup" /></el-icon>
+                      :style="{ background: child.color }">
+                      <el-icon :size="16">
+                        <component :is="child.icon || CoffeeCup" />
+                      </el-icon>
                     </div>
                     <div class="flex-1">
                       <h4 class="m-0 mb-1 text-sm font-bold">{{ child.title }}</h4>
@@ -164,19 +151,13 @@ const handleCardClick = (path: string | undefined, requiresLogin = false) => {
                         {{ child.description }}
                       </p>
                     </div>
-                    <el-icon class="text-[var(--el-text-color-placeholder)]"
-                      ><el-icon-arrow-right
-                    /></el-icon>
+                    <el-icon class="text-[var(--el-text-color-placeholder)]"><el-icon-arrow-right /></el-icon>
                   </div>
                 </div>
 
                 <!-- 如果没有子项，显示直接访问按钮 -->
                 <div v-else class="mt-4 flex justify-center">
-                  <el-button
-                    type="default"
-                    :plain="true"
-                    @click="handleCardClick(module.path, module.requiresLogin)"
-                  >
+                  <el-button type="default" :plain="true" @click="handleCardClick(module.path, module.requiresLogin)">
                     立即访问
                   </el-button>
                 </div>
@@ -189,9 +170,7 @@ const handleCardClick = (path: string | undefined, requiresLogin = false) => {
 
     <!-- 页脚 -->
     <div class="mt-16 bg-[var(--el-fill-color-dark)] text-[var(--el-text-color-placeholder)]">
-      <div
-        class="mx-auto grid max-w-6xl grid-cols-1 gap-10 px-5 py-10 sm:grid-cols-2 lg:grid-cols-3"
-      >
+      <div class="mx-auto grid max-w-6xl grid-cols-1 gap-10 px-5 py-10 sm:grid-cols-2 lg:grid-cols-3">
         <div>
           <h3 class="mt-0 mb-4 text-lg font-semibold text-[var(--el-color-white)]">关于我</h3>
           <p class="leading-7">
@@ -202,25 +181,16 @@ const handleCardClick = (path: string | undefined, requiresLogin = false) => {
           <h3 class="mt-0 mb-4 text-lg font-semibold text-[var(--el-color-white)]">快速链接</h3>
           <ul class="m-0 list-none p-0">
             <li class="mb-2">
-              <a
-                class="cursor-pointer text-[var(--el-text-color-placeholder)] no-underline hover:text-blue-500"
-                @click="router.push('/app/Feedback')"
-                >反馈建议</a
-              >
+              <a class="cursor-pointer text-[var(--el-text-color-placeholder)] no-underline hover:text-blue-500"
+                @click="router.push('/app/Feedback')">反馈建议</a>
             </li>
             <li class="mb-2">
-              <a
-                class="cursor-pointer text-[var(--el-text-color-placeholder)] no-underline hover:text-blue-500"
-                @click="router.push('/app/user-center')"
-                >用户中心</a
-              >
+              <a class="cursor-pointer text-[var(--el-text-color-placeholder)] no-underline hover:text-blue-500"
+                @click="router.push('/app/user-center')">用户中心</a>
             </li>
             <li class="mb-2">
-              <a
-                class="cursor-pointer text-[var(--el-text-color-placeholder)] no-underline hover:text-blue-500"
-                @click="router.push('/app/lot-data/bili-data/official')"
-                >抽奖数据</a
-              >
+              <a class="cursor-pointer text-[var(--el-text-color-placeholder)] no-underline hover:text-blue-500"
+                @click="router.push('/app/lot-data/bili-data/official')">抽奖数据</a>
             </li>
           </ul>
         </div>
@@ -240,6 +210,7 @@ const handleCardClick = (path: string | undefined, requiresLogin = false) => {
 <style scoped>
 @import '@/assets/components/home/module-card-tailwind.css';
 @import '@/assets/components/home/news-section-tailwind.css';
+
 :deep(.el-card__header) {
   padding: 0;
 }

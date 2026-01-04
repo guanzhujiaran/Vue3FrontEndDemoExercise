@@ -8,13 +8,11 @@
         @input="() => (props.value = Array.from(props.value.split(',')))"
         :readonly="prop.readonly"
         :placeholder="prop.placeholder"
-        type="text"
         class="input-text"
         v-model="props.value"
       ></textarea>
       <input
         v-else
-        type="text"
         class="input-text"
         v-model="props.value"
         :placeholder="prop.placeholder"

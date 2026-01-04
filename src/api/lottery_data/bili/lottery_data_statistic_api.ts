@@ -22,16 +22,16 @@ class LotteryDataStatisticApi extends BaseApi {
     this.path = '/api/v1/lottery_database/bili/'
   }
 
-  async handle_lottery_rank(
+  handle_lottery_rank(
     { offset, limit }: { offset: number; limit: number },
     date: LotteryRankDateType,
     lot_type: LotteryRankLotType,
     rank_type: LotteryRankType
   ): Promise<RootObject<LotteryRankResp>> {
-    return await this._get('rank/lottery_hof/'.concat(lot_type), { date, rank_type, offset, limit })
+    return this._get('rank/lottery_hof/'.concat(lot_type), { date, rank_type, offset, limit })
   }
 
-  async handle_lottery_result({
+  handle_lottery_result({
     uid,
     date,
     lot_type,
@@ -46,7 +46,7 @@ class LotteryDataStatisticApi extends BaseApi {
     offset: number
     limit: number
   }): Promise<RootObject<LotteryResultResp>> {
-    return await this._get('lottery_result', { uid, date, lot_type, rank_type, offset, limit })
+    return this._get('lottery_result', { uid, date, lot_type, rank_type, offset, limit })
   }
 }
 

@@ -71,7 +71,6 @@
 
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue'
-import { Search, Close } from '@element-plus/icons-vue'
 import type { SearchBoxProps } from '@/models/compo/searchbox/SearchBox.ts'
 
 const autocompleteRef = ref<any>(null)

@@ -1,0 +1,9 @@
+---
+description: 
+alwaysApply: true
+enabled: true
+updatedAt: 2025-12-24T06:44:54.014Z
+provider: 
+---
+
+主文件夹下面创建一个docs文件夹，前端界面有需求可以用markdown格式写在里面，后端会根据里面的内容修改接口返回值

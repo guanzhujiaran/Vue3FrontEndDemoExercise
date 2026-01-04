@@ -14,9 +14,9 @@ export interface AccountInfoModel {
     uname?: string
     vip?: string
     level?: number
-    face?: string | null,
-    settings?: AccountSettingModel,
-    uid?: number|string,
+    face?: string | null
+    settings?: AccountSettingModel
+    uid?: number | string
   } | null
 }
 
@@ -74,7 +74,6 @@ export interface AccountSettingModel {
   }
 }
 
-
 export interface AccountMsgSessionModel {
   content: string
   msg_key: string
@@ -84,11 +83,8 @@ export interface AccountMsgSessionModel {
   msg_tips: string
 }
 
-export interface AccountRunningStatus{
-  is_running:boolean
-  last_start_ts:number
-  running_msg:string
-  
-
+export interface AccountRunningStatus {
+  is_running: boolean
+  last_start_ts: number
+  running_msg: string
 }
-

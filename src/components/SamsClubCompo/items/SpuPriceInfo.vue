@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import type { SpuInfoType } from '@/gql/samsclub/graphql.ts'
 import { computed } from 'vue'
-import { Coin, PriceTag, QuestionFilled } from '@element-plus/icons-vue'
 import { formatDateTime, getTimeAgo, handlePriceTitleTextColor, handlePriceValueTextColor, getPricePositionColor, getPricePositionType } from '../utils'
 
 const props = defineProps<{

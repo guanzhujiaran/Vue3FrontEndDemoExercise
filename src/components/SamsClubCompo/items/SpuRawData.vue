@@ -3,7 +3,6 @@ import { ref } from 'vue'
 import VueJsonPretty from 'vue-json-pretty'
 import 'vue-json-pretty/lib/styles.css'
 import type { SpuInfoType } from '@/gql/samsclub/graphql.ts'
-import { InfoFilled } from '@element-plus/icons-vue'
 
 const props = defineProps<{
   spuInfo: SpuInfoType

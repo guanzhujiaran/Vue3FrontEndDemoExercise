@@ -1,6 +1,6 @@
 import BaseApi from '../base_axios/base_api'
 import type { RootObject } from '@/models/api/base_model.ts'
-import type { AccountInfoModel, AccountRunningStatus, AccountSettingModel } from '@/models/account/account_model'
+import type { AccountInfoModel, AccountRunningStatus, AccountSettingModel, AccountMsgSessionModel } from '@/models/account/account_model'
 
 /*
  * @Author: 星瞳 1944637830@qq.com
@@ -15,16 +15,16 @@ class AccountApi extends BaseApi {
     super()
     this.path = '/api/v1/account/'
   }
-  async GetAllAccounts(): Promise<RootObject<Array<AccountInfoModel>>> {
-    return await this._get('all_accounts')
+  GetAllAccounts(): Promise<RootObject<Array<AccountInfoModel>>> {
+    return this._get('all_accounts')
   }
-  async AddAccount(new_account_name: string): Promise<RootObject<null>> {
-    return await this._post('add_account', { account_name: new_account_name })
+  AddAccount(new_account_name: string): Promise<RootObject<null>> {
+    return this._post('add_account', { account_name: new_account_name })
   }
-  async GetAccountInfoByAccountName(account_name: string): Promise<RootObject<AccountInfoModel>> {
-    return await this._get('get_account_info', { account_name: account_name })
+  GetAccountInfoByAccountName(account_name: string): Promise<RootObject<AccountInfoModel>> {
+    return this._get('get_account_info', { account_name: account_name })
   }
-  async GetAccountLotterySettingByAccountName(account_name: string): Promise<
+  GetAccountLotterySettingByAccountName(account_name: string): Promise<
     RootObject<{
       account_name: string
       info: {
@@ -32,16 +32,22 @@ class AccountApi extends BaseApi {
       }
     }>
   > {
-    return await this._get('get_account_setting', { account_name: account_name })
+    return this._get('get_account_setting', { account_name: account_name })
   }
-  async save_account_setting(account_name: string, settings: Object): Promise<RootObject<string>> {
-    return await this._post('save_account_setting', {
+  save_account_setting(account_name: string, settings: Object): Promise<RootObject<string>> {
+    return this._post('save_account_setting', {
       account_name: account_name,
       settings: settings
     })
   }
-  async GetAccountRunningStatus(account_name: string):Promise<RootObject<AccountRunningStatus>> {
-    return await this._get('get_account_running_status', {
+  GetAccountRunningStatus(account_name: string):Promise<RootObject<AccountRunningStatus>> {
+    return this._get('get_account_running_status', {
+      account_name: account_name
+    })
+  }
+
+  GetAccountMessages(account_name: string): Promise<RootObject<Array<AccountMsgSessionModel>>> {
+    return this._get('get_account_messages', {
       account_name: account_name
     })
   }

@@ -1,14 +1,4 @@
 <script setup lang="ts">
-import {
-  ArrowRight,
-  CreditCard,
-  DataAnalysis,
-  Histogram,
-  Lightning,
-  Location,
-  Promotion,
-  Setting
-} from '@element-plus/icons-vue'
 import router from '@/router'
 const navigationItems = [
   {
@@ -58,7 +48,9 @@ const goTo = (path: string) => {
       <el-col :span="8">
         <el-card class="stat-card">
           <div class="stat-content">
-            <el-icon :size="32"><DataAnalysis /></el-icon>
+            <el-icon :size="32">
+              <DataAnalysis />
+            </el-icon>
             <div class="stat-info">
               <h3>数据概览</h3>
               <p>综合统计信息</p>
@@ -69,7 +61,9 @@ const goTo = (path: string) => {
       <el-col :span="8">
         <el-card class="stat-card">
           <div class="stat-content">
-            <el-icon :size="32"><Histogram /></el-icon>
+            <el-icon :size="32">
+              <Histogram />
+            </el-icon>
             <div class="stat-info">
               <h3>图表分析</h3>
               <p>可视化数据展示</p>
@@ -80,7 +74,9 @@ const goTo = (path: string) => {
       <el-col :span="8">
         <el-card class="stat-card">
           <div class="stat-content">
-            <el-icon :size="32"><Promotion /></el-icon>
+            <el-icon :size="32">
+              <Promotion />
+            </el-icon>
             <div class="stat-info">
               <h3>最新活动</h3>
               <p>近期抽奖信息</p>
@@ -95,12 +91,16 @@ const goTo = (path: string) => {
         <el-col :span="12" v-for="item in navigationItems" :key="item.path">
           <el-card class="nav-card" @click="goTo(item.path)">
             <div class="nav-content">
-              <el-icon :size="24"><component :is="item.icon" /></el-icon>
+              <el-icon :size="24">
+                <component :is="item.icon" />
+              </el-icon>
               <div class="nav-info">
                 <h3>{{ item.title }}</h3>
                 <p>{{ item.description }}</p>
               </div>
-              <el-icon class="arrow-icon"><ArrowRight /></el-icon>
+              <el-icon class="arrow-icon">
+                <ArrowRight />
+              </el-icon>
             </div>
           </el-card>
         </el-col>

@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { ClickOutside as vClickOutside } from 'element-plus'
-import { ArrowDown, ArrowUp } from '@element-plus/icons-vue'
 import { ref } from 'vue'
 import type { PartitionParamsInfo, RankingPartition } from '@/models/api/lottery/lotdata.ts'
 

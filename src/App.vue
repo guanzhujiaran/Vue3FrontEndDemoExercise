@@ -44,8 +44,8 @@ const backgroundUrl = computed(() => {
 })
 
 // 存储清理函数
-let themeCleanup = () => {}
-let autoScaleCleanup = () => {}
+let themeCleanup = () => { }
+let autoScaleCleanup = () => { }
 
 // 全局打开登录模态框的方法
 const openGlobalLoginModal = () => {
@@ -105,21 +105,17 @@ onUnmounted(() => {
 
 <template>
   <!-- 背景图片 -->
-  <img
-    class="pointer-events-none fixed inset-0 z-[-9999] h-full w-full object-cover"
-    :src="backgroundUrl"
-    referrerpolicy="no-referrer"
-    alt="Background Image"
-  />
+  <img class="pointer-events-none fixed inset-0 z-[-9999] h-full w-full object-cover" :src="backgroundUrl"
+    referrerpolicy="no-referrer" alt="Background Image" />
 
   <el-config-provider :locale="zhCn">
-    <UseScreenSafeArea top right bottom left>
+    <UseScreenSafeArea class="use-screen-safe-area" top right bottom left>
       <div class="app-wrapper">
         <el-container v-if="isInit" id="i_cecream">
           <el-header>
             <HeaderBarView />
           </el-header>
-          <el-main class="!flex min-h-[86vh] flex-col">
+          <el-main class="flex! min-h-[86vh] flex-col">
             <RouterView v-slot="{ Component, route }">
               <transition name="slide-fade" mode="out-in">
                 <keep-alive :max="10">

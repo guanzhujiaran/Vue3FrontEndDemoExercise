@@ -23,4 +23,12 @@ export type GlobalEvents = {
    * 登录成功事件
    */
   loading: { isLoading: boolean; loadingText?: string }
+  /**
+   * API错误事件
+   */
+  apiError: {
+    code: number
+    msg: string
+    data?: any
+  }
 }

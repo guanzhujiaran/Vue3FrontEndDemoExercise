@@ -86,21 +86,13 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
-import {
-  Iphone,
-  Location,
-  OfficeBuilding,
-  Tickets,
-  User,
-  SwitchButton,
-  CaretRight
-} from '@element-plus/icons-vue'
 import type { ComponentSize } from 'element-plus'
 import type { PageShowModel } from '@/models/account/page/model'
 import type { AccountRunningStatus } from '@/models/account/account_model'
 import accountApi from '@/api/account/account_api'
 import emitter from '@/utils/mitt'
 import doLotteryApi from '@/api/do_lottery/bili_do_lottery_api'
+import { businessHandler } from '@/utils/businessHandler'
 const props = defineModel<PageShowModel>()
 const get_status_error_msg = '获取状态失败'
 const account_running_status = ref<AccountRunningStatus>()
@@ -113,24 +105,30 @@ const get_account_running_status = () => {
     last_start_ts: 0,
     running_msg: get_status_error_msg
   }
-  props.value?.info.account_name
-    ? accountApi.GetAccountRunningStatus(props.value?.info.account_name).then((resp) => {
-        let da = resp.data
-        if (resp.code === 0) {
-          account_running_status.value = {
-            is_running: da.is_running,
-            last_start_ts: da.last_start_ts,
-            running_msg: da.running_msg
-          }
-        } else {
-          account_running_status.value = {
-            is_running: false,
-            last_start_ts: 0,
-            running_msg: resp.msg
+  
+  if (props.value?.info.account_name) {
+    businessHandler(
+      accountApi.GetAccountRunningStatus(props.value.info.account_name),
+      {
+        successMessage: '',
+        errorMessage: '获取账号状态失败',
+        showSuccessToast: false,
+        showErrorToast: true,
+        autoHandleError: true
+      },
+      [
+        (result) => {
+          if (result.success && result.data) {
+            account_running_status.value = {
+              is_running: result.data.is_running,
+              last_start_ts: result.data.last_start_ts,
+              running_msg: result.data.running_msg
+            }
           }
         }
-      })
-    : {}
+      ]
+    )
+  }
 }
 const handle_account_task_btn = () => {
   let account_name = props.value?.info.account_name
@@ -150,23 +148,45 @@ const handle_account_task_btn = () => {
         t: `账号【${props.value?.info.account_name}】${action_name}任务！`,
         e: 'info'
       })
+      
       if (action_name === '启动') {
-        doLotteryApi.run_account_lottery_task(props.value?.info.account_name!).then((resp) => {
-          resp.code
-            ? emitter.emit('toast', {
-                t: `账号【${props.value?.info.account_name}】${action_name}任务执行出错\n${resp.msg}`,
-                e: 'error'
-              })
-            : emitter.emit('toast', {
-                t: `账号【${props.value?.info.account_name}】${action_name}任务执行成功！`,
-                e: 'info'
-              })
-          account_running_status.value &&
-            (account_running_status.value.is_running = resp.code ? false : true)
-        })
+        businessHandler(
+          doLotteryApi.run_account_lottery_task(props.value!.info.account_name),
+          {
+            successMessage: `账号【${props.value?.info.account_name}】启动任务执行成功！`,
+            errorMessage: `账号【${props.value?.info.account_name}】启动任务执行出错`,
+            showSuccessToast: true,
+            showErrorToast: true,
+            autoHandleError: true
+          },
+          [
+            (result) => {
+              if (result.success) {
+                account_running_status.value &&
+                  (account_running_status.value.is_running = true)
+              }
+            }
+          ]
+        )
       } else if (action_name === '停止') {
-        //TODO 添加停止api
-        account_running_status.value && (account_running_status.value.is_running = false)
+        businessHandler(
+          doLotteryApi.stop_account_lottery_task(props.value!.info.account_name),
+          {
+            successMessage: `账号【${props.value?.info.account_name}】停止任务执行成功！`,
+            errorMessage: `账号【${props.value?.info.account_name}】停止任务执行出错`,
+            showSuccessToast: true,
+            showErrorToast: true,
+            autoHandleError: true
+          },
+          [
+            (result) => {
+              if (result.success) {
+                account_running_status.value &&
+                  (account_running_status.value.is_running = false)
+              }
+            }
+          ]
+        )
       } else {
         emitter.emit('toast', { t: `未知任务命令！`, e: 'error' })
       }

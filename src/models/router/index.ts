@@ -58,8 +58,9 @@ export enum RouteName {
   // 用户中心子路由
   USER_GLOBAL_CONFIG = '用户全局设置',
   USER_INFO_CONFIG = '用户基本信息设置',
-  ACCOUNT_DETAIL = '所有账号',
-  ACCOUNT_NAME_DETAIL_PAGE = '账号名称详情页',
+
+  USER_CENTER_DASHBOARD = '用户中心仪表盘',
+  BROWSER_MANAGEMENT = '浏览器管理',
   // 抽奖数据子路由
   SCRAPY_STAT = '爬虫状态',
   BILI_ATARI_RANKING = 'B站中奖名人堂',

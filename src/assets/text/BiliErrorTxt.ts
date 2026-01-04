@@ -19,7 +19,6 @@ type BiliErrorRouteToType = {
   not_found: BiliErrorDetailType
   unauthorized: BiliErrorDetailType
   unknown: BiliErrorDetailType
-  not_found_account_detail: BiliErrorDetailType
 }
 
 export const BiliErrorRouteToTxt: BiliErrorRouteToType = {
@@ -49,14 +48,6 @@ export const BiliErrorRouteToTxt: BiliErrorRouteToType = {
     route_link: {
       name: RouteName.HOME
     }
-  },
-  not_found_account_detail: {
-    error_img_src: BiliImg.error.not_found,
-    error_msg: '账号未找到',
-    error_description: '您访问的账号不存在',
-    btn_text: '返回用户中心',
-    route_link: {
-      name: RouteName.USER_CENTER
-    }
   }
 }
+

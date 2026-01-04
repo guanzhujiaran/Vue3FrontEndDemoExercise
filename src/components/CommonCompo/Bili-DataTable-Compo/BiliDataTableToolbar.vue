@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { Refresh, Setting } from '@element-plus/icons-vue'
 import { useBiliLotteryRecord } from '@/stores/bili_lottery_record.ts'
 
 defineProps<{

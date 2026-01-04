@@ -1,0 +1,229 @@
+<!--
+ * @Author: 星瞳 1944637830@qq.com
+ * @Date: 2024-12-24 00:00:00
+ * @LastEditors: 星瞳 1944637830@qq.com
+ * @LastEditTime: 2024-12-24 00:00:00
+ * @FilePath: \Vue3FrontEndDemoExercise\src\components\browser\FingerprintList.vue
+ * @Description: 指纹列表组件
+-->
+<template>
+  <div class="fingerprint-section">
+    <!-- 操作栏 -->
+    <div class="action-bar">
+      <div class="action-buttons">
+        <el-button type="primary" @click="$emit('create')">
+          <el-icon>
+            <Plus />
+          </el-icon>
+          创建指纹
+        </el-button>
+
+        <el-button @click="$emit('refresh')">
+          <el-icon>
+            <RefreshRight />
+          </el-icon>
+          刷新
+        </el-button>
+      </div>
+
+      <!-- 过滤器和搜索 -->
+      <div class="filter-controls">
+        <el-select v-model="filterBrowser" placeholder="筛选浏览器" style="width: 150px" clearable @change="$emit('filter-change', { browser: filterBrowser, platform: filterPlatform, keyword: searchKeyword })">
+          <el-option label="全部浏览器" value="" />
+          <el-option label="Chrome" value="chrome" />
+          <el-option label="Edge" value="Edge" />
+          <el-option label="Opera" value="Opera" />
+          <el-option label="Vivaldi" value="Vivaldi" />
+        </el-select>
+
+        <el-select v-model="filterPlatform" placeholder="筛选平台" style="width: 150px" clearable @change="$emit('filter-change', { browser: filterBrowser, platform: filterPlatform, keyword: searchKeyword })">
+          <el-option label="全部平台" value="" />
+          <el-option label="Windows" value="windows" />
+          <el-option label="Linux" value="linux" />
+          <el-option label="macOS" value="macos" />
+        </el-select>
+
+        <el-input v-model="searchKeyword" placeholder="搜索用户ID" style="width: 200px" clearable @clear="handleSearch"
+          @keyup.enter="handleSearch">
+          <template #prefix>
+            <el-icon>
+              <Search />
+            </el-icon>
+          </template>
+        </el-input>
+      </div>
+    </div>
+
+    <!-- 统计面板 -->
+    <StatsPanel :stats="stats" />
+
+    <!-- 指纹列表 -->
+    <div v-loading="loading" class="fingerprint-list">
+      <div class="fingerprint-grid">
+        <FingerprintCard
+          v-for="fingerprint in filteredFingerprints"
+          :key="fingerprint.id_str || fingerprint.id"
+          :fingerprint="fingerprint"
+          @click="$emit('card-click', fingerprint)"
+          @view="$emit('view', fingerprint)"
+          @edit="$emit('edit', fingerprint)"
+          @delete="$emit('delete', fingerprint)"
+          @start="$emit('start', fingerprint)"
+        />
+      </div>
+
+      <!-- 空状态 -->
+      <div v-if="filteredFingerprints.length === 0" class="empty-state">
+        <el-empty description="暂无浏览器指纹数据" />
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ref, computed, watch } from 'vue'
+import { Plus, RefreshRight, Search } from '@element-plus/icons-vue'
+import StatsPanel from './StatsPanel.vue'
+import FingerprintCard from './FingerprintCard.vue'
+import type { UserBrowserInfoReadResp } from '@/types/browser-automation-api'
+
+// 定义Props
+interface Props {
+  fingerprints: UserBrowserInfoReadResp[]
+  loading?: boolean
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  loading: false
+})
+
+// 定义Emit
+const emit = defineEmits<{
+  create: []
+  refresh: []
+  'filter-change': [filter: { browser: string; platform: string; keyword: string }]
+  'card-click': [fingerprint: UserBrowserInfoReadResp]
+  view: [fingerprint: UserBrowserInfoReadResp]
+  edit: [fingerprint: UserBrowserInfoReadResp]
+  delete: [fingerprint: UserBrowserInfoReadResp]
+  start: [fingerprint: UserBrowserInfoReadResp]
+}>()
+
+// 过滤条件
+const filterBrowser = ref('')
+const filterPlatform = ref('')
+const searchKeyword = ref('')
+
+// 统计数据
+const stats = computed(() => {
+  const total = props.fingerprints.length
+  const chrome = props.fingerprints.filter(item => item.fingerprint_browser === 'chrome').length
+  const edge = props.fingerprints.filter(item => item.fingerprint_browser === 'Edge').length
+  const windows = props.fingerprints.filter(item => item.fingerprint_platform === 'windows').length
+
+  return {
+    total,
+    chrome,
+    edge,
+    windows
+  }
+})
+
+// 过滤后的指纹列表
+const filteredFingerprints = computed(() => {
+  let result = props.fingerprints
+
+  // 按浏览器类型过滤
+  if (filterBrowser.value) {
+    result = result.filter((item) => item.fingerprint_browser === filterBrowser.value)
+  }
+
+  // 按平台过滤
+  if (filterPlatform.value) {
+    result = result.filter((item) => item.fingerprint_platform === filterPlatform.value)
+  }
+
+  // 按用户ID搜索
+  if (searchKeyword.value) {
+    result = result.filter((item) =>
+      item.mid.toLowerCase().includes(searchKeyword.value.toLowerCase())
+    )
+  }
+
+  return result
+})
+
+// 方法
+const handleSearch = () => {
+  emit('filter-change', { 
+    browser: filterBrowser.value, 
+    platform: filterPlatform.value, 
+    keyword: searchKeyword.value 
+  })
+}
+
+// 监听搜索关键词变化
+watch(searchKeyword, (newVal) => {
+  if (newVal === '') {
+    handleSearch()
+  }
+})
+</script>
+
+<style scoped>
+.fingerprint-section {
+  flex: 1;
+}
+
+.action-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  gap: 16px;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.filter-controls {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.fingerprint-list {
+  min-height: 400px;
+}
+
+.fingerprint-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+}
+
+.empty-state {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+}
+
+@media (max-width: 768px) {
+  .action-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+  
+  .filter-controls {
+    justify-content: space-between;
+  }
+  
+  .fingerprint-grid {
+    grid-template-columns: 1fr;
+  }
+}
+</style>

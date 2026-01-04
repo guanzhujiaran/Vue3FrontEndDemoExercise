@@ -13,42 +13,42 @@ class FeedbackCommentApi extends BaseApi {
     this.path = '/api/v1/feedback/comment/'
   }
 
-  async add(
+  add(
     oid: string | number,
     type: string | number,
     root: string | number,
     parent: string | number,
     content: string
   ): Promise<RootObject<ReplyItem>> {
-    return await this._post('add', { oid, type, root, parent, content })
+    return this._post('add', { oid, type, root, parent, content })
   }
 
-  async reply_main(
+  reply_main(
     oid: number | string,
     type: number | string,
     page_size = 10,
     page_num: number,
     order_by: 'hot' | 'time'
   ): Promise<RootObject<ReplyMainResp>> {
-    return await this._get('reply/main', { oid, type, page_size, page_num, order_by })
+    return this._get('reply/main', { oid, type, page_size, page_num, order_by })
   }
 
-  async reply_reply(
+  reply_reply(
     oid: number | string,
     type: number | string,
     root: number | string,
     page_size = 10,
     page_num: number
   ): Promise<RootObject<ReplyReplyResp>> {
-    return await this._get('reply/reply', { oid, type, root, page_size, page_num })
+    return this._get('reply/reply', { oid, type, root, page_size, page_num })
   }
 
-  async action(rpid: number | string, action: 0 | 1 | 2): Promise<RootObject<null>> {
-    return await this._post('action', { rpid, action })
+  action(rpid: number | string, action: 0 | 1 | 2): Promise<RootObject<null>> {
+    return this._post('action', { rpid, action })
   }
 
-  async del(oid: number | string, type: number | string, rpid: number | string) {
-    return await this._post('del', { oid, type, rpid })
+  del(oid: number | string, type: number | string, rpid: number | string) {
+    return this._post('del', { oid, type, rpid })
   }
 }
 

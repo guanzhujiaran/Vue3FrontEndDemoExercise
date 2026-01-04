@@ -1,8 +1,6 @@
 <script setup lang="ts">
-import { computed } from 'vue'
 import type { SpuInfoType } from '@/gql/samsclub/graphql.ts'
 import { formatDateTime, getTimeAgo } from '../utils'
-import { Calendar } from '@element-plus/icons-vue'
 const props = defineProps<{
   spuInfo: SpuInfoType
 }>()

@@ -10,41 +10,34 @@ class UserApi extends BaseApi {
     this.path = '/api/v1/user/'
   }
 
-  async RefreshToken(): Promise<RootObject<LoginModel>> {
-    return await this._post('refresh_token')
+  RefreshToken(): Promise<RootObject<LoginModel>> {
+    return this._post('refresh_token')
   }
 
-  async Login(user_name: String, pwd: String): Promise<RootObject<LoginModel>> {
-    return await this._post('login', { user_name: user_name, pwd: pwd })
+  Login(user_name: String, pwd: String): Promise<RootObject<LoginModel>> {
+    return this._post('login', { user_name: user_name, pwd: pwd })
   }
 
-  async Nav(): Promise<RootObject<UserNavModel>> {
-    let resp = await this._get('nav')
-    resp.code === -101 &&
-      (() => {
-        const JwtStore = useJwtStore()
-        JwtStore.jwt && JwtStore.delete_jwt_token()
-      })()
-
-    return resp
+  Nav(): Promise<RootObject<UserNavModel>> {
+    return this._get('nav')
   }
 
-  async Reg(user_name: String, pwd: String): Promise<RootObject<String>> {
-    return await this._post('reg', { user_name: user_name, pwd: pwd })
+  Reg(user_name: String, pwd: String): Promise<RootObject<String>> {
+    return this._post('reg', { user_name: user_name, pwd: pwd })
   }
 
-  async PwdSalt(): Promise<RootObject<string>> {
-    return await this._get('pwd_salt')
+  PwdSalt(): Promise<RootObject<string>> {
+    return this._get('pwd_salt')
   }
 
-  async UserInfo(): Promise<RootObject<User_base_info_config_form>> {
-    return await this._get('user_info')
+  UserInfo(): Promise<RootObject<User_base_info_config_form>> {
+    return this._get('user_info')
   }
 
-  async UpdateUserInfo(
+  UpdateUserInfo(
     user_base_info_config_form: Omit<User_base_info_config_form, 'userid'>
   ): Promise<RootObject<string>> {
-    return await this._post('user_info/update', user_base_info_config_form)
+    return this._post('user_info/update', user_base_info_config_form)
   }
 }
 

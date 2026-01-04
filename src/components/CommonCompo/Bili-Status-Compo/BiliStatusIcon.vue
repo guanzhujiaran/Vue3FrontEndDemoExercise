@@ -1,10 +1,4 @@
 <script setup lang="ts">
-import {
-  CircleCheckFilled,
-  CircleCloseFilled,
-  InfoFilled,
-  WarningFilled
-} from '@element-plus/icons-vue'
 import { useNamespace } from 'element-plus'
 import type { Component } from 'vue'
 import type { EpPropMergeType } from 'element-plus/es/utils'

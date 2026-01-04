@@ -1,13 +1,8 @@
 <script setup lang="ts">
-import Placeholder from '@/components/opus-detail/RightPannel/PannelItems/Placeholder.vue'
 import comment_section from '@/components/communicate_list/comment_section.vue'
 import { ref } from 'vue'
 import type { CommentSectionBaseInfo } from '@/models/api/communication/comment_model.ts'
 
-const placeholder_props = ref({
-  inner_text: '璞熤和AC站比较厉害，数据均采集自互联网公开内容',
-  is_show: true
-})
 const comment_section_base_info = ref<CommentSectionBaseInfo>({ oid: 2, type: 1 })
 </script>
 
@@ -21,7 +16,7 @@ const comment_section_base_info = ref<CommentSectionBaseInfo>({ oid: 2, type: 1 
           target="_blank"
           rel="noreferrer"
         >
-          <Placeholder v-model="placeholder_props"></Placeholder>
+          <div class="placeholder-text">璞熤和AC站比较厉害，数据均采集自互联网公开内容</div>
         </el-link>
       </el-tooltip>
     </div>
@@ -39,6 +34,13 @@ const comment_section_base_info = ref<CommentSectionBaseInfo>({ oid: 2, type: 1 
   width: 100%;
   display: flex;
   justify-content: center;
+}
+
+.placeholder-text {
+  padding: 1rem;
+  text-align: center;
+  color: var(--el-text-color-regular);
+  font-size: 14px;
 }
 
 :deep(.placeholder) {

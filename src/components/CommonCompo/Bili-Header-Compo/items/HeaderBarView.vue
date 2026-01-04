@@ -11,7 +11,6 @@ import type { UserNavModel } from '@/models/user/user_model.ts'
 
 const globalVars = useInject(KeysEnum.GlobalVars) as Ref<GlobalVarsType>
 const biliUser = useInject(KeysEnum.BiliUser) as Ref<UserNavModel>
-const isLoggedIn = computed<boolean>(() => !!biliUser.value.uid)
 
 const route = useRoute()
 let resizeTimer: number | null = null
@@ -73,7 +72,7 @@ provide('headerBarView', {
 <template>
   <div id="bili-header">
     <div class="header-container">
-      <el-menu :default-active="route.path" mode="horizontal" class="header-menu">
+      <el-menu :default-active="route.path" mode="horizontal" class="header-menu" :collapse="false" :ellipsis="false">
         <template v-for="(item, index) in navigationData" :key="item.path">
           <MenuItem :item="item" />
         </template>

@@ -2,7 +2,6 @@
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import dayjs from 'dayjs'
 import { useWindowSize } from '@vueuse/core'
-import { Clock, Refresh } from '@element-plus/icons-vue'
 import Placeholder from '@/components/opus-detail/RightPannel/PannelItems/Placeholder.vue'
 import type { ScrapyStatus, ScrapyStatusResp } from '@/models/api/lottery/lotdata.ts'
 import lottery_database_bili_api from '@/api/lottery_data/bili/lottery_database_bili_api.ts'

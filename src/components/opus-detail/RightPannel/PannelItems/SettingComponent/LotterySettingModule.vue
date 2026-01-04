@@ -17,6 +17,7 @@ import ConfigItem from '@/components/opus-detail/RightPannel/PannelItems/Setting
 import BlueBtn from '@/components/CommonCompo/Bili-Interact-Compo/Blue-Btn.vue';
 import accountApi from '@/api/account/account_api';
 import emitter from '@/utils/mitt'
+import { businessHandler } from '@/utils/businessHandler'
 
 const is_loading_setting = ref<boolean>()
 
@@ -314,37 +315,55 @@ const save_lottery_setting = () => {
     account_name: props.account_name,
     settings: saved_props.value
   }
-  accountApi.save_account_setting(post_data.account_name, post_data.settings).then((res) => {
-    if (res.code !== 0) {
-      emitter.emit('toast', { t: `保存失败！${res.msg}`, e: 'error' })
-      return
-    }
-    emitter.emit('toast', { t: '保存成功' })
-    emit('close_setting_modal')
-  }).catch(e => {
-    emitter.emit('toast', { t: `保存失败！${e}`, e: 'error' })
-  })
+  
+  businessHandler(
+    accountApi.save_account_setting(post_data.account_name, post_data.settings),
+    {
+      successMessage: '保存成功',
+      errorMessage: '保存失败',
+      showSuccessToast: true,
+      showErrorToast: true,
+      autoHandleError: true
+    },
+    [
+      (result) => {
+        if (result.success) {
+          emit('close_setting_modal')
+        }
+      }
+    ]
+  )
 
 
 }
 
 
-onMounted(
-  async () => {
-    is_loading_setting.value = true;
-    return await accountApi.GetAccountLotterySettingByAccountName(props.account_name).then(resp => {
-      if (resp.code) {
-        return emitter.emit('toast', { t: resp.msg, e: 'error' })
+onMounted(() => {
+  is_loading_setting.value = true;
+  
+  businessHandler(
+    accountApi.GetAccountLotterySettingByAccountName(props.account_name),
+    {
+      successMessage: '',
+      errorMessage: '获取账号设置失败',
+      showSuccessToast: false,
+      showErrorToast: true,
+      autoHandleError: true
+    },
+    [
+      (result) => {
+        if (result.success && result.data) {
+          if (result.data.info.settings) {
+            formattedprops.value = fomat_setting(result.data.info.settings)
+            is_loading_setting.value = false
+          } else {
+            emitter.emit('toast', { t: `账号设置加载失败！`, e: 'error' })
+          }
+        }
       }
-      return resp.data.info.settings ? (formattedprops.value = fomat_setting(resp.data.info.settings)) && (is_loading_setting.value = false) : emitter.emit('toast', { t: `账号设置加载失败！`, e: 'error' })
-    }).catch(e => {
-      emitter.emit('toast', { t: `获取账号设置失败！${e}`, e: 'error' })
-    })
-
-
-
-  }
-)
+    ]
+  )
+})
 </script>
 <style scoped>
 

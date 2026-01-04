@@ -3,15 +3,7 @@ import { ref, onMounted } from 'vue'
 import { query } from '@/api/samsclub/gql.ts'
 import { ElCollapseTransition } from 'element-plus'
 import { useQuery } from '@urql/vue'
-import {
-  SortUp,
-  SortDown,
-  Search,
-  RemoveFilled,
-  ArrowDown,
-  ArrowUp,
-  QuestionFilled
-} from '@element-plus/icons-vue'
+
 import type { QueryGetSpuInfosArgs } from '@/gql/samsclub/graphql.ts'
 import { useSamsclubStore } from '@/stores/samsclub.ts'
 import UniversalSearchBox from '@/components/CommonCompo/Bili-Search-Compo/UniversalSearchBox.vue'

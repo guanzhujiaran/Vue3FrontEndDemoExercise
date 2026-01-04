@@ -22,7 +22,7 @@
         --el-color-success-light-8: var(--color-green-100);
         --el-color-success-light-9: var(--color-green-50);
         --el-color-success-dark-2: var(--color-green-600);
-
+        
         --el-color-warning: var(--color-amber-500);
         --el-color-warning-light-3: var(--color-amber-400);
         --el-color-warning-light-5: var(--color-amber-300);
@@ -249,4 +249,16 @@
         --component-line-height: 1.75rem;
     }
 
+    /* 优化滚动性能 */
+    * {
+        touch-action: auto;
+    }
+
+    /* Element Plus 组件的滚动优化 */
+    .el-scrollbar__wrap,
+    .el-select-dropdown__wrap,
+    .el-table__body-wrapper,
+    .el-dialog__body {
+        overscroll-behavior: contain;
+    }
 }

@@ -7,8 +7,8 @@ import { useRouter } from 'vue-router'
 import { useJwtStore } from '@/stores/jwt_token'
 import utils from '@/utils/mixin.ts'
 import emitter from '@/utils/mitt.ts'
-import { Hide, View } from '@element-plus/icons-vue'
 import { KeysEnum, useInject } from '@/models/base/provide_model.ts'
+import { businessHandler } from '@/utils/businessHandler'
 
 // 定义props
 const props = defineProps({
@@ -95,37 +95,37 @@ const handleLoginBtn = useDebounceFn(async () => {
   }
   loadingLogin.value = true
   let encrypt_pwd = utils.encrypt_pwd(tab__form.value.pwd, pwd_sec.value)
-  userApi
-    .Login(tab__form.value.user_name, encrypt_pwd)
-    .then((resp) => {
-      // 无论成功与否都显示API返回的消息
-      if (resp.code) {
-        emitter.emit('toast', { t: resp.msg || '登录失败！', e: 'error' })
-        return
-      } else {
-        emitter.emit('toast', { t: resp.msg || '登录成功！', e: 'success' })
+  
+  businessHandler(
+    userApi.Login(tab__form.value.user_name, encrypt_pwd),
+    {
+      successMessage: '登录成功！',
+      errorMessage: '登录失败！',
+      showSuccessToast: true,
+      showErrorToast: true,
+      autoHandleError: true
+    },
+    [
+      (result) => {
+        if (result.success && result.data) {
+          const JwtStore = useJwtStore()
+          JwtStore.save_jwt_token(result.data.jwt_token)
+
+          // 发出登录成功事件，让父组件可以关闭模态框
+          emit('login-success')
+
+          // 如果是在模态框中登录，不自动跳转，而是刷新当前页面
+          if (props.isModal) {
+            window.location.reload()
+          } else {
+            router.push('/app/user-center')
+          }
+        }
       }
-
-      const JwtStore = useJwtStore()
-      JwtStore.save_jwt_token(resp.data.jwt_token)
-
-      // 发出登录成功事件，让父组件可以关闭模态框
-      emit('login-success')
-
-      // 如果是在模态框中登录，不自动跳转，而是刷新当前页面
-      if (props.isModal) {
-        window.location.reload()
-      } else {
-        router.push('/app/user-center')
-      }
-    })
-    .catch((e) => {
-      emitter.emit('toast', { t: `登录失败！原因：${e}`, e: 'error' })
-      return
-    })
-    .finally(() => {
-      loadingLogin.value = false
-    })
+    ]
+  ).finally(() => {
+    loadingLogin.value = false
+  })
 }, 2e3)
 
 const handleRegBtn = useDebounceFn(async () => {

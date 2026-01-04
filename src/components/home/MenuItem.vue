@@ -37,7 +37,7 @@ const bili_user = useInject(KeysEnum.BiliUser) as Ref<UserNavModel>
 const headerBarView: any = inject('headerBarView', null)
 const router = useRouter()
 
-const handleMenuItemClick = (item: MenuItemRegistered) => {
+const handleMenuItemClick = (e: Event) => {
   // 如果路由需要登录但用户未登录，则不跳转，显示登录提示
   if (props.item.requiresLogin && !bili_user.value?.uid) {
     // 调用父组件的方法处理需要登录的路由点击

@@ -1,37 +1,22 @@
 <template>
-  <el-card
-    class="lottery-card"
-    :class="['lottery-type-' + normalizedData.type.toLowerCase()]"
-    shadow="hover"
-    body-class="lottery-card-body"
-  >
+  <el-card class="lottery-card" :class="['lottery-type-' + normalizedData.type.toLowerCase()]" shadow="hover"
+    body-class="lottery-card-body">
     <template #header>
       <div class="card-header">
         <el-tag size="small" :type="typeInfo.tagType" effect="plain" class="type-tag">{{
           normalizedData.displayType
-        }}</el-tag>
+          }}</el-tag>
         <span class="card-title" :title="normalizedData.title">{{ normalizedData.title }}</span>
         <span class="card-id">ID: {{ normalizedData.id }}</span>
         <div class="card-header-right">
-          <el-link
-            v-if="normalizedData.resultLink || normalizedData.sourceLink"
-            type="primary"
-            :href="normalizedData.resultLink || normalizedData.sourceLink!"
-            target="_blank"
-            rel="noreferrer"
-            referrerpolicy="no-referrer"
-            underline="never"
-            @click="handleLinkClick"
-          >
+          <el-link v-if="normalizedData.resultLink || normalizedData.sourceLink" type="primary"
+            :href="normalizedData.resultLink || normalizedData.sourceLink!" target="_blank" rel="noreferrer"
+            referrerpolicy="no-referrer" underline="never" @click="handleLinkClick">
             查看详情
           </el-link>
-          <el-switch
-            :active-text="BiliCommTxt.BiliLotteryCard.hasJoined"
-            :inactive-text="BiliCommTxt.BiliLotteryCard.hasNotJoined"
-            :model-value="hasClicked"
-            inline-prompt
-            @change="handleRecordLotteryId"
-          ></el-switch>
+          <el-switch :active-text="BiliCommTxt.BiliLotteryCard.hasJoined"
+            :inactive-text="BiliCommTxt.BiliLotteryCard.hasNotJoined" :model-value="hasClicked" inline-prompt
+            @change="handleRecordLotteryId"></el-switch>
         </div>
       </div>
     </template>
@@ -39,23 +24,17 @@
       <div class="main-content-wrapper">
         <div class="lottery__section line" v-if="normalizedData.endTime !== null">
           <div class="lottery__section__title status">开奖倒计时</div>
-          <el-countdown
-            class="lottery__countdown"
-            :value="normalizedData.endTime * 1e3"
-            format="DD 天 HH 时 mm 分 ss 秒"
-          ></el-countdown>
+          <el-countdown class="lottery__countdown" :value="normalizedData.endTime * 1e3"
+            format="DD 天 HH 时 mm 分 ss 秒"></el-countdown>
         </div>
         <div class="lottery__section line desc">
           <LotteryDesc>
             <template #label>状态：</template>
-            <template #value
-              ><BiliStatusIcon
-                class="h-10 w-10"
-                :icon="normalizedData.statusType"
-                :popover_text="normalizedData.statusText"
-                >{{ normalizedData.statusText }}
-              </BiliStatusIcon></template
-            >
+            <template #value>
+              <BiliStatusIcon class="h-10 w-10" :icon="normalizedData.statusType"
+                :popover_text="normalizedData.statusText">{{ normalizedData.statusText }}
+              </BiliStatusIcon>
+            </template>
           </LotteryDesc>
           <LotteryDesc>
             <template #label>截止时间：</template>
@@ -67,12 +46,11 @@
           </LotteryDesc>
           <LotteryDesc>
             <template #label>抽取人数：</template>
-            <template #value
-              >{{
-                normalizedData.prizes
-                  .map((el) => el.count || 0)
-                  .reduce((prev, curr) => prev + curr, 0)
-              }}
+            <template #value>{{
+              normalizedData.prizes
+                .map((el) => el.count || 0)
+                .reduce((prev, curr) => prev + curr, 0)
+            }}
               名
             </template>
           </LotteryDesc>
@@ -82,75 +60,34 @@
           </LotteryDesc>
           <LotteryDesc v-if="normalizedData.roomId">
             <template #label>直播间：</template>
-            <template #value
-              ><el-link
-                type="primary"
-                :href="normalizedData.sourceLink!"
-                target="_blank"
-                rel="noreferrer"
-                referrerpolicy="no-referrer"
-                @click="handleLinkClick"
-              >
+            <template #value><el-link type="primary" :href="normalizedData.sourceLink!" target="_blank" rel="noreferrer"
+                referrerpolicy="no-referrer" @click="handleLinkClick">
                 <!-- Corrected Icon -->
                 房间号: {{ normalizedData.roomId }}
                 <el-icon>
                   <Link />
-                </el-icon> </el-link
-            ></template>
+                </el-icon> </el-link></template>
           </LotteryDesc>
         </div>
         <el-divider></el-divider>
 
         <!-- --- Prize Info --- -->
-        <LotteryPrize
-          v-if="normalizedData.prizes.length > 0"
-          :prizes="normalizedData.prizes"
-        ></LotteryPrize>
+        <LotteryPrize v-if="normalizedData.prizes.length > 0" :prizes="normalizedData.prizes"></LotteryPrize>
 
         <!-- --- Requirements Info --- -->
-        <el-descriptions
-          v-if="normalizedData.requirements.length > 0"
-          title="参与条件"
-          :column="1"
-          border
-          size="small"
-          class="requirements-desc"
-        >
+        <el-descriptions v-if="normalizedData.requirements.length > 0" title="参与条件" :column="1" border size="small"
+          class="requirements-desc">
           <el-descriptions-item>
             <div class="conditions">
-              <div
-                class="condition"
-                v-for="(req, index) in normalizedData.requirements"
-                :key="index"
-              >
-                <el-link
-                  v-if="req.link"
-                  :href="req.link"
-                  target="_blank"
-                  type="primary"
-                  style="margin-left: 4px; vertical-align: middle"
-                  underline="never"
-                  class="condition-link"
-                  rel="noreferrer"
-                  referrerpolicy="no-referrer"
-                  @click="handleLinkClick"
-                >
-                  <el-tag
-                    :type="getRequirementTagType(req.type)"
-                    size="small"
-                    effect="plain"
-                    :title="req.link"
-                  >
+              <div class="condition" v-for="(req, index) in normalizedData.requirements" :key="index">
+                <el-link v-if="req.link" :href="req.link" target="_blank" type="primary"
+                  style="margin-left: 4px; vertical-align: middle" underline="never" class="condition-link"
+                  rel="noreferrer" referrerpolicy="no-referrer" @click="handleLinkClick">
+                  <el-tag :type="getRequirementTagType(req.type)" size="small" effect="plain" :title="req.link">
                     {{ req.text }}
                   </el-tag>
                 </el-link>
-                <el-tag
-                  v-else
-                  :type="getRequirementTagType(req.type)"
-                  size="small"
-                  effect="plain"
-                  :title="req.link"
-                >
+                <el-tag v-else :type="getRequirementTagType(req.type)" size="small" effect="plain" :title="req.link">
                   {{ req.text }}
                 </el-tag>
               </div>
@@ -176,10 +113,7 @@
             <el-descriptions-item label="业务类型码" v-if="normalizedData.businessType !== null">
               {{ normalizedData.businessType }}
             </el-descriptions-item>
-            <el-descriptions-item
-              label="原始弹幕要求"
-              v-if="normalizedData.danmu !== null && normalizedData.danmu !== ''"
-            >
+            <el-descriptions-item label="原始弹幕要求" v-if="normalizedData.danmu !== null && normalizedData.danmu !== ''">
               {{ normalizedData.danmu }}
             </el-descriptions-item>
             <!-- Add more specific original fields if needed -->
@@ -192,7 +126,6 @@
 </template>
 
 <script setup lang="ts">
-import { Flag, InfoFilled, TrophyBase, Trophy, Medal, Link } from '@element-plus/icons-vue'
 import { ref, computed } from 'vue'
 import type { PropType } from 'vue'
 import type { TagProps } from 'element-plus'
@@ -423,10 +356,10 @@ const normalizedData = computed<NormalizedLottery>(() => {
         normalized.title = dynData.first_prize_cmt || `预约抽奖 #${dynData.lottery_id}`
         data.business_id && String(data.business_id).length > 18
           ? normalized.requirements!.push({
-              type: '预约',
-              text: '完成直播预约(动态)',
-              link: getBiliOpusUrl(data.business_id)
-            })
+            type: '预约',
+            text: '完成直播预约(动态)',
+            link: getBiliOpusUrl(data.business_id)
+          })
           : null
         normalized.requirements!.push({
           type: '预约',
@@ -501,18 +434,18 @@ const normalizedData = computed<NormalizedLottery>(() => {
         const typeParam = url.searchParams.get('business_type')
         if (typeParam) normalized.businessType = parseInt(typeParam, 10) || 10
       }
-    } catch (e) {}
+    } catch (e) { }
     normalized.prizes = parsePrizeText(resData.text)
     normalized.requirements = []
     resData.dynamicId_str && resData.dynamicId_str.length > 18
       ? normalized.requirements.push({
-          type: '预约',
-          text: '完成直播预约(动态)',
-          link:
-            is_mobile == 2
-              ? `bilibili://opus/detail/${resData.dynamicId_str}?h5awaken=random`
-              : resData.jumpUrl
-        })
+        type: '预约',
+        text: '完成直播预约(动态)',
+        link:
+          is_mobile == 2
+            ? `bilibili://opus/detail/${resData.dynamicId_str}?h5awaken=random`
+            : resData.jumpUrl
+      })
       : null
     normalized.requirements.push({
       type: '预约',

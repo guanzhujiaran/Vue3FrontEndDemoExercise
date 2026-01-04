@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
-import { Top, Bottom } from '@element-plus/icons-vue'
 
 // 定义组件属性
 const props = defineProps({

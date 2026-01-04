@@ -1,14 +1,5 @@
 <script setup lang="ts">
 import { ref, computed, type Ref } from 'vue'
-import {
-  User,
-  Delete,
-  Moon,
-  Sunny,
-  Monitor,
-  MagicStick,
-  ScaleToOriginal
-} from '@element-plus/icons-vue'
 import { type ThemeMode, useThemeStore } from '@/stores/theme.ts'
 import { useUserPrefStore, type SizeTheme } from '@/stores/user_pref.ts'
 import { useHueThemeStore } from '@/stores/hue_theme.ts'
@@ -18,6 +9,7 @@ import type { UserNavModel } from '@/models/user/user_model.ts'
 import { useRouter } from 'vue-router'
 import { RouteName } from '@/models/router'
 import type { ElDropdown } from 'element-plus'
+import { MagicStick, User, Delete, ScaleToOriginal, Moon, Sunny, Monitor } from '@element-plus/icons-vue'
 
 const router = useRouter()
 const isLoggedIn = computed<boolean>(() => !!user_nav_model.value.uid)
@@ -165,7 +157,7 @@ const handleDropDownVisibleChange = (visible: boolean) => {
     ref="headerAvatarDropdown"
     @visible-change="handleDropDownVisibleChange"
     :persistent="true"
-    :teleported="false"
+    :teleported="true"
   >
     <div class="header-avatar-wrapper">
       <UserAvatarBox v-if="isLoggedIn" :src="user_face_src" size="default" />

@@ -15,8 +15,14 @@ class DolotteryApi extends BaseApi {
     this.path = '/api/v1/do_lottery/bili/'
   }
 
-  async run_account_lottery_task(account_name: string): Promise<RootObject<boolean | undefined>> {
-    return await this._post('run', {
+  run_account_lottery_task(account_name: string): Promise<RootObject<boolean | undefined>> {
+    return this._post('run', {
+      account_name: account_name
+    })
+  }
+
+  stop_account_lottery_task(account_name: string): Promise<RootObject<boolean | undefined>> {
+    return this._post('stop', {
       account_name: account_name
     })
   }

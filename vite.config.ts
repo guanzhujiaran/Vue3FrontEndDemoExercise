@@ -61,7 +61,7 @@ export default defineConfig({
     vueJsx(),
     VueDevTools({
       componentInspector: true,
-      launchEditor: 'H:\\jetbrains\\WebStorm 2\\bin\\webstorm64.exe'
+      launchEditor: 'K:\\CodeBuddy CN\\CodeBuddy CN.exe'
     }),
     tailwindcss()
   ],
@@ -77,7 +77,9 @@ export default defineConfig({
   },
   server: {
     proxy: {
-      '/api': 'http://localhost:9926'
+      '/api': {
+        target: 'http://localhost:9926',
+      }
     },
     host: '0.0.0.0'
   }

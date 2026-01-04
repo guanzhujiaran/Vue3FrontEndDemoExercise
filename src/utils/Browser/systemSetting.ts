@@ -28,7 +28,7 @@ export const adjustLayout = useDebounceFn(() => {
   // 确保body至少有视口的高度
   // document.body.style.minHeight = `${screenSize.height - 10}px`
 
-  const minWidth = 500 // body的min-width值
+  const minWidth = 450 // body的min-width值
 
   // 当窗口宽度小于body的min-width时，自动缩放
   if (window.innerWidth < minWidth) {
@@ -71,14 +71,6 @@ export const adjustLayout = useDebounceFn(() => {
     // 移除标记类
     document.documentElement.classList.remove('scaled-view')
 
-    // 根据屏幕尺寸调整其他布局参数
-    if (screenSize.width < 768) {
-      // 小屏幕布局调整
-      document.body.style.overflowX = 'auto'
-    } else {
-      // 大屏幕布局调整
-      document.body.style.overflowX = 'hidden'
-    }
   }
 }, 200) // 200ms的防抖延迟
 

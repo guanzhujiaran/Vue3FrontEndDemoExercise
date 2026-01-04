@@ -16,7 +16,7 @@ class LotteryDataBaseApi extends BaseApi {
     this.path = '/api/v1/lottery_database/bili/'
   }
 
-  async handle_lottery_data(
+  handle_lottery_data(
     { page_num, page_size }: { page_num: number; page_size: number },
     data_type:
       | 'GetOfficialLottery'
@@ -26,15 +26,15 @@ class LotteryDataBaseApi extends BaseApi {
       | 'GetTopicLottery'
       | string
   ): Promise<RootObject<LotDataView<any> | undefined>> {
-    return await this._get(data_type, { page_num, page_size })
+    return this._get(data_type, { page_num, page_size })
   }
 
-  async handle_add_dynamic_lottery_data({
+  handle_add_dynamic_lottery_data({
     dynamic_id_or_url
   }: {
     dynamic_id_or_url: string
   }): Promise<RootObject<string | undefined>> {
-    return await this._post(
+    return this._post(
       'AddDynamicLottery',
       { dynamic_id_or_url: dynamic_id_or_url },
       {
@@ -43,12 +43,12 @@ class LotteryDataBaseApi extends BaseApi {
     )
   }
 
-  async get_all_scrapy_status(): Promise<RootObject<ScrapyStatusResp>> {
-    return await this._get('GetAllScrapyStatus')
+  get_all_scrapy_status(): Promise<RootObject<ScrapyStatusResp>> {
+    return this._get('GetAllScrapyStatus')
   }
 
-  async handle_search_lottery_data({ keyword }: { keyword: string }): Promise<RootObject<any[]>> {
-    return await this._get('SearchLotteryByKeyword', { keyword })
+  handle_search_lottery_data({ keyword }: { keyword: string }): Promise<RootObject<any[]>> {
+    return this._get('SearchLotteryByKeyword', { keyword })
   }
 }
 

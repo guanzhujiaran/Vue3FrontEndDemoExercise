@@ -10,6 +10,7 @@
 import { useJwtStore } from '@/stores/jwt_token'
 import axios from 'axios'
 import emitter from '@/utils/mitt.ts'
+import { apiErrorHandler } from './error_handler'
 
 declare module 'axios' {
   interface AxiosResponse<T = any> {
@@ -49,22 +50,44 @@ ajax.interceptors.request.use(
 // 响应拦截器，处理响应数据，例如错误统一处理
 ajax.interceptors.response.use(
   (response) => {
+    // 如果是 Blob 类型响应，直接返回 response，不进行 JSON 处理
+    if (response.config.responseType === 'blob') {
+      return response
+    }
+
     const data = response.data
     // 检查是否是未登录状态
     if (data.code === -101) {
       // 触发未登录事件
       emitter.emit('needLogin')
+      return data
     }
+
+    // 检查业务错误
+    if (data.code !== 0) {
+      // 使用统一错误处理器，但不自动显示消息（让业务层决定）
+      apiErrorHandler.handleError(data, {
+        showToast: false,
+        emitError: false
+      })
+    }
+
     return data
   },
   (error) => {
     // 处理错误，比如根据错误码提示用户或跳转登录页
     console.error('API Error:', error)
-    emitter.emit('toast', { t: `请求发送失败！${error}`, e: 'error' })
+    
+    // 使用统一错误处理器，默认显示错误消息
+    apiErrorHandler.handleError(error, {
+      showToast: true,
+      emitError: false
+    })
+    
     return {
       code: -9999,
       data: null,
-      msg: error.message
+      msg: error.message || '请求发送失败'
     }
   }
 )

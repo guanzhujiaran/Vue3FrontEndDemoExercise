@@ -6,7 +6,6 @@ import type { ComposeOption } from 'echarts/core'
 import { use } from 'echarts/core'
 import type { LineSeriesOption } from 'echarts/charts'
 import { LineChart } from 'echarts/charts'
-import { TrendCharts } from '@element-plus/icons-vue'
 import type {
   DataZoomComponentOption,
   GridComponentOption,

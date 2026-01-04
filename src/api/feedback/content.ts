@@ -8,21 +8,21 @@ class FeedbackContentApi extends BaseApi {
     this.path = '/api/v1/feedback/content/'
   }
 
-  async pub_content(
+  pub_content(
     title: String,
     content: String,
     desc: String = '',
     type: number
   ): Promise<RootObject<LoginModel>> {
-    return await this._post('pub_content', { title, content, desc, type })
+    return this._post('pub_content', { title, content, desc, type })
   }
 
-  async get_list(
+  get_list(
     page_num: number,
     page_size: number,
     order_by: 'hot' | 'time'
   ): Promise<RootObject<UserNavModel>> {
-    return await this._get('get_list', { page_num, page_size, order_by })
+    return this._get('get_list', { page_num, page_size, order_by })
   }
 }
 

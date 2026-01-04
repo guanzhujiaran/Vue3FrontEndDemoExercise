@@ -1,27 +1,124 @@
 @reference '@/assets/tailwind.css';
+
+/* 禁用 Element Plus 菜单的默认缩小功能 */
+#bili-header .el-menu--horizontal {
+    border-bottom: none !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    white-space: nowrap !important;
+    flex-wrap: nowrap !important;
+}
+
+#bili-header .el-menu--horizontal .el-menu-item,
+#bili-header .el-menu--horizontal .el-sub-menu__title {
+    border-bottom: none !important;
+    white-space: nowrap !important;
+    flex-shrink: 0 !important;
+}
+
 .header-bar-view {
     @apply flex w-full items-center;
 }
 
 .header-container {
-    @apply inline-flex justify-end w-full;
+    @apply flex items-center justify-between w-full;
+    @apply px-2 sm:px-2 md:px-0 px-4;
+    position: relative;
+    background: var(--el-bg-color);
 }
 
 .header-menu {
-    @apply flex;
+    @apply flex-1 overflow-x-auto;
+    /* 禁用 Element Plus 默认的省略号行为 */
+    min-width: 0;
+    /* 确保不会遮挡dropdown */
+    z-index: 1;
 }
 
 .avatar-container {
-    @apply flex items-center pr-5 pl-5 justify-end ml-auto w-full;
+    @apply flex items-center justify-center;
+    @apply flex-shrink-0;
+    @apply px-2 sm:px-4;
+    /* 确保dropdown能正常显示 */
+    position: relative;
+    z-index: 10;
 }
 
+/* 小屏幕适配 */
 @media (max-width: 768px) {
+    .header-container {
+        @apply px-1;
+    }
+    
     .header-menu :deep(.el-sub-menu__title),
     .header-menu :deep(.el-menu-item) {
-        @apply text-sm;
+        @apply text-xs px-2 py-3;
+        min-width: fit-content;
     }
-
+    
     .avatar-container {
-        @apply p-0;
+        @apply px-1;
+        min-width: auto;
+    }
+}
+
+/* 超小屏幕适配 */
+@media (max-width: 480px) {
+    .header-menu :deep(.el-sub-menu__title),
+    .header-menu :deep(.el-menu-item) {
+        @apply text-xs px-1 py-2;
+        font-size: 0.75rem;
+    }
+    
+    .header-menu :deep(.el-sub-menu__title span),
+    .header-menu :deep(.el-menu-item span) {
+        @apply truncate max-w-[60px];
+    }
+}
+
+/* 滚动条样式 */
+.header-menu::-webkit-scrollbar {
+    height: 2px;
+}
+
+.header-menu::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.header-menu::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 1px;
+}
+
+.header-menu::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.3);
+}
+
+/* 确保 dropdown 和 popover 能正常显示 */
+#bili-header .el-dropdown {
+    position: relative;
+    z-index: 100;
+}
+
+/* 确保 header 容器有完整的背景色 */
+#bili-header {
+    background: var(--el-bg-color);
+    border-bottom: 1px solid var(--el-border-color-light);
+}
+
+#bili-header .el-dropdown__popper,
+#bili-header .el-popover {
+    z-index: 3000 !important;
+}
+
+/* 修复 dropdown 和 popover 在小屏幕下的显示问题 */
+@media (max-width: 768px) {
+    #bili-header .el-dropdown__popper,
+    #bili-header .el-popover {
+        z-index: 3000 !important;
+    }
+    
+    .avatar-container {
+        z-index: 100;
     }
 }

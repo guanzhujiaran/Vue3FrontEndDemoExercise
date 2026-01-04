@@ -6,7 +6,7 @@
       <div class="hero-actions">
         <el-button type="primary" size="large" @click="handleLoginClick" v-if="!isLoggedIn">
           <el-icon class="el-icon--left">
-            <IconUser />
+            <User />
           </el-icon>
           立即登录
         </el-button>
@@ -17,13 +17,13 @@
           v-else
         >
           <el-icon class="el-icon--left">
-            <IconDataAnalysis />
+            <DataAnalysis />
           </el-icon>
           查看抽奖数据
         </el-button>
         <el-button type="info" size="large" @click="router.push('/app/Feedback')">
           <el-icon class="el-icon--left">
-            <IconChat />
+            <ChatLineRound />
           </el-icon>
           提交反馈
         </el-button>
@@ -36,11 +36,6 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
 import { ElButton, ElIcon } from 'element-plus'
-import {
-  User as IconUser,
-  DataAnalysis as IconDataAnalysis,
-  ChatLineRound as IconChat
-} from '@element-plus/icons-vue'
 
 interface Props {
   isLoggedIn: boolean

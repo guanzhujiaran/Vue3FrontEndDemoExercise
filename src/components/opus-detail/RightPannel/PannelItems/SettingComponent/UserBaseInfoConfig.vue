@@ -60,6 +60,7 @@ import { ElMessage } from 'element-plus'
 import userApi from '@/api/user/user_api.ts'
 import type { User_base_info_config_form } from '@/models/user/user_setting/user_base_info_config_model.ts'
 import '@/assets/components/user/user-base-info-config-tailwind.css'
+import { businessHandler } from '@/utils/businessHandler'
 
 // 设置项
 const userName = ref('')
@@ -100,45 +101,50 @@ const saveSettings = async () => {
     return
   }
   
-  try {
-    saving.value = true
-    const userInfo: Omit<User_base_info_config_form, 'userid'> = {
-      uname: userName.value,
-      usersign: userSign.value,
-      sex: sex.value,
-      birthday: birthday.value || '' // 如果没有选择生日，则发送空字符串
-    }
-    
-    const response = await userApi.UpdateUserInfo(userInfo)
-    if (response.code === 0) {
-      ElMessage.success('用户信息已更新')
-    } else {
-      ElMessage.error(response.msg || '保存失败')
-    }
-  } catch (error) {
-    ElMessage.error('保存设置时出错')
-    console.error('保存设置时出错:', error)
-  } finally {
-    saving.value = false
+  saving.value = true
+  const userInfo: Omit<User_base_info_config_form, 'userid'> = {
+    uname: userName.value,
+    usersign: userSign.value,
+    sex: sex.value,
+    birthday: birthday.value || '' // 如果没有选择生日，则发送空字符串
   }
+  
+  businessHandler(
+    userApi.UpdateUserInfo(userInfo),
+    {
+      successMessage: '用户信息已更新',
+      errorMessage: '保存失败',
+      showSuccessToast: true,
+      showErrorToast: true,
+      autoHandleError: true
+    }
+  ).finally(() => {
+    saving.value = false
+  })
 }
 
 // 加载用户信息
-const loadUserInfo = async () => {
-  try {
-    const response = await userApi.UserInfo()
-    if (response.code === 0 && response.data) {
-      userName.value = response.data.uname.toString()
-      userSign.value = response.data.usersign
-      sex.value = response.data.sex
-      birthday.value = response.data.birthday
-    } else {
-      ElMessage.error(response.msg || '加载用户信息失败')
-    }
-  } catch (error) {
-    ElMessage.error('加载用户信息时出错')
-    console.error('加载用户信息时出错:', error)
-  }
+const loadUserInfo = () => {
+  businessHandler(
+    userApi.UserInfo(),
+    {
+      successMessage: '',
+      errorMessage: '加载用户信息失败',
+      showSuccessToast: false,
+      showErrorToast: true,
+      autoHandleError: true
+    },
+    [
+      (result) => {
+        if (result.success && result.data) {
+          userName.value = result.data.uname.toString()
+          userSign.value = result.data.usersign
+          sex.value = result.data.sex
+          birthday.value = result.data.birthday
+        }
+      }
+    ]
+  )
 }
 
 // 组件挂载时加载用户信息

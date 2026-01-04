@@ -1,4 +1,5 @@
 @reference "@/assets/tailwind.css"
+@import "daisyui/dist/full.css";
 
 html, body {
     @apply m-0 min-h-full overflow-x-hidden p-0;
@@ -35,10 +36,6 @@ html.scaled-view #app {
     @apply h-auto min-h-screen;
 }
 
-html.scaled-view .el-container {
-    @apply min-h-screen;
-}
-
 /* 过渡动画 */
 .slide-fade-enter-active {
     transition: all 0.3s ease-out;
@@ -51,4 +48,8 @@ html.scaled-view .el-container {
 .slide-fade-enter-from,
 .slide-fade-leave-to {
     opacity: 0;
+}
+
+.use-screen-safe-area {
+    max-width: unset !important;
 }

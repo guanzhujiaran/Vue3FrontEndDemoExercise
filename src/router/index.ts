@@ -24,12 +24,24 @@ import emitter from '@/utils/mitt.ts'
 import { type CustomRouteRecordRaw, RouteName } from '@/models/router/index.ts'
 const user_center_routes = [
   {
+    path: '',
+    name: RouteName.USER_CENTER_DASHBOARD,
+    component: () =>
+      import('@/components/opus-detail/RightPannel/PannelItems/SettingComponent/UserCenterDefaultPanel.vue'),
+    meta: {
+      title: '用户中心首页',
+      description: '用户中心默认面板',
+      isHeaderShow: true,
+      requiresLogin: true,
+      icon: IconUser
+    }
+  },
+
+  {
     path: 'user-info-config',
     name: RouteName.USER_INFO_CONFIG,
     component: () =>
-      import(
-        '@/components/opus-detail/RightPannel/PannelItems/SettingComponent/UserBaseInfoConfig.vue'
-      ),
+      import('@/components/opus-detail/RightPannel/PannelItems/SettingComponent/UserBaseInfoConfig.vue'),
     meta: {
       title: RouteName.USER_INFO_CONFIG,
       description: '管理用户基本信息',
@@ -39,46 +51,17 @@ const user_center_routes = [
     }
   },
   {
-    path: 'all_accounts',
-    name: RouteName.ACCOUNT_DETAIL,
-    component: () => import('@/components/opus-detail/RightPannel/PannelItem.vue'),
+    path: 'browser-management',
+    name: RouteName.BROWSER_MANAGEMENT,
+    component: () =>
+      import('@/views/BrowserManagementView.vue'),
     meta: {
-      title: '所有账号',
-      description: '查看所有账号信息',
-      isHeaderShow: false,
+      title: RouteName.BROWSER_MANAGEMENT,
+      description: '管理浏览器指纹、插件配置和通知设置',
+      isHeaderShow: true,
       requiresLogin: true,
-      icon: IconUser
-    },
-    children: [
-      {
-        path: 'rpa-control',
-        name: RouteName.RPA_CONTROL,
-        component: () => import('@/views/RPAControlView.vue'),
-        meta: {
-          title: 'RPA控制',
-          icon: IconSetting,
-          description: 'RPA 任务编排与控制台',
-          color:
-            'linear-gradient(225deg, var(--el-color-info) 0%, var(--el-color-primary) 40%, var(--el-color-danger) 80%)',
-          requiresLogin: false,
-          showInHome: false,
-          order: 1,
-          isHeaderShow: false
-        }
-      },
-      {
-        path: 'account_name:account_name',
-        name: RouteName.ACCOUNT_NAME_DETAIL_PAGE,
-        component: () => import('@/components/opus-detail/RightPannel/PannelItem.vue'),
-        meta: {
-          title: '账号详情',
-          description: '查看单个账号详细信息',
-          isHeaderShow: false,
-          requiresLogin: true,
-          icon: IconUser
-        }
-      }
-    ]
+      icon: IconMonitor
+    }
   }
 ]
 /**
@@ -118,6 +101,7 @@ const routes: CustomRouteRecordRaw[] = [
     path: '/app/user-center/',
     name: RouteName.USER_CENTER,
     component: () => import('@/views/UserCenterView.vue'),
+    redirect: { name: RouteName.USER_CENTER_DASHBOARD },
     meta: {
       id: 'user',
       title: '用户中心',
