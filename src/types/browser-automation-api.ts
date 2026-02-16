@@ -106,7 +106,22 @@ export interface UserBrowserInfoListResp {
 }
 
 // 浏览器指纹相关类型定义(这些类型已被BrowserFingerprintUpsertParams等替代)
-// export interface UserBrowserInfoCreateParams { ... }
+export interface UserBrowserInfoCreateParams {
+  id?: string | null
+  fingerprint_int?: number | null
+  is_desktop?: boolean
+  fingerprint_platform?: PlatformEnum | null
+  fingerprint_platform_version?: string | null
+  fingerprint_browser?: BrowserEnum | null
+  fingerprint_brand_version?: string | null
+  fingerprint_hardware_concurrency?: number | null
+  fingerprint_gpu_vendor?: string | null
+  fingerprint_gpu_renderer?: string | null
+  lang?: string | null
+  accept_lang?: string | null
+  timezone?: string | null
+  proxy_server?: string | null
+}
 
 export interface BaseFingerprintBrowserInitParams {
   fingerprint_int: number | null
@@ -194,6 +209,7 @@ export interface UserBrowserInfoListParams {
 
 // 通知配置相关类型定义
 export interface NotificationConfigCreate {
+  browser_id?: string | null
   created_at?: string
   updated_at?: string
   hitokoto?: boolean
@@ -244,6 +260,7 @@ export interface NotificationConfigCreate {
   aibotk_type?: string
   aibotk_name?: string
   smtp_server?: string
+  smtp_port?: string
   smtp_ssl?: string
   smtp_email?: string
   smtp_password?: string
@@ -323,6 +340,7 @@ export interface NotificationConfigUpdate {
   aibotk_type?: string
   aibotk_name?: string
   smtp_server?: string
+  smtp_port?: string
   smtp_ssl?: string
   smtp_email?: string
   smtp_password?: string
@@ -422,6 +440,7 @@ export interface NotificationConfig {
   aibotk_type?: string
   aibotk_name?: string
   smtp_server?: string
+  smtp_port?: string
   smtp_ssl?: string
   smtp_email?: string
   smtp_password?: string
@@ -982,6 +1001,7 @@ export interface NotificationConfigEffectiveResp {
   aibotk_type?: string
   aibotk_name?: string
   smtp_server?: string
+  smtp_port?: string
   smtp_ssl?: string
   smtp_email?: string
   smtp_password?: string

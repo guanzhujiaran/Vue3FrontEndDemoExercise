@@ -2,6 +2,7 @@
 import { useNamespace } from 'element-plus'
 import type { Component } from 'vue'
 import type { EpPropMergeType } from 'element-plus/es/utils'
+import { CircleCheckFilled, WarningFilled, CircleCloseFilled, InfoFilled } from '@element-plus/icons-vue'
 
 const IconMap = {
   success: 'icon-success',

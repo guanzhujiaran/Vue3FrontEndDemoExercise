@@ -134,6 +134,18 @@
     @apply text-xl text-center font-bold;
 }
 
+.lottery-pool-section {
+    @apply mt-4 p-4 rounded-lg bg-[var(--el-fill-color-light)];
+}
+
+.lottery-pool-title {
+    @apply text-base font-semibold text-[var(--el-text-color-primary)] mb-2;
+}
+
+.lottery-pool-content {
+    @apply text-sm text-[var(--el-text-color-regular)] leading-relaxed;
+}
+
 @media (max-width: 640px) {
     .lottery-card {
         @apply max-w-full;

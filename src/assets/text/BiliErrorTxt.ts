@@ -19,6 +19,7 @@ type BiliErrorRouteToType = {
   not_found: BiliErrorDetailType
   unauthorized: BiliErrorDetailType
   unknown: BiliErrorDetailType
+  network_error: BiliErrorDetailType
 }
 
 export const BiliErrorRouteToTxt: BiliErrorRouteToType = {
@@ -44,6 +45,15 @@ export const BiliErrorRouteToTxt: BiliErrorRouteToType = {
     error_img_src: BiliImg.error.not_found,
     error_msg: '未知错误',
     error_description: '抱歉，您访问的页面出现了未知错误',
+    btn_text: '返回首页',
+    route_link: {
+      name: RouteName.HOME
+    }
+  },
+  network_error: {
+    error_img_src: BiliImg.error.not_found,
+    error_msg: '网络连接失败',
+    error_description: '抱歉，无法连接到服务器，请检查您的网络连接',
     btn_text: '返回首页',
     route_link: {
       name: RouteName.HOME

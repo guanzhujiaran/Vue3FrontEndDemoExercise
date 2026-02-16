@@ -18,6 +18,7 @@ import type { UserNavModel } from '@/models/user/user_model.ts'
 import { isLogin } from '@/api/user/utils.ts'
 import userApi from '@/api/user/user_api.ts'
 import type { Ref } from 'vue'
+import NetworkErrorView from '@/views/NetworkErrorView.vue'
 useHead({
   title: '爆破哔哩哔哩弹幕视频网 - ( ゜- ゜)つロ 乾杯~ - bilibili',
   meta: [
@@ -56,24 +57,22 @@ const openGlobalLoginModal = () => {
 
 provide(openGlobalLoginModalKey, openGlobalLoginModal)
 const biliUser = useInject(KeysEnum.BiliUser) as Ref<UserNavModel>
-const pwd_sec = useInject(KeysEnum.BiliPwdSec)
 
-const get_pwd_sec = () => {
-  userApi.PwdSalt().then((resp) => {
-    pwd_sec.value = resp.data
-  })
-}
+// 存储网络错误状态
+const showNetworkDiagnosis = ref(false)
+const networkErrorMessage = ref('')
 
 // 检查登录状态
 const checkLoginStatus = () => {
-  isLogin()
-    .then(([isLoggedInStatus, message, user_nav]) => {
-      user_nav ? (biliUser.value = user_nav) : null
-      if (!isLoggedInStatus && message) {
-        get_pwd_sec()
-      }
-    })
-    .catch(() => get_pwd_sec())
+  isLogin().then(([isLoggedInStatus, message, user_nav]) => {
+    if (!isLoggedInStatus && message !== '未登录') {
+      // 如果不是因为未登录导致的错误，显示网络诊断页面
+      console.log('App.vue - 获取用户信息失败，显示网络诊断页面，错误信息:', message)
+      networkErrorMessage.value = message
+      showNetworkDiagnosis.value = true
+    }
+    user_nav ? (biliUser.value = user_nav) : null
+  })
 }
 
 onMounted(() => {
@@ -104,34 +103,44 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <!-- 背景图片 -->
-  <img class="pointer-events-none fixed inset-0 z-[-9999] h-full w-full object-cover" :src="backgroundUrl"
-    referrerpolicy="no-referrer" alt="Background Image" />
+  <!-- 网络诊断页面 - 覆盖显示 -->
+  <NetworkErrorView
+    v-if="showNetworkDiagnosis"
+    :error-message="networkErrorMessage"
+    @close="showNetworkDiagnosis = false"
+  />
 
-  <el-config-provider :locale="zhCn">
-    <UseScreenSafeArea class="use-screen-safe-area" top right bottom left>
-      <div class="app-wrapper">
-        <el-container v-if="isInit" id="i_cecream">
-          <el-header>
-            <HeaderBarView />
-          </el-header>
-          <el-main class="flex! min-h-[86vh] flex-col">
-            <RouterView v-slot="{ Component, route }">
-              <transition name="slide-fade" mode="out-in">
-                <keep-alive :max="10">
-                  <component :is="Component" />
-                </keep-alive>
-              </transition>
-            </RouterView>
-          </el-main>
-        </el-container>
-        <SponsorNotification />
-        <GlobalLoadingMask />
-        <GlobalToast />
-        <LoginModal ref="loginModalRef" />
-      </div>
-    </UseScreenSafeArea>
-  </el-config-provider>
+  <!-- 主应用内容 -->
+  <template v-else>
+    <!-- 背景图片 -->
+    <img class="pointer-events-none fixed inset-0 z-[-9999] h-full w-full object-cover" :src="backgroundUrl"
+      referrerpolicy="no-referrer" alt="Background Image" />
+
+    <el-config-provider :locale="zhCn">
+      <UseScreenSafeArea class="use-screen-safe-area" top right bottom left>
+        <div class="app-wrapper">
+          <el-container v-if="isInit" id="i_cecream">
+            <el-header>
+              <HeaderBarView />
+            </el-header>
+            <el-main class="flex! min-h-[86vh] flex-col">
+              <RouterView v-slot="{ Component, route }">
+                <transition name="slide-fade" mode="out-in">
+                  <keep-alive :max="10">
+                    <component :is="Component" />
+                  </keep-alive>
+                </transition>
+              </RouterView>
+            </el-main>
+          </el-container>
+          <SponsorNotification />
+          <GlobalLoadingMask />
+          <GlobalToast />
+          <LoginModal ref="loginModalRef" />
+        </div>
+      </UseScreenSafeArea>
+    </el-config-provider>
+  </template>
 </template>
 
 <style scoped>

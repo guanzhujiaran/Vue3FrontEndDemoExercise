@@ -67,7 +67,12 @@ export const businessHandler = async <T>(
 
       // 执行成功回调函数
       if (callbacks && callbacks.length > 0) {
-        Promise.all(callbacks)
+        const result: BusinessHandlerResult<T> = {
+          success: true,
+          data: response.data,
+          response
+        }
+        await Promise.all(callbacks.map(cb => cb(result)))
       }
 
       return {
@@ -85,7 +90,13 @@ export const businessHandler = async <T>(
 
       // 执行错误回调函数
       if (errorCallbacks && errorCallbacks.length > 0) {
-        Promise.all(errorCallbacks)
+        const result: BusinessHandlerResult<T> = {
+          success: false,
+          error: true,
+          msg: errorMsg,
+          response
+        }
+        await Promise.all(errorCallbacks.map(cb => cb(result)))
       }
 
       return {
@@ -103,7 +114,12 @@ export const businessHandler = async <T>(
       ElMessage.error(errorMsg)
     }
     if (errorCallbacks && errorCallbacks.length > 0) {
-      Promise.all(errorCallbacks)
+      const result: BusinessHandlerResult<T> = {
+        success: false,
+        error: true,
+        msg: errorMsg
+      }
+      await Promise.all(errorCallbacks.map(cb => cb(result)))
     }
     return {
       success: false,

@@ -10,12 +10,12 @@
       <div class="welcome-content">
         <p>您好，{{ userInfo.user_name }}！欢迎回到用户中心。</p>
         <p>在这里您可以管理您的个人信息、浏览器配置以及其他相关内容。</p>
-        
+
         <div class="quick-actions">
           <h3>快速操作</h3>
           <el-row :gutter="20">
-            <el-col 
-              v-for="route in userCenterRoutes" 
+            <el-col
+              v-for="route in userCenterRoutes"
               :key="route.name"
               :span="12"
             >
@@ -33,19 +33,6 @@
         </div>
       </div>
     </el-card>
-    
-    <el-card class="info-card">
-      <template #header>
-        <div class="card-header">
-          <el-icon><InfoFilled /></el-icon>
-          <span>系统信息</span>
-        </div>
-      </template>
-      <div class="info-content">
-        <p>当前用户角色: {{ userInfo.role === 'root' ? '管理员' : '普通用户' }}</p>
-        <p>用户ID: {{ userInfo.uid }}</p>
-      </div>
-    </el-card>
   </div>
 </template>
 
@@ -56,12 +43,13 @@ import type { UserNavModel } from '@/models/user/user_model'
 import type { Ref } from 'vue'
 import { user_center_routes } from '@/router/index'
 import type { CustomRouteRecordRaw } from '@/models/router/index'
+import { Link } from '@element-plus/icons-vue'
 
 const router = useRouter()
 const userInfo = useInject(KeysEnum.BiliUser) as Ref<UserNavModel>
 
 // 过滤出用户中心的路由（排除当前首页）
-const userCenterRoutes = user_center_routes.filter(route => 
+const userCenterRoutes = user_center_routes.filter(route =>
   route.name !== 'USER_CENTER_DASHBOARD'
 )
 
@@ -139,5 +127,17 @@ const navigateToRoute = (route: CustomRouteRecordRaw) => {
 
 .info-content p {
   margin: 8px 0;
+}
+
+.sso-tip-card {
+  margin-top: 20px;
+}
+
+.sso-tip-content p {
+  margin: 8px 0;
+}
+
+.sso-tip-content .bind-link {
+  margin-top: 10px;
 }
 </style>

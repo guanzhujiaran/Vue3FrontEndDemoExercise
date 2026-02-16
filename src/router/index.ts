@@ -12,13 +12,15 @@ import {
   User as IconUser,
   DataAnalysis as IconDataAnalysis,
   ChatLineRound as IconChat,
+  ChatDotRound as IconChatDotRound,
   ShoppingCart as IconShoppingCart,
   Promotion as IconPromotion,
   Lightning as IconLightning,
   CreditCard as IconCreditCard,
   List as IconList,
   Trophy as IconTrophy,
-  Monitor as IconMonitor
+  Monitor as IconMonitor,
+  Link as IconLink
 } from '@element-plus/icons-vue'
 import emitter from '@/utils/mitt.ts'
 import { type CustomRouteRecordRaw, RouteName } from '@/models/router/index.ts'
@@ -238,6 +240,21 @@ const routes: CustomRouteRecordRaw[] = [
               order: 3,
               isHeaderShow: true
             }
+          },
+          {
+            path: 'topic',
+            name: RouteName.TOPIC_LOTTERY,
+            component: () => import('@/components/lottery_data/bili_data/TopicLottery.vue'),
+            meta: {
+              title: '话题抽奖',
+              icon: IconChatDotRound,
+              description: 'B站话题活动抽奖数据',
+              color:
+                'linear-gradient(225deg, var(--el-color-success) 0%, var(--el-color-info) 35%, var(--el-color-primary) 70%, var(--el-color-warning) 100%)',
+              showInHome: true,
+              order: 4,
+              isHeaderShow: true
+            }
           }
         ]
       }
@@ -269,6 +286,26 @@ const routes: CustomRouteRecordRaw[] = [
       description: '查看项目更新日志',
       isHeaderShow: true,
       order: 5
+    }
+  },
+
+  {
+    path: '/casdoor-callback',
+    name: 'CASDOOR_CALLBACK',
+    component: () => import('@/views/CasdoorCallbackView.vue'),
+    meta: {
+      title: 'Casdoor 登录回调',
+      isHeaderShow: false
+    }
+  },
+
+  {
+    path: '/casdoor-callback',
+    name: 'CASDOOR_CALLBACK',
+    component: () => import('@/views/CasdoorCallbackView.vue'),
+    meta: {
+      title: 'Casdoor 登录回调',
+      isHeaderShow: false
     }
   },
 

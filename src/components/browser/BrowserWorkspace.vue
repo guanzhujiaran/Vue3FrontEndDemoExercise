@@ -123,9 +123,9 @@
           >
             <!-- 卡片选择框（仅在批量选择模式显示） -->
             <div class="card-selection" v-if="batchSelectMode">
-              <el-checkbox 
+              <el-checkbox
                 :model-value="selectedInstances.some(item => item.id === instance.id)"
-                @change="(checked) => handleInstanceSelect(instance, checked)"
+                @change="(checked: boolean) => handleInstanceSelect(instance, checked)"
                 @click.stop
               />
             </div>
@@ -582,7 +582,7 @@ const refreshInstanceStatus = async (instanceId: number) => {
   instance.statusLoading = true
 
   try {
-    const response = await browserLiveControlApi.getBrowserSessionStatus(instanceId)
+    const response = await browserLiveControlApi.getBrowserSessionStatus({ browser_id: String(instanceId) })
     if (response.data) {
       instance.sessionStatus = response.data
     }
@@ -682,8 +682,11 @@ const createBrowserSession = async () => {
       expiration_time: 3600
     }
 
-    const response = await browserLiveControlApi.createBrowserSession(selectedBrowserId.value, request)
-    
+    const response = await browserLiveControlApi.createBrowserSession({
+      browser_id: String(selectedBrowserId.value),
+      request
+    })
+
     if (response.data?.success) {
       ElMessage.success('浏览器会话创建成功')
       await refreshSessionStatus()
@@ -710,8 +713,10 @@ const refreshSessionStatus = async () => {
 
   sessionStatusLoading.value = true
   try {
-    const response = await browserLiveControlApi.getBrowserSessionStatus(selectedBrowserId.value)
-    
+    const response = await browserLiveControlApi.getBrowserSessionStatus({
+      browser_id: String(selectedBrowserId.value)
+    })
+
     if (response.data) {
       sessionStatus.value = response.data
     } else {
@@ -731,17 +736,15 @@ const startVideoStream = async () => {
   videoLoading.value = true
   streamConnectionStatus.value = 'connecting'
   try {
+    // 使用 WebRTC 连接替代旧的 startVideoStream 方法
     const response = await businessHandler(
-      browserLiveControlApi.startVideoStream(selectedBrowserId.value, {
-        quality: 'medium',
-        fps: 15
-      }),
+      browserLiveControlApi.createWebrtcOffer({ browser_id: String(selectedBrowserId.value) }),
       { errorMessage: '启动视频流失败' }
     )
 
-    if (response.success && response.data?.stream_url) {
-      streamUrl.value = response.data.stream_url
-      screenshotUrl.value = ''
+    if (response.data?.sdp) {
+      // 这里可以添加 WebRTC 连接逻辑
+      // 目前暂时使用截图作为替代
       streamConnectionStatus.value = 'connected'
       // 启动视频流健康检查
       startStreamHealthCheck()
@@ -763,7 +766,7 @@ const stopVideoStream = async () => {
 
   try {
     await businessHandler(
-      browserLiveControlApi.stopVideoStream(selectedBrowserId.value),
+      browserLiveControlApi.closeWebrtcConnection(String(selectedBrowserId.value)),
       { errorMessage: '停止视频流失败' }
     )
     streamUrl.value = ''

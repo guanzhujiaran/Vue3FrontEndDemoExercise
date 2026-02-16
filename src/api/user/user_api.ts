@@ -1,7 +1,6 @@
 import type { LoginModel, UserNavModel } from '@/models/user/user_model'
 import BaseApi from '../base_axios/base_api'
 import type { RootObject } from '@/models/api/base_model.ts'
-import { useJwtStore } from '@/stores/jwt_token.ts'
 import type { User_base_info_config_form } from '@/models/user/user_setting/user_base_info_config_model.ts'
 
 class UserApi extends BaseApi {
@@ -26,10 +25,6 @@ class UserApi extends BaseApi {
     return this._post('reg', { user_name: user_name, pwd: pwd })
   }
 
-  PwdSalt(): Promise<RootObject<string>> {
-    return this._get('pwd_salt')
-  }
-
   UserInfo(): Promise<RootObject<User_base_info_config_form>> {
     return this._get('user_info')
   }
@@ -38,6 +33,10 @@ class UserApi extends BaseApi {
     user_base_info_config_form: Omit<User_base_info_config_form, 'userid'>
   ): Promise<RootObject<string>> {
     return this._post('user_info/update', user_base_info_config_form)
+  }
+
+  Logout(): Promise<RootObject<string>> {
+    return this._post('logout')
   }
 }
 

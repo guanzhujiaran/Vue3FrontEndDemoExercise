@@ -2,6 +2,7 @@
 import { ref, computed } from 'vue'
 import { useJwtStore } from '@/stores/jwt_token'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { CoffeeCup } from '@element-plus/icons-vue'
 import { processRoutesForHome } from '@/utils/routeUtils'
 import { openGlobalLoginModalKey } from '@/models/inject/inject_type.ts'
 import { KeysEnum, useInject } from '@/models/base/provide_model.ts'

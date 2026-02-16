@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { query } from '@/api/samsclub/gql.ts'
 import { ElCollapseTransition } from 'element-plus'
 import { useQuery } from '@urql/vue'
+import { ArrowUp, ArrowDown, RemoveFilled, Search } from '@element-plus/icons-vue'
 
 import type { QueryGetSpuInfosArgs } from '@/gql/samsclub/graphql.ts'
 import { useSamsclubStore } from '@/stores/samsclub.ts'
@@ -57,7 +58,7 @@ const spuNewTagTagMarkSelectOptions = computed<ListItem[]>(() => {
     : []
 })
 // 初始化时加载搜索历史
-onMounted(() => {
+onMounted(async () => {
   // 初始化更新时间范围
   if (queryParams.value.lastUpdateAfterTss && queryParams.value.lastUpdateBeforeTss) {
     updateTimeRange.value = [
@@ -76,6 +77,25 @@ onMounted(() => {
 
   // 初始化SPU标题输入框的值
   spuTitleInput.value = queryParams.value.spuInfoTitle || ''
+
+  // 等待标签数据加载完成并初始化
+  await new Promise<void>((resolve) => {
+    const unwatch = watch(
+      () => get_tag_groups_result.data.value,
+      (data) => {
+        if (data && data.SpuNewTagInfoTagMarkGroup) {
+          unwatch()
+          // 如果 queryParams 中已经有标签数据，保持不变
+          // 如果没有标签数据，初始化为空数组
+          if (!queryParams.value.spuNewTagTagMarkList) {
+            queryParams.value.spuNewTagTagMarkList = []
+          }
+          resolve()
+        }
+      },
+      { immediate: true }
+    )
+  })
 })
 
 /**
@@ -741,7 +761,7 @@ onMounted(() => {
                   <div class="cell-label">商品标签：</div>
                   <div class="cell-content">
                     <el-select
-                      v-model="queryParams.spuNewTagTagMarkList!"
+                      v-model="queryParams.spuNewTagTagMarkList"
                       multiple
                       placeholder="请选择商品标签"
                       clearable

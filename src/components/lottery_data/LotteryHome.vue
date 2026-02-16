@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import router from '@/router'
+import { Setting, Location, Promotion, Lightning, CreditCard, ChatDotRound } from '@element-plus/icons-vue'
+
 const navigationItems = [
   {
     title: '爬虫状态',
@@ -30,6 +32,12 @@ const navigationItems = [
     description: 'B站充电活动抽奖数据',
     path: '/app/lot-data/bili-data/charge',
     icon: CreditCard
+  },
+  {
+    title: '话题抽奖',
+    description: 'B站话题活动抽奖数据',
+    path: '/app/lot-data/bili-data/topic',
+    icon: ChatDotRound
   }
 ]
 

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useBiliLotteryRecord } from '@/stores/bili_lottery_record.ts'
+import { Setting, Refresh } from '@element-plus/icons-vue'
 
 defineProps<{
   refresh_data: () => void
@@ -33,7 +34,7 @@ const onSubmit = () => {
         </el-form-item>
       </el-form>
     </el-dialog>
-    <el-button type="info" :icon="Setting" class="setting-btn" @click="isOpenSetting = true"
+    <el-button type="info" :icon="Setting" class="setting-btn" @click="isOpenSetting = true">
       >设置
     </el-button>
     <el-button type="primary" :icon="Refresh" class="refresh-btn" @click="refresh_data"

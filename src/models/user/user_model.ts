@@ -9,6 +9,7 @@ export interface UserNavModel {
   user_name: string
   role: string
   face: string
+  level_info: UserLevelInfo
 }
 
 export interface UserInfo {
@@ -22,10 +23,10 @@ export interface UserInfo {
 }
 
 export interface UserLevelInfo {
-  current_exp: number
-  current_level: number
-  current_min: number
-  next_exp: number
+  current_exp: string
+  current_level: string
+  current_min: string
+  next_exp: string
 }
 
 export interface UserVipinfo {

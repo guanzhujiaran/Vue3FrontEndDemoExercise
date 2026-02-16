@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, type Ref } from 'vue'
+import { ref, computed, watch, type Ref } from 'vue'
 import { type ThemeMode, useThemeStore } from '@/stores/theme.ts'
 import { useUserPrefStore, type SizeTheme } from '@/stores/user_pref.ts'
 import { useHueThemeStore } from '@/stores/hue_theme.ts'
@@ -9,7 +9,13 @@ import type { UserNavModel } from '@/models/user/user_model.ts'
 import { useRouter } from 'vue-router'
 import { RouteName } from '@/models/router'
 import type { ElDropdown } from 'element-plus'
-import { MagicStick, User, Delete, ScaleToOriginal, Moon, Sunny, Monitor } from '@element-plus/icons-vue'
+import { MagicStick, User, Delete, ScaleToOriginal, Moon, Sunny, Monitor, SwitchButton } from '@element-plus/icons-vue'
+import { ElMessage } from 'element-plus'
+import userApi from '@/api/user/user_api'
+import { useUserNavStore } from '@/stores/user_nav'
+import { useJwtStore } from '@/stores/jwt_token'
+import UserAvatarBox from '@/components/CommonCompo/Bili-User-Compo/UserAvatarBox.vue'
+import LevelIcon from '@/components/CommonCompo/LevelIcon.vue'
 
 const router = useRouter()
 const isLoggedIn = computed<boolean>(() => !!user_nav_model.value.uid)
@@ -17,6 +23,34 @@ const user_nav_model = useInject(KeysEnum.BiliUser) as Ref<UserNavModel>
 const themeStore = useThemeStore()
 const userPrefStore = useUserPrefStore()
 const hueThemeStore = useHueThemeStore()
+const userNavStore = useUserNavStore()
+const jwtStore = useJwtStore()
+
+// 计算当前经验进度百分比
+const expProgress = computed(() => {
+  const levelInfo = user_nav_model.value?.level_info
+  if (!levelInfo) return 0
+
+  // 如果已满级，返回 100%
+  if (levelInfo.next_exp === '--') return 100
+
+  // 确保所有值都是数字类型
+  const currentExp = parseInt(String(levelInfo.current_exp)) - parseInt(String(levelInfo.current_min))
+  const nextExp = parseInt(String(levelInfo.next_exp))
+
+  if (nextExp <= 0) return 100
+  const progress = (currentExp / nextExp) * 100
+  return Math.min(Math.max(progress, 0), 100)
+})
+
+// 用于显示的转换后的数值
+const displayCurrentExp = computed(() => {
+  return parseInt(user_nav_model.value?.level_info?.current_exp || '0')
+})
+
+const displayNextExp = computed(() => {
+  return parseInt(user_nav_model.value?.level_info?.next_exp || '0')
+})
 
 const user_face_src = computed(() => {
   return user_nav_model.value?.face ?? BiliImg.face.noface
@@ -77,6 +111,27 @@ const handlePopoverVisibleChange = (visible: boolean, type: 'theme' | 'size' | '
 // 处理个人中心点击
 const handleUserCenterClick = () => {
   router.push({ name: RouteName.USER_CENTER })
+}
+
+// 处理退出登录
+const handleLogout = async () => {
+  try {
+    await userApi.Logout()
+    ElMessage.success('退出登录成功')
+  } catch (error) {
+    console.error('退出登录失败:', error)
+    ElMessage.warning('退出登录失败，但已清除本地状态')
+  } finally {
+    // 清除用户信息和JWT token
+    userNavStore.delete_user_nav()
+    jwtStore.delete_jwt_token()
+    // 跳转到首页
+    router.push({ name: RouteName.HOME })
+    // 刷新页面
+    setTimeout(() => {
+      window.location.reload()
+    }, 100)
+  }
 }
 
 // 处理主题可见性变化
@@ -143,24 +198,17 @@ const handleKeepDropdownOpen = () => {
 }
 
 const handleDropDownVisibleChange = (visible: boolean) => {
-  ;(themeVisible.value || sizeThemeVisible.value || hueThemeVisible.value || visible) &&
+  ; (themeVisible.value || sizeThemeVisible.value || hueThemeVisible.value || visible) &&
     handleKeepDropdownOpen()
 }
 </script>
 
 <template>
-  <el-dropdown
-    role="tooltip"
-    @mouseover="headerAvatarDropdown?.handleOpen()"
-    trigger="click"
-    :hide-on-click="false"
-    ref="headerAvatarDropdown"
-    @visible-change="handleDropDownVisibleChange"
-    :persistent="true"
-    :teleported="true"
-  >
+  <el-dropdown role="tooltip" @mouseover="headerAvatarDropdown?.handleOpen()" trigger="click" :hide-on-click="false"
+    ref="headerAvatarDropdown" @visible-change="handleDropDownVisibleChange" :persistent="true" :teleported="true">
     <div class="header-avatar-wrapper">
-      <UserAvatarBox v-if="isLoggedIn" :src="user_face_src" size="default" />
+      <UserAvatarBox v-if="isLoggedIn" :src="user_face_src" size="default" :level-info="user_nav_model?.level_info"
+        :show-exp-bar="false" />
       <div class="header-login-entry" v-else>
         <span> 登录 </span>
       </div>
@@ -170,29 +218,44 @@ const handleDropDownVisibleChange = (visible: boolean) => {
         <el-dropdown-item class="login-tip" v-if="!isLoggedIn">
           <HeaderDropdownLoginTip></HeaderDropdownLoginTip>
         </el-dropdown-item>
-        <el-dropdown-item :icon="User" v-else @click="handleUserCenterClick" class="dropdown-item">
-          <HeaderAvatarDropdownItem>
-            <template #text>个人中心</template>
-          </HeaderAvatarDropdownItem>
-        </el-dropdown-item>
+        <template v-else>
+          <!-- 用户信息展示区域 -->
+          <div class="user-info-section">
+            <div class="user-info-content">
+              <UserAvatarBox :src="user_face_src" size="large" :level-info="user_nav_model?.level_info" :show-exp-bar="false"/>
+            </div>
+            <div class="user-info-text">
+              <div class="user-name">{{ user_nav_model?.user_name }}</div>
+              <LevelIcon :level="parseInt(user_nav_model?.level_info?.current_level) || 0" />
+              <!-- 经验进度条 -->
+              <div class="exp-progress-container">
+                <div class="exp-progress-bar">
+                  <div class="exp-progress-fill" :style="{ width: expProgress + '%' }"></div>
+                </div>
+                <div class="exp-progress-text">
+                  <template v-if="user_nav_model?.level_info?.next_exp === '--'">
+                    已满级
+                  </template>
+                  <template v-else>
+                    {{ displayCurrentExp }} / {{ displayNextExp }}
+                  </template>
+                </div>
+              </div>
+            </div>
+          </div>
+          <el-dropdown-item :icon="User" @click="handleUserCenterClick" class="dropdown-item">
+            <HeaderAvatarDropdownItem>
+              <template #text>个人中心</template>
+            </HeaderAvatarDropdownItem>
+          </el-dropdown-item>
+        </template>
 
         <!-- 主题设置 -->
-        <el-dropdown-item
-          @click="handleThemeVisibleChange(true)"
-          @hover="handleThemeVisibleChange(true)"
-          divided
-          :icon="themeStore.getThemeIcon()"
-          class="dropdown-item"
-        >
-          <el-popover
-            popper-class="header-avatar-dropdown-popover"
-            @show="handlePopoverVisibleChange(true, 'theme')"
-            @hide="handlePopoverVisibleChange(false, 'theme')"
-            v-model:visible="themeVisible"
-            placement="left"
-            trigger="hover"
-            :persistent="true"
-          >
+        <el-dropdown-item @click="handleThemeVisibleChange(true)" @hover="handleThemeVisibleChange(true)" divided
+          :icon="themeStore.getThemeIcon()" class="dropdown-item">
+          <el-popover popper-class="header-avatar-dropdown-popover" @show="handlePopoverVisibleChange(true, 'theme')"
+            @hide="handlePopoverVisibleChange(false, 'theme')" v-model:visible="themeVisible" placement="left"
+            trigger="hover" :persistent="true">
             <template #reference>
               <div class="popover-reference">
                 <span> {{ `主题：${themeStore.getThemeText()}` }}</span>
@@ -200,25 +263,16 @@ const handleDropDownVisibleChange = (visible: boolean) => {
               </div>
             </template>
             <template #default>
-              <el-dropdown-item
-                :class="{ activated: themeStore.themeMode === 'dark' }"
-                @click="handleThemeClick('dark')"
-                :icon="Moon"
-              >
+              <el-dropdown-item :class="{ activated: themeStore.themeMode === 'dark' }"
+                @click="handleThemeClick('dark')" :icon="Moon">
                 深色
               </el-dropdown-item>
-              <el-dropdown-item
-                :class="{ activated: themeStore.themeMode === 'light' }"
-                @click="handleThemeClick('light')"
-                :icon="Sunny"
-              >
+              <el-dropdown-item :class="{ activated: themeStore.themeMode === 'light' }"
+                @click="handleThemeClick('light')" :icon="Sunny">
                 浅色
               </el-dropdown-item>
-              <el-dropdown-item
-                :class="{ activated: themeStore.themeMode === 'auto' }"
-                @click="handleThemeClick('auto')"
-                :icon="Monitor"
-              >
+              <el-dropdown-item :class="{ activated: themeStore.themeMode === 'auto' }"
+                @click="handleThemeClick('auto')" :icon="Monitor">
                 自动
               </el-dropdown-item>
             </template>
@@ -226,20 +280,11 @@ const handleDropDownVisibleChange = (visible: boolean) => {
         </el-dropdown-item>
 
         <!-- Hue主题设置 -->
-        <el-dropdown-item
-          @click="handleHueThemeVisibleChange(true)"
-          @hover="handleHueThemeVisibleChange(true)"
-          :icon="MagicStick"
-          class="dropdown-item"
-        >
-          <el-popover
-            popper-class="header-avatar-dropdown-popover"
-            @show="handlePopoverVisibleChange(true, 'hue')"
-            @hide="handlePopoverVisibleChange(false, 'hue')"
-            v-model:visible="hueThemeVisible"
-            placement="left"
-            trigger="hover"
-          >
+        <el-dropdown-item @click="handleHueThemeVisibleChange(true)" @hover="handleHueThemeVisibleChange(true)"
+          :icon="MagicStick" class="dropdown-item">
+          <el-popover popper-class="header-avatar-dropdown-popover" @show="handlePopoverVisibleChange(true, 'hue')"
+            @hide="handlePopoverVisibleChange(false, 'hue')" v-model:visible="hueThemeVisible" placement="left"
+            trigger="hover">
             <template #reference>
               <div class="popover-reference">
                 <span>
@@ -252,33 +297,19 @@ const handleDropDownVisibleChange = (visible: boolean) => {
             </template>
             <template #default>
               <div class="hue-theme-items">
-                <el-dropdown-item
-                  v-for="theme in hueThemes"
-                  :key="theme.value"
+                <el-dropdown-item v-for="theme in hueThemes" :key="theme.value"
                   :class="{ activated: hueThemeStore.currentIndex === theme.value }"
-                  @click="handleSetHueTheme(theme.value)"
-                  class="hue-theme-item"
-                >
+                  @click="handleSetHueTheme(theme.value)" class="hue-theme-item">
                   <div class="hue-theme-content">
                     <span>{{ theme.label }}</span>
-                    <el-button
-                      v-if="theme.value !== 0 && hueThemeStore.currentIndex !== theme.value"
-                      class="delete-theme-btn"
-                      size="small"
-                      type="danger"
-                      @click="handleDeleteHueTheme(theme.value, $event)"
-                      circle
-                      :icon="Delete"
-                    >
+                    <el-button v-if="theme.value !== 0 && hueThemeStore.currentIndex !== theme.value"
+                      class="delete-theme-btn" size="small" type="danger"
+                      @click="handleDeleteHueTheme(theme.value, $event)" circle :icon="Delete">
                     </el-button>
                   </div>
                 </el-dropdown-item>
               </div>
-              <el-dropdown-item
-                :disabled="!hueThemeStore.canGenerate"
-                @click="handleRandomizeHueTheme()"
-                divided
-              >
+              <el-dropdown-item :disabled="!hueThemeStore.canGenerate" @click="handleRandomizeHueTheme()" divided>
                 {{ hueThemeStore.canGenerate ? '创建随机主题' : '已达上限' }}
               </el-dropdown-item>
               <el-dropdown-item @click="handleRestoreHueTheme()" divided>
@@ -289,20 +320,11 @@ const handleDropDownVisibleChange = (visible: boolean) => {
         </el-dropdown-item>
 
         <!-- 大小主题设置 -->
-        <el-dropdown-item
-          @click="handleSizeThemeVisibleChange(true)"
-          @hover="handleSizeThemeVisibleChange(true)"
-          :icon="ScaleToOriginal"
-          class="dropdown-item"
-        >
-          <el-popover
-            popper-class="header-avatar-dropdown-popover"
-            @show="handlePopoverVisibleChange(true, 'size')"
-            @hide="handlePopoverVisibleChange(false, 'size')"
-            v-model:visible="sizeThemeVisible"
-            placement="left"
-            trigger="hover"
-          >
+        <el-dropdown-item @click="handleSizeThemeVisibleChange(true)" @hover="handleSizeThemeVisibleChange(true)"
+          :icon="ScaleToOriginal" class="dropdown-item">
+          <el-popover popper-class="header-avatar-dropdown-popover" @show="handlePopoverVisibleChange(true, 'size')"
+            @hide="handlePopoverVisibleChange(false, 'size')" v-model:visible="sizeThemeVisible" placement="left"
+            trigger="hover">
             <template #reference>
               <div class="popover-reference">
                 <span>
@@ -314,16 +336,19 @@ const handleDropDownVisibleChange = (visible: boolean) => {
               </div>
             </template>
             <template #default>
-              <el-dropdown-item
-                v-for="theme in sizeThemes"
-                :key="theme.value"
+              <el-dropdown-item v-for="theme in sizeThemes" :key="theme.value"
                 :class="{ activated: userPrefStore.sizeTheme === theme.value }"
-                @click="handleSetSizeTheme(theme.value)"
-              >
+                @click="handleSetSizeTheme(theme.value)">
                 {{ theme.label }}
               </el-dropdown-item>
             </template>
           </el-popover>
+        </el-dropdown-item>
+
+        <!-- 退出登录按钮 -->
+        <el-dropdown-item v-if="isLoggedIn" :icon="SwitchButton" @click="handleLogout"
+          class="dropdown-item logout-dropdown-item" divided>
+          <span style="color: #f56c6c;">退出登录</span>
         </el-dropdown-item>
       </el-dropdown-menu>
     </template>
@@ -332,4 +357,66 @@ const handleDropDownVisibleChange = (visible: boolean) => {
 
 <style>
 @import '@/assets/components/dropdown/avatar-dropdown-tailwind.css';
+
+.user-info-section {
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border-bottom: 1px solid var(--el-border-color-light);
+}
+
+.user-info-text {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.user-info-content {
+  display: flex;
+  justify-content: center;
+}
+
+.user-name {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--el-text-color-primary);
+  margin-bottom: 4px;
+}
+
+.exp-progress-container {
+  width: 100%;
+  max-width: 180px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.exp-progress-bar {
+  width: 100%;
+  height: 6px;
+  background-color: var(--el-border-color-light);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.exp-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #FB7299 0%, #FF9EB9 100%);
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+.exp-progress-text {
+  font-size: 12px;
+  color: var(--el-text-color-secondary);
+  text-align: center;
+}
+
+:deep(.el-dropdown-menu__item) {
+  padding: 8px 20px;
+}
 </style>

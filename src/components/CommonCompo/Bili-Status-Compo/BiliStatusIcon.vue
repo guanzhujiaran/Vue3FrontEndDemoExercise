@@ -1,7 +1,6 @@
 <script setup lang="ts">
-import { useNamespace } from 'element-plus'
 import type { Component } from 'vue'
-import type { EpPropMergeType } from 'element-plus/es/utils'
+import { CircleCheckFilled, WarningFilled, CircleCloseFilled, InfoFilled } from '@element-plus/icons-vue'
 
 const IconMap = {
   success: 'icon-success',
@@ -17,11 +16,10 @@ const IconComponentMap: Record<(typeof IconMap)[keyof typeof IconMap], Component
   [IconMap.info]: InfoFilled
 }
 type ResultProps = {
-  icon: EpPropMergeType<StringConstructor, "info" | "success" | "error" | "primary" | "warning", unknown>,
+  icon: "info" | "success" | "error" | "primary" | "warning",
   popover_text?: string
 }
 const props = defineProps<ResultProps>()
-const ns = useNamespace('result')
 const resultIcon = computed(() => {
   const icon = props.icon
   const iconClass = icon && IconMap[icon] ? IconMap[icon] : 'icon-info'
@@ -35,10 +33,10 @@ const resultIcon = computed(() => {
 </script>
 
 <template>
-  <div :class="ns.b()">
+  <div class="el-bili-status">
     <el-popover :content="props.popover_text" :disabled="!props.popover_text" :placement="'top'">
       <template #reference>
-        <div :class="ns.e('icon')">
+        <div class="el-bili-status__icon">
           <slot name="icon">
             <component
               :is="resultIcon.component"
@@ -53,5 +51,42 @@ const resultIcon = computed(() => {
 </template>
 
 <style scoped lang="scss">
-@import '@/assets/components/status/bili-status-icon-tailwind.css';
+.el-bili-status {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  box-sizing: border-box;
+  padding: 0;
+}
+
+.el-bili-status__icon {
+  display: flex;
+}
+
+.el-bili-status__icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+:deep(.icon-success) {
+  color: var(--el-color-success);
+}
+
+:deep(.icon-primary) {
+  color: var(--el-color-primary);
+}
+
+:deep(.icon-warning) {
+  color: var(--el-color-warning);
+}
+
+:deep(.icon-error) {
+  color: var(--el-color-error);
+}
+
+:deep(.icon-info) {
+  color: var(--el-color-info);
+}
 </style>

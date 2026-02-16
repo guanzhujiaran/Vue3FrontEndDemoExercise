@@ -40,9 +40,9 @@
         <div class="card-header">
           <div class="browser-icon">
             <el-icon v-if="fingerprint.fingerprint_browser === 'chrome'"><ChromeFilled /></el-icon>
-            <el-icon v-else-if="fingerprint.fingerprint_browser === 'edge'"><Monitor /></el-icon>
-            <el-icon v-else-if="fingerprint.fingerprint_browser === 'opera'"><ChromeFilled /></el-icon>
-            <el-icon v-else-if="fingerprint.fingerprint_browser === 'vivaldi'"><ChromeFilled /></el-icon>
+            <el-icon v-else-if="fingerprint.fingerprint_browser === 'Edge'"><Monitor /></el-icon>
+            <el-icon v-else-if="fingerprint.fingerprint_browser === 'Opera'"><ChromeFilled /></el-icon>
+            <el-icon v-else-if="fingerprint.fingerprint_browser === 'Vivaldi'"><ChromeFilled /></el-icon>
             <el-icon v-else><Monitor /></el-icon>
           </div>
           <div class="card-title">
@@ -199,11 +199,11 @@ const filteredFingerprints = computed(() => {
 })
 
 // 浏览器显示名称映射
-const browserDisplayNames = {
+const browserDisplayNames: Record<string, string> = {
   chrome: 'Chrome',
-  edge: 'Edge',
-  opera: 'Opera',
-  vivaldi: 'Vivaldi'
+  Edge: 'Edge',
+  Opera: 'Opera',
+  Vivaldi: 'Vivaldi'
 }
 
 // 平台显示名称映射
@@ -214,17 +214,19 @@ const platformDisplayNames = {
 }
 
 // 获取浏览器显示名称
-const getBrowserDisplayName = (browser: string) => {
-  return browserDisplayNames[browser as keyof typeof browserDisplayNames] || browser || '未知浏览器'
+const getBrowserDisplayName = (browser: string | null) => {
+  if (!browser) return '未知浏览器'
+  return browserDisplayNames[browser] || browser
 }
 
 // 获取平台显示名称
-const getPlatformDisplayName = (platform: string) => {
-  return platformDisplayNames[platform as keyof typeof platformDisplayNames] || platform || '未知系统'
+const getPlatformDisplayName = (platform: string | null) => {
+  if (!platform) return '未知系统'
+  return platformDisplayNames[platform as keyof typeof platformDisplayNames] || platform
 }
 
 // 获取状态类型
-const getStatusType = (fingerprint: UserBrowserInfoReadResp) => {
+const getStatusType = (fingerprint: UserBrowserInfoReadResp): 'success' | 'info' | 'warning' | 'danger' => {
   // 这里可以根据实际状态返回不同的类型
   return 'success'
 }

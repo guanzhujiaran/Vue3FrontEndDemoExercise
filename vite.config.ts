@@ -22,7 +22,12 @@ export default defineConfig({
       },
       defaultImport: 'url'
     }),
-    Sitemap({ hostname: 'https://serena.dynv6.net', exclude: ['google22ac62fc624759d1.html'] }),
+    Sitemap({
+      hostname: 'https://serena.dynv6.net',
+      exclude: ['google22ac62fc624759d1.html'],
+      dynamicRoutes: [],
+      generateRobotsTxt: false // 禁用自动生成 robots.txt
+    }),
     AutoImport({
       // Auto import functions from Vue, e.g. ref, reactive, toRef...
       // 自动导入 Vue 相关函数，如：ref, reactive, toRef 等
@@ -60,8 +65,7 @@ export default defineConfig({
     }),
     vueJsx(),
     VueDevTools({
-      componentInspector: true,
-      launchEditor: 'K:\\CodeBuddy CN\\CodeBuddy CN.exe'
+      componentInspector: true
     }),
     tailwindcss()
   ],
@@ -78,12 +82,11 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'http://localhost:9926',
+        target: 'http://localhost:9923',
+        changeOrigin: true,
+        rewrite: (path) => path
       }
     },
     host: '0.0.0.0'
   }
-  // esbuild: {
-  //   drop: ['console', 'debugger']
-  // }
 })

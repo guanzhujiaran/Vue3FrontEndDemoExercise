@@ -70,6 +70,7 @@ export enum RouteName {
   OFFICIAL_LOTTERY = '官方抽奖',
   RESERVE_LOTTERY = '预约抽奖',
   CHARGE_LOTTERY = '充电抽奖',
+  TOPIC_LOTTERY = '话题抽奖',
 
   // 404 页面
   NOT_FOUND = 'NotFound',

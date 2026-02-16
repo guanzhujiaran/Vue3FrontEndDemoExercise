@@ -56,6 +56,22 @@ ajax.interceptors.response.use(
     }
 
     const data = response.data
+
+    // 检查响应头中是否有新 token（后端自动刷新）
+    const newToken = response.headers['x-new-token'] || response.headers['X-New-Token']
+    if (newToken) {
+      const JwtStore = useJwtStore()
+      JwtStore.save_jwt_token(newToken)
+      console.log('Token 已自动刷新')
+    }
+
+    // 检查响应数据中是否包含新 token（兼容不同刷新方式）
+    if (data.data?.jwt_token && response.config.url?.includes('/refresh_token')) {
+      const JwtStore = useJwtStore()
+      JwtStore.save_jwt_token(data.data.jwt_token)
+      console.log('Token 已手动刷新')
+    }
+
     // 检查是否是未登录状态
     if (data.code === -101) {
       // 触发未登录事件
@@ -77,13 +93,13 @@ ajax.interceptors.response.use(
   (error) => {
     // 处理错误，比如根据错误码提示用户或跳转登录页
     console.error('API Error:', error)
-    
+
     // 使用统一错误处理器，默认显示错误消息
     apiErrorHandler.handleError(error, {
       showToast: true,
       emitError: false
     })
-    
+
     return {
       code: -9999,
       data: null,

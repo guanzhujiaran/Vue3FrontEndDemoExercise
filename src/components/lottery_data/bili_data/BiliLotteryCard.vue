@@ -23,7 +23,8 @@
     <template #default>
       <div class="main-content-wrapper">
         <div class="lottery__section line" v-if="normalizedData.endTime !== null">
-          <div class="lottery__section__title status">开奖倒计时</div>
+          <div class="lottery__section__title status" v-if="normalizedData.type!=='TOPIC'">开奖倒计时</div>
+          <div class="lottery__section__title status" v-else>截止时间</div>
           <el-countdown class="lottery__countdown" :value="normalizedData.endTime * 1e3"
             format="DD 天 HH 时 mm 分 ss 秒"></el-countdown>
         </div>
@@ -31,7 +32,7 @@
           <LotteryDesc>
             <template #label>状态：</template>
             <template #value>
-              <BiliStatusIcon class="h-10 w-10" :icon="normalizedData.statusType"
+              <BiliStatusIcon :icon="normalizedData.statusType"
                 :popover_text="normalizedData.statusText">{{ normalizedData.statusText }}
               </BiliStatusIcon>
             </template>
@@ -40,11 +41,11 @@
             <template #label>截止时间：</template>
             <template #value>{{ formatTimestamp(normalizedData.endTime) }} </template>
           </LotteryDesc>
-          <LotteryDesc>
+          <LotteryDesc v-if="normalizedData.type !== 'TOPIC'">
             <template #label>参与人数(非即时)：</template>
             <template #value>{{ normalizedData.participants }} </template>
           </LotteryDesc>
-          <LotteryDesc>
+          <LotteryDesc v-if="normalizedData.type !== 'TOPIC'">
             <template #label>抽取人数：</template>
             <template #value>{{
               normalizedData.prizes
@@ -69,10 +70,18 @@
                 </el-icon> </el-link></template>
           </LotteryDesc>
         </div>
-        <el-divider></el-divider>
+        <el-divider v-if="normalizedData.type !== 'TOPIC'"></el-divider>
 
         <!-- --- Prize Info --- -->
-        <LotteryPrize v-if="normalizedData.prizes.length > 0" :prizes="normalizedData.prizes"></LotteryPrize>
+        <LotteryPrize v-if="normalizedData.prizes.length > 0 && normalizedData.type !== 'TOPIC'" :prizes="normalizedData.prizes"></LotteryPrize>
+
+        <!-- --- Lottery Pool for Topic --- -->
+        <div v-if="normalizedData.type === 'TOPIC' && normalizedData.prizes.length > 0" class="lottery-pool-section">
+          <div class="lottery-pool-title">奖品池</div>
+          <div class="lottery-pool-content">
+            {{ normalizedData.prizes[0].description }}
+          </div>
+        </div>
 
         <!-- --- Requirements Info --- -->
         <el-descriptions v-if="normalizedData.requirements.length > 0" title="参与条件" :column="1" border size="small"
@@ -497,9 +506,10 @@ const normalizedData = computed<NormalizedLottery>(() => {
     // Use lottery_sid if available, otherwise create a pseudo-ID from title/url
     let _id_re = topicData.jump_url && /\/([a-zA-Z0-9]+)\.html$/.exec(topicData.jump_url)
     let _id_re1 = topicData.jump_url && /id=(.*)/.exec(topicData.jump_url)
-    normalized.id = (_id_re && _id_re[1]) || (_id_re1 && _id_re1[1]) || topicData.jump_url
+    let _id_re2 = topicData.jump_url && /actId=(.*)/.exec(topicData.jump_url)
+    normalized.id = (_id_re && _id_re[1]) || (_id_re1 && _id_re1[1]) || (_id_re2 && _id_re2[1]) || topicData.lottery_sid || topicData.jump_url
     normalized.type = 'TOPIC'
-    normalized.displayType = '话题活动'
+    normalized.displayType = topicData.lot_type_text || '话题活动'
     normalized.title = topicData.title || '未知话题活动'
     // Try parsing end_date_str
     const endDate = formatTimestamp(topicData.end_date_str)

@@ -265,7 +265,7 @@ const generateLoading = ref(false)
 const formRef = ref<FormInstance>()
 
 // 表单数据
-const formData = reactive<BrowserFingerprintUpsertParams>({
+const formData = reactive<BrowserFingerprintUpsertParams & { is_desktop?: boolean }>({
   id: null,
   fingerprint_int: null,
   fingerprint_platform: null,
@@ -278,7 +278,8 @@ const formData = reactive<BrowserFingerprintUpsertParams>({
   lang: null,
   accept_lang: null,
   timezone: null,
-  proxy_server: null
+  proxy_server: null,
+  is_desktop: undefined
 })
 
 // 表单验证规则
@@ -353,7 +354,7 @@ const timezoneOptions = [
 watch(() => props.fingerprint, (fingerprint) => {
   if (fingerprint) {
     // 编辑模式：填充现有数据
-    Object.assign(formData, {
+    const formDataWithDesktop: typeof formData = {
       id: fingerprint.id_str || fingerprint.id,
       fingerprint_int: fingerprint.fingerprint_int,
       fingerprint_platform: fingerprint.fingerprint_platform,
@@ -367,8 +368,9 @@ watch(() => props.fingerprint, (fingerprint) => {
       accept_lang: fingerprint.accept_lang,
       timezone: fingerprint.timezone,
       proxy_server: fingerprint.proxy_server,
-      is_desktop: fingerprint.is_desktop
-    })
+      is_desktop: (fingerprint as any).is_desktop
+    }
+    Object.assign(formData, formDataWithDesktop)
   } else {
     // 新建模式：使用默认数据或重置
     const defaultValues = props.defaultData || {
@@ -387,7 +389,6 @@ watch(() => props.fingerprint, (fingerprint) => {
       proxy_server: null,
       is_desktop: true
     }
-    
     Object.assign(formData, defaultValues)
   }
 }, { immediate: true })

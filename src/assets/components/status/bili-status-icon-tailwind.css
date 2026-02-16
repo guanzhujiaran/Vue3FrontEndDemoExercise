@@ -1,18 +1,18 @@
 @reference '@/assets/tailwind.css';
-.result {
-  @apply flex flex-col items-center justify-center text-center box-border p-4;
+:deep(.el-bili-status) {
+  @apply flex flex-row items-center justify-center text-center box-border p-0;
 }
 
-.result__icon {
+:deep(.el-bili-status__icon) {
   @apply flex;
 }
 
-.result__icon svg {
-  @apply w-9 h-9;
+:deep(.el-bili-status__icon svg) {
+  @apply w-5 h-5;
 }
 
 @each $type in (success, primary, warning, error, info) {
-  .icon-$(type) {
+  :deep(.icon-$(type)) {
     @apply text-$(type);
   }
 }

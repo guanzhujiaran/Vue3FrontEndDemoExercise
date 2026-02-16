@@ -24,7 +24,26 @@ export const ProvideKeys = {
 const globalVarsDefaultRef = ref<GlobalVarsType>({
   screen_size: ScreenTypeEnum.large
 })
-const __Bili_User__DefaultRef = ref<UserNavModel>({ uid: '', user_name: '', role: '', face: '' })
+
+let __Bili_User__DefaultRef: Ref<UserNavModel> | null = null
+const getBiliUserDefaultRef = () => {
+  if (!__Bili_User__DefaultRef) {
+    __Bili_User__DefaultRef = ref<UserNavModel>({
+      uid: '',
+      user_name: '',
+      role: '',
+      face: '',
+      level_info: {
+        current_exp: 0,
+        current_level: 0,
+        current_min: 0,
+        next_exp: '--'
+      }
+    })
+  }
+  return __Bili_User__DefaultRef
+}
+
 const __Bili_Pwd_Sec__DefaultRef = ref<string>('')
 const default_val_gen = (key: KeysEnumType): ProvideValTypes => {
   switch (key) {
@@ -32,8 +51,9 @@ const default_val_gen = (key: KeysEnumType): ProvideValTypes => {
       provide(ProvideKeys[KeysEnum.GlobalVars], globalVarsDefaultRef)
       return globalVarsDefaultRef
     case KeysEnum.BiliUser:
-      provide(ProvideKeys[KeysEnum.BiliUser], __Bili_User__DefaultRef)
-      return __Bili_User__DefaultRef
+      // 直接返回全局 ref，不在 default_val_gen 中 provide
+      const biliUserRef = getBiliUserDefaultRef()
+      return biliUserRef
     case KeysEnum.BiliPwdSec:
       provide(ProvideKeys[KeysEnum.BiliPwdSec], __Bili_Pwd_Sec__DefaultRef)
       return __Bili_Pwd_Sec__DefaultRef
@@ -43,5 +63,16 @@ const default_val_gen = (key: KeysEnumType): ProvideValTypes => {
 }
 
 export const useInject = (key: KeysEnumType): ProvideValTypes => {
-  return inject(key, default_val_gen(key), true)
+  const injected = inject(key, null, false)
+
+  let result: ProvideValTypes
+  if (injected !== null) {
+    // 如果已经 inject 到值，直接返回
+    result = injected
+  } else {
+    // 否则返回全局 ref
+    result = default_val_gen(key)
+  }
+
+  return result
 }

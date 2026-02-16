@@ -37,7 +37,7 @@ import { Document, Delete } from '@element-plus/icons-vue'
 interface LogItem {
     time: string
     message: string
-    type: 'info' | 'success' | 'warning' | 'error'
+    type: 'info' | 'success' | 'warning' | 'error' | 'debug'
 }
 
 interface Props {

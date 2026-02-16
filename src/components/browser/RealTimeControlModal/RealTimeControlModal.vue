@@ -106,7 +106,7 @@ let isWebrtcConnecting = false  // 标记是否正在建立 WebRTC 连接
 interface LogItem {
     time: string
     message: string
-    type: 'info' | 'success' | 'warning' | 'error'
+    type: 'info' | 'success' | 'warning' | 'error' | 'debug'
 }
 const logs = ref<LogItem[]>([])
 
@@ -116,6 +116,9 @@ const arePluginsPaused = ref(false)
 const isDisconnecting = ref(false)  // 是否正在主动断开连接
 const showDebugDialog = ref(false)  // 是否显示调试对话框
 const sessionInfo = ref({
+    connections: 0,
+    lastActivity: '',
+    status: 'disconnected',
     session_exists: false,
     browser_running: false,
     lifecycle_state: 'inactive',
@@ -125,7 +128,6 @@ const sessionInfo = ref({
     manual_mode: false,
     created_at: 0,
     expires_at: null as number | null,
-    status: 'disconnected',
     cleanup_policy: {
         max_idle_time: 1800,
         max_no_heartbeat_time: 60,
@@ -172,6 +174,9 @@ const resetSessionState = () => {
     screenshotUrl.value = ''
     isGatheringIce.value = false
     sessionInfo.value = {
+        connections: 0,
+        lastActivity: '',
+        status: 'disconnected',
         session_exists: false,
         browser_running: false,
         lifecycle_state: 'inactive',
@@ -181,7 +186,6 @@ const resetSessionState = () => {
         manual_mode: false,
         created_at: 0,
         expires_at: null,
-        status: 'disconnected',
         cleanup_policy: {
             max_idle_time: 1800,
             max_no_heartbeat_time: 60,
@@ -216,7 +220,7 @@ const blobToBase64 = (blob: Blob): Promise<string> => {
 }
 
 // 添加日志
-const addLog = (message: string, type: 'info' | 'success' | 'warning' | 'error' = 'info') => {
+const addLog = (message: string, type: 'info' | 'success' | 'warning' | 'error' | 'debug' = 'info') => {
     const now = new Date()
     const time = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`
     logs.value.push({ time, message, type })
@@ -251,14 +255,29 @@ const ensureSessionExists = async (): Promise<boolean> => {
         )
 
         if (statusResult.success && statusResult.data) {
-            const status = statusResult.data.status
-            if (status === 'connected' || status === 'running') {
-                sessionInfo.value = {
-                    ...statusResult.data,
-                    lifecycle_state: statusResult.data.lifecycle_state || 'active'
-                }
-                return true
+            const data = statusResult.data as any
+            // 转换 BrowserSessionStatus 到 SessionInfo 格式
+            sessionInfo.value = {
+                connections: data.connected_clients || 0,
+                lastActivity: data.last_heartbeat ? new Date(data.last_heartbeat).toISOString() : '',
+                status: data.lifecycle_status || 'disconnected',
+                session_exists: true,
+                browser_running: data.is_running || false,
+                lifecycle_state: data.lifecycle_status || 'inactive',
+                last_heartbeat: data.last_heartbeat ? new Date(data.last_heartbeat).getTime() : 0,
+                active_connections: data.connected_clients || 0,
+                video_streaming: data.video_stream_active || false,
+                manual_mode: data.manual_operation || false,
+                created_at: new Date(data.created_at).getTime(),
+                expires_at: data.expiration_time ? new Date(data.expiration_time).getTime() : null,
+                cleanup_policy: data.cleanup_policy || {
+                    max_idle_time: 1800,
+                    max_no_heartbeat_time: 60,
+                    cleanup_interval: 300
+                },
+                message: ''
             }
+            return true
         }
 
         // 会话不存在或未运行，创建新会话
@@ -312,15 +331,30 @@ const waitForBrowserReady = async (): Promise<boolean> => {
                 }
             )
             if (statusResult.success && statusResult.data) {
-                const status = statusResult.data.status
-                if (status === 'connected' || status === 'running') {
-                    sessionInfo.value = {
-                        ...statusResult.data,
-                        lifecycle_state: statusResult.data.lifecycle_state || 'active'
-                    }
-                    ElMessage.success('浏览器启动完成')
-                    return true
+                const data = statusResult.data as any
+                // 转换 BrowserSessionStatus 到 SessionInfo 格式
+                sessionInfo.value = {
+                    connections: data.connected_clients || 0,
+                    lastActivity: data.last_heartbeat ? new Date(data.last_heartbeat).toISOString() : '',
+                    status: data.lifecycle_status || 'disconnected',
+                    session_exists: true,
+                    browser_running: data.is_running || false,
+                    lifecycle_state: data.lifecycle_status || 'inactive',
+                    last_heartbeat: data.last_heartbeat ? new Date(data.last_heartbeat).getTime() : 0,
+                    active_connections: data.connected_clients || 0,
+                    video_streaming: data.video_stream_active || false,
+                    manual_mode: data.manual_operation || false,
+                    created_at: new Date(data.created_at).getTime(),
+                    expires_at: data.expiration_time ? new Date(data.expiration_time).getTime() : null,
+                    cleanup_policy: data.cleanup_policy || {
+                        max_idle_time: 1800,
+                        max_no_heartbeat_time: 60,
+                        cleanup_interval: 300
+                    },
+                    message: ''
                 }
+                ElMessage.success('浏览器启动完成')
+                return true
             }
             ElMessage.info("等待浏览器启动中...")
             await new Promise(resolve => setTimeout(resolve, pollInterval))
@@ -349,15 +383,30 @@ const loadSessionStatus = async (showErrorToast: boolean = true) => {
         )
 
         if (result.success && result.data) {
-            // 同步 manual_mode 状态
-            if (result.data.manual_mode !== undefined) {
-                isManualMode.value = result.data.manual_mode
-            }
-
+            const data = result.data as any
+            // 转换 BrowserSessionStatus 到 SessionInfo 格式
             sessionInfo.value = {
-                ...result.data,
-                lifecycle_state: result.data.lifecycle_state || 'inactive'
+                connections: data.connected_clients || 0,
+                lastActivity: data.last_heartbeat ? new Date(data.last_heartbeat).toISOString() : '',
+                status: data.lifecycle_status || 'disconnected',
+                session_exists: true,
+                browser_running: data.is_running || false,
+                lifecycle_state: data.lifecycle_status || 'inactive',
+                last_heartbeat: data.last_heartbeat ? new Date(data.last_heartbeat).getTime() : 0,
+                active_connections: data.connected_clients || 0,
+                video_streaming: data.video_stream_active || false,
+                manual_mode: data.manual_operation || false,
+                created_at: new Date(data.created_at).getTime(),
+                expires_at: data.expiration_time ? new Date(data.expiration_time).getTime() : null,
+                cleanup_policy: data.cleanup_policy || {
+                    max_idle_time: 1800,
+                    max_no_heartbeat_time: 60,
+                    cleanup_interval: 300
+                },
+                message: ''
             }
+            // 同步 manual_mode 状态
+            isManualMode.value = data.manual_operation || false
         }
     } catch (error) {
         console.error('加载会话状态失败:', error)
@@ -583,7 +632,7 @@ const setupWebrtcStream = async () => {
         }
 
         const offer = offerResult.data
-        console.log('收到服务器 offer，SDP 长度:', offer.sdp.length)
+        console.log('收到服务器 offer，SDP 长度:', offer.sdp?.length || 0)
         addLog('收到服务器 offer 响应', 'success')
 
         // 2. 创建本地 PeerConnection - 局域网环境不需要 STUN
@@ -597,7 +646,7 @@ const setupWebrtcStream = async () => {
         peerConnection.ontrack = (event) => {
             console.log('✅✅✅ 接收到远程流，track 数量:', event.streams.length)
             if (event.streams && event.streams.length > 0) {
-                remoteStream = event.streams[0]
+                remoteStream = event.streams[0] || null
                 const videoPlayer = videoPlayerRef.value?.videoPlayer
                 if (videoPlayer) {
                     videoPlayer.srcObject = remoteStream
@@ -627,7 +676,7 @@ const setupWebrtcStream = async () => {
                 }
 
                 // 监听远程流中的 track 结束事件
-                remoteStream.getTracks().forEach(track => {
+                remoteStream?.getTracks().forEach(track => {
                     track.onended = () => {
                         console.warn('⚠️ 视频流 track 已结束')
                         addLog('视频流已结束', 'warning')
@@ -782,8 +831,8 @@ const setupWebrtcStream = async () => {
         console.log('设置远程 offer...')
         addLog('设置远程 offer', 'info')
         await peerConnection.setRemoteDescription({
-            type: offer.type,
-            sdp: offer.sdp
+            type: 'offer',
+            sdp: offer.sdp || ''
         })
         console.log('远程 offer 设置成功')
         addLog('远程 offer 设置成功', 'success')
@@ -831,6 +880,16 @@ const setupWebrtcStream = async () => {
         console.log('本地 answer 设置成功')
         addLog('本地 answer 设置成功', 'success')
 
+        // 7. 发送 answer 到服务端
+        console.log('发送 WebRTC answer 到服务端...')
+        addLog('发送 WebRTC answer 到服务端', 'info')
+        const answerResult = await businessHandler(
+            browserLiveControlApi.setWebrtcAnswer({
+                browser_id: browserId,
+                sdp: answer.sdp || ''
+            })
+        )
+
         // 🔧 关键修复：等待 ICE gathering 完成 - 完全参照HTML页面逻辑
         console.log(`🔍 当前 ICE gathering 状态: ${peerConnection.iceGatheringState}`)
         addLog(`当前 ICE gathering 状态: ${peerConnection.iceGatheringState}`, 'debug')
@@ -840,15 +899,10 @@ const setupWebrtcStream = async () => {
             addLog('等待 ICE gathering 完成...', 'info')
 
             // 等待 ICE gathering 完成
-            await new Promise((resolve) => {
+            await new Promise<void>((resolve) => {
                 const checkInterval = setInterval(() => {
-                    console.log(`🔍 ICE gathering 状态: ${peerConnection.iceGatheringState}, 已收集 ${iceCandidateSentCount} 个 candidates`)
-                    if (peerConnection.iceGatheringState === 'complete') {
+                    if (peerConnection && peerConnection.iceGatheringState === 'complete') {
                         clearInterval(checkInterval)
-                        console.log('✅ ICE gathering 完成')
-                        console.log(`📊 总共收集到 ${iceCandidateSentCount} 个 ICE candidates`)
-                        addLog('ICE gathering 完成', 'success')
-                        addLog(`总共收集到 ${iceCandidateSentCount} 个 ICE candidates`, 'info')
                         resolve()
                     }
                 }, 100)
@@ -856,28 +910,13 @@ const setupWebrtcStream = async () => {
                 // 超时保护（15秒，增加超时时间）
                 setTimeout(() => {
                     clearInterval(checkInterval)
-                    if (peerConnection.iceGatheringState !== 'complete') {
+                    if (peerConnection && peerConnection.iceGatheringState !== 'complete') {
                         console.log(`⚠️ ICE gathering 未在预期时间内完成（当前状态: ${peerConnection.iceGatheringState}，已收集 ${iceCandidateSentCount} 个 candidates），继续发送 answer`)
                         addLog(`ICE gathering 未在预期时间内完成，继续发送 answer`, 'warn')
                     }
                     resolve()
                 }, 15000)
             })
-        }
-
-        // 6. 发送 answer 到服务器
-        console.log('发送 answer 到服务器...')
-        addLog('发送 answer 到服务器', 'info')
-        const answerResult = await businessHandler(
-            browserLiveControlApi.setWebrtcAnswer({
-                browser_id: browserId,
-                sdp: answer.sdp
-            })
-        )
-
-        if (!answerResult.success) {
-            addLog('发送 answer 失败', 'error')
-            throw new Error('发送 answer 失败')
         }
 
         console.log('answer 发送成功，等待 ICE 连接建立...')

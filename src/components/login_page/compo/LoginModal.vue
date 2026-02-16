@@ -1,13 +1,39 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
+import { ElMessage } from 'element-plus'
 import LoginCompo from './LoginCompo.vue'
 import emitter from '@/utils/mitt'
 
 const dialogVisible = ref(false)
+const STORAGE_KEY = 'login_modal_first_open_shown'
+const hasShownFirstTip = ref<boolean>(false)
+
+// 检查是否已经显示过首次提示
+const checkFirstOpen = () => {
+  const shown = localStorage.getItem(STORAGE_KEY)
+  return shown === 'true'
+}
+
+// 显示首次提示
+const showFirstOpenTip = () => {
+  if (!checkFirstOpen()) {
+    hasShownFirstTip.value = true
+    setTimeout(() => {
+      ElMessage({
+        message: '⚠️ 当前禁止注册新账号,仅支持 Gitee 登录',
+        type: 'warning',
+        duration: 5000,
+        showClose: true
+      })
+      localStorage.setItem(STORAGE_KEY, 'true')
+    }, 500)
+  }
+}
 
 // 提供给外部的打开方法
 const openLoginModal = () => {
   dialogVisible.value = true
+  showFirstOpenTip()
 }
 
 // 关闭模态框

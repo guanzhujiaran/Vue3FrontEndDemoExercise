@@ -427,10 +427,13 @@ class BrowserLiveControlApiImpl extends BrowserLiveControlApi {
    */
   async sendHeartbeat(params: {
     browser_id: string
-    request: SimplifiedHeartbeatRequest
+    request?: SimplifiedHeartbeatRequest
   }): Promise<RootObject<HeartbeatResponse>> {
     const body: Body_send_heartbeat_api_v1_rpa_browser_live_control_browser_heartbeat_post = {
-      request: params.request,
+      request: params.request || {
+        client_id: '',
+        timestamp: Date.now()
+      },
       body: { browser_id: params.browser_id }
     }
     const response = await this._post(`/browser/heartbeat`, body)
@@ -569,18 +572,97 @@ class BrowserLiveControlApiImpl extends BrowserLiveControlApi {
    * 获取截图
    * POST /api/v1/rpa/browser_live_control/stream/screenshot
    */
-  async getScreenshot(params: {
+  async getScreenshot(browser_id: string | {
     browser_id: string
     request?: SimplifiedScreenshotRequest
-  }): Promise<Blob> {
+  }, request?: SimplifiedScreenshotRequest): Promise<Blob> {
+    // 兼容旧的调用方式: getScreenshot(browser_id, request)
+    // 和新的调用方式: getScreenshot({ browser_id, request })
+    let finalBrowserId: string
+    let finalRequest: SimplifiedScreenshotRequest | undefined
+
+    if (typeof browser_id === 'object') {
+      finalBrowserId = browser_id.browser_id
+      finalRequest = browser_id.request || request
+    } else {
+      finalBrowserId = browser_id
+      finalRequest = request
+    }
+
     const body: Body_get_screenshot_api_v1_rpa_browser_live_control_stream_screenshot_post = {
-      request: params.request || {},
-      body: { browser_id: params.browser_id }
+      request: finalRequest || {},
+      body: { browser_id: finalBrowserId }
     }
     const response = await ajax.post<Blob>(`${this.path}/stream/screenshot`, body, {
       responseType: 'blob'
     })
     return response.data
+  }
+
+  /**
+   * 执行JavaScript代码
+   * POST /api/v1/rpa/browser_live_control/browser/execute
+   */
+  async executeJavaScript(browser_id: string | {
+    browser_id: string
+    request: SimplifiedJavaScriptExecuteWithParamsRequest
+  }, request?: SimplifiedJavaScriptExecuteWithParamsRequest): Promise<RootObject<any>> {
+    // 兼容旧的调用方式: executeJavaScript(browser_id, request)
+    let finalBrowserId: string
+    let finalRequest: SimplifiedJavaScriptExecuteWithParamsRequest
+
+    if (typeof browser_id === 'object') {
+      finalBrowserId = browser_id.browser_id
+      finalRequest = browser_id.request
+    } else {
+      finalBrowserId = browser_id
+      finalRequest = request || { code: '' }
+    }
+
+    const body: Body_execute_javascript_code_api_v1_rpa_browser_live_control_browser_execute_post =
+      {
+        request: finalRequest,
+        body: { browser_id: finalBrowserId }
+      }
+    const response = await this._post(`/browser/execute`, body)
+    // 适配新的StandardResponse结构
+    if (response && 'code' in response) {
+      return { data: response.data, msg: response.msg, code: response.code } as RootObject<any>
+    }
+    return response
+  }
+
+  /**
+   * 安全执行JavaScript代码（带沙箱检查）
+   * POST /api/v1/rpa/browser_live_control/browser/safe_execute
+   */
+  async safeExecuteJavaScript(browser_id: string | {
+    browser_id: string
+    request: SimplifiedJavaScriptExecuteWithParamsRequest
+  }, request?: SimplifiedJavaScriptExecuteWithParamsRequest): Promise<RootObject<any>> {
+    // 兼容旧的调用方式: safeExecuteJavaScript(browser_id, request)
+    let finalBrowserId: string
+    let finalRequest: SimplifiedJavaScriptExecuteWithParamsRequest
+
+    if (typeof browser_id === 'object') {
+      finalBrowserId = browser_id.browser_id
+      finalRequest = browser_id.request
+    } else {
+      finalBrowserId = browser_id
+      finalRequest = request || { code: '' }
+    }
+
+    const body: Body_safe_execute_javascript_api_v1_rpa_browser_live_control_browser_safe_execute_post =
+      {
+        request: finalRequest,
+        body: { browser_id: finalBrowserId }
+      }
+    const response = await this._post(`/browser/safe_execute`, body)
+    // 适配新的StandardResponse结构
+    if (response && 'code' in response) {
+      return { data: response.data, msg: response.msg, code: response.code } as RootObject<any>
+    }
+    return response
   }
 
   /**
@@ -617,48 +699,6 @@ class BrowserLiveControlApiImpl extends BrowserLiveControlApi {
         body: { browser_id: params.browser_id }
       }
     const response = await this._post(`/browser/control`, body)
-    // 适配新的StandardResponse结构
-    if (response && 'code' in response) {
-      return { data: response.data, msg: response.msg, code: response.code } as RootObject<any>
-    }
-    return response
-  }
-
-  /**
-   * 执行JavaScript代码
-   * POST /api/v1/rpa/browser_live_control/browser/execute
-   */
-  async executeJavaScript(params: {
-    browser_id: string
-    request: SimplifiedJavaScriptExecuteWithParamsRequest
-  }): Promise<RootObject<any>> {
-    const body: Body_execute_javascript_code_api_v1_rpa_browser_live_control_browser_execute_post =
-      {
-        request: params.request,
-        body: { browser_id: params.browser_id }
-      }
-    const response = await this._post(`/browser/execute`, body)
-    // 适配新的StandardResponse结构
-    if (response && 'code' in response) {
-      return { data: response.data, msg: response.msg, code: response.code } as RootObject<any>
-    }
-    return response
-  }
-
-  /**
-   * 安全执行JavaScript代码（带沙箱检查）
-   * POST /api/v1/rpa/browser_live_control/browser/safe_execute
-   */
-  async safeExecuteJavaScript(params: {
-    browser_id: string
-    request: SimplifiedJavaScriptExecuteWithParamsRequest
-  }): Promise<RootObject<any>> {
-    const body: Body_safe_execute_javascript_api_v1_rpa_browser_live_control_browser_safe_execute_post =
-      {
-        request: params.request,
-        body: { browser_id: params.browser_id }
-      }
-    const response = await this._post(`/browser/safe_execute`, body)
     // 适配新的StandardResponse结构
     if (response && 'code' in response) {
       return { data: response.data, msg: response.msg, code: response.code } as RootObject<any>

@@ -166,7 +166,12 @@
 import { ref, reactive } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { browserLiveControlApi } from '@/api/browser/browser_api'
-import type { JavaScriptExecuteParams, JavaScriptExecuteResponse, SecurityCheckResult } from '@/types/browser-automation-api'
+import type {
+  JavaScriptExecuteParams,
+  JavaScriptExecuteResponse,
+  SecurityCheckResult,
+  SimplifiedJavaScriptExecuteWithParamsRequest
+} from '@/types/browser-automation-api'
 import SecurityChecker from './SecurityChecker.vue'
 
 // 定义Props
@@ -309,23 +314,22 @@ const executeCode = async () => {
   executionResult.value = null
 
   try {
-    const params: JavaScriptExecuteParams = {
+    const request: SimplifiedJavaScriptExecuteWithParamsRequest = {
       code: jsCode.value.trim(),
-      timeout: timeout.value,
-      await_result: awaitResult.value
+      timeout: timeout.value
     }
 
     let response
     if (safeMode.value) {
-      response = await browserLiveControlApi.safeExecuteJavaScript(props.browserId, params)
+      response = await browserLiveControlApi.safeExecuteJavaScript(props.browserId, request)
     } else {
-      response = await browserLiveControlApi.executeJavaScript(props.browserId, params)
+      response = await browserLiveControlApi.executeJavaScript(props.browserId, request)
     }
 
     if (response.data) {
       executionResult.value = response.data
       emit('executed', response.data)
-      
+
       if (response.data.success) {
         ElMessage.success('代码执行成功')
       } else {

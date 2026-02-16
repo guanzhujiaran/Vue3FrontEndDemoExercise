@@ -25,7 +25,7 @@ export function testErrorHandler() {
   }, {
     showToast: false,
     emitError: true,
-    customHandler: (error) => {
+    customHandler: (error: any) => {
       console.log('🔧 自定义错误处理:', error)
     }
   })

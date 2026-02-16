@@ -9,7 +9,13 @@ export const useUserNavStore = defineStore(
       uid: '',
       user_name: '',
       role: '',
-      face: ''
+      face: '',
+      level_info: {
+        current_exp: 0,
+        current_level: 0,
+        current_min: 0,
+        next_exp: '--'
+      }
     })
 
     function save_user_nav(val: UserNavModel) {
@@ -21,7 +27,13 @@ export const useUserNavStore = defineStore(
         uid: '',
         user_name: '',
         role: '',
-        face: ''
+        face: '',
+        level_info: {
+          current_exp: 0,
+          current_level: 0,
+          current_min: 0,
+          next_exp: '--'
+        }
       }
     }
 

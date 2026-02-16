@@ -1,14 +1,11 @@
 <script setup lang="ts">
-import { useDebounceFn } from '@vueuse/core'
-import { computed, onMounted, ref } from 'vue'
-import userApi from '@/api/user/user_api'
+import { ref, onMounted } from 'vue'
+import { ElMessage } from 'element-plus'
 import { isLogin } from '@/api/user/utils'
 import { useRouter } from 'vue-router'
 import { useJwtStore } from '@/stores/jwt_token'
-import utils from '@/utils/mixin.ts'
 import emitter from '@/utils/mitt.ts'
-import { KeysEnum, useInject } from '@/models/base/provide_model.ts'
-import { businessHandler } from '@/utils/businessHandler'
+import OAuthLoginProviders from './OAuthLoginProviders.vue'
 
 // 定义props
 const props = defineProps({
@@ -21,149 +18,36 @@ const props = defineProps({
 // 定义事件
 const emit = defineEmits(['login-success'])
 
-// 输入框禁止输入空格
-const pwd_sec = useInject(KeysEnum.BiliPwdSec) as Ref<string>
-const vNoSpace = {
-  updated(el: Ref<string>, binding: any, vnode: any, prevVnode: any) {
-    if (el?.value?.includes(' ')) {
-      //输入空格就替换全部表单内容！
-      tab__form.value = Object.fromEntries(
-        Object.entries(tab__form.value).map((el) => [el[0], el[1].replaceAll(' ', '')])
-      ) as {
-        user_name: string
-        pwd: string
-        reg_user_name: string
-        reg_pwd: string
-        reg_check_pwd: string
-      }
-    }
-  }
-}
-
-const tab__form = ref({
-  user_name: '',
-  pwd: '',
-  reg_user_name: '',
-  reg_pwd: '',
-  reg_check_pwd: ''
-})
-
-const show_pwd = ref<boolean>(false)
-const show_reg_pwd = ref<boolean>(false)
-const show_reg_check_pwd = ref<boolean>(false)
-const loadingLogin = ref<boolean>(false)
-const loadingRegist = ref<boolean>(false)
-const isLoading = computed(() => {
-  return loadingLogin.value || loadingRegist.value
-})
+const isLoading = ref<boolean>(false)
 const router = useRouter()
-const login_able = computed(() => ({
-  enable: tab__form.value.user_name && tab__form.value.pwd,
-  disabled: !(tab__form.value.user_name && tab__form.value.pwd)
-}))
-const reg_able = computed(() => ({
-  enable: tab__form.value.reg_user_name && tab__form.value.reg_pwd,
-  disabled: !(tab__form.value.reg_user_name && tab__form.value.reg_pwd)
-}))
 const login_info = ref({
   source: 'main_web',
   go_url: '',
   spm_id_from: '',
-  checked: 'pwd',
+  checked: 'casdoor',
   isSmsFocus: !1,
   captcha: void 0
 })
 
-/**
- *
- * @param t pwd 或者 reg 用于切换tab
- */
-const tabChange = (t: string | number) => {
-  const tabName = String(t)
-  login_info.value.checked !== tabName && (login_info.value.checked = tabName)
-}
+// 在页面加载时显示提示(仅在非Modal模式下)
+onMounted(() => {
+  if (!props.isModal) {
+    const STORAGE_KEY = 'login_page_first_visit_shown'
+    const shown = localStorage.getItem(STORAGE_KEY)
 
-const handleLoginBtn = useDebounceFn(async () => {
-  if (login_able.value.disabled) return
-  if (tab__form.value.user_name.length * tab__form.value.pwd.length == 0) {
-    emitter.emit('toast', { t: '请输入账号和密码！', e: 'info' })
-    return
+    if (!shown) {
+      setTimeout(() => {
+        ElMessage({
+          message: '⚠️ 当前禁止注册新账号,仅支持 Gitee 登录',
+          type: 'warning',
+          duration: 5000,
+          showClose: true
+        })
+        localStorage.setItem(STORAGE_KEY, 'true')
+      }, 500)
+    }
   }
-  if (!pwd_sec.value) {
-    emitter.emit('toast', { t: '缺少加密盐！', e: 'error' })
-    return
-  }
-  loadingLogin.value = true
-  let encrypt_pwd = utils.encrypt_pwd(tab__form.value.pwd, pwd_sec.value)
-  
-  businessHandler(
-    userApi.Login(tab__form.value.user_name, encrypt_pwd),
-    {
-      successMessage: '登录成功！',
-      errorMessage: '登录失败！',
-      showSuccessToast: true,
-      showErrorToast: true,
-      autoHandleError: true
-    },
-    [
-      (result) => {
-        if (result.success && result.data) {
-          const JwtStore = useJwtStore()
-          JwtStore.save_jwt_token(result.data.jwt_token)
-
-          // 发出登录成功事件，让父组件可以关闭模态框
-          emit('login-success')
-
-          // 如果是在模态框中登录，不自动跳转，而是刷新当前页面
-          if (props.isModal) {
-            window.location.reload()
-          } else {
-            router.push('/app/user-center')
-          }
-        }
-      }
-    ]
-  ).finally(() => {
-    loadingLogin.value = false
-  })
-}, 2e3)
-
-const handleRegBtn = useDebounceFn(async () => {
-  if (reg_able.value.disabled) return
-  if (tab__form.value.reg_user_name.length * tab__form.value.reg_pwd.length == 0) {
-    emitter.emit('toast', { t: '请输入账号和密码！', e: 'error' })
-    return
-  }
-  if (tab__form.value.reg_pwd !== tab__form.value.reg_check_pwd) {
-    emitter.emit('toast', { t: '两次密码不一致！', e: 'error' })
-    return
-  }
-  if (!pwd_sec.value) {
-    emitter.emit('toast', { t: '缺少加密盐！', e: 'error' })
-    return
-  }
-  loadingRegist.value = true
-  let encrypt_pwd = utils.encrypt_pwd(tab__form.value.reg_pwd, pwd_sec.value)
-  userApi
-    .Reg(tab__form.value.reg_user_name, encrypt_pwd)
-    .then((resp) => {
-      if (resp.code) {
-        emitter.emit('toast', { t: `注册失败！原因：${resp.msg}`, e: 'error' })
-        return
-      }
-      emitter.emit('toast', { t: '注册成功！请登录', e: 'success' })
-      login_info.value.checked = 'pwd'
-      tab__form.value.user_name = tab__form.value.reg_user_name
-      tab__form.value.pwd = tab__form.value.reg_pwd
-    })
-    .catch((e) => {
-      emitter.emit('toast', { t: `注册失败！原因：${e}`, e: 'error' })
-      return
-    })
-    .finally(() => {
-      loadingRegist.value = false
-    })
-}, 2e3)
+})
 
 const check_login = () => {
   // 如果是在模态框中，不需要自动检查登录状态
@@ -185,190 +69,39 @@ const check_login = () => {
     })
 }
 
-const check_pwd_sec = () => {
-  !pwd_sec.value &&
-    userApi.PwdSalt().then((el) => {
-      !el.code && (pwd_sec.value = el.data)
-    })
-}
+// 处理 OAuth 登录成功
+const handleOAuthLoginSuccess = async (data: { token: string, uid: string, user_name: string }) => {
+  const JwtStore = useJwtStore()
+  JwtStore.save_jwt_token(data.token)
 
-onMounted(() => {
-  check_login()
-  check_pwd_sec()
-  // 强制隐藏全局加载遮罩
-})
+  // 刷新获取用户状态
+  const [isLoggedIn, message, userNav] = await isLogin()
+
+  if (!isLoggedIn && message !== '未登录') {
+    emitter.emit('toast', { t: `获取用户信息失败: ${message}`, e: 'error' })
+  }
+
+  // 发出登录成功事件
+  emit('login-success')
+
+  // 等待1秒后刷新页面，让用户看到成功提示
+  setTimeout(() => {
+    window.location.reload()
+  }, 1000)
+}
 </script>
 
 <template>
-  <div class="login_wp">
+  <div class="login_wp" v-loading="isLoading">
     <div class="login__main">
-      <div class="main__right" v-loading="isLoading">
-        <!-- 使用Element Plus的Tabs组件 -->
-        <el-tabs
-          :stretch="true"
-          type="card"
-          v-model="login_info.checked"
-          @tab-change="tabChange"
-          class="login-tabs"
-        >
-          <el-tab-pane label="密码登录" name="pwd">
-            <div class="login-pwd">
-              <div class="tab__form">
-                <div class="form__item">
-                  <el-input
-                    v-model.trim="tab__form.user_name"
-                    placeholder="请输入账号"
-                    maxlength="32"
-                    clearable
-                    @input="(value) => (value = value.replace(/\s+/g, ''))"
-                    @keydown.enter="handleLoginBtn"
-                    v-no-space
-                    ><template #prefix>
-                      <span class="form-label">账号</span>
-                    </template>
-                  </el-input>
-                </div>
-                <div class="form__separator-line"></div>
-                <div class="form__item">
-                  <el-input
-                    v-model.trim="tab__form.pwd"
-                    placeholder="请输入密码"
-                    maxlength="32"
-                    :type="show_pwd ? 'text' : 'password'"
-                    clearable
-                    @input="(value) => (value = value.replace(/\s+/g, ''))"
-                    @keydown.enter="handleLoginBtn"
-                    v-no-space
-                  >
-                    <template #prefix>
-                      <span class="form-label">密码</span>
-                    </template>
-                    <template #suffix>
-                      <el-icon class="eye-btn mr-1 cursor-pointer" @click="show_pwd = !show_pwd">
-                        <View v-if="show_pwd" />
-                        <Hide v-else />
-                      </el-icon>
-                      <el-popover
-                        placement="bottom-end"
-                        width="332px"
-                        trigger="click"
-                        popper-class="forget-tip-popover"
-                      >
-                        <template #reference>
-                          <div class="clickable">忘记密码？</div>
-                        </template>
-                        <!--                <div class="forget-tip-content">-->
-                        <!--                  <div class="forget-tip-line">-->
-                        <!--                    <p class="title">发送短信快速登录</p>-->
-                        <!--                    <p class="desc">未注册或绑定哔哩哔哩的手机号，将帮你注册新账号</p>-->
-                        <!--                  </div>-->
-                        <!--                  <div class="forget-tip-line">-->
-                        <!--                    <p class="title">去找回密码</p>-->
-                        <!--                    <p class="desc">通过绑定的手机号/邮箱重置密码</p>-->
-                        <!--                  </div>-->
-                        <!--                </div>-->
-                        <div class="forget-tip-line">
-                          <p class="title">忘了就忘了吧</p>
-                          <p class="desc">重新注册一个就是了，反正也没要求绑邮箱</p>
-                        </div>
-                      </el-popover>
-                    </template>
-                  </el-input>
-                </div>
-              </div>
-              <div class="btn_wp">
-                <el-button type="default" @click="tabChange('reg')" class="btn_primary">
-                  没有账号立即注册
-                </el-button>
-                <el-button
-                  type="primary"
-                  @click="handleLoginBtn"
-                  :disabled="login_able.disabled"
-                  class="btn_primary"
-                >
-                  立即登录
-                </el-button>
-              </div>
-            </div>
-          </el-tab-pane>
-
-          <el-tab-pane label="账号注册" name="reg">
-            <div class="tab-sms">
-              <div class="tab__form">
-                <div class="form__item">
-                  <el-input
-                    v-model.trim="tab__form.reg_user_name"
-                    placeholder="请输入需要注册的账号名"
-                    maxlength="32"
-                    clearable
-                    @input="(value) => (value = value.replace(/\s+/g, ''))"
-                    v-no-space
-                    ><template #prefix>
-                      <span class="form-label">注册账号名</span>
-                    </template></el-input
-                  >
-                </div>
-                <div class="form__separator-line"></div>
-                <div class="form__item">
-                  <el-input
-                    v-model.trim="tab__form.reg_pwd"
-                    placeholder="请输入注册密码"
-                    maxlength="32"
-                    :type="show_reg_pwd ? 'text' : 'password'"
-                    clearable
-                    @input="(value) => (value = value.replace(/\s+/g, ''))"
-                    v-no-space
-                  >
-                    <template #prefix>
-                      <span class="form-label">注册密码</span>
-                    </template>
-                    <template #suffix>
-                      <el-icon
-                        class="eye-btn"
-                        @click="show_reg_pwd = !show_reg_pwd"
-                        style="cursor: pointer"
-                      >
-                        <View v-if="show_reg_pwd" />
-                        <Hide v-else />
-                      </el-icon> </template
-                  ></el-input>
-                </div>
-                <div class="form__item">
-                  <el-input
-                    v-model.trim="tab__form.reg_check_pwd"
-                    placeholder="请再次输入相同内容，确认注册密码"
-                    maxlength="32"
-                    :type="show_reg_check_pwd ? 'text' : 'password'"
-                    clearable
-                    @input="(value) => (value = value.replace(/\s+/g, ''))"
-                    v-no-space
-                  >
-                    <template #prefix>
-                      <span class="form-label">确认注册密码</span>
-                    </template>
-                    <template #suffix>
-                      <el-icon
-                        class="eye-btn"
-                        @click="show_reg_check_pwd = !show_reg_check_pwd"
-                        style="cursor: pointer"
-                      >
-                        <View v-if="show_reg_check_pwd" />
-                        <Hide v-else />
-                      </el-icon> </template
-                  ></el-input>
-                </div>
-              </div>
-              <div class="btn_wp">
-                <el-button
-                  type="primary"
-                  @click="handleRegBtn"
-                  :disabled="reg_able.disabled"
-                  class="btn_primary"
-                >
-                  账号注册
-                </el-button>
-              </div>
-            </div>
+      <div class="main__right">
+        <!-- 使用Element Plus的Tabs组件 - 只保留Casdoor登录 -->
+        <el-tabs :stretch="true" type="card" v-model="login_info.checked" class="login-tabs">
+          <el-tab-pane label="Casdoor登录" name="casdoor">
+            <OAuthLoginProviders
+              :providers="['casdoor']"
+              @login-success="handleOAuthLoginSuccess"
+            />
           </el-tab-pane>
         </el-tabs>
       </div>
