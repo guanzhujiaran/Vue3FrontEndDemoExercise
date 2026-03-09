@@ -4,12 +4,12 @@
       <template #header>
         <div class="card-header">
           <el-icon><Avatar /></el-icon>
-          <span>欢迎来到用户中心</span>
+          <span>欢迎来到浏览器管理</span>
         </div>
       </template>
       <div class="welcome-content">
-        <p>您好，{{ userInfo.user_name }}！欢迎回到用户中心。</p>
-        <p>在这里您可以管理您的个人信息、浏览器配置以及其他相关内容。</p>
+        <p>您好，{{ userInfo.user_name }}！欢迎回到浏览器管理。</p>
+        <p>在这里您可以管理您的浏览器指纹、插件配置以及其他相关内容。</p>
 
         <div class="quick-actions">
           <h3>快速操作</h3>

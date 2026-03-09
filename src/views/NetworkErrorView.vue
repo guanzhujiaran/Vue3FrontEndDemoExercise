@@ -27,29 +27,34 @@ const pingResults = ref<Array<{
 
 // 要检测的服务器列表
 const servers = [
-  { name: '主服务器', host: window.location.hostname },
-  { name: 'DNS服务器 (Google)', host: '8.8.8.8' },
-  { name: 'DNS服务器 (Cloudflare)', host: '1.1.1.1' },
-  { name: 'B站CDN', host: 'www.bilibili.com' },
-  { name: '百度', host: 'www.baidu.com' }
+  { name: '该网站服务器', host: window.location.hostname },
+  { name: 'B站服务器', host: 'www.bilibili.com' },
+  { name: '百度服务器', host: 'www.baidu.com' }
 ]
 
 // 获取主服务器的IP地址
 const getServerIP = async (hostname: string): Promise<string> => {
-  try {
-    // 使用 DNS over HTTPS (DoH) 查询 IP 地址
-    const response = await fetch(`https://cloudflare-dns.com/dns-query?name=${hostname}&type=A`, {
-      headers: { accept: 'application/dns-json' }
-    })
-    const data = await response.json()
-    if (data.Answer && data.Answer.length > 0) {
-      return data.Answer[0].data
+  const dohServers = [
+    'https://dns.alidns.com/resolve',
+    'https://doh.pub/dns-query'
+  ]
+
+  for (const dohUrl of dohServers) {
+    try {
+      // 使用国内 DoH API 查询 IP 地址
+      const response = await fetch(`${dohUrl}?name=${hostname}&type=A`, {
+        headers: { accept: 'application/dns-json' }
+      })
+      const data = await response.json()
+      if (data.Answer && data.Answer.length > 0) {
+        return data.Answer[0].data
+      }
+    } catch (error) {
+      console.error(`DNS查询失败 (${dohUrl}):`, error)
+      continue
     }
-    return '未知'
-  } catch (error) {
-    console.error('DNS查询失败:', error)
-    return '未知'
   }
+  return '未知'
 }
 
 // Ping服务器（通过HTTP请求模拟）

@@ -64,11 +64,11 @@ const networkErrorMessage = ref('')
 
 // 检查登录状态
 const checkLoginStatus = () => {
-  isLogin().then(([isLoggedInStatus, message, user_nav]) => {
-    if (!isLoggedInStatus && message !== '未登录') {
-      // 如果不是因为未登录导致的错误，显示网络诊断页面
-      console.log('App.vue - 获取用户信息失败，显示网络诊断页面，错误信息:', message)
-      networkErrorMessage.value = message
+  isLogin().then(([isLoggedInStatus, message, user_nav, apiError]) => {
+    // 只在有 apiError 时（网络请求失败）显示网络诊断页面
+    if (apiError) {
+      console.log('App.vue - 网络请求失败，显示网络诊断页面，错误信息:', apiError.msg)
+      networkErrorMessage.value = apiError.msg
       showNetworkDiagnosis.value = true
     }
     user_nav ? (biliUser.value = user_nav) : null

@@ -65,7 +65,8 @@ export default defineConfig({
     }),
     vueJsx(),
     VueDevTools({
-      componentInspector: true
+      componentInspector: true,
+      launchEditor: 'CodeBuddy'
     }),
     tailwindcss()
   ],

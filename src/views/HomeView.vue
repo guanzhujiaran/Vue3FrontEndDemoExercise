@@ -111,7 +111,7 @@ const handleCardClick = (path: string | undefined, requiresLogin = false) => {
             <el-radio-group v-model="activeTab" size="large">
               <el-radio-button label="all" value="all">全部</el-radio-button>
               <el-radio-button label="lottery" value="lottery">抽奖数据</el-radio-button>
-              <el-radio-button label="user" value="user">用户中心</el-radio-button>
+              <el-radio-button label="user" value="user">浏览器管理</el-radio-button>
               <el-radio-button label="shopping" value="shopping">山姆会员商店</el-radio-button>
             </el-radio-group>
           </div>
@@ -187,7 +187,7 @@ const handleCardClick = (path: string | undefined, requiresLogin = false) => {
             </li>
             <li class="mb-2">
               <a class="cursor-pointer text-[var(--el-text-color-placeholder)] no-underline hover:text-blue-500"
-                @click="router.push('/app/user-center')">用户中心</a>
+                @click="router.push('/app/user-center')">浏览器管理</a>
             </li>
             <li class="mb-2">
               <a class="cursor-pointer text-[var(--el-text-color-placeholder)] no-underline hover:text-blue-500"

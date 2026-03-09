@@ -85,7 +85,7 @@ const menuDefaultActive = computed(() => {
 })
 
 const getCurrentRouteTitle = computed(() => {
-  if (!use_route.name) return '用户中心'
+  if (!use_route.name) return '浏览器管理'
 
   // 首先尝试直接匹配路由名称
   const currentRoute = user_center_routes.find((route) => route.name === use_route.name)
@@ -105,7 +105,7 @@ const getCurrentRouteTitle = computed(() => {
   // 最后检查是否是根路径，返回默认首页标题
   if (use_route.path === '/app/user-center/') {
     const defaultRoute = user_center_routes.find((route) => route.path === '')
-    return defaultRoute?.meta?.title || '用户中心首页'
+    return defaultRoute?.meta?.title || '浏览器管理首页'
   }
 
   return use_route.name as string
@@ -189,12 +189,6 @@ const scrollbarHeight = computed(() => {
             <div class="content-body">
               <RouterView v-slot="{ Component, route }">
                 <div v-if="Component">
-                  <!-- 调试信息 -->
-                  <div v-if="env.VITE_BILI_ENV !== 'prod'">
-                    <p>{{ env }}</p>
-                    <p>Route: {{ route.path }}</p>
-                    <p>Name: {{ route.name }}</p>
-                  </div>
                   <transition name="slide-fade" mode="out-in">
                     <keep-alive>
                       <component :is="Component" :key="route.path" />

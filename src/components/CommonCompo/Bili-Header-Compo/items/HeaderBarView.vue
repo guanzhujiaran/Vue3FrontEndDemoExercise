@@ -32,7 +32,7 @@ const navigationData = computed(() => {
 const openGlobalLoginModal = inject(openGlobalLoginModalKey, () => {})
 // 处理需要登录但未登录的情况
 const handleProtectedRouteClick = (title: string) => {
-  ElMessage.info(`"${title}"功能需要登录后才能使用`)
+  ElMessage.info(` ${title} 功能需要登录后才能使用`)
   openGlobalLoginModal()
 }
 

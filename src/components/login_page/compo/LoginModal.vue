@@ -45,7 +45,8 @@ const closeLoginModal = () => {
 const handleLoginSuccess = () => {
   // 登录成功后关闭模态框
   closeLoginModal()
-  // 可以在这里添加其他登录成功后的操作
+  // 刷新页面
+  window.location.reload()
 }
 
 // 暴露方法给父组件

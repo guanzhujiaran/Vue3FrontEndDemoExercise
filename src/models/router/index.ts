@@ -50,7 +50,7 @@ export enum RouteName {
 
   // 应用模块
   FEEDBACK = '反馈区',
-  USER_CENTER = '用户中心',
+  USER_CENTER = '浏览器管理',
   LOTTERY_DATA = '抽奖数据',
   SAMSCLUB = '山姆会员店数据',
   RPA_CONTROL = 'RPA控制',
@@ -60,7 +60,7 @@ export enum RouteName {
   USER_INFO_CONFIG = '用户基本信息设置',
 
   USER_CENTER_DASHBOARD = '用户中心仪表盘',
-  BROWSER_MANAGEMENT = '浏览器管理',
+  BROWSER_MANAGEMENT = '浏览器指纹管理',
   // 抽奖数据子路由
   SCRAPY_STAT = '爬虫状态',
   BILI_ATARI_RANKING = 'B站中奖名人堂',

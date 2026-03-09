@@ -4,7 +4,7 @@
     "private": true,
     "type": "module",
     "scripts": {
-        "dev": "LAUNCH_EDITOR=/home/minato_aqua/Vue3FrontEndDemoExercise/launch-codebuddy.sh vite --mode development",
+        "dev": "vite --mode development",
         "build": "vite build --mode prod",
         "build:no-check": "vite build --mode prod",
         "build:check": "run-p type-check \"build-only {@}\"",

@@ -33,7 +33,7 @@ const user_center_routes = [
     meta: {
       title: '用户中心首页',
       description: '用户中心默认面板',
-      isHeaderShow: true,
+      isHeaderShow: false,
       requiresLogin: true,
       icon: IconUser
     }
@@ -47,22 +47,9 @@ const user_center_routes = [
     meta: {
       title: RouteName.USER_INFO_CONFIG,
       description: '管理用户基本信息',
-      isHeaderShow: true,
+      isHeaderShow: false,
       requiresLogin: true,
       icon: IconSetting
-    }
-  },
-  {
-    path: 'browser-management',
-    name: RouteName.BROWSER_MANAGEMENT,
-    component: () =>
-      import('@/views/BrowserManagementView.vue'),
-    meta: {
-      title: RouteName.BROWSER_MANAGEMENT,
-      description: '管理浏览器指纹、插件配置和通知设置',
-      isHeaderShow: true,
-      requiresLogin: true,
-      icon: IconMonitor
     }
   }
 ]
@@ -83,7 +70,7 @@ const routes: CustomRouteRecordRaw[] = [
     }
   },
   {
-    path: '/app/Feedback',
+    path: '/app/feedback',
     name: RouteName.FEEDBACK,
     component: () => import('@/views/FeedbackView.vue'),
     meta: {
@@ -95,29 +82,11 @@ const routes: CustomRouteRecordRaw[] = [
         'linear-gradient(225deg, var(--el-color-primary) 0%, var(--el-color-info) 40%, var(--el-color-warning) 70%, var(--el-color-danger) 100%)',
       requiresLogin: false,
       showInHome: true,
-      order: 3,
+      order: 114514,
       isHeaderShow: true
     }
   },
-  {
-    path: '/app/user-center/',
-    name: RouteName.USER_CENTER,
-    component: () => import('@/views/UserCenterView.vue'),
-    redirect: { name: RouteName.USER_CENTER_DASHBOARD },
-    meta: {
-      id: 'user',
-      title: '用户中心',
-      icon: IconUser,
-      description: '管理您的账户信息和个人设置',
-      color:
-        'linear-gradient(225deg, var(--el-color-primary) 0%, var(--el-color-info) 40%, var(--el-color-warning) 70%, var(--el-color-danger) 100%)',
-      requiresLogin: true,
-      showInHome: true,
-      order: 4,
-      isHeaderShow: true
-    },
-    children: user_center_routes
-  },
+
   {
     path: '/app/lot-data',
     name: RouteName.LOTTERY_DATA,
@@ -278,6 +247,21 @@ const routes: CustomRouteRecordRaw[] = [
     }
   },
   {
+    path: '/app/browser-management',
+    name: RouteName.BROWSER_MANAGEMENT,
+    component: () => import('@/views/BrowserManagementView.vue'),
+    meta: {
+      id: 'browser-management',
+      title: RouteName.BROWSER_MANAGEMENT,
+      description: '管理浏览器指纹、插件配置和通知设置',
+      isHeaderShow: true,
+      requiresLogin: true,
+      icon: IconMonitor,
+      showInHome: true,
+      order: 5
+    }
+  },
+  {
     path: '/app/changelog',
     name: RouteName.CHANGE_LOG,
     component: () => import('@/views/ChangelogView.vue'),
@@ -285,7 +269,7 @@ const routes: CustomRouteRecordRaw[] = [
       title: '更新日志',
       description: '查看项目更新日志',
       isHeaderShow: true,
-      order: 5
+      order: 7
     }
   },
 
@@ -298,17 +282,25 @@ const routes: CustomRouteRecordRaw[] = [
       isHeaderShow: false
     }
   },
-
   {
-    path: '/casdoor-callback',
-    name: 'CASDOOR_CALLBACK',
-    component: () => import('@/views/CasdoorCallbackView.vue'),
+    path: '/app/user-center/',
+    name: RouteName.USER_CENTER,
+    component: () => import('@/views/UserCenterView.vue'),
+    redirect: { name: RouteName.USER_CENTER_DASHBOARD },
     meta: {
-      title: 'Casdoor 登录回调',
+      id: 'user-center',
+      title: '用户中心',
+      icon: IconUser,
+      description: '管理浏览器指纹、插件配置和通知设置',
+      color:
+        'linear-gradient(225deg, var(--el-color-primary) 0%, var(--el-color-info) 40%, var(--el-color-warning) 70%, var(--el-color-danger) 100%)',
+      requiresLogin: true,
+      showInHome: true,
+      order: 4,
       isHeaderShow: false
-    }
+    },
+    children: user_center_routes
   },
-
   {
     // 404页面路由配置
     path: '/:pathMatch(.*)*',
