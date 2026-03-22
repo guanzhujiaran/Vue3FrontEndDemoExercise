@@ -4,29 +4,47 @@
   padding: var(--component-spacing);
 }
 
-.bili-data-table-toolbar .refresh-btn,
-.bili-data-table-toolbar .setting-btn {
-  @apply w-auto rounded-[20px] transition-all duration-300;
+.toolbar-buttons {
+  @apply flex flex-col items-center gap-3;
+}
+
+.button-row {
+  @apply flex items-center gap-4;
+}
+
+.button-row .refresh-btn,
+.button-row .setting-btn,
+.button-row .feedback-btn {
+  @apply w-auto transition-all duration-300;
   padding: calc(var(--component-spacing) * 0.5) var(--component-spacing);
 }
 
-.bili-data-table-toolbar .refresh-btn {
+.button-row .refresh-btn {
   border-color: var(--el-color-primary);
 }
 
-.bili-data-table-toolbar .refresh-btn:hover {
+.button-row .refresh-btn:hover {
   @apply translate-y-[-2px];
   box-shadow: 0 4px 8px rgba(0, 161, 214, 0.2);
 }
 
-.bili-data-table-toolbar .setting-btn {
+.button-row .setting-btn {
   border-color: var(--el-border-color);
   color: var(--el-text-color-regular);
 }
 
-.bili-data-table-toolbar .setting-btn:hover {
+.button-row .setting-btn:hover {
   border-color: var(--el-border-color-darker);
   @apply translate-y-[-2px] shadow-sm;
+}
+
+.button-row .feedback-btn {
+  border-color: var(--el-color-warning);
+}
+
+.button-row .feedback-btn:hover {
+  @apply translate-y-[-2px];
+  box-shadow: 0 4px 8px rgba(230, 162, 60, 0.2);
 }
 
 :deep(.el-dialog__header) {

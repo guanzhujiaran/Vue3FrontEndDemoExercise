@@ -27,6 +27,7 @@
         "@vueuse/core": "^14.1.0",
         "@vueuse/head": "^2.0.0",
         "axios": "^1.13.2",
+        "casdoor-vue-sdk": "^1.6.0",
         "crypto-js": "^4.2.0",
         "daisyui": "^5.5.14",
         "echarts": "^6.0.0",

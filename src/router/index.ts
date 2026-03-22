@@ -254,10 +254,10 @@ const routes: CustomRouteRecordRaw[] = [
       id: 'browser-management',
       title: RouteName.BROWSER_MANAGEMENT,
       description: '管理浏览器指纹、插件配置和通知设置',
-      isHeaderShow: true,
+      isHeaderShow: false,
       requiresLogin: true,
       icon: IconMonitor,
-      showInHome: true,
+      showInHome: false,
       order: 5
     }
   },
@@ -274,7 +274,7 @@ const routes: CustomRouteRecordRaw[] = [
   },
 
   {
-    path: '/casdoor-callback',
+    path: '/app/casdoor-callback',
     name: 'CASDOOR_CALLBACK',
     component: () => import('@/views/CasdoorCallbackView.vue'),
     meta: {

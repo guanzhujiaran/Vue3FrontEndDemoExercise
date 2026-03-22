@@ -1,4 +1,3 @@
-
 <template>
   <FlexContainer class="bili-lottery-data-panel">
     <div class="page-header">
@@ -8,11 +7,11 @@
         <span class="description-text">B站预约活动相关的抽奖数据</span>
       </div>
     </div>
-    
+
     <div class="search-section">
       <BiliLotteryDataSearchBox></BiliLotteryDataSearchBox>
     </div>
-    
+
     <BiliPaginationDataView
       :data="reserve_lot_data_props.lot_data?.items"
       :total="reserve_lot_data_props.lot_data?.total"
@@ -21,18 +20,28 @@
       v-model:Loading="reserve_lot_data_props.loading"
       @on-mounted="reserve_lot_data_props.lot_page = 1"
       @retry-on-error="() => get_lot_data(reserve_lot_data_props.lot_page, page_size)"
-    />
+    >
+      <template #toolbar>
+        <LotteryDataTableToolbar :refresh_data="refresh_data">
+          <template #submit-button>
+            <SubmitDynamicLotteryModal />
+          </template>
+        </LotteryDataTableToolbar>
+      </template>
+    </BiliPaginationDataView>
   </FlexContainer>
 </template>
 
-<script setup lang="ts">import { watch, onMounted } from 'vue'
+<script setup lang="ts">
+import { watch, onMounted } from 'vue'
 import { useLotteryData } from '@/utils/useLotteryData.ts'
 import emitter from '@/utils/mitt.ts'
+import SubmitDynamicLotteryModal from './SubmitDynamicLotteryModal.vue'
 
-const { 
-  page_size, 
-  lotteryDataProps: reserve_lot_data_props, 
-  getLotData: get_lot_data 
+const {
+  page_size,
+  lotteryDataProps: reserve_lot_data_props,
+  getLotData: get_lot_data
 } = useLotteryData('GetReserveLottery')
 
 // 组件挂载时加载初始数据
@@ -79,6 +88,17 @@ watch(
       })
   }
 )
+
+// 刷新数据
+const refresh_data = () => {
+  get_lot_data(reserve_lot_data_props.value.lot_page, page_size.value)
+}
+
+// 提交成功后刷新数据
+const handleSubmitSuccess = () => {
+  reserve_lot_data_props.value.lot_page = 1
+  get_lot_data(1, page_size.value)
+}
 </script>
 
 <style>

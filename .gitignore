@@ -29,3 +29,4 @@ coverage
 
 .lh
 .history
+.env.prod

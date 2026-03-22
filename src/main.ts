@@ -14,7 +14,7 @@ import { useHueThemeStore } from '@/stores/hue_theme.ts'
 import urql, { cacheExchange, fetchExchange } from '@urql/vue'
 import Clarity from '@microsoft/clarity'
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'
-
+import Casdoor from 'casdoor-vue-sdk'
 const app = createApp(App)
 const head = createHead()
 const pinia = createPinia()
@@ -29,6 +29,14 @@ app
     exchanges: [cacheExchange, fetchExchange],
     preferGetMethod: false //https://qiita.com/someone7140/items/42f7e35eeb07f65ce900 参考 默认设置变成了`within-url-limit` 会导致请求参数长度在get允许的params长度内时变成get请求，设置为false强制使用post请求
   })
+  .use(Casdoor, {
+    serverUrl: import.meta.env.VITE_CASDOOR_SERVER_URL,
+    clientId: import.meta.env.VITE_CASDOOR_CLIENT_ID,
+    organizationName: import.meta.env.VITE_CASDOOR_ORGANIZATION,
+    appName: import.meta.env.VITE_CASDOOR_APPLICATION,
+    redirectPath: import.meta.env.VITE_CASDOOR_REDIRECT_PATH
+  })
+
 // 初始化主题（在挂载前）
 const themeStore = useHueThemeStore()
 themeStore.restoreFromLocalStorage()

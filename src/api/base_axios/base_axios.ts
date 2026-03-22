@@ -69,7 +69,6 @@ ajax.interceptors.response.use(
     if (data.data?.jwt_token && response.config.url?.includes('/refresh_token')) {
       const JwtStore = useJwtStore()
       JwtStore.save_jwt_token(data.data.jwt_token)
-      console.log('Token 已手动刷新')
     }
 
     // 检查是否是未登录状态

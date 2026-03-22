@@ -1,55 +1,56 @@
 @reference "@/assets/tailwind.css"
 @import "daisyui/dist/full.css";
 
-html, body {
-    @apply m-0 min-h-full overflow-x-hidden p-0;
+html,
+body {
+  @apply m-0 min-h-full overflow-x-hidden p-0;
 }
 
 body {
-    @apply mx-auto flex min-w-[550px] flex-col bg-cover bg-fixed bg-center bg-no-repeat font-sans font-normal transition-colors duration-300;
+  @apply mx-auto flex min-w-[550px] flex-col bg-cover bg-fixed bg-center bg-no-repeat font-sans font-normal transition-colors duration-300;
 }
 
 /* 应用容器样式 */
 .app-wrapper {
-    @apply relative min-h-screen;
+  @apply relative flex max-h-[2340px] min-h-[94vh];
 }
 
 /* el-header 取消 padding */
 .app-wrapper .el-header {
-    @apply p-0;
+  @apply p-0;
 }
 
 /* 响应式样式 */
 @media (max-width: 768px) {
-    .el-main {
-        @apply p-1;
-    }
+  .el-main {
+    @apply p-1;
+  }
 }
 
 /* 缩放视图样式 */
 html.scaled-view,
 html.scaled-view body {
-    @apply w-full;
+  @apply w-full;
 }
 
 html.scaled-view #app {
-    @apply h-auto min-h-screen;
+  @apply h-auto min-h-screen;
 }
 
 /* 过渡动画 */
 .slide-fade-enter-active {
-    transition: all 0.3s ease-out;
+  transition: all 0.3s ease-out;
 }
 
 .slide-fade-leave-active {
-    transition: all 0.1s cubic-bezier(1, 0.5, 0.8, 1);
+  transition: all 0.1s cubic-bezier(1, 0.5, 0.8, 1);
 }
 
 .slide-fade-enter-from,
 .slide-fade-leave-to {
-    opacity: 0;
+  opacity: 0;
 }
-
 .use-screen-safe-area {
-    max-width: unset !important;
+  max-width: unset !important; /* 取消最大宽度限制，不能删除 */
+  max-height: unset !important; /* 取消最大高度限制，不能删除 */
 }

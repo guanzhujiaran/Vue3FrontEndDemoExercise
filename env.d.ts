@@ -15,7 +15,12 @@ interface ImportMetaEnv {
   readonly VITE_GRAPH_API: string
   readonly VITE_GRAPH_API_KEY: string
   readonly VITE_CLARITY_ID: string | undefined
-  // 更多环境变量...
+  readonly VITE_CASDOOR_CLIENT_ID: string
+  readonly VITE_CASDOOR_APPLICATION: string
+  readonly VITE_CASDOOR_ORGANIZATION: string
+  readonly VITE_CASDOOR_ORGANIZATION: string
+  readonly VITE_CASDOOR_REDIRECT_PATH: string
+  readonly VITE_CASDOOR_SERVER_URL: string
 }
 
 interface ImportMeta {

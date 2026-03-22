@@ -20,7 +20,15 @@
       v-model:Loading="official_lot_data_props.loading"
       @on-mounted="official_lot_data_props.lot_page = 1"
       @retry-on-error="() => get_lot_data(official_lot_data_props.lot_page, page_size)"
-    />
+    >
+      <template #toolbar>
+        <LotteryDataTableToolbar :refresh_data="refresh_data">
+          <template #submit-button>
+            <SubmitDynamicLotteryModal />
+          </template>
+        </LotteryDataTableToolbar>
+      </template>
+    </BiliPaginationDataView>
   </FlexContainer>
 </template>
 
@@ -28,6 +36,7 @@
 import { watch, onMounted } from 'vue'
 import { useLotteryData } from '@/utils/useLotteryData.ts'
 import emitter from '@/utils/mitt.ts'
+import SubmitDynamicLotteryModal from './SubmitDynamicLotteryModal.vue'
 
 const {
   page_size,
@@ -79,6 +88,17 @@ watch(
       })
   }
 )
+
+// 刷新数据
+const refresh_data = () => {
+  get_lot_data(official_lot_data_props.value.lot_page, page_size.value)
+}
+
+// 提交成功后刷新数据
+const handleSubmitSuccess = () => {
+  official_lot_data_props.value.lot_page = 1
+  get_lot_data(1, page_size.value)
+}
 </script>
 
 <style>
