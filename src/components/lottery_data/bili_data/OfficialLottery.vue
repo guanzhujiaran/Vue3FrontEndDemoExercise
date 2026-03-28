@@ -1,12 +1,11 @@
 <template>
   <FlexContainer class="bili-lottery-data-panel">
-    <div class="page-header">
-      <h2 class="page-title">官方抽奖数据</h2>
-      <div class="page-description">
-        <el-tag type="success" effect="plain">官方抽奖</el-tag>
-        <span class="description-text">B站官方活动相关的抽奖数据</span>
-      </div>
-    </div>
+    <BiliPageHeader 
+      title="官方抽奖数据" 
+      description="B 站官方活动相关的抽奖数据"
+      tag-text="官方抽奖"
+      tag-type="success"
+    />
 
     <div class="search-section">
       <BiliLotteryDataSearchBox></BiliLotteryDataSearchBox>
@@ -18,6 +17,8 @@
       :page_size="page_size"
       v-model:CurrentPage="official_lot_data_props.lot_page"
       v-model:Loading="official_lot_data_props.loading"
+      v-model:Error="official_lot_data_props.error"
+      :ErrorMsg="official_lot_data_props.error_msg || '网络异常，请检查网络连接'"
       @on-mounted="official_lot_data_props.lot_page = 1"
       @retry-on-error="() => get_lot_data(official_lot_data_props.lot_page, page_size)"
     >
@@ -33,7 +34,7 @@
 </template>
 
 <script setup lang="ts">
-import { watch, onMounted } from 'vue'
+import { watch, onMounted, onUnmounted } from 'vue'
 import { useLotteryData } from '@/utils/useLotteryData.ts'
 import emitter from '@/utils/mitt.ts'
 import SubmitDynamicLotteryModal from './SubmitDynamicLotteryModal.vue'
@@ -51,16 +52,18 @@ onMounted(() => {
     .then((resp) => {
       if (!resp.is_succ) {
         emitter.emit('toast', { t: resp.msg, e: 'error' })
-        official_lot_data_props.value.error = true
       }
     })
     .catch(() => {
       emitter.emit('toast', { t: '加载数据失败', e: 'error' })
-      official_lot_data_props.value.error = true
     })
-    .finally(() => {
-      official_lot_data_props.value.loading = false
-    })
+})
+
+// 组件卸载时清空数据
+onUnmounted(() => {
+  official_lot_data_props.value.lot_data = { items: [], total: 0 }
+  official_lot_data_props.value.loading = true
+  official_lot_data_props.value.error = false
 })
 
 watch(
@@ -76,15 +79,10 @@ watch(
       .then((resp) => {
         if (!resp.is_succ) {
           emitter.emit('toast', { t: resp.msg, e: 'error' })
-          official_lot_data_props.value.error = true
         }
       })
       .catch(() => {
         emitter.emit('toast', { t: '加载数据失败', e: 'error' })
-        official_lot_data_props.value.error = true
-      })
-      .finally(() => {
-        official_lot_data_props.value.loading = false
       })
   }
 )
@@ -100,7 +98,3 @@ const handleSubmitSuccess = () => {
   get_lot_data(1, page_size.value)
 }
 </script>
-
-<style>
-@import '@/assets/components/lottery/bili-lottery-data-tailwind.css';
-</style>

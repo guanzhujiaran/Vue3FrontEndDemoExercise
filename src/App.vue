@@ -16,7 +16,7 @@ import { openGlobalLoginModalKey } from '@/models/inject/inject_type.ts'
 import { KeysEnum, useInject } from '@/models/base/provide_model.ts'
 import type { UserNavModel } from '@/models/user/user_model.ts'
 import { isLogin } from '@/api/user/utils.ts'
-import userApi from '@/api/user/user_api.ts'
+
 import type { Ref } from 'vue'
 import NetworkErrorView from '@/views/NetworkErrorView.vue'
 useHead({
@@ -74,7 +74,6 @@ const checkLoginStatus = () => {
     user_nav ? (biliUser.value = user_nav) : null
   })
 }
-
 onMounted(() => {
   checkLoginStatus()
   isInit.value = true
@@ -90,7 +89,9 @@ onMounted(() => {
 
   // 设置自动缩放功能
   autoScaleCleanup = setupAutoScale()
+
 })
+
 
 onUnmounted(() => {
   themeCleanup()
@@ -114,14 +115,14 @@ onUnmounted(() => {
   <template v-else>
     <!-- 背景图片 -->
     <img class="pointer-events-none fixed inset-0 z-[-9999] h-full w-full object-cover" :src="backgroundUrl"
-      referrerpolicy="no-referrer" alt="Background Image" />
+      referrerpolicy="no-referrer" alt="Background Image"/>
 
     <el-config-provider :locale="zhCn">
       <UseScreenSafeArea class="use-screen-safe-area">
         <div class="app-wrapper">
           <el-container v-if="isInit" id="i_cecream">
             <el-header>
-              <HeaderBarView />
+              <HeaderBarView/>
             </el-header>
             <el-main class="flex! flex-col">
               <RouterView v-slot="{ Component, route }">
@@ -133,7 +134,7 @@ onUnmounted(() => {
               </RouterView>
             </el-main>
           </el-container>
-          <SponsorNotification />
+          <SponsorNotification/>
           <GlobalLoadingMask />
           <GlobalToast />
           <LoginModal ref="loginModalRef" />

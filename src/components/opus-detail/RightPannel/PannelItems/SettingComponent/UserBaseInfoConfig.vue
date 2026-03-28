@@ -3,7 +3,7 @@
     <div class="config-section">
       <h3>个人信息</h3>
       <div class="config-item">
-        <label>用户名</label>
+        <label>昵称</label>
         <el-input 
           v-model="userName" 
           placeholder="请输入用户名（2-24个字符）" 
@@ -11,7 +11,10 @@
           show-word-limit
         />
       </div>
-      
+      <div class="config-item">
+        <label>用户名</label>
+        <span class="userinfo-descript">{{ userid }}</span>
+      </div>
       <div class="config-item">
         <label>个性签名</label>
         <el-input 
@@ -41,8 +44,8 @@
           v-model="birthday"
           type="date"
           placeholder="请选择生日"
-          format="YYYY-MM-DD"
-          value-format="YYYY-MM-DD"
+          format="YYYY/MM/DD"
+          value-format="YYYY/MM/DD"
         />
       </div>
     </div>
@@ -66,9 +69,9 @@ import { businessHandler } from '@/utils/businessHandler'
 const userName = ref('')
 const userSign = ref('')
 const sex = ref('保密')
-const birthday = ref('')
+const birthday = ref<string>()
 const saving = ref(false)
-
+const userid = ref('')
 // 保存设置
 const saveSettings = async () => {
   // 验证用户名长度
@@ -96,7 +99,7 @@ const saveSettings = async () => {
   }
   
   // 验证生日
-  if (birthday.value && isNaN(Date.parse(birthday.value))) {
+  if (birthday.value && isNaN(Date.parse(birthday.value.toString()))) {
     ElMessage.error('生日必须是有效日期')
     return
   }
@@ -106,7 +109,7 @@ const saveSettings = async () => {
     uname: userName.value,
     usersign: userSign.value,
     sex: sex.value,
-    birthday: birthday.value || '' // 如果没有选择生日，则发送空字符串
+    birthday: birthday.value || ''
   }
   
   businessHandler(
@@ -137,10 +140,14 @@ const loadUserInfo = () => {
     [
       (result) => {
         if (result.success && result.data) {
-          userName.value = result.data.uname.toString()
+          console.log((new Date(result.data.birthday)).toISOString())
+          userName.value = result.data.uname
           userSign.value = result.data.usersign
           sex.value = result.data.sex
-          birthday.value = result.data.birthday
+          // 将 UTC 日期转换为本地时区日期
+          const localDate = new Date(result.data.birthday)
+          birthday.value = `${localDate.getFullYear()}/${String(localDate.getMonth() + 1).padStart(2, '0')}/${String(localDate.getDate()).padStart(2, '0')}`
+          userid.value = result.data.userid
         }
       }
     ]

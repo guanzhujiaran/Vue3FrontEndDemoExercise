@@ -1,5 +1,5 @@
 export interface User_base_info_config_form {
-  uname: string | number
+  uname: string
   userid: string
   usersign: string
   sex: string

@@ -15,6 +15,7 @@ import urql, { cacheExchange, fetchExchange } from '@urql/vue'
 import Clarity from '@microsoft/clarity'
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 import Casdoor from 'casdoor-vue-sdk'
+
 const app = createApp(App)
 const head = createHead()
 const pinia = createPinia()

@@ -29,6 +29,7 @@ const processCallback = () => {
       user_name: decodeURIComponent(user_name),
       role: '0',
       face: '',
+      email: '',
       level_info: {
         current_exp: '0',
         current_level: '0',

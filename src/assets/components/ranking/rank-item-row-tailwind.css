@@ -57,7 +57,7 @@
 .rank-item-row .score {
   color: #9499a0;
   font-weight: 500;
-  @apply flex items-center justify-center ml-auto;
+  @apply flex items-center justify-center ml-auto pr-5;
 }
 
 .rank-item-row .score span {

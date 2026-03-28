@@ -14,12 +14,16 @@ import type {
   LotteryResultResp,
   ScrapyStatusResp
 } from '@/models/api/lottery/lotdata'
-import { LotteryRankDateType, LotteryRankLotType, LotteryRankType } from '@/models/api/lottery/lotdata'
+import {
+  LotteryRankDateType,
+  LotteryRankLotType,
+  LotteryRankType
+} from '@/models/api/lottery/lotdata'
 
 class LotteryDataStatisticApi extends BaseApi {
   constructor() {
     super()
-    this.path = '/api/v1/lottery_database/bili/'
+    this.path = '/api/v1/lottery_database/bili'
   }
 
   handle_lottery_rank(
@@ -28,7 +32,7 @@ class LotteryDataStatisticApi extends BaseApi {
     lot_type: LotteryRankLotType,
     rank_type: LotteryRankType
   ): Promise<RootObject<LotteryRankResp>> {
-    return this._get('rank/lottery_hof/'.concat(lot_type), { date, rank_type, offset, limit })
+    return this._get('/lottery_hof/'.concat(lot_type), { date, rank_type, offset, limit })
   }
 
   handle_lottery_result({
@@ -46,7 +50,7 @@ class LotteryDataStatisticApi extends BaseApi {
     offset: number
     limit: number
   }): Promise<RootObject<LotteryResultResp>> {
-    return this._get('lottery_result', { uid, date, lot_type, rank_type, offset, limit })
+    return this._get('/lottery_result', { uid, date, lot_type, rank_type, offset, limit })
   }
 }
 

@@ -5,10 +5,11 @@ export interface LoginModel {
 }
 
 export interface UserNavModel {
-  uid: string // 这里是string，因为有可能是bigint，所以直接用string表示
+  uid: string // 这里是 string，因为有可能是 bigint，所以直接用 string 表示
   user_name: string
   role: string
   face: string
+  email: string
   level_info: UserLevelInfo
 }
 

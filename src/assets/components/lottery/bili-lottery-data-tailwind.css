@@ -1,32 +1,69 @@
 @import '@assets/tailwind.css';
 
 .bili-lottery-data-panel {
-    @apply flex flex-col h-auto p-1 sm:p-4 md:p-6 lg:p-8  rounded-md overflow-auto ;
+    @apply flex flex-col h-auto p-1 sm:p-4 md:p-6 lg:p-8 rounded-md overflow-auto;
     background-color: var(--el-bg-color-overlay);
 }
 
 .bili-lottery-data-panel .page-header {
-    @apply mb-12 pb-8 border-b border-solid;
+    @apply mb-10 pb-6 border-b border-solid relative;
     border-color: var(--el-border-color-lighter);
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0.02) 0%, transparent 100%);
+    transition: all 0.3s ease;
+    
+    /* 使用 Flexbox 布局优化内部元素排列 */
+    display: flex;
+    flex-direction: column;
+    gap: calc(var(--component-spacing) * 2.4);
 }
 
+/* 页面标题样式优化 */
 .bili-lottery-data-panel .page-title {
-    @apply text-2xl m-0 mb-4;
-    color: var(--el-color-primary);
+    @apply text-2xl md:text-3xl m-0 font-semibold tracking-tight;
+    background: linear-gradient(135deg, var(--el-color-primary) 0%, var(--el-color-info) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1.3;
 }
 
+/* 页面描述区域优化 */
 .bili-lottery-data-panel .page-description {
-    @apply flex items-center gap-4 mt-4;
+    @apply flex items-center gap-3 flex-wrap;
+    padding-left: 2px;
 }
 
 .bili-lottery-data-panel .description-text {
     color: var(--el-text-color-secondary);
+    font-size: 0.95rem;
+    line-height: 1.6;
+    transition: color 0.3s ease;
 }
 
+.bili-lottery-data-panel:hover .description-text {
+    color: var(--el-text-color-regular);
+}
+
+/* 深色模式适配 - 移除标题装饰线相关样式 */
+@media (prefers-color-scheme: dark) {
+    .bili-lottery-data-panel .page-title {
+        background: linear-gradient(135deg, var(--el-color-primary-light-3) 0%, var(--el-color-info-light-3) 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+}
+
+/* 搜索区域优化 */
 .bili-lottery-data-panel .search-section {
     @apply mb-8 p-8 rounded-md shadow-sm;
     background-color: var(--el-bg-color);
     box-shadow: 0 calc(var(--component-size) * 0.0625) calc(var(--component-size) * 0.375) 0 rgba(0, 0, 0, 0.05);
+    transition: box-shadow 0.3s ease;
+}
+
+.bili-lottery-data-panel .search-section:hover {
+    box-shadow: 0 calc(var(--component-size) * 0.125) calc(var(--component-size) * 0.5) 0 rgba(0, 0, 0, 0.08);
 }
 
 /* 响应式调整 */
@@ -35,8 +72,21 @@
         @apply p-4;
     }
 
+    .bili-lottery-data-panel .page-header {
+        @apply mb-6 pb-4;
+        gap: calc(var(--component-spacing) * 1.6);
+    }
+
     .bili-lottery-data-panel .page-title {
-        @apply text-lg;
+        @apply text-lg md:text-xl;
+    }
+
+    .bili-lottery-data-panel .page-description {
+        @apply gap-2;
+    }
+
+    .bili-lottery-data-panel .description-text {
+        font-size: 0.875rem;
     }
 
     .bili-lottery-data-panel .search-section {

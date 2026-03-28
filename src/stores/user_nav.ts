@@ -10,10 +10,11 @@ export const useUserNavStore = defineStore(
       user_name: '',
       role: '',
       face: '',
+      email: '',
       level_info: {
-        current_exp: 0,
-        current_level: 0,
-        current_min: 0,
+        current_exp: '0',
+        current_level: '0',
+        current_min: '0',
         next_exp: '--'
       }
     })
@@ -28,10 +29,11 @@ export const useUserNavStore = defineStore(
         user_name: '',
         role: '',
         face: '',
+        email: '',
         level_info: {
-          current_exp: 0,
-          current_level: 0,
-          current_min: 0,
+          current_exp: '0',
+          current_level: '0',
+          current_min: '0',
           next_exp: '--'
         }
       }

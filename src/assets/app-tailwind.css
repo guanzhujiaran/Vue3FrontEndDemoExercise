@@ -7,12 +7,12 @@ body {
 }
 
 body {
-  @apply mx-auto flex min-w-[550px] flex-col bg-cover bg-fixed bg-center bg-no-repeat font-sans font-normal transition-colors duration-300;
+  @apply mx-auto flex min-w-[1080px] flex-col overflow-visible bg-cover bg-fixed bg-center bg-no-repeat font-sans font-normal transition-colors duration-300;
 }
 
 /* 应用容器样式 */
 .app-wrapper {
-  @apply relative flex max-h-[2340px] min-h-[94vh];
+  @apply relative flex;
 }
 
 /* el-header 取消 padding */
@@ -52,5 +52,5 @@ html.scaled-view #app {
 }
 .use-screen-safe-area {
   max-width: unset !important; /* 取消最大宽度限制，不能删除 */
-  max-height: unset !important; /* 取消最大高度限制，不能删除 */
+  overflow: visible !important;
 }

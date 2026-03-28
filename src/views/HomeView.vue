@@ -9,10 +9,11 @@ import { KeysEnum, useInject } from '@/models/base/provide_model.ts'
 import type { UserNavModel } from '@/models/user/user_model.ts'
 import { routes } from '@/router'
 import router from '@/router'
+import { useUserNavStore } from '@/stores/user_nav'
+const userNavStore = useUserNavStore()
 const jwtStore = useJwtStore()
 const activeTab = ref('all')
 const openGlobalLoginModal = inject(openGlobalLoginModalKey, () => { })
-
 // 从路由配置中提取功能模块
 const routeModules = computed(() => {
   // 从路由配置中提取顶级模块
@@ -47,7 +48,19 @@ const handleLogoutClick = () => {
   })
     .then(() => {
       jwtStore.delete_jwt_token()
-      biliUser.value = { uid: '', user_name: '', role: '', face: '' }
+      biliUser.value = { 
+        uid: '', 
+        user_name: '', 
+        role: '', 
+        face: '',
+        email: '',
+        level_info: {
+          current_exp: '',
+          current_level: '',
+          current_min: '',
+          next_exp: ''
+        }
+      }
       ElMessage.success('已成功退出登录')
     })
     .catch(() => { })

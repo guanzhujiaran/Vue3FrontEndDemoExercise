@@ -9,12 +9,13 @@
     <template #content>
       <div class="rank-header-info">
         <div class="header-title">排行榜</div>
+        
+      </div>
+      <div class="rank-header-panel">
         <div class="sync-time">
           <span class="sync-label">数据同步时间：</span>
           <span class="sync-value">{{ syncTimeText }}</span>
         </div>
-      </div>
-      <div class="rank-header-panel">
         <HallAreaContent
           v-if="props.ranking_partitions.length"
           v-for="partition in props.ranking_partitions"
@@ -48,7 +49,7 @@
           @score_click="handleScoreClick"
         />
       </div>
-      <BiliEmpty v-if="!isMore && !isError && !isLoading && rankItems.length === 0"></BiliEmpty>
+      <BiliEmpty v-if="!isError && !isLoading && topItems.length === 0 && rankItems.length === 0"></BiliEmpty>
       <BiliError class="rank-error" v-if="isError" @click-retry="handleLoad"></BiliError>
     </template>
   </LoadingMoreContainer>
@@ -56,7 +57,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, type PropType, ref } from 'vue'
+import { computed, onMounted, type PropType, ref } from 'vue'
 import type { BaseRankItem, BaseSimpleUserInfo } from '@/models/compo/ranking/Ranking.ts'
 import RankItem from '@/components/CommonCompo/Bili-Ranking-Compo/items/RankItem.vue'
 import type { RankingPartition } from '@/models/api/lottery/lotdata.ts'
@@ -74,8 +75,11 @@ const ActivedUserLotteryResult = ref<{
   user_info: { uid: 0, name: '' },
   isOpenDrawer: false
 })
-const isLoading = ref(true)
+const isLoading = ref(false)
 const syncTimeText = computed(() => {
+  if (!syncTs.value || syncTs.value === 0) {
+    return '暂无同步记录'
+  }
   const date = new Date(syncTs.value * 1e3)
   return date.toLocaleString() // 根据需要调整日期格式
 })
@@ -123,15 +127,20 @@ const handleLoad = () => {
   props
     .load_func(cur_offset.value, props.page_size, activedParams.value)
     .then((resp_rank_items) => {
-      if (rankItems.value.length) {
-        rankItems.value = [...rankItems.value, ...resp_rank_items]
-      } else {
+      const isNewList = rankItems.value.length === 0 && topItems.value.length === 0
+      
+      if (isNewList) {
+        // 首次加载：分割前 3 名和后续数据
         topItems.value = resp_rank_items.slice(0, 3)
         if (topItems.value.length >= 2) {
           ;[topItems.value[0], topItems.value[1]] = [topItems.value[1]!, topItems.value[0]!]
         }
         rankItems.value = resp_rank_items.slice(3)
+      } else {
+        // 加载更多：直接追加到列表末尾
+        rankItems.value = [...rankItems.value, ...resp_rank_items]
       }
+      
       isMore.value = resp_rank_items.length >= props.page_size
       cur_offset.value += resp_rank_items.length
       isError.value = false
@@ -157,6 +166,11 @@ const handleScoreClick = (item: BaseRankItem) => {
   ActivedUserLotteryResult.value.user_info = item.user
   ActivedUserLotteryResult.value.isOpenDrawer = true
 }
+
+// 组件挂载时自动加载数据
+onMounted(() => {
+  handleLoad()
+})
 </script>
 
 <style scoped>

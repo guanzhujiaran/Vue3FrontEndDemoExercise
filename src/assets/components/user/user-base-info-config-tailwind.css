@@ -27,3 +27,6 @@
 .user-base-info-config .config-actions {
   @apply flex justify-start space-x-4 pt-4 border-t;
 }
+.userinfo-descript { 
+  color: #898989;
+}

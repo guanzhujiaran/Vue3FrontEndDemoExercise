@@ -387,6 +387,16 @@ const handleDropDownVisibleChange = (visible: boolean) => {
   margin-bottom: 4px;
 }
 
+.user-email {
+  font-size: 12px;
+  color: var(--el-text-color-secondary);
+  margin-bottom: 4px;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .exp-progress-container {
   width: 100%;
   max-width: 180px;

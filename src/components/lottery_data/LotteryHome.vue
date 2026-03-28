@@ -43,6 +43,7 @@ const navigationItems = [
 
 const goTo = (path: string) => {
   router.push(path)
+
 }
 </script>
 

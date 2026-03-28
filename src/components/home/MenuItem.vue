@@ -18,7 +18,6 @@ import { ElMenuItem, ElSubMenu } from 'element-plus'
 import { useRouter } from 'vue-router'
 import { KeysEnum, useInject } from '@/models/base/provide_model.ts'
 import type { UserNavModel } from '@/models/user/user_model.ts'
-import type { MenuItemRegistered } from 'element-plus/es/components/menu/src/types'
 
 interface MenuItem {
   path: string

@@ -12,7 +12,7 @@ import type { PrizeResult } from '@/models/api/lottery/lottery_prize_result.ts'
 import { BiliImg } from '@/assets/img/BiliImg.ts'
 import { gotoOpusDynamic } from '@/utils/PageOpen/BiliJump.ts'
 import { useDebounceFn } from '@vueuse/core'
-import { useTourTipStore } from '@/stores/tour_tip.ts' // 导入默认图片
+import { useTourTipStore } from '@/stores/tour_tip.ts'
 
 const props = defineProps<{
   uid: number | string
@@ -53,9 +53,6 @@ const handle_lottery_result = useDebounceFn(() => {
     })
 }, 1e3)
 
-onMounted(() => {
-  handle_lottery_result()
-})
 
 watch(currentPage, (newVal) => {
   offset.value = (newVal - 1) * props.limit

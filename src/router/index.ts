@@ -159,7 +159,7 @@ const routes: CustomRouteRecordRaw[] = [
           title: 'B站抽奖数据',
           icon: IconList,
           description: 'B站各类抽奖数据汇总',
-          showInHome: true,
+          showInHome: false,
           isHeaderShow: true,
           color:
             'linear-gradient(225deg, var(--el-color-danger) 0%, var(--el-color-warning) 40%, var(--el-color-primary) 80%, var(--el-color-success) 100%)'

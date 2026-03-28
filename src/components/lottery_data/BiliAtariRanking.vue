@@ -63,7 +63,6 @@ import BiliBaseRanking from '@/components/CommonCompo/Bili-Ranking-Compo/BiliBas
 import UserAvatarBox from '@/components/CommonCompo/Bili-User-Compo/UserAvatarBox.vue'
 import { gotoBiliUserSpace } from '@/utils/PageOpen/BiliJump.ts'
 import BiliAtariResultSlot from '@/components/lottery_data/BiliAtariResultSlot.vue'
-import { useTourTipStore } from '@/stores/tour_tip.ts'
 
 const isLoadingLotteryResult = ref(false)
 const ranking_partitions = ref<RankingPartition[]>([
@@ -142,14 +141,12 @@ const ranking_partitions = ref<RankingPartition[]>([
   }
 ])
 const isError = ref(false)
-const isLoading = ref(false)
 const syncTs = ref(0)
 const load_func = async (
   cur_offset: number,
   page_size: number,
   filter_params: Record<string, string>
 ): Promise<BaseRankItem[]> => {
-  isLoading.value = true
   isError.value = false
   try {
     const resp = await lotteryDataStatisticApi.handle_lottery_rank(
@@ -181,8 +178,6 @@ const load_func = async (
   } catch (err) {
     isError.value = true
     return []
-  } finally {
-    isLoading.value = false
   }
 }
 </script>

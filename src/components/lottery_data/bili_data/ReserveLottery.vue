@@ -1,12 +1,11 @@
 <template>
   <FlexContainer class="bili-lottery-data-panel">
-    <div class="page-header">
-      <h2 class="page-title">预约抽奖数据</h2>
-      <div class="page-description">
-        <el-tag type="info" effect="plain">预约抽奖</el-tag>
-        <span class="description-text">B站预约活动相关的抽奖数据</span>
-      </div>
-    </div>
+    <BiliPageHeader 
+      title="预约抽奖数据" 
+      description="B 站预约活动相关的抽奖数据"
+      tag-text="预约抽奖"
+      tag-type="info"
+    />
 
     <div class="search-section">
       <BiliLotteryDataSearchBox></BiliLotteryDataSearchBox>

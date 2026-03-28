@@ -5,7 +5,7 @@
 }
 
 :deep(.lottery-card-body) {
-    @apply p-0 md:p-1 lg:p-4;
+    @apply p-0 md:p-1 lg:p-4 overflow-hidden;
 }
 
 .card-header {
@@ -58,7 +58,7 @@
 }
 
 .main-content-wrapper {
-    @apply flex flex-col min-h-0 overflow-auto p-1 md:p-2 lg:p-4 rounded;
+    @apply flex flex-col min-h-0 overflow-hidden p-1 md:p-2 lg:p-4 rounded;
 }
 
 /* 为不同类型的抽奖卡片添加不同的顶部边框颜色 */
