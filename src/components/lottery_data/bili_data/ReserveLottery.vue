@@ -17,6 +17,8 @@
       :page_size="page_size"
       v-model:CurrentPage="reserve_lot_data_props.lot_page"
       v-model:Loading="reserve_lot_data_props.loading"
+      v-model:Error="reserve_lot_data_props.error"
+      :ErrorMsg="reserve_lot_data_props.error_msg || '网络异常，请检查网络连接'"
       @on-mounted="reserve_lot_data_props.lot_page = 1"
       @retry-on-error="() => get_lot_data(reserve_lot_data_props.lot_page, page_size)"
     >

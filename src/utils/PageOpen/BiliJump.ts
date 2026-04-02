@@ -43,5 +43,10 @@ export const getBiliLotteryResultUrl = (
 ) => {
   if (!business_id || !business_type) return ''
   let ret_url = `https://www.bilibili.com/h5/lottery/result?business_id=${business_id}&business_type=${business_type}`
+  switch (business_type) {
+    case 1:
+      return getBiliOpusUrl(business_id)
+  }
+
   return is_mobile == 2 ? getBiliWebView(ret_url) : ret_url
 }

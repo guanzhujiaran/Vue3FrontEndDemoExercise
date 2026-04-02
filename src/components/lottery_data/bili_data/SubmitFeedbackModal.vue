@@ -10,7 +10,7 @@
       :close-on-click-modal="true"
     >
       <el-alert
-        title="反馈bug给服主，可以帮助我们改进系统，提供更好的体验！"
+        title="反馈bug/提建议给服主，可以帮助我们改进系统，提供更好的体验！"
         type="info"
         :closable="false"
         show-icon
@@ -18,7 +18,7 @@
       />
 
       <el-form :model="form" :rules="rules" ref="formRef" label-width="100px">
-        <el-form-item label="反馈bug" prop="message">
+        <el-form-item label="反馈bug/提建议" prop="message">
           <el-input
             v-model="form.message"
             type="textarea"
@@ -91,9 +91,7 @@ const handleSubmit = async () => {
     loading.value = true
 
     try {
-      const resp = await lotteryDataBaseApi.handle_submit_feedback({
-        message: form.message
-      })
+      const resp = await lotteryDataBaseApi.submitFeedback(form.message)
 
       if (resp.code === 0) {
         emitter.emit('toast', { t: '反馈提交成功！感谢您的反馈', e: 'success' })

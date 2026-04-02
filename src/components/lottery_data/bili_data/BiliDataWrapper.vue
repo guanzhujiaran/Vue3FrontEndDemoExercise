@@ -26,8 +26,10 @@
           :page_size="page_size"
           v-model:CurrentPage="lot_data.props.lot_page"
           v-model:Loading="lot_data.props.loading"
+          v-model:Error="lot_data.props.error"
+          :ErrorMsg="lot_data.props.error_msg || '网络异常，请检查网络连接'"
           @on-mounted="lot_data.props.lot_page = 1"
-          @retry-on-error="() => get_lot_data(lot_data.props.lot_name)"
+          @retry-on-error="() => get_lot_data(lot_data.props.lot_name)(lot_data.props.lot_page, page_size)"
         />
       </el-tab-pane>
     </el-tabs>
@@ -59,7 +61,8 @@ const official_lot_data_props = ref<LotDataWrapperProps>({
   },
   lot_page: init_pg,
   loading: true,
-  error: false
+  error: false,
+  error_msg: ''
 })
 const charge_lot_data_props = ref<LotDataWrapperProps>({
   lot_name: 'GetChargeLottery',
@@ -69,7 +72,8 @@ const charge_lot_data_props = ref<LotDataWrapperProps>({
   },
   lot_page: init_pg,
   loading: true,
-  error: false
+  error: false,
+  error_msg: ''
 })
 const reserve_lot_data_props = ref<LotDataWrapperProps>({
   lot_name: 'GetReserveLottery',
@@ -79,7 +83,8 @@ const reserve_lot_data_props = ref<LotDataWrapperProps>({
   },
   lot_page: init_pg,
   loading: true,
-  error: false
+  error: false,
+  error_msg: ''
 })
 const live_lot_data_props = ref<LotDataWrapperProps>({
   lot_name: 'GetLiveLottery',
@@ -89,7 +94,8 @@ const live_lot_data_props = ref<LotDataWrapperProps>({
   },
   lot_page: init_pg,
   loading: true,
-  error: false
+  error: false,
+  error_msg: ''
 })
 const topic_lot_data_props = ref<LotDataWrapperProps>({
   lot_name: 'GetTopicLottery',
@@ -99,7 +105,8 @@ const topic_lot_data_props = ref<LotDataWrapperProps>({
   },
   lot_page: init_pg,
   loading: true,
-  error: false
+  error: false,
+  error_msg: ''
 })
 type LotDataWrapperPropsWrapper = {
   props: Ref<LotDataWrapperProps>
@@ -171,12 +178,14 @@ const get_lot_data = (
         if (resp.code !== 0) {
           lot_data_props.value.loading = false
           lot_data_props.value.error = true
+          lot_data_props.value.error_msg = resp.msg || '业务错误'
           emitter.emit('toast', { t: resp.msg, e: 'error' })
           return { is_succ: false, msg: resp.msg }
         }
         lot_data_props.value.lot_data = resp.data ?? { items: [], total: 0 }
         lot_data_props.value.loading = false
         lot_data_props.value.error = false
+        lot_data_props.value.error_msg = ''
         return { is_succ: true, msg: resp.msg }
       })
   }
@@ -199,11 +208,13 @@ const handle_page_change = async (
       emitter.emit('toast', { t: resp.msg, e: 'error' })
       // lot_data_props.value.lot_page = old_page
       lot_data_props.error = true
+      lot_data_props.error_msg = resp.msg || '加载数据失败'
     }
   } catch (error) {
     emitter.emit('toast', { t: '加载数据失败', e: 'error' })
     // lot_data_props.value.lot_page = old_page
     lot_data_props.error = true
+    lot_data_props.error_msg = '加载数据失败'
   } finally {
     lot_data_props.loading = false
   }

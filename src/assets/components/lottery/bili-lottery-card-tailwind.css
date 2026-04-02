@@ -1,7 +1,7 @@
 @import '@/assets/tailwind.css';
 
 .lottery-card {
-    @apply flex flex-col max-w-md rounded-lg overflow-hidden shadow-sm transition-all duration-300;
+    @apply flex flex-col max-w-md rounded-lg overflow-hidden shadow-sm transition-all duration-300 h-full;
 }
 
 :deep(.lottery-card-body) {

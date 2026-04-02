@@ -25,7 +25,7 @@ const parsedData = computed(() => {
       :key="idx"
       :style="{ '--card-index': idx }"
     >
-      <BiliLotteryCard class="lottery-card" :lottery-data="item"></BiliLotteryCard>
+      <BiliLotteryCard :lottery-data="item"></BiliLotteryCard>
       <el-divider></el-divider>
     </div>
   </grid-container>

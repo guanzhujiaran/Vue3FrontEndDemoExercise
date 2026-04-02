@@ -176,7 +176,7 @@ const routes: CustomRouteRecordRaw[] = [
               color:
                 'linear-gradient(225deg, var(--el-color-success) 0%, var(--el-color-info) 35%, var(--el-color-primary) 70%, var(--el-color-warning) 100%)',
               showInHome: true,
-              order: 1,
+              order: 10,
               isHeaderShow: true
             }
           },
@@ -191,7 +191,7 @@ const routes: CustomRouteRecordRaw[] = [
               color:
                 'linear-gradient(225deg, var(--el-color-success) 0%, var(--el-color-info) 35%, var(--el-color-primary) 70%, var(--el-color-warning) 100%)',
               showInHome: true,
-              order: 2,
+              order: 11,
               isHeaderShow: true
             }
           },
@@ -206,7 +206,7 @@ const routes: CustomRouteRecordRaw[] = [
               color:
                 'linear-gradient(225deg, var(--el-color-success) 0%, var(--el-color-info) 35%, var(--el-color-primary) 70%, var(--el-color-warning) 100%)',
               showInHome: true,
-              order: 3,
+              order: 12,
               isHeaderShow: true
             }
           },
@@ -221,7 +221,7 @@ const routes: CustomRouteRecordRaw[] = [
               color:
                 'linear-gradient(225deg, var(--el-color-success) 0%, var(--el-color-info) 35%, var(--el-color-primary) 70%, var(--el-color-warning) 100%)',
               showInHome: true,
-              order: 4,
+              order: 13,
               isHeaderShow: true
             }
           }

@@ -18,7 +18,7 @@
         :pager-count="5"
       />
       <bili-empty :txt="empty_msg" v-if="props.data.length === 0 && !error"></bili-empty>
-      <bili-error :txt="error_msg" v-if="error"></bili-error>
+      <bili-error v-if="error" @click-retry="handleRetry"></bili-error>
     </FlexContainer>
     <ScrollButtons :top-threshold="300" :bottom-threshold="100" />
   </div>

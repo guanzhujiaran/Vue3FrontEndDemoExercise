@@ -17,7 +17,8 @@ export interface LotDataWrapperProps {
   lot_data: LotDataView<any>
   lot_page: number
   loading: boolean
-  error:boolean
+  error: boolean
+  error_msg?: string
 }
 
 export interface LotUploadAreaProps {

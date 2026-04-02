@@ -78,8 +78,8 @@
         <!-- --- Lottery Pool for Topic --- -->
         <div v-if="normalizedData.type === 'TOPIC' && normalizedData.prizes.length > 0" class="lottery-pool-section">
           <div class="lottery-pool-title">奖品池</div>
-          <div class="lottery-pool-content">
-            {{ normalizedData.prizes[0].description }}
+          <div class="lottery-pool-content" v-for="(prize, index) in normalizedData.prizes" >
+            {{ prize.description }}
           </div>
         </div>
 
@@ -105,8 +105,9 @@
         </el-descriptions>
       </div>
       <!-- 结束 main-content-wrapper -->
-
-      <!-- --- Collapsible: More Details / Raw Data --- -->
+    </template>
+    <template #footer>
+        <!-- --- Collapsible: More Details / Raw Data --- -->
       <el-collapse v-model="activeCollapseNames" class="details-collapse">
         <el-collapse-item name="details">
           <template #title>
@@ -132,6 +133,7 @@
       </el-collapse>
     </template>
   </el-card>
+
 </template>
 
 <script setup lang="ts">

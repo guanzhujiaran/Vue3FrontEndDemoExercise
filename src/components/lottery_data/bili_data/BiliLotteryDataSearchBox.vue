@@ -4,7 +4,6 @@ import { ref, computed } from 'vue'
 import type { SearchBoxProps } from '@/models/compo/searchbox/SearchBox.ts'
 import lotteryDataBaseApi, { type LotterySearchPaginationParams } from '@/api/lottery_data/bili/lottery_database_bili_api.ts'
 import emitter from '@/utils/mitt.ts'
-import { storeToRefs } from 'pinia'
 
 const search_box_prop = ref<SearchBoxProps>({
   placeholder: '转发、预约、充电',
