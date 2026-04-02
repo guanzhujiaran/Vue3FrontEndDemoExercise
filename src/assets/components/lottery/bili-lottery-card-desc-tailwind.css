@@ -7,14 +7,18 @@
 .lottery__section.prize {
     @apply flex flex-col py-2;
 
+    .title {
+        @apply w-full text-center font-bold text-lg;
+    }
+
     .prizes {
-        @apply mt-4;
+        @apply mt-4 w-full;
 
         .prizes__list {
-            @apply flex justify-around;
+            @apply flex justify-around w-full;
 
             .prize {
-                @apply w-25 text-center;
+                @apply flex-1 text-center;
 
                 .prize__picture {
                     @apply w-25 h-25
@@ -30,8 +34,4 @@
             }
         }
     }
-}
-
-.title {
-    @apply w-full text-center font-bold text-lg;
 }

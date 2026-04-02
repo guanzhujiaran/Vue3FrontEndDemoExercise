@@ -1,7 +1,7 @@
 @import '@/assets/tailwind.css';
 
 .lottery-card {
-    @apply flex flex-col max-w-md rounded-lg overflow-hidden shadow-sm transition-all duration-300 h-full;
+    @apply flex flex-col max-w-md rounded-lg overflow-hidden shadow-sm transition-all duration-300;
 }
 
 :deep(.lottery-card-body) {
@@ -9,11 +9,12 @@
 }
 
 .card-header {
-    @apply flex flex-wrap items-center justify-between p-4 border-b border-[var(--el-border-color-light)];
+    @apply flex flex-wrap items-center justify-between p-4 border-b border-[var(--el-border-color-light)] min-h-[4.5rem];
 }
 
 .card-title {
     @apply text-lg font-semibold text-[var(--el-color-primary-light-3)] truncate mx-2;
+    max-width: 200px;
 }
 
 .card-id {
@@ -58,7 +59,7 @@
 }
 
 .main-content-wrapper {
-    @apply flex flex-col min-h-0 overflow-hidden p-1 md:p-2 lg:p-4 rounded;
+    @apply flex flex-col flex-1 min-h-0 overflow-hidden p-1 md:p-2 lg:p-4 rounded;
 }
 
 /* 为不同类型的抽奖卡片添加不同的顶部边框颜色 */

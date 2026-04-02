@@ -5,7 +5,7 @@
 
 @layer base {
     :root {
-        /* 主色系 */
+        /* ==================== 主色系 ==================== */
         --el-color-primary: var(--color-sky-500);
         --el-color-primary-light-3: var(--color-sky-400);
         --el-color-primary-light-5: var(--color-sky-300);
@@ -14,7 +14,7 @@
         --el-color-primary-light-9: var(--color-sky-50);
         --el-color-primary-dark-2: var(--color-sky-600);
 
-        /* 成功/警告/危险/信息，可按需调整 */
+        /* 成功/警告/危险/信息 */
         --el-color-success: var(--color-green-500);
         --el-color-success-light-3: var(--color-green-400);
         --el-color-success-light-5: var(--color-green-300);
@@ -22,7 +22,7 @@
         --el-color-success-light-8: var(--color-green-100);
         --el-color-success-light-9: var(--color-green-50);
         --el-color-success-dark-2: var(--color-green-600);
-        
+
         --el-color-warning: var(--color-amber-500);
         --el-color-warning-light-3: var(--color-amber-400);
         --el-color-warning-light-5: var(--color-amber-300);
@@ -55,18 +55,18 @@
         --el-color-info-light-9: var(--color-slate-50);
         --el-color-info-dark-2: var(--color-slate-600);
 
-        /* 基础颜色 */
+        /* ==================== 基础颜色 ==================== */
         --el-color-white: #ffffff;
         --el-color-black: #000000;
 
-        /* 文本颜色 */
+        /* ==================== 文本颜色 ==================== */
         --el-text-color-primary: #303133;
         --el-text-color-regular: #606266;
         --el-text-color-secondary: #909399;
         --el-text-color-placeholder: #a8abb2;
         --el-text-color-disabled: #c0c4cc;
 
-        /* 边框颜色 */
+        /* ==================== 边框颜色 ==================== */
         --el-border-color: #dcdfe6;
         --el-border-color-light: #e4e7ed;
         --el-border-color-lighter: #ebeef5;
@@ -74,7 +74,7 @@
         --el-border-color-dark: #d4d7de;
         --el-border-color-darker: #cdd0d6;
 
-        /* 填充颜色 */
+        /* ==================== 填充颜色 ==================== */
         --el-fill-color: #f0f2f5;
         --el-fill-color-light: #f5f7fa;
         --el-fill-color-lighter: #fafafa;
@@ -83,36 +83,152 @@
         --el-fill-color-darker: #e6e8eb;
         --el-fill-color-blank: #ffffff;
 
-        /* 背景颜色 */
+        /* ==================== 背景颜色 ==================== */
         --el-bg-color: #ffffff;
         --el-bg-color-page: #f2f3f5;
         --el-bg-color-overlay: #ffffff;
 
-        /* 阴影 */
+        /* ==================== 阴影 ==================== */
         --el-box-shadow: 0px 12px 32px 4px rgba(0, 0, 0, .04), 0px 8px 20px rgba(0, 0, 0, .08);
         --el-box-shadow-light: 0px 0px 12px rgba(0, 0, 0, .12);
         --el-box-shadow-lighter: 0px 0px 6px rgba(0, 0, 0, .12);
         --el-box-shadow-dark: 0px 16px 48px 16px rgba(0, 0, 0, .08), 0px 12px 32px rgba(0, 0, 0, .12), 0px 8px 16px -8px rgba(0, 0, 0, .16);
 
-        /* 禁用状态颜色 */
+        /* ==================== 禁用状态颜色 ==================== */
         --el-disabled-bg-color: var(--el-fill-color-light);
         --el-disabled-text-color: var(--el-text-color-placeholder);
         --el-disabled-border-color: var(--el-border-color-light);
 
-        /* 遮罩颜色 */
+        /* ==================== 遮罩颜色 ==================== */
         --el-overlay-color: rgba(0, 0, 0, .8);
         --el-overlay-color-light: rgba(0, 0, 0, .7);
         --el-overlay-color-lighter: rgba(0, 0, 0, .5);
         --el-mask-color: rgba(255, 255, 255, .9);
         --el-mask-color-extra-light: rgba(255, 255, 255, .3);
 
-        /* 组件尺寸变量 */
-        --component-size: 1.25rem;
-        --component-spacing: 1.25rem;
-        --component-line-height: 1.25rem;
+        /* ==================== 统一设计系统 ==================== */
+        /* 基础尺寸单位 */
+        --size-base: 0.25rem;  /* 4px - 基础单位 */
+        --size-radius-base: 0.5rem;  /* 8px - 默认圆角 */
+        --size-radius-large: 0.75rem;  /* 12px - 大圆角 */
+        --size-radius-full: 9999px;  /* 完全圆角 */
+
+        /* 间距系统 (基于 4px 基准) */
+        --spacing-0: 0;
+        --spacing-1: 0.25rem;  /* 4px */
+        --spacing-2: 0.5rem;   /* 8px */
+        --spacing-3: 0.75rem;  /* 12px */
+        --spacing-4: 1rem;     /* 16px */
+        --spacing-5: 1.25rem;  /* 20px */
+        --spacing-6: 1.5rem;   /* 24px */
+        --spacing-7: 1.75rem;  /* 28px */
+        --spacing-8: 2rem;     /* 32px */
+        --spacing-10: 2.5rem;  /* 40px */
+        --spacing-12: 3rem;    /* 48px */
+        --spacing-16: 4rem;    /* 64px */
+        --spacing-20: 5rem;    /* 80px */
+
+        /* 字体大小系统 */
+        --font-size-xs: 0.75rem;     /* 12px */
+        --font-size-sm: 0.875rem;    /* 14px */
+        --font-size-base: 1rem;      /* 16px */
+        --font-size-lg: 1.125rem;    /* 18px */
+        --font-size-xl: 1.25rem;     /* 20px */
+        --font-size-2xl: 1.5rem;     /* 24px */
+        --font-size-3xl: 1.875rem;   /* 30px */
+        --font-size-4xl: 2.25rem;    /* 36px */
+
+        /* 行高系统 */
+        --line-height-none: 1;
+        --line-height-tight: 1.25;
+        --line-height-snug: 1.375;
+        --line-height-normal: 1.5;
+        --line-height-relaxed: 1.625;
+        --line-height-loose: 2;
+
+        /* 组件尺寸系统 */
+        --component-height-xxs: 1.5rem;    /* 24px */
+        --component-height-xs: 1.75rem;   /* 28px */
+        --component-height-sm: 2rem;      /* 32px */
+        --component-height-md: 2.25rem;   /* 36px */
+        --component-height-base: 2.5rem;  /* 40px */
+        --component-height-lg: 2.75rem;   /* 44px */
+        --component-height-xl: 3rem;     /* 48px */
+        --component-height-2xl: 3.5rem;   /* 56px */
+
+        /* 组件内边距系统 */
+        --component-padding-x-xxs: 0.375rem; /* 6px */
+        --component-padding-x-xs: 0.5rem;   /* 8px */
+        --component-padding-x-sm: 0.625rem; /* 10px */
+        --component-padding-x-md: 0.75rem;  /* 12px */
+        --component-padding-x-base: 0.875rem; /* 14px */
+        --component-padding-x-lg: 1rem;     /* 16px */
+        --component-padding-x-xl: 1.125rem; /* 18px */
+        --component-padding-x-2xl: 1.25rem; /* 20px */
+
+        /* 组件字体大小 */
+        --component-font-size-xxs: 0.6875rem; /* 11px */
+        --component-font-size-xs: 0.75rem;   /* 12px */
+        --component-font-size-sm: 0.8125rem; /* 13px */
+        --component-font-size-md: 0.875rem;  /* 14px */
+        --component-font-size-base: 0.9375rem; /* 15px */
+        --component-font-size-lg: 1rem;      /* 16px */
+        --component-font-size-xl: 1.125rem; /* 18px */
+        --component-font-size-2xl: 1.25rem;  /* 20px */
+
+        /* 图标尺寸 */
+        --icon-size-xs: 0.875rem;  /* 14px */
+        --icon-size-sm: 1rem;      /* 16px */
+        --icon-size-base: 1.125rem; /* 18px */
+        --icon-size-lg: 1.25rem;    /* 20px */
+        --icon-size-xl: 1.5rem;     /* 24px */
+
+        /* 过渡动画 */
+        --transition-fast: 150ms;
+        --transition-base: 250ms;
+        --transition-slow: 350ms;
+        --transition-timing: cubic-bezier(0.4, 0, 0.2, 1);
+
+        /* Element Plus 组件尺寸覆盖 */
+        --el-component-size-small: var(--component-height-sm);
+        --el-component-size: var(--component-height-base);
+        --el-component-size-large: var(--component-height-lg);
+
+        /* Element Plus 字体大小覆盖 */
+        --el-font-size-extra-small: var(--font-size-xs);
+        --el-font-size-small: var(--font-size-sm);
+        --el-font-size-base: var(--font-size-base);
+        --el-font-size-medium: var(--font-size-lg);
+        --el-font-size-large: var(--font-size-xl);
+        --el-font-size-extra-large: var(--font-size-2xl);
+
+        /* Element Plus 间距覆盖 */
+        --el-spacing-1: var(--spacing-1);
+        --el-spacing-2: var(--spacing-2);
+        --el-spacing-3: var(--spacing-3);
+        --el-spacing-4: var(--spacing-4);
+        --el-spacing-5: var(--spacing-5);
+        --el-spacing-6: var(--spacing-6);
+        --el-spacing-8: var(--spacing-8);
+        --el-spacing-10: var(--spacing-10);
+        --el-spacing-12: var(--spacing-12);
+
+        /* Element Plus 圆角覆盖 */
+        --el-border-radius-small: var(--size-radius-base);
+        --el-border-radius-base: var(--size-radius-base);
+        --el-border-radius-large: var(--size-radius-large);
+        --el-border-radius-extra-large: 1rem;
+        --el-border-radius-round: var(--size-radius-full);
+        --el-border-radius-circle: var(--size-radius-full);
+
+        /* 兼容性变量（向后兼容） */
+        --component-size: var(--component-height-base);
+        --component-spacing: var(--spacing-4);
+        --component-line-height: var(--line-height-normal);
     }
 
     .dark {
+        /* ==================== 主色系 ==================== */
         --el-color-primary: var(--color-sky-400);
         --el-color-primary-light-3: var(--color-sky-300);
         --el-color-primary-light-5: var(--color-sky-200);
@@ -161,18 +277,18 @@
         --el-color-info-light-9: var(--color-slate-50);
         --el-color-info-dark-2: var(--color-slate-500);
 
-        /* 基础颜色 */
+        /* ==================== 基础颜色 ==================== */
         --el-color-white: #000000;
         --el-color-black: #ffffff;
 
-        /* 文本颜色 */
+        /* ==================== 文本颜色 ==================== */
         --el-text-color-primary: #e5eaf3;
         --el-text-color-regular: #cfd3dc;
         --el-text-color-secondary: #a3a6ad;
         --el-text-color-placeholder: #8d9095;
         --el-text-color-disabled: #6c6e72;
 
-        /* 边框颜色 */
+        /* ==================== 边框颜色 ==================== */
         --el-border-color: #4c4d4f;
         --el-border-color-light: #414243;
         --el-border-color-lighter: #38393b;
@@ -180,7 +296,7 @@
         --el-border-color-dark: #5d5e5f;
         --el-border-color-darker: #696a6b;
 
-        /* 填充颜色 */
+        /* ==================== 填充颜色 ==================== */
         --el-fill-color: #1d1e1f;
         --el-fill-color-light: #262727;
         --el-fill-color-lighter: #303030;
@@ -189,64 +305,413 @@
         --el-fill-color-darker: #282929;
         --el-fill-color-blank: #141414;
 
-        /* 背景颜色 */
+        /* ==================== 背景颜色 ==================== */
         --el-bg-color: #141414;
         --el-bg-color-page: #0a0a0a;
         --el-bg-color-overlay: #1d1e1f;
 
-        /* 阴影 */
+        /* ==================== 阴影 ==================== */
         --el-box-shadow: 0px 12px 32px 4px rgba(0, 0, 0, .36), 0px 8px 20px rgba(0, 0, 0, .72);
         --el-box-shadow-light: 0px 0px 12px rgba(0, 0, 0, .72);
         --el-box-shadow-lighter: 0px 0px 6px rgba(0, 0, 0, .72);
         --el-box-shadow-dark: 0px 16px 48px 16px rgba(0, 0, 0, .72), 0px 12px 32px rgba(0, 0, 0, .72), 0px 8px 16px -8px rgba(0, 0, 0, .72);
 
-        /* 禁用状态颜色 */
+        /* ==================== 禁用状态颜色 ==================== */
         --el-disabled-bg-color: var(--el-fill-color-light);
         --el-disabled-text-color: var(--el-text-color-placeholder);
         --el-disabled-border-color: var(--el-border-color-light);
 
-        /* 遮罩颜色 */
+        /* ==================== 遮罩颜色 ==================== */
         --el-overlay-color: rgba(0, 0, 0, .8);
         --el-overlay-color-light: rgba(0, 0, 0, .7);
         --el-overlay-color-lighter: rgba(0, 0, 0, .5);
         --el-mask-color: rgba(0, 0, 0, .9);
         --el-mask-color-extra-light: rgba(0, 0, 0, .3);
-
-        /* 组件尺寸变量 */
-        --component-size: 1.25rem;
-        --component-spacing: 1.25rem;
-        --component-line-height: 1.25rem;
     }
 
-    /* 不同尺寸主题 */
+    /* ==================== 尺寸主题类 ==================== */
+    /* 超超小尺寸 - 适合极紧凑布局 */
+    .size-xxs {
+        --component-size: var(--component-height-xxs);
+        --component-spacing: var(--spacing-2);
+        --component-line-height: var(--line-height-none);
+        --component-font-size: var(--component-font-size-xxs);
+        --component-padding-x: var(--component-padding-x-xxs);
+    }
+
+    /* 超小尺寸 - 适合紧凑布局 */
     .size-xs {
-        --component-size: 1rem;
-        --component-spacing: 1rem;
-        --component-line-height: 1rem;
+        --component-size: var(--component-height-xs);
+        --component-spacing: var(--spacing-3);
+        --component-line-height: var(--line-height-tight);
+        --component-font-size: var(--component-font-size-xs);
+        --component-padding-x: var(--component-padding-x-xs);
+    }
+
+    /* 小尺寸 - 适合空间有限的情况 */
+    .size-sm {
+        --component-size: var(--component-height-sm);
+        --component-spacing: var(--spacing-4);
+        --component-line-height: var(--line-height-tight);
+        --component-font-size: var(--component-font-size-sm);
+        --component-padding-x: var(--component-padding-x-sm);
+    }
+
+    /* 中尺寸 - 默认推荐 */
+    .size-md {
+        --component-size: var(--component-height-md);
+        --component-spacing: var(--spacing-4);
+        --component-line-height: var(--line-height-normal);
+        --component-font-size: var(--component-font-size-md);
+        --component-padding-x: var(--component-padding-x-md);
+    }
+
+    /* 基础尺寸 - 标准尺寸 (向后兼容) */
+    .size-base {
+        --component-size: var(--component-height-base);
+        --component-spacing: var(--spacing-5);
+        --component-line-height: var(--line-height-normal);
+        --component-font-size: var(--component-font-size-base);
+        --component-padding-x: var(--component-padding-x-base);
+    }
+
+    /* 大尺寸 - 适合重要操作 */
+    .size-lg {
+        --component-size: var(--component-height-lg);
+        --component-spacing: var(--spacing-6);
+        --component-line-height: var(--line-height-normal);
+        --component-font-size: var(--component-font-size-lg);
+        --component-padding-x: var(--component-padding-x-lg);
+    }
+
+    /* 超大尺寸 - 适合强调展示 */
+    .size-xl {
+        --component-size: var(--component-height-xl);
+        --component-spacing: var(--spacing-7);
+        --component-line-height: var(--line-height-relaxed);
+        --component-font-size: var(--component-font-size-xl);
+        --component-padding-x: var(--component-padding-x-xl);
+    }
+
+    /* 超超大尺寸 - 适合 Hero 区域 */
+    .size-2xl {
+        --component-size: var(--component-height-2xl);
+        --component-spacing: var(--spacing-8);
+        --component-line-height: var(--line-height-relaxed);
+        --component-font-size: var(--component-font-size-2xl);
+        --component-padding-x: var(--component-padding-x-2xl);
+    }
+
+    /* ==================== 自定义尺寸比例 ==================== */
+    /* 紧凑比例 - 所有尺寸缩小 10% */
+    .size-compact .size-xxs,
+    .size-compact .size-xs,
+    .size-compact .size-sm,
+    .size-compact .size-md,
+    .size-compact .size-base,
+    .size-compact .size-lg,
+    .size-compact .size-xl,
+    .size-compact .size-2xl {
+        --component-size: calc(var(--component-height-base) * 0.7);
+        --component-spacing: calc(var(--spacing-4) * 0.7);
+        --component-font-size: calc(var(--component-font-size-base) * 0.85);
+        --component-padding-x: calc(var(--component-padding-x-base) * 0.8);
+    }
+
+    /* 宽松比例 - 所有尺寸放大 10% */
+    .size-spacious .size-xxs,
+    .size-spacious .size-xs,
+    .size-spacious .size-sm,
+    .size-spacious .size-md,
+    .size-spacious .size-base,
+    .size-spacious .size-lg,
+    .size-spacious .size-xl,
+    .size-spacious .size-2xl {
+        --component-size: calc(var(--component-height-base) * 1.2);
+        --component-spacing: calc(var(--spacing-4) * 1.2);
+        --component-font-size: calc(var(--component-font-size-base) * 1.1);
+        --component-padding-x: calc(var(--component-padding-x-base) * 1.2);
+    }
+
+    /* ==================== Element Plus 组件样式覆盖 ==================== */
+
+    /* 按钮 */
+    :root,
+    .el-button {
+        --el-button-border-radius: var(--size-radius-base);
+        --el-button-padding-vertical: calc((var(--el-button-height) - var(--el-button-font-size)) / 2 - 0.125rem);
+        --el-button-padding-horizontal: var(--component-padding-x-base);
+    }
+
+    .el-button--large {
+        --el-button-height: var(--component-height-xl);
+        --el-button-font-size: var(--component-font-size-xl);
+        --el-button-padding-horizontal: var(--component-padding-x-xl);
+    }
+
+    .el-button--default {
+        --el-button-height: var(--component-height-base);
+        --el-button-font-size: var(--component-font-size-base);
+    }
+
+    .el-button--small {
+        --el-button-height: var(--component-height-sm);
+        --el-button-font-size: var(--component-font-size-sm);
+        --el-button-padding-horizontal: var(--component-padding-x-sm);
+    }
+
+    /* 输入框 */
+    :root {
+        --el-input-height-large: var(--component-height-xl);
+        --el-input-height: var(--component-height-base);
+        --el-input-height-small: var(--component-height-sm);
+        --el-input-border-radius: var(--size-radius-base);
+        --el-input-border-radius-small: var(--size-radius-base);
+        --el-input-border-radius-large: var(--size-radius-base);
+        --el-input-font-size: var(--component-font-size-base);
+    }
+
+    /* 选择器 */
+    :root {
+        --el-select-input-height-large: var(--component-height-lg);
+        --el-select-input-height: var(--component-height-base);
+        --el-select-input-height-small: var(--component-height-sm);
+        --el-select-border-radius: var(--size-radius-base);
+        --el-select-font-size: var(--component-font-size-base);
+    }
+
+    /* 对话框 */
+    :root {
+        --el-dialog-border-radius: var(--size-radius-large);
+    }
+
+    .el-dialog {
+        border-radius: var(--el-dialog-border-radius);
+    }
+
+    .el-dialog__header {
+        padding: var(--spacing-5) var(--spacing-6);
+    }
+
+    .el-dialog__body {
+        padding: var(--spacing-5) var(--spacing-6);
+    }
+
+    .el-dialog__footer {
+        padding: var(--spacing-5) var(--spacing-6);
+    }
+
+    /* 卡片 */
+    :root {
+        --el-card-border-radius: var(--size-radius-large);
+    }
+
+    .el-card {
+        border-radius: var(--el-card-border-radius);
+    }
+
+    .el-card__header {
+        padding: var(--spacing-5) var(--spacing-6);
+    }
+
+    .el-card__body {
+        padding: var(--spacing-6);
+    }
+
+    /* 消息提示 */
+    :root {
+        --el-message-border-radius: var(--size-radius-base);
+        --el-message-min-width: 20rem;
+    }
+
+    /* 通知 */
+    :root {
+        --el-notification-border-radius: var(--size-radius-base);
+        --el-notification-width: 24rem;
+    }
+
+    /* 抽屉 */
+    :root {
+        --el-drawer-border-radius: var(--size-radius-large);
+    }
+
+    /* 弹出框 */
+    :root {
+        --el-popover-border-radius: var(--size-radius-base);
+        --el-popover-padding: var(--spacing-4);
+    }
+
+    /* 下拉菜单 */
+    :root {
+        --el-dropdown-menu-border-radius: var(--size-radius-base);
+        --el-dropdown-menuItem-padding: var(--spacing-3) var(--spacing-4);
+    }
+
+    /* 分页 */
+    :root {
+        --el-pagination-button-border-radius: var(--size-radius-base);
+        --el-pagination-font-size: var(--component-font-size-base);
+    }
+
+    .el-pagination button {
+        font-size: var(--el-pagination-font-size);
+        min-width: calc(var(--component-height-base) + var(--spacing-2));
+        height: var(--component-height-base);
+        border-radius: var(--el-pagination-button-border-radius);
+    }
+
+    /* 标签 */
+    :root {
+        --el-tag-border-radius: var(--size-radius-base);
+        --el-tag-font-size: var(--component-font-size-sm);
+    }
+
+    .el-tag {
+        border-radius: var(--el-tag-border-radius);
+        font-size: var(--el-tag-font-size);
+        padding: calc(var(--spacing-1) / 2) var(--spacing-3);
+    }
+
+    /* 进度条 */
+    :root {
+        --el-progress-border-radius: var(--size-radius-base);
+    }
+
+    /* 开关 */
+    :root {
+        --el-switch-border-radius: var(--size-radius-full);
+        --el-switch-core-height: calc(var(--component-height-base) - var(--spacing-1));
+    }
+
+    .el-switch--large .el-switch__core {
+        height: calc(var(--component-height-lg) - var(--spacing-1));
+    }
+
+    .el-switch--small .el-switch__core {
+        height: calc(var(--component-height-sm) - var(--spacing-1));
+    }
+
+    /* 滑块 */
+    :root {
+        --el-slider-border-radius: var(--size-radius-base);
+    }
+
+    /* 表格 */
+    :root {
+        --el-table-border-color: var(--el-border-color-lighter);
+    }
+
+    .el-table {
+        --el-table-header-bg-color: var(--el-fill-color-light);
+        --el-table-row-hover-bg-color: var(--el-fill-color-lighter);
+    }
+
+    /* 消息框 */
+    :root {
+        --el-messagebox-border-radius: var(--size-radius-large);
+    }
+
+    /* 加载 */
+    :root {
+        --el-loading-spinner-size: 2.5rem;
+        --el-loading-fullscreen-spinner-size: 3rem;
+    }
+
+    /* 菜单 */
+    :root {
+        --el-menu-item-height: var(--component-height-base);
+        --el-menu-horizontal-item-padding: 0 var(--component-padding-x-base);
+        --el-menu-base-level-padding: var(--spacing-6);
+        --el-menu-level-padding: var(--spacing-6);
+        --el-menu-font-size: var(--component-font-size-base);
+    }
+
+    /* 菜单尺寸主题响应 */
+    .size-xxs {
+        --el-menu-item-height: var(--component-height-xxs);
+        --el-menu-horizontal-item-padding: 0 var(--component-padding-x-xxs);
+        --el-menu-base-level-padding: var(--spacing-2);
+        --el-menu-level-padding: var(--spacing-2);
+        --el-menu-font-size: var(--component-font-size-xxs);
+    }
+
+    .size-xs {
+        --el-menu-item-height: var(--component-height-xs);
+        --el-menu-horizontal-item-padding: 0 var(--component-padding-x-xs);
+        --el-menu-base-level-padding: var(--spacing-3);
+        --el-menu-level-padding: var(--spacing-3);
+        --el-menu-font-size: var(--component-font-size-xs);
     }
 
     .size-sm {
-        --component-size: 1.125rem;
-        --component-spacing: 1.125rem;
-        --component-line-height: 1.125rem;
+        --el-menu-item-height: var(--component-height-sm);
+        --el-menu-horizontal-item-padding: 0 var(--component-padding-x-sm);
+        --el-menu-base-level-padding: var(--spacing-4);
+        --el-menu-level-padding: var(--spacing-4);
+        --el-menu-font-size: var(--component-font-size-sm);
+    }
+
+    .size-md {
+        --el-menu-item-height: var(--component-height-md);
+        --el-menu-horizontal-item-padding: 0 var(--component-padding-x-md);
+        --el-menu-base-level-padding: var(--spacing-4);
+        --el-menu-level-padding: var(--spacing-4);
+        --el-menu-font-size: var(--component-font-size-md);
     }
 
     .size-base {
-        --component-size: 1.25rem;
-        --component-spacing: 1.25rem;
-        --component-line-height: 1.25rem;
+        --el-menu-item-height: var(--component-height-base);
+        --el-menu-horizontal-item-padding: 0 var(--component-padding-x-base);
+        --el-menu-base-level-padding: var(--spacing-5);
+        --el-menu-level-padding: var(--spacing-5);
+        --el-menu-font-size: var(--component-font-size-base);
     }
 
     .size-lg {
-        --component-size: 1.5rem;
-        --component-spacing: 1.5rem;
-        --component-line-height: 1.5rem;
+        --el-menu-item-height: var(--component-height-lg);
+        --el-menu-horizontal-item-padding: 0 var(--component-padding-x-lg);
+        --el-menu-base-level-padding: var(--spacing-6);
+        --el-menu-level-padding: var(--spacing-6);
+        --el-menu-font-size: var(--component-font-size-lg);
     }
 
     .size-xl {
-        --component-size: 1.75rem;
-        --component-spacing: 1.75rem;
-        --component-line-height: 1.75rem;
+        --el-menu-item-height: var(--component-height-xl);
+        --el-menu-horizontal-item-padding: 0 var(--component-padding-x-xl);
+        --el-menu-base-level-padding: var(--spacing-7);
+        --el-menu-level-padding: var(--spacing-7);
+        --el-menu-font-size: var(--component-font-size-xl);
+    }
+
+    .size-2xl {
+        --el-menu-item-height: var(--component-height-2xl);
+        --el-menu-horizontal-item-padding: 0 var(--component-padding-x-2xl);
+        --el-menu-base-level-padding: var(--spacing-8);
+        --el-menu-level-padding: var(--spacing-8);
+        --el-menu-font-size: var(--component-font-size-2xl);
+    }
+
+    .el-menu-item,
+    .el-sub-menu__title {
+        font-size: var(--el-menu-font-size) !important;
+        height: var(--el-menu-item-height);
+        line-height: var(--el-menu-item-height);
+    }
+
+    /* 面包屑 */
+    :root {
+        --el-breadcrumb-font-size: var(--font-size-sm);
+    }
+
+    /* 链接 */
+    :root {
+        --el-link-font-size: var(--font-size-base);
+    }
+
+    /* 表单 */
+    :root {
+        --el-form-label-font-size: var(--component-font-size-base);
+        --el-form-item-margin-bottom: var(--spacing-5);
     }
 
     /* 优化滚动性能 */

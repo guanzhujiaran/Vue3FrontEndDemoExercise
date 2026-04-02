@@ -49,13 +49,16 @@
     .header-container {
         @apply px-1;
     }
-    
+
     .header-menu :deep(.el-sub-menu__title),
     .header-menu :deep(.el-menu-item) {
-        @apply text-xs px-2 py-3;
+        padding: 0 var(--component-padding-x-sm);
         min-width: fit-content;
+        font-size: var(--el-menu-font-size);
+        height: var(--el-menu-item-height);
+        line-height: var(--el-menu-item-height);
     }
-    
+
     .avatar-container {
         @apply px-1;
         min-width: auto;
@@ -66,10 +69,12 @@
 @media (max-width: 480px) {
     .header-menu :deep(.el-sub-menu__title),
     .header-menu :deep(.el-menu-item) {
-        @apply text-xs px-1 py-2;
-        font-size: 0.75rem;
+        padding: 0 var(--component-padding-x-xs);
+        font-size: var(--el-menu-font-size);
+        height: var(--el-menu-item-height);
+        line-height: var(--el-menu-item-height);
     }
-    
+
     .header-menu :deep(.el-sub-menu__title span),
     .header-menu :deep(.el-menu-item span) {
         @apply truncate max-w-[60px];

@@ -1,8 +1,8 @@
 @import '@/assets/tailwind.css';
 
 .bili-lottery-card-wrapper {
-    @apply flex flex-col flex-1 w-full rounded-lg border border-[var(--el-border-color-light)] transition-all duration-300;
-    min-height: 250px;
+    @apply flex flex-col w-full rounded-lg border border-[var(--el-border-color-light)] transition-all duration-300;
+    min-height: 600px;
 }
 
 .bili-lottery-card-wrapper:hover {
@@ -10,7 +10,7 @@
 }
 
 .lottery-card {
-    @apply rounded-lg;
+    @apply rounded-lg h-full flex flex-col;
 }
 
 /* 添加卡片加载动画 */

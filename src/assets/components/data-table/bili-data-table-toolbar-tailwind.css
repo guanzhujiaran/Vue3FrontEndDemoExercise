@@ -12,39 +12,14 @@
   @apply flex items-center gap-4;
 }
 
-.button-row .refresh-btn,
-.button-row .setting-btn,
-.button-row .feedback-btn {
+:deep(.button-row .el-button) {
   @apply w-auto transition-all duration-300;
   padding: calc(var(--component-spacing) * 0.5) var(--component-spacing);
-}
-
-.button-row .refresh-btn {
-  border-color: var(--el-color-primary);
-}
-
-.button-row .refresh-btn:hover {
-  @apply translate-y-[-2px];
-  box-shadow: 0 4px 8px rgba(0, 161, 214, 0.2);
-}
-
-.button-row .setting-btn {
-  border-color: var(--el-border-color);
-  color: var(--el-text-color-regular);
-}
-
-.button-row .setting-btn:hover {
-  border-color: var(--el-border-color-darker);
-  @apply translate-y-[-2px] shadow-sm;
-}
-
-.button-row .feedback-btn {
-  border-color: var(--el-color-warning);
-}
-
-.button-row .feedback-btn:hover {
-  @apply translate-y-[-2px];
-  box-shadow: 0 4px 8px rgba(230, 162, 60, 0.2);
+  height: var(--component-size) !important;
+  min-height: var(--component-size) !important;
+  font-size: var(--component-font-size) !important;
+  line-height: var(--component-size) !important;
+  border-radius: var(--size-radius-full);
 }
 
 :deep(.el-dialog__header) {
@@ -85,7 +60,7 @@
 }
 
 .button-group {
-  @apply flex justify-center gap-4 mt-8;
+  @apply mt-8 flex justify-center gap-4;
 }
 
 .button-group :deep(.el-form-item__content) {

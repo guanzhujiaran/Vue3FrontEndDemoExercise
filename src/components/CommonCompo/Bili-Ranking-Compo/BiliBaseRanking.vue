@@ -156,8 +156,8 @@ const handleLoad = () => {
 
 const handlePartitionChange = () => {
   cur_offset.value = 0
-  rankItems.value = []
-  topItems.value = []
+  rankItems.value.splice(0, rankItems.value.length)
+  topItems.value.splice(0, topItems.value.length)
   isMore.value = !0
   handleLoad()
 }

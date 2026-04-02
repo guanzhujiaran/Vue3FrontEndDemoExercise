@@ -85,7 +85,7 @@
 
         <!-- --- Requirements Info --- -->
         <el-descriptions v-if="normalizedData.requirements.length > 0" title="参与条件" :column="1" border size="small"
-          class="requirements-desc">
+          class="requirements-desc mt-auto">
           <el-descriptions-item>
             <div class="conditions">
               <div class="condition" v-for="(req, index) in normalizedData.requirements" :key="index">
