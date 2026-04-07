@@ -136,7 +136,6 @@ onUnmounted(() => {
           </el-container>
           <SponsorNotification/>
           <GlobalLoadingMask />
-          <GlobalToast />
           <LoginModal ref="loginModalRef" />
         </div>
       </UseScreenSafeArea>

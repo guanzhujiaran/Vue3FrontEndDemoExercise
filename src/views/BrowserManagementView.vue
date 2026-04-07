@@ -59,7 +59,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useDebounceFn } from '@vueuse/core'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import biliMessage from '@/utils/message'
 import FingerprintCardList from '@/components/browser/FingerprintCardList.vue'
 import FingerprintEditForm from '@/components/browser/FingerprintEditForm.vue'
 import GlobalConfigManagement from '@/components/browser/GlobalConfigManagement.vue'
@@ -152,7 +152,7 @@ const handleConfigNotify = (fingerprint: UserBrowserInfoReadResp) => {
 // 处理保存控制配置
 const handleSaveControlConfig = (config: any) => {
   console.log('保存控制配置:', config)
-  ElMessage.success('控制配置保存成功')
+  biliMessage.success('控制配置保存成功')
 }
 
 // 处理保存指纹
@@ -191,7 +191,7 @@ const handleSaveFingerprint = async (data: BrowserFingerprintUpsertParams) => {
     }
   } catch (error) {
     console.error('保存指纹失败:', error)
-    ElMessage.error('操作失败，请重试')
+    biliMessage.error('操作失败，请重试')
   } finally {
     submitLoading.value = false
   }
@@ -216,11 +216,11 @@ const handleGenerateRandom = async () => {
     
     if (result.success && result.data) {
       generatedFingerprintData.value = result.data
-      ElMessage.success('随机指纹生成成功')
+      biliMessage.success('随机指纹生成成功')
     }
   } catch (error) {
     console.error('生成随机指纹失败:', error)
-    ElMessage.error('生成随机指纹失败，请重试')
+    biliMessage.error('生成随机指纹失败，请重试')
   }
 }
 

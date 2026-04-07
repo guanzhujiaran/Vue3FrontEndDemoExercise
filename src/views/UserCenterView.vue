@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
-import { ElIcon, ElMessage } from 'element-plus'
+import { ElIcon } from 'element-plus'
 import { BiliErrorRouteToTxt } from '@/assets/text/BiliErrorTxt.ts'
 import { KeysEnum, useInject } from '@/models/base/provide_model.ts'
 import type { UserNavModel } from '@/models/user/user_model.ts'

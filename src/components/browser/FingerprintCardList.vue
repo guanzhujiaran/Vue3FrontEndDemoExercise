@@ -141,7 +141,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { ElMessageBox } from '@/utils/message'
 import { useDebounceFn } from '@vueuse/core'
 import {
   Plus,

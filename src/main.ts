@@ -51,5 +51,6 @@ if (import.meta.env.VITE_CLARITY_ID) {
 for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
   app.component(key, component)
 }
+
 // 添加全局属性
 app.mount('#app')

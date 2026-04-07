@@ -97,10 +97,9 @@
 <script setup lang="ts">
 import { ref, reactive } from 'vue'
 import { useClipboard } from '@vueuse/core'
-import { ElMessage } from 'element-plus'
+import biliMessage from '@/utils/message'
 import { Upload, Link, Check, RefreshLeft, DocumentCopy } from '@element-plus/icons-vue'
 import lotteryDataBaseApi from '@/api/lottery_data/bili/lottery_database_bili_api'
-import emitter from '@/utils/mitt'
 import { usePermission } from '@vueuse/core'
 
 const dialogVisible = ref(false)
@@ -141,16 +140,16 @@ const closeDialog = () => {
 // 粘贴功能
 const handlePaste = async () => {
   if (clipboardReadPermission.value !== 'granted' && clipboardReadPermission.value !== 'prompt') {
-    ElMessage.error('浏览器不支持剪贴板访问或未授予权限，请手动粘贴')
+    biliMessage.error('浏览器不支持剪贴板访问或未授予权限，请手动粘贴')
     return
   }
 
   try {
     const clipText = await navigator.clipboard.readText()
     form.dynamicUrl = clipText
-    ElMessage.success('已从剪贴板粘贴')
+    biliMessage.success('已从剪贴板粘贴')
   } catch (err) {
-    ElMessage.error('无法访问剪贴板，请手动粘贴')
+    biliMessage.error('无法访问剪贴板，请手动粘贴')
   }
 }
 
@@ -198,29 +197,23 @@ const handleBatchSubmit = async () => {
       const successCount = batchResults.value.filter(r => r.is_succ).length
 
       if (successCount === urls.length) {
-        emitter.emit('toast', {
-          t: `批量提交成功 ${successCount}/${urls.length}`,
-          e: 'success'
-        })
+        biliMessage.success(`批量提交成功 ${successCount}/${urls.length}`)
         closeDialog()
       } else {
-        emitter.emit('toast', {
-          t: `批量提交完成 成功 ${successCount}/${urls.length}`,
-          e: 'info'
-        })
+        biliMessage.info(`批量提交完成 成功 ${successCount}/${urls.length}`)
       }
     } else {
-      emitter.emit('toast', { t: resp.msg || '批量提交失败', e: 'error' })
+      biliMessage.error(resp.msg || '批量提交失败')
     }
   } catch (error: any) {
-    emitter.emit('toast', { t: error.message || '批量提交失败', e: 'error' })
+    biliMessage.error(error.message || '批量提交失败')
   }
 }
 
 // 提交处理
 const handleSubmit = async () => {
   if (!form.dynamicUrl && !form.batchUrls) {
-    ElMessage.warning('请输入动态链接或批量提交内容')
+    biliMessage.warning('请输入动态链接或批量提交内容')
     return
   }
 
@@ -235,14 +228,14 @@ const handleSubmit = async () => {
       await formRef.value?.validate()
       const resp = await handleSingleSubmit(form.dynamicUrl)
       if (resp.code === 0) {
-        emitter.emit('toast', { t: '提交成功', e: 'success' })
+        biliMessage.success('提交成功')
         closeDialog()
       } else {
-        emitter.emit('toast', { t: resp.msg, e: 'error' })
+        biliMessage.error(resp.msg)
       }
     }
   } catch (error: any) {
-    emitter.emit('toast', { t: error.message || '提交失败', e: 'error' })
+    biliMessage.error(error.message || '提交失败')
   } finally {
     loading.value = false
   }

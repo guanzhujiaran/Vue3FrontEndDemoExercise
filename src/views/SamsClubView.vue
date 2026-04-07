@@ -72,7 +72,7 @@
 import { ref, onMounted, computed } from 'vue'
 import { WarningFilled, InfoFilled } from '@element-plus/icons-vue'
 import type { PageInfoType, QueryGetSpuInfosArgs, SpuInfoType } from '@/gql/samsclub/graphql.ts'
-import emitter from '@/utils/mitt.ts'
+import biliMessage from '@/utils/message'
 import { GET_SAMSCLUB_SPU } from '@/gql/samsclub/queries.ts'
 import { useQuery } from '@urql/vue'
 
@@ -140,7 +140,7 @@ const dataItems = computed<SpuInfoType[]>(() => {
 const isError = computed<boolean>(() => {
   if (getSamsclubSpuResult.error.value) {
     console.error(getSamsclubSpuResult.error.value)
-    emitter.emit('toast', { t: JSON.stringify(getSamsclubSpuResult.error.value), e: 'error' })
+    biliMessage.error(JSON.stringify(getSamsclubSpuResult.error.value))
     return true
   }
   return false

@@ -59,7 +59,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { ElMessage } from 'element-plus'
+import biliMessage from '@/utils/message'
 import userApi from '@/api/user/user_api.ts'
 import type { User_base_info_config_form } from '@/models/user/user_setting/user_base_info_config_model.ts'
 import '@/assets/components/user/user-base-info-config-tailwind.css'
@@ -76,31 +76,31 @@ const userid = ref('')
 const saveSettings = async () => {
   // 验证用户名长度
   if (userName.value.length < 2) {
-    ElMessage.error('用户名不能少于2个字符')
+    biliMessage.error('用户名不能少于2个字符')
     return
   }
   
   if (userName.value.length > 24) {
-    ElMessage.error('用户名不能超过24个字符')
+    biliMessage.error('用户名不能超过24个字符')
     return
   }
   
   // 验证签名长度
   if (userSign.value.length > 70) {
-    ElMessage.error('个性签名不能超过70个字符')
+    biliMessage.error('个性签名不能超过70个字符')
     return
   }
   
   // 验证性别选项
   const validSexOptions = ['男', '女', '保密', '武装直升机', '永雏塔菲']
   if (!validSexOptions.includes(sex.value)) {
-    ElMessage.error('性别选项不正确')
+    biliMessage.error('性别选项不正确')
     return
   }
   
   // 验证生日
   if (birthday.value && isNaN(Date.parse(birthday.value.toString()))) {
-    ElMessage.error('生日必须是有效日期')
+    biliMessage.error('生日必须是有效日期')
     return
   }
   

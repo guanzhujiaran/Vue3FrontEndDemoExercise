@@ -4,7 +4,7 @@ import { type GlobalVarsType, ScreenTypeEnum } from '@/models/global_var/global_
 import { useInject, KeysEnum } from '@/models/base/provide_model.ts'
 import { useRoute } from 'vue-router'
 import { routes } from '@/router'
-import { ElMessage } from 'element-plus'
+import biliMessage from '@/utils/message'
 import { processRoutesForHeader } from '@/utils/routeUtils.ts'
 import { openGlobalLoginModalKey } from '@/models/inject/inject_type.ts'
 import type { UserNavModel } from '@/models/user/user_model.ts'
@@ -32,7 +32,7 @@ const navigationData = computed(() => {
 const openGlobalLoginModal = inject(openGlobalLoginModalKey, () => {})
 // 处理需要登录但未登录的情况
 const handleProtectedRouteClick = (title: string) => {
-  ElMessage.info(` ${title} 功能需要登录后才能使用`)
+  biliMessage.info(` ${title} 功能需要登录后才能使用`)
   openGlobalLoginModal()
 }
 

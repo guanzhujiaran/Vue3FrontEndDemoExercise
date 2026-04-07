@@ -7,7 +7,7 @@ import {
   type LotteryResultResp
 } from '@/models/api/lottery/lotdata.ts'
 import lotteryDataStatisticApi from '@/api/lottery_data/bili/lottery_data_statistic_api.ts'
-import emitter from '@/utils/mitt.ts'
+import biliMessage from '@/utils/message'
 import type { PrizeResult } from '@/models/api/lottery/lottery_prize_result.ts'
 import { BiliImg } from '@/assets/img/BiliImg.ts'
 import { gotoOpusDynamic } from '@/utils/PageOpen/BiliJump.ts'
@@ -42,10 +42,7 @@ const handle_lottery_result = useDebounceFn(() => {
     })
     .then((res) => {
       if (res.code) {
-        emitter.emit('toast', {
-          e: 'error',
-          t: res.msg
-        })
+        biliMessage.error(res.msg)
       } else {
         data.value = res.data
       }

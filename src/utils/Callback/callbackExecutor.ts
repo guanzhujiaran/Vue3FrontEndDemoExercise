@@ -3,7 +3,7 @@
  * 提供错误日志记录和消息气泡提示功能
  */
 
-import { ElMessage } from 'element-plus'
+import biliMessage from '@/utils/message'
 
 /**
  * 执行回调函数并处理错误
@@ -20,7 +20,7 @@ export function executeCallback<T = any>(
 ): void {
   if (!callback) {
     console.error('Callback is undefined');
-    ElMessage({
+    biliMessage({
       type: 'error',
       message: 'Callback is undefined',
       duration: 5000
@@ -38,7 +38,7 @@ export function executeCallback<T = any>(
         .then((data: T) => {
           console.log('操作成功:', data)
           if (showSuccess && successMessage) {
-            ElMessage({
+            biliMessage({
               type: 'success',
               message: successMessage,
               duration: 3000
@@ -49,7 +49,7 @@ export function executeCallback<T = any>(
           // 网络错误（HTTP 非 200）
           if (error.isNetworkError || !error.response) {
             console.error('网络异常:', error)
-            ElMessage({
+            biliMessage({
               type: 'error',
               message: '网络异常，请检查网络连接',
               duration: 5000
@@ -59,7 +59,7 @@ export function executeCallback<T = any>(
           // 业务错误（code !== 0）
           if (error.isBusinessError) {
             console.error(`业务错误 [${error.businessCode}]:`, error.businessMessage)
-            ElMessage({
+            biliMessage({
               type: 'error',
               message: error.businessMessage || '操作失败',
               duration: 5000
@@ -68,7 +68,7 @@ export function executeCallback<T = any>(
           }
           // 其他错误
           console.error(`${errorMessage}:`, error)
-          ElMessage({
+          biliMessage({
             type: 'error',
             message: `${errorMessage}: ${error.message || error}`,
             duration: 5000
@@ -78,7 +78,7 @@ export function executeCallback<T = any>(
       // 处理同步操作
       console.log('操作成功:', result)
       if (showSuccess && successMessage) {
-        ElMessage({
+        biliMessage({
           type: 'success',
           message: successMessage,
           duration: 3000
@@ -88,7 +88,7 @@ export function executeCallback<T = any>(
   } catch (error: any) {
     // 处理同步错误
     console.error(`${errorMessage}:`, error)
-    ElMessage({
+    biliMessage({
       type: 'error',
       message: `${errorMessage}: ${error.message || error}`,
       duration: 5000
@@ -135,7 +135,7 @@ export function createCallbackHandler<T = any>(
             }
             
             if (showSuccess && successMessage) {
-              ElMessage({
+              biliMessage({
                 type: 'success',
                 message: successMessage,
                 duration: 3000
@@ -149,7 +149,7 @@ export function createCallbackHandler<T = any>(
               if (errorHandler) {
                 errorHandler(error)
               } else {
-                ElMessage({
+                biliMessage({
                   type: 'error',
                   message: '网络异常，请检查网络连接',
                   duration: 5000
@@ -163,7 +163,7 @@ export function createCallbackHandler<T = any>(
               if (errorHandler) {
                 errorHandler(error)
               } else {
-                ElMessage({
+                biliMessage({
                   type: 'error',
                   message: error.businessMessage || '操作失败',
                   duration: 5000
@@ -176,7 +176,7 @@ export function createCallbackHandler<T = any>(
             if (errorHandler) {
               errorHandler(error)
             } else {
-              ElMessage({
+              biliMessage({
                 type: 'error',
                 message: `${errorMessage}: ${error.message || error}`,
                 duration: 5000
@@ -192,7 +192,7 @@ export function createCallbackHandler<T = any>(
         }
         
         if (showSuccess && successMessage) {
-          ElMessage({
+          biliMessage({
             type: 'success',
             message: successMessage,
             duration: 3000
@@ -205,7 +205,7 @@ export function createCallbackHandler<T = any>(
       if (errorHandler) {
         errorHandler(error)
       } else {
-        ElMessage({
+        biliMessage({
           type: 'error',
           message: `${errorMessage}: ${error.message || error}`,
           duration: 5000
@@ -251,7 +251,7 @@ export function executeBatchCallbacks<T = any>(
       .then((results) => {
         console.log('批量操作成功:', results)
         if (showSuccess) {
-          ElMessage({
+          biliMessage({
             type: 'success',
             message: successMessage,
             duration: 3000
@@ -262,7 +262,7 @@ export function executeBatchCallbacks<T = any>(
         // 网络错误（HTTP 非 200）
         if (error.isNetworkError || !error.response) {
           console.error('网络异常:', error)
-          ElMessage({
+          biliMessage({
             type: 'error',
             message: '网络异常，请检查网络连接',
             duration: 5000
@@ -272,7 +272,7 @@ export function executeBatchCallbacks<T = any>(
         // 业务错误（code !== 0）
         if (error.isBusinessError) {
           console.error(`业务错误 [${error.businessCode}]:`, error.businessMessage)
-          ElMessage({
+          biliMessage({
             type: 'error',
             message: error.businessMessage || '操作失败',
             duration: 5000
@@ -281,7 +281,7 @@ export function executeBatchCallbacks<T = any>(
         }
         // 其他错误
         console.error(`${errorMessage}:`, error)
-        ElMessage({
+        biliMessage({
           type: 'error',
           message: `${errorMessage}: ${error.message || error}`,
           duration: 5000
@@ -294,7 +294,7 @@ export function executeBatchCallbacks<T = any>(
     const executeNext = () => {
       if (currentIndex >= callbacks.length) {
         if (showSuccess) {
-          ElMessage({
+          biliMessage({
             type: 'success',
             message: successMessage,
             duration: 3000
@@ -308,7 +308,7 @@ export function executeBatchCallbacks<T = any>(
       
       if (!callback) {
         console.error('Callback is undefined');
-        ElMessage({
+        biliMessage({
           type: 'error',
           message: 'Callback is undefined',
           duration: 5000
@@ -326,7 +326,7 @@ export function executeBatchCallbacks<T = any>(
               // 网络错误（HTTP 非 200）
               if (error.isNetworkError || !error.response) {
                 console.error('网络异常:', error)
-                ElMessage({
+                biliMessage({
                   type: 'error',
                   message: '网络异常，请检查网络连接',
                   duration: 5000
@@ -336,7 +336,7 @@ export function executeBatchCallbacks<T = any>(
               // 业务错误（code !== 0）
               if (error.isBusinessError) {
                 console.error(`业务错误 [${error.businessCode}]:`, error.businessMessage)
-                ElMessage({
+                biliMessage({
                   type: 'error',
                   message: error.businessMessage || '操作失败',
                   duration: 5000
@@ -345,7 +345,7 @@ export function executeBatchCallbacks<T = any>(
               }
               // 其他错误
               console.error(`${errorMessage}:`, error)
-              ElMessage({
+              biliMessage({
                 type: 'error',
                 message: `${errorMessage}: ${error.message || error}`,
                 duration: 5000
@@ -356,7 +356,7 @@ export function executeBatchCallbacks<T = any>(
         }
       } catch (error: any) {
         console.error(`${errorMessage}:`, error)
-        ElMessage({
+        biliMessage({
           type: 'error',
           message: `${errorMessage}: ${error.message || error}`,
           duration: 5000

@@ -1,4 +1,4 @@
-import emitter from '@/utils/mitt'
+import biliMessage from './message'
 
 /**
  * 异步操作处理器，统一处理异步操作的结果和错误
@@ -23,14 +23,14 @@ export const asyncHandler = async <T>(
   try {
     const data = await asyncFn
     if (showSuccessToast) {
-      emitter.emit('toast', { t: successMessage, e: 'success' })
+      biliMessage.success(successMessage)
     }
     return { data, error: false }
   } catch (error: any) {
     const errorMsg = errorMessage ? errorMessage.concat(error?.message || '') : error?.message
     if (showErrorToast) {
       console.error(errorMsg)
-      emitter.emit('toast', { t: errorMsg, e: 'error' })
+      biliMessage.error(errorMsg)
     }
     return { error: true, msg: errorMsg }
   }

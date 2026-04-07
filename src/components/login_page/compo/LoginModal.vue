@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-import { ElMessage } from 'element-plus'
+import biliMessage from '@/utils/message'
 import LoginCompo from './LoginCompo.vue'
 import emitter from '@/utils/mitt'
 
@@ -19,12 +19,7 @@ const showFirstOpenTip = () => {
   if (!checkFirstOpen()) {
     hasShownFirstTip.value = true
     setTimeout(() => {
-      ElMessage({
-        message: '⚠️ 当前禁止注册新账号,仅支持 Gitee 登录',
-        type: 'warning',
-        duration: 5000,
-        showClose: true
-      })
+      biliMessage.warning('⚠️ 当前禁止注册新账号,仅支持 Gitee 登录')
       localStorage.setItem(STORAGE_KEY, 'true')
     }, 500)
   }

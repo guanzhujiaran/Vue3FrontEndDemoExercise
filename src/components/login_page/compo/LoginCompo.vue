@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { ElMessage } from 'element-plus'
 import { isLogin } from '@/api/user/utils'
 import { useRouter } from 'vue-router'
 import { useJwtStore } from '@/stores/jwt_token'
 import emitter from '@/utils/mitt.ts'
+import biliMessage from '@/utils/message'
 import OAuthLoginProviders from './OAuthLoginProviders.vue'
 
 // 定义props
@@ -37,12 +37,7 @@ onMounted(() => {
 
     if (!shown) {
       setTimeout(() => {
-        ElMessage({
-          message: '⚠️ 当前禁止注册新账号,仅支持 Gitee 登录',
-          type: 'warning',
-          duration: 5000,
-          showClose: true
-        })
+        biliMessage.warning('⚠️ 当前禁止注册新账号,仅支持 Gitee 登录')
         localStorage.setItem(STORAGE_KEY, 'true')
       }, 500)
     }
@@ -57,14 +52,14 @@ const check_login = () => {
   isLogin()
     .then((res) => {
       if (res[0]) {
-        emitter.emit('toast', { t: '账号已登录，等待跳转！', e: 'info' })
+        biliMessage.info('账号已登录，等待跳转！')
         router.push('/app/user-center')
       } else {
-        emitter.emit('toast', { t: res[1], e: 'error' })
+        biliMessage.error(res[1])
       }
     })
     .catch((e) => {
-      emitter.emit('toast', { t: e, e: 'error' })
+      biliMessage.error(e)
       setTimeout(check_login, 2e3)
     })
 }
@@ -78,7 +73,7 @@ const handleOAuthLoginSuccess = async (data: { token: string, uid: string, user_
   const [isLoggedIn, message, userNav] = await isLogin()
 
   if (!isLoggedIn && message !== '未登录') {
-    emitter.emit('toast', { t: `获取用户信息失败: ${message}`, e: 'error' })
+    biliMessage.error(`获取用户信息失败: ${message}`)
   }
 
   // 发出登录成功事件

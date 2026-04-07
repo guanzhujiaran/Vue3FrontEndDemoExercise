@@ -385,7 +385,7 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted, onUnmounted, onBeforeUpdate } from 'vue'
-import { ElMessage } from 'element-plus'
+import biliMessage from '@/utils/message'
 import { browserLiveControlApi } from '@/api/browser/browser_api'
 import { businessHandler } from '@/utils/businessHandler'
 import type {
@@ -561,14 +561,14 @@ const startSession = async (instanceId: number) => {
     const response = await browserLiveControlApi.createBrowserSession(instanceId, request)
 
     if (response.data?.success) {
-      ElMessage.success(`实例 ${instanceId} 启动成功`)
+      biliMessage.success(`实例 ${instanceId} 启动成功`)
       await refreshInstanceStatus(instanceId)
     } else {
-      ElMessage.error(`实例 ${instanceId} 启动失败`)
+      biliMessage.error(`实例 ${instanceId} 启动失败`)
     }
   } catch (error: any) {
     console.error('启动会话失败', error)
-    ElMessage.error(error.message || '启动会话失败')
+    biliMessage.error(error.message || '启动会话失败')
   } finally {
     instance.operationLoading = false
   }
@@ -604,9 +604,9 @@ const batchStartSessions = async () => {
     for (const instance of selectedInstances.value) {
       await startSession(Number(instance.id))
     }
-    ElMessage.success(`批量启动 ${selectedInstances.value.length} 个实例成功`)
+    biliMessage.success(`批量启动 ${selectedInstances.value.length} 个实例成功`)
   } catch (error: any) {
-    ElMessage.error('批量启动部分失败')
+    biliMessage.error('批量启动部分失败')
   } finally {
     batchOperating.value = false
     selectedInstances.value = []
@@ -663,7 +663,7 @@ const handleBrowserSelect = async (browserId: number) => {
     }
   } catch (error) {
     console.error('选择浏览器失败', error)
-    ElMessage.error('获取浏览器状态失败')
+    biliMessage.error('获取浏览器状态失败')
   }
 
   // 显示控制面板
@@ -688,7 +688,7 @@ const createBrowserSession = async () => {
     })
 
     if (response.data?.success) {
-      ElMessage.success('浏览器会话创建成功')
+      biliMessage.success('浏览器会话创建成功')
       await refreshSessionStatus()
       
       // 如果会话正在运行，开始心跳
@@ -698,11 +698,11 @@ const createBrowserSession = async () => {
         await refreshScreenshot()
       }
     } else {
-      ElMessage.error('创建浏览器会话失败')
+      biliMessage.error('创建浏览器会话失败')
     }
   } catch (error: any) {
     console.error('创建浏览器会话失败', error)
-    ElMessage.error(error.message || '创建浏览器会话失败')
+    biliMessage.error(error.message || '创建浏览器会话失败')
   }
   sessionCreating.value = false
 }
@@ -756,7 +756,7 @@ const startVideoStream = async () => {
   } catch (error) {
     console.error('启动视频流失败', error)
     streamConnectionStatus.value = 'failed'
-    ElMessage.error('视频流连接失败')
+    biliMessage.error('视频流连接失败')
   }
   videoLoading.value = false
 }
@@ -797,10 +797,10 @@ const refreshScreenshot = async () => {
     const url = URL.createObjectURL(blob)
     screenshotUrl.value = url
     lastScreenshotTime.value = new Date().toLocaleString('zh-CN')
-    ElMessage.success('截图已更新')
+    biliMessage.success('截图已更新')
   } catch (error) {
     console.error('获取截图失败', error)
-    ElMessage.error('获取截图失败')
+    biliMessage.error('获取截图失败')
   }
   screenshotLoading.value = false
 }
@@ -870,7 +870,7 @@ const switchTab = async (tabId: string) => {
       }),
       { errorMessage: '切换标签页失败' }
     )
-    ElMessage.success('切换标签页成功')
+    biliMessage.success('切换标签页成功')
     await refreshTabsList()
     await refreshScreenshot()
   } catch (error) {
@@ -917,17 +917,17 @@ const checkStreamHealth = async () => {
       const isActive = response.data.active || response.data.streaming
       if (!isActive && streamConnectionStatus.value === 'connected') {
         streamConnectionStatus.value = 'disconnected'
-        ElMessage.warning('视频流连接已断开')
+        biliMessage.warning('视频流连接已断开')
       } else if (isActive && streamConnectionStatus.value === 'disconnected') {
         streamConnectionStatus.value = 'connected'
-        ElMessage.success('视频流连接已恢复')
+        biliMessage.success('视频流连接已恢复')
       }
     }
   } catch (error) {
     if (streamConnectionStatus.value === 'connected') {
       console.error('视频流健康检查失败:', error)
       streamConnectionStatus.value = 'disconnected'
-      ElMessage.warning('视频流连接异常，请检查网络')
+      biliMessage.warning('视频流连接异常，请检查网络')
     }
   }
 }

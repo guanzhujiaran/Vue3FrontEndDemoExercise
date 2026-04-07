@@ -10,7 +10,7 @@ import { useRouter } from 'vue-router'
 import { RouteName } from '@/models/router'
 import type { ElDropdown } from 'element-plus'
 import { MagicStick, User, Delete, ScaleToOriginal, Moon, Sunny, Monitor, SwitchButton } from '@element-plus/icons-vue'
-import { ElMessage } from 'element-plus'
+import biliMessage from '@/utils/message'
 import userApi from '@/api/user/user_api'
 import { useUserNavStore } from '@/stores/user_nav'
 import { useJwtStore } from '@/stores/jwt_token'
@@ -117,10 +117,10 @@ const handleUserCenterClick = () => {
 const handleLogout = async () => {
   try {
     await userApi.Logout()
-    ElMessage.success('退出登录成功')
+    biliMessage.success('退出登录成功')
   } catch (error) {
     console.error('退出登录失败:', error)
-    ElMessage.warning('退出登录失败，但已清除本地状态')
+    biliMessage.warning('退出登录失败，但已清除本地状态')
   } finally {
     // 清除用户信息和JWT token
     userNavStore.delete_user_nav()

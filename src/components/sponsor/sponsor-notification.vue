@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { ElNotification } from 'element-plus'
+
 const open = () => {
   ElNotification({
     title: '通知',

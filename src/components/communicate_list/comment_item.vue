@@ -3,7 +3,7 @@ import { computed, ref } from 'vue'
 import type { CommentSectionStat, ReplyItem } from '@/models/api/communication/comment_model.ts'
 import utils from '@/utils/mixin.ts'
 import feedbackCommentApi from '@/api/feedback/comment.ts'
-import emitter from '@/utils/mitt.ts'
+import biliMessage from '@/utils/message'
 import { useDebounceFn } from '@vueuse/core'
 import likeSvg from '@/assets/svgs/like.svg?url'
 import likeActiveSvg from '@/assets/svgs/like_active.svg?url'
@@ -102,7 +102,7 @@ const handle_comment_interaction = async (rpid: string | number, action: 0 | 1 |
         break
       case 99:
         await feedbackCommentApi.action(rpid, action).then((resp) => {
-          emitter.emit('toast', { t: resp.msg, e: 'info' })
+          biliMessage.info(resp.msg)
           if (resp.code === 0) {
             reply_item.value.action = action
             reply_item.value.like = (

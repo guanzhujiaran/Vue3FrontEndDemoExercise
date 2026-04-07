@@ -191,7 +191,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import biliMessage, { ElMessageBox } from '@/utils/message'
 import { Refresh } from '@element-plus/icons-vue'
 import browserApi from '@/api/browser/browser_api'
 import { businessHandler } from '@/utils/businessHandler'
@@ -336,7 +336,7 @@ const loadConfig = async (showMessage = true) => {
       Object.assign(form.value, result.data)
       configSource.value = 'browser'
       console.log('已加载浏览器特定配置')
-      if (showMessage) ElMessage.success('配置加载成功')
+      if (showMessage) biliMessage.success('配置加载成功')
     } else {
       // 没有浏览器配置，尝试加载全局配置
       const globalResult = await businessHandler(
@@ -348,18 +348,18 @@ const loadConfig = async (showMessage = true) => {
         Object.assign(form.value, globalResult.data)
         configSource.value = 'global'
         console.log('已加载全局配置')
-        if (showMessage) ElMessage.success('已加载全局配置')
+        if (showMessage) biliMessage.success('已加载全局配置')
       } else {
         // 都没有配置，使用默认值
         resetForm()
         configSource.value = null
         console.log('使用默认配置')
-        if (showMessage) ElMessage.info('暂无通知配置，使用默认配置')
+        if (showMessage) biliMessage.info('暂无通知配置，使用默认配置')
       }
     }
   } catch (error) {
     console.error('加载通知配置失败:', error)
-    if (showMessage) ElMessage.error('加载通知配置失败，使用默认配置')
+    if (showMessage) biliMessage.error('加载通知配置失败，使用默认配置')
     resetForm()
   } finally {
     loading.value = false
@@ -383,11 +383,11 @@ const handleSave = async () => {
     )
     
     if (result.success) {
-      ElMessage.success('通知配置保存成功')
+      biliMessage.success('通知配置保存成功')
       handleClose()
     }
   } catch (error) {
-    ElMessage.error('通知配置保存失败')
+    biliMessage.error('通知配置保存失败')
   }
 }
 
@@ -413,13 +413,13 @@ const handleDelete = async () => {
     )
     
     if (result.success) {
-      ElMessage.success('通知配置删除成功')
+      biliMessage.success('通知配置删除成功')
       resetForm()
       handleClose()
     }
   } catch (error) {
     if (error !== 'cancel') {
-      ElMessage.error('通知配置删除失败')
+      biliMessage.error('通知配置删除失败')
     }
   }
 }

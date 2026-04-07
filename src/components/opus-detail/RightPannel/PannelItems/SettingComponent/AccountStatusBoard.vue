@@ -91,6 +91,7 @@ import type { PageShowModel } from '@/models/account/page/model'
 import type { AccountRunningStatus } from '@/models/account/account_model'
 import accountApi from '@/api/account/account_api'
 import emitter from '@/utils/mitt'
+import biliMessage from '@/utils/message'
 import doLotteryApi from '@/api/do_lottery/bili_do_lottery_api'
 import { businessHandler } from '@/utils/businessHandler'
 const props = defineModel<PageShowModel>()
@@ -133,7 +134,7 @@ const get_account_running_status = () => {
 const handle_account_task_btn = () => {
   let account_name = props.value?.info.account_name
   if (account_name === undefined) {
-    return emitter.emit('toast', { t: `账号名称获取失败！无法执行任务！`, e: 'error' })
+    return biliMessage.error(`账号名称获取失败！无法执行任务！`)
   }
   let is_running: boolean = account_running_status.value?.is_running!
 
@@ -144,10 +145,7 @@ const handle_account_task_btn = () => {
     type: 'warning'
   })
     .then(() => {
-      emitter.emit('toast', {
-        t: `账号【${props.value?.info.account_name}】${action_name}任务！`,
-        e: 'info'
-      })
+      biliMessage.info(`账号【${props.value?.info.account_name}】${action_name}任务！`)
       
       if (action_name === '启动') {
         businessHandler(
@@ -188,14 +186,11 @@ const handle_account_task_btn = () => {
           ]
         )
       } else {
-        emitter.emit('toast', { t: `未知任务命令！`, e: 'error' })
+        biliMessage.error(`未知任务命令！`)
       }
     })
     .catch(() => {
-      emitter.emit('toast', {
-        t: `账号【${props.value?.info.account_name}】取消修改任务状态！`,
-        e: 'info'
-      })
+      biliMessage.info(`账号【${props.value?.info.account_name}】取消修改任务状态！`)
     })
 }
 watch(

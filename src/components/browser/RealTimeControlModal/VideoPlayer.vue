@@ -266,12 +266,12 @@ const copyScreenshotToClipboard = async () => {
         ])
         
         // 显示成功消息
-        const ElMessage = (await import('element-plus')).ElMessage
-        ElMessage.success('截图已复制到剪贴板')
+        const biliMessage = (await import('@/utils/message')).default
+        biliMessage.success('截图已复制到剪贴板')
     } catch (error) {
         console.error('复制截图失败:', error)
-        const ElMessage = (await import('element-plus')).ElMessage
-        ElMessage.error('复制截图失败，请检查浏览器权限')
+        const biliMessage = (await import('@/utils/message')).default
+        biliMessage.error('复制截图失败，请检查浏览器权限')
     }
 }
 

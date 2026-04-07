@@ -27,7 +27,7 @@
 @import '@/assets/bili-pagination-data-view-tailwind.css';
 </style>
 <script setup lang="ts">
-import emitter from '@/utils/mitt.ts'
+import biliMessage from '@/utils/message'
 import { computed, onMounted, ref } from 'vue'
 import { type GlobalVarsType, ScreenTypeEnum } from '@/models/global_var/global_var_model.ts'
 import { KeysEnum, useInject } from '@/models/base/provide_model.ts'
@@ -63,7 +63,7 @@ const loading = defineModel<boolean>('Loading', { default: true })
 const error = defineModel<boolean>('Error', { default: false })
 const emits = defineEmits(['onMounted', 'retryOnError'])
 onMounted(() => {
-  emitter.emit('toast', { t: '加载数据中！', e: 'info' })
+  biliMessage.info('加载数据中！')
   emits('onMounted')
 })
 const refresh_data = () => {

@@ -3,7 +3,7 @@ import lotteryDataBaseApi, {
   type LotteryPaginationParams,
   type LotteryWithLimitTimePaginationParams 
 } from '@/api/lottery_data/bili/lottery_database_bili_api';
-import emitter from '@/utils/mitt';
+import biliMessage from '@/utils/message';
 
 export interface LotteryDataProps {
   lot_name: string;
@@ -83,7 +83,7 @@ export const useLotteryData = (lotName: string) => {
         lotteryDataProps.value.error = true;
         lotteryDataProps.value.error_msg = resp.msg || '网络异常';
         lotteryDataProps.value.lot_data = { items: [], total: 0 };
-        emitter.emit('toast', { t: resp.msg || '加载数据失败', e: 'error' });
+        biliMessage.error(resp.msg || '加载数据失败');
         return { is_succ: false, msg: resp.msg || '加载数据失败' };
       }
       
@@ -92,7 +92,7 @@ export const useLotteryData = (lotName: string) => {
         lotteryDataProps.value.error = true;
         lotteryDataProps.value.error_msg = resp.msg || '业务错误';
         lotteryDataProps.value.lot_data = { items: [], total: 0 };
-        emitter.emit('toast', { t: resp.msg, e: 'error' });
+        biliMessage.error(resp.msg);
         return { is_succ: false, msg: resp.msg };
       }
       
@@ -105,7 +105,7 @@ export const useLotteryData = (lotName: string) => {
       lotteryDataProps.value.error = true;
       lotteryDataProps.value.error_msg = '加载数据失败';
       lotteryDataProps.value.lot_data = { items: [], total: 0 };
-      emitter.emit('toast', { t: '加载数据失败', e: 'error' });
+      biliMessage.error('加载数据失败');
       return { is_succ: false, msg: '加载数据失败' };
     } finally {
       lotteryDataProps.value.loading = false;

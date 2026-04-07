@@ -51,7 +51,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, nextTick } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import biliMessage, { ElMessageBox } from '@/utils/message'
 import { Loading } from '@element-plus/icons-vue'
 import { browserLiveControlApi } from '@/api/browser/browser_api'
 import { businessHandler } from '@/utils/businessHandler'
@@ -299,11 +299,11 @@ const ensureSessionExists = async (): Promise<boolean> => {
 
         if (createResult.success) {
             if (createResult.data?.success && createResult.data?.browser_started === false) {
-                ElMessage.info('浏览器启动任务已提交，正在后台处理...')
+                biliMessage.info('浏览器启动任务已提交，正在后台处理...')
                 return await waitForBrowserReady()
             } else {
                 await loadSessionStatus()
-                ElMessage.success('浏览器会话创建成功')
+                biliMessage.success('浏览器会话创建成功')
                 return true
             }
         }
@@ -353,20 +353,20 @@ const waitForBrowserReady = async (): Promise<boolean> => {
                     },
                     message: ''
                 }
-                ElMessage.success('浏览器启动完成')
+                biliMessage.success('浏览器启动完成')
                 return true
             }
-            ElMessage.info("等待浏览器启动中...")
+            biliMessage.info("等待浏览器启动中...")
             await new Promise(resolve => setTimeout(resolve, pollInterval))
         } catch (error) {
             console.error('检查浏览器状态失败:', error)
             if (attempt === maxAttempts - 1) {
-                ElMessage.error('等待浏览器启动超时，请稍后重试')
+                biliMessage.error('等待浏览器启动超时，请稍后重试')
             }
         }
     }
 
-    ElMessage.error('浏览器启动超时，请检查服务器状态')
+    biliMessage.error('浏览器启动超时，请检查服务器状态')
     return false
 }
 
@@ -545,7 +545,7 @@ const startVideoStream = async () => {
 
         const sessionReady = await ensureSessionExists()
         if (!sessionReady) {
-            ElMessage.error('无法创建浏览器会话')
+            biliMessage.error('无法创建浏览器会话')
             sessionInfo.value.status = 'disconnected'
             isWebrtcConnecting = false
             isStreaming.value = false
@@ -568,14 +568,14 @@ const startVideoStream = async () => {
         // 重置重连状态
         isReconnecting.value = false
         reconnectError.value = ''
-        ElMessage.success('视频流已启动')
+        biliMessage.success('视频流已启动')
 
         // 注意：轮询和心跳会在视频播放成功后自动停止
         // 现在只在连接过程中进行轮询，播放成功后停止
     } catch (error) {
         isWebrtcConnecting = false
         sessionInfo.value.status = 'disconnected'
-        ElMessage.error('启动视频流失败')
+        biliMessage.error('启动视频流失败')
         isStreaming.value = false
         // 重置重连状态
         isReconnecting.value = false
@@ -595,7 +595,7 @@ const setupVideoStream = async () => {
         startHeartbeat()
     } catch (error) {
         console.error('设置视频流失败:', error)
-        ElMessage.error('视频流设置失败')
+        biliMessage.error('视频流设置失败')
         sessionInfo.value.status = 'disconnected'
         isStreaming.value = false
         // 重置重连状态
@@ -660,7 +660,7 @@ const setupWebrtcStream = async () => {
                                 stopSessionPolling()
                             }).catch(error => {
                                 console.error('❌❌❌ 视频播放失败:', error)
-                                ElMessage.error('视频播放失败，请重试')
+                                biliMessage.error('视频播放失败，请重试')
                             })
                         }
                     }
@@ -760,14 +760,14 @@ const setupWebrtcStream = async () => {
             if (peerConnection?.iceConnectionState === 'connected') {
                 console.log('🎉 WebRTC 视频连接已建立！')
                 addLog('WebRTC 视频连接已建立', 'success')
-                ElMessage.success('视频流连接成功')
+                biliMessage.success('视频流连接成功')
                 reconnectAttempts.value = 0
                 isReconnecting.value = false
                 reconnectError.value = ''
             } else if (peerConnection?.iceConnectionState === 'failed') {
                 console.error('❌ WebRTC 连接失败')
                 addLog('WebRTC 连接失败', 'error')
-                ElMessage.error('视频流连接失败')
+                biliMessage.error('视频流连接失败')
                 handleConnectionLost('ICE连接失败')
             } else if (peerConnection?.iceConnectionState === 'disconnected') {
                 console.warn('⚠️ ICE 连接已断开')
@@ -1001,7 +1001,7 @@ const stopVideoStream = () => {
         isDisconnecting.value = false
     }, 500)
 
-    ElMessage.info('视频流已停止')
+    biliMessage.info('视频流已停止')
 }
 
 // 处理连接丢失并尝试重连
@@ -1017,7 +1017,7 @@ const handleConnectionLost = async (reason: string) => {
         console.error('❌ 达到最大重连次数，停止重连')
         reconnectError.value = reason
         isReconnecting.value = false
-        ElMessage.error(`连接已断开，重连失败：${reason}`)
+        biliMessage.error(`连接已断开，重连失败：${reason}`)
         addLog(`连接失败: ${reason} (已尝试 ${maxReconnectAttempts} 次重连)`, 'error')
         // 停止视频流，黑屏
         stopVideoStreamWithBlackScreen()
@@ -1041,7 +1041,7 @@ const handleConnectionLost = async (reason: string) => {
         // 确保重连状态被重置
         isReconnecting.value = false
         reconnectError.value = ''
-        ElMessage.success('重连成功')
+        biliMessage.success('重连成功')
         addLog('重连成功', 'success')
     } catch (error) {
         console.error('重连失败:', error)
@@ -1102,18 +1102,18 @@ const takeScreenshot = async () => {
         console.log('📸 Blob size:', blob.size)
         if (blob.type == "application/json") {
             console.error('❌ 返回的不是图片类型:', blob)
-            ElMessage.error('截图失败')
+            biliMessage.error('截图失败')
             return
         }
         if (!(blob instanceof Blob)) {
             console.error('❌ 返回的不是 Blob 类型:', blob)
-            ElMessage.error('截图失败')
+            biliMessage.error('截图失败')
             return
         }
 
         if (blob.size === 0) {
             console.error('❌ 返回的 Blob 大小为 0')
-            ElMessage.error('截图数据为空')
+            biliMessage.error('截图数据为空')
             return
         }
 
@@ -1122,17 +1122,17 @@ const takeScreenshot = async () => {
             console.log('📸 base64 数据长度:', base64Data.length)
             console.log('📸 base64 前50个字符:', base64Data.substring(0, 50))
             screenshotUrl.value = base64Data
-            ElMessage.success('截图成功')
+            biliMessage.success('截图成功')
             addLog('截图成功', 'success')
         } catch (error) {
             console.error('❌ Blob 转 base64 失败:', error)
             addLog(`截图处理失败: ${error}`, 'error')
-            ElMessage.error('截图处理失败')
+            biliMessage.error('截图处理失败')
         }
     } catch (error) {
         console.error('❌ 截图失败:', error)
         addLog(`截图失败: ${error}`, 'error')
-        ElMessage.error('截图失败')
+        biliMessage.error('截图失败')
     }
 }
 
@@ -1143,7 +1143,7 @@ const handleNavigate = async (url: string) => {
     try {
         const sessionReady = await ensureSessionExists()
         if (!sessionReady) {
-            ElMessage.error('无法创建浏览器会话')
+            biliMessage.error('无法创建浏览器会话')
             return
         }
 
@@ -1155,11 +1155,11 @@ const handleNavigate = async (url: string) => {
         )
 
         if (result.success) {
-            ElMessage.success('导航成功')
+            biliMessage.success('导航成功')
             executionResult.value = `导航到: ${url}`
         }
     } catch (error) {
-        ElMessage.error('导航失败')
+        biliMessage.error('导航失败')
     }
 }
 
@@ -1170,7 +1170,7 @@ const executeJavaScript = async (code: string) => {
     try {
         const sessionReady = await ensureSessionExists()
         if (!sessionReady) {
-            ElMessage.error('无法创建浏览器会话')
+            biliMessage.error('无法创建浏览器会话')
             return
         }
 
@@ -1183,10 +1183,10 @@ const executeJavaScript = async (code: string) => {
 
         if (result.success) {
             executionResult.value = `执行结果: ${JSON.stringify(result.data, null, 2)}`
-            ElMessage.success('JavaScript执行成功')
+            biliMessage.success('JavaScript执行成功')
         }
     } catch (error) {
-        ElMessage.error('JavaScript执行失败')
+        biliMessage.error('JavaScript执行失败')
     }
 }
 
@@ -1197,7 +1197,7 @@ const safeExecuteJavaScript = async (code: string) => {
     try {
         const sessionReady = await ensureSessionExists()
         if (!sessionReady) {
-            ElMessage.error('无法创建浏览器会话')
+            biliMessage.error('无法创建浏览器会话')
             return
         }
 
@@ -1210,10 +1210,10 @@ const safeExecuteJavaScript = async (code: string) => {
 
         if (result.success) {
             executionResult.value = `安全执行结果: ${JSON.stringify(result.data, null, 2)}`
-            ElMessage.success('JavaScript安全执行成功')
+            biliMessage.success('JavaScript安全执行成功')
         }
     } catch (error) {
-        ElMessage.error('JavaScript安全执行失败')
+        biliMessage.error('JavaScript安全执行失败')
     }
 }
 
@@ -1232,12 +1232,12 @@ const toggleManualMode = async () => {
 
             if (result.success) {
                 isManualMode.value = false
-                ElMessage.success('已停止人工操作')
+                biliMessage.success('已停止人工操作')
             }
         } else {
             const sessionReady = await ensureSessionExists()
             if (!sessionReady) {
-                ElMessage.error('无法创建浏览器会话')
+                biliMessage.error('无法创建浏览器会话')
                 return
             }
 
@@ -1250,11 +1250,11 @@ const toggleManualMode = async () => {
             if (result.success) {
                 isManualMode.value = true
                 arePluginsPaused.value = true
-                ElMessage.success('已开始人工操作')
+                biliMessage.success('已开始人工操作')
             }
         }
     } catch (error) {
-        ElMessage.error('切换人工模式失败')
+        biliMessage.error('切换人工模式失败')
     }
 }
 
@@ -1274,12 +1274,12 @@ const togglePlugins = async () => {
             if (result.success) {
                 arePluginsPaused.value = false
                 isManualMode.value = false
-                ElMessage.success('插件已恢复')
+                biliMessage.success('插件已恢复')
             }
         } else {
             const sessionReady = await ensureSessionExists()
             if (!sessionReady) {
-                ElMessage.error('无法创建浏览器会话')
+                biliMessage.error('无法创建浏览器会话')
                 return
             }
 
@@ -1291,11 +1291,11 @@ const togglePlugins = async () => {
 
             if (result.success) {
                 arePluginsPaused.value = true
-                ElMessage.success('插件已暂停')
+                biliMessage.success('插件已暂停')
             }
         }
     } catch (error) {
-        ElMessage.error('切换插件状态失败')
+        biliMessage.error('切换插件状态失败')
     }
 }
 
@@ -1306,7 +1306,7 @@ const performClick = async (coords: { x: number; y: number }) => {
     try {
         const sessionReady = await ensureSessionExists()
         if (!sessionReady) {
-            ElMessage.error('无法创建浏览器会话')
+            biliMessage.error('无法创建浏览器会话')
             return
         }
 
@@ -1325,10 +1325,10 @@ const performClick = async (coords: { x: number; y: number }) => {
 
         if (result.success) {
             executionResult.value = `点击位置: (${coords.x}, ${coords.y}) - 成功`
-            ElMessage.success('点击操作成功')
+            biliMessage.success('点击操作成功')
         }
     } catch (error) {
-        ElMessage.error('点击操作失败')
+        biliMessage.error('点击操作失败')
     }
 }
 
@@ -1347,7 +1347,7 @@ const handleClose = () => {
 
 // 处理保存
 const handleSave = () => {
-    ElMessage.success('配置保存成功')
+    biliMessage.success('配置保存成功')
     handleClose()
 }
 
@@ -1357,7 +1357,7 @@ const showWebRTCDebug = () => {
     console.log('📍 当前函数作用域:', { peerConnection, remoteStream, videoPlayerRef })
 
     // 立即显示消息验证函数被调用
-    ElMessage.info('调试信息正在加载...')
+    biliMessage.info('调试信息正在加载...')
 
     try {
         const debugInfo = {
@@ -1413,7 +1413,7 @@ const showWebRTCDebug = () => {
     } catch (error) {
         console.error('❌ 显示调试信息失败:', error)
         console.error('错误堆栈:', (error as Error)?.stack)
-        ElMessage.error('获取调试信息失败: ' + (error as Error).message)
+        biliMessage.error('获取调试信息失败: ' + (error as Error).message)
     }
 }
 </script>

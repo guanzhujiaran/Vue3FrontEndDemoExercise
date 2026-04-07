@@ -49,10 +49,9 @@
 
 <script setup lang="ts">
 import { ref, reactive } from 'vue'
-import { ElMessage } from 'element-plus'
+import biliMessage from '@/utils/message'
 import { ChatLineRound, Check, RefreshLeft } from '@element-plus/icons-vue'
 import lotteryDataBaseApi from '@/api/lottery_data/bili/lottery_database_bili_api'
-import emitter from '@/utils/mitt'
 
 const dialogVisible = ref(false)
 const loading = ref(false)
@@ -81,7 +80,7 @@ const closeDialog = () => {
 // 提交处理
 const handleSubmit = async () => {
   if (!form.message) {
-    ElMessage.warning('请输入反馈内容')
+    biliMessage.warning('请输入反馈内容')
     return
   }
 
@@ -94,13 +93,13 @@ const handleSubmit = async () => {
       const resp = await lotteryDataBaseApi.submitFeedback(form.message)
 
       if (resp.code === 0) {
-        emitter.emit('toast', { t: '反馈提交成功！感谢您的反馈', e: 'success' })
+        biliMessage.success('反馈提交成功！感谢您的反馈')
         closeDialog()
       } else {
-        emitter.emit('toast', { t: resp.msg, e: 'error' })
+        biliMessage.error(resp.msg)
       }
     } catch (error: any) {
-      emitter.emit('toast', { t: error.message || '提交失败', e: 'error' })
+      biliMessage.error(error.message || '提交失败')
     } finally {
       loading.value = false
     }

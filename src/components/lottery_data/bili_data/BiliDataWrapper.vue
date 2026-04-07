@@ -45,7 +45,7 @@ import { ref, watch, type Ref } from 'vue'
 import BiliPaginationDataView from '@/components/CommonCompo/Bili-DataTable-Compo/BiliPaginationDataView.vue'
 import { type LotDataWrapperProps } from '@/models/api/lottery/lotdata'
 import lotteryDataBaseApi from '@/api/lottery_data/bili/lottery_database_bili_api'
-import emitter from '@/utils/mitt'
+import biliMessage from '@/utils/message'
 import { useLotDataStore } from '@/stores/lot_data.ts'
 import type { TabPaneName } from 'element-plus'
 
@@ -167,7 +167,7 @@ const get_lot_data = (
   return async (page_num: number, page_size: number) => {
     let lot_data_props = get_lot_data_props_by_name(data_type)
     if (!lot_data_props) {
-      emitter.emit('toast', { t: `未知的抽奖数据类型：${data_type}`, e: 'error' })
+      biliMessage.error(`未知的抽奖数据类型：${data_type}`)
       return { is_succ: false, msg: '未知的抽奖数据类型' }
     }
     lot_data_props.value.loading = true
@@ -179,7 +179,7 @@ const get_lot_data = (
           lot_data_props.value.loading = false
           lot_data_props.value.error = true
           lot_data_props.value.error_msg = resp.msg || '业务错误'
-          emitter.emit('toast', { t: resp.msg, e: 'error' })
+          biliMessage.error(resp.msg)
           return { is_succ: false, msg: resp.msg }
         }
         lot_data_props.value.lot_data = resp.data ?? { items: [], total: 0 }
@@ -205,13 +205,13 @@ const handle_page_change = async (
     const resp = await get_lot_data(lot_data_props.lot_name)(now_page, page_size.value)
 
     if (!resp.is_succ) {
-      emitter.emit('toast', { t: resp.msg, e: 'error' })
+      biliMessage.error(resp.msg)
       // lot_data_props.value.lot_page = old_page
       lot_data_props.error = true
       lot_data_props.error_msg = resp.msg || '加载数据失败'
     }
   } catch (error) {
-    emitter.emit('toast', { t: '加载数据失败', e: 'error' })
+    biliMessage.error('加载数据失败')
     // lot_data_props.value.lot_page = old_page
     lot_data_props.error = true
     lot_data_props.error_msg = '加载数据失败'

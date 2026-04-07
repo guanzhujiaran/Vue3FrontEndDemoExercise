@@ -9,7 +9,7 @@ import type {
 import submit_comment_section from '@/components/communicate_list/submit_comment_section.vue'
 import { computed, onMounted, ref, watch, useTemplateRef, onUnmounted } from 'vue'
 import feedbackCommentApi from '@/api/feedback/comment.ts'
-import emitter from '@/utils/mitt.ts'
+import biliMessage from '@/utils/message'
 import { KeysEnum, useInject } from '@/models/base/provide_model.ts'
 import { type GlobalVarsType, ScreenTypeEnum } from '@/models/global_var/global_var_model.ts'
 import { useDebounceFn } from '@vueuse/core'
@@ -71,7 +71,7 @@ const handle_get_reply_main = () => {
     )
     .then((resp) => {
       if (resp.code) {
-        return emitter.emit('toast', { t: resp.msg, e: 'error' })
+        return biliMessage.error(resp.msg)
       }
       comment_list_resp.value = resp.data
     })
@@ -96,7 +96,7 @@ const comment_reply_input_placeholder = computed(() => {
 const submit_comment_reply = async () => {
   let { root, rpidTarget, reply_content } = comment_section_stat.value
   if (!reply_content?.trim()?.length) {
-    return (emitter.emit('toast', { t: '评论内容不能为空', e: 'error' }), false)
+    return (biliMessage.error('评论内容不能为空'), false)
   }
   return await feedbackCommentApi
     .add(
@@ -108,7 +108,7 @@ const submit_comment_reply = async () => {
     )
     .then((resp) => {
       if (resp.code) {
-        return (emitter.emit('toast', { t: resp.msg, e: 'error' }), false)
+        return (biliMessage.error(resp.msg), false)
       }
       comment_list_resp.value.replies.map((replies) => {
         if (replies.rpid === rpidTarget || replies.rpid === root) {
@@ -117,7 +117,7 @@ const submit_comment_reply = async () => {
         }
       })
 
-      emitter.emit('toast', { t: '评论成功', e: 'success' })
+      biliMessage.success('评论成功')
       comment_section_stat.value.is_reply_section_active = false
       comment_section_stat.value.replyTarget = ''
       comment_section_stat.value.rpidTarget = ''
@@ -130,7 +130,7 @@ const submit_comment_reply = async () => {
 }
 const submit_comment = async () => {
   if (!comment_content.value.trim().length) {
-    return (emitter.emit('toast', { t: '评论内容不能为空', e: 'error' }), false)
+    return (biliMessage.error('评论内容不能为空'), false)
   }
   return await feedbackCommentApi
     .add(
@@ -142,10 +142,10 @@ const submit_comment = async () => {
     )
     .then((resp) => {
       if (resp.code) {
-        return (emitter.emit('toast', { t: resp.msg, e: 'error' }), false)
+        return (biliMessage.error(resp.msg), false)
       }
       comment_list_resp.value.replies.unshift(resp.data)
-      emitter.emit('toast', { t: '评论成功', e: 'success' })
+      biliMessage.success('评论成功')
       comment_content.value = ''
       comment_list_resp.value.total_num = comment_list_resp.value.total_num + 1
       return true
@@ -161,16 +161,13 @@ const paginationLayout = computed(() => {
 
 const handle_top = (reply_item: ReplyItem) => {
   console.log(reply_item)
-  emitter.emit('toast', { t: `待实现置顶评论功能${JSON.stringify(reply_item)}`, e: 'info' })
+  biliMessage.info(`待实现置顶评论功能${JSON.stringify(reply_item)}`)
 }
 const handle_delete = (reply_item: ReplyItem) => {
   feedbackCommentApi
     .del(comment_section_base_info.value.oid, comment_section_base_info.value.type, reply_item.rpid)
     .then((resp) => {
-      emitter.emit('toast', {
-        t: resp.msg,
-        e: resp.code === 0 ? 'info' : 'error'
-      })
+      resp.code === 0 ? biliMessage.info(resp.msg) : biliMessage.error(resp.msg)
       if (resp.code === 0) {
         comment_list_resp.value.replies = comment_list_resp.value.replies.filter((item) => {
           let origin_length = item.replies.length
@@ -195,11 +192,11 @@ const handle_delete = (reply_item: ReplyItem) => {
 }
 const handle_black_list = (reply_item: ReplyItem) => {
   console.log(reply_item)
-  emitter.emit('toast', { t: `待实现添加黑名单用户功能${JSON.stringify(reply_item)}`, e: 'info' })
+  biliMessage.info(`待实现添加黑名单用户功能${JSON.stringify(reply_item)}`)
 }
 const handle_report = (reply_item: ReplyItem) => {
   console.log(reply_item)
-  emitter.emit('toast', { t: `待实现举报评论功能${JSON.stringify(reply_item)}`, e: 'info' })
+  biliMessage.info(`待实现举报评论功能${JSON.stringify(reply_item)}`)
 }
 
 const handle_comment_reply_page_change = (reply_item: ReplyItem, page_num: number) => {
@@ -218,10 +215,7 @@ const handle_comment_reply_page_change = (reply_item: ReplyItem, page_num: numbe
           (reply_item.rcount = resp.data.total_num),
           (reply_item.current_page = resp.data.cur_page))
         : {}
-      emitter.emit('toast', {
-        t: resp.msg,
-        e: resp.code === 0 ? 'info' : 'error'
-      })
+      resp.code === 0 ? biliMessage.info(resp.msg) : biliMessage.error(resp.msg)
       expander_reply_loading_set.value.delete(reply_item.rpid)
     })
 }

@@ -30,7 +30,7 @@
 </template>
 
 <script setup lang="ts">
-import { ElMessage } from 'element-plus'
+import biliMessage from '@/utils/message'
 import { DocumentCopy, Delete } from '@element-plus/icons-vue'
 
 interface Props {
@@ -46,9 +46,9 @@ defineEmits<{
 const copyResult = async (text: string) => {
     try {
         await navigator.clipboard.writeText(text)
-        ElMessage.success('结果已复制到剪贴板')
+        biliMessage.success('结果已复制到剪贴板')
     } catch (error) {
-        ElMessage.error('复制失败')
+        biliMessage.error('复制失败')
     }
 }
 </script>

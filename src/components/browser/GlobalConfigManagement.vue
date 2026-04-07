@@ -445,7 +445,7 @@
 
 <script setup lang="ts">
 import { ref, reactive, onMounted, watch } from 'vue'
-import { ElMessage } from 'element-plus'
+import biliMessage from '@/utils/message'
 import { Setting, Apple, Promotion, ChatDotRound, MoreFilled, SuccessFilled, WarningFilled, RefreshLeft, Check, Document, DataAnalysis, Bell, CircleCloseFilled } from '@element-plus/icons-vue'
 import browserApi from '@/api/browser/browser_api'
 import { asyncHandler } from '@/utils/asyncHandler'
@@ -639,13 +639,13 @@ const handleConfigChange = () => {
 const resetConfig = () => {
   notificationConfig.value = { ...defaultConfig }
   configSaved.value = false
-  ElMessage.info('配置已重置')
+  biliMessage.info('配置已重置')
 }
 
 const initializeConfig = () => {
   notificationConfig.value = { ...defaultConfig }
   configSaved.value = false
-  ElMessage.success('配置初始化完成')
+  biliMessage.success('配置初始化完成')
 }
 
 const applyTemplate = (templateName: keyof typeof templates) => {
@@ -662,7 +662,7 @@ const applyTemplate = (templateName: keyof typeof templates) => {
     complete: '完整'
   }
   
-  ElMessage.success(`已应用${templateNames[templateName]}模板`)
+  biliMessage.success(`已应用${templateNames[templateName]}模板`)
 }
 
 const testNotification = async () => {
@@ -670,9 +670,9 @@ const testNotification = async () => {
   try {
     // 模拟测试推送
     await new Promise(resolve => setTimeout(resolve, 1000))
-    ElMessage.success('测试推送发送成功')
+    biliMessage.success('测试推送发送成功')
   } catch (error) {
-    ElMessage.error('测试推送发送失败')
+    biliMessage.error('测试推送发送失败')
   }
   testingNotification.value = false
 }

@@ -16,7 +16,7 @@ import LoadingCard from '@/components/CommonCompo/Bili-Feedback-Compo/items/Load
 import ConfigItem from '@/components/opus-detail/RightPannel/PannelItems/SettingComponent/ConfigItem.vue';
 import BlueBtn from '@/components/CommonCompo/Bili-Interact-Compo/Blue-Btn.vue';
 import accountApi from '@/api/account/account_api';
-import emitter from '@/utils/mitt'
+import biliMessage from '@/utils/message'
 import { businessHandler } from '@/utils/businessHandler'
 
 const is_loading_setting = ref<boolean>()
@@ -357,7 +357,7 @@ onMounted(() => {
             formattedprops.value = fomat_setting(result.data.info.settings)
             is_loading_setting.value = false
           } else {
-            emitter.emit('toast', { t: `账号设置加载失败！`, e: 'error' })
+            biliMessage.error('账号设置加载失败！')
           }
         }
       }

@@ -5,7 +5,7 @@ import { useWindowSize } from '@vueuse/core'
 import Placeholder from '@/components/opus-detail/RightPannel/PannelItems/Placeholder.vue'
 import type { ScrapyStatus, ScrapyStatusResp } from '@/models/api/lottery/lotdata.ts'
 import lottery_database_bili_api from '@/api/lottery_data/bili/lottery_database_bili_api.ts'
-import emitter from '@/utils/mitt.ts'
+import biliMessage from '@/utils/message'
 
 const is_loading = ref(false)
 
@@ -142,10 +142,7 @@ const handle_get_scrapy_status = () => {
     .get_all_scrapy_status()
     .then((res) => {
       res.code
-        ? emitter.emit('toast', {
-            t: res.msg,
-            e: 'error'
-          })
+        ? biliMessage.error(res.msg)
         : (data.value = res.data)
     })
     .finally(() => {

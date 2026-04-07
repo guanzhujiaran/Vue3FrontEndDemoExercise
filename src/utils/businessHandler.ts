@@ -1,4 +1,4 @@
-import { ElMessage } from 'element-plus'
+import biliMessage from './message'
 import type { RootObject } from '@/models/api/base_model'
 
 /**
@@ -62,7 +62,7 @@ export const businessHandler = async <T>(
     if (response.code === 0) {
       // 业务成功
       if (showSuccessToast && successMessage) {
-        ElMessage.success(successMessage)
+        biliMessage.success(successMessage)
       }
 
       // 执行成功回调函数
@@ -85,7 +85,7 @@ export const businessHandler = async <T>(
       const errorMsg = response.msg || errorMessage
 
       if (autoHandleError && showErrorToast) {
-        ElMessage.error(errorMsg)
+        biliMessage.error(errorMsg)
       }
 
       // 执行错误回调函数
@@ -111,7 +111,7 @@ export const businessHandler = async <T>(
     const errorMsg = errorMessage ? errorMessage.concat(error?.message || '') : error?.message
 
     if (autoHandleError && showErrorToast) {
-      ElMessage.error(errorMsg)
+      biliMessage.error(errorMsg)
     }
     if (errorCallbacks && errorCallbacks.length > 0) {
       const result: BusinessHandlerResult<T> = {

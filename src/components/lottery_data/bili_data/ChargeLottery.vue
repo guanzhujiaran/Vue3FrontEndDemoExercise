@@ -37,7 +37,7 @@
 <script setup lang="ts">
 import { watch, onMounted } from 'vue'
 import { useLotteryData } from '@/utils/useLotteryData.ts'
-import emitter from '@/utils/mitt.ts'
+import biliMessage from '@/utils/message'
 import SubmitDynamicLotteryModal from './SubmitDynamicLotteryModal.vue'
 
 const {
@@ -52,12 +52,12 @@ onMounted(() => {
   get_lot_data(1, page_size.value)
     .then((resp) => {
       if (!resp.is_succ) {
-        emitter.emit('toast', { t: resp.msg, e: 'error' })
+        biliMessage.error(resp.msg)
         charge_lot_data_props.value.error = true
       }
     })
     .catch(() => {
-      emitter.emit('toast', { t: '加载数据失败', e: 'error' })
+      biliMessage.error('加载数据失败')
       charge_lot_data_props.value.error = true
     })
     .finally(() => {
@@ -77,12 +77,12 @@ watch(
     get_lot_data(now_page, page_size.value)
       .then((resp) => {
         if (!resp.is_succ) {
-          emitter.emit('toast', { t: resp.msg, e: 'error' })
+          biliMessage.error(resp.msg)
           charge_lot_data_props.value.error = true
         }
       })
       .catch(() => {
-        emitter.emit('toast', { t: '加载数据失败', e: 'error' })
+        biliMessage.error('加载数据失败')
         charge_lot_data_props.value.error = true
       })
       .finally(() => {

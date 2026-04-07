@@ -57,7 +57,7 @@ import {
   type RankingPartition
 } from '@/models/api/lottery/lotdata.ts'
 import { ref } from 'vue'
-import emitter from '@/utils/mitt.ts'
+import biliMessage from '@/utils/message'
 import type { BaseRankItem } from '@/models/compo/ranking/Ranking.ts'
 import BiliBaseRanking from '@/components/CommonCompo/Bili-Ranking-Compo/BiliBaseRanking.vue'
 import UserAvatarBox from '@/components/CommonCompo/Bili-User-Compo/UserAvatarBox.vue'
@@ -160,10 +160,7 @@ const load_func = async (
     )
 
     if (resp.code) {
-      emitter.emit('toast', {
-        t: resp.msg,
-        e: 'error'
-      })
+      biliMessage.error(resp.msg)
       isError.value = true
       return []
     }

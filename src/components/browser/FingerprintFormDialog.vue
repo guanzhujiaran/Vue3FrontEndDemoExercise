@@ -92,7 +92,7 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed, watch } from 'vue'
-import { ElMessage } from 'element-plus'
+import biliMessage from '@/utils/message'
 import type { FormInstance, FormRules } from 'element-plus'
 import { Refresh } from '@element-plus/icons-vue'
 import NotificationConfigPanel from './NotificationConfigPanel.vue'
@@ -227,7 +227,7 @@ const handleSubmit = async () => {
       }
     }
   } catch (error) {
-    ElMessage.error('表单验证失败，请检查输入')
+    biliMessage.error('表单验证失败，请检查输入')
   }
 }
 
@@ -374,13 +374,13 @@ const generateRandomConfig = async () => {
       // 直接使用API返回的数据填充表单
       Object.assign(form, result.data)
 
-      ElMessage.success('随机配置生成成功')
+      biliMessage.success('随机配置生成成功')
     } else {
-      ElMessage.error('随机配置生成失败')
+      biliMessage.error('随机配置生成失败')
     }
   } catch (error) {
     console.error('生成随机配置失败:', error)
-    ElMessage.error('生成随机配置失败')
+    biliMessage.error('生成随机配置失败')
   } finally {
     generatingRandom.value = false
   }

@@ -3,7 +3,8 @@
  * @Date: 2025-12-18 00:00:00
  * @Description: API错误处理工具类
  */
-import emitter from '@/utils/mitt.ts'
+import biliMessage from '@/utils/message'
+import emitter from '@/utils/mitt'
 
 export interface ApiError {
   code: number
@@ -95,7 +96,7 @@ export class ApiErrorHandler {
    * 显示错误消息
    */
   private showErrorToast(message: string): void {
-    emitter.emit('toast', { t: message, e: 'error' })
+    biliMessage.error(message)
   }
 
   /**

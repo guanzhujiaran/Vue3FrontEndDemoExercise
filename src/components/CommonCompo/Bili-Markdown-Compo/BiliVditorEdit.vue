@@ -10,7 +10,7 @@ import { KeysEnum, useInject } from '@/models/base/provide_model'
 import { useDark, useDebounceFn } from '@vueuse/core'
 import { useDeviceSystemStore } from '@/stores/device_system'
 import { Theme } from '@/models/store/device_system'
-import emitter from '@/utils/mitt'
+import biliMessage from '@/utils/message'
 import { useClipboard } from '@vueuse/core'
 import type { GlobalVarsType } from '@/models/global_var/global_var_model.ts'
 
@@ -184,10 +184,7 @@ const viditor_factory = async () => {
     link: {
       click: (bom: Element) => {
         clipBoard.copy(bom.textContent ?? '')
-        emitter.emit('toast', {
-          t: `已经复制链接地址 【${bom.textContent ?? ''}】 前往浏览器自行复制打开，注意安全喵！`,
-          e: 'info'
-        })
+        biliMessage.info(`已经复制链接地址 【${bom.textContent ?? ''}】 前往浏览器自行复制打开，注意安全喵！`)
       }
     }
   })

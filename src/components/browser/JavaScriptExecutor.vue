@@ -164,7 +164,7 @@
 
 <script setup lang="ts">
 import { ref, reactive } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import biliMessage, { ElMessageBox } from '@/utils/message'
 import { browserLiveControlApi } from '@/api/browser/browser_api'
 import type {
   JavaScriptExecuteParams,
@@ -229,7 +229,7 @@ if (input) {
 
 // 方法
 const handleModeChange = (enabled: boolean) => {
-  ElMessage.info(enabled ? '已切换到安全模式' : '已切换到直接执行模式')
+  biliMessage.info(enabled ? '已切换到安全模式' : '已切换到直接执行模式')
   if (enabled && jsCode.value.trim()) {
     // 切换到安全模式时自动检查代码
     checkCodeSecurity()
@@ -265,12 +265,12 @@ const checkCodeSecurity = async () => {
       
       // 如果检测到高风险，显示警告
       if (response.data.level === 'high') {
-        ElMessage.warning('检测到高风险代码，建议修改后再执行')
+        biliMessage.warning('检测到高风险代码，建议修改后再执行')
       }
     }
   } catch (error: any) {
     console.error('安全检查失败', error)
-    ElMessage.error('安全检查失败: ' + error.message)
+    biliMessage.error('安全检查失败: ' + error.message)
     securityResult.value = null
   } finally {
     checkingSecurity.value = false
@@ -279,7 +279,7 @@ const checkCodeSecurity = async () => {
 
 const insertExample = (type: keyof typeof codeExamples) => {
   jsCode.value = codeExamples[type]
-  ElMessage.success('示例代码已插入')
+  biliMessage.success('示例代码已插入')
 }
 
 const executeCode = async () => {
@@ -331,9 +331,9 @@ const executeCode = async () => {
       emit('executed', response.data)
 
       if (response.data.success) {
-        ElMessage.success('代码执行成功')
+        biliMessage.success('代码执行成功')
       } else {
-        ElMessage.error('代码执行失败: ' + (response.data.error || '未知错误'))
+        biliMessage.error('代码执行失败: ' + (response.data.error || '未知错误'))
       }
     } else {
       throw new Error('执行接口返回空结果')
@@ -344,7 +344,7 @@ const executeCode = async () => {
       success: false,
       error: error.message || '执行请求失败'
     }
-    ElMessage.error('代码执行失败: ' + error.message)
+    biliMessage.error('代码执行失败: ' + error.message)
   } finally {
     executing.value = false
   }

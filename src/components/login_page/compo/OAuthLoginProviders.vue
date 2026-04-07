@@ -24,7 +24,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import { ElMessage } from 'element-plus'
+import biliMessage from '@/utils/message'
 import { useCasdoor } from 'casdoor-vue-sdk'
 import { useJwtStore } from '@/stores/jwt_token'
 
@@ -41,7 +41,7 @@ const handleCasdoorLogin = () => {
     window.location.href = getSigninUrl()
   } catch (error) {
     console.error('Casdoor 登录失败:', error)
-    ElMessage.error(`Casdoor 登录失败: ${(error as Error).message}`)
+    biliMessage.error(`Casdoor 登录失败: ${(error as Error).message}`)
   } finally {
     loading.value = false
   }

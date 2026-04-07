@@ -3,7 +3,7 @@ import BiliSearchBox from '@/components/CommonCompo/Bili-Search-Compo/BiliSearch
 import { ref, computed } from 'vue'
 import type { SearchBoxProps } from '@/models/compo/searchbox/SearchBox.ts'
 import lotteryDataBaseApi, { type LotterySearchPaginationParams } from '@/api/lottery_data/bili/lottery_database_bili_api.ts'
-import emitter from '@/utils/mitt.ts'
+import biliMessage from '@/utils/message'
 
 const search_box_prop = ref<SearchBoxProps>({
   placeholder: '转发、预约、充电',
@@ -39,10 +39,7 @@ const performSearch = async (keyword: string, page_num: number = 1) => {
     const res = await lotteryDataBaseApi.searchLotteryByKeyword(params)
     
     if (res.code !== 0) {
-      emitter.emit('toast', {
-        t: res.msg || '搜索失败',
-        e: 'error'
-      })
+      biliMessage.error(res.msg || '搜索失败')
       data.value = []
       total.value = 0
       return
@@ -59,10 +56,7 @@ const performSearch = async (keyword: string, page_num: number = 1) => {
     }
   } catch (error) {
     console.error('搜索出错:', error)
-    emitter.emit('toast', {
-      t: '搜索失败，请稍后重试',
-      e: 'error'
-    })
+    biliMessage.error('搜索失败，请稍后重试')
     data.value = []
     total.value = 0
   } finally {

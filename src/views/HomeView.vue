@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useJwtStore } from '@/stores/jwt_token'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import biliMessage, { ElMessageBox } from '@/utils/message'
 import { CoffeeCup } from '@element-plus/icons-vue'
 import { processRoutesForHome } from '@/utils/routeUtils'
 import { openGlobalLoginModalKey } from '@/models/inject/inject_type.ts'
@@ -61,7 +61,7 @@ const handleLogoutClick = () => {
           next_exp: ''
         }
       }
-      ElMessage.success('已成功退出登录')
+      biliMessage.success('已成功退出登录')
     })
     .catch(() => { })
 }

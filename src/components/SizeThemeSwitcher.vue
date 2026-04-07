@@ -54,7 +54,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { ElMessage } from 'element-plus'
+import biliMessage from '@/utils/message'
 
 interface SizeOption {
   value: string
@@ -100,7 +100,7 @@ const setSize = (size: string) => {
   )
   document.documentElement.classList.add(`size-${size}`)
   localStorage.setItem('size-theme', size)
-  ElMessage.success(`已切换到${sizeOptions.find(opt => opt.value === size)?.label}尺寸`)
+  biliMessage.success(`已切换到${sizeOptions.find(opt => opt.value === size)?.label}尺寸`)
 }
 
 const setScale = (scale: 'normal' | 'compact' | 'spacious') => {
@@ -110,7 +110,7 @@ const setScale = (scale: 'normal' | 'compact' | 'spacious') => {
     document.documentElement.classList.add(`size-${scale}`)
   }
   localStorage.setItem('size-scale', scale)
-  ElMessage.success(`已切换到${scale === 'normal' ? '正常' : scale === 'compact' ? '紧凑' : '宽松'}模式`)
+  biliMessage.success(`已切换到${scale === 'normal' ? '正常' : scale === 'compact' ? '紧凑' : '宽松'}模式`)
 }
 
 onMounted(() => {

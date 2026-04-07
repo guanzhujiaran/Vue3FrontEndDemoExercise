@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
 import { useRoute } from 'vue-router'
-import { ElMessage } from 'element-plus'
 import { useJwtStore } from '@/stores/jwt_token'
+import biliMessage from '@/utils/message'
 import { useUserNavStore } from '@/stores/user_nav'
 
 const route = useRoute()
@@ -15,7 +15,7 @@ const processCallback = () => {
   const user_name = route.query.user_name as string
 
   if (!token || !uid || !user_name) {
-    ElMessage.error('登录失败：缺少必要的登录信息')
+    biliMessage.error('登录失败：缺少必要的登录信息')
     return
   }
 
@@ -39,7 +39,7 @@ const processCallback = () => {
     }
     userNavStore.save_user_nav(userInfo)
 
-    ElMessage.success('登录成功，正在跳转...')
+    biliMessage.success('登录成功，正在跳转...')
 
     // 跳转到首页
     setTimeout(() => {
@@ -47,7 +47,7 @@ const processCallback = () => {
     }, 500)
   } catch (error) {
     console.error('登录处理失败:', error)
-    ElMessage.error('登录失败：' + (error instanceof Error ? error.message : '未知错误'))
+    biliMessage.error('登录失败：' + (error instanceof Error ? error.message : '未知错误'))
   }
 }
 
