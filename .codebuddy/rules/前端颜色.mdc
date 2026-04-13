@@ -1,9 +1,0 @@
----
-description: 
-alwaysApply: true
-enabled: true
-updatedAt: 2025-12-24T08:32:13.933Z
-provider: 
----
-
-颜色全部从src\assets\tailwind.css 里面获取，使用var(--el-color--xx) 这样配置

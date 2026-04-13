@@ -26,6 +26,7 @@ const hueThemeStore = useHueThemeStore()
 const userNavStore = useUserNavStore()
 const jwtStore = useJwtStore()
 
+
 // 计算当前经验进度百分比
 const expProgress = computed(() => {
   const levelInfo = user_nav_model.value?.level_info
@@ -95,7 +96,6 @@ const sizeThemes: { value: SizeTheme; label: string }[] = [
 const themeVisible = ref(false)
 const sizeThemeVisible = ref(false)
 const hueThemeVisible = ref(false)
-const dropdownVisible = ref(false)
 
 // 当任意一个 popover 显示时，隐藏其他 popover
 const handlePopoverVisibleChange = (visible: boolean, type: 'theme' | 'size' | 'hue') => {

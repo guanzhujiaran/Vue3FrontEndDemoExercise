@@ -1,6 +1,6 @@
 <template>
   <div class="oauth-providers">
-    <!-- Casdoor 登录按钮 -->
+    <!-- 第三方登录按钮 -->
     <el-button
       type="primary"
       size="large"
@@ -17,7 +17,7 @@
           <path fill="#1E88E5" d="M512 332c-99.4 0-180 80.6-180 180s80.6 180 180 180 180-80.6 180-180-80.6-180-180-180zm0 320c-77.2 0-140-62.8-140-140s62.8-140 140-140 140 62.8 140 140-62.8 140-140 140z"/>
         </svg>
       </template>
-      Casdoor 登录
+      第三方登录
     </el-button>
   </div>
 </template>
@@ -33,15 +33,15 @@ const emit = defineEmits(['login-success'])
 const loading = ref(false)
 const { getSigninUrl } = useCasdoor()
 
-// 使用 Casdoor SDK 进行登录
+// 使用第三方登录
 const handleCasdoorLogin = () => {
   try {
     loading.value = true
     // 使用 SDK 获取登录 URL 并跳转
     window.location.href = getSigninUrl()
   } catch (error) {
-    console.error('Casdoor 登录失败:', error)
-    biliMessage.error(`Casdoor 登录失败: ${(error as Error).message}`)
+    console.error('第三方登录失败:', error)
+    biliMessage.error(`第三方登录失败: ${(error as Error).message}`)
   } finally {
     loading.value = false
   }

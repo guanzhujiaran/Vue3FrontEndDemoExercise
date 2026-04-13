@@ -253,11 +253,11 @@ const routes: CustomRouteRecordRaw[] = [
     meta: {
       id: 'browser-management',
       title: RouteName.BROWSER_MANAGEMENT,
-      description: '管理浏览器指纹、插件配置和通知设置',
-      isHeaderShow: false,
+      description: 'RPA浏览器自动化操作和调试控制台',
+      isHeaderShow: import.meta.env.VITE_BILI_ENV === 'dev',
       requiresLogin: true,
       icon: IconMonitor,
-      showInHome: false,
+      showInHome: import.meta.env.VITE_BILI_ENV === 'dev',
       order: 5
     }
   },
@@ -278,7 +278,7 @@ const routes: CustomRouteRecordRaw[] = [
     name: 'CASDOOR_CALLBACK',
     component: () => import('@/views/CasdoorCallbackView.vue'),
     meta: {
-      title: 'Casdoor 登录回调',
+      title: '第三方登录回调',
       isHeaderShow: false
     }
   },
@@ -316,12 +316,13 @@ const router = createRouter({
   routes
 })
 // 路由守卫 - 全局加载遮罩
-router.beforeEach((to, from, next) => {
+router.beforeEach((to, from) => {
   // 如果不是首次访问（from.name存在）
   if (from.name) {
     emitter.emit('loading', { isLoading: true, loadingText: `正在前往：【${to.meta.title}】中` })
   }
-  next()
+  // 直接返回，不再需要调用 next()
+  return true
 })
 
 router.afterEach(() => {

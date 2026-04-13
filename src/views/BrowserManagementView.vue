@@ -4,25 +4,42 @@
  * @LastEditors: 星瞳 1944637830@qq.com
  * @LastEditTime: 2024-12-24 00:00:00
  * @FilePath: \Vue3FrontEndDemoExercise\src\views\BrowserManagementView.vue
- * @Description: 浏览器管理页面 - 统一管理浏览器指纹和工作区
+ * @Description: RPA浏览器控制台 - 统一管理浏览器自动化操作和调试
 -->
 <template>
   <div class="browser-management-view">
     <!-- 标签页导航 -->
     <el-tabs v-model="activeTab" type="card" class="mb-4">
-      <el-tab-pane label="统一浏览器管理" name="unified" :lazy="true">
-        <FingerprintCardList :fingerprints="fingerprints" :loading="loading" @refresh="loadFingerprints"
-          @edit="handleEditFingerprint" @delete="handleDeleteFingerprint" @quickStart="handleQuickStart"
-          @configNotify="handleConfigNotify" @create="handleCreateFingerprint" />
+      <el-tab-pane label="RPA浏览器控制台" name="unified" :lazy="true">
+        <FingerprintList 
+          :fingerprints="fingerprints" 
+          :loading="loading" 
+          @refresh="loadFingerprints"
+          @edit="handleEditFingerprint" 
+          @delete="handleDeleteFingerprint" 
+          @start="handleQuickStart"
+          @create="handleCreateFingerprint" 
+        />
       </el-tab-pane>
       <el-tab-pane label="全局配置" name="global" :lazy="true">
         <GlobalConfigManagement />
       </el-tab-pane>
     </el-tabs>
 
-    <!-- 实时控制Modal -->
-    <RealTimeControlModal v-model="showRealTimeControl" :fingerprint="selectedFingerprint"
-      @save="handleSaveControlConfig" />
+    <!-- 浏览器调试面板对话框 -->
+    <el-dialog 
+      v-model="showDebugPanel" 
+      title="浏览器控制台"
+      width="95%"
+      top="2vh"
+      destroy-on-close
+      :close-on-click-modal="false"
+    >
+      <BrowserDebugPanel 
+        v-if="showDebugPanel && selectedFingerprint"
+        :browser-id="String(selectedFingerprint.id)" 
+      />
+    </el-dialog>
 
     <!-- 通知配置Modal -->
     <NotifyConfigModal v-model="showNotifyConfig" :fingerprint="selectedFingerprint" @refresh="loadFingerprints" />
@@ -60,10 +77,10 @@
 import { ref, onMounted } from 'vue'
 import { useDebounceFn } from '@vueuse/core'
 import biliMessage from '@/utils/message'
-import FingerprintCardList from '@/components/browser/FingerprintCardList.vue'
+import FingerprintList from '@/components/browser/FingerprintList.vue'
 import FingerprintEditForm from '@/components/browser/FingerprintEditForm.vue'
 import GlobalConfigManagement from '@/components/browser/GlobalConfigManagement.vue'
-import RealTimeControlModal from '@/components/browser/RealTimeControlModal'
+import BrowserDebugPanel from '@/components/browser/BrowserDebugPanel.vue'
 import NotifyConfigModal from '@/components/browser/NotifyConfigModal.vue'
 import browserApi from '@/api/browser/browser_api'
 import { businessHandler } from '@/utils/businessHandler'
@@ -78,7 +95,7 @@ const loading = ref(false)
 const fingerprints = ref<UserBrowserInfoReadResp[]>([])
 
 // Modal控制
-const showRealTimeControl = ref(false)
+const showDebugPanel = ref(false)
 const showNotifyConfig = ref(false)
 const showEditDialog = ref(false)
 const selectedFingerprint = ref<UserBrowserInfoReadResp | null>(null)
@@ -96,7 +113,8 @@ const loadFingerprints = async () => {
   }
 
   const result = await businessHandler(browserApi.listFingerprint(params), {
-    errorMessage: '加载指纹列表失败'
+    errorMessage: '加载指纹列表失败',
+    showSuccessToast: false // 查询操作不显示成功提示
   })
 
   if (result.success && result.data) {
@@ -108,10 +126,10 @@ const loadFingerprints = async () => {
 
 const debouncedLoadFingerprints = useDebounceFn(loadFingerprints, 500)
 
-// 处理快速启动（实时控制）
+// 处理快速启动（打开调试面板）
 const handleQuickStart = (fingerprint: UserBrowserInfoReadResp) => {
   selectedFingerprint.value = fingerprint
-  showRealTimeControl.value = true
+  showDebugPanel.value = true
 }
 
 // 处理编辑指纹
@@ -147,12 +165,6 @@ const handleDeleteFingerprint = async (fingerprint: UserBrowserInfoReadResp) => 
 const handleConfigNotify = (fingerprint: UserBrowserInfoReadResp) => {
   selectedFingerprint.value = fingerprint
   showNotifyConfig.value = true
-}
-
-// 处理保存控制配置
-const handleSaveControlConfig = (config: any) => {
-  console.log('保存控制配置:', config)
-  biliMessage.success('控制配置保存成功')
 }
 
 // 处理保存指纹

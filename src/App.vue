@@ -4,7 +4,6 @@ import SponsorNotification from '@/components/sponsor/sponsor-notification.vue'
 import { onMounted, onUnmounted, provide, ref, computed } from 'vue'
 import { useThemeStore } from '@/stores/theme'
 import { useUserPrefStore } from '@/stores/user_pref.ts'
-import { setupAutoScale } from '@/utils/Browser/systemSetting.ts'
 import { useHead } from '@vueuse/head'
 import emitter from '@/utils/mitt'
 import zhCn from 'element-plus/es/locale/lang/zh-cn'
@@ -87,8 +86,6 @@ onMounted(() => {
   // 设置系统主题监听
   themeCleanup = themeStore.setupSystemThemeListener()
 
-  // 设置自动缩放功能
-  autoScaleCleanup = setupAutoScale()
 
 })
 

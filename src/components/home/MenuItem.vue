@@ -36,7 +36,7 @@ const bili_user = useInject(KeysEnum.BiliUser) as Ref<UserNavModel>
 const headerBarView: any = inject('headerBarView', null)
 const router = useRouter()
 
-const handleMenuItemClick = (e: Event) => {
+const handleMenuItemClick = async (e: Event) => {
   // 如果路由需要登录但用户未登录，则不跳转，显示登录提示
   if (props.item.requiresLogin && !bili_user.value?.uid) {
     // 调用父组件的方法处理需要登录的路由点击
@@ -46,11 +46,19 @@ const handleMenuItemClick = (e: Event) => {
     }
   }
   // 正常路由跳转
-  router.push(props.item.path)
+  try {
+    await router.push(props.item.path)
+  } catch (error) {
+    // 忽略导航重复错误和取消错误
+    if ((error as Error).name !== 'NavigationDuplicated' && 
+        !(error as Error).message?.includes('Avoided redundant navigation')) {
+      console.error('路由导航错误:', error)
+    }
+  }
 }
 
 // 处理子菜单点击事件
-const handleSubMenuClick = (e: Event) => {
+const handleSubMenuClick = async (e: Event) => {
   // 如果路由需要登录但用户未登录，则不跳转，显示登录提示
   if (props.item.requiresLogin && !bili_user.value?.uid) {
     // 调用父组件的方法处理需要登录的路由点击
@@ -60,7 +68,15 @@ const handleSubMenuClick = (e: Event) => {
     }
   }
   if (e.target === e.currentTarget) {
-    router.push(props.item.path)
+    try {
+      await router.push(props.item.path)
+    } catch (error) {
+      // 忽略导航重复错误和取消错误
+      if ((error as Error).name !== 'NavigationDuplicated' && 
+          !(error as Error).message?.includes('Avoided redundant navigation')) {
+        console.error('路由导航错误:', error)
+      }
+    }
   }
 }
 </script>

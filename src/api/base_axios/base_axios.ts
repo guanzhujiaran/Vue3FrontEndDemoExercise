@@ -8,6 +8,7 @@
  */
 // src/axios.js
 import { useJwtStore } from '@/stores/jwt_token'
+import { useUserNavStore } from '@/stores/user_nav'
 import axios from 'axios'
 import emitter from '@/utils/mitt.ts'
 import { apiErrorHandler } from './error_handler'
@@ -36,12 +37,21 @@ const ajax = axios.create({
 // 请求拦截器，可以在请求发送前做一些处理
 ajax.interceptors.request.use(
   (config) => {
-    // 比如添加 Authorization token
+    // 添加 Authorization token
     const JwtStore = useJwtStore()
     const token = JwtStore.jwt
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
     }
+
+    // 添加浏览器自动化API所需的认证头
+    const UserNavStore = useUserNavStore()
+    const userInfo = UserNavStore.user_nav
+    if (userInfo && userInfo.uid) {
+      config.headers['x-bili-mid'] = userInfo.uid
+      config.headers['x-bili-level'] = userInfo.level_info?.current_level || '0'
+    }
+
     return config
   },
   (error: any) => Promise.reject(error)

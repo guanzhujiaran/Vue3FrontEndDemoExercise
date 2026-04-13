@@ -328,7 +328,8 @@ const loadConfig = async (showMessage = true) => {
     const result = await businessHandler(
       browserApi.readNotifyConfig({
         browser_id: currentFingerprint.value.id_str || currentFingerprint.value.id.toString()
-      })
+      }),
+      { showSuccessToast: false } // 查询操作不显示成功提示
     )
     
       if (result.success && result.data) {
@@ -340,7 +341,8 @@ const loadConfig = async (showMessage = true) => {
     } else {
       // 没有浏览器配置，尝试加载全局配置
       const globalResult = await businessHandler(
-        browserApi.readGlobalNotifyConfig()
+        browserApi.readGlobalNotifyConfig(),
+        { showSuccessToast: false } // 查询操作不显示成功提示
       )
       
       if (globalResult.success && globalResult.data) {

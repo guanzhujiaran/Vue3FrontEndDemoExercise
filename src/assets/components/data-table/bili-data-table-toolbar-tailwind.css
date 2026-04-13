@@ -23,16 +23,17 @@
 }
 
 :deep(.el-dialog__header) {
-  border-bottom: 1px solid #eaeaea;
-  padding-bottom: 15px;
+  @apply border-b;
+  border-color: var(--el-border-color-lighter);
+  padding-bottom: var(--spacing-4);
 }
 
 :deep(.el-dialog__body) {
-  padding-top: 20px;
+  padding-top: var(--spacing-5);
 }
 
 :deep(.el-slider__runway) {
-  margin: 16px 0;
+  margin: var(--spacing-4) 0;
 }
 
 :deep(.el-slider__button) {
@@ -44,7 +45,7 @@
 }
 
 :deep(.el-form-item) {
-  margin-bottom: 20px;
+  margin-bottom: var(--spacing-5);
 }
 
 :deep(.el-form-item__label) {
@@ -52,7 +53,7 @@
 }
 
 .setting-dialog {
-  min-width: 500px;
+  min-width: 31.25rem;
 }
 
 .dialog-content {

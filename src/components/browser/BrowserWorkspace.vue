@@ -4,7 +4,7 @@
  * @LastEditors: 星瞳 1944637830@qq.com
  * @LastEditTime: 2024-12-24 00:00:00
  * @FilePath: \Vue3FrontEndDemoExercise\src\components\browser\BrowserWorkspace.vue
- * @Description: 浏览器工作区组件 - 响应式卡片布局，适配移动端
+ * @Description: RPA浏览器控制台 - 响应式卡片布局，适配移动端
 -->
 <template>
   <div class="browser-workspace">
@@ -558,17 +558,19 @@ const startSession = async (instanceId: number) => {
       expiration_time: 3600
     }
 
-    const response = await browserLiveControlApi.createBrowserSession(instanceId, request)
+    const result = await businessHandler(
+      browserLiveControlApi.createBrowserSession(instanceId, request),
+      {
+        successMessage: `实例 ${instanceId} 启动成功`,
+        errorMessage: `实例 ${instanceId} 启动失败`
+      }
+    )
 
-    if (response.data?.success) {
-      biliMessage.success(`实例 ${instanceId} 启动成功`)
+    if (result.success) {
       await refreshInstanceStatus(instanceId)
-    } else {
-      biliMessage.error(`实例 ${instanceId} 启动失败`)
     }
   } catch (error: any) {
     console.error('启动会话失败', error)
-    biliMessage.error(error.message || '启动会话失败')
   } finally {
     instance.operationLoading = false
   }
@@ -582,9 +584,18 @@ const refreshInstanceStatus = async (instanceId: number) => {
   instance.statusLoading = true
 
   try {
-    const response = await browserLiveControlApi.getBrowserSessionStatus({ browser_id: String(instanceId) })
-    if (response.data) {
-      instance.sessionStatus = response.data
+    const result = await businessHandler(
+      browserLiveControlApi.getBrowserSessionStatus({ browser_id: String(instanceId) }),
+      {
+        showSuccessToast: false,
+        showErrorToast: false // 静默失败，不显示错误提示
+      }
+    )
+    
+    if (result.success && result.data) {
+      instance.sessionStatus = result.data
+    } else {
+      instance.sessionStatus = null
     }
   } catch (error) {
     console.error('获取实例状态失败', error)
@@ -682,13 +693,18 @@ const createBrowserSession = async () => {
       expiration_time: 3600
     }
 
-    const response = await browserLiveControlApi.createBrowserSession({
-      browser_id: String(selectedBrowserId.value),
-      request
-    })
+    const result = await businessHandler(
+      browserLiveControlApi.createBrowserSession({
+        browser_id: String(selectedBrowserId.value),
+        request
+      }),
+      {
+        successMessage: '浏览器会话创建成功',
+        errorMessage: '创建浏览器会话失败'
+      }
+    )
 
-    if (response.data?.success) {
-      biliMessage.success('浏览器会话创建成功')
+    if (result.success) {
       await refreshSessionStatus()
       
       // 如果会话正在运行，开始心跳
@@ -697,12 +713,9 @@ const createBrowserSession = async () => {
         startStatusCheck()
         await refreshScreenshot()
       }
-    } else {
-      biliMessage.error('创建浏览器会话失败')
     }
   } catch (error: any) {
     console.error('创建浏览器会话失败', error)
-    biliMessage.error(error.message || '创建浏览器会话失败')
   }
   sessionCreating.value = false
 }
@@ -713,12 +726,18 @@ const refreshSessionStatus = async () => {
 
   sessionStatusLoading.value = true
   try {
-    const response = await browserLiveControlApi.getBrowserSessionStatus({
-      browser_id: String(selectedBrowserId.value)
-    })
+    const result = await businessHandler(
+      browserLiveControlApi.getBrowserSessionStatus({
+        browser_id: String(selectedBrowserId.value)
+      }),
+      {
+        showSuccessToast: false,
+        showErrorToast: false // 静默失败
+      }
+    )
 
-    if (response.data) {
-      sessionStatus.value = response.data
+    if (result.success && result.data) {
+      sessionStatus.value = result.data
     } else {
       sessionStatus.value = null
     }
@@ -788,16 +807,16 @@ const refreshScreenshot = async () => {
 
   screenshotLoading.value = true
   try {
-    const blob = await browserLiveControlApi.getScreenshot(selectedBrowserId.value, {
-      quality: 80,
-      format: 'jpeg'
-    })
-
-    // 将 Blob 转换为 Data URL
-    const url = URL.createObjectURL(blob)
-    screenshotUrl.value = url
-    lastScreenshotTime.value = new Date().toLocaleString('zh-CN')
-    biliMessage.success('截图已更新')
+    // 注意：截图接口已在后端移除，请使用 executeAction 接口执行截图操作
+    biliMessage.warning('截图功能已移除，请使用自定义操作执行截图')
+    // const blob = await browserLiveControlApi.getScreenshot(selectedBrowserId.value, {
+    //   quality: 80,
+    //   format: 'jpeg'
+    // })
+    // const url = URL.createObjectURL(blob)
+    // screenshotUrl.value = url
+    // lastScreenshotTime.value = new Date().toLocaleString('zh-CN')
+    // biliMessage.success('截图已更新')
   } catch (error) {
     console.error('获取截图失败', error)
     biliMessage.error('获取截图失败')
@@ -805,97 +824,106 @@ const refreshScreenshot = async () => {
   screenshotLoading.value = false
 }
 
-// 暂停视频流
+// 暂停视频流（已删除，后端不再提供此接口）
 const pauseVideoStream = async () => {
   if (!selectedBrowserId.value) return
 
   try {
-    await businessHandler(
-      browserLiveControlApi.pauseVideoStream(selectedBrowserId.value.toString()),
-      { errorMessage: '暂停视频流失败' }
-    )
-    videoPaused.value = true
-    streamUrl.value = ''
-    await refreshScreenshot()
+    // 注意：暂停视频流接口已在后端移除
+    biliMessage.warning('暂停视频流功能已移除')
+    // await businessHandler(
+    //   browserLiveControlApi.pauseVideoStream(selectedBrowserId.value.toString()),
+    //   { errorMessage: '暂停视频流失败' }
+    // )
+    // videoPaused.value = true
+    // streamUrl.value = ''
+    // await refreshScreenshot()
   } catch (error) {
     console.error('暂停视频流失败', error)
   }
 }
 
-// 恢复视频流
+// 恢复视频流（已删除，后端不再提供此接口）
 const resumeVideoStream = async () => {
   if (!selectedBrowserId.value) return
 
   try {
-    await businessHandler(
-      browserLiveControlApi.resumeVideoStream(selectedBrowserId.value.toString()),
-      { errorMessage: '恢复视频流失败' }
-    )
-    videoPaused.value = false
-    await startVideoStream()
+    // 注意：恢复视频流接口已在后端移除
+    biliMessage.warning('恢复视频流功能已移除')
+    // await businessHandler(
+    //   browserLiveControlApi.resumeVideoStream(selectedBrowserId.value.toString()),
+    //   { errorMessage: '恢复视频流失败' }
+    // )
+    // videoPaused.value = false
+    // await startVideoStream()
   } catch (error) {
     console.error('恢复视频流失败', error)
   }
 }
 
-// 刷新标签页列表
+// 刷新标签页列表（已删除，后端不再提供此接口）
 const refreshTabsList = async () => {
   if (!selectedBrowserId.value) return
 
   tabsLoading.value = true
   try {
-    const response = await businessHandler(
-      browserLiveControlApi.listTabs(selectedBrowserId.value.toString()),
-      { errorMessage: '获取标签页列表失败' }
-    )
-
-    if (response.success && response.data) {
-      tabsList.value = response.data
-    }
+    // 注意：标签页列表接口已在后端移除
+    biliMessage.warning('标签页列表功能已移除')
+    // const response = await businessHandler(
+    //   browserLiveControlApi.listTabs(selectedBrowserId.value.toString()),
+    //   { errorMessage: '获取标签页列表失败' }
+    // )
+    // if (response.success && response.data) {
+    //   tabsList.value = response.data
+    // }
   } catch (error) {
     console.error('获取标签页列表失败', error)
   }
   tabsLoading.value = false
 }
 
-// 切换标签页
+// 切换标签页（已删除，后端不再提供此接口）
 const switchTab = async (tabId: string) => {
   if (!selectedBrowserId.value) return
 
   try {
-    await businessHandler(
-      browserLiveControlApi.switchTab({
-        browser_id: selectedBrowserId.value.toString(),
-        tab_id: tabId
-      }),
-      { errorMessage: '切换标签页失败' }
-    )
-    biliMessage.success('切换标签页成功')
-    await refreshTabsList()
-    await refreshScreenshot()
+    // 注意：切换标签页接口已在后端移除
+    biliMessage.warning('切换标签页功能已移除')
+    // await businessHandler(
+    //   browserLiveControlApi.switchTab({
+    //     browser_id: selectedBrowserId.value.toString(),
+    //     tab_id: tabId
+    //   }),
+    //   { errorMessage: '切换标签页失败' }
+    // )
+    // biliMessage.success('切换标签页成功')
+    // await refreshTabsList()
+    // await refreshScreenshot()
   } catch (error) {
     console.error('切换标签页失败', error)
   }
 }
 
-// 处理视频点击
+// 处理视频点击（已删除，请使用 executeAction 接口）
 const handleVideoClick = async (x: number, y: number) => {
   if (!selectedBrowserId.value || !isBrowserStarted.value) return
 
   try {
-    await businessHandler(
-      browserLiveControlApi.clickElement({
-        browser_id: selectedBrowserId.value.toString(),
-        request: {
-          x,
-          y,
-          button: 'left',
-          double: false,
-          wait_after: 100
-        }
-      }),
-      { errorMessage: '点击失败' }
-    )
+    // 注意：点击接口已在后端移除，请使用 executeAction 接口执行点击操作
+    biliMessage.warning('点击功能已移除，请使用自定义操作执行点击')
+    // await businessHandler(
+    //   browserLiveControlApi.clickElement({
+    //     browser_id: selectedBrowserId.value.toString(),
+    //     request: {
+    //       x,
+    //       y,
+    //       button: 'left',
+    //       double: false,
+    //       wait_after: 100
+    //     }
+    //   }),
+    //   { errorMessage: '点击失败' }
+    // )
   } catch (error) {
     console.error('点击失败', error)
   }
@@ -1044,42 +1072,8 @@ onUnmounted(() => {
   white-space: nowrap;
 }
 
-/* 统计卡片 */
-.stat-card {
-  height: 80px;
-}
-
-.stat-card :deep(.el-card__body) {
-  padding: 16px;
-  height: 100%;
-}
-
-.stat-content {
-  display: flex;
-  align-items: center;
-  height: 100%;
-  gap: 12px;
-}
-
-.stat-icon {
-  font-size: 32px;
-}
-
-.stat-info {
-  flex: 1;
-}
-
-.stat-value {
-  font-size: 24px;
-  font-weight: 700;
-  line-height: 1.2;
-}
-
-.stat-label {
-  font-size: 12px;
-  color: #909399;
-  line-height: 1.2;
-}
+/* 统计卡片 - 样式已移至 tailwind.css */
+/* .stat-card, .stat-content, .stat-icon, .stat-info, .stat-value, .stat-label */
 
 /* 实例卡片 */
 .instance-cards .el-col {
@@ -1089,9 +1083,9 @@ onUnmounted(() => {
 .instance-card {
   flex: 1;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all var(--transition-base) var(--transition-timing);
   position: relative;
-  margin-bottom: 16px;
+  margin-bottom: var(--spacing-4);
 }
 
 .instance-card:hover {
@@ -1100,135 +1094,60 @@ onUnmounted(() => {
 }
 
 .instance-card.selected {
-  border-color: #409EFF;
+  border-color: var(--el-color-primary);
   box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.2);
 }
 
 .card-selection {
   position: absolute;
-  top: 10px;
-  left: 10px;
+  top: var(--spacing-2);
+  left: var(--spacing-2);
   z-index: 10;
   background: rgba(255, 255, 255, 0.9);
-  border-radius: 4px;
-  padding: 4px;
+  border-radius: var(--size-radius-base);
+  padding: var(--spacing-1);
 }
 
-/* 卡片头部 */
-.card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 12px;
-}
+/* 卡片头部 - 样式已移至 tailwind.css */
+/* .card-header, .browser-info, .browser-icon, .browser-details, .browser-name, .browser-platform, .status-indicator, .status-dot */
 
-.browser-info {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
+/* 平台信息 - 样式已移至 tailwind.css */
+/* .platform-info */
 
-.browser-icon {
-  flex-shrink: 0;
-}
-
-.browser-details {
-  flex: 1;
-  min-width: 0;
-}
-
-.browser-name {
-  font-size: 16px;
-  font-weight: 600;
-  color: #303133;
-  margin-bottom: 4px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.browser-platform {
-  font-size: 12px;
-  color: #909399;
-}
-
-.status-indicator {
-  flex-shrink: 0;
-}
-
-.status-dot {
-  animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.5;
-  }
-}
-
-/* 平台信息 */
-.platform-info {
-  margin-bottom: 12px;
-}
-
-/* 状态信息 */
-.status-section {
-  margin-bottom: 16px;
-}
-
-.status-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 8px;
-}
-
-.status-label {
-  font-size: 12px;
-  color: #606266;
-  font-weight: 500;
-}
-
-.connection-count {
-  font-size: 14px;
-  font-weight: 600;
-  color: #409EFF;
-}
+/* 状态信息 - 样式已移至 tailwind.css */
+/* .status-section, .status-row, .status-label, .connection-count */
 
 /* 操作按钮 */
 .action-buttons {
   display: flex;
-  gap: 8px;
+  gap: var(--spacing-2);
   flex-wrap: wrap;
 }
 
 .action-btn {
   flex: 1;
   min-width: 0;
-  font-size: 12px;
+  font-size: var(--component-font-size-xs);
 }
 
 .action-btn :deep(.el-icon) {
-  margin-right: 4px;
+  margin-right: var(--spacing-1);
 }
 
 /* 批量选择切换 */
 .batch-toggle {
   text-align: center;
-  margin-top: 16px;
-  padding: 16px;
-  border-top: 1px solid #ebeef5;
+  margin-top: var(--spacing-4);
+  padding: var(--spacing-4);
+  border-top: 1px solid var(--el-border-color-lighter);
 }
 
 .batch-btn {
-  color: #909399;
+  color: var(--el-text-color-secondary);
 }
 
 .batch-btn:hover {
-  color: #409EFF;
+  color: var(--el-color-primary);
 }
 
 /* 抽屉样式 */
@@ -1260,9 +1179,7 @@ onUnmounted(() => {
     height: 70px;
   }
 
-  .stat-icon {
-    font-size: 24px;
-  }
+  /* .stat-icon 尺寸主题响应已在 tailwind.css 中定义 */
 
   .stat-value {
     font-size: 20px;
@@ -1304,9 +1221,7 @@ onUnmounted(() => {
     gap: 8px;
   }
 
-  .stat-icon {
-    font-size: 20px;
-  }
+  /* .stat-icon 尺寸主题响应已在 tailwind.css 中定义 */
 
   .stat-value {
     font-size: 18px;

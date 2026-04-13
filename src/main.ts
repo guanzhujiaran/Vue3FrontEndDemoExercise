@@ -5,16 +5,17 @@ import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
 import { createHead } from '@vueuse/head'
 import App from './App.vue'
 import router from './router'
-import 'element-plus/dist/index.css'
 import 'element-plus/theme-chalk/dark/css-vars.css'
 import 'mavon-editor/dist/css/index.css'
 import 'md-editor-v3/lib/style.css'
-import { useUserPrefStore } from '@/stores/user_pref'
 import { useHueThemeStore } from '@/stores/hue_theme.ts'
 import urql, { cacheExchange, fetchExchange } from '@urql/vue'
 import Clarity from '@microsoft/clarity'
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'
-import Casdoor from 'casdoor-vue-sdk'
+// casdoor-vue-sdk has a non-standard export structure in ESM environments
+// The plugin object is in the .default property
+import CasdoorSDK from 'casdoor-vue-sdk'
+const CasdoorPlugin = (CasdoorSDK as any).default || CasdoorSDK
 
 const app = createApp(App)
 const head = createHead()
@@ -30,7 +31,7 @@ app
     exchanges: [cacheExchange, fetchExchange],
     preferGetMethod: false //https://qiita.com/someone7140/items/42f7e35eeb07f65ce900 参考 默认设置变成了`within-url-limit` 会导致请求参数长度在get允许的params长度内时变成get请求，设置为false强制使用post请求
   })
-  .use(Casdoor, {
+  .use(CasdoorPlugin, {
     serverUrl: import.meta.env.VITE_CASDOOR_SERVER_URL,
     clientId: import.meta.env.VITE_CASDOOR_CLIENT_ID,
     organizationName: import.meta.env.VITE_CASDOOR_ORGANIZATION,
@@ -41,9 +42,7 @@ app
 // 初始化主题（在挂载前）
 const themeStore = useHueThemeStore()
 themeStore.restoreFromLocalStorage()
-// 应用存储的主题
-const userPrefStore = useUserPrefStore()
-userPrefStore.applyThemes()
+
 // 初始化 Clarity
 if (import.meta.env.VITE_CLARITY_ID) {
   Clarity.init(import.meta.env.VITE_CLARITY_ID ?? '')

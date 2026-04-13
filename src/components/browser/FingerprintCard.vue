@@ -18,8 +18,8 @@
           <Monitor />
         </el-icon>
         <div class="browser-details">
-          <h3 class="browser-name">{{ fingerprint.mid || '匿名用户' }}</h3>
-          <div class="browser-platform">ID: {{ fingerprint.id_str || fingerprint.id }}</div>
+          <h3 class="browser-name">{{ fingerprint.custom_name || fingerprint.mid || '匿名用户' }}</h3>
+          <div class="browser-id">ID: {{ fingerprint.id_str || fingerprint.id }}</div>
         </div>
       </div>
       <div class="status-indicator">
@@ -123,118 +123,6 @@ const getBrowserType = (
 </script>
 
 <style scoped>
-.fingerprint-card {
-  cursor: pointer;
-  transition: all 0.3s ease;
-  margin-bottom: 16px;
-}
-
-.fingerprint-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 12px;
-}
-
-.browser-info {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.browser-icon {
-  flex-shrink: 0;
-}
-
-.browser-details {
-  line-height: 1.2;
-}
-
-.browser-name {
-  margin: 0;
-  font-size: 16px;
-  font-weight: 600;
-  color: var(--el-text-color-primary);
-}
-
-.browser-platform {
-  font-size: 12px;
-  color: var(--el-text-color-secondary);
-}
-
-.status-indicator {
-  display: flex;
-  gap: 4px;
-}
-
-.basic-info {
-  margin-bottom: 12px;
-}
-
-.info-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 4px;
-  font-size: 12px;
-}
-
-.info-row .label {
-  color: var(--el-text-color-secondary);
-  min-width: 40px;
-}
-
-.info-row .value {
-  color: var(--el-text-color-primary);
-  font-weight: 500;
-}
-
-.hardware-info {
-  margin-bottom: 12px;
-}
-
-.hardware-row {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-bottom: 4px;
-  font-size: 12px;
-}
-
-.hardware-label {
-  color: var(--el-text-color-secondary);
-  min-width: 30px;
-}
-
-.hardware-value {
-  color: var(--el-text-color-primary);
-  font-weight: 500;
-}
-
-.proxy-info {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-bottom: 12px;
-  font-size: 12px;
-}
-
-.proxy-label {
-  color: var(--el-text-color-secondary);
-}
-
-.action-buttons {
-  display: flex;
-  gap: 6px;
-  justify-content: flex-end;
-}
-
-.action-buttons .el-button {
-  flex: 1;
-}
+/* 所有样式已移至 tailwind.css 中的 .fingerprint-card 相关类 */
+/* 组件现在使用全局CSS变量，支持尺寸主题切换 */
 </style>

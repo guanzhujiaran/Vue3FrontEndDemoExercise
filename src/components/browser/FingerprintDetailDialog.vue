@@ -4,7 +4,7 @@
  * @LastEditors: 星瞳 1944637830@qq.com
  * @LastEditTime: 2024-12-24 00:00:00
  * @FilePath: \Vue3FrontEndDemoExercise\src\components\browser\FingerprintDetailDialog.vue
- * @Description: 指纹详情对话框组件
+ * @Description: RPA浏览器控制台 - 指纹详情对话框组件
 -->
 <template>
   <el-dialog title="指纹详情" v-model="visible" width="800px" @close="handleClose">
@@ -31,14 +31,36 @@
 
     <template #footer>
       <span class="dialog-footer">
+        <el-button type="primary" @click="openDebugPanel" v-if="fingerprint">
+          <el-icon><Operation /></el-icon>
+          调试面板
+        </el-button>
         <el-button @click="handleClose">关闭</el-button>
       </span>
     </template>
   </el-dialog>
+
+  <!-- 调试面板对话框 -->
+  <el-dialog
+    v-model="debugPanelVisible"
+    title="前端调试面板"
+    width="90%"
+    :fullscreen="true"
+    destroy-on-close
+    @close="closeDebugPanel"
+  >
+    <BrowserDebugPanel
+      v-if="debugPanelVisible && fingerprint"
+      :browser-id="String(fingerprint.id)"
+    />
+  </el-dialog>
 </template>
 
 <script setup lang="ts">
+import { ref } from 'vue'
+import { Operation } from '@element-plus/icons-vue'
 import type { UserBrowserInfoReadResp } from '@/types/browser-automation-api'
+import BrowserDebugPanel from './BrowserDebugPanel.vue'
 
 // 定义Model
 const visible = defineModel<boolean>('visible', { default: false })
@@ -50,21 +72,32 @@ interface Props {
 
 const props = defineProps<Props>()
 
-// 定义Emit
-const emit = defineEmits<{
-  'update:visible': [visible: boolean]
-  close: []
-}>()
+// 调试面板可见性
+const debugPanelVisible = ref(false)
 
-// 方法
-const handleClose = () => {
-  emit('update:visible', false)
-  emit('close')
-}
-
+// 格式化时间
 const formatTime = (time: string | undefined) => {
   if (!time) return '未知'
   return new Date(time).toLocaleString('zh-CN')
+}
+
+// 关闭对话框
+const handleClose = () => {
+  visible.value = false
+}
+
+// 打开调试面板
+const openDebugPanel = () => {
+  if (props.fingerprint) {
+    debugPanelVisible.value = true
+    visible.value = false
+  }
+}
+
+// 关闭调试面板
+const closeDebugPanel = () => {
+  debugPanelVisible.value = false
+  visible.value = true
 }
 </script>
 
@@ -72,5 +105,6 @@ const formatTime = (time: string | undefined) => {
 .dialog-footer {
   display: flex;
   justify-content: flex-end;
+  gap: 12px;
 }
 </style>

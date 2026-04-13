@@ -90,9 +90,9 @@ const handleOAuthLoginSuccess = async (data: { token: string, uid: string, user_
   <div class="login_wp" v-loading="isLoading">
     <div class="login__main">
       <div class="main__right">
-        <!-- 使用Element Plus的Tabs组件 - 只保留Casdoor登录 -->
+        <!-- 使用Element Plus的Tabs组件 - 只保留第三方登录 -->
         <el-tabs :stretch="true" type="card" v-model="login_info.checked" class="login-tabs">
-          <el-tab-pane label="Casdoor登录" name="casdoor">
+          <el-tab-pane label="第三方登录" name="casdoor">
             <OAuthLoginProviders
               :providers="['casdoor']"
               @login-success="handleOAuthLoginSuccess"

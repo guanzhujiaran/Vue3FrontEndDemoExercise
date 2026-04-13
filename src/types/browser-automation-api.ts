@@ -28,7 +28,7 @@ export interface BrowserFingerprintUpsertParams {
 }
 
 export interface BrowserFingerprintQueryParams {
-  id: string
+  id: string | number
 }
 export interface BrowserFingerprintDeleteParams {
   browser_id: string
@@ -36,6 +36,10 @@ export interface BrowserFingerprintDeleteParams {
 export interface BrowserFingerprintListParams {
   page?: number
   per_page?: number
+}
+export interface BrowserFingerprintRenameParams {
+  id: string | number
+  custom_name?: string | null
 }
 
 export interface VerifyFingerprintDependsReq {
@@ -137,6 +141,7 @@ export interface BaseFingerprintBrowserInitParams {
   accept_lang: string | null
   timezone: string | null
   proxy_server: string | null
+  custom_name?: string | null
   id: number | string
   id_str: string
   mid: number | string
@@ -511,7 +516,7 @@ export interface WebRTCOfferResponse {
 }
 
 export interface WebRTCAnswerRequest {
-  browser_id: number
+  browser_id: string
   sdp: string
 }
 
@@ -521,7 +526,6 @@ export interface WebRTCAnswerResponse {
 }
 
 export interface WebRTCIceCandidateRequest {
-  browser_id: number
   candidate: Record<string, any>
 }
 
@@ -1149,4 +1153,846 @@ export interface SystemHealthCheckResponse {
     response_time?: number
   }>
   timestamp?: string
+}
+
+// ===== 自定义操作相关类型 =====
+
+export interface ActionMetadataResponse {
+  id: string
+  name: string
+  type: string
+  description: string
+  parameters: Array<{
+    name: string
+    type: string
+    required: boolean
+    default?: any
+    description?: string
+  }>
+}
+
+export interface ActionResultResponse {
+  success: boolean
+  data?: any
+  error?: string | null
+  execution_time?: number
+  action_id?: string
+  action_name?: string
+}
+
+export interface ActionPreviewResponse {
+  action_id: string
+  action_name: string
+  is_composite: boolean
+  steps_preview: Array<{
+    step_index: number
+    action_id: string
+    original_params: Record<string, any>
+    replaced_params: Record<string, any>
+  }>
+  found_params: string[]
+}
+
+export interface ActionValidateResponse {
+  valid: boolean
+  action_id: string
+  action_name: string
+  missing_params: string[]
+  invalid_params: string[]
+  errors: string[]
+}
+
+export interface ExecuteStepResponse {
+  step_index: number
+  action_id: string
+  action_name: string
+  result: {
+    success: boolean
+    data?: any
+    error?: string | null
+    execution_time?: number
+    action_id?: string
+    action_name?: string
+  }
+}
+
+export interface CustomActionListItem {
+  id: number
+  action_id: string
+  name: string
+  action_type: string
+  is_composite: boolean
+  description: string
+  created_at: string
+  updated_at: string
+}
+
+export interface CustomActionDetail {
+  id: number
+  action_id: string
+  name: string
+  action_type: string
+  parameters_schema: Array<Record<string, any>>
+  steps: Array<Record<string, any>>
+  is_composite: boolean
+  code?: string | null
+  description: string
+  timeout?: number
+  is_enabled: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface CustomActionCreateResponse {
+  id: number
+  action_id: string
+  message: string
+}
+
+export interface ReloadActionsResponse {
+  success: boolean
+  message: string
+  reloaded_count?: number
+}
+
+// ===== 插件相关类型 =====
+
+export interface PluginMetadataResponse {
+  id: string
+  name: string
+  hooks: string[]
+  description: string
+}
+
+export interface PluginListItem {
+  id: number
+  plugin_id: string
+  name: string
+  hooks: string[]
+  description: string
+  priority: number
+  is_enabled: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface PluginDetail {
+  id: number
+  plugin_id: string
+  name: string
+  hooks: string[]
+  code?: string | null
+  description: string
+  priority: number
+  is_enabled: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface PluginCreateResponse {
+  id: number
+  plugin_id: string
+  message: string
+}
+
+// ===== 工作流相关类型 =====
+
+export interface WorkflowListItem {
+  id: number
+  workflow_id: string
+  name: string
+  description: string
+  step_count: number
+  tags: string[]
+  is_enabled: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface WorkflowDetail {
+  id: number
+  workflow_id: string
+  name: string
+  steps: Array<Record<string, any>>
+  on_error: string
+  description: string
+  tags: string[]
+  is_enabled: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface WorkflowCreateResponse {
+  id: number
+  workflow_id: string
+  message: string
+}
+
+export interface WorkflowDuplicateResponse {
+  id: number
+  workflow_id: string
+  message: string
+}
+
+export interface WorkflowExecuteResponse {
+  success: boolean
+  workflow_id: string
+  execution_id?: string
+  results?: Array<{
+    step_index: number
+    action_id: string
+    success: boolean
+    data?: any
+    error?: string | null
+    execution_time?: number
+  }>
+  total_time?: number
+  error?: string | null
+}
+
+// ===== 请求体类型 =====
+
+export interface ActionExecuteRequest {
+  action_id: string
+  params?: Record<string, any>
+  plugin_ids?: string[]
+}
+
+export interface ActionPreviewRequest {
+  action_id: string
+  params?: Record<string, any>
+}
+
+export interface ActionValidateRequest {
+  action_id: string
+  params?: Record<string, any>
+}
+
+export interface ExecuteStepRequest {
+  action_id: string
+  params?: Record<string, any>
+  step_index?: number
+  plugin_ids?: string[]
+}
+
+export interface BatchActionRequest {
+  actions: ActionExecuteRequest[]
+  parallel?: boolean
+}
+
+export interface CustomActionCreate {
+  action_id: string
+  name: string
+  action_type?: string
+  parameters_schema?: Array<Record<string, any>>
+  steps?: Array<Record<string, any>>
+  is_composite?: boolean
+  code?: string | null
+  description?: string
+}
+
+export interface CustomActionUpdate {
+  id: number
+  name?: string | null
+  description?: string | null
+  parameters_schema?: Array<Record<string, any>> | null
+  steps?: Array<Record<string, any>> | null
+  is_composite?: boolean | null
+  code?: string | null
+  timeout?: number | null
+  is_enabled?: boolean | null
+}
+
+export interface CustomActionGet {
+  id: number
+}
+
+export interface CustomActionDelete {
+  id: number
+}
+
+export interface CustomActionList {
+  skip?: number
+  limit?: number
+}
+
+export interface PluginCreate {
+  plugin_id: string
+  name: string
+  hooks: string[]
+  code?: string | null
+  description?: string
+}
+
+export interface PluginRegister {
+  plugin_id: string
+  name: string
+  hooks: string[]
+  code?: string | null
+  description?: string
+}
+
+export interface PluginUpdate {
+  id: number
+  name?: string | null
+  description?: string | null
+  hooks?: string[] | null
+  code?: string | null
+  priority?: number | null
+  is_enabled?: boolean | null
+}
+
+export interface PluginGet {
+  id: number
+}
+
+export interface PluginDelete {
+  id: number
+}
+
+export interface PluginList {
+  skip?: number
+  limit?: number
+}
+
+// 新增的插件管理请求类型（与后端 API 同步）
+export interface PluginGetRequest {
+  plugin_type: string // 插件类型: log, page_limit, random_wait, retry
+  browser_info_id?: string | number | null // 浏览器实例ID
+}
+
+export interface PluginListRequest {
+  browser_info_id?: string | number | null // 浏览器实例ID
+}
+
+export interface PluginDeleteRequest {
+  plugin_id: string // 插件ID
+}
+
+export interface WorkflowCreate {
+  workflow_id: string
+  name: string
+  steps: Array<Record<string, any>>
+  on_error?: string
+  description?: string
+}
+
+export interface WorkflowUpdate {
+  id: number
+  name?: string | null
+  description?: string | null
+  steps?: Array<Record<string, any>> | null
+  on_error?: string | null
+  tags?: string[] | null
+  is_enabled?: boolean | null
+}
+
+export interface WorkflowGet {
+  id: number
+}
+
+export interface WorkflowDelete {
+  id: number
+}
+
+export interface WorkflowList {
+  skip?: number
+  limit?: number
+}
+
+export interface WorkflowExecuteRequest {
+  steps: Array<Record<string, any>>
+  plugin_ids?: string[]
+  on_error?: string
+}
+
+// ===== 新增的API请求体类型（与新后端API结构匹配）=====
+
+// ID请求类型
+export interface IdRequest {
+  id: number
+}
+
+// ID列表请求类型（用于分页列表查询）
+export interface IdListRequest {
+  skip?: number
+  limit?: number
+}
+
+// 自定义操作创建请求
+export interface CustomActionCreateRequest {
+  name: string
+  action_type?: string
+  description?: string
+  parameters_schema?: Array<Record<string, any>>
+  steps?: Array<Record<string, any>>
+  tags?: string[]
+  user_data?: Record<string, any> | null
+  code?: string | null
+}
+
+// 自定义操作更新请求
+export interface CustomActionUpdateRequest {
+  id: number
+  name?: string | null
+  description?: string | null
+  parameters_schema?: Array<Record<string, any>> | null
+  steps?: Array<Record<string, any>> | null
+  tags?: string[] | null
+  user_data?: Record<string, any> | null
+  code?: string | null
+  is_enabled?: boolean | null
+}
+
+// 插件创建请求
+export interface PluginCreateRequest {
+  plugin_id: string
+  name: string
+  hooks: string[]
+  code?: string | null
+  description?: string
+  priority?: number
+  is_enabled?: boolean
+}
+
+// 插件更新请求
+export interface PluginUpdateRequest {
+  id: number
+  name?: string | null
+  description?: string | null
+  hooks?: string[] | null
+  code?: string | null
+  priority?: number | null
+  is_enabled?: boolean | null
+}
+
+// 工作流创建请求
+export interface WorkflowCreateRequest {
+  workflow_id: string
+  name: string
+  steps: Array<Record<string, any>>
+  on_error?: string
+  description?: string
+  tags?: string[]
+}
+
+// 工作流更新请求
+export interface WorkflowUpdateRequest {
+  id: number
+  name?: string | null
+  description?: string | null
+  steps?: Array<Record<string, any>> | null
+  on_error?: string | null
+  tags?: string[] | null
+  is_enabled?: boolean | null
+}
+
+// 组合请求体类型（与新后端API结构匹配）
+
+// 发送心跳请求体
+export interface BodySendHeartbeatRequest {
+  request: SimplifiedHeartbeatRequest
+  body: VerifyBrowserDependsReq
+}
+
+// 创建浏览器会话请求体
+export interface BodyCreateBrowserSessionRequest {
+  request: SimplifiedCreateSessionRequest
+  body: VerifyBrowserDependsReq
+}
+
+// 停止人工操作请求体
+export interface BodyStopManualOperationRequest {
+  request: SimplifiedAutomationResumeRequest
+  body: VerifyBrowserDependsReq
+}
+
+// 获取截图请求体
+export interface BodyGetScreenshotRequest {
+  request: SimplifiedScreenshotRequest
+  body: VerifyBrowserDependsReq
+}
+
+// 执行JavaScript代码请求体
+export interface BodyExecuteJavaScriptCodeRequest {
+  request: SimplifiedJavaScriptExecuteWithParamsRequest
+  body: VerifyBrowserDependsReq
+}
+
+// 安全执行JavaScript代码请求体
+export interface BodySafeExecuteJavaScriptRequest {
+  request: SimplifiedJavaScriptExecuteWithParamsRequest
+  body: VerifyBrowserDependsReq
+}
+
+// 浏览器点击请求体
+export interface BodyBrowserClickRequest {
+  request: SimplifiedBrowserClickRequest
+  body: VerifyBrowserDependsReq
+}
+
+// 执行浏览器命令请求体
+export interface BodyExecuteBrowserCommandRequest {
+  command: SimplifiedLiveControlCommand
+  body: VerifyBrowserDependsReq
+}
+
+// 评估JavaScript请求体
+export interface BodyEvaluateJavaScriptRequest {
+  request: SimplifiedJavaScriptExecuteRequest
+  body: VerifyBrowserDependsReq
+}
+
+// 导航到URL请求体
+export interface BodyNavigateToUrlRequest {
+  request: SimplifiedNavigateRequest
+  body: VerifyBrowserDependsReq
+}
+
+// 暂停插件请求体
+export interface BodyPausePluginsRequest {
+  request: SimplifiedPausePluginsRequest
+  body: VerifyBrowserDependsReq
+}
+
+// 强制释放浏览器请求体
+export interface BodyForceReleaseBrowserRequest {
+  request: SimplifiedForceReleaseRequest
+  body: VerifyBrowserDependsReq
+}
+
+// 设置清理策略请求体
+export interface BodySetCleanupPolicyRequest {
+  request: SimplifiedBrowserCleanupPolicyRequest
+  body: VerifyBrowserDependsReq
+}
+
+// 执行操作请求体
+export interface BodyExecuteActionRequest {
+  req: ActionExecuteRequest
+  body: VerifyBrowserDependsReq
+}
+
+// 批量执行请求体
+export interface BodyBatchExecuteRequest {
+  req: BatchActionRequest
+  body: VerifyBrowserDependsReq
+}
+
+// 预览操作参数请求体
+export interface BodyPreviewActionParamsRequest {
+  req: ActionPreviewRequest
+  body: VerifyBrowserDependsReq
+}
+
+// 验证操作参数请求体
+export interface BodyValidateActionParamsRequest {
+  req: ActionValidateRequest
+  body: VerifyBrowserDependsReq
+}
+
+// 单步执行请求体
+export interface BodyExecuteActionStepRequest {
+  req: ExecuteStepRequest
+  body: VerifyBrowserDependsReq
+}
+
+// 执行工作流请求体
+export interface BodyExecuteWorkflowRequest {
+  req: WorkflowExecuteRequest
+  body: VerifyBrowserDependsReq
+}
+
+// 设置清理策略请求体 (注意：OpenAPI中为 system_cleanup_post，但逻辑上是 cleanup policy)
+export interface BodySetCleanupPolicyRequest {
+  request: SimplifiedBrowserCleanupPolicyRequest
+  body: VerifyBrowserDependsReq
+}
+
+// WebRTC ICE Candidate请求体
+export interface BodyAddWebrtcIceCandidateRequest {
+  request: WebRTCIceCandidateRequest
+  body: VerifyBrowserDependsReq
+}
+
+// 设置WebRTC Answer请求体
+export interface BodySetWebrtcAnswerRequest {
+  request: WebRTCAnswerRequest
+  body: VerifyBrowserDependsReq
+}
+
+// ===== 响应类型扩展 =====
+
+// 管理员所有会话响应
+export interface AdminAllSessionsResponse {
+  sessions: Array<{
+    browser_id: string
+    session_id: string
+    status: string
+    created_at: string
+  }>
+}
+
+// 管理员所有流响应
+export interface AdminAllStreamsResponse {
+  streams: Array<{
+    browser_id: string
+    stream_url: string
+    status: string
+  }>
+}
+
+// 管理员所有统计响应
+export interface AdminAllStatsResponse {
+  total_sessions: number
+  active_sessions: number
+  total_browsers: number
+  running_browsers: number
+}
+
+// 权限配置列表
+export interface PermissionConfigList {
+  permissions: Array<{
+    mid: string
+    level: string
+    updated_at: string
+  }>
+}
+
+// 权限级别配置
+export interface PermissionLevelConfig {
+  level: string
+  description: string
+}
+
+// 测试通知响应
+export interface TestNotificationResponse {
+  success: boolean
+  message: string
+  sent_channels: string[]
+  failed_channels: string[]
+  results?: Record<string, {
+    success: boolean
+    message?: string
+  }>
+}
+
+// WebRTC相关响应类型
+export interface WebRTCOfferResponse {
+  success: boolean
+  sdp?: string
+  message?: string
+}
+
+export interface WebRTCAnswerResponse {
+  success: boolean
+  message?: string
+}
+
+export interface WebRTCIceCandidateResponse {
+  success: boolean
+  message?: string
+}
+
+export interface WebRTCGetIceCandidatesResponse {
+  success: boolean
+  candidates: Array<{
+    candidate?: string
+    sdpMid?: string | null
+    sdpMLineIndex?: number | null
+  }>
+  ice_gathering_state?: string
+}
+
+export interface WebRTCConnectionStatusResponse {
+  success: boolean
+  connected: boolean
+  state: 'new' | 'connecting' | 'connected' | 'disconnected' | 'failed' | 'closed'
+  message?: string
+}
+
+export interface WebRTCCloseConnectionResponse {
+  success: boolean
+  message?: string
+}
+
+// 系统清理响应
+export interface SystemCleanupResponse {
+  success: boolean
+  message: string
+  cleaned_count?: number
+}
+
+// 重命名指纹响应
+export interface BrowserFingerprintRenameResp {
+  id: string
+  message: string
+  success: boolean
+}
+
+// 自定义操作列表项响应
+export interface CustomActionListItemResponse {
+  id: number
+  action_id: string
+  name: string
+  action_type: string
+  is_composite: boolean
+  description: string
+  tags: string[]
+  created_at: string
+  updated_at: string
+}
+
+// 自定义操作详情响应
+export interface CustomActionDetailResponse {
+  id: number
+  action_id: string
+  name: string
+  action_type: string
+  parameters_schema: Array<Record<string, any>>
+  steps: Array<Record<string, any>>
+  is_composite: boolean
+  code?: string | null
+  description: string
+  tags: string[]
+  timeout?: number
+  is_enabled: boolean
+  user_data?: Record<string, any> | null
+  created_at: string
+  updated_at: string
+}
+
+// 插件列表项响应
+export interface PluginListItemResponse {
+  id: number
+  plugin_id: string
+  name: string
+  hooks: string[]
+  description: string
+  priority: number
+  is_enabled: boolean
+  created_at: string
+  updated_at: string
+}
+
+// 插件详情响应
+export interface PluginDetailResponse {
+  id: number
+  plugin_id: string
+  name: string
+  hooks: string[]
+  code?: string | null
+  description: string
+  priority: number
+  is_enabled: boolean
+  created_at: string
+  updated_at: string
+}
+
+// 插件字典响应
+export interface PluginDictResponse {
+  [key: string]: any
+}
+
+// 插件响应
+export interface PluginResponse {
+  id: number
+  plugin_id: string
+  name: string
+  hooks: string[]
+  code?: string | null
+  description: string
+  priority: number
+  is_enabled: boolean
+  created_at: string
+  updated_at: string
+}
+
+// 工作流列表项响应
+export interface WorkflowListItemResponse {
+  id: number
+  workflow_id: string
+  name: string
+  description: string
+  step_count: number
+  tags: string[]
+  is_enabled: boolean
+  created_at: string
+  updated_at: string
+}
+
+// 工作流详情响应
+export interface WorkflowDetailResponse {
+  id: number
+  workflow_id: string
+  name: string
+  steps: Array<Record<string, any>>
+  on_error: string
+  description: string
+  tags: string[]
+  is_enabled: boolean
+  created_at: string
+  updated_at: string
+}
+
+// ===== 浏览器默认设置管理相关类型 =====
+
+// 日志插件日志级别枚举
+export type LogPluginLogLevelEnum = 'DEBUG' | 'INFO' | 'WARNING' | 'ERROR' | 'CRITICAL'
+
+// 用户浏览器默认设置请求模型
+export interface UserBrowserDefaultSettingRequest {
+  default_proxy_server?: string | null
+  default_log_level?: LogPluginLogLevelEnum | null
+  default_max_pages?: number | null
+  default_retry_times?: number | null
+  default_retry_delay?: number | null
+  default_min_wait?: number | null
+  default_max_wait?: number | null
+  default_platform?: PlatformEnum | null
+  default_browser?: BrowserEnum | null
+  default_lang?: string | null
+  default_timezone?: string | null
+  default_viewport_width?: number | null
+  default_viewport_height?: number | null
+  default_timeout?: number | null
+  default_headless?: boolean | null
+}
+
+// 用户浏览器默认设置响应模型
+export interface UserBrowserDefaultSettingResponse {
+  id: number
+  mid: string
+  default_proxy_server?: string | null
+  default_log_level?: LogPluginLogLevelEnum | null
+  default_max_pages?: number | null
+  default_retry_times?: number | null
+  default_retry_delay?: number | null
+  default_min_wait?: number | null
+  default_max_wait?: number | null
+  default_platform?: PlatformEnum | null
+  default_browser?: BrowserEnum | null
+  default_lang?: string | null
+  default_timezone?: string | null
+  default_viewport_width?: number | null
+  default_viewport_height?: number | null
+  default_timeout?: number | null
+  default_headless?: boolean | null
+  created_at: string
+  updated_at: string
+}
+
+// 获取默认设置请求（占位符）
+export interface GetSettingsRequest {
+  // 无参数，但后端要求非空对象
+}
+
+// 删除默认设置请求（占位符）
+export interface DeleteSettingsRequest {
+  // 无参数，但后端要求非空对象
+}
+
+// 应用默认设置请求
+export interface ApplySettingsRequest {
+  browser_id: number
 }

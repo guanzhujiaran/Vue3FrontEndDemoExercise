@@ -59,19 +59,6 @@ import type {
   SimplifiedForceReleaseRequest,
   SimplifiedBrowserCleanupPolicyRequest,
   SimplifiedLiveControlCommand,
-  Body_send_heartbeat_api_v1_rpa_browser_live_control_browser_heartbeat_post,
-  Body_create_browser_session_api_v1_rpa_browser_live_control_browser_session_create_post,
-  Body_stop_manual_operation_api_v1_rpa_browser_live_control_browser_manual_stop_post,
-  Body_browser_click_api_v1_rpa_browser_live_control_browser_click_post,
-  Body_execute_browser_command_api_v1_rpa_browser_live_control_browser_control_post,
-  Body_execute_javascript_code_api_v1_rpa_browser_live_control_browser_execute_post,
-  Body_safe_execute_javascript_api_v1_rpa_browser_live_control_browser_safe_execute_post,
-  Body_evaluate_javascript_api_v1_rpa_browser_live_control_browser_evaluate_post,
-  Body_force_release_browser_api_v1_rpa_browser_live_control_browser_force_release_post,
-  Body_get_screenshot_api_v1_rpa_browser_live_control_stream_screenshot_post,
-  Body_navigate_to_url_api_v1_rpa_browser_live_control_browser_navigate_post,
-  Body_pause_plugins_api_v1_rpa_browser_live_control_browser_plugins_pause_post,
-  Body_set_cleanup_policy_api_v1_rpa_browser_live_control_browser_cleanup_policy_post,
   // 新增的类型导入
   NotificationConfigUpsertResp,
   OperationPriority,
@@ -89,7 +76,107 @@ import type {
   SystemStatisticsResponse,
   SystemHealthCheckResponse,
   BrowserFingerprintCreateResp,
-  BrowserFingerprintDeleteParams
+  BrowserFingerprintDeleteParams,
+  // 自定义操作相关类型
+  ActionMetadataResponse,
+  ActionResultResponse,
+  ActionPreviewResponse,
+  ActionValidateResponse,
+  ExecuteStepResponse,
+  CustomActionListItem,
+  CustomActionDetail,
+  CustomActionCreateResponse,
+  ReloadActionsResponse,
+  ActionExecuteRequest,
+  ActionPreviewRequest,
+  ActionValidateRequest,
+  ExecuteStepRequest,
+  BatchActionRequest,
+  CustomActionCreate,
+  CustomActionUpdate,
+  CustomActionGet,
+  CustomActionDelete,
+  CustomActionList,
+  // 插件相关类型
+  PluginMetadataResponse,
+  PluginListItem,
+  PluginDetail,
+  PluginCreateResponse,
+  PluginCreate,
+  PluginRegister,
+  PluginUpdate,
+  PluginGet,
+  PluginDelete,
+  PluginList,
+  PluginDictResponse,
+  // 工作流相关类型
+  WorkflowListItem,
+  WorkflowDetail,
+  WorkflowCreateResponse,
+  WorkflowDuplicateResponse,
+  WorkflowExecuteResponse,
+  WorkflowCreate,
+  WorkflowUpdate,
+  WorkflowGet,
+  WorkflowDelete,
+  WorkflowList,
+  WorkflowExecuteRequest,
+  // 新增的API请求体类型
+  BodySendHeartbeatRequest,
+  BodyCreateBrowserSessionRequest,
+  BodyExecuteActionRequest,
+  BodyBatchExecuteRequest,
+  BodyPreviewActionParamsRequest,
+  BodyValidateActionParamsRequest,
+  BodyExecuteActionStepRequest,
+  BodyExecuteWorkflowRequest,
+  BodySetCleanupPolicyRequest,
+  BodyAddWebrtcIceCandidateRequest,
+  BodySetWebrtcAnswerRequest,
+  BodyStopManualOperationRequest,
+  BodyGetScreenshotRequest,
+  BodyExecuteJavaScriptCodeRequest,
+  BodySafeExecuteJavaScriptRequest,
+  BodyBrowserClickRequest,
+  BodyExecuteBrowserCommandRequest,
+  BodyEvaluateJavaScriptRequest,
+  BodyNavigateToUrlRequest,
+  BodyPausePluginsRequest,
+  BodyForceReleaseBrowserRequest,
+  // 新增的响应类型
+  TestNotificationResponse,
+  WebRTCOfferResponse,
+  WebRTCAnswerResponse,
+  WebRTCIceCandidateResponse,
+  WebRTCGetIceCandidatesResponse,
+  WebRTCConnectionStatusResponse,
+  WebRTCCloseConnectionResponse,
+  SystemCleanupResponse,
+  BrowserFingerprintRenameResp,
+  CustomActionListItemResponse,
+  CustomActionDetailResponse,
+  PluginListItemResponse,
+  PluginDetailResponse,
+  PluginResponse,
+  WorkflowListItemResponse,
+  WorkflowDetailResponse,
+  IdRequest,
+  IdListRequest,
+  CustomActionCreateRequest,
+  CustomActionUpdateRequest,
+  PluginCreateRequest,
+  PluginUpdateRequest,
+  WorkflowCreateRequest,
+  WorkflowUpdateRequest,
+  // 新增的插件管理请求类型
+  PluginGetRequest,
+  PluginListRequest,
+  PluginDeleteRequest,
+  // 默认设置管理相关类型
+  UserBrowserDefaultSettingRequest,
+  UserBrowserDefaultSettingResponse,
+  ApplySettingsRequest,
+  BrowserFingerprintRenameParams
 } from '@/types/browser-automation-api'
 
 // 重新导出类型以保持向后兼容性
@@ -166,7 +253,96 @@ export type {
   SystemHealthCheckResponse,
   // 新增的类型导出
   NotificationConfigUpsertResp,
-  OperationPriority
+  OperationPriority,
+  // 自定义操作相关类型导出
+  ActionMetadataResponse,
+  ActionResultResponse,
+  ActionPreviewResponse,
+  ActionValidateResponse,
+  ExecuteStepResponse,
+  CustomActionListItem,
+  CustomActionDetail,
+  CustomActionCreateResponse,
+  ReloadActionsResponse,
+  ActionExecuteRequest,
+  ActionPreviewRequest,
+  ActionValidateRequest,
+  ExecuteStepRequest,
+  BatchActionRequest,
+  CustomActionCreate,
+  CustomActionUpdate,
+  CustomActionGet,
+  CustomActionDelete,
+  CustomActionList,
+  // 插件相关类型导出
+  PluginMetadataResponse,
+  PluginListItem,
+  PluginDetail,
+  PluginCreateResponse,
+  PluginCreate,
+  PluginRegister,
+  PluginUpdate,
+  PluginGet,
+  PluginDelete,
+  PluginList,
+  // 工作流相关类型导出
+  WorkflowListItem,
+  WorkflowDetail,
+  WorkflowCreateResponse,
+  WorkflowDuplicateResponse,
+  WorkflowExecuteResponse,
+  WorkflowCreate,
+  WorkflowUpdate,
+  WorkflowGet,
+  WorkflowDelete,
+  WorkflowList,
+  WorkflowExecuteRequest,
+  // 新增的API请求体类型导出
+  BodySendHeartbeatRequest,
+  BodyCreateBrowserSessionRequest,
+  BodyExecuteActionRequest,
+  BodyBatchExecuteRequest,
+  BodyPreviewActionParamsRequest,
+  BodyValidateActionParamsRequest,
+  BodyExecuteActionStepRequest,
+  BodyExecuteWorkflowRequest,
+  BodySetCleanupPolicyRequest,
+  BodyAddWebrtcIceCandidateRequest,
+  BodySetWebrtcAnswerRequest,
+  // 新增的响应类型导出
+  TestNotificationResponse,
+  WebRTCOfferResponse,
+  WebRTCAnswerResponse,
+  WebRTCIceCandidateResponse,
+  WebRTCGetIceCandidatesResponse,
+  WebRTCConnectionStatusResponse,
+  WebRTCCloseConnectionResponse,
+  SystemCleanupResponse,
+  BrowserFingerprintRenameResp,
+  CustomActionListItemResponse,
+  CustomActionDetailResponse,
+  PluginListItemResponse,
+  PluginDetailResponse,
+  PluginResponse,
+  WorkflowListItemResponse,
+  WorkflowDetailResponse,
+  IdRequest,
+  IdListRequest,
+  CustomActionCreateRequest,
+  CustomActionUpdateRequest,
+  PluginCreateRequest,
+  PluginUpdateRequest,
+  WorkflowCreateRequest,
+  WorkflowUpdateRequest,
+  // 新增的插件管理请求类型导出
+  PluginGetRequest,
+  PluginListRequest,
+  PluginDeleteRequest,
+  // 默认设置管理相关类型导出
+  UserBrowserDefaultSettingRequest,
+  UserBrowserDefaultSettingResponse,
+  ApplySettingsRequest,
+  BrowserFingerprintRenameParams
 }
 
 // 浏览器指纹管理API
@@ -409,13 +585,168 @@ class BrowserApi extends BaseApi {
    * 获取用户的全局默认有效通知配置
    */
   // async getGlobalEffectiveNotifyConfig() { ... }
+
+  // ===== 浏览器插件管理 =====
+
+  /**
+   * 更新现有插件配置
+   * POST /api/v1/rpa/browser/plugin
+   */
+  async updatePlugin(params: PluginUpdateRequest): Promise<RootObject<PluginResponse>> {
+    const response = await this._post('/plugin', params)
+    if (response && 'code' in response) {
+      return {
+        data: response.data,
+        msg: response.msg,
+        code: response.code
+      } as RootObject<PluginResponse>
+    }
+    return response
+  }
+
+  /**
+   * 获取插件配置列表
+   * POST /api/v1/rpa/browser/plugins/list
+   */
+  async listPlugins(params?: PluginListRequest): Promise<RootObject<PluginDictResponse>> {
+    const requestBody = params || {}
+    const response = await this._post('/plugins/list', requestBody)
+    if (response && 'code' in response) {
+      return {
+        data: response.data,
+        msg: response.msg,
+        code: response.code
+      } as RootObject<PluginDictResponse>
+    }
+    return response
+  }
+
+  /**
+   * 获取特定类型的插件配置
+   * POST /api/v1/rpa/browser/plugin/get
+   */
+  async getPlugin(params: PluginGetRequest): Promise<RootObject<PluginResponse>> {
+    const response = await this._post('/plugin/get', params)
+    if (response && 'code' in response) {
+      return {
+        data: response.data,
+        msg: response.msg,
+        code: response.code
+      } as RootObject<PluginResponse>
+    }
+    return response
+  }
+
+  /**
+   * 删除指定ID的插件配置
+   * POST /api/v1/rpa/browser/plugin/delete
+   */
+  async deletePlugin(params: PluginDeleteRequest): Promise<RootObject<boolean>> {
+    const response = await this._post('/plugin/delete', params)
+    if (response && 'code' in response) {
+      return {
+        data: response.data,
+        msg: response.msg,
+        code: response.code
+      } as RootObject<boolean>
+    }
+    return response
+  }
+
+  /**
+   * 重命名浏览器指纹
+   * POST /api/v1/rpa/browser/rename_fingerprint
+   */
+  async renameFingerprint(
+    params: BrowserFingerprintRenameParams
+  ): Promise<RootObject<BrowserFingerprintRenameResp>> {
+    const response = await this._post('/rename_fingerprint', params)
+    if (response && 'code' in response) {
+      return {
+        data: response.data,
+        msg: response.msg,
+        code: response.code
+      } as RootObject<BrowserFingerprintRenameResp>
+    }
+    return response
+  }
+
+  // ===== 浏览器默认设置管理 =====
+
+  /**
+   * 获取用户的默认设置
+   * POST /api/v1/rpa/browser/default-settings/get
+   */
+  async getDefaultSettings(): Promise<RootObject<UserBrowserDefaultSettingResponse | null>> {
+    const response = await this._post('/default-settings/get', {})
+    if (response && 'code' in response) {
+      return {
+        data: response.data,
+        msg: response.msg,
+        code: response.code
+      } as RootObject<UserBrowserDefaultSettingResponse | null>
+    }
+    return response
+  }
+
+  /**
+   * 创建或更新用户的默认设置
+   * POST /api/v1/rpa/browser/default-settings/create-or-update
+   */
+  async createOrUpdateDefaultSettings(
+    params: UserBrowserDefaultSettingRequest
+  ): Promise<RootObject<UserBrowserDefaultSettingResponse>> {
+    const response = await this._post('/default-settings/create-or-update', params)
+    if (response && 'code' in response) {
+      return {
+        data: response.data,
+        msg: response.msg,
+        code: response.code
+      } as RootObject<UserBrowserDefaultSettingResponse>
+    }
+    return response
+  }
+
+  /**
+   * 删除用户的默认设置
+   * POST /api/v1/rpa/browser/default-settings/delete
+   */
+  async deleteDefaultSettings(): Promise<RootObject<boolean>> {
+    const response = await this._post('/default-settings/delete', {})
+    if (response && 'code' in response) {
+      return {
+        data: response.data,
+        msg: response.msg,
+        code: response.code
+      } as RootObject<boolean>
+    }
+    return response
+  }
+
+  /**
+   * 将用户的默认设置应用到指定的浏览器实例
+   * POST /api/v1/rpa/browser/default-settings/apply
+   */
+  async applyDefaultSettingsToBrowser(
+    params: ApplySettingsRequest
+  ): Promise<RootObject<boolean>> {
+    const response = await this._post('/default-settings/apply', params)
+    if (response && 'code' in response) {
+      return {
+        data: response.data,
+        msg: response.msg,
+        code: response.code
+      } as RootObject<boolean>
+    }
+    return response
+  }
 }
 
 // 浏览器实时控制API
 class BrowserLiveControlApi extends BaseApi {
   constructor() {
     super()
-    this.path = '/api/v1/rpa/browser_live_control'
+    this.path = '/api/v1/rpa/browser/control'
   }
 }
 
@@ -423,20 +754,20 @@ class BrowserLiveControlApi extends BaseApi {
 class BrowserLiveControlApiImpl extends BrowserLiveControlApi {
   /**
    * 发送心跳信号
-   * POST /api/v1/rpa/browser_live_control/browser/heartbeat
+   * POST /api/v1/rpa/browser/control/heartbeat
    */
   async sendHeartbeat(params: {
     browser_id: string
     request?: SimplifiedHeartbeatRequest
   }): Promise<RootObject<HeartbeatResponse>> {
-    const body: Body_send_heartbeat_api_v1_rpa_browser_live_control_browser_heartbeat_post = {
+    const body: BodySendHeartbeatRequest = {
       request: params.request || {
         client_id: '',
         timestamp: Date.now()
       },
       body: { browser_id: params.browser_id }
     }
-    const response = await this._post(`/browser/heartbeat`, body)
+    const response = await this._post('/heartbeat', body)
     // 适配新的StandardResponse结构
     if (response && 'code' in response) {
       return {
@@ -450,27 +781,26 @@ class BrowserLiveControlApiImpl extends BrowserLiveControlApi {
 
   /**
    * 创建浏览器会话
-   * POST /api/v1/rpa/browser_live_control/browser/session/create
+   * POST /api/v1/rpa/browser/control/create
    */
   async createBrowserSession(params: {
     browser_id: string
     request?: SimplifiedCreateSessionRequest
   }): Promise<RootObject<CreateSessionResponse>> {
-    const body: Body_create_browser_session_api_v1_rpa_browser_live_control_browser_session_create_post =
-      {
-        request: params.request || {
-          headless: true,
-          auto_cleanup: true,
-          cleanup_policy: {
-            max_idle_time: 1800,
-            max_no_heartbeat_time: 60,
-            cleanup_interval: 300
-          },
-          expiration_time: 0
+    const body: BodyCreateBrowserSessionRequest = {
+      request: params.request || {
+        headless: true,
+        auto_cleanup: true,
+        cleanup_policy: {
+          max_idle_time: 1800,
+          max_no_heartbeat_time: 60,
+          cleanup_interval: 300
         },
-        body: { browser_id: params.browser_id }
-      }
-    const response = await this._post(`/browser/session/create`, body)
+        expiration_time: 0
+      },
+      body: { browser_id: params.browser_id }
+    }
+    const response = await this._post('/create', body)
     // 适配新的StandardResponse结构
     if (response && 'code' in response) {
       return {
@@ -484,12 +814,12 @@ class BrowserLiveControlApiImpl extends BrowserLiveControlApi {
 
   /**
    * 获取浏览器会话状态
-   * POST /api/v1/rpa/browser_live_control/browser/session/status
+   * POST /api/v1/rpa/browser/control/status
    */
   async getBrowserSessionStatus(params: {
     browser_id: string
   }): Promise<RootObject<BrowserSessionStatus>> {
-    const response = await this._post(`/browser/session/status`, {
+    const response = await this._post('/status', {
       browser_id: params.browser_id
     })
     // 适配新的StandardResponse结构
@@ -511,18 +841,17 @@ class BrowserLiveControlApiImpl extends BrowserLiveControlApi {
 
   /**
    * 停止人工操作
-   * POST /api/v1/rpa/browser_live_control/browser/manual/stop
+   * POST /api/v1/rpa/browser/control/session/manual/stop
    */
   async stopManualOperation(params: {
     browser_id: string
     request?: SimplifiedAutomationResumeRequest
   }): Promise<RootObject<any>> {
-    const body: Body_stop_manual_operation_api_v1_rpa_browser_live_control_browser_manual_stop_post =
-      {
-        request: params.request || { force: false },
-        body: { browser_id: params.browser_id }
-      }
-    const response = await this._post(`/browser/manual/stop`, body)
+    const body: BodyStopManualOperationRequest = {
+      request: params.request || { force: false },
+      body: { browser_id: params.browser_id }
+    }
+    const response = await ajax.post('/api/v1/rpa/browser/control/session/manual/stop', body)
     // 适配新的StandardResponse结构
     if (response && 'code' in response) {
       return { data: response.data, msg: response.msg, code: response.code } as RootObject<any>
@@ -532,10 +861,10 @@ class BrowserLiveControlApiImpl extends BrowserLiveControlApi {
 
   /**
    * 获取操作状态
-   * POST /api/v1/rpa/browser_live_control/browser/operation/status
+   * POST /api/v1/rpa/browser/control/session/operation/status
    */
   async getOperationStatus(params: { browser_id: string }): Promise<RootObject<any>> {
-    const response = await this._post(`/browser/operation/status`, {
+    const response = await ajax.post('/api/v1/rpa/browser/control/session/operation/status', {
       browser_id: params.browser_id
     })
     // 适配新的StandardResponse结构
@@ -549,12 +878,12 @@ class BrowserLiveControlApiImpl extends BrowserLiveControlApi {
 
   /**
    * 获取视频流状态
-   * POST /api/v1/rpa/browser_live_control/browser/stream/status
+   * POST /api/v1/rpa/browser/control/stream/status
    */
   async getVideoStreamStatus(params: {
     browser_id: string
   }): Promise<RootObject<VideoStreamStatusResponse>> {
-    const response = await this._post(`/browser/stream/status`, {
+    const response = await this._post('/stream/status', {
       browser_id: params.browser_id
     })
     // 适配新的StandardResponse结构
@@ -569,206 +898,63 @@ class BrowserLiveControlApiImpl extends BrowserLiveControlApi {
   }
 
   /**
-   * 获取截图
+   * 获取截图（已删除，后端不再提供此接口）
    * POST /api/v1/rpa/browser_live_control/stream/screenshot
    */
-  async getScreenshot(browser_id: string | {
-    browser_id: string
-    request?: SimplifiedScreenshotRequest
-  }, request?: SimplifiedScreenshotRequest): Promise<Blob> {
-    // 兼容旧的调用方式: getScreenshot(browser_id, request)
-    // 和新的调用方式: getScreenshot({ browser_id, request })
-    let finalBrowserId: string
-    let finalRequest: SimplifiedScreenshotRequest | undefined
-
-    if (typeof browser_id === 'object') {
-      finalBrowserId = browser_id.browser_id
-      finalRequest = browser_id.request || request
-    } else {
-      finalBrowserId = browser_id
-      finalRequest = request
-    }
-
-    const body: Body_get_screenshot_api_v1_rpa_browser_live_control_stream_screenshot_post = {
-      request: finalRequest || {},
-      body: { browser_id: finalBrowserId }
-    }
-    const response = await ajax.post<Blob>(`${this.path}/stream/screenshot`, body, {
-      responseType: 'blob'
-    })
-    return response.data
-  }
+  // async getScreenshot(...) { ... }
 
   /**
-   * 执行JavaScript代码
+   * 执行JavaScript代码（已删除，请使用 executeAction 接口）
    * POST /api/v1/rpa/browser_live_control/browser/execute
    */
-  async executeJavaScript(browser_id: string | {
-    browser_id: string
-    request: SimplifiedJavaScriptExecuteWithParamsRequest
-  }, request?: SimplifiedJavaScriptExecuteWithParamsRequest): Promise<RootObject<any>> {
-    // 兼容旧的调用方式: executeJavaScript(browser_id, request)
-    let finalBrowserId: string
-    let finalRequest: SimplifiedJavaScriptExecuteWithParamsRequest
-
-    if (typeof browser_id === 'object') {
-      finalBrowserId = browser_id.browser_id
-      finalRequest = browser_id.request
-    } else {
-      finalBrowserId = browser_id
-      finalRequest = request || { code: '' }
-    }
-
-    const body: Body_execute_javascript_code_api_v1_rpa_browser_live_control_browser_execute_post =
-      {
-        request: finalRequest,
-        body: { browser_id: finalBrowserId }
-      }
-    const response = await this._post(`/browser/execute`, body)
-    // 适配新的StandardResponse结构
-    if (response && 'code' in response) {
-      return { data: response.data, msg: response.msg, code: response.code } as RootObject<any>
-    }
-    return response
-  }
+  // async executeJavaScript(...) { ... }
 
   /**
-   * 安全执行JavaScript代码（带沙箱检查）
+   * 安全执行JavaScript代码（已删除，请使用 executeAction 接口）
    * POST /api/v1/rpa/browser_live_control/browser/safe_execute
    */
-  async safeExecuteJavaScript(browser_id: string | {
-    browser_id: string
-    request: SimplifiedJavaScriptExecuteWithParamsRequest
-  }, request?: SimplifiedJavaScriptExecuteWithParamsRequest): Promise<RootObject<any>> {
-    // 兼容旧的调用方式: safeExecuteJavaScript(browser_id, request)
-    let finalBrowserId: string
-    let finalRequest: SimplifiedJavaScriptExecuteWithParamsRequest
-
-    if (typeof browser_id === 'object') {
-      finalBrowserId = browser_id.browser_id
-      finalRequest = browser_id.request
-    } else {
-      finalBrowserId = browser_id
-      finalRequest = request || { code: '' }
-    }
-
-    const body: Body_safe_execute_javascript_api_v1_rpa_browser_live_control_browser_safe_execute_post =
-      {
-        request: finalRequest,
-        body: { browser_id: finalBrowserId }
-      }
-    const response = await this._post(`/browser/safe_execute`, body)
-    // 适配新的StandardResponse结构
-    if (response && 'code' in response) {
-      return { data: response.data, msg: response.msg, code: response.code } as RootObject<any>
-    }
-    return response
-  }
+  // async safeExecuteJavaScript(...) { ... }
 
   /**
-   * 浏览器点击操作
+   * 浏览器点击操作（已删除，请使用 executeAction 接口）
    * POST /api/v1/rpa/browser_live_control/browser/click
    */
-  async clickElement(params: {
-    browser_id: string
-    request: SimplifiedBrowserClickRequest
-  }): Promise<RootObject<any>> {
-    const body: Body_browser_click_api_v1_rpa_browser_live_control_browser_click_post = {
-      request: params.request,
-      body: { browser_id: params.browser_id }
-    }
-    const response = await this._post(`/browser/click`, body)
-    // 适配新的StandardResponse结构
-    if (response && 'code' in response) {
-      return { data: response.data, msg: response.msg, code: response.code } as RootObject<any>
-    }
-    return response
-  }
+  // async clickElement(...) { ... }
 
   /**
-   * 执行浏览器命令
-   * POST /api/v1/rpa/browser_live_control/browser/control
+   * 执行浏览器命令（已删除，后端不再提供此接口）
+   * POST /api/v1/rpa/browser/control/session/control
    */
-  async executeBrowserCommand(params: {
-    browser_id: string
-    command: SimplifiedLiveControlCommand
-  }): Promise<RootObject<any>> {
-    const body: Body_execute_browser_command_api_v1_rpa_browser_live_control_browser_control_post =
-      {
-        command: params.command,
-        body: { browser_id: params.browser_id }
-      }
-    const response = await this._post(`/browser/control`, body)
-    // 适配新的StandardResponse结构
-    if (response && 'code' in response) {
-      return { data: response.data, msg: response.msg, code: response.code } as RootObject<any>
-    }
-    return response
-  }
+  // async executeBrowserCommand(...) { ... }
 
   /**
-   * 评估JavaScript代码
+   * 评估JavaScript代码（已删除，请使用 executeAction 接口）
    * POST /api/v1/rpa/browser_live_control/browser/evaluate
    */
-  async evaluateJavaScript(params: {
-    browser_id: string
-    request: SimplifiedJavaScriptExecuteRequest
-  }): Promise<RootObject<any>> {
-    const body: Body_evaluate_javascript_api_v1_rpa_browser_live_control_browser_evaluate_post = {
-      request: params.request,
-      body: { browser_id: params.browser_id }
-    }
-    const response = await this._post(`/browser/evaluate`, body)
-    // 适配新的StandardResponse结构
-    if (response && 'code' in response) {
-      return { data: response.data, msg: response.msg, code: response.code } as RootObject<any>
-    }
-    return response
-  }
+  // async evaluateJavaScript(...) { ... }
 
   /**
-   * 代码安全检查
+   * 代码安全检查（已删除，后端不再提供此接口）
    * POST /api/v1/rpa/browser_live_control/security/check
    */
-  async checkCodeSecurity(params: SecurityCheckParams): Promise<RootObject<any>> {
-    const response = await this._post('/security/check', params)
-    // 适配新的StandardResponse结构
-    if (response && 'code' in response) {
-      return { data: response.data, msg: response.msg, code: response.code } as RootObject<any>
-    }
-    return response
-  }
+  // async checkCodeSecurity(...) { ... }
 
   /**
-   * 导航到指定URL
+   * 导航到指定URL（已删除，请使用 executeAction 接口）
    * POST /api/v1/rpa/browser_live_control/browser/navigate
    */
-  async navigateToUrl(params: {
-    browser_id: string
-    request: SimplifiedNavigateRequest
-  }): Promise<RootObject<any>> {
-    const body: Body_navigate_to_url_api_v1_rpa_browser_live_control_browser_navigate_post = {
-      request: params.request,
-      body: { browser_id: params.browser_id }
-    }
-    const response = await this._post(`/browser/navigate`, body)
-    // 适配新的StandardResponse结构
-    if (response && 'code' in response) {
-      return { data: response.data, msg: response.msg, code: response.code } as RootObject<any>
-    }
-    return response
-  }
+  // async navigateToUrl(...) { ... }
 
   /**
    * 暂停插件
-   * POST /api/v1/rpa/browser_live_control/browser/plugins/pause
+   * POST /api/v1/rpa/browser/control/plugins/pause
    */
   async pausePlugins(params: { browser_id: string }): Promise<RootObject<any>> {
-    const body: Body_pause_plugins_api_v1_rpa_browser_live_control_browser_plugins_pause_post = {
+    const body: BodyPausePluginsRequest = {
       request: {},
       body: { browser_id: params.browser_id }
     }
-    const response = await this._post(`/browser/plugins/pause`, body)
+    const response = await this._post('/plugins/pause', body)
     // 适配新的StandardResponse结构
     if (response && 'code' in response) {
       return { data: response.data, msg: response.msg, code: response.code } as RootObject<any>
@@ -778,10 +964,10 @@ class BrowserLiveControlApiImpl extends BrowserLiveControlApi {
 
   /**
    * 获取插件状态
-   * POST /api/v1/rpa/browser_live_control/browser/plugins/status
+   * POST /api/v1/rpa/browser/control/plugins/status
    */
   async getPluginStatus(params: { browser_id: string }): Promise<RootObject<any>> {
-    const response = await this._post(`/browser/plugins/status`, {
+    const response = await this._post('/plugins/status', {
       browser_id: params.browser_id
     })
     // 适配新的StandardResponse结构
@@ -792,73 +978,32 @@ class BrowserLiveControlApiImpl extends BrowserLiveControlApi {
   }
 
   /**
-   * 获取浏览器详细信息
+   * 获取浏览器详细信息（已删除，请使用 getBrowserSessionStatus 接口）
    * POST /api/v1/rpa/browser_live_control/browser/info
    */
-  async getBrowserInfo(browser_id: string): Promise<RootObject<any>> {
-    const response = await this._post(`/browser/info`, { browser_id: browser_id })
-    // 适配新的StandardResponse结构
-    if (response && 'code' in response) {
-      return { data: response.data, msg: response.msg, code: response.code } as RootObject<any>
-    }
-    return response
-  }
+  // async getBrowserInfo(...) { ... }
 
   /**
-   * 获取浏览器状态
+   * 获取浏览器状态（已删除，请使用 getBrowserSessionStatus 接口）
    * POST /api/v1/rpa/browser_live_control/browser/status
    */
-  async getBrowserStatus(browser_id: string): Promise<RootObject<any>> {
-    const response = await this._post(`/browser/status`, { browser_id: browser_id })
-    // 适配新的StandardResponse结构
-    if (response && 'code' in response) {
-      return { data: response.data, msg: response.msg, code: response.code } as RootObject<any>
-    }
-    return response
-  }
+  // async getBrowserStatus(...) { ... }
 
   /**
-   * 设置清理策略
+   * 设置清理策略（已删除，请使用系统清理接口）
    * POST /api/v1/rpa/browser_live_control/browser/cleanup/policy
    */
-  async setCleanupPolicy(
-    browser_id: string,
-    policy: BrowserCleanupPolicy
-  ): Promise<RootObject<any>> {
-    const body: Body_set_cleanup_policy_api_v1_rpa_browser_live_control_browser_cleanup_policy_post =
-      {
-        request: { policy },
-        body: { browser_id: browser_id }
-      }
-    const response = await this._post(`/browser/cleanup/policy`, body)
-    // 适配新的StandardResponse结构
-    if (response && 'code' in response) {
-      return { data: response.data, msg: response.msg, code: response.code } as RootObject<any>
-    }
-    return response
-  }
+  // async setCleanupPolicy(...) { ... }
 
   /**
-   * 强制释放浏览器实例
+   * 强制释放浏览器实例（已删除，后端不再提供此接口）
    * POST /api/v1/rpa/browser_live_control/browser/force/release
    */
-  async forceReleaseBrowser(browser_id: string): Promise<RootObject<any>> {
-    const body: Body_force_release_browser_api_v1_rpa_browser_live_control_browser_force_release_post =
-      {
-        request: {},
-        body: { browser_id: browser_id }
-      }
-    const response = await this._post(`/browser/force/release`, body)
-    // 适配新的StandardResponse结构
-    if (response && 'code' in response) {
-      return { data: response.data, msg: response.msg, code: response.code } as RootObject<any>
-    }
-    return response
-  }
+  // async forceReleaseBrowser(...) { ... }
 
   /**
    * 获取系统统计信息
-   * POST /api/v1/rpa/browser_live_control/system/statistics
+   * POST /api/v1/rpa/browser/control/system/statistics
    */
   async getSystemStatistics(): Promise<RootObject<any>> {
     const response = await this._post('/system/statistics', {})
@@ -870,8 +1015,26 @@ class BrowserLiveControlApiImpl extends BrowserLiveControlApi {
   }
 
   /**
+   * 系统健康检查
+   * POST /api/v1/rpa/system/health
+   */
+  async healthCheck(): Promise<RootObject<SystemHealthCheckResponse>> {
+    // 注意:健康检查接口路径不同,使用 /api/v1/rpa/system/health
+    const response = await ajax.post('/api/v1/rpa/system/health', {})
+    // 适配新的StandardResponse结构
+    if (response && 'code' in response) {
+      return {
+        data: response.data,
+        msg: response.msg,
+        code: response.code
+      } as RootObject<SystemHealthCheckResponse>
+    }
+    return response
+  }
+
+  /**
    * 触发系统清理
-   * POST /api/v1/rpa/browser_live_control/system/cleanup
+   * POST /api/v1/rpa/browser/control/system/cleanup
    */
   async triggerSystemCleanup(): Promise<RootObject<any>> {
     const response = await this._post('/system/cleanup', {})
@@ -883,59 +1046,28 @@ class BrowserLiveControlApiImpl extends BrowserLiveControlApi {
   }
 
   /**
-   * 获取浏览器标签页列表
+   * 获取浏览器标签页列表（已删除，后端不再提供此接口）
    * POST /api/v1/rpa/browser_live_control/browser/tabs/list
    */
-  async listTabs(browser_id: string): Promise<RootObject<any>> {
-    const response = await this._post(`/browser/tabs/list`, { browser_id })
-    // 适配新的StandardResponse结构
-    if (response && 'code' in response) {
-      return { data: response.data, msg: response.msg, code: response.code } as RootObject<any>
-    }
-    return response
-  }
+  // async listTabs(...) { ... }
 
   /**
-   * 切换到指定标签页
+   * 切换到指定标签页（已删除，后端不再提供此接口）
    * POST /api/v1/rpa/browser_live_control/browser/tabs/switch
    */
-  async switchTab(params: {
-    browser_id: string
-    tab_id: string
-  }): Promise<RootObject<any>> {
-    const response = await this._post(`/browser/tabs/switch`, params)
-    // 适配新的StandardResponse结构
-    if (response && 'code' in response) {
-      return { data: response.data, msg: response.msg, code: response.code } as RootObject<any>
-    }
-    return response
-  }
+  // async switchTab(...) { ... }
 
   /**
-   * 暂停视频流
+   * 暂停视频流（已删除，后端不再提供此接口）
    * POST /api/v1/rpa/browser_live_control/browser/stream/pause
    */
-  async pauseVideoStream(browser_id: string): Promise<RootObject<any>> {
-    const response = await this._post(`/browser/stream/pause`, { browser_id })
-    // 适配新的StandardResponse结构
-    if (response && 'code' in response) {
-      return { data: response.data, msg: response.msg, code: response.code } as RootObject<any>
-    }
-    return response
-  }
+  // async pauseVideoStream(...) { ... }
 
   /**
-   * 恢复视频流
+   * 恢复视频流（已删除，后端不再提供此接口）
    * POST /api/v1/rpa/browser_live_control/browser/stream/resume
    */
-  async resumeVideoStream(browser_id: string): Promise<RootObject<any>> {
-    const response = await this._post(`/browser/stream/resume`, { browser_id })
-    // 适配新的StandardResponse结构
-    if (response && 'code' in response) {
-      return { data: response.data, msg: response.msg, code: response.code } as RootObject<any>
-    }
-    return response
-  }
+  // async resumeVideoStream(...) { ... }
 
   /**
    * 获取H.264视频流（已删除,使用WebRTC替代）
@@ -953,12 +1085,12 @@ class BrowserLiveControlApiImpl extends BrowserLiveControlApi {
 
   /**
    * 创建 WebRTC offer
-   * POST /api/v1/rpa/browser_live_control/webrtc/offer
+   * POST /api/v1/rpa/browser/control/webrtc/offer
    */
   async createWebrtcOffer(params: {
     browser_id: string
   }): Promise<RootObject<{ sdp?: string }>> {
-    const response = await this._post(`/webrtc/offer`, {
+    const response = await this._post('/webrtc/offer', {
       browser_id: params.browser_id
     })
     // 适配新的StandardResponse结构
@@ -974,13 +1106,17 @@ class BrowserLiveControlApiImpl extends BrowserLiveControlApi {
 
   /**
    * 设置 WebRTC answer
-   * POST /api/v1/rpa/browser_live_control/webrtc/answer
+   * POST /api/v1/rpa/browser/control/webrtc/answer
    */
   async setWebrtcAnswer(params: {
     browser_id: string
     sdp: string
   }): Promise<RootObject<any>> {
-    const response = await this._post(`/webrtc/answer`, params)
+    const body: BodySetWebrtcAnswerRequest = {
+      request: { browser_id: params.browser_id, sdp: params.sdp },
+      body: { browser_id: params.browser_id }
+    }
+    const response = await this._post('/webrtc/answer', body)
     // 适配新的StandardResponse结构
     if (response && 'code' in response) {
       return {
@@ -994,7 +1130,7 @@ class BrowserLiveControlApiImpl extends BrowserLiveControlApi {
 
   /**
    * 添加 WebRTC ICE candidate
-   * POST /api/v1/rpa/browser_live_control/webrtc/ice-candidate
+   * POST /api/v1/rpa/browser/control/webrtc/ice-candidate
    */
   async addWebrtcIceCandidate(params: {
     browser_id: string
@@ -1006,7 +1142,11 @@ class BrowserLiveControlApiImpl extends BrowserLiveControlApi {
   }): Promise<RootObject<any>> {
     console.log('📤 [API] 准备发送 ICE candidate 请求:', params)
     console.log('📤 [API] 完整URL:', `${this.path}/webrtc/ice-candidate`)
-    const response = await this._post(`/webrtc/ice-candidate`, params)
+    const body: BodyAddWebrtcIceCandidateRequest = {
+      request: { candidate: params.candidate },
+      body: { browser_id: params.browser_id }
+    }
+    const response = await this._post('/webrtc/ice-candidate', body)
     console.log('📤 [API] ICE candidate 请求响应:', response)
     // 适配新的StandardResponse结构
     if (response && 'code' in response) {
@@ -1021,7 +1161,7 @@ class BrowserLiveControlApiImpl extends BrowserLiveControlApi {
 
   /**
    * 获取 WebRTC ICE candidates
-   * GET /api/v1/rpa/browser_live_control/webrtc/ice-candidates
+   * GET /api/v1/rpa/browser/control/webrtc/ice-candidates
    */
   async getWebrtcIceCandidates(params: {
     browser_id: string
@@ -1059,7 +1199,7 @@ class BrowserLiveControlApiImpl extends BrowserLiveControlApi {
 
   /**
    * 获取 WebRTC 连接状态
-   * GET /api/v1/rpa/browser_live_control/webrtc/status
+   * GET /api/v1/rpa/browser/control/webrtc/status
    */
   async getWebrtcStatus(browser_id: string): Promise<RootObject<any>> {
     const response = await ajax.get(`${this.path}/webrtc/status`, {
@@ -1078,10 +1218,10 @@ class BrowserLiveControlApiImpl extends BrowserLiveControlApi {
 
   /**
    * 关闭 WebRTC 连接
-   * POST /api/v1/rpa/browser_live_control/webrtc/close
+   * POST /api/v1/rpa/browser/control/webrtc/close
    */
   async closeWebrtcConnection(browser_id: string): Promise<RootObject<any>> {
-    const response = await this._post(`/webrtc/close`, {
+    const response = await this._post('/webrtc/close', {
       browser_id: browser_id
     })
     // 适配新的StandardResponse结构
@@ -1138,47 +1278,19 @@ class BrowserLiveControlApiImpl extends BrowserLiveControlApi {
   }
 
   /**
-   * 获取截图（兼容性方法）
+   * 获取截图（兼容性方法，已删除）
    */
-  async getScreenshotCompat(browser_id: string, params?: ScreenshotParams): Promise<Blob> {
-    return await this.getScreenshot({
-      browser_id: browser_id,
-      request: params
-        ? {
-            quality: params.quality
-          }
-        : undefined
-    })
-  }
+  // async getScreenshotCompat(...) { ... }
 
   /**
-   * 浏览器点击操作（兼容性方法）
+   * 浏览器点击操作（兼容性方法，已删除）
    */
-  async clickElementCompat(
-    browser_id: string,
-    params: BrowserClickParams
-  ): Promise<RootObject<any>> {
-    return await this.clickElement({
-      browser_id: browser_id,
-      request: {
-        x: params.x,
-        y: params.y,
-        button: params.button,
-        double: params.double,
-        wait_after: params.wait_after
-      }
-    })
-  }
+  // async clickElementCompat(...) { ... }
 
   /**
-   * 导航到指定URL（兼容性方法）
+   * 导航到指定URL（兼容性方法，已删除）
    */
-  async navigateToUrlCompat(browser_id: string, url: string): Promise<RootObject<any>> {
-    return await this.navigateToUrl({
-      browser_id: browser_id,
-      request: { url }
-    })
-  }
+  // async navigateToUrlCompat(...) { ... }
 
   /**
    * 暂停插件（兼容性方法）
@@ -1195,35 +1307,24 @@ class BrowserLiveControlApiImpl extends BrowserLiveControlApi {
   }
 
   /**
-   * 获取浏览器详细信息（兼容性方法）
+   * 获取浏览器详细信息（兼容性方法，已删除）
    */
-  async getBrowserInfoCompat(browser_id: string): Promise<RootObject<any>> {
-    return await this.getBrowserInfo(browser_id)
-  }
+  // async getBrowserInfoCompat(...) { ... }
 
   /**
-   * 获取浏览器状态（兼容性方法）
+   * 获取浏览器状态（兼容性方法，已删除）
    */
-  async getBrowserStatusCompat(browser_id: string): Promise<RootObject<any>> {
-    return await this.getBrowserStatus(browser_id)
-  }
+  // async getBrowserStatusCompat(...) { ... }
 
   /**
-   * 设置清理策略（兼容性方法）
+   * 设置清理策略（兼容性方法，已删除）
    */
-  async setCleanupPolicyCompat(
-    browser_id: string,
-    policy: BrowserCleanupPolicy
-  ): Promise<RootObject<any>> {
-    return await this.setCleanupPolicy(browser_id, policy)
-  }
+  // async setCleanupPolicyCompat(...) { ... }
 
   /**
-   * 强制释放浏览器实例（兼容性方法）
+   * 强制释放浏览器实例（兼容性方法，已删除）
    */
-  async forceReleaseBrowserCompat(browser_id: string): Promise<RootObject<any>> {
-    return await this.forceReleaseBrowser(browser_id)
-  }
+  // async forceReleaseBrowserCompat(...) { ... }
 
   /**
    * 获取视频流状态（兼容性方法）
@@ -1236,6 +1337,491 @@ class BrowserLiveControlApiImpl extends BrowserLiveControlApi {
    * 获取MJPEG视频流（已删除,不再在新API中）
    */
   // async getVideoStreamMjpegCompat(...) { ... }
+
+  // ===== 自定义操作管理 =====
+
+  /**
+   * 获取系统预注册操作列表
+   * POST /api/v1/rpa/browser_live_control/actions/registered
+   */
+  async listRegisteredActions(): Promise<RootObject<ActionMetadataResponse[]>> {
+    const response = await this._post('/actions/registered', {})
+    if (response && 'code' in response) {
+      return {
+        data: response.data,
+        msg: response.msg,
+        code: response.code
+      } as RootObject<ActionMetadataResponse[]>
+    }
+    return response
+  }
+
+  /**
+   * 执行单个操作
+   * POST /api/v1/rpa/browser_live_control/actions/execute
+   */
+  async executeAction(params: {
+    browser_id: string
+    req: ActionExecuteRequest
+  }): Promise<RootObject<ActionResultResponse>> {
+    const body = {
+      req: params.req,
+      body: { browser_id: params.browser_id }
+    }
+    const response = await this._post('/actions/execute', body)
+    if (response && 'code' in response) {
+      return {
+        data: response.data,
+        msg: response.msg,
+        code: response.code
+      } as RootObject<ActionResultResponse>
+    }
+    return response
+  }
+
+  /**
+   * 批量执行操作
+   * POST /api/v1/rpa/browser_live_control/actions/batch
+   */
+  async batchExecute(params: {
+    browser_id: string
+    req: BatchActionRequest
+  }): Promise<RootObject<ActionResultResponse[]>> {
+    const body = {
+      req: params.req,
+      body: { browser_id: params.browser_id }
+    }
+    const response = await this._post('/actions/batch', body)
+    if (response && 'code' in response) {
+      return {
+        data: response.data,
+        msg: response.msg,
+        code: response.code
+      } as RootObject<ActionResultResponse[]>
+    }
+    return response
+  }
+
+  /**
+   * 预览参数替换结果
+   * POST /api/v1/rpa/browser_live_control/actions/preview
+   */
+  async previewActionParams(params: {
+    browser_id: string
+    req: ActionPreviewRequest
+  }): Promise<RootObject<ActionPreviewResponse>> {
+    const body = {
+      req: params.req,
+      body: { browser_id: params.browser_id }
+    }
+    const response = await this._post('/actions/preview', body)
+    if (response && 'code' in response) {
+      return {
+        data: response.data,
+        msg: response.msg,
+        code: response.code
+      } as RootObject<ActionPreviewResponse>
+    }
+    return response
+  }
+
+  /**
+   * 验证操作参数
+   * POST /api/v1/rpa/browser_live_control/actions/validate
+   */
+  async validateActionParams(params: {
+    browser_id: string
+    req: ActionValidateRequest
+  }): Promise<RootObject<ActionValidateResponse>> {
+    const body = {
+      req: params.req,
+      body: { browser_id: params.browser_id }
+    }
+    const response = await this._post('/actions/validate', body)
+    if (response && 'code' in response) {
+      return {
+        data: response.data,
+        msg: response.msg,
+        code: response.code
+      } as RootObject<ActionValidateResponse>
+    }
+    return response
+  }
+
+  /**
+   * 单步执行操作
+   * POST /api/v1/rpa/browser_live_control/actions/execute-step
+   */
+  async executeActionStep(params: {
+    browser_id: string
+    req: ExecuteStepRequest
+  }): Promise<RootObject<ExecuteStepResponse>> {
+    const body = {
+      req: params.req,
+      body: { browser_id: params.browser_id }
+    }
+    const response = await this._post('/actions/execute-step', body)
+    if (response && 'code' in response) {
+      return {
+        data: response.data,
+        msg: response.msg,
+        code: response.code
+      } as RootObject<ExecuteStepResponse>
+    }
+    return response
+  }
+
+  /**
+   * 获取用户自定义操作列表
+   * POST /api/v1/rpa/browser_live_control/custom-actions/list
+   */
+  async listCustomActions(params?: {
+    skip?: number
+    limit?: number
+  }): Promise<RootObject<CustomActionListItem[]>> {
+    const requestBody: CustomActionList = {
+      skip: params?.skip || 0,
+      limit: params?.limit || 100
+    }
+    const response = await this._post('/custom-actions/list', requestBody)
+    if (response && 'code' in response) {
+      return {
+        data: response.data,
+        msg: response.msg,
+        code: response.code
+      } as RootObject<CustomActionListItem[]>
+    }
+    return response
+  }
+
+  /**
+   * 获取单个自定义操作
+   * POST /api/v1/rpa/browser_live_control/custom-actions/get
+   */
+  async getCustomAction(id: number): Promise<RootObject<CustomActionDetail>> {
+    const response = await this._post('/custom-actions/get', { id })
+    if (response && 'code' in response) {
+      return {
+        data: response.data,
+        msg: response.msg,
+        code: response.code
+      } as RootObject<CustomActionDetail>
+    }
+    return response
+  }
+
+  /**
+   * 创建自定义操作
+   * POST /api/v1/rpa/browser_live_control/custom-actions/create
+   */
+  async createCustomAction(data: CustomActionCreate): Promise<RootObject<CustomActionCreateResponse>> {
+    const response = await this._post('/custom-actions/create', data)
+    if (response && 'code' in response) {
+      return {
+        data: response.data,
+        msg: response.msg,
+        code: response.code
+      } as RootObject<CustomActionCreateResponse>
+    }
+    return response
+  }
+
+  /**
+   * 更新自定义操作
+   * POST /api/v1/rpa/browser_live_control/custom-actions/update
+   */
+  async updateCustomAction(data: CustomActionUpdate): Promise<RootObject<string>> {
+    const response = await this._post('/custom-actions/update', data)
+    if (response && 'code' in response) {
+      return {
+        data: response.data,
+        msg: response.msg,
+        code: response.code
+      } as RootObject<string>
+    }
+    return response
+  }
+
+  /**
+   * 删除自定义操作
+   * POST /api/v1/rpa/browser_live_control/custom-actions/delete
+   */
+  async deleteCustomAction(id: number): Promise<RootObject<string>> {
+    const response = await this._post('/custom-actions/delete', { id })
+    if (response && 'code' in response) {
+      return {
+        data: response.data,
+        msg: response.msg,
+        code: response.code
+      } as RootObject<string>
+    }
+    return response
+  }
+
+  /**
+   * 重新加载自定义操作缓存
+   * POST /api/v1/rpa/browser_live_control/custom-actions/reload
+   */
+  async reloadCustomActions(): Promise<RootObject<ReloadActionsResponse>> {
+    const response = await this._post('/custom-actions/reload', {})
+    if (response && 'code' in response) {
+      return {
+        data: response.data,
+        msg: response.msg,
+        code: response.code
+      } as RootObject<ReloadActionsResponse>
+    }
+    return response
+  }
+
+  // ===== 插件管理 =====
+
+  /**
+   * 获取系统预注册插件列表
+   * POST /api/v1/rpa/browser_live_control/plugins/registered
+   */
+  async listRegisteredPlugins(): Promise<RootObject<PluginMetadataResponse[]>> {
+    const response = await this._post('/plugins/registered', {})
+    if (response && 'code' in response) {
+      return {
+        data: response.data,
+        msg: response.msg,
+        code: response.code
+      } as RootObject<PluginMetadataResponse[]>
+    }
+    return response
+  }
+
+  /**
+   * 获取用户插件列表
+   * POST /api/v1/rpa/browser_live_control/plugins/list-user
+   */
+  async listUserPlugins(params?: {
+    skip?: number
+    limit?: number
+  }): Promise<RootObject<PluginListItem[]>> {
+    const requestBody: PluginList = {
+      skip: params?.skip || 0,
+      limit: params?.limit || 100
+    }
+    const response = await this._post('/plugins/list-user', requestBody)
+    if (response && 'code' in response) {
+      return {
+        data: response.data,
+        msg: response.msg,
+        code: response.code
+      } as RootObject<PluginListItem[]>
+    }
+    return response
+  }
+
+  /**
+   * 获取单个插件
+   * POST /api/v1/rpa/browser_live_control/plugins/get
+   */
+  async getPlugin(id: number): Promise<RootObject<PluginDetail>> {
+    const response = await this._post('/plugins/get', { id })
+    if (response && 'code' in response) {
+      return {
+        data: response.data,
+        msg: response.msg,
+        code: response.code
+      } as RootObject<PluginDetail>
+    }
+    return response
+  }
+
+  /**
+   * 注册插件到数据库
+   * POST /api/v1/rpa/browser_live_control/plugins/register
+   */
+  async registerPlugin(data: PluginRegister): Promise<RootObject<PluginCreateResponse>> {
+    const response = await this._post('/plugins/register', data)
+    if (response && 'code' in response) {
+      return {
+        data: response.data,
+        msg: response.msg,
+        code: response.code
+      } as RootObject<PluginCreateResponse>
+    }
+    return response
+  }
+
+  /**
+   * 创建插件（兼容旧接口）
+   * POST /api/v1/rpa/browser_live_control/plugins/create
+   */
+  async createPlugin(data: PluginCreate): Promise<RootObject<PluginCreateResponse>> {
+    const response = await this._post('/plugins/create', data)
+    if (response && 'code' in response) {
+      return {
+        data: response.data,
+        msg: response.msg,
+        code: response.code
+      } as RootObject<PluginCreateResponse>
+    }
+    return response
+  }
+
+  /**
+   * 更新插件
+   * POST /api/v1/rpa/browser_live_control/plugins/update
+   */
+  async updatePlugin(data: PluginUpdate): Promise<RootObject<string>> {
+    const response = await this._post('/plugins/update', data)
+    if (response && 'code' in response) {
+      return {
+        data: response.data,
+        msg: response.msg,
+        code: response.code
+      } as RootObject<string>
+    }
+    return response
+  }
+
+  /**
+   * 删除插件
+   * POST /api/v1/rpa/browser_live_control/plugins/delete
+   */
+  async deletePlugin(id: number): Promise<RootObject<string>> {
+    const response = await this._post('/plugins/delete', { id })
+    if (response && 'code' in response) {
+      return {
+        data: response.data,
+        msg: response.msg,
+        code: response.code
+      } as RootObject<string>
+    }
+    return response
+  }
+
+  // ===== 工作流管理 =====
+
+  /**
+   * 获取用户工作流列表
+   * POST /api/v1/rpa/browser_live_control/workflows/list
+   */
+  async listWorkflows(params?: {
+    skip?: number
+    limit?: number
+  }): Promise<RootObject<WorkflowListItem[]>> {
+    const requestBody: WorkflowList = {
+      skip: params?.skip || 0,
+      limit: params?.limit || 100
+    }
+    const response = await this._post('/workflows/list', requestBody)
+    if (response && 'code' in response) {
+      return {
+        data: response.data,
+        msg: response.msg,
+        code: response.code
+      } as RootObject<WorkflowListItem[]>
+    }
+    return response
+  }
+
+  /**
+   * 获取单个工作流
+   * POST /api/v1/rpa/browser_live_control/workflows/get
+   */
+  async getWorkflow(id: number): Promise<RootObject<WorkflowDetail>> {
+    const response = await this._post('/workflows/get', { id })
+    if (response && 'code' in response) {
+      return {
+        data: response.data,
+        msg: response.msg,
+        code: response.code
+      } as RootObject<WorkflowDetail>
+    }
+    return response
+  }
+
+  /**
+   * 创建工作流
+   * POST /api/v1/rpa/browser_live_control/workflows/create
+   */
+  async createWorkflow(data: WorkflowCreate): Promise<RootObject<WorkflowCreateResponse>> {
+    const response = await this._post('/workflows/create', data)
+    if (response && 'code' in response) {
+      return {
+        data: response.data,
+        msg: response.msg,
+        code: response.code
+      } as RootObject<WorkflowCreateResponse>
+    }
+    return response
+  }
+
+  /**
+   * 更新工作流
+   * POST /api/v1/rpa/browser_live_control/workflows/update
+   */
+  async updateWorkflow(data: WorkflowUpdate): Promise<RootObject<string>> {
+    const response = await this._post('/workflows/update', data)
+    if (response && 'code' in response) {
+      return {
+        data: response.data,
+        msg: response.msg,
+        code: response.code
+      } as RootObject<string>
+    }
+    return response
+  }
+
+  /**
+   * 删除工作流
+   * POST /api/v1/rpa/browser_live_control/workflows/delete
+   */
+  async deleteWorkflow(id: number): Promise<RootObject<string>> {
+    const response = await this._post('/workflows/delete', { id })
+    if (response && 'code' in response) {
+      return {
+        data: response.data,
+        msg: response.msg,
+        code: response.code
+      } as RootObject<string>
+    }
+    return response
+  }
+
+  /**
+   * 复制工作流
+   * POST /api/v1/rpa/browser_live_control/workflows/duplicate
+   */
+  async duplicateWorkflow(id: number): Promise<RootObject<WorkflowDuplicateResponse>> {
+    const response = await this._post('/workflows/duplicate', { id })
+    if (response && 'code' in response) {
+      return {
+        data: response.data,
+        msg: response.msg,
+        code: response.code
+      } as RootObject<WorkflowDuplicateResponse>
+    }
+    return response
+  }
+
+  /**
+   * 执行工作流
+   * POST /api/v1/rpa/browser_live_control/workflows/execute
+   */
+  async executeWorkflow(params: {
+    browser_id: string
+    req: WorkflowExecuteRequest
+  }): Promise<RootObject<WorkflowExecuteResponse>> {
+    const body = {
+      req: params.req,
+      body: { browser_id: params.browser_id }
+    }
+    const response = await this._post('/workflows/execute', body)
+    if (response && 'code' in response) {
+      return {
+        data: response.data,
+        msg: response.msg,
+        code: response.code
+      } as RootObject<WorkflowExecuteResponse>
+    }
+    return response
+  }
 }
 
 const browserApi = new BrowserApi()

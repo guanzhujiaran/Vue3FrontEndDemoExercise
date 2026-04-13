@@ -4,7 +4,7 @@
  * @LastEditors: 星瞳 1944637830@qq.com
  * @LastEditTime: 2024-12-24 00:00:00
  * @FilePath: \Vue3FrontEndDemoExercise\src\components\browser\ControlPanelContent.vue
- * @Description: 控制面板内容组件 - 用于抽屉中显示
+ * @Description: RPA浏览器控制台 - 控制面板内容组件
 -->
 <template>
   <div class="control-panel-content">

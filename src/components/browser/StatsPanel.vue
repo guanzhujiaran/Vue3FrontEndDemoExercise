@@ -72,40 +72,7 @@ const props = defineProps<Props>()
 </script>
 
 <style scoped>
-.stats-section {
-  margin-bottom: 20px;
-}
+@import '@/assets/components/browser/stats-panel-tailwind.css';
 
-.stat-card {
-  height: 100%;
-}
-
-.stat-content {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.stat-icon {
-  font-size: 32px;
-  flex-shrink: 0;
-}
-
-.stat-info {
-  flex: 1;
-}
-
-.stat-value {
-  font-size: 24px;
-  font-weight: 600;
-  color: var(--el-text-color-primary);
-  line-height: 1;
-  margin-bottom: 4px;
-}
-
-.stat-label {
-  font-size: 12px;
-  color: var(--el-text-color-secondary);
-  line-height: 1;
-}
+/* 基础样式已在 tailwind.css 的 @layer components 中定义 */
 </style>

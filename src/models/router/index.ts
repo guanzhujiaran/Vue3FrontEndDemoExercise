@@ -60,7 +60,7 @@ export enum RouteName {
   USER_INFO_CONFIG = '用户基本信息设置',
 
   USER_CENTER_DASHBOARD = '用户中心仪表盘',
-  BROWSER_MANAGEMENT = '浏览器指纹管理',
+  BROWSER_MANAGEMENT = 'RPA浏览器控制台',
   // 抽奖数据子路由
   SCRAPY_STAT = '爬虫状态',
   BILI_ATARI_RANKING = 'B站中奖名人堂',

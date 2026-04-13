@@ -18,26 +18,210 @@
       @close="showAlert = false"
     >
       <template #default>
-        <p>配置浏览器事件通知，支持多种推送方式，确保重要信息及时送达。</p>
-        <p>包括系统状态、任务完成、错误报告等通知类型。</p>
+        <p>配置浏览器事件通知和默认指纹参数，支持多种推送方式，确保重要信息及时送达。</p>
+        <p>包括系统状态、任务完成、错误报告等通知类型，以及新建浏览器实例的默认配置。</p>
       </template>
     </el-alert>
 
-    <!-- 全局通知配置 -->
+    <!-- 统一配置管理卡片 -->
     <el-card>
       <div class="config-header">
-        <h3>全局通知配置</h3>
-        <p class="config-description">配置浏览器事件通知，支持多种推送方式，确保重要信息及时送达</p>
+        <h3>全局配置中心</h3>
+        <p class="config-description">统一管理浏览器默认配置和通知设置</p>
       </div>
       
+      <!-- 统一手风琴组件 -->
       <el-collapse v-model="activeCollapses" class="unified-accordion">
-        <!-- 当前配置 -->
-        <el-collapse-item name="current" title="当前配置">
+        <!-- 第一部分：浏览器默认配置（在上） -->
+        <el-collapse-item name="default-fingerprint-section" title="浏览器默认配置">
+          <template #title>
+            <div class="main-accordion-title">
+              <el-icon><Monitor /></el-icon>
+              <span>浏览器默认配置</span>
+              <span class="badge-text badge-success">指纹</span>
+            </div>
+          </template>
+          <div v-loading="loadingDefaultConfig" class="min-h-[300px]">
+            <div v-if="defaultFingerprintConfig" class="space-y-6">
+              <el-form :model="defaultFingerprintConfig" label-width="160px" @submit.prevent>
+                <el-collapse 
+                  v-model="activeDefaultConfigCollapses" 
+                  class="unified-accordion"
+                  @change="handleDefaultConfigAccordionChange"
+                >
+                  <!-- 基础浏览器配置 -->
+                  <el-collapse-item name="browser-basic" title="基础浏览器配置">
+                    <template #title>
+                      <div class="accordion-title">
+                        <el-icon><Monitor /></el-icon>
+                        <span>基础配置</span>
+                        <span class="badge-text badge-core">核心</span>
+                      </div>
+                    </template>
+                    <el-form-item label="浏览器类型">
+                      <el-select 
+                        v-model="defaultFingerprintConfig.default_browser" 
+                        placeholder="选择浏览器类型（留空则使用后端默认值）"
+                        clearable
+                        style="width: 100%"
+                        @change="handleDefaultConfigChange"
+                      >
+                        <el-option label="Chrome" value="chrome" />
+                        <el-option label="Edge" value="edge" />
+                        <el-option label="Firefox" value="firefox" />
+                      </el-select>
+                      <div class="form-help-text">新建浏览器时使用的浏览器类型，留空则使用后端默认值</div>
+                    </el-form-item>
+                    <el-form-item label="操作系统">
+                      <el-select 
+                        v-model="defaultFingerprintConfig.default_platform" 
+                        placeholder="选择操作系统（留空则使用后端默认值）"
+                        clearable
+                        style="width: 100%"
+                        @change="handleDefaultConfigChange"
+                      >
+                        <el-option label="Windows" value="windows" />
+                        <el-option label="macOS" value="macos" />
+                        <el-option label="Linux" value="linux" />
+                      </el-select>
+                      <div class="form-help-text">新建浏览器时使用的操作系统，留空则使用后端默认值</div>
+                    </el-form-item>
+                  </el-collapse-item>
+
+                  <!-- 屏幕分辨率配置 -->
+                  <el-collapse-item name="screen-config" title="屏幕分辨率配置">
+                    <template #title>
+                      <div class="accordion-title">
+                        <el-icon><FullScreen /></el-icon>
+                        <span>屏幕配置</span>
+                        <span class="badge-text badge-warning">显示</span>
+                      </div>
+                    </template>
+                    <div class="config-section">
+                      <el-row :gutter="16">
+                        <el-col :md="12">
+                          <el-form-item label="视口宽度">
+                            <el-input-number 
+                              v-model="defaultFingerprintConfig.default_viewport_width" 
+                              :min="800"
+                              :max="3840"
+                              :step="100"
+                              placeholder="留空则使用后端默认值"
+                              clearable
+                              style="width: 100%"
+                              @change="handleDefaultConfigChange"
+                            />
+                            <div class="form-help-text">浏览器视口宽度，留空则使用后端默认值</div>
+                          </el-form-item>
+                        </el-col>
+                        <el-col :md="12">
+                          <el-form-item label="视口高度">
+                            <el-input-number 
+                              v-model="defaultFingerprintConfig.default_viewport_height" 
+                              :min="600"
+                              :max="2160"
+                              :step="100"
+                              placeholder="留空则使用后端默认值"
+                              clearable
+                              style="width: 100%"
+                              @change="handleDefaultConfigChange"
+                            />
+                            <div class="form-help-text">浏览器视口高度，留空则使用后端默认值</div>
+                          </el-form-item>
+                        </el-col>
+                      </el-row>
+                    </div>
+                  </el-collapse-item>
+
+                  <!-- 语言与时区配置 -->
+                  <el-collapse-item name="locale-timezone" title="语言与时区配置">
+                    <template #title>
+                      <div class="accordion-title">
+                        <el-icon><Clock /></el-icon>
+                        <span>语言时区</span>
+                        <span class="badge-text badge-info">区域</span>
+                      </div>
+                    </template>
+                    <div class="config-section">
+                      <el-form-item label="语言">
+                        <el-input 
+                          v-model="defaultFingerprintConfig.default_lang" 
+                          placeholder="zh-CN（留空则使用后端默认值）"
+                          clearable
+                          @input="handleDefaultConfigChange"
+                        />
+                        <div class="form-help-text">浏览器语言设置，如 zh-CN、en-US，留空则使用后端默认值</div>
+                      </el-form-item>
+                      <el-form-item label="时区">
+                        <el-input 
+                          v-model="defaultFingerprintConfig.default_timezone" 
+                          placeholder="Asia/Shanghai（留空则使用后端默认值）"
+                          clearable
+                          @input="handleDefaultConfigChange"
+                        />
+                        <div class="form-help-text">浏览器时区设置，如 Asia/Shanghai、America/New_York，留空则使用后端默认值</div>
+                      </el-form-item>
+                    </div>
+                  </el-collapse-item>
+                </el-collapse>
+              </el-form>
+              
+              <!-- 配置状态和操作 -->
+              <div class="config-actions">
+                <div class="config-status">
+                  <span class="status-badge" :class="defaultConfigSaved ? 'status-saved' : 'status-unsaved'">
+                    <el-icon class="status-icon">
+                      <SuccessFilled v-if="defaultConfigSaved" />
+                      <WarningFilled v-else />
+                    </el-icon>
+                    {{ defaultConfigSaved ? '配置已保存' : '有未保存的更改' }}
+                  </span>
+                  <el-button 
+                    size="default" 
+                    type="danger"
+                    plain
+                    @click="clearAllDefaultConfig" 
+                    class="clear-button"
+                  >
+                    <el-icon><CircleCloseFilled /></el-icon>
+                    全部设为未设置
+                  </el-button>
+                </div>
+                <div class="config-buttons">
+                  <el-button 
+                    @click="resetDefaultConfig"
+                    :icon="RefreshLeft"
+                    size="small"
+                  >
+                    重置
+                  </el-button>
+                  <el-button 
+                    type="primary" 
+                    @click="saveDefaultConfig" 
+                    :loading="savingDefaultConfig"
+                    :icon="Check"
+                    size="small"
+                  >
+                    保存配置
+                  </el-button>
+                </div>
+              </div>
+            </div>
+            
+            <!-- 空状态 -->
+            <el-empty v-else description="暂无默认配置">
+              <el-button type="primary" @click="initializeDefaultConfig">初始化配置</el-button>
+            </el-empty>
+          </div>
+        </el-collapse-item>
+
+        <!-- 第二部分：全局通知配置（在下） -->
+        <el-collapse-item name="notification-section" title="全局通知配置">
           <template #title>
             <div class="main-accordion-title">
               <el-icon><Setting /></el-icon>
-              <span>当前配置</span>
-              <el-tag type="primary" size="small">配置</el-tag>
+              <span>全局通知配置</span>
+              <span class="badge-text badge-primary">通知</span>
             </div>
           </template>
           <div v-loading="loadingConfig" class="min-h-[300px]">
@@ -45,9 +229,9 @@
               <!-- 统一手风琴配置界面 -->
               <el-form :model="notificationConfig" label-width="160px" @submit.prevent>
               <el-collapse 
-                v-model="activeCollapses" 
+                v-model="activeNotificationCollapses" 
                 class="unified-accordion"
-                @change="handleAccordionChange"
+                @change="handleNotificationAccordionChange"
               >
                 <!-- 基础设置 -->
                 <el-collapse-item name="basic" title="基础设置">
@@ -55,7 +239,7 @@
                     <div class="accordion-title">
                       <el-icon><Setting /></el-icon>
                       <span>基础设置</span>
-                      <el-tag type="primary" size="small">核心</el-tag>
+                      <span class="badge-text badge-core">核心</span>
                     </div>
                   </template>
                   <el-form-item label="一言推送">
@@ -73,7 +257,7 @@
                     <div class="accordion-title">
                       <el-icon><Apple /></el-icon>
                       <span>Bark推送</span>
-                      <el-tag type="success" size="small">iOS</el-tag>
+                      <span class="badge-text badge-ios">iOS</span>
                     </div>
                   </template>
                   <div class="config-section">
@@ -158,7 +342,7 @@
                     <div class="accordion-title">
                       <el-icon><Promotion /></el-icon>
                       <span>Push Plus</span>
-                      <el-tag type="warning" size="small">多平台</el-tag>
+                      <span class="badge-text badge-warning">多平台</span>
                     </div>
                   </template>
                   <div class="config-section">
@@ -241,7 +425,7 @@
                     <div class="accordion-title">
                       <el-icon><ChatDotRound /></el-icon>
                       <span>微信推送器</span>
-                      <el-tag type="info" size="small">微信</el-tag>
+                      <span class="badge-text badge-wechat">微信</span>
                     </div>
                   </template>
                   <div class="config-section">
@@ -281,7 +465,7 @@
                     <div class="accordion-title">
                       <el-icon><MoreFilled /></el-icon>
                       <span>其他推送</span>
-                      <el-tag type="info" size="small">更多</el-tag>
+                      <span class="badge-text badge-more">更多</span>
                     </div>
                   </template>
                   <div class="config-section">
@@ -389,17 +573,13 @@
               <!-- 配置状态和操作 -->
               <div class="config-actions">
                 <div class="config-status">
-                  <el-tag 
-                    :type="configSaved ? 'success' : 'warning'" 
-                    size="small"
-                    effect="light"
-                  >
+                  <span class="status-badge" :class="configSaved ? 'status-saved' : 'status-unsaved'">
                     <el-icon class="status-icon">
                       <SuccessFilled v-if="configSaved" />
                       <WarningFilled v-else />
                     </el-icon>
                     {{ configSaved ? '配置已保存' : '有未保存的更改' }}
-                  </el-tag>
+                  </span>
                   <el-button 
                     size="small" 
                     link 
@@ -446,26 +626,46 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted, watch } from 'vue'
 import biliMessage from '@/utils/message'
-import { Setting, Apple, Promotion, ChatDotRound, MoreFilled, SuccessFilled, WarningFilled, RefreshLeft, Check, Document, DataAnalysis, Bell, CircleCloseFilled } from '@element-plus/icons-vue'
+import { Setting, Apple, Promotion, ChatDotRound, MoreFilled, SuccessFilled, WarningFilled, RefreshLeft, Check, Document, DataAnalysis, Bell, CircleCloseFilled, Monitor, FullScreen, Clock } from '@element-plus/icons-vue'
 import browserApi from '@/api/browser/browser_api'
 import { asyncHandler } from '@/utils/asyncHandler'
 import type { 
   NotificationConfigCreate,
-  NotificationConfigUpdate
+  NotificationConfigUpdate,
+  UserBrowserDefaultSettingRequest,
+  UserBrowserDefaultSettingResponse
 } from '@/types/browser-automation-api'
 
 // 响应式数据
 const showAlert = ref(true)
-const activeCollapses = ref<string[]>(['current'])
+const activeCollapses = ref<string[]>(['default-fingerprint-section']) // 默认展开浏览器默认配置
+const activeNotificationCollapses = ref<string[]>(['basic']) // 通知配置内部手风琴状态
+const activeDefaultConfigCollapses = ref<string[]>(['browser-basic']) // 默认配置内部手风琴状态
 const loadingConfig = ref(false)
 const savingConfig = ref(false)
 const testingNotification = ref(false)
 const configSaved = ref(true)
 const notificationConfig = ref<NotificationConfigCreate | null>(null)
 
-// 处理手风琴变化
+// 浏览器默认配置相关
+const loadingDefaultConfig = ref(false)
+const savingDefaultConfig = ref(false)
+const defaultConfigSaved = ref(true)
+const defaultFingerprintConfig = ref<UserBrowserDefaultSettingRequest | null>(null)
+
+// 处理主手风琴变化（已废弃，保留兼容）
 const handleAccordionChange = (activeNames: string[]) => {
   activeCollapses.value = activeNames
+}
+
+// 处理通知配置内部手风琴变化
+const handleNotificationAccordionChange = (activeNames: string[]) => {
+  activeNotificationCollapses.value = activeNames
+}
+
+// 处理默认配置内部手风琴变化
+const handleDefaultConfigAccordionChange = (activeNames: string[]) => {
+  activeDefaultConfigCollapses.value = activeNames
 }
 
 // 统计数据
@@ -685,10 +885,117 @@ const updateStatistics = () => {
   statistics.pending = 6
 }
 
+// ========== 浏览器默认配置相关方法 ==========
+
+// 默认指纹配置（使用服务器端 API 的类型）
+// 所有字段初始化为 null/undefined，表示"未设置"状态
+// 这样可以让后端动态决定默认值，用户也可以主动选择"未设置"
+const defaultFingerprintDefaultConfig: UserBrowserDefaultSettingRequest = {
+  default_browser: undefined,
+  default_platform: undefined,
+  default_lang: undefined,
+  default_timezone: undefined,
+  default_viewport_width: undefined,
+  default_viewport_height: undefined,
+  default_headless: undefined,
+  default_timeout: undefined,
+  default_max_pages: undefined,
+  default_retry_times: undefined,
+  default_retry_delay: undefined,
+  default_min_wait: undefined,
+  default_max_wait: undefined,
+  default_proxy_server: undefined,
+  default_log_level: undefined
+}
+
+// 加载默认指纹配置（从服务器获取）
+const loadDefaultFingerprintConfig = async () => {
+  loadingDefaultConfig.value = true
+  
+  const { data: response, error } = await asyncHandler(
+    browserApi.getDefaultSettings(),
+    {
+      errorMessage: '加载浏览器默认配置失败',
+      showErrorToast: false // 不显示错误提示，因为可能是首次使用
+    }
+  )
+  
+  if (!error && response && response.code === 0 && response.data) {
+    // API 调用成功且有数据，直接使用后端返回的配置
+    defaultFingerprintConfig.value = { ...response.data }
+    defaultConfigSaved.value = true
+  } else {
+    // API 调用失败或无数据，使用"未设置"状态
+    defaultFingerprintConfig.value = { ...defaultFingerprintDefaultConfig }
+    defaultConfigSaved.value = true // 初始状态视为已保存（未设置也是一种有效状态）
+  }
+  
+  loadingDefaultConfig.value = false
+}
+
+// 保存默认指纹配置到服务器
+const saveDefaultConfig = async () => {
+  if (!defaultFingerprintConfig.value) return
+  
+  savingDefaultConfig.value = true
+  
+  const { data: response, error } = await asyncHandler(
+    browserApi.createOrUpdateDefaultSettings(defaultFingerprintConfig.value),
+    {
+      successMessage: '浏览器默认配置保存成功',
+      errorMessage: '保存失败',
+      showSuccessToast: true,
+      showErrorToast: true
+    }
+  )
+  
+  if (!error && response && response.code === 0) {
+    defaultConfigSaved.value = true
+  } else {
+    defaultConfigSaved.value = false
+  }
+  
+  savingDefaultConfig.value = false
+}
+
+// 处理默认配置变化
+const handleDefaultConfigChange = () => {
+  defaultConfigSaved.value = false
+}
+
+// 重置默认配置 - 重置为"未设置"状态
+const resetDefaultConfig = () => {
+  defaultFingerprintConfig.value = { ...defaultFingerprintDefaultConfig }
+  defaultConfigSaved.value = false
+  biliMessage.info('配置已重置为未设置状态')
+}
+
+// 清除所有默认配置 - 将所有字段设为 undefined
+const clearAllDefaultConfig = () => {
+  if (defaultFingerprintConfig.value) {
+    // 将所有字段设置为 undefined
+    Object.keys(defaultFingerprintConfig.value).forEach(key => {
+      (defaultFingerprintConfig.value as any)[key] = undefined
+    })
+    defaultConfigSaved.value = false
+    biliMessage.success('所有配置已设为未设置状态，将由后端提供默认值')
+  }
+}
+
+// 初始化默认配置 - 初始化为"未设置"状态
+const initializeDefaultConfig = () => {
+  defaultFingerprintConfig.value = { ...defaultFingerprintDefaultConfig }
+  defaultConfigSaved.value = false
+  biliMessage.success('配置已初始化为未设置状态，将由后端提供默认值')
+}
+
 // 生命周期
 onMounted(() => {
-  // 加载配置
+  // 加载通知配置
   loadConfig()
+  
+  // 加载默认指纹配置
+  loadDefaultFingerprintConfig()
   
   // 自动关闭alert
   setTimeout(() => {
@@ -700,55 +1007,57 @@ onMounted(() => {
 <style scoped>
 /* 全局容器 */
 .global-config-management {
-  padding: 16px;
+  padding: var(--spacing-4);
   max-width: 1400px;
   margin: 0 auto;
+  font-size: var(--font-size-base);
 }
 
 /* 配置头部样式 */
 .config-header {
-  padding: 24px;
+  padding: var(--spacing-6);
   text-align: center;
   border-bottom: 1px solid var(--el-border-color-light);
   margin-bottom: 0;
 }
 
 .config-header h3 {
-  margin: 0 0 8px 0;
-  font-size: 20px;
-  font-weight: 600;
+  margin: 0 0 var(--spacing-2) 0;
+  font-size: var(--font-size-4xl);
+  font-weight: 700;
   color: var(--el-text-color-primary);
 }
 
 .config-description {
   margin: 0;
-  font-size: 14px;
+  font-size: var(--font-size-lg);
   color: var(--el-text-color-regular);
-  line-height: 1.5;
+  line-height: var(--line-height-relaxed);
 }
 
 /* 主手风琴样式 */
 .main-accordion {
   border: none;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  border-radius: 8px;
+  box-shadow: var(--el-box-shadow-lighter);
+  border-radius: var(--size-radius-base);
   overflow: hidden;
 }
 
 .main-accordion :deep(.el-collapse-item__header) {
-  padding: 16px 20px;
+  padding: var(--spacing-4) var(--spacing-5);
+  font-size: var(--font-size-lg);
   font-weight: 600;
   border: none;
   border-bottom: 1px solid var(--el-border-color-light);
-  transition: all 0.3s ease;
+  transition: all var(--transition-slow) var(--transition-timing);
 }
 
 
 /* 统一手风琴样式 */
 .unified-accordion {
   border: none;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  border-radius: 8px;
+  box-shadow: var(--el-box-shadow-lighter);
+  border-radius: var(--size-radius-base);
   overflow: hidden;
 }
 
@@ -761,11 +1070,11 @@ onMounted(() => {
 }
 
 .unified-accordion :deep(.el-collapse-item__header) {
-  padding: 16px 20px;
+  padding: var(--spacing-4) var(--spacing-5);
   font-weight: 600;
   border: none;
   border-bottom: 1px solid var(--el-border-color-light);
-  transition: all 0.3s ease;
+  transition: all var(--transition-base) var(--transition-timing);
 }
 
 .unified-accordion :deep(.el-collapse-item__wrap) {
@@ -773,82 +1082,94 @@ onMounted(() => {
 }
 
 .unified-accordion :deep(.el-collapse-item__content) {
-  padding: 24px 20px;
+  padding: var(--spacing-6) var(--spacing-5);
 }
 
 /* 主手风琴标题样式 */
 .main-accordion-title {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--spacing-3);
   width: 100%;
+}
+
+.main-accordion-title .el-icon {
+  font-size: var(--icon-size-xl);
+  color: var(--el-color-primary);
+}
+
+.main-accordion-title span {
+  flex: 1;
+  font-size: var(--font-size-2xl);
+  font-weight: 600;
 }
 
 /* 手风琴标题样式 */
 .accordion-title {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--spacing-3);
   width: 100%;
 }
 
 .accordion-title .el-icon {
-  font-size: 18px;
+  font-size: var(--icon-size-lg);
   color: var(--el-color-primary);
 }
 
-.accordion-title span {
+.accordion-title span:not(.badge-text) {
   flex: 1;
-  font-size: 16px;
+  font-size: var(--font-size-xl);
+  font-weight: 500;
 }
 
 /* 配置区域样式 */
 .config-section {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: var(--spacing-5);
 }
 
 .sub-section {
-  padding: 16px;
-  border-radius: 6px;
-  margin-bottom: 16px;
+  padding: var(--spacing-4);
+  border-radius: var(--size-radius-base);
+  margin-bottom: var(--spacing-4);
 }
 
 .sub-section h4 {
-  margin: 0 0 16px 0;
-  font-size: 14px;
+  margin: 0 0 var(--spacing-4) 0;
+  font-size: var(--font-size-sm);
   font-weight: 600;
   color: var(--el-text-color-primary);
   border-left: 3px solid var(--el-color-primary);
-  padding-left: 8px;
+  padding-left: var(--spacing-2);
 }
 
 /* 表单帮助文本 */
 .form-help-text {
-  font-size: 12px;
+  font-size: var(--font-size-xs);
   color: var(--el-text-color-secondary);
-  margin-top: 4px;
-  line-height: 1.4;
+  margin-top: var(--spacing-1);
+  line-height: var(--line-height-snug);
 }
 
 /* 模板卡片样式 */
 .template-card {
-  padding: 20px;
+  padding: var(--spacing-5);
   border: 1px solid var(--el-border-color-light);
-  border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-  transition: all 0.3s ease;
+  border-radius: var(--size-radius-base);
+  box-shadow: var(--el-box-shadow-lighter);
+  transition: all var(--transition-base) var(--transition-timing);
 }
 
 .template-card:hover {
   transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+  box-shadow: var(--el-box-shadow-light);
 }
 
 .template-card h4 {
-  margin: 0 0 16px 0;
-  font-size: 16px;
+  margin: 0 0 var(--spacing-4) 0;
+  font-size: var(--font-size-lg);
   font-weight: 600;
   color: var(--el-text-color-primary);
   text-align: center;
@@ -856,96 +1177,98 @@ onMounted(() => {
 
 /* 卡片样式 */
 .el-card {
-  margin-bottom: 20px;
-  border-radius: 8px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  margin-bottom: var(--spacing-5);
+  border-radius: var(--size-radius-base);
+  box-shadow: var(--el-box-shadow-light);
 }
 
 .el-card :deep(.el-card__header) {
+  font-size: var(--font-size-lg);
   font-weight: 600;
   border-bottom: 1px solid var(--el-border-color-light);
 }
 
 .el-card :deep(.el-card__body) {
-  padding: 24px;
+  padding: var(--spacing-6);
+  font-size: var(--font-size-base);
 }
 
 .config-tabs :deep(.el-tabs__content) {
-  padding: 20px 0;
+  padding: var(--spacing-5) 0;
 }
 
 .text-center .el-card :deep(.el-card__body) {
-  padding: 32px 24px;
+  padding: var(--spacing-8) var(--spacing-6);
 }
 
 .el-descriptions {
-  margin-bottom: 16px;
+  margin-bottom: var(--spacing-4);
 }
 
 .el-tag {
-  margin-bottom: 4px;
+  margin-bottom: var(--spacing-1);
 }
 
 /* 响应式设计 */
 @media (max-width: 768px) {
   .global-config-management {
-    padding: 12px;
+    padding: var(--spacing-3);
   }
   
   .main-accordion :deep(.el-collapse-item__header),
   .unified-accordion :deep(.el-collapse-item__header) {
-    padding: 12px 16px;
-    font-size: 14px;
+    padding: var(--spacing-3) var(--spacing-4);
+    font-size: var(--font-size-base);
   }
   
   .main-accordion :deep(.el-collapse-item__content),
   .unified-accordion :deep(.el-collapse-item__content) {
-    padding: 16px;
+    padding: var(--spacing-4);
   }
   
   .accordion-title {
-    gap: 8px;
+    gap: var(--spacing-2);
   }
   
   .accordion-title .el-icon {
-    font-size: 16px;
+    font-size: var(--icon-size-sm);
   }
   
   .accordion-title span {
-    font-size: 14px;
+    font-size: var(--font-size-base);
   }
   
   .sub-section {
-    padding: 12px;
-    margin-bottom: 12px;
+    padding: var(--spacing-3);
+    margin-bottom: var(--spacing-3);
   }
   
   .el-form-item {
-    margin-bottom: 16px;
+    margin-bottom: var(--spacing-4);
   }
   
   .el-card :deep(.el-card__body) {
-    padding: 16px;
+    padding: var(--spacing-4);
   }
 }
 
 @media (max-width: 480px) {
   .global-config-management {
-    padding: 8px;
+    padding: var(--spacing-2);
   }
   
   .main-accordion :deep(.el-collapse-item__header),
   .unified-accordion :deep(.el-collapse-item__header) {
-    padding: 10px 12px;
+    padding: var(--spacing-2) var(--spacing-3);
   }
   
   .main-accordion :deep(.el-collapse-item__content),
   .unified-accordion :deep(.el-collapse-item__content) {
-    padding: 12px;
+    padding: var(--spacing-3);
   }
   
   .sub-section {
-    padding: 8px;
+    padding: var(--spacing-2);
   }
   
   .accordion-title .el-tag {
@@ -955,7 +1278,7 @@ onMounted(() => {
 
 /* 交互动画 */
 .unified-accordion :deep(.el-collapse-item__arrow) {
-  transition: transform 0.3s ease;
+  transition: transform var(--transition-base) var(--transition-timing);
 }
 
 .unified-accordion :deep(.el-collapse-item.is-active .el-collapse-item__arrow) {
@@ -995,35 +1318,43 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 20px 0;
+  padding: var(--spacing-5) 0;
   border-top: 1px solid var(--el-border-color-light);
-  margin-top: 20px;
+  margin-top: var(--spacing-5);
   flex-wrap: wrap;
-  gap: 16px;
+  gap: var(--spacing-4);
 }
 
 .config-status {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--spacing-3);
   flex-wrap: wrap;
 }
 
 .status-icon {
-  margin-right: 4px;
+  margin-right: var(--spacing-1);
 }
 
 .test-button {
-  transition: all 0.3s ease;
+  transition: all var(--transition-base) var(--transition-timing);
 }
 
 .test-button:hover {
   transform: translateY(-1px);
 }
 
+.clear-button {
+  transition: all var(--transition-base) var(--transition-timing);
+}
+
+.clear-button:hover {
+  transform: translateY(-1px);
+}
+
 .config-buttons {
   display: flex;
-  gap: 12px;
+  gap: var(--spacing-3);
   flex-wrap: wrap;
 }
 
@@ -1032,7 +1363,7 @@ onMounted(() => {
   .config-actions {
     flex-direction: column;
     align-items: stretch;
-    gap: 12px;
+    gap: var(--spacing-3);
   }
   
   .config-status {
@@ -1046,12 +1377,12 @@ onMounted(() => {
 
 /* 动画和过渡效果 */
 .config-actions * {
-  transition: all 0.3s ease;
+  transition: all var(--transition-base) var(--transition-timing);
 }
 
 /* 表单验证反馈 */
 .el-form-item.is-error :deep(.el-input__wrapper) {
-  animation: shake 0.3s ease-in-out;
+  animation: shake var(--transition-base) ease-in-out;
 }
 
 @keyframes shake {
@@ -1062,7 +1393,7 @@ onMounted(() => {
 
 /* 配置完成提示 */
 .config-saved-toast {
-  animation: slideInRight 0.3s ease-out;
+  animation: slideInRight var(--transition-base) ease-out;
 }
 
 @keyframes slideInRight {
@@ -1078,146 +1409,156 @@ onMounted(() => {
 
 /* 确保与FingerprintManagement组件样式一致 */
 code {
-  padding: 2px 6px;
-  border-radius: 4px;
+  padding: var(--spacing-0) var(--spacing-1);
+  border-radius: var(--size-radius-base);
   font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
 }
 
-.text-xs {
-  font-size: 12px;
-  word-break: break-all;
-}
-
 .el-form-item :deep(.el-form-item__content) {
-  line-height: 1.6;
+  line-height: var(--line-height-relaxed);
+  font-size: var(--font-size-base);
 }
 
-.text-sm {
-  font-size: 14px;
-  line-height: 1.5;
-}
-
-.text-gray-500 {
-  color: #6b7280;
-}
-
-.text-gray-600 {
-  color: #4b5563;
-}
-
-.text-blue-500 {
-  color: #3b82f6;
-}
-
-.text-green-500 {
-  color: #10b981;
-}
-
-.text-orange-500 {
-  color: #f59e0b;
-}
-
-.text-purple-500 {
-  color: #8b5cf6;
-}
-
-.text-blue-600 {
-  color: #2563eb;
-}
-
-.text-green-600 {
-  color: #059669;
-}
-
-.text-red-600 {
-  color: #dc2626;
-}
-
-.text-lg {
-  font-size: 18px;
-}
-
-.text-2xl {
-  font-size: 24px;
-}
-
-.font-medium {
-  font-weight: 500;
-}
-
-.font-bold {
-  font-weight: 700;
-}
-
-.space-y-6 > * + * {
-  margin-top: 1.5rem;
-}
-
-.space-x-2 > * + * {
-  margin-left: 0.5rem;
-}
-
-.mb-1 {
-  margin-bottom: 0.25rem;
-}
-
-.mb-2 {
-  margin-bottom: 0.5rem;
-}
-
-.mb-4 {
-  margin-bottom: 1rem;
-}
-
-.mb-6 {
-  margin-bottom: 1.5rem;
-}
-
-.mt-1 {
-  margin-top: 0.25rem;
-}
-
-.mt-2 {
-  margin-top: 0.5rem;
-}
-
-.mt-4 {
-  margin-top: 1rem;
-}
-
-.mt-6 {
-  margin-top: 1.5rem;
-}
-
-.flex {
-  display: flex;
-}
-
-.items-center {
+/* 徽章样式 - 精致文字标签 */
+.badge-text {
+  display: inline-flex;
   align-items: center;
+  justify-content: center;
+  min-width: var(--spacing-12);
+  padding: var(--spacing-1) var(--spacing-3);
+  margin-left: var(--spacing-2);
+  font-size: var(--component-font-size-sm);
+  font-weight: 500;
+  line-height: var(--line-height-normal);
+  border-radius: var(--size-radius-large);
+  white-space: nowrap;
+  transition: all var(--transition-base) var(--transition-timing);
+  letter-spacing: 0.02em;
 }
 
-.justify-between {
-  justify-content: space-between;
+.badge-text:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--el-box-shadow-lighter);
 }
 
-.text-center {
-  text-align: center;
+/* 核心配置 - 紫色渐变 */
+.badge-core {
+  background: linear-gradient(135deg, var(--color-violet-500) 0%, var(--color-purple-600) 100%);
+  color: var(--el-color-white);
+  box-shadow: var(--el-box-shadow-lighter);
 }
 
-.gap-2 {
-  gap: 0.5rem;
+/* iOS - 粉红渐变 */
+.badge-ios {
+  background: linear-gradient(135deg, var(--color-pink-400) 0%, var(--color-rose-500) 100%);
+  color: var(--el-color-white);
+  box-shadow: var(--el-box-shadow-lighter);
 }
 
-.gap-20 {
-  gap: 5rem;
+/* Android - 蓝色渐变 */
+.badge-android {
+  background: linear-gradient(135deg, var(--color-sky-400) 0%, var(--color-cyan-400) 100%);
+  color: var(--el-color-white);
+  box-shadow: var(--el-box-shadow-lighter);
 }
 
-.min-h-\[200px\] {
-  min-height: 200px;
+/* Web - 橙黄渐变 */
+.badge-web {
+  background: linear-gradient(135deg, var(--color-orange-400) 0%, var(--color-amber-300) 100%);
+  color: var(--el-color-white);
+  box-shadow: var(--el-box-shadow-lighter);
 }
 
-.min-h-\[300px\] {
-  min-height: 300px;
+/* 微信 - 绿色渐变 */
+.badge-wechat {
+  background: linear-gradient(135deg, var(--color-green-500) 0%, var(--color-emerald-600) 100%);
+  color: var(--el-color-white);
+  box-shadow: var(--el-box-shadow-lighter);
+}
+
+/* 更多 - 蓝紫渐变 */
+.badge-more {
+  background: linear-gradient(135deg, var(--color-violet-400) 0%, var(--color-fuchsia-300) 100%);
+  color: var(--el-color-white);
+  box-shadow: var(--el-box-shadow-lighter);
+}
+
+/* 通用 - 灰色渐变 */
+.badge-general {
+  background: linear-gradient(135deg, var(--color-gray-300) 0%, var(--color-gray-100) 100%);
+  color: var(--el-text-color-regular);
+  box-shadow: var(--el-box-shadow-lighter);
+}
+
+/* 成功 - 绿色渐变 */
+.badge-success {
+  background: linear-gradient(135deg, var(--el-color-success) 0%, var(--el-color-success-dark-2) 100%);
+  color: var(--el-color-white);
+  box-shadow: var(--el-box-shadow-lighter);
+}
+
+/* 警告 - 橙色渐变 */
+.badge-warning {
+  background: linear-gradient(135deg, var(--el-color-warning) 0%, var(--el-color-warning-dark-2) 100%);
+  color: var(--el-color-white);
+  box-shadow: var(--el-box-shadow-lighter);
+}
+
+/* 信息 - 灰色渐变 */
+.badge-info {
+  background: linear-gradient(135deg, var(--el-color-info) 0%, var(--el-color-info-dark-2) 100%);
+  color: var(--el-color-white);
+  box-shadow: var(--el-box-shadow-lighter);
+}
+
+/* 主要 - 蓝色渐变 */
+.badge-primary {
+  background: linear-gradient(135deg, var(--el-color-primary) 0%, var(--el-color-primary-dark-2) 100%);
+  color: var(--el-color-white);
+  box-shadow: var(--el-box-shadow-lighter);
+}
+
+/* 状态徽章 - 配置保存状态 */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  padding: var(--spacing-3) var(--spacing-5);
+  min-height: var(--component-height-base);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  border-radius: var(--size-radius-base);
+  transition: all var(--transition-base) var(--transition-timing);
+  cursor: default;
+  white-space: nowrap;
+  line-height: 1;
+}
+
+.status-badge .status-icon {
+  font-size: var(--icon-size-lg);
+}
+
+/* 已保存状态 - 深绿色 */
+.status-saved {
+  background: linear-gradient(135deg, var(--el-color-success) 0%, var(--el-color-success-dark-2) 100%);
+  color: var(--el-color-white);
+  box-shadow: var(--el-box-shadow-light);
+}
+
+.status-saved:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--el-box-shadow);
+}
+
+/* 未保存状态 - 深橙色 */
+.status-unsaved {
+  background: linear-gradient(135deg, var(--el-color-warning) 0%, var(--el-color-warning-dark-2) 100%);
+  color: var(--el-color-white);
+  box-shadow: var(--el-box-shadow-light);
+}
+
+.status-unsaved:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--el-box-shadow);
 }
 </style>

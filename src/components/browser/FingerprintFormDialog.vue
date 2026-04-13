@@ -368,19 +368,20 @@ const generateRandomConfig = async () => {
   generatingRandom.value = true
   try {
     // 调用API生成随机配置
-    const result = await browserApi.genRandFingerprint({})
+    const result = await businessHandler(
+      browserApi.genRandFingerprint({}),
+      {
+        successMessage: '随机配置生成成功',
+        errorMessage: '生成随机配置失败'
+      }
+    )
 
-    if (result.data) {
+    if (result.success && result.data) {
       // 直接使用API返回的数据填充表单
       Object.assign(form, result.data)
-
-      biliMessage.success('随机配置生成成功')
-    } else {
-      biliMessage.error('随机配置生成失败')
     }
   } catch (error) {
     console.error('生成随机配置失败:', error)
-    biliMessage.error('生成随机配置失败')
   } finally {
     generatingRandom.value = false
   }
