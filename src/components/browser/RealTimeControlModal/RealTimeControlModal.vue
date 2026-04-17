@@ -9,11 +9,11 @@
 <template>
     <el-dialog v-model="visible" :title="`实时控制 - ${currentFingerprint?.id_str || currentFingerprint?.id}`" width="96vw"
         top="2vh" destroy-on-close class="real-time-control-modal">
-        <div class="control-container">
+        <div class="control-container" style="display: grid; grid-template-columns: 1fr 320px; gap: 0; height: 82vh;">
             <!-- 主视频区域 -->
-            <div class="main-section">
+            <div class="flex flex-col p-4 border-r border-[var(--el-border-color)]">
                 <!-- 视频播放区域 -->
-                <div class="video-section-wrapper">
+                <div class="flex-1 flex flex-col overflow-hidden">
                     <VideoPlayer ref="videoComponentRef" v-model:show-debug-dialog="showDebugDialog"
                         :is-streaming="isStreaming" :screenshot-url="screenshotUrl" :session-info="sessionInfo"
                         :is-disconnecting="isDisconnecting" :is-reconnecting="isReconnecting"
@@ -28,7 +28,7 @@
             </div>
 
             <!-- 右侧：高级控制面板 -->
-            <div class="advanced-section">
+            <div class="p-4 overflow-y-auto">
                 <!-- JavaScript执行 -->
                 <JavaScriptPanel @execute="executeJavaScript" @safe-execute="safeExecuteJavaScript" />
 
@@ -41,7 +41,7 @@
         </div>
 
         <template #footer>
-            <span class="dialog-footer">
+            <span class="flex justify-end gap-2">
                 <el-button @click="handleClose">关闭</el-button>
                 <el-button type="primary" @click="handleSave">保存配置</el-button>
             </span>
@@ -1418,6 +1418,7 @@ const showWebRTCDebug = () => {
 }
 </script>
 
+
 <style scoped>
 .real-time-control-modal {
     :deep(.el-dialog) {
@@ -1433,45 +1434,15 @@ const showWebRTCDebug = () => {
     }
 }
 
-.control-container {
-    display: grid;
-    grid-template-columns: 1fr 320px;
-    gap: 0;
-    height: 82vh;
-}
-
-/* 主区域 */
-.main-section {
-    display: flex;
-    flex-direction: column;
-    padding: 16px;
-    border-right: 1px solid var(--el-border-color);
-}
-
-/* 视频区域包装器 */
-.video-section-wrapper {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 0;
-    overflow: hidden;
-}
-
-/* 高级控制面板 */
-.advanced-section {
-    padding: 16px;
-    overflow-y: auto;
-}
-
 /* 响应式设计 */
 @media (max-width: 1400px) {
     .control-container {
-        grid-template-columns: 1fr;
+        grid-template-columns: 1fr !important;
         grid-template-rows: auto 1fr;
-        height: auto;
+        height: auto !important;
     }
 
-    .advanced-section {
+    .control-container > div:last-child {
         border-top: 1px solid var(--el-border-color);
     }
 }

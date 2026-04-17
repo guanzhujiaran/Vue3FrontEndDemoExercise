@@ -11,5 +11,3 @@ const topic_items = defineModel<TopicItem[]>({
     <el-table :data="topic_items" style="width: 100%" :fixed="true"> </el-table>
   </div>
 </template>
-
-<style scoped></style>

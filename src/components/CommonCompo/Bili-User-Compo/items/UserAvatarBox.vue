@@ -38,7 +38,3 @@ const size = computed(() => {
     </div>
   </div>
 </template>
-
-<style scoped>
-@import '@/assets/components/user/user-avatar-box-tailwind.css';
-</style>

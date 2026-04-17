@@ -33,15 +33,16 @@ const resultIcon = computed(() => {
 </script>
 
 <template>
-  <div class="el-bili-status">
+  <div class="flex flex-row items-center justify-center text-center box-border p-0 el-bili-status">
     <el-popover :content="props.popover_text" :disabled="!props.popover_text" :placement="'top'">
       <template #reference>
-        <div class="el-bili-status__icon">
+        <div class="flex el-bili-status__icon">
           <slot name="icon">
             <component
               :is="resultIcon.component"
               v-if="resultIcon.component"
               :class="resultIcon.class"
+              class="w-5 h-5"
             />
           </slot>
         </div>

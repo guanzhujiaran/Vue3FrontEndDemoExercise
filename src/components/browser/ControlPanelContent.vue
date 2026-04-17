@@ -7,10 +7,10 @@
  * @Description: RPA浏览器控制台 - 控制面板内容组件
 -->
 <template>
-  <div class="control-panel-content">
+  <div class="h-full flex flex-col">
     <!-- 头部 -->
-    <div class="panel-header">
-      <h3>浏览器控制</h3>
+    <div class="flex justify-between items-center p-4 border-b border-[var(--el-border-color-lighter)]">
+      <h3 class="m-0 text-base font-semibold">浏览器控制</h3>
       <el-button text @click="$emit('close')">
         <el-icon><Close /></el-icon>
       </el-button>
@@ -30,15 +30,15 @@
     </el-empty>
 
     <!-- 控制面板内容 -->
-    <div v-else class="panel-content">
+    <div v-else class="flex-1 p-4 overflow-y-auto">
       <!-- 当前选中实例信息 -->
-      <el-card class="current-instance-card mb-4">
-        <div class="instance-header">
+      <el-card class="mb-4 [&_.el-card\_\_body]:p-4">
+        <div class="flex justify-between items-center">
           <div class="instance-info">
-            <h4 class="font-medium">实例 {{ selectedBrowserId }}</h4>
-            <div class="instance-details">
+            <h4 class="font-medium m-0 mb-1.5 text-base">实例 {{ selectedBrowserId }}</h4>
+            <div class="text-[13px] text-[var(--el-text-color-secondary)]">
               <span>{{ currentBrowserInfo?.fingerprint_browser || '未知' }}</span>
-              <span class="separator">|</span>
+              <span class="mx-2">|</span>
               <span>{{ currentBrowserInfo?.fingerprint_platform || '未知' }}</span>
             </div>
           </div>
@@ -53,7 +53,7 @@
         <template #header>
           <span class="font-medium">会话管理</span>
         </template>
-        <div class="control-buttons">
+        <div class="flex flex-col gap-2.5 mb-4">
           <el-button 
             type="primary" 
             @click="$emit('create-session')" 
@@ -80,7 +80,7 @@
         </div>
 
         <!-- 会话详情 -->
-        <div v-if="sessionStatus" class="session-details">
+        <div v-if="sessionStatus" class="border-t border-[var(--el-border-color-lighter)] pt-4">
           <el-descriptions :column="1" border size="small">
             <el-descriptions-item label="会话ID">
               <span class="text-xs">{{ sessionStatus.session_id }}</span>
@@ -103,9 +103,9 @@
       <!-- 视频流预览 -->
       <el-card class="mb-4">
         <template #header>
-          <div class="card-header-row">
+          <div class="flex items-center justify-between w-full gap-3">
             <span class="font-medium">视频流预览</span>
-            <div class="connection-status">
+            <div class="flex items-center">
               <el-tag
                 :type="getConnectionStatusType"
                 size="small"
@@ -135,20 +135,20 @@
             </el-button>
           </div>
         </template>
-        <div class="video-preview">
-          <div v-if="streamUrl && !videoPaused" class="video-container" ref="videoContainer">
-            <video ref="videoElement" :src="streamUrl" autoplay muted playsinline class="w-full rounded" @click="handleVideoClick"></video>
+        <div class="min-h-[180px] flex items-center justify-center">
+          <div v-if="streamUrl && !videoPaused" class="relative cursor-pointer w-full" ref="videoContainer">
+            <video ref="videoElement" :src="streamUrl" autoplay muted playsinline class="w-full rounded max-h-[250px] object-contain bg-black hover:opacity-90" @click="handleVideoClick"></video>
           </div>
-          <div v-else-if="videoPaused && screenshotUrl" class="screenshot-container">
-            <img :src="screenshotUrl" alt="浏览器截图" class="w-full rounded" @click="handleVideoClick" />
-            <div class="screenshot-time">
-              <span class="text-xs text-gray-500">最后更新: {{ lastScreenshotTime }}</span>
+          <div v-else-if="videoPaused && screenshotUrl" class="w-full">
+            <img :src="screenshotUrl" alt="浏览器截图" class="w-full rounded max-h-[250px] object-contain bg-black hover:opacity-90" @click="handleVideoClick" />
+            <div class="mt-2 text-center">
+              <span class="text-xs text-[var(--el-text-color-secondary)]">最后更新: {{ lastScreenshotTime }}</span>
             </div>
           </div>
-          <div v-else-if="screenshotUrl" class="screenshot-container">
-            <img :src="screenshotUrl" alt="浏览器截图" class="w-full rounded" @click="handleVideoClick" />
-            <div class="screenshot-time">
-              <span class="text-xs text-gray-500">最后更新: {{ lastScreenshotTime }}</span>
+          <div v-else-if="screenshotUrl" class="w-full">
+            <img :src="screenshotUrl" alt="浏览器截图" class="w-full rounded max-h-[250px] object-contain bg-black hover:opacity-90" @click="handleVideoClick" />
+            <div class="mt-2 text-center">
+              <span class="text-xs text-[var(--el-text-color-secondary)]">最后更新: {{ lastScreenshotTime }}</span>
             </div>
           </div>
           <el-empty
@@ -170,7 +170,7 @@
             </el-button>
           </el-empty>
         </div>
-        <div class="video-actions mt-3">
+        <div class="mt-3 flex gap-2 flex-wrap">
           <el-button
             v-if="!streamUrl && isBrowserStarted"
             type="primary"
@@ -212,7 +212,7 @@
       <!-- 标签页管理 -->
       <el-card class="mb-4" v-if="isBrowserStarted">
         <template #header>
-          <div class="card-header-row">
+          <div class="flex items-center justify-between w-full gap-3">
             <span class="font-medium">标签页管理</span>
             <el-button
               type="primary"
@@ -226,17 +226,18 @@
           </div>
         </template>
         <el-scrollbar max-height="200px">
-          <div v-if="tabsList.length > 0" class="tabs-list">
+          <div v-if="tabsList.length > 0" class="flex flex-col gap-2">
             <div
               v-for="tab in tabsList"
               :key="tab.id"
-              :class="['tab-item', { 'tab-active': tab.active }]"
+              :class="['flex items-center gap-2 px-3 py-2.5 border border-[var(--el-border-color)] rounded-[6px] cursor-pointer transition-all duration-300', 
+                tab.active ? 'bg-[var(--el-color-primary-light-9)] border-[var(--el-color-primary)]' : 'hover:bg-[var(--el-fill-color-light)] hover:border-[var(--el-color-primary)]']"
               @click="$emit('switch-tab', tab.id)"
             >
               <el-icon><Document /></el-icon>
-              <div class="tab-content">
-                <div class="tab-title">{{ tab.title || '无标题' }}</div>
-                <div class="tab-url">{{ tab.url || '' }}</div>
+              <div class="flex-1 min-w-0">
+                <el-text class="text-sm font-medium text-[var(--el-text-color-primary)] mb-0.5 truncate" tag="div">{{ tab.title || '无标题' }}</el-text>
+                <el-text class="text-xs text-[var(--el-text-color-secondary)] truncate" tag="div">{{ tab.url || '' }}</el-text>
               </div>
               <el-tag v-if="tab.active" type="success" size="small">当前</el-tag>
             </div>
@@ -369,239 +370,3 @@ const getSessionStatusType = (status: BrowserSessionStatus) => {
   return typeMap[status.lifecycle_status] || 'info'
 }
 </script>
-
-<style scoped>
-.control-panel-content {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-}
-
-.panel-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 16px;
-  border-bottom: 1px solid #ebeef5;
-}
-
-.panel-header h3 {
-  margin: 0;
-  font-size: 16px;
-  font-weight: 600;
-}
-
-.panel-content {
-  flex: 1;
-  padding: 16px;
-  overflow-y: auto;
-}
-
-/* 当前实例卡片 */
-.current-instance-card :deep(.el-card__body) {
-  padding: 16px;
-}
-
-.instance-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.instance-info h4 {
-  margin: 0 0 6px 0;
-  font-size: 16px;
-}
-
-.instance-details {
-  font-size: 13px;
-  color: #909399;
-}
-
-.instance-details .separator {
-  margin: 0 8px;
-}
-
-/* 控制按钮 */
-.control-buttons {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-bottom: 16px;
-}
-
-/* 会话详情 */
-.session-details {
-  border-top: 1px solid #ebeef5;
-  padding-top: 16px;
-}
-
-/* 视频预览 */
-.video-preview {
-  min-height: 180px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.video-container video,
-.screenshot-container img {
-  max-height: 250px;
-  object-fit: contain;
-  background: #000;
-  width: 100%;
-}
-
-.screenshot-time {
-  margin-top: 8px;
-  text-align: center;
-}
-
-.video-actions {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.card-header-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  gap: 12px;
-}
-
-.connection-status {
-  display: flex;
-  align-items: center;
-}
-
-/* 视频点击区域 */
-.video-container {
-  position: relative;
-  cursor: pointer;
-}
-
-.video-container video:hover,
-.screenshot-container img:hover {
-  opacity: 0.9;
-}
-
-/* 标签页列表 */
-.tabs-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.tab-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 12px;
-  border: 1px solid var(--el-border-color);
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.3s;
-}
-
-.tab-item:hover {
-  background: var(--el-fill-color-light);
-  border-color: var(--el-color-primary);
-}
-
-.tab-item.tab-active {
-  background: var(--el-color-primary-light-9);
-  border-color: var(--el-color-primary);
-}
-
-.tab-content {
-  flex: 1;
-  min-width: 0;
-}
-
-.tab-title {
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--el-text-color-primary);
-  margin-bottom: 2px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.tab-url {
-  font-size: 12px;
-  color: var(--el-text-color-secondary);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-/* 响应式调整 */
-@media (max-width: 768px) {
-  .panel-header {
-    padding: 12px;
-  }
-
-  .panel-content {
-    padding: 12px;
-  }
-
-  .instance-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
-  }
-
-  .control-buttons {
-    gap: 8px;
-  }
-
-  .video-actions {
-    flex-direction: column;
-    gap: 8px;
-  }
-
-  .video-actions .el-button {
-    width: 100%;
-  }
-}
-
-/* 通用样式 */
-.text-xs {
-  font-size: 12px;
-}
-
-.text-sm {
-  font-size: 14px;
-}
-
-.text-gray-500 {
-  color: #909399;
-}
-
-.font-medium {
-  font-weight: 500;
-}
-
-.w-full {
-  width: 100%;
-}
-
-.rounded {
-  border-radius: 4px;
-}
-
-.mb-4 {
-  margin-bottom: 1rem;
-}
-
-.mt-3 {
-  margin-top: 0.75rem;
-}
-
-.gap-8 {
-  gap: 8px;
-}
-</style>

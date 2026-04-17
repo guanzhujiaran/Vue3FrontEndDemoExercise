@@ -78,8 +78,7 @@ const routes: CustomRouteRecordRaw[] = [
       title: '反馈区',
       icon: IconChat,
       description: '提交问题反馈和建议',
-      color:
-        'linear-gradient(225deg, var(--el-color-primary) 0%, var(--el-color-info) 40%, var(--el-color-warning) 70%, var(--el-color-danger) 100%)',
+      color: 'var(--color-gradient-hero-cool)',
       requiresLogin: false,
       showInHome: true,
       order: 114514,
@@ -99,8 +98,7 @@ const routes: CustomRouteRecordRaw[] = [
       title: 'B站抽奖数据',
       icon: IconDataAnalysis,
       description: '查看和分析B站各类抽奖数据',
-      color:
-        'linear-gradient(225deg, var(--el-color-danger) 0%, var(--el-color-primary) 45%, var(--el-color-info) 100%)',
+      color: 'var(--color-gradient-hero-vibrant)',
       requiresLogin: false,
       showInHome: true,
       order: 1,
@@ -115,8 +113,7 @@ const routes: CustomRouteRecordRaw[] = [
           title: RouteName.LOTTERY_HOME,
           icon: IconMonitor,
           description: '查看抽奖数据首页',
-          color:
-            'linear-gradient(225deg, var(--el-color-danger) 0%, var(--el-color-warning) 40%, var(--el-color-info) 80%, var(--el-color-success) 100%)',
+          color: 'var(--color-gradient-hero-warm)',
           order: 1,
           showInHome: false,
           isHeaderShow: false
@@ -130,8 +127,7 @@ const routes: CustomRouteRecordRaw[] = [
           title: '爬虫状态',
           icon: IconMonitor,
           description: '查看数据爬虫的运行状态',
-          color:
-            'linear-gradient(225deg, var(--el-color-danger) 0%, var(--el-color-warning) 40%, var(--el-color-info) 80%, var(--el-color-success) 100%)',
+          color: 'var(--color-gradient-hero-warm)',
           order: 1,
           showInHome: true,
           isHeaderShow: true
@@ -145,8 +141,7 @@ const routes: CustomRouteRecordRaw[] = [
           title: 'B站中奖名人堂',
           icon: IconTrophy,
           description: '查看B站中奖排行榜',
-          color:
-            'linear-gradient(225deg, var(--el-color-warning) 0%, var(--el-color-success) 40%, var(--el-color-primary) 80%, var(--el-color-info) 100%)',
+          color: 'var(--color-gradient-hero-elegant)',
           showInHome: true,
           order: 2,
           isHeaderShow: true
@@ -161,8 +156,7 @@ const routes: CustomRouteRecordRaw[] = [
           description: 'B站各类抽奖数据汇总',
           showInHome: false,
           isHeaderShow: true,
-          color:
-            'linear-gradient(225deg, var(--el-color-danger) 0%, var(--el-color-warning) 40%, var(--el-color-primary) 80%, var(--el-color-success) 100%)'
+          color: 'var(--color-gradient-bili-data)'
         },
         children: [
           {
@@ -173,8 +167,7 @@ const routes: CustomRouteRecordRaw[] = [
               title: '官方抽奖',
               icon: IconPromotion,
               description: 'B站官方活动抽奖数据',
-              color:
-                'linear-gradient(225deg, var(--el-color-success) 0%, var(--el-color-info) 35%, var(--el-color-primary) 70%, var(--el-color-warning) 100%)',
+              color: 'var(--color-gradient-lottery-item)',
               showInHome: true,
               order: 10,
               isHeaderShow: true
@@ -188,8 +181,7 @@ const routes: CustomRouteRecordRaw[] = [
               title: '预约抽奖',
               icon: IconLightning,
               description: 'B站预约活动抽奖数据',
-              color:
-                'linear-gradient(225deg, var(--el-color-success) 0%, var(--el-color-info) 35%, var(--el-color-primary) 70%, var(--el-color-warning) 100%)',
+              color: 'var(--color-gradient-lottery-item)',
               showInHome: true,
               order: 11,
               isHeaderShow: true
@@ -203,8 +195,7 @@ const routes: CustomRouteRecordRaw[] = [
               title: '充电抽奖',
               icon: IconCreditCard,
               description: 'B站充电活动抽奖数据',
-              color:
-                'linear-gradient(225deg, var(--el-color-success) 0%, var(--el-color-info) 35%, var(--el-color-primary) 70%, var(--el-color-warning) 100%)',
+              color: 'var(--color-gradient-lottery-item)',
               showInHome: true,
               order: 12,
               isHeaderShow: true
@@ -218,8 +209,7 @@ const routes: CustomRouteRecordRaw[] = [
               title: '话题抽奖',
               icon: IconChatDotRound,
               description: 'B站话题活动抽奖数据',
-              color:
-                'linear-gradient(225deg, var(--el-color-success) 0%, var(--el-color-info) 35%, var(--el-color-primary) 70%, var(--el-color-warning) 100%)',
+              color: 'var(--color-gradient-lottery-item)',
               showInHome: true,
               order: 13,
               isHeaderShow: true
@@ -238,8 +228,7 @@ const routes: CustomRouteRecordRaw[] = [
       title: '山姆会员店',
       icon: IconShoppingCart,
       description: '山姆会员店信息查询',
-      color:
-        'linear-gradient(225deg, var(--el-color-info) 0%, var(--el-color-primary) 40%, var(--el-color-danger) 80%, var(--el-color-success) 100%)',
+      color: 'var(--color-gradient-shopping)',
       requiresLogin: false,
       showInHome: true,
       order: 2,
@@ -254,6 +243,7 @@ const routes: CustomRouteRecordRaw[] = [
       id: 'browser-management',
       title: RouteName.BROWSER_MANAGEMENT,
       description: 'RPA浏览器自动化操作和调试控制台',
+      color: 'var(--color-gradient-hero-primary)',
       isHeaderShow: import.meta.env.VITE_BILI_ENV === 'dev',
       requiresLogin: true,
       icon: IconMonitor,
@@ -292,8 +282,7 @@ const routes: CustomRouteRecordRaw[] = [
       title: '用户中心',
       icon: IconUser,
       description: '管理浏览器指纹、插件配置和通知设置',
-      color:
-        'linear-gradient(225deg, var(--el-color-primary) 0%, var(--el-color-info) 40%, var(--el-color-warning) 70%, var(--el-color-danger) 100%)',
+      color: 'var(--color-gradient-hero-cool)',
       requiresLogin: true,
       showInHome: true,
       order: 4,
@@ -331,3 +320,4 @@ router.afterEach(() => {
 })
 export default router
 export { routes, user_center_routes }
+

@@ -204,35 +204,35 @@ const handleDropDownVisibleChange = (visible: boolean) => {
 </script>
 
 <template>
-  <el-dropdown role="tooltip" @mouseover="headerAvatarDropdown?.handleOpen()" trigger="click" :hide-on-click="false"
+  <el-dropdown @mouseover="headerAvatarDropdown?.handleOpen()" trigger="click" :hide-on-click="false"
     ref="headerAvatarDropdown" @visible-change="handleDropDownVisibleChange" :persistent="true" :teleported="true">
-    <div class="header-avatar-wrapper">
+    <div class="header-avatar-wrapper cursor-pointer">
       <UserAvatarBox v-if="isLoggedIn" :src="user_face_src" size="default" :level-info="user_nav_model?.level_info"
         :show-exp-bar="false" />
-      <div class="header-login-entry" v-else>
+      <div class="header-login-entry flex items-center justify-center px-4 py-1.5 text-sm font-medium text-[var(--el-text-color-primary)] hover:text-[var(--el-color-primary)] transition-colors" v-else>
         <span> 登录 </span>
       </div>
     </div>
     <template #dropdown>
-      <el-dropdown-menu class="dropdown-menu">
-        <el-dropdown-item class="login-tip" v-if="!isLoggedIn">
+      <el-dropdown-menu class="dropdown-menu py-3 px-3">
+        <el-dropdown-item class="login-tip hover:!text-inherit hover:!bg-inherit" v-if="!isLoggedIn">
           <HeaderDropdownLoginTip></HeaderDropdownLoginTip>
         </el-dropdown-item>
         <template v-else>
           <!-- 用户信息展示区域 -->
-          <div class="user-info-section">
-            <div class="user-info-content">
+          <div class="user-info-section py-6 px-6 flex flex-col items-center border-b border-[var(--el-border-color-light)]">
+            <div class="user-info-content flex justify-center">
               <UserAvatarBox :src="user_face_src" size="large" :level-info="user_nav_model?.level_info" :show-exp-bar="false"/>
             </div>
-            <div class="user-info-text">
-              <div class="user-name">{{ user_nav_model?.user_name }}</div>
+            <div class="user-info-text mt-4 flex flex-col items-center gap-3 w-full">
+              <div class="user-name text-base font-medium text-[var(--el-text-color-primary)] mb-2">{{ user_nav_model?.user_name }}</div>
               <LevelIcon :level="parseInt(user_nav_model?.level_info?.current_level) || 0" />
               <!-- 经验进度条 -->
-              <div class="exp-progress-container">
-                <div class="exp-progress-bar">
-                  <div class="exp-progress-fill" :style="{ width: expProgress + '%' }"></div>
+              <div class="exp-progress-container w-full max-w-[200px] flex flex-col gap-2">
+                <div class="exp-progress-bar w-full h-2 bg-[var(--el-border-color-light)] rounded overflow-hidden">
+                  <div class="exp-progress-fill h-full bg-gradient-to-r from-[#FB7299] to-[#FF9EB9] rounded transition-all duration-300" :style="{ width: expProgress + '%' }"></div>
                 </div>
-                <div class="exp-progress-text">
+                <div class="exp-progress-text text-sm text-[var(--el-text-color-secondary)] text-center">
                   <template v-if="user_nav_model?.level_info?.next_exp === '--'">
                     已满级
                   </template>
@@ -243,7 +243,7 @@ const handleDropDownVisibleChange = (visible: boolean) => {
               </div>
             </div>
           </div>
-          <el-dropdown-item :icon="User" @click="handleUserCenterClick" class="dropdown-item">
+          <el-dropdown-item :icon="User" @click="handleUserCenterClick" class="dropdown-item text-sm rounded-xl my-3">
             <HeaderAvatarDropdownItem>
               <template #text>个人中心</template>
             </HeaderAvatarDropdownItem>
@@ -252,14 +252,14 @@ const handleDropDownVisibleChange = (visible: boolean) => {
 
         <!-- 主题设置 -->
         <el-dropdown-item @click="handleThemeVisibleChange(true)" @hover="handleThemeVisibleChange(true)" divided
-          :icon="themeStore.getThemeIcon()" class="dropdown-item">
+          :icon="themeStore.getThemeIcon()" class="dropdown-item text-sm rounded-xl my-3">
           <el-popover popper-class="header-avatar-dropdown-popover" @show="handlePopoverVisibleChange(true, 'theme')"
             @hide="handlePopoverVisibleChange(false, 'theme')" v-model:visible="themeVisible" placement="left"
             trigger="hover" :persistent="true">
             <template #reference>
-              <div class="popover-reference">
+              <div class="popover-reference flex items-center justify-between">
                 <span> {{ `主题：${themeStore.getThemeText()}` }}</span>
-                <el-icon-arrow-right class="dropdown-arrow" />
+                <el-icon-arrow-right class="dropdown-arrow ml-auto h-4 w-4 text-xs" />
               </div>
             </template>
             <template #default>
@@ -281,18 +281,18 @@ const handleDropDownVisibleChange = (visible: boolean) => {
 
         <!-- Hue主题设置 -->
         <el-dropdown-item @click="handleHueThemeVisibleChange(true)" @hover="handleHueThemeVisibleChange(true)"
-          :icon="MagicStick" class="dropdown-item">
+          :icon="MagicStick" class="dropdown-item text-sm rounded-xl my-3">
           <el-popover popper-class="header-avatar-dropdown-popover" @show="handlePopoverVisibleChange(true, 'hue')"
             @hide="handlePopoverVisibleChange(false, 'hue')" v-model:visible="hueThemeVisible" placement="left"
             trigger="hover">
             <template #reference>
-              <div class="popover-reference">
+              <div class="popover-reference flex items-center justify-between">
                 <span>
                   色彩主题：{{
                     `主题 ${hueThemeStore.currentIndex === 0 ? '默认' : hueThemeStore.currentIndex}`
                   }}
                 </span>
-                <el-icon-arrow-right class="dropdown-arrow" />
+                <el-icon-arrow-right class="dropdown-arrow ml-auto h-4 w-4 text-xs" />
               </div>
             </template>
             <template #default>
@@ -300,10 +300,11 @@ const handleDropDownVisibleChange = (visible: boolean) => {
                 <el-dropdown-item v-for="theme in hueThemes" :key="theme.value"
                   :class="{ activated: hueThemeStore.currentIndex === theme.value }"
                   @click="handleSetHueTheme(theme.value)" class="hue-theme-item">
-                  <div class="hue-theme-content">
+                  <div class="hue-theme-content flex justify-between w-full items-center">
                     <span>{{ theme.label }}</span>
                     <el-button v-if="theme.value !== 0 && hueThemeStore.currentIndex !== theme.value"
-                      class="delete-theme-btn" size="small" type="danger"
+                      class="delete-theme-btn opacity-0 w-5 h-5 transition-opacity duration-300 hover:scale-110 hover:bg-[var(--el-color-danger)] [&_i]:mr-0" 
+                      size="small" type="danger"
                       @click="handleDeleteHueTheme(theme.value, $event)" circle :icon="Delete">
                     </el-button>
                   </div>
@@ -321,18 +322,18 @@ const handleDropDownVisibleChange = (visible: boolean) => {
 
         <!-- 大小主题设置 -->
         <el-dropdown-item @click="handleSizeThemeVisibleChange(true)" @hover="handleSizeThemeVisibleChange(true)"
-          :icon="ScaleToOriginal" class="dropdown-item">
+          :icon="ScaleToOriginal" class="dropdown-item text-sm rounded-xl my-3">
           <el-popover popper-class="header-avatar-dropdown-popover" @show="handlePopoverVisibleChange(true, 'size')"
             @hide="handlePopoverVisibleChange(false, 'size')" v-model:visible="sizeThemeVisible" placement="left"
             trigger="hover">
             <template #reference>
-              <div class="popover-reference">
+              <div class="popover-reference flex items-center justify-between">
                 <span>
                   大小主题：{{
                     sizeThemes.find((t) => t.value === userPrefStore.sizeTheme)?.label || '标准'
                   }}
                 </span>
-                <el-icon-arrow-right class="dropdown-arrow" />
+                <el-icon-arrow-right class="dropdown-arrow ml-auto h-4 w-4 text-xs" />
               </div>
             </template>
             <template #default>
@@ -347,86 +348,10 @@ const handleDropDownVisibleChange = (visible: boolean) => {
 
         <!-- 退出登录按钮 -->
         <el-dropdown-item v-if="isLoggedIn" :icon="SwitchButton" @click="handleLogout"
-          class="dropdown-item logout-dropdown-item" divided>
+          class="dropdown-item text-sm rounded-xl my-3 logout-dropdown-item" divided>
           <span style="color: #f56c6c;">退出登录</span>
         </el-dropdown-item>
       </el-dropdown-menu>
     </template>
   </el-dropdown>
 </template>
-
-<style>
-@import '@/assets/components/dropdown/avatar-dropdown-tailwind.css';
-
-.user-info-section {
-  padding: 16px 20px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  border-bottom: 1px solid var(--el-border-color-light);
-}
-
-.user-info-text {
-  margin-top: 12px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  width: 100%;
-}
-
-.user-info-content {
-  display: flex;
-  justify-content: center;
-}
-
-.user-name {
-  font-size: 16px;
-  font-weight: 500;
-  color: var(--el-text-color-primary);
-  margin-bottom: 4px;
-}
-
-.user-email {
-  font-size: 12px;
-  color: var(--el-text-color-secondary);
-  margin-bottom: 4px;
-  max-width: 200px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.exp-progress-container {
-  width: 100%;
-  max-width: 180px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.exp-progress-bar {
-  width: 100%;
-  height: 6px;
-  background-color: var(--el-border-color-light);
-  border-radius: 3px;
-  overflow: hidden;
-}
-
-.exp-progress-fill {
-  height: 100%;
-  background: linear-gradient(90deg, #FB7299 0%, #FF9EB9 100%);
-  border-radius: 3px;
-  transition: width 0.3s ease;
-}
-
-.exp-progress-text {
-  font-size: 12px;
-  color: var(--el-text-color-secondary);
-  text-align: center;
-}
-
-:deep(.el-dropdown-menu__item) {
-  padding: 8px 20px;
-}
-</style>

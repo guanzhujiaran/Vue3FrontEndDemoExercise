@@ -5,39 +5,39 @@
  * @Description: 可视化操作连接面板 - 卡片式展示浏览器控制操作
 -->
 <template>
-  <div class="visual-control-panel">
+  <div class="flex flex-col gap-5">
     <!-- 浏览器状态卡片 -->
-    <el-card class="status-card" shadow="hover">
+    <el-card shadow="hover">
       <template #header>
-        <div class="card-header">
+        <div class="flex items-center gap-2 font-bold">
           <el-icon><Monitor /></el-icon>
           <span>浏览器状态</span>
           <el-tag :type="statusTagType" size="small">{{ statusText }}</el-tag>
         </div>
       </template>
-      <div class="status-info">
+      <div class="mb-4">
         <el-row :gutter="20">
           <el-col :span="8">
-            <div class="info-item">
-              <label>会话ID:</label>
-              <span>{{ browserId }}</span>
+            <div class="flex flex-col gap-1">
+              <label class="text-[12px] text-[var(--el-text-color-secondary)]">会话ID:</label>
+              <span class="text-[14px] text-[var(--el-text-color-primary)] font-medium">{{ browserId }}</span>
             </div>
           </el-col>
           <el-col :span="8">
-            <div class="info-item">
-              <label>运行状态:</label>
-              <span>{{ sessionStatus?.is_running ? '运行中' : '未运行' }}</span>
+            <div class="flex flex-col gap-1">
+              <label class="text-[12px] text-[var(--el-text-color-secondary)]">运行状态:</label>
+              <span class="text-[14px] text-[var(--el-text-color-primary)] font-medium">{{ sessionStatus?.is_running ? '运行中' : '未运行' }}</span>
             </div>
           </el-col>
           <el-col :span="8">
-            <div class="info-item">
-              <label>人工操作:</label>
-              <span>{{ operationStatus?.manual_mode ? '启用' : '禁用' }}</span>
+            <div class="flex flex-col gap-1">
+              <label class="text-[12px] text-[var(--el-text-color-secondary)]">人工操作:</label>
+              <span class="text-[14px] text-[var(--el-text-color-primary)] font-medium">{{ operationStatus?.manual_mode ? '启用' : '禁用' }}</span>
             </div>
           </el-col>
         </el-row>
       </div>
-      <div class="status-actions">
+      <div class="flex gap-2 justify-end">
         <el-button size="small" @click="refreshStatus" :loading="statusLoading">
           <el-icon><Refresh /></el-icon>
           刷新状态
@@ -66,60 +66,76 @@
     </el-card>
 
     <!-- 快捷操作卡片组 -->
-    <div class="action-cards">
-      <h3 class="section-title">
+    <div>
+      <h3 class="flex items-center gap-2 text-[16px] font-bold text-[var(--el-text-color-primary)] mt-6 mb-4">
         <el-icon><Operation /></el-icon>
         快捷操作
       </h3>
       <el-row :gutter="16">
         <!-- 导航操作 -->
         <el-col :xs="24" :sm="12" :md="8" :lg="6">
-          <el-card class="action-card" shadow="hover" @click="showNavigateDialog = true">
-            <div class="card-icon navigate">
+          <el-card
+            class="cursor-pointer transition-all duration-300 h-full hover:-translate-y-1 hover:shadow-[0_4px_12px_rgba(0,0,0,0.15)]"
+            shadow="hover"
+            @click="showNavigateDialog = true"
+          >
+            <div class="w-12 h-12 rounded-lg flex items-center justify-center mb-3 text-[24px] text-white bg-[linear-gradient(135deg,#667eea_0%,#764ba2_100%)]">
               <el-icon><Link /></el-icon>
             </div>
-            <div class="card-content">
-              <h4>页面导航</h4>
-              <p>跳转到指定URL</p>
+            <div>
+              <h4 class="m-0 mb-1 text-[14px] text-[var(--el-text-color-primary)]">页面导航</h4>
+              <p class="m-0 text-[12px] text-[var(--el-text-color-secondary)]">跳转到指定URL</p>
             </div>
           </el-card>
         </el-col>
 
         <!-- 截图操作 -->
         <el-col :xs="24" :sm="12" :md="8" :lg="6">
-          <el-card class="action-card" shadow="hover" @click="captureScreenshot">
-            <div class="card-icon screenshot">
+          <el-card
+            class="cursor-pointer transition-all duration-300 h-full hover:-translate-y-1 hover:shadow-[0_4px_12px_rgba(0,0,0,0.15)]"
+            shadow="hover"
+            @click="captureScreenshot"
+          >
+            <div class="w-12 h-12 rounded-lg flex items-center justify-center mb-3 text-[24px] text-white bg-[linear-gradient(135deg,#f093fb_0%,#f5576c_100%)]">
               <el-icon><Camera /></el-icon>
             </div>
-            <div class="card-content">
-              <h4>页面截图</h4>
-              <p>捕获当前页面快照</p>
+            <div>
+              <h4 class="m-0 mb-1 text-[14px] text-[var(--el-text-color-primary)]">页面截图</h4>
+              <p class="m-0 text-[12px] text-[var(--el-text-color-secondary)]">捕获当前页面快照</p>
             </div>
           </el-card>
         </el-col>
 
         <!-- JavaScript执行 -->
         <el-col :xs="24" :sm="12" :md="8" :lg="6">
-          <el-card class="action-card" shadow="hover" @click="showJsDialog = true">
-            <div class="card-icon js">
+          <el-card
+            class="cursor-pointer transition-all duration-300 h-full hover:-translate-y-1 hover:shadow-[0_4px_12px_rgba(0,0,0,0.15)]"
+            shadow="hover"
+            @click="showJsDialog = true"
+          >
+            <div class="w-12 h-12 rounded-lg flex items-center justify-center mb-3 text-[24px] text-white bg-[linear-gradient(135deg,#4facfe_0%,#00f2fe_100%)]">
               <el-icon><Document /></el-icon>
             </div>
-            <div class="card-content">
-              <h4>执行JS</h4>
-              <p>运行自定义脚本</p>
+            <div>
+              <h4 class="m-0 mb-1 text-[14px] text-[var(--el-text-color-primary)]">执行JS</h4>
+              <p class="m-0 text-[12px] text-[var(--el-text-color-secondary)]">运行自定义脚本</p>
             </div>
           </el-card>
         </el-col>
 
         <!-- 插件管理 -->
         <el-col :xs="24" :sm="12" :md="8" :lg="6">
-          <el-card class="action-card" shadow="hover" @click="togglePlugins">
-            <div class="card-icon plugin">
+          <el-card
+            class="cursor-pointer transition-all duration-300 h-full hover:-translate-y-1 hover:shadow-[0_4px_12px_rgba(0,0,0,0.15)]"
+            shadow="hover"
+            @click="togglePlugins"
+          >
+            <div class="w-12 h-12 rounded-lg flex items-center justify-center mb-3 text-[24px] text-white bg-[linear-gradient(135deg,#43e97b_0%,#38f9d7_100%)]">
               <el-icon><Setting /></el-icon>
             </div>
-            <div class="card-content">
-              <h4>插件管理</h4>
-              <p>暂停/恢复插件</p>
+            <div>
+              <h4 class="m-0 mb-1 text-[14px] text-[var(--el-text-color-primary)]">插件管理</h4>
+              <p class="m-0 text-[12px] text-[var(--el-text-color-secondary)]">暂停/恢复插件</p>
             </div>
           </el-card>
         </el-col>
@@ -127,8 +143,8 @@
     </div>
 
     <!-- 系统操作卡片列表 -->
-    <div class="system-actions">
-      <h3 class="section-title">
+    <div>
+      <h3 class="flex items-center gap-2 text-[16px] font-bold text-[var(--el-text-color-primary)] mt-6 mb-4">
         <el-icon><List /></el-icon>
         系统操作
       </h3>
@@ -141,15 +157,15 @@
           :md="8"
           :lg="6"
         >
-          <el-card class="action-item-card" shadow="hover">
-            <div class="action-header">
+          <el-card class="mb-3 h-full" shadow="hover">
+            <div class="flex items-center gap-2 mb-2">
               <el-tag size="small" :type="getActionTagType(action.type)">
                 {{ action.type }}
               </el-tag>
-              <span class="action-name">{{ action.name }}</span>
+              <span class="font-bold text-[14px] text-[var(--el-text-color-primary)]">{{ action.name }}</span>
             </div>
-            <p class="action-desc">{{ action.description }}</p>
-            <div class="action-footer">
+            <p class="text-[12px] text-[var(--el-text-color-regular)] my-2 min-h-8">{{ action.description }}</p>
+            <div class="flex justify-end">
               <el-button
                 size="small"
                 type="primary"
@@ -197,7 +213,7 @@
         </el-form-item>
         <el-form-item label="安全模式">
           <el-switch v-model="jsForm.safeMode" />
-          <span class="form-tip">启用后将进行安全检查</span>
+          <span class="ml-2 text-[12px] text-[var(--el-text-color-secondary)]">启用后将进行安全检查</span>
         </el-form-item>
       </el-form>
       <template #footer>
@@ -210,8 +226,8 @@
 
     <!-- 截图预览对话框 -->
     <el-dialog v-model="showScreenshotDialog" title="页面截图" width="800px">
-      <div class="screenshot-container">
-        <img v-if="screenshotUrl" :src="screenshotUrl" alt="截图" class="screenshot-img" />
+      <div class="text-center">
+        <img v-if="screenshotUrl" :src="screenshotUrl" alt="截图" class="max-w-full max-h-[600px] border border-[var(--el-border-color-lighter)] rounded" />
         <el-empty v-else description="暂无截图" />
       </div>
       <template #footer>
@@ -479,159 +495,3 @@ onMounted(() => {
   fetchRegisteredActions()
 })
 </script>
-
-<style scoped lang="scss">
-.visual-control-panel {
-  .status-card {
-    margin-bottom: 20px;
-
-    .card-header {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-weight: bold;
-    }
-
-    .status-info {
-      margin-bottom: 16px;
-
-      .info-item {
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-
-        label {
-          font-size: 12px;
-          color: #909399;
-        }
-
-        span {
-          font-size: 14px;
-          color: #303133;
-          font-weight: 500;
-        }
-      }
-    }
-
-    .status-actions {
-      display: flex;
-      gap: 8px;
-      justify-content: flex-end;
-    }
-  }
-
-  .section-title {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 16px;
-    font-weight: bold;
-    color: #303133;
-    margin: 24px 0 16px 0;
-  }
-
-  .action-cards {
-    .action-card {
-      cursor: pointer;
-      transition: all 0.3s;
-      height: 100%;
-
-      &:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-      }
-
-      .card-icon {
-        width: 48px;
-        height: 48px;
-        border-radius: 8px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin-bottom: 12px;
-        font-size: 24px;
-        color: white;
-
-        &.navigate {
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        }
-
-        &.screenshot {
-          background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-        }
-
-        &.js {
-          background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-        }
-
-        &.plugin {
-          background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
-        }
-      }
-
-      .card-content {
-        h4 {
-          margin: 0 0 4px 0;
-          font-size: 14px;
-          color: #303133;
-        }
-
-        p {
-          margin: 0;
-          font-size: 12px;
-          color: #909399;
-        }
-      }
-    }
-  }
-
-  .system-actions {
-    .action-item-card {
-      margin-bottom: 12px;
-      height: 100%;
-
-      .action-header {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        margin-bottom: 8px;
-
-        .action-name {
-          font-weight: bold;
-          font-size: 14px;
-          color: #303133;
-        }
-      }
-
-      .action-desc {
-        font-size: 12px;
-        color: #606266;
-        margin: 8px 0;
-        min-height: 32px;
-      }
-
-      .action-footer {
-        display: flex;
-        justify-content: flex-end;
-      }
-    }
-  }
-
-  .screenshot-container {
-    text-align: center;
-
-    .screenshot-img {
-      max-width: 100%;
-      max-height: 600px;
-      border: 1px solid #ebeef5;
-      border-radius: 4px;
-    }
-  }
-
-  .form-tip {
-    margin-left: 8px;
-    font-size: 12px;
-    color: #909399;
-  }
-}
-</style>

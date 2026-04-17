@@ -1,5 +1,5 @@
 <template>
-  <FlexContainer v-loading="isLoading" style="padding: 10px">
+  <FlexContainer v-loading="isLoading" class="p-[var(--spacing-2)]">
     <!-- 账号被封提示 Modal -->
     <el-dialog
       v-model="showAccountBannedModal"
@@ -10,27 +10,27 @@
       :show-close="true"
       center
     >
-      <div class="account-banned-content">
-        <el-icon class="warning-icon" :size="60" color="#f56c6c">
+      <div class="flex flex-col items-center py-[var(--spacing-5)] text-center">
+        <el-icon class="mb-[var(--spacing-5)] animate-pulse text-danger" :size="60">
           <WarningFilled />
         </el-icon>
-        <h3 class="warning-title">服主 Sam's Club 账号已被封禁</h3>
-        <p class="warning-text">
+        <el-text class="mb-4 text-xl font-semibold text-[var(--el-text-color-primary)]" tag="h3">服主 Sam's Club 账号已被封禁</el-text>
+        <el-text class="mb-3 px-5 text-[15px] leading-relaxed text-[var(--el-text-color-regular)]" tag="p">
           由于服主(管理员)的 Sam's Club 账号被封禁，商品数据无法正常更新。
-        </p>
-        <p class="warning-subtext">
+        </el-text>
+        <el-text class="px-5 text-sm leading-snug text-[var(--el-text-color-secondary)]" tag="p">
           这可能导致商品价格、库存等信息不是最新的。服主正在努力恢复服务，请您耐心等待。
-        </p>
+        </el-text>
         <el-divider></el-divider>
-        <div class="info-box">
-          <p class="info-text">
+        <div class="mt-2.5 w-full rounded border border-[var(--el-color-primary-light-7)] bg-[var(--el-color-primary-light-9)] px-4 py-3">
+          <el-text class="m-0 flex items-center justify-center gap-2 text-sm text-[var(--el-color-primary)]" tag="p">
             <el-icon><InfoFilled /></el-icon>
             您可以继续浏览已有的商品信息，但请注意数据可能不是最新的。
-          </p>
+          </el-text>
         </div>
       </div>
       <template #footer>
-        <div class="dialog-footer">
+        <div class="flex justify-center gap-3">
           <el-button type="primary" @click="handleCloseModal">我知道了</el-button>
           <el-button @click="handleDontShowAgain">不再提示</el-button>
         </div>
@@ -168,78 +168,3 @@ const handleSubmitForm = () => {
   getSamsclubSpuResult.executeQuery()
 }
 </script>
-
-<style scoped>
-@import '@/assets/components/samsclub/samsclub-filter-tailwind.css';
-@import '@/assets/components/samsclub/spu-item-tailwind.css';
-
-.account-banned-content {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  padding: 20px 0;
-}
-
-.warning-icon {
-  margin-bottom: 20px;
-  animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.6;
-  }
-}
-
-.warning-title {
-  font-size: 20px;
-  font-weight: 600;
-  color: #303133;
-  margin-bottom: 16px;
-}
-
-.warning-text {
-  font-size: 15px;
-  color: #606266;
-  line-height: 1.6;
-  margin-bottom: 12px;
-  padding: 0 20px;
-}
-
-.warning-subtext {
-  font-size: 13px;
-  color: #909399;
-  line-height: 1.5;
-  padding: 0 20px;
-}
-
-.info-box {
-  background-color: #ecf5ff;
-  border: 1px solid #d9ecff;
-  border-radius: 4px;
-  padding: 12px 16px;
-  width: 100%;
-  margin-top: 10px;
-}
-
-.info-text {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  font-size: 13px;
-  color: #409eff;
-  margin: 0;
-}
-
-.dialog-footer {
-  display: flex;
-  justify-content: center;
-  gap: 12px;
-}
-</style>

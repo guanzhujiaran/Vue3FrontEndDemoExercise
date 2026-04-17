@@ -1,0 +1,37 @@
+{
+  "version": 2,
+  "sessions": {
+    "ab52f91bb7bb4959896da28a142d344c": [
+      {
+        "expertId": "FrontendDeveloper",
+        "name": "像素匠",
+        "profession": "前端开发工程师",
+        "avatarUrl": "https://acc-1258344699.cos.accelerate.myqcloud.com/workbuddy/experts/avatars/02-Engineering/FrontendDeveloper/FrontendDeveloper.png",
+        "promptUrl": "https://acc-1258344699.cos.accelerate.myqcloud.com/workbuddy/experts/experts/02-Engineering/FrontendDeveloper/FrontendDeveloper_zh.md",
+        "usedAt": 1776396859165,
+        "industryId": "all"
+      },
+      {
+        "expertId": "PrivateDomainMarketingExpert",
+        "name": "司玉琦",
+        "profession": "私域营销专家",
+        "avatarUrl": "https://acc-1258344699.cos.accelerate.myqcloud.com/workbuddy/experts/avatars/03-Marketing/PrivateDomainMarketingExpert/PrivateDomainMarketingExpert.png",
+        "promptUrl": "https://acc-1258344699.cos.accelerate.myqcloud.com/workbuddy/experts/experts/03-Marketing/PrivateDomainMarketingExpert/PrivateDomainMarketingExpert_zh.md",
+        "usedAt": 1776396856213,
+        "industryId": "all"
+      }
+    ],
+    "0cfaafe4cc8b49f09acd47ea2ae86da9": [
+      {
+        "expertId": "FrontendDeveloper",
+        "name": "像素匠",
+        "profession": "前端开发工程师",
+        "avatarUrl": "https://acc-1258344699.cos.accelerate.myqcloud.com/workbuddy/experts/avatars/02-Engineering/FrontendDeveloper/FrontendDeveloper.png",
+        "promptUrl": "https://acc-1258344699.cos.accelerate.myqcloud.com/workbuddy/experts/experts/02-Engineering/FrontendDeveloper/FrontendDeveloper_zh.md",
+        "usedAt": 1776397687770,
+        "industryId": "all"
+      }
+    ]
+  },
+  "lastUpdated": 1776397696129
+}

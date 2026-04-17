@@ -33,6 +33,5 @@ const { prizes } = defineProps<{ prizes: LotteryPrize[] }>()
   </div>
 </template>
 
-<style scoped>
-@import '@/assets/components/lottery/bili-lottery-card-desc-tailwind.css';
-</style>
+
+

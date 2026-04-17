@@ -76,8 +76,3 @@ const sendHeartbeat = () => emit('sendHeartbeat')
 const takeScreenshot = () => emit('takeScreenshot')
 const toggleVideoStream = () => emit('toggleVideo')
 </script>
-
-<style scoped>
-/* 所有样式已移至 tailwind.css 中的 .toolbar-section 相关类 */
-/* 组件现在使用全局CSS变量，支持尺寸主题切换 */
-</style>

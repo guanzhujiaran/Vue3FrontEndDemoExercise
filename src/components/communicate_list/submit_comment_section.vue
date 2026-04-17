@@ -52,7 +52,7 @@ const comment_content = defineModel<string>('comment_content')
 
 <style scoped>
 .markdown-editor {
-  min-height: calc(var(--component-size) * 1.5625);
+  min-height: var(--spacing-40);
   transition: height 1s ease; /* 平滑过渡效果 */
 }
 

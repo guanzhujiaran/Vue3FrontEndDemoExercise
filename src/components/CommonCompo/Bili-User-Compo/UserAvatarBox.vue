@@ -44,10 +44,10 @@ const expBarSize = computed(() => {
 </script>
 
 <template>
-  <div class="avatar-container">
-    <div class="avatar-box" :style="{ width: size + 'px', height: size + 'px' }">
-      <div class="avatar border" :style="{ width: size + 'px', height: size + 'px' }">
-        <el-image :src="props.src" fit="fill" class="url" referrerpolicy="no-referrer" alt="" />
+  <div class="avatar-container flex flex-col items-center">
+    <div class="avatar-box relative flex items-center rounded-full justify-center" :style="{ width: size + 'px', height: size + 'px' }">
+      <div class="avatar flex items-center justify-center rounded-full box-border hover:cursor-pointer border border-solid border-[var(--el-color-danger-dark-2)] overflow-hidden" :style="{ width: size + 'px', height: size + 'px' }">
+        <el-image :src="props.src" fit="fill" class="url rounded-full w-full h-full block [&_img]:w-full [&_img]:h-full [&_img]:object-cover" referrerpolicy="no-referrer" alt="" />
       </div>
     </div>
     <ExpBar
@@ -55,20 +55,7 @@ const expBarSize = computed(() => {
       :level-info="levelInfo"
       :size="expBarSize"
       class="exp-bar-wrapper"
+      :style="{ width: size + 'px' }"
     />
   </div>
 </template>
-
-<style scoped>
-@import '@/assets/components/user/user-avatar-box-tailwind.css';
-
-.avatar-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.exp-bar-wrapper {
-  width: size;
-}
-</style>

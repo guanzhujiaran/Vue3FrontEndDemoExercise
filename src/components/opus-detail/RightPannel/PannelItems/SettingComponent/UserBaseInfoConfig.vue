@@ -160,6 +160,4 @@ onMounted(() => {
 })
 </script>
 
-<style>
-@import '@/assets/components/user/user-base-info-config-tailwind.css';
-</style>
+

@@ -82,13 +82,13 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="changelog-container">
-    <div class="header">
-      <h1>更新日志</h1>
-      <p>查看项目的更新历史和功能变更</p>
+  <div class="p-5 max-w-[800px] mx-auto">
+    <div class="text-center mb-8">
+      <el-text class="text-[2rem] mb-2.5" tag="h1">更新日志</el-text>
+      <el-text class="text-[var(--el-text-color-secondary)]" tag="p">查看项目的更新历史和功能变更</el-text>
     </div>
     
-    <div class="content">
+    <div class="bg-[var(--el-bg-color-page)] rounded-lg p-5">
       <el-timeline>
         <el-timeline-item
           v-for="(entry, index) in changelogData"
@@ -97,25 +97,25 @@ onMounted(() => {
           placement="top"
         >
           <el-card>
-            <h3>版本 {{ entry.version }}</h3>
-            <div v-if="entry.changes.added && entry.changes.added.length > 0" class="change-section">
-              <h4>新增功能</h4>
-              <ul>
-                <li v-for="(item, i) in entry.changes.added" :key="i">{{ item }}</li>
+            <el-text class="text-lg font-medium text-[var(--el-text-color-primary)] mb-4" tag="h3">版本 {{ entry.version }}</el-text>
+            <div v-if="entry.changes.added && entry.changes.added.length > 0" class="my-4">
+              <el-text class="mt-4 mb-2.5 text-[var(--el-text-color-primary)] font-medium" tag="h4">新增功能</el-text>
+              <ul class="pl-5">
+                <li v-for="(item, i) in entry.changes.added" :key="i" class="mb-1.5 leading-relaxed text-[var(--el-text-color-regular)]">{{ item }}</li>
               </ul>
             </div>
             
-            <div v-if="entry.changes.improved && entry.changes.improved.length > 0" class="change-section">
-              <h4>功能优化</h4>
-              <ul>
-                <li v-for="(item, i) in entry.changes.improved" :key="i">{{ item }}</li>
+            <div v-if="entry.changes.improved && entry.changes.improved.length > 0" class="my-4">
+              <el-text class="mt-4 mb-2.5 text-[var(--el-text-color-primary)] font-medium" tag="h4">功能优化</el-text>
+              <ul class="pl-5">
+                <li v-for="(item, i) in entry.changes.improved" :key="i" class="mb-1.5 leading-relaxed text-[var(--el-text-color-regular)]">{{ item }}</li>
               </ul>
             </div>
             
-            <div v-if="entry.changes.fixed && entry.changes.fixed.length > 0" class="change-section">
-              <h4>问题修复</h4>
-              <ul>
-                <li v-for="(item, i) in entry.changes.fixed" :key="i">{{ item }}</li>
+            <div v-if="entry.changes.fixed && entry.changes.fixed.length > 0" class="my-4">
+              <el-text class="mt-4 mb-2.5 text-[var(--el-text-color-primary)] font-medium" tag="h4">问题修复</el-text>
+              <ul class="pl-5">
+                <li v-for="(item, i) in entry.changes.fixed" :key="i" class="mb-1.5 leading-relaxed text-[var(--el-text-color-regular)]">{{ item }}</li>
               </ul>
             </div>
           </el-card>
@@ -125,45 +125,3 @@ onMounted(() => {
   </div>
 </template>
 
-<style scoped>
-.changelog-container {
-  padding: 20px;
-  max-width: 800px;
-  margin: 0 auto;
-}
-
-.header {
-  text-align: center;
-  margin-bottom: 30px;
-}
-
-.header h1 {
-  font-size: 2rem;
-  margin-bottom: 10px;
-}
-
-.content {
-  background-color: var(--el-bg-color-page);
-  border-radius: 8px;
-  padding: 20px;
-}
-
-.change-section {
-  margin: 15px 0;
-}
-
-.change-section h4 {
-  margin-top: 15px;
-  margin-bottom: 10px;
-  color: var(--el-text-color-primary);
-}
-
-.change-section ul {
-  padding-left: 20px;
-}
-
-.change-section li {
-  margin-bottom: 5px;
-  line-height: 1.5;
-}
-</style>

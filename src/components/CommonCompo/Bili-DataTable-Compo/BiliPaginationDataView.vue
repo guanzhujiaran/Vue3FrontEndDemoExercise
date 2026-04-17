@@ -23,9 +23,6 @@
     <ScrollButtons :top-threshold="300" :bottom-threshold="100" />
   </div>
 </template>
-<style scoped>
-@import '@/assets/components/data-table/bili-pagination-data-view-tailwind.css';
-</style>
 <script setup lang="ts">
 import biliMessage from '@/utils/message'
 import { computed, onMounted, watch } from 'vue'

@@ -25,7 +25,3 @@ const props = defineModel<BaseSettingDatePicker>({
     </el-date-picker>
   </div>
 </template>
-
-<style scoped>
-@import '@/assets/date-picker-tailwind.css';
-</style>

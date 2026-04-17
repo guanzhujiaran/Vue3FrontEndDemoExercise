@@ -31,6 +31,5 @@ const parsedData = computed(() => {
   </grid-container>
 </template>
 
-<style scoped>
-@import '@/assets/components/lottery/bili-lottery-card-container-tailwind.css';
-</style>
+
+

@@ -69,17 +69,9 @@ emitter.on('needLogin', () => {
   >
     <LoginCompo :is-modal="true" @login-success="handleLoginSuccess" />
     <template #footer>
-      <div class="dialog-footer">
+      <div class="flex justify-end mt-[var(--spacing-1)]">
         <el-button @click="closeLoginModal">关闭</el-button>
       </div>
     </template>
   </el-dialog>
 </template>
-
-<style scoped>
-.dialog-footer {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: calc(var(--component-spacing) * 0.5);
-}
-</style>

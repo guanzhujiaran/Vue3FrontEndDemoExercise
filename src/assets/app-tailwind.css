@@ -1,61 +1,53 @@
-@reference "@/assets/tailwind.css"
-@import "daisyui/dist/full.css";
+@layer theme, base, element, components, utilities;
+@import 'element-plus/dist/index.css' layer(element);
+@import 'element-plus/theme-chalk/dark/css-vars.css' layer(elementDark);
+@import "tailwindcss";
+@import './theme.css';
+@plugin 'daisyui';
 
-html,
-body {
-  @apply m-0 min-h-full overflow-x-hidden p-0;
-}
-*,
-*::before,
-*::after {
-  @apply size-base;
-}
+@layer utilities {
+  /* 菜单尺寸主题响应 */
 
-body {
-  @apply mx-auto flex min-w-[1080px] flex-col overflow-visible bg-cover bg-fixed bg-center bg-no-repeat font-sans font-normal transition-colors duration-300;
-}
+  .size-xs {
+    font-size: var(--component-font-size-sm);
+    line-height: var(--line-height-snug);
+    padding: var(--component-padding-x-sm);
+  }
 
-/* 应用容器样式 */
-.app-wrapper {
-  @apply relative flex min-h-screen;
-}
+  .size-sm {
+    font-size: var(--component-font-size-md);
+    line-height: var(--line-height-normal);
+    padding: var(--component-padding-x-md);
+  }
 
-/* el-header 取消 padding */
-.app-wrapper .el-header {
-  @apply p-0;
-}
+  .size-base {
+    font-size: var(--component-font-size-base);
+    line-height: var(--line-height-normal);
+    padding: var(--component-padding-x-base);
+  }
 
-/* 响应式样式 */
-@media (max-width: 768px) {
-  .el-main {
-    @apply p-1;
+  .size-lg {
+    font-size: var(--component-font-size-lg);
+    line-height: var(--line-height-normal);
+    padding: var(--component-padding-x-lg);
+  }
+
+  .size-xl {
+    font-size: var(--component-font-size-xl);
+    line-height: var(--line-height-loose);
+    padding: var(--component-padding-x-xl);
   }
 }
 
-/* 缩放视图样式 */
-html.scaled-view,
-html.scaled-view body {
-  @apply w-full;
-}
+@layer components {
+  .el-message__content {
+    font-size: var(--text-base)
+  }
 
-html.scaled-view #app {
-  @apply h-auto min-h-screen;
-}
-
-/* 过渡动画 */
-.slide-fade-enter-active {
-  transition: all 0.3s ease-out;
-}
-
-.slide-fade-leave-active {
-  transition: all 0.1s cubic-bezier(1, 0.5, 0.8, 1);
-}
-
-.slide-fade-enter-from,
-.slide-fade-leave-to {
-  opacity: 0;
-}
-.use-screen-safe-area {
-  max-width: unset !important; /* 取消最大宽度限制，不能删除 */
-  overflow: visible !important;
+  .el-page-header__title {
+    font-size: var(--text-base);
+  }
+  .el-page-header__content{
+    font-size: var(--text-2xl);
+  }
 }

@@ -64,8 +64,3 @@ defineExpose({
     scrollToBottom
 })
 </script>
-
-<style scoped>
-/* 所有样式已移至 tailwind.css 中的 .log-panel 相关类 */
-/* 组件现在使用全局CSS变量，支持尺寸主题切换 */
-</style>

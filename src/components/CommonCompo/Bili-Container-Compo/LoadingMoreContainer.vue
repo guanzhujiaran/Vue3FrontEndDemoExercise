@@ -39,17 +39,13 @@ const handleLoad = useDebounceFn(() => {
 </script>
 
 <template>
-  <div class="with-loading-more-container-wrapper" ref="scrollContainer" v-loading="isLoading">
-    <el-scrollbar class="with-loading-more-container" @end-reached="handleLoad" :distance="10">
+  <div class="with-loading-more-container-wrapper mb-4" ref="scrollContainer" v-loading="isLoading">
+    <el-scrollbar class="with-loading-more-container p-0 m-0 flex flex-col items-center h-[75vh] overflow-auto [&::-webkit-scrollbar]:w-0 [&::-webkit-scrollbar]:h-0" @end-reached="handleLoad" :distance="10">
       <slot name="content"></slot>
-      <div class="loading-more-txt" style="background-color: transparent">
-        <span v-if="isMore" @click="handleLoad">查看更多</span>
-        <span v-else-if="!isError">到底了喵~</span>
+      <div class="loading-more-txt relative w-full text-center bg-transparent h-25" style="background-color: transparent">
+        <span v-if="isMore" @click="handleLoad" class="cursor-pointer">查看更多</span>
+        <span v-else-if="!isError" class="cursor-pointer">到底了喵~</span>
       </div>
     </el-scrollbar>
   </div>
 </template>
-
-<style scoped>
-@import '@/assets/components/container/loading-more-container-tailwind.css';
-</style>

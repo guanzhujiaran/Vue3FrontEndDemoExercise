@@ -7,9 +7,9 @@
  * @Description: 浏览器指纹编辑表单组件
 -->
 <template>
-  <div class="fingerprint-edit-form">
+  <div class="w-full">
     <!-- 操作栏 -->
-    <div class="form-actions mb-4">
+    <div class="mb-4">
       <el-button 
         type="info" 
         :icon="Refresh"
@@ -28,9 +28,9 @@
       size="default"
     >
       <!-- 基本信息 -->
-      <el-card class="form-section" shadow="never">
+      <el-card class="form-section mb-4" shadow="never">
         <template #header>
-          <div class="section-header">
+          <div class="flex items-center gap-2 font-semibold text-[var(--el-text-color-primary)] [&_.el-icon]:text-[var(--el-color-primary)]">
             <el-icon><Monitor /></el-icon>
             <span>基本信息</span>
           </div>
@@ -114,9 +114,9 @@
       </el-card>
 
       <!-- GPU信息 -->
-      <el-card class="form-section" shadow="never">
+      <el-card class="form-section mb-4" shadow="never">
         <template #header>
-          <div class="section-header">
+          <div class="flex items-center gap-2 font-semibold text-[var(--el-text-color-primary)] [&_.el-icon]:text-[var(--el-color-primary)]">
             <el-icon><Picture /></el-icon>
             <span>GPU信息</span>
           </div>
@@ -153,11 +153,11 @@
       </el-card>
 
       <!-- 语言和地区 -->
-      <el-card class="form-section" shadow="never">
+      <el-card class="form-section mb-4" shadow="never">
         <template #header>
-          <div class="section-header">
+          <div class="flex items-center gap-2 font-semibold text-[var(--el-text-color-primary)] [&_.el-icon]:text-[var(--el-color-primary)]">
             <el-icon><Location /></el-icon>
-            <span>语言和地区</span>
+            <el-text tag="span">语言和地区</el-text>
           </div>
         </template>
         
@@ -209,9 +209,9 @@
       </el-card>
 
       <!-- 代理设置 -->
-      <el-card class="form-section" shadow="never">
+      <el-card class="form-section mb-4" shadow="never">
         <template #header>
-          <div class="section-header">
+          <div class="flex items-center gap-2 font-semibold text-[var(--el-text-color-primary)] [&_.el-icon]:text-[var(--el-color-primary)]">
             <el-icon><Connection /></el-icon>
             <span>代理设置</span>
           </div>
@@ -440,44 +440,23 @@ defineExpose({
 })
 </script>
 
+
 <style scoped>
-.fingerprint-edit-form {
-  width: 100%;
-}
-
-.form-section {
-  margin-bottom: 16px;
-}
-
 .form-section :deep(.el-card__header) {
-  padding: 16px 20px;
-  border-bottom: 1px solid var(--el-border-color-light);
-  background-color: var(--el-bg-color-page);
-}
-
-.section-header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-weight: 600;
-  color: var(--el-text-color-primary);
-}
-
-.section-header .el-icon {
-  color: var(--el-color-primary);
+  @apply px-5 py-4 border-b border-[var(--el-border-color-light)] bg-[var(--el-bg-color-page)];
 }
 
 .form-section :deep(.el-card__body) {
-  padding: 20px;
+  @apply p-5;
 }
 
 @media (max-width: 768px) {
   .form-section :deep(.el-row) {
-    margin: 0 !important;
+    @apply !m-0;
   }
-  
+
   .form-section :deep(.el-col) {
-    padding: 0 0 16px 0 !important;
+    @apply !py-0 !px-0 !pb-4;
   }
 }
 </style>

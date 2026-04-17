@@ -14,10 +14,7 @@
           v-model="ActivedUserLotteryResult.isOpenDrawer"
           size="81.0%"
           direction="btt"
-          style="
-            background:
-              linear-gradient(180deg, var(--el-color-black), var(--el-color-info) 96.22%);
-          "
+          class="bg-gradient-drawer-dark"
         >
           <template #header>
             <div class="user-title">
@@ -179,16 +176,5 @@ const load_func = async (
 }
 </script>
 
-<style scoped>
-.user-title {
-  flex-direction: column;
-  display: flex;
-  align-items: center;
-}
 
-.user-title p {
-  color: var(--el-color-white);
-  font-size: calc(var(--component-size) * 0.5); /* 可选：根据需求调整字体大小 */
-  line-height: calc(var(--component-line-height) * 1.2); /* 可选：根据需求调整行高 */
-}
-</style>
+

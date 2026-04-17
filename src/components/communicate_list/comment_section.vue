@@ -422,16 +422,16 @@ onUnmounted(() => {
 .reply-pagination {
   display: flex;
   align-items: center;
-  font-size: var(--component-size);
+  font-size: var(--text-base);
   color: var(--el-text-color-primary);
 }
 
 .comment-pagination {
-  padding-top: calc(var(--component-spacing) * 3.2);
-  padding-bottom: calc(var(--component-spacing) * 4.8);
+  padding-top: var(--spacing-12);
+  padding-bottom: var(--spacing-16);
   margin: auto;
   width: 50%;
-  font-size: var(--component-size);
+  font-size: var(--text-base);
 }
 
 .expander-footer .button:not([disabled]):hover {
@@ -455,7 +455,7 @@ onUnmounted(() => {
   text-indent: 0;
   text-shadow: none;
   margin: 0;
-  padding-block: calc(var(--component-spacing) * 0.2);
+  padding-block: var(--spacing-1);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -475,16 +475,16 @@ onUnmounted(() => {
 }
 
 .expander-footer {
-  margin-left: calc(var(--component-size) * 1.875);
-  font-size: calc(var(--component-size) * 0.4375);
+  margin-left: var(--spacing-40);
+  font-size: var(--text-sm);
   color: var(--el-text-color-secondary);
-  margin-top: calc(var(--component-spacing) * 1.6);
+  margin-top: var(--spacing-6);
 }
 
 .comment-reply-wrap {
-  margin-right: calc(var(--component-size) * 1.875);
-  margin-left: calc(var(--component-size) * 1.875);
-  margin-top: calc(var(--component-spacing) * 4.8);
+  margin-right: var(--spacing-40);
+  margin-left: var(--spacing-40);
+  margin-top: var(--spacing-16);
 }
 
 .comment-list {
@@ -493,22 +493,22 @@ onUnmounted(() => {
 }
 
 .div-line {
-  padding-bottom: calc(var(--component-spacing) * 3.2);
-  margin-left: calc(var(--component-spacing) * 0.8);
-  border-bottom: calc(var(--component-size) * 0.0625) solid var(--el-border-color-lighter);
+  padding-bottom: var(--spacing-12);
+  margin-left: var(--spacing-4);
+  border-bottom: 1px solid var(--el-border-color-lighter);
 }
 
 .sort-actions .sort-div {
   display: inline-block;
-  height: calc(var(--component-size) * 0.5625);
-  margin: 0 calc(var(--component-spacing) * 1.2);
-  border-left: solid calc(var(--component-size) * 0.0625) var(--el-text-color-secondary);
+  height: 9px;
+  margin: 0 var(--spacing-6);
+  border-left: solid 1px var(--el-text-color-secondary);
   vertical-align: bottom;
 }
 
 .comment-title .comment-count {
-  margin: 0 calc(var(--component-spacing) * 6) 0 calc(var(--component-spacing) * 2.16);
-  font-size: calc(var(--component-size) * 0.5625);
+  margin: 0 var(--spacing-20) 0 var(--spacing-10);
+  font-size: var(--text-sm);
   font-weight: 400;
   color: var(--el-text-color-secondary);
 }
@@ -516,7 +516,7 @@ onUnmounted(() => {
 .comment-title h2 {
   margin: 0;
   font-weight: 700;
-  font-size: var(--component-size);
+  font-size: var(--text-base);
 }
 
 .comment-title {
@@ -540,9 +540,9 @@ onUnmounted(() => {
 
 .sort-btn {
   height: 100%;
-  padding-inline-start: calc(var(--component-spacing) * 2.4);
-  padding-inline-end: calc(var(--component-spacing) * 2.4);
-  font-size: calc(var(--component-size) * 0.5625);
+  padding-inline-start: var(--spacing-12);
+  padding-inline-end: var(--spacing-12);
+  font-size: var(--text-sm);
   color: var(--el-text-color-secondary);
 }
 ul,

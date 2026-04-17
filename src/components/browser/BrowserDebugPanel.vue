@@ -9,11 +9,11 @@
 <template>
   <div class="browser-debug-panel">
     <!-- 顶部导航标签 -->
-    <el-tabs v-model="activeTab" type="card" class="main-tabs">
+    <el-tabs v-model="activeTab" type="card" class="main-tabs mb-5">
       <!-- 可视化操作连接 -->
       <el-tab-pane name="visual-control">
         <template #label>
-          <span class="tab-label">
+          <span class="flex items-center gap-1.5 text-sm">
             <el-icon><Connection /></el-icon>
             可视化操作
           </span>
@@ -24,7 +24,7 @@
       <!-- 自定义操作管理 -->
       <el-tab-pane name="custom-actions">
         <template #label>
-          <span class="tab-label">
+          <span class="flex items-center gap-1.5 text-sm">
             <el-icon><Tools /></el-icon>
             自定义操作
           </span>
@@ -35,7 +35,7 @@
       <!-- Debug调试面板 -->
       <el-tab-pane name="debug">
         <template #label>
-          <span class="tab-label">
+          <span class="flex items-center gap-1.5 text-sm">
             <el-icon><Cpu /></el-icon>
             Debug调试
           </span>
@@ -64,20 +64,3 @@ const props = defineProps({
 // 状态管理
 const activeTab = ref('visual-control')
 </script>
-
-<style scoped lang="scss">
-.browser-debug-panel {
-  .main-tabs {
-    :deep(.el-tabs__header) {
-      margin-bottom: 20px;
-    }
-
-    .tab-label {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 14px;
-    }
-  }
-}
-</style>

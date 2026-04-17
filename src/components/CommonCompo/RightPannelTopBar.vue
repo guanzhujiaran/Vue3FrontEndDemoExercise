@@ -14,7 +14,3 @@ const props = defineProps({
     }
 })
 </script>
-
-<style scoped>
-@import '@/assets/components/container/right-pannel-top-bar-tailwind.css';
-</style>

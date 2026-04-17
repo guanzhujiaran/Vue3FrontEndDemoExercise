@@ -12,13 +12,13 @@
     v-model="visible" 
     width="90%"
     fullscreen
-    class="control-modal"
+    class="[--el-dialog-margin-top:20px]"
     @close="handleClose"
   >
-    <div class="modal-content" v-if="fingerprint">
+    <div class="px-5" v-if="fingerprint">
       <!-- 基本信息 -->
-      <div class="modal-section">
-        <h3>基本信息</h3>
+      <div class="mb-6">
+        <el-text class="m-0 mb-3 text-[var(--el-text-color-primary)] font-semibold text-base" tag="h3">基本信息</el-text>
         <el-descriptions :column="2" border size="small">
           <el-descriptions-item label="实例ID">{{ fingerprint.id_str || fingerprint.id }}</el-descriptions-item>
           <el-descriptions-item label="用户ID">{{ fingerprint.mid }}</el-descriptions-item>
@@ -29,9 +29,9 @@
       </div>
 
       <!-- 会话状态 -->
-      <div class="modal-section">
-        <h3>会话状态</h3>
-        <div v-if="sessionStatus" class="session-status">
+      <div class="mb-6">
+        <h3 class="m-0 mb-3 text-[var(--el-text-color-primary)] font-semibold text-base">会话状态</h3>
+        <div v-if="sessionStatus" class="bg-[var(--el-fill-color-light)] p-3 rounded">
           <el-descriptions :column="2" border size="small">
             <el-descriptions-item label="状态">
               <el-tag :type="getSessionStatusType(sessionStatus)">
@@ -53,7 +53,7 @@
             </el-descriptions-item>
           </el-descriptions>
         </div>
-        <div v-else class="no-session">
+        <div v-else class="text-center py-5">
           <el-alert title="暂无会话" type="info" :closable="false" show-icon>
             <p>该实例尚未启动，点击"启动"按钮开始使用。</p>
           </el-alert>
@@ -61,45 +61,45 @@
       </div>
 
       <!-- 视频流控制 -->
-      <div class="modal-section" v-if="isRunning">
-        <h3>视频直播</h3>
-        <div class="modal-video-stream">
+      <div class="mb-6" v-if="isRunning">
+        <h3 class="m-0 mb-3 text-[var(--el-text-color-primary)] font-semibold text-base">视频直播</h3>
+        <div class="flex flex-col gap-3">
           <!-- 视频播放器 -->
-          <div class="modal-video-player-wrapper" @click="handleVideoPlay" v-if="videoStreamActive">
+          <div class="relative w-full h-[300px] bg-black rounded overflow-hidden cursor-pointer" @click="handleVideoPlay" v-if="videoStreamActive">
             <video 
               v-if="videoStreamUrl"
               ref="videoPlayer"
               :src="videoStreamUrl"
-              class="modal-video-player"
-              :class="{ 'playing': isPlaying }"
+              class="w-full h-full object-contain"
+              :class="{ 'cursor-default': isPlaying }"
             >
               您的浏览器不支持视频播放
             </video>
             
             <!-- 播放按钮覆盖层 -->
-            <div v-if="!isPlaying" class="modal-video-play-overlay">
-              <el-button type="primary" circle size="large" class="modal-play-button">
+            <div v-if="!isPlaying" class="absolute inset-0 flex flex-col justify-center items-center bg-black/50 text-white gap-3">
+              <el-button type="primary" circle size="large" class="transition-transform duration-200 hover:scale-110">
                 <el-icon size="32"><VideoPlay /></el-icon>
               </el-button>
               <p>点击播放视频流</p>
             </div>
             
             <!-- 播放状态显示 -->
-            <div v-if="isPlaying" class="modal-video-status-overlay">
+            <div v-if="isPlaying" class="absolute top-2 right-2">
               <el-tag type="success" size="small">播放中</el-tag>
             </div>
           </div>
           
           <!-- 视频流未启动状态 -->
-          <div v-else class="modal-video-not-started">
-            <div class="modal-video-placeholder">
+          <div v-else class="flex justify-center items-center h-[200px] bg-[var(--el-fill-color-light)] rounded">
+            <div class="text-center text-[var(--el-text-color-secondary)]">
               <el-icon size="64" color="#909399"><VideoCamera /></el-icon>
               <p>视频流未启动</p>
             </div>
           </div>
           
           <!-- 视频控制按钮 -->
-          <div class="modal-video-controls">
+          <div class="flex justify-center gap-2">
             <el-button 
               v-if="videoStreamActive"
               type="danger" 
@@ -134,9 +134,9 @@
       </div>
 
       <!-- 控制操作 -->
-      <div class="modal-section">
-        <h3>控制操作</h3>
-        <div class="modal-control-actions">
+      <div class="mb-6">
+        <h3 class="m-0 mb-3 text-[var(--el-text-color-primary)] font-semibold text-base">控制操作</h3>
+        <div class="flex justify-center gap-2">
           <el-button 
             v-if="!sessionStatus?.is_running"
             type="primary" 
@@ -160,7 +160,7 @@
     </div>
 
     <template #footer>
-      <span class="dialog-footer">
+      <span class="flex justify-end">
         <el-button @click="handleClose">关闭</el-button>
       </span>
     </template>
@@ -413,121 +413,3 @@ onUnmounted(() => {
   }
 })
 </script>
-
-<style scoped>
-.control-modal {
-  --el-dialog-margin-top: 20px;
-}
-
-.modal-content {
-  padding: 0 20px;
-}
-
-.modal-section {
-  margin-bottom: 24px;
-}
-
-.modal-section h3 {
-  margin: 0 0 12px 0;
-  color: var(--el-text-color-primary);
-  font-weight: 600;
-  font-size: 16px;
-}
-
-.modal-video-stream {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.modal-video-player-wrapper {
-  position: relative;
-  width: 100%;
-  height: 300px;
-  background-color: #000;
-  border-radius: 4px;
-  overflow: hidden;
-  cursor: pointer;
-}
-
-.modal-video-player {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-}
-
-.modal-video-player.playing {
-  cursor: default;
-}
-
-.modal-video-play-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  background-color: rgba(0, 0, 0, 0.5);
-  color: white;
-  gap: 12px;
-}
-
-.modal-play-button {
-  transition: transform 0.2s ease;
-}
-
-.modal-play-button:hover {
-  transform: scale(1.1);
-}
-
-.modal-video-status-overlay {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-}
-
-.modal-video-not-started {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 200px;
-  background-color: var(--el-fill-color-light);
-  border-radius: 4px;
-}
-
-.modal-video-placeholder {
-  text-align: center;
-  color: var(--el-text-color-secondary);
-}
-
-.modal-video-controls {
-  display: flex;
-  justify-content: center;
-  gap: 8px;
-}
-
-.modal-control-actions {
-  display: flex;
-  justify-content: center;
-  gap: 8px;
-}
-
-.session-status {
-  background-color: var(--el-fill-color-light);
-  padding: 12px;
-  border-radius: 4px;
-}
-
-.no-session {
-  text-align: center;
-  padding: 20px;
-}
-
-.dialog-footer {
-  display: flex;
-  justify-content: flex-end;
-}
-</style>

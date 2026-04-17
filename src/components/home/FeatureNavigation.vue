@@ -1,7 +1,7 @@
 <template>
-  <section class="features-section">
-    <div class="section-header">
-      <h2 class="section-title">功能导航</h2>
+  <section class="mx-auto w-full max-w-[93.75rem] px-4 py-8 md:py-16 md:px-8">
+    <div class="mb-16 flex flex-wrap items-center justify-between gap-8 max-md:flex-col max-md:items-start">
+      <h2 class="m-0 text-lg font-semibold md:text-xl">功能导航</h2>
       <div class="tab-navigation">
         <el-radio-group v-model="activeTab" size="large">
         <el-radio-button label="all" value="all">全部</el-radio-button>
@@ -13,7 +13,7 @@
     </div>
 
     <!-- 模块列表 -->
-    <div class="modules-container">
+    <div class="mb-16 grid grid-cols-[repeat(auto-fill,minmax(17.5rem,1fr))] gap-12 max-md:grid-cols-1">
       <ModuleCard
         v-for="(module, moduleIndex) in filteredModules"
         :key="moduleIndex"
@@ -64,7 +64,3 @@ const handleCardClick = (path: string | undefined, requiresLogin: boolean | unde
   emit('cardClick', path, requiresLogin || false)
 }
 </script>
-
-<style scoped>
-@import '@/assets/components/navigation/feature-navigation-tailwind.css';
-</style>

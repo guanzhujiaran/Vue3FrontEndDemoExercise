@@ -315,6 +315,5 @@ onBeforeUnmount(() => {
   </div>
 </template>
 
-<style scoped>
-@import '@/assets/components/status/scrapy-status-tailwind.css';
-</style>
+
+

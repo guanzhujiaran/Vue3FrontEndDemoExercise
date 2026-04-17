@@ -104,6 +104,5 @@ const handleOAuthLoginSuccess = async (data: { token: string, uid: string, user_
   </div>
 </template>
 
-<style scoped>
-@import '@/assets/components/auth/login-tailwind.css';
-</style>
+
+

@@ -2,8 +2,28 @@
 description: 
 alwaysApply: true
 enabled: true
-updatedAt: 2025-12-24T08:32:13.933Z
+updatedAt: 2026-04-17T04:35:48.697Z
 provider: 
 ---
-1.颜色和大小全部从src\assets\tailwind.css 里面获取，使用var(--el-color--xx) 这样配置颜色,用.size-xx(如.size-sm)这样配置大小
-2.var不要出现在这些非全局的css里面,尽量先写到src\assets\tailwind.css 里面,写成class,然后用.class的形式应用到局部的css里面
+
+css全都使用assets/theme.css里面的的color和size,vue文件使用的时候不能有style块,需要全部写成tailwind的class,如bg-primary这样的Theme variables的写法,缺少的内容可以在theme.css里面用Namespace定义,定义表格如下:
+
+Namespace	Utility classes
+--color-*	Color utilities like bg-red-500, text-sky-300, and many more
+--font-*	Font family utilities like font-sans
+--text-*	Font size utilities like text-xl
+--font-weight-*	Font weight utilities like font-bold
+--tracking-*	Letter spacing utilities like tracking-wide
+--leading-*	Line height utilities like leading-tight
+--breakpoint-*	Responsive breakpoint variants like sm:*
+--container-*	Container query variants like @sm:* and size utilities like max-w-md
+--spacing-*	Spacing and sizing utilities like px-4, max-h-16, and many more
+--radius-*	Border radius utilities like rounded-sm
+--shadow-*	Box shadow utilities like shadow-md
+--inset-shadow-*	Inset box shadow utilities like inset-shadow-xs
+--drop-shadow-*	Drop shadow filter utilities like drop-shadow-md
+--blur-*	Blur filter utilities like blur-md
+--perspective-*	Perspective utilities like perspective-near
+--aspect-*	Aspect ratio utilities like aspect-video
+--ease-*	Transition timing function utilities like ease-out
+--animate-*	Animation utilities like animate-spin

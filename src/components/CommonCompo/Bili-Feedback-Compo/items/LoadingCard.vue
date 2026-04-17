@@ -26,6 +26,3 @@ withDefaults(
 )
 defineExpose()
 </script>
-<style scoped>
-@import '@/assets/components/feedback/loading-card-tailwind.css';
-</style>

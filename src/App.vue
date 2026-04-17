@@ -139,7 +139,3 @@ onUnmounted(() => {
     </el-config-provider>
   </template>
 </template>
-
-<style scoped>
-@import '@/assets/app-tailwind.css';
-</style>

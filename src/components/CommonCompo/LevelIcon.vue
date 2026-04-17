@@ -28,15 +28,9 @@ const getCurrentLevelIcon = () => {
 </script>
 
 <template>
-  <div class="level-icon-container">
+  <div class="inline-flex items-center leading-none">
     <component :is="getCurrentLevelIcon()" />
   </div>
 </template>
 
-<style scoped>
-.level-icon-container {
-  display: inline-flex;
-  align-items: center;
-  line-height: 0;
-}
-</style>
+

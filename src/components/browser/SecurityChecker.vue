@@ -7,7 +7,7 @@
  * @Description: 代码安全检查组件 - 提供JavaScript代码的安全检查和风险评估
 -->
 <template>
-  <div class="security-checker">
+  <div class="p-4">
     <div class="flex items-center justify-between mb-4">
       <h4 class="font-medium">代码安全检查</h4>
       <el-tooltip content="分析JavaScript代码的安全风险">
@@ -212,15 +212,11 @@ const getRiskLevelClass = (level: string) => {
 </script>
 
 <style scoped>
-.security-checker {
-  padding: 16px;
-}
-
 details summary {
-  outline: none;
+  @apply outline-none;
 }
 
 details[open] summary {
-  margin-bottom: 8px;
+  @apply mb-2;
 }
 </style>

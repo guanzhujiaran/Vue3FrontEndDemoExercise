@@ -598,7 +598,3 @@ const typeInfo = computed(() => {
   }
 })
 </script>
-
-<style scoped>
-@import '@/assets/components/lottery/bili-lottery-card-tailwind.css';
-</style>

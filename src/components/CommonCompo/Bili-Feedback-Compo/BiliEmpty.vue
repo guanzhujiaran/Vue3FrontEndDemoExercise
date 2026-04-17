@@ -16,7 +16,3 @@ const props = defineProps({
     </el-space>
   </div>
 </template>
-
-<style scoped>
-@import '@/assets/components/feedback/bili-empty-tailwind.css';
-</style>

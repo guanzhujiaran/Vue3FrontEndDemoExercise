@@ -76,7 +76,7 @@
     </el-tabs>
 
     <template #footer>
-      <span class="dialog-footer">
+      <span class="flex justify-end gap-2">
         <el-button type="success" @click="generateRandomConfig" :loading="generatingRandom">
           <el-icon>
             <Refresh />
@@ -388,10 +388,3 @@ const generateRandomConfig = async () => {
 }
 </script>
 
-<style scoped>
-.dialog-footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-}
-</style>

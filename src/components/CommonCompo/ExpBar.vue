@@ -54,53 +54,16 @@ const expText = computed(() => {
 </script>
 
 <template>
-  <div class="exp-bar-container" :style="{ height: `${currentSize.height}px` }">
-    <div class="exp-bar-bg">
-      <div class="exp-bar-fill" :style="{ width: progressWidth }"></div>
+  <div class="w-full mt-1 flex items-center gap-2" :style="{ height: `${currentSize.height}px` }">
+    <div
+      class="flex-1 h-full bg-black/10 rounded-[var(--size-radius-base)] overflow-hidden relative exp-bar-bg dark:bg-white/10 ">
+      <div
+        class="h-full rounded-[var(--size-radius-base)] transition-[width] duration-300 ease-in-out bg-gradient-badge-success"
+        :style="{ width: progressWidth }"></div>
     </div>
-    <div class="exp-text" :style="{ fontSize: `${currentSize.fontSize}px` }">
+    <div class="whitespace-nowrap font-medium text-text-secondary dark:text-text-regular"
+      :style="{ fontSize: `${currentSize.fontSize}px` }">
       {{ expText }}
     </div>
   </div>
 </template>
-
-<style scoped>
-.exp-bar-container {
-  width: 100%;
-  margin-top: 4px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.exp-bar-bg {
-  flex: 1;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.1);
-  border-radius: 3px;
-  overflow: hidden;
-  position: relative;
-}
-
-.exp-bar-fill {
-  height: 100%;
-  background: linear-gradient(90deg, #00a1d6 0%, #00d6be 100%);
-  border-radius: 3px;
-  transition: width 0.3s ease;
-}
-
-.exp-text {
-  white-space: nowrap;
-  color: #666;
-  font-weight: 500;
-}
-
-/* 暗色主题适配 */
-:global(.dark) .exp-bar-bg {
-  background: rgba(255, 255, 255, 0.1);
-}
-
-:global(.dark) .exp-text {
-  color: #ccc;
-}
-</style>

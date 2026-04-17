@@ -1,7 +1,7 @@
 <template>
   <FlexContainer>
     <el-page-header
-      style="margin-bottom: 20px"
+      class="mb-5"
       title="返回"
       content="B站抽奖数据"
       @back="() => router.back()"
@@ -20,7 +20,3 @@ import router from '@/router'
 import { RouteName } from '@/models/router'
 const use_router = useRouter()
 </script>
-
-<style scoped>
-@import '@/assets/views/lottery-data-stat-tailwind.css';
-</style>

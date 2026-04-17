@@ -14,9 +14,9 @@
     destroy-on-close
     class="notify-config-modal"
   >
-    <el-form :model="form" label-width="120px" class="config-form">
+    <el-form :model="form" label-width="120px" class="mb-4">
       <!-- 操作按钮 -->
-      <div class="form-actions">
+      <div class="mb-4 flex gap-2">
         <el-button @click="loadConfig" :loading="loading">
           <el-icon><Refresh /></el-icon>
           加载配置
@@ -26,11 +26,11 @@
       <!-- 基础配置 -->
       <el-form-item label="启用一言">
         <el-switch v-model="form.hitokoto" />
-        <div class="form-tip">在通知消息前添加一言</div>
+        <div class="ml-2 text-[12px] text-[var(--el-text-color-secondary)]">在通知消息前添加一言</div>
       </el-form-item>
 
       <!-- Bark推送配置 -->
-      <el-collapse v-model="activeCollapse" class="config-collapse">
+      <el-collapse v-model="activeCollapse" class="mt-4">
         <el-collapse-item title="Bark推送" name="bark">
           <el-form-item label="Bark Key">
             <el-input v-model="form.bark_push" placeholder="请输入Bark推送密钥" />
@@ -170,7 +170,7 @@
     </el-form>
 
     <!-- 配置来源提示 -->
-    <div v-if="configSource" class="config-source-info">
+    <div v-if="configSource" class="mt-4">
       <el-alert
         :title="`当前配置来源: ${configSource === 'browser' ? '浏览器配置' : '全局配置'}`"
         :type="configSource === 'browser' ? 'success' : 'info'"
@@ -180,7 +180,7 @@
     </div>
 
     <template #footer>
-      <span class="dialog-footer">
+      <span class="flex justify-between items-center w-full">
         <el-button @click="handleClose">取消</el-button>
         <el-button type="danger" @click="handleDelete" :disabled="!hasConfig">删除配置</el-button>
         <el-button type="primary" @click="handleSave">保存配置</el-button>
@@ -433,45 +433,7 @@ const handleClose = () => {
 </script>
 
 <style scoped>
-.notify-config-modal {
-  :deep(.el-dialog__body) {
-    max-height: 60vh;
-    overflow-y: auto;
-  }
-}
-
-.config-form {
-  margin-bottom: 16px;
-}
-
-.form-actions {
-  margin-bottom: 16px;
-  display: flex;
-  gap: 8px;
-}
-
-.form-tip {
-  font-size: 12px;
-  color: var(--el-text-color-secondary);
-  margin-left: 8px;
-}
-
-.config-collapse {
-  margin-top: 16px;
-}
-
-.config-source-info {
-  margin-top: 16px;
-}
-
-.mt-2 {
-  margin-top: 8px;
-}
-
-.dialog-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  width: 100%;
+.notify-config-modal :deep(.el-dialog__body) {
+  @apply max-h-[60vh] overflow-y-auto;
 }
 </style>

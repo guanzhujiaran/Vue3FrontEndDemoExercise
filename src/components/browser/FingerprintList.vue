@@ -7,10 +7,10 @@
  * @Description: 指纹列表组件
 -->
 <template>
-  <div class="fingerprint-section">
+  <div class="flex-1">
     <!-- 操作栏 -->
-    <div class="action-bar">
-      <div class="action-buttons">
+    <div class="flex justify-between items-center mb-5 gap-4 flex-wrap">
+      <div class="flex gap-2">
         <el-button type="primary" @click="$emit('create')">
           <el-icon>
             <Plus />
@@ -27,7 +27,7 @@
       </div>
 
       <!-- 过滤器和搜索 -->
-      <div class="filter-controls">
+      <div class="flex gap-2 items-center flex-wrap">
         <el-select v-model="filterBrowser" placeholder="筛选浏览器" style="width: 150px" clearable @change="$emit('filter-change', { browser: filterBrowser, platform: filterPlatform, keyword: searchKeyword })">
           <el-option label="全部浏览器" value="" />
           <el-option label="Chrome" value="chrome" />
@@ -58,8 +58,8 @@
     <StatsPanel :stats="stats" />
 
     <!-- 指纹列表 -->
-    <div v-loading="loading" class="fingerprint-list">
-      <div class="fingerprint-grid">
+    <div v-loading="loading" class="min-h-[400px]">
+      <div class="grid gap-4" style="grid-template-columns: repeat(auto-fill, minmax(300px, 1fr))">
         <FingerprintCard
           v-for="fingerprint in filteredFingerprints"
           :key="fingerprint.id_str || fingerprint.id"
@@ -73,7 +73,7 @@
       </div>
 
       <!-- 空状态 -->
-      <div v-if="filteredFingerprints.length === 0" class="empty-state">
+      <div v-if="filteredFingerprints.length === 0" class="flex justify-center items-center h-[200px]">
         <el-empty description="暂无浏览器指纹数据" />
       </div>
     </div>
@@ -169,61 +169,3 @@ watch(searchKeyword, (newVal) => {
   }
 })
 </script>
-
-<style scoped>
-.fingerprint-section {
-  flex: 1;
-}
-
-.action-bar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-  gap: 16px;
-}
-
-.action-buttons {
-  display: flex;
-  gap: 8px;
-}
-
-.filter-controls {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
-
-.fingerprint-list {
-  min-height: 400px;
-}
-
-.fingerprint-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 16px;
-}
-
-.empty-state {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 200px;
-}
-
-@media (max-width: 768px) {
-  .action-bar {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 12px;
-  }
-  
-  .filter-controls {
-    justify-content: space-between;
-  }
-  
-  .fingerprint-grid {
-    grid-template-columns: 1fr;
-  }
-}
-</style>

@@ -250,18 +250,5 @@ const handleReset = () => {
 }
 </script>
 
-<style scoped>
-.form-tip {
-  margin-top: 4px;
-  font-size: 12px;
-  color: var(--el-text-color-secondary);
-}
 
-.mb-4 {
-  margin-bottom: 16px;
-}
 
-.mt-4 {
-  margin-top: 16px;
-}
-</style>

@@ -206,12 +206,5 @@ onMounted(() => {
   get_account_running_status()
 })
 </script>
-<style scoped>
-button:hover {
-  opacity: 1;
-}
 
-button {
-  opacity: 0.7;
-}
-</style>
+

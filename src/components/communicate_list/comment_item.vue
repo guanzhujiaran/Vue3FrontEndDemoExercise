@@ -160,7 +160,7 @@ const is_loading_md = ref<boolean>(true)
     @mouseleave="is_mouse_in = false"
     v-loading="is_loading_md"
   >
-    <el-avatar class="user-avater" :size="is_root ? 60 : 40">
+    <el-avatar class="user-avater" :size="is_root ? 'var(--spacing-16)' : 'var(--spacing-10)'">
       <img
         :src="reply_item.member.avatar ? reply_item.member.avatar : BiliImg.face.noface"
         referrerpolicy="no-referrer"
@@ -181,7 +181,7 @@ const is_loading_md = ref<boolean>(true)
                 :src="`https://i0.hdslb.com/bfs/seed/jinkela/short/webui/user-profile/img/level_${reply_item.member.level_info.current_level ?? 0}.svg`"
                 referrerpolicy="no-referrer"
                 :alt="JSON.stringify(reply_item.member.level_info.current_level)"
-                style="max-width: 19px; max-height: 19px"
+                style="max-width: var(--spacing-5); max-height: var(--spacing-5)"
               />
             </div>
             <div id="user-up" v-if="up_mid && String(up_mid) === String(reply_item.member.mid)">
@@ -190,7 +190,7 @@ const is_loading_md = ref<boolean>(true)
                 height="100%"
                 src="//i0.hdslb.com/bfs/seed/jinkela/short/webui/comments/img/icons/up_pb.svg"
                 referrerpolicy="no-referrer"
-                style="max-width: 19px; max-height: 19px"
+                style="max-width: var(--spacing-5); max-height: var(--spacing-5)"
               />
             </div>
           </div>
@@ -199,7 +199,7 @@ const is_loading_md = ref<boolean>(true)
           <div class="comment-content">
             <BiliVditorEdit
               v-model="comment_content"
-              style="min-height: 40px; line-height: 16px; overflow: visible; font-size: 16px"
+              style="min-height: var(--spacing-10); line-height: var(--spacing-4); overflow: visible; font-size: var(--spacing-4)"
               v-model:is_loading="is_loading_md"
               :is_preview="true"
             />
@@ -215,7 +215,7 @@ const is_loading_md = ref<boolean>(true)
                 class="like-btn"
                 @click="handleLike"
                 :style="{
-                  color: String(interact_btn_active) === '1' ? 'var(--el-color-primary)' : ''
+                  color: String(interact_btn_active) === '1' ? 'var(--color-primary)' : ''
                 }"
               >
                 <img :src="likeActiveSvg" v-if="interact_btn_active == 1" class="svg-icon" />
@@ -228,7 +228,7 @@ const is_loading_md = ref<boolean>(true)
                 class="dislike-btn"
                 @click="handleHate"
                 :style="{
-                  color: String(interact_btn_active) === '2' ? 'var(--el-color-primary)' : ''
+                  color: String(interact_btn_active) === '2' ? 'var(--color-primary)' : ''
                 }"
               >
                 <img :src="dislikeActiveSvg" fill="currentColor" v-if="interact_btn_active == 2" class="svg-icon" />
@@ -242,7 +242,7 @@ const is_loading_md = ref<boolean>(true)
             <div
               id="more"
               v-show="is_mouse_in || is_comment_menu_open"
-              :style="{ 'padding-right': is_root ? '0' : '32px' }"
+              :style="{ 'padding-right': is_root ? '0' : 'var(--spacing-8)' }"
             >
               <button
                 class="more-btn"
@@ -298,92 +298,45 @@ const is_loading_md = ref<boolean>(true)
 
 <style scoped>
 #options li {
-  box-sizing: border-box;
-  width: 100%;
-  display: flex;
-  align-items: center;
-  height: calc(var(--component-size) * 1.3125);
-  padding: 0 calc(var(--component-spacing) * 4);
-  cursor: pointer;
-  user-select: none;
+  @apply box-border w-full flex items-center h-[var(--spacing-5)] px-[var(--spacing-4)] cursor-pointer select-none;
 }
 
 #options {
-  display: block;
-  position: absolute;
-  top: calc(var(--component-spacing) * 5);
-  right: 0;
-  margin: 0;
-  padding: 0;
-  z-index: 10;
-  width: calc(var(--component-size) * 4.6875);
-  list-style: none;
-  border-radius: calc(var(--component-size) * 0.1875);
-  font-size: var(--component-size);
-  color: var(--el-text-color-primary);
-  background-color: var(--el-bg-color);
-  box-shadow: var(--el-box-shadow-light);
-  overflow: hidden;
+  @apply block absolute top-[var(--spacing-5)] right-0 m-0 p-0 z-[10] w-[var(--spacing-12)] list-none rounded-[var(--size-radius-base)] text-[var(--component-font-size-base)] text-[var(--color-text-primary)] bg-[var(--color-bg)] shadow-[var(--el-box-shadow-light)] overflow-hidden;
 }
 
 .comment-menu {
-  right: 0;
-  position: absolute;
-  top: calc(var(--component-spacing) * 3);
-  z-index: 2000;
+  @apply right-0 absolute top-[var(--spacing-3)] z-[2000];
 }
 
 #more {
-  margin-left: auto;
-  margin-right: calc(var(--component-spacing) * 6);
-  width: calc(var(--component-size) * 1);
-  height: calc(var(--component-size) * 1);
-  position: relative;
-  scale: 1.4;
-  z-index: 1600;
+  @apply ml-auto mr-[var(--spacing-6)] w-[var(--component-height-base)] h-[var(--component-height-base)] relative scale-[1.4] z-[1600];
 }
 
 #count {
-  margin-left: calc(var(--component-spacing) * 1.6);
+  @apply ml-[var(--spacing-2)];
 }
 
 .comment-tag {
-  width: fit-content;
-  color: var(--el-text-color-regular);
-  background-color: var(--el-fill-color-light);
-  padding: calc(var(--component-spacing) * 1);
-  border-radius: calc(var(--component-size) * 0.09375);
-  box-sizing: border-box;
-  font-size: calc(var(--component-size) * 0.34375);
-  line-height: 1;
+  @apply w-fit text-[var(--color-text-regular)] bg-[var(--color-fill-light)] p-[var(--spacing-1)] rounded-[var(--size-radius-base)] box-border text-[var(--component-font-size-xs)] leading-none;
 }
 
 .like-btn:hover,
 .dislike-btn:hover,
 .reply-btn:hover,
 .more-btn:hover {
-  color: var(--el-color-primary);
+  @apply text-[var(--color-primary)];
 }
 
 .like-btn,
 .dislike-btn,
 .reply-btn,
 .more-btn {
-  padding: 0;
-  outline: none;
-  border: none;
-  background: transparent;
-  height: calc(var(--component-size) * 0.75);
-  font-size: calc(var(--component-size) * 0.4375);
-  color: var(--el-text-color-secondary);
-  display: inline-flex;
-  align-items: center;
-  cursor: pointer;
-  vertical-align: middle;
+  @apply p-0 outline-none border-none bg-transparent h-[var(--component-height-xs)] text-[var(--component-font-size-md)] text-[var(--color-text-secondary)] inline-flex items-center cursor-pointer align-middle;
 }
 
 .comment-footer > :not(:first-child) {
-  margin-left: calc(var(--component-spacing) * 3.8);
+  @apply ml-[var(--spacing-4)];
 }
 
 .comment-content :deep(.v-note-wrapper) {
@@ -391,81 +344,50 @@ const is_loading_md = ref<boolean>(true)
 }
 
 .comment-footer {
-  width: -webkit-fill-available;
-  display: flex;
-  align-items: center;
-  position: relative;
-  margin-top: calc(var(--component-spacing) * 1.6);
-  font-size: calc(var(--component-size) * 0.4375);
-  color: var(--el-text-color-secondary);
-  height: calc(var(--component-size) * 1.5625);
-  flex-wrap: wrap;
+  @apply w-[-webkit-fill-available] flex items-center relative mt-[var(--spacing-2)] text-[var(--component-font-size-md)] text-[var(--color-text-secondary)] h-[var(--component-height-md)] flex-wrap;
 }
 
 .comment-footer .pubdate {
-  white-space: nowrap;
+  @apply whitespace-nowrap;
 }
 
 .comment-main :deep(.el-card) {
-  overflow: visible;
-  border: none;
+  @apply overflow-visible border-none;
 }
 
 .comment-main :deep(.el-card__footer) {
-  border-top: none;
-  padding: 0;
+  @apply border-t-none p-0;
 }
 
 .comment-main :deep(.el-card__header) {
-  border-bottom: none;
-  margin-bottom: calc(var(--component-spacing) * 1.6);
-  padding: 0;
+  @apply border-b-none mb-[var(--spacing-2)] p-0;
 }
 
 .user-level {
-  margin-left: calc(var(--component-spacing) * 1.6);
-  width: calc(var(--component-size) * 0.59375);
-  height: calc(var(--component-size) * 0.59375);
+  @apply ml-[var(--spacing-2)] w-[var(--spacing-3)] h-[var(--spacing-3)];
 }
 
 .user-info #user-up {
-  margin-left: calc(var(--component-spacing) * 1.6);
-  width: calc(var(--component-size) * 0.59375);
-  height: calc(var(--component-size) * 0.59375);
+  @apply ml-[var(--spacing-2)] w-[var(--spacing-3)] h-[var(--spacing-3)];
 }
 
 .user-name {
-  color: var(--el-text-color-primary);
-  font-size: var(--component-size);
-  font-weight: 500;
+  @apply text-[var(--color-text-primary)] text-[var(--component-font-size-base)] font-medium;
 }
 
 .user-info {
-  display: inline-flex;
-  align-items: center;
+  @apply inline-flex items-center;
 }
 
 .comment-item {
-  display: flex;
-  margin-bottom: calc(var(--component-spacing) * 4.8);
+  @apply flex mb-[var(--spacing-8)];
 }
 
 .comment-main {
-  width: 100%;
-  position: relative;
-  padding-left: calc(var(--component-spacing) * 2.6);
-  padding-top: calc(var(--component-spacing) * 1.6);
-  line-height: var(--component-line-height);
+  @apply w-full relative pl-[var(--spacing-3)] pt-[var(--spacing-2)] leading-[var(--line-height-normal)];
 }
 
 .user-avater {
-  position: relative;
-  left: calc(var(--component-spacing) * 1.6);
-  top: calc(var(--component-spacing) * 1.6);
-  width: calc(var(--component-size) * 1.25);
-  height: calc(var(--component-size) * 1.25);
-  transform-origin: left top;
-  transform: scale(1);
-  flex-shrink: 0;
+  @apply relative left-[var(--spacing-2)] top-[var(--spacing-2)] w-[var(--component-height-lg)] h-[var(--component-height-lg)] origin-left-top scale-1 flex-shrink-0;
 }
 </style>

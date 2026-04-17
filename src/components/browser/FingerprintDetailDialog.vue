@@ -30,7 +30,7 @@
     </el-descriptions>
 
     <template #footer>
-      <span class="dialog-footer">
+      <span class="flex justify-end gap-3">
         <el-button type="primary" @click="openDebugPanel" v-if="fingerprint">
           <el-icon><Operation /></el-icon>
           调试面板
@@ -101,10 +101,3 @@ const closeDebugPanel = () => {
 }
 </script>
 
-<style scoped>
-.dialog-footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-}
-</style>

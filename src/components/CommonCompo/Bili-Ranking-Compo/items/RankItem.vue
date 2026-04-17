@@ -71,7 +71,3 @@ const emit = defineEmits<{
     </div>
   </div>
 </template>
-
-<style scoped>
-@import '@/assets/components/ranking/rank-item-tailwind.css';
-</style>

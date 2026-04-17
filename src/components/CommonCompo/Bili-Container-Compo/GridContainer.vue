@@ -1,5 +1,5 @@
 <template>
-  <div ref="gridContainer" class="grid-container" :style="{ '--item-width': itemWidth, '--min-columns': minColumns, '--gap': gap + 'px' }">
+  <div ref="gridContainer" class="grid justify-items-center" :style="{ '--item-width': itemWidth, '--min-columns': minColumns, '--gap': gap + 'px', gridTemplateColumns: `repeat(var(--min-columns), minmax(max(var(--item-width), calc((100% - var(--gap) * (var(--min-columns) - 1)) / var(--min-columns))), 1fr))`, gap: 'var(--gap)' }">
     <slot></slot>
   </div>
 </template>
@@ -22,12 +22,4 @@ const props = defineProps({
 
 </script>
 
-<style scoped>
-.grid-container {
-  display: grid;
-  /* 使用 min-columns 作为固定列数，而不是 auto-fit */
-  grid-template-columns: repeat(var(--min-columns), minmax(max(var(--item-width), calc((100% - var(--gap) * (var(--min-columns) - 1)) / var(--min-columns))), 1fr));
-  gap: var(--gap);
-  justify-items: center;
-}
-</style>
+

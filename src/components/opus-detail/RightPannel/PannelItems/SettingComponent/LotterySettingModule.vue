@@ -365,21 +365,8 @@ onMounted(() => {
   )
 })
 </script>
-<style scoped>
 
-.el-collapse-item button {
-  background-color: var(--el-color-danger);
-  opacity: 0.7;
-  border-radius: calc(var(--component-size) * 0.234375);
-  height: calc(var(--component-size) * 0.625);
-  padding: calc(var(--component-size) * 0.3125);
-  margin-top: calc(var(--component-spacing) * 0.4);
-}
 
-.el-collapse-item .is-active {
-  opacity: 1;
-}
-</style>
 
 
 <template>

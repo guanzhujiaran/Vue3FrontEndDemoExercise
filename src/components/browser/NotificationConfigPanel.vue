@@ -7,19 +7,19 @@
  * @Description: 通知配置组件
 -->
 <template>
-  <div class="notification-config-section" v-loading="loading">
+  <div class="min-h-[400px]" v-loading="loading">
     <div v-if="config" class="space-y-6">
       <!-- 统一手风琴配置界面 -->
       <el-form :model="config" label-width="160px" @submit.prevent>
         <el-collapse 
           v-model="activeCollapses" 
-          class="unified-accordion"
+          class="border border-[var(--el-border-color)] rounded"
           @change="handleAccordionChange"
         >
           <!-- 基础设置 -->
           <el-collapse-item name="basic" title="基础设置">
             <template #title>
-              <div class="accordion-title">
+              <div class="flex items-center gap-2 font-medium">
                 <el-icon><Setting /></el-icon>
                 <span>基础设置</span>
                 <el-tag type="primary" size="small">核心</el-tag>
@@ -30,27 +30,27 @@
                 v-model="config.hitokoto" 
                 @change="handleConfigChange"
               />
-              <div class="form-help-text">启用后每日推送一句优美语句</div>
+              <div class="text-[12px] text-[var(--el-text-color-secondary)] mt-1">启用后每日推送一句优美语句</div>
             </el-form-item>
           </el-collapse-item>
 
           <!-- Bark推送配置 -->
           <el-collapse-item name="bark" title="Bark推送配置">
             <template #title>
-              <div class="accordion-title">
+              <div class="flex items-center gap-2 font-medium">
                 <el-icon><Apple /></el-icon>
                 <span>Bark推送</span>
                 <el-tag type="success" size="small">iOS</el-tag>
               </div>
             </template>
-            <div class="config-section">
+            <div class="px-4">
               <el-form-item label="推送地址">
                 <el-input 
                   v-model="config.bark_push" 
                   placeholder="https://api.day.app/your_key"
                   @input="handleConfigChange"
                 />
-                <div class="form-help-text">iOS设备专用推送服务</div>
+                <div class="text-[12px] text-[var(--el-text-color-secondary)] mt-1">iOS设备专用推送服务</div>
               </el-form-item>
               <el-row :gutter="16">
                 <el-col :md="12">
@@ -122,13 +122,13 @@
           <!-- Push Plus配置 -->
           <el-collapse-item name="pushplus" title="Push Plus配置">
             <template #title>
-              <div class="accordion-title">
+              <div class="flex items-center gap-2 font-medium">
                 <el-icon><Promotion /></el-icon>
                 <span>Push Plus</span>
                 <el-tag type="warning" size="small">多平台</el-tag>
               </div>
             </template>
-            <div class="config-section">
+            <div class="px-4">
               <el-form-item label="Token">
                 <el-input 
                   v-model="config.push_plus_token" 
@@ -205,13 +205,13 @@
           <!-- 微信推送器配置 -->
           <el-collapse-item name="wxpusher" title="微信推送器配置">
             <template #title>
-              <div class="accordion-title">
+              <div class="flex items-center gap-2 font-medium">
                 <el-icon><ChatDotRound /></el-icon>
                 <span>微信推送器</span>
                 <el-tag type="info" size="small">微信</el-tag>
               </div>
             </template>
-            <div class="config-section">
+            <div class="px-4">
               <el-form-item label="应用Token">
                 <el-input 
                   v-model="config.wxpusher_app_token" 
@@ -245,15 +245,15 @@
           <!-- 其他推送服务 -->
           <el-collapse-item name="other" title="其他推送服务">
             <template #title>
-              <div class="accordion-title">
+              <div class="flex items-center gap-2 font-medium">
                 <el-icon><MoreFilled /></el-icon>
                 <span>其他推送</span>
                 <el-tag type="info" size="small">更多</el-tag>
               </div>
             </template>
-            <div class="config-section">
-              <div class="sub-section">
-                <h4>钉钉机器人</h4>
+            <div class="px-4">
+              <div class="mb-5">
+                <h4 class="mt-0 mb-3 text-[var(--el-text-color-primary)] font-medium">钉钉机器人</h4>
                 <el-row :gutter="16">
                   <el-col :md="12">
                     <el-form-item label="Token">
@@ -276,8 +276,8 @@
                 </el-row>
               </div>
               
-              <div class="sub-section">
-                <h4>企业微信</h4>
+              <div class="mb-5">
+                <h4 class="mt-0 mb-3 text-[var(--el-text-color-primary)] font-medium">企业微信</h4>
                 <el-form-item label="密钥">
                   <el-input 
                     v-model="config.qywx_key" 
@@ -287,8 +287,8 @@
                 </el-form-item>
               </div>
               
-              <div class="sub-section">
-                <h4>Telegram</h4>
+              <div class="mb-5">
+                <h4 class="mt-0 mb-3 text-[var(--el-text-color-primary)] font-medium">Telegram</h4>
                 <el-row :gutter="16">
                   <el-col :md="12">
                     <el-form-item label="Bot Token">
@@ -312,8 +312,8 @@
                 </el-row>
               </div>
               
-              <div class="sub-section">
-                <h4>邮件推送</h4>
+              <div class="mb-5">
+                <h4 class="mt-0 mb-3 text-[var(--el-text-color-primary)] font-medium">邮件推送</h4>
                 <el-row :gutter="16">
                   <el-col :md="12">
                     <el-form-item label="SMTP服务器">
@@ -338,8 +338,8 @@
                 </el-row>
               </div>
               
-              <div class="sub-section">
-                <h4>Webhook</h4>
+              <div class="mb-5">
+                <h4 class="mt-0 mb-3 text-[var(--el-text-color-primary)] font-medium">Webhook</h4>
                 <el-form-item label="Webhook地址">
                   <el-input 
                     v-model="config.webhook_url" 
@@ -354,8 +354,8 @@
       </el-form>
       
       <!-- 配置状态和操作 -->
-      <div class="config-actions">
-        <div class="config-status">
+      <div class="flex justify-between items-center p-4 border-t border-[var(--el-border-color)] bg-[var(--el-fill-color-light)] rounded-b">
+        <div>
           <el-tag 
             :type="saved ? 'success' : 'warning'" 
             size="small"
@@ -365,7 +365,7 @@
             {{ saved ? '配置已保存' : '有未保存的更改' }}
           </el-tag>
         </div>
-        <div class="config-buttons">
+        <div class="flex gap-2">
           <el-button 
             @click="$emit('reset')"
             :icon="RefreshLeft"
@@ -438,59 +438,3 @@ const handleConfigChange = () => {
 }
 </script>
 
-<style scoped>
-.notification-config-section {
-  min-height: 400px;
-}
-
-.unified-accordion {
-  border: 1px solid var(--el-border-color);
-  border-radius: 4px;
-}
-
-.accordion-title {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-weight: 500;
-}
-
-.config-section {
-  padding: 0 16px;
-}
-
-.sub-section {
-  margin-bottom: 20px;
-}
-
-.sub-section h4 {
-  margin: 0 0 12px 0;
-  color: var(--el-text-color-primary);
-  font-weight: 500;
-}
-
-.form-help-text {
-  font-size: 12px;
-  color: var(--el-text-color-secondary);
-  margin-top: 4px;
-}
-
-.config-actions {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 16px;
-  border-top: 1px solid var(--el-border-color);
-  background-color: var(--el-fill-color-light);
-  border-radius: 0 0 4px 4px;
-}
-
-.config-buttons {
-  display: flex;
-  gap: 8px;
-}
-
-.space-y-6 > * + * {
-  margin-top: 24px;
-}
-</style>

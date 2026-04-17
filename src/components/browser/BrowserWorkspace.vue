@@ -7,7 +7,7 @@
  * @Description: RPA浏览器控制台 - 响应式卡片布局，适配移动端
 -->
 <template>
-  <div class="browser-workspace">
+  <div class="p-2.5">
     <!-- 功能说明 -->
     <el-alert
       v-if="showAlert"
@@ -25,29 +25,29 @@
     </el-alert>
 
     <!-- 筛选和搜索区域 -->
-    <el-card class="filter-section mb-4">
-      <div class="filter-controls">
-        <el-select v-model="filterStatus" placeholder="筛选状态" clearable class="filter-item">
+    <el-card class="mb-4 [&_.el-card\_\_body]:p-4">
+      <div class="flex flex-wrap gap-3 items-center">
+        <el-select v-model="filterStatus" placeholder="筛选状态" clearable class="flex-1 min-w-[150px]">
           <el-option label="全部状态" value="" />
           <el-option label="运行中" value="running" />
           <el-option label="已停止" value="stopped" />
           <el-option label="未启动" value="initializing" />
           <el-option label="异常" value="error" />
         </el-select>
-        <el-input v-model="searchKeyword" placeholder="搜索浏览器..." clearable class="filter-item" @clear="handleSearch" @keyup.enter="handleSearch">
+        <el-input v-model="searchKeyword" placeholder="搜索浏览器..." clearable class="flex-1 min-w-[150px]" @clear="handleSearch" @keyup.enter="handleSearch">
           <template #prefix>
             <el-icon>
               <Search />
             </el-icon>
           </template>
         </el-input>
-        <el-button type="success" :disabled="selectedInstances.length === 0" @click="batchStartSessions" :loading="batchOperating" class="filter-btn">
+        <el-button type="success" :disabled="selectedInstances.length === 0" @click="batchStartSessions" :loading="batchOperating" class="whitespace-nowrap">
           <el-icon>
             <VideoPlay />
           </el-icon>
           批量启动 ({{ selectedInstances.length }})
         </el-button>
-        <el-button @click="$emit('refresh')" class="filter-btn">
+        <el-button @click="$emit('refresh')" class="whitespace-nowrap">
           <el-icon>
             <Refresh />
           </el-icon>
@@ -61,7 +61,7 @@
       <el-col :xs="6" :sm="6" :md="6" :lg="6">
         <el-card class="stat-card">
           <div class="stat-content">
-            <el-icon class="stat-icon" color="#409EFF"><Monitor /></el-icon>
+            <el-icon class="stat-icon fill-primary"><Monitor /></el-icon>
             <div class="stat-info">
               <div class="stat-value">{{ stats.total }}</div>
               <div class="stat-label">总数</div>
@@ -72,7 +72,7 @@
       <el-col :xs="6" :sm="6" :md="6" :lg="6">
         <el-card class="stat-card">
           <div class="stat-content">
-            <el-icon class="stat-icon" color="#67C23A"><CircleCheck /></el-icon>
+            <el-icon class="stat-icon fill-success"><CircleCheck /></el-icon>
             <div class="stat-info">
               <div class="stat-value">{{ stats.running }}</div>
               <div class="stat-label">运行中</div>
@@ -83,7 +83,7 @@
       <el-col :xs="6" :sm="6" :md="6" :lg="6">
         <el-card class="stat-card">
           <div class="stat-content">
-            <el-icon class="stat-icon" color="#909399"><CircleClose /></el-icon>
+            <el-icon class="stat-icon fill-text-secondary"><CircleClose /></el-icon>
             <div class="stat-info">
               <div class="stat-value">{{ stats.stopped }}</div>
               <div class="stat-label">已停止</div>
@@ -94,7 +94,7 @@
       <el-col :xs="6" :sm="6" :md="6" :lg="6">
         <el-card class="stat-card">
           <div class="stat-content">
-            <el-icon class="stat-icon" color="#F56C6C"><Warning /></el-icon>
+            <el-icon class="stat-icon fill-danger"><Warning /></el-icon>
             <div class="stat-info">
               <div class="stat-value">{{ stats.error }}</div>
               <div class="stat-label">异常</div>
@@ -118,11 +118,11 @@
           class="mb-4"
         >
           <el-card 
-            :class="['instance-card', { 'selected': selectedBrowserId === Number(instance.id) }]"
+            :class="['cursor-pointer transition-all duration-[var(--transition-base)] relative mb-4 flex-1', { 'border-[var(--color-primary)] shadow-[0_0_0_2px_rgba(64,158,255,0.2)]': selectedBrowserId === Number(instance.id) }]"
             @click="handleRowClick(instance)"
           >
             <!-- 卡片选择框（仅在批量选择模式显示） -->
-            <div class="card-selection" v-if="batchSelectMode">
+            <div class="absolute top-2 left-2 z-10 bg-white/90 rounded-lg p-1" v-if="batchSelectMode">
               <el-checkbox
                 :model-value="selectedInstances.some(item => item.id === instance.id)"
                 @change="(checked: boolean) => handleInstanceSelect(instance, checked)"
@@ -131,21 +131,20 @@
             </div>
 
             <!-- 卡片头部 -->
-            <div class="card-header">
-              <div class="browser-info">
-                <el-icon :size="24" color="#409EFF" class="browser-icon">
+            <div class="flex items-center justify-between mb-2">
+              <div class="flex items-center gap-2">
+                <el-icon :size="24" class="fill-primary">
                   <Monitor />
                 </el-icon>
-                <div class="browser-details">
-                  <div class="browser-name">{{ instance.fingerprint_browser || '未知浏览器' }}</div>
-                  <div class="browser-platform">ID: {{ instance.id }}</div>
+                <div>
+                  <div class="font-medium text-sm">{{ instance.fingerprint_browser || '未知浏览器' }}</div>
+                  <div class="text-xs text-[var(--el-text-color-secondary)]">ID: {{ instance.id }}</div>
                 </div>
               </div>
-              <div class="status-indicator">
+              <div class="flex items-center">
                 <el-icon 
                   :size="12" 
-                  :color="instance.sessionStatus?.is_running ? '#67C23A' : '#909399'"
-                  class="status-dot"
+                  :color="instance.sessionStatus?.is_running ? 'var(--color-success)' : 'var(--color-text-secondary)'"
                 >
                   <CircleCheck />
                 </el-icon>
@@ -153,45 +152,45 @@
             </div>
 
             <!-- 平台信息 -->
-            <div class="platform-info">
+            <div class="mb-2">
               <el-tag type="info" size="small">{{ instance.fingerprint_platform || '未知平台' }}</el-tag>
             </div>
 
             <!-- 状态信息 -->
-            <div class="status-section">
-              <div class="status-row">
-                <span class="status-label">会话:</span>
+            <div class="mb-2 space-y-1">
+              <div class="flex items-center gap-2">
+                <span class="text-xs text-[var(--el-text-color-secondary)]">会话:</span>
                 <el-tag :type="getSessionStatusType(instance.sessionStatus)" size="small">
                   {{ getSessionStatusText(instance.sessionStatus) }}
                 </el-tag>
               </div>
-              <div class="status-row">
-                <span class="status-label">运行:</span>
+              <div class="flex items-center gap-2">
+                <span class="text-xs text-[var(--el-text-color-secondary)]">运行:</span>
                 <el-tag :type="instance.sessionStatus?.is_running ? 'success' : 'info'" size="small">
                   {{ instance.sessionStatus?.is_running ? '运行中' : '未运行' }}
                 </el-tag>
               </div>
-              <div class="status-row">
-                <span class="status-label">视频:</span>
+              <div class="flex items-center gap-2">
+                <span class="text-xs text-[var(--el-text-color-secondary)]">视频:</span>
                 <el-tag :type="instance.sessionStatus?.video_stream_active ? 'success' : 'info'" size="small">
                   {{ instance.sessionStatus?.video_stream_active ? '启用' : '未启用' }}
                 </el-tag>
               </div>
-              <div class="status-row">
-                <span class="status-label">连接:</span>
-                <span class="connection-count">{{ instance.sessionStatus?.connected_clients || 0 }}</span>
+              <div class="flex items-center gap-2">
+                <span class="text-xs text-[var(--el-text-color-secondary)]">连接:</span>
+                <span class="text-xs font-medium">{{ instance.sessionStatus?.connected_clients || 0 }}</span>
               </div>
             </div>
 
             <!-- 操作按钮 -->
-            <div class="action-buttons">
+            <div class="flex gap-2 flex-wrap">
               <el-button
                 v-if="!instance.sessionStatus?.is_running"
                 type="primary"
                 size="small"
                 @click.stop="startSession(Number(instance.id))"
                 :loading="instance.operationLoading"
-                class="action-btn"
+                class="flex-1 min-w-0 text-xs"
               >
                 <el-icon><VideoPlay /></el-icon>
                 启动
@@ -202,7 +201,7 @@
                 size="small"
                 @click.stop="refreshSessionStatus(Number(instance.id))"
                 :loading="instance.statusLoading"
-                class="action-btn"
+                class="flex-1 min-w-0 text-xs"
               >
                 <el-icon><Refresh /></el-icon>
                 刷新
@@ -211,7 +210,7 @@
                 type="info"
                 size="small"
                 @click.stop="controlInstance(instance)"
-                class="action-btn"
+                class="flex-1 min-w-0 text-xs"
               >
                 <el-icon><Setting /></el-icon>
                 管理
@@ -222,11 +221,11 @@
       </el-row>
 
       <!-- 批量选择模式切换 -->
-      <div class="batch-toggle">
+      <div class="text-center mt-4 pt-4 border-t border-[var(--el-border-color-lighter)]">
         <el-button 
           link
           @click="batchSelectMode = !batchSelectMode"
-          class="batch-btn"
+          class="text-[var(--el-text-color-secondary)] hover:text-[var(--el-color-primary)]"
         >
           <el-icon><Select /></el-icon>
           {{ batchSelectMode ? '退出批量选择' : '批量选择模式' }}
@@ -1047,275 +1046,19 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-.browser-workspace {
-  padding: 10px;
+/* 实例卡片 hover 效果 */
+.cursor-pointer:hover {
+  @apply -translate-y-0.5 shadow-lg;
 }
 
-/* 筛选区域 */
-.filter-section :deep(.el-card__body) {
-  padding: 16px;
-}
-
-.filter-controls {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  align-items: center;
-}
-
-.filter-item {
-  flex: 1;
-  min-width: 150px;
-}
-
-.filter-btn {
-  white-space: nowrap;
-}
-
-/* 统计卡片 - 样式已移至 tailwind.css */
-/* .stat-card, .stat-content, .stat-icon, .stat-info, .stat-value, .stat-label */
-
-/* 实例卡片 */
-.instance-cards .el-col {
-  display: flex;
-}
-
-.instance-card {
-  flex: 1;
-  cursor: pointer;
-  transition: all var(--transition-base) var(--transition-timing);
-  position: relative;
-  margin-bottom: var(--spacing-4);
-}
-
-.instance-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-}
-
-.instance-card.selected {
-  border-color: var(--el-color-primary);
-  box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.2);
-}
-
-.card-selection {
-  position: absolute;
-  top: var(--spacing-2);
-  left: var(--spacing-2);
-  z-index: 10;
-  background: rgba(255, 255, 255, 0.9);
-  border-radius: var(--size-radius-base);
-  padding: var(--spacing-1);
-}
-
-/* 卡片头部 - 样式已移至 tailwind.css */
-/* .card-header, .browser-info, .browser-icon, .browser-details, .browser-name, .browser-platform, .status-indicator, .status-dot */
-
-/* 平台信息 - 样式已移至 tailwind.css */
-/* .platform-info */
-
-/* 状态信息 - 样式已移至 tailwind.css */
-/* .status-section, .status-row, .status-label, .connection-count */
-
-/* 操作按钮 */
-.action-buttons {
-  display: flex;
-  gap: var(--spacing-2);
-  flex-wrap: wrap;
-}
-
-.action-btn {
-  flex: 1;
-  min-width: 0;
-  font-size: var(--component-font-size-xs);
-}
-
-.action-btn :deep(.el-icon) {
-  margin-right: var(--spacing-1);
-}
-
-/* 批量选择切换 */
-.batch-toggle {
-  text-align: center;
-  margin-top: var(--spacing-4);
-  padding: var(--spacing-4);
-  border-top: 1px solid var(--el-border-color-lighter);
-}
-
-.batch-btn {
-  color: var(--el-text-color-secondary);
-}
-
-.batch-btn:hover {
-  color: var(--el-color-primary);
-}
-
-/* 抽屉样式 */
+/* 抽屉内边距清零 */
 .control-drawer :deep(.el-drawer__body) {
   padding: 0;
   overflow: hidden;
 }
 
-/* 响应式调整 */
-@media (max-width: 768px) {
-  .filter-controls {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .filter-item {
-    width: 100%;
-  }
-
-  .filter-btn {
-    width: 100%;
-  }
-
-  .stats-section .el-col {
-    margin-bottom: 12px;
-  }
-
-  .stat-card {
-    height: 70px;
-  }
-
-  /* .stat-icon 尺寸主题响应已在 tailwind.css 中定义 */
-
-  .stat-value {
-    font-size: 20px;
-  }
-
-  .card-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
-  }
-
-  .browser-info {
-    width: 100%;
-  }
-
-  .browser-name {
-    font-size: 14px;
-  }
-
-  .action-buttons {
-    flex-direction: column;
-  }
-
-  .action-btn {
-    width: 100%;
-  }
-}
-
-@media (max-width: 480px) {
-  .instance-cards .el-col {
-    margin-bottom: 12px;
-  }
-  
-  .browser-workspace {
-    padding: 8px;
-  }
-
-  .stat-content {
-    gap: 8px;
-  }
-
-  /* .stat-icon 尺寸主题响应已在 tailwind.css 中定义 */
-
-  .stat-value {
-    font-size: 18px;
-  }
-
-  .browser-name {
-    font-size: 13px;
-  }
-
-  .browser-platform {
-    font-size: 11px;
-  }
-
-  .status-row {
-    margin-bottom: 6px;
-  }
-
-  .action-buttons {
-    gap: 6px;
-  }
-}
-
-/* 通用样式 */
-.text-xs {
-  font-size: 12px;
-}
-
-.text-sm {
-  font-size: 14px;
-}
-
-.text-gray-500 {
-  color: #909399;
-}
-
-.text-gray-600 {
-  color: #606266;
-}
-
-.font-medium {
-  font-weight: 500;
-}
-
-.font-bold {
-  font-weight: 700;
-}
-
-.mb-4 {
-  margin-bottom: 1rem;
-}
-
-.mb-16 {
-  margin-bottom: 16px;
-}
-
-.truncate {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.block {
-  display: block;
-}
-
-.text-center {
-  text-align: center;
-}
-
-.mt-4 {
-  margin-top: 1rem;
-}
-
-.gap-8 {
-  gap: 8px;
-}
-
-.gap-12 {
-  gap: 12px;
-}
-
-.space-x-2 > * + * {
-  margin-left: 0.5rem;
-}
-
-.flex {
-  display: flex;
-}
-
-.items-center {
-  align-items: center;
-}
-
-.justify-between {
-  justify-content: space-between;
+/* 操作按钮图标间距 */
+.action-btn :deep(.el-icon) {
+  margin-right: var(--spacing-1);
 }
 </style>

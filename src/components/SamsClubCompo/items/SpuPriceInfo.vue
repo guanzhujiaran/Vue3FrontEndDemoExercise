@@ -140,6 +140,4 @@ const priceStats = computed(() => {
   </div>
 </template>
 
-<style scoped>
-@import '@/assets/components/samsclub/spu-item-tailwind.css';
-</style>
+

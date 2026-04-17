@@ -29,7 +29,3 @@ const props = defineProps<{
     </el-dialog>
   </div>
 </template>
-
-<style scoped>
-@import '@/assets/components/feedback/bili-dialog-tailwind.css';
-</style>

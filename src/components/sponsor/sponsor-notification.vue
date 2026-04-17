@@ -12,7 +12,3 @@ onMounted(() => {
   open()
 })
 </script>
-
-<template></template>
-
-<style scoped></style>

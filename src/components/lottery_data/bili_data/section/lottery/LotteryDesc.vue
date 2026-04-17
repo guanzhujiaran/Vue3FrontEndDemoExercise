@@ -7,6 +7,5 @@
   </div>
 </template>
 
-<style scoped>
-@import '@/assets/components/lottery/bili-lottery-card-desc-tailwind.css';
-</style>
+
+

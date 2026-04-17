@@ -45,6 +45,3 @@ const vNoSpace = {
   }
 }
 </script>
-<style scoped>
-@import '@/assets/components/interact/text-list-tailwind.css';
-</style>

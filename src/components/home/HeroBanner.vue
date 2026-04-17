@@ -1,9 +1,9 @@
 <template>
-  <section class="hero-banner">
-    <div class="hero-content">
-      <h1 class="hero-title">BiliExplosion</h1>
-      <p class="hero-subtitle">B站抽奖数据分析与管理平台，但不限于B站</p>
-      <div class="hero-actions">
+  <section class="relative flex flex-col items-center overflow-hidden bg-gradient-hero-primary py-12 px-4 text-center text-white">
+    <div class="relative z-10 max-w-80">
+      <h1 class="mb-5 text-4xl font-bold drop-shadow-lg md:text-5xl">BiliExplosion</h1>
+      <p class="mb-10 text-lg opacity-90 md:text-xl">B站抽奖数据分析与管理平台,但不限于B站</p>
+      <div class="mb-8 flex flex-wrap justify-center gap-5 md:flex-row md:justify-center">
         <el-button type="primary" size="large" @click="handleLoginClick" v-if="!isLoggedIn">
           <el-icon class="el-icon--left">
             <User />
@@ -29,7 +29,7 @@
         </el-button>
       </div>
     </div>
-    <div class="hero-stats" v-if="isLoggedIn"></div>
+    <div class="mt-10 flex gap-12 md:flex-row md:justify-center" v-if="isLoggedIn"></div>
   </section>
 </template>
 
@@ -53,81 +53,3 @@ const handleLoginClick = () => {
   emit('loginClick')
 }
 </script>
-
-<style scoped>
-/* 顶部横幅 */
-.hero-banner {
-  background: linear-gradient(135deg, var(--el-color-danger) 0%, var(--el-color-info) 100%);
-  padding: calc(var(--component-spacing) * 12) calc(var(--component-spacing) * 4);
-  color: var(--el-color-white);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  position: relative;
-  overflow: hidden;
-}
-
-.hero-banner::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  opacity: 0.3;
-}
-
-.hero-content {
-  max-width: calc(var(--component-size) * 25);
-  position: relative;
-  z-index: 1;
-}
-
-.hero-title {
-  font-size: calc(var(--component-size) * 1.5);
-  font-weight: 700;
-  margin-bottom: calc(var(--component-spacing) * 3.2);
-  text-shadow: 0 calc(var(--component-size) * 0.0625) calc(var(--component-size) * 0.125) rgba(0, 0, 0, 0.2);
-}
-
-.hero-subtitle {
-  font-size: calc(var(--component-size) * 0.625);
-  margin-bottom: calc(var(--component-spacing) * 6.4);
-  opacity: 0.9;
-}
-
-.hero-actions {
-  display: flex;
-  gap: calc(var(--component-spacing) * 3.2);
-  justify-content: center;
-  margin-bottom: calc(var(--component-spacing) * 4.8);
-}
-
-.hero-stats {
-  display: flex;
-  gap: calc(var(--component-spacing) * 8);
-  margin-top: calc(var(--component-spacing) * 6.4);
-}
-
-/* 响应式调整 */
-@media (max-width: 768px) {
-  .hero-title {
-    font-size: calc(var(--component-size) * 1);
-  }
-
-  .hero-subtitle {
-    font-size: var(--component-size);
-  }
-
-  .hero-actions {
-    flex-direction: column;
-    align-items: center;
-  }
-
-  .hero-stats {
-    flex-direction: column;
-    gap: calc(var(--component-spacing) * 4);
-  }
-}
-</style>

@@ -36,10 +36,6 @@
   </FlexContainer>
 </template>
 
-<style scoped>
-@import '@/assets/components/lottery/bili-lottery-data-wrapper-tailwind.css';
-</style>
-
 <script setup lang="ts">
 import { ref, watch, type Ref } from 'vue'
 import BiliPaginationDataView from '@/components/CommonCompo/Bili-DataTable-Compo/BiliPaginationDataView.vue'

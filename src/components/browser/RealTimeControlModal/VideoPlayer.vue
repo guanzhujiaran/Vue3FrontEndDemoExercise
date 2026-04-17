@@ -26,17 +26,17 @@
         </div>
 
         <div class="video-info-bar">
-            <div class="info-item">
+            <div class="flex items-center gap-1.5 text-[13px]">
                 <el-tag :type="sessionStatus.type" size="small" effect="dark">
                     <span class="status-dot" :class="connectionStatusClass"></span>
                     {{ sessionStatus.text }}
                 </el-tag>
             </div>
-            <div class="info-item">
+            <div class="flex items-center gap-1.5 text-[13px]">
                 <el-icon><User /></el-icon>
                 <span>连接数: {{ (sessionInfo as any).active_connections || sessionInfo.connections || 0 }}</span>
             </div>
-            <div class="info-item">
+            <div class="flex items-center gap-1.5 text-[13px]">
                 <el-icon><Clock /></el-icon>
                 <span>{{ formatTime((sessionInfo as any).last_heartbeat || sessionInfo.lastActivity) }}</span>
             </div>
@@ -50,17 +50,17 @@
         >
             <!-- 加载遮罩层 -->
             <div v-if="showLoadingMask || props.isReconnecting" class="loading-mask">
-                <div class="loading-content">
-                    <el-icon class="is-loading" :size="60" color="var(--el-color-primary)"><Loading /></el-icon>
-                    <p class="loading-text">{{ props.isReconnecting ? '正在重连...' : loadingText }}</p>
+                <div class="flex flex-col items-center gap-4">
+                    <el-icon class="is-loading fill-primary" :size="60"><Loading /></el-icon>
+                    <p class="text-white text-[14px] m-0">{{ props.isReconnecting ? '正在重连...' : loadingText }}</p>
                 </div>
             </div>
 
             <!-- 重连错误提示 -->
             <div v-if="reconnectError && !isStreaming" class="error-overlay">
-                <el-icon :size="48" color="var(--el-color-danger)"><CircleClose /></el-icon>
-                <p class="error-text">{{ reconnectError }}</p>
-                <p class="error-subtext">连接已断开，请点击"开始视频"重新连接</p>
+                <el-icon :size="48" class="fill-danger"><CircleClose /></el-icon>
+                <p class="text-[var(--el-color-danger)] text-[18px] font-semibold m-0 text-center px-5">{{ reconnectError }}</p>
+                <p class="text-white text-[14px] m-0 text-center px-5 opacity-80">连接已断开，请点击"开始视频"重新连接</p>
             </div>
 
             <video
@@ -79,7 +79,7 @@
             <!-- 视频控制条 - B站风格,悬浮时显示 -->
             <transition name="control-bar-fade">
                 <div v-if="showControls" class="video-control-bar">
-                    <div class="control-bar-left">
+                    <div class="flex items-center gap-3">
                         <el-button
                             :icon="Camera"
                             circle
@@ -97,7 +97,7 @@
                             :title="props.isStreaming ? '停止视频' : '开始视频'"
                         />
                     </div>
-                    <div class="control-bar-right">
+                    <div class="flex items-center gap-3">
                         <el-button
                             :icon="DocumentCopy"
                             circle
@@ -120,7 +120,7 @@
             :close-on-press-escape="true"
             class="screenshot-preview-dialog"
         >
-            <div class="screenshot-preview-container">
+            <div class="w-full h-full flex items-center justify-center p-5">
                 <el-image
                     :src="screenshotUrl"
                     fit="contain"
@@ -130,25 +130,25 @@
                     preview-teleported
                 >
                     <template #error>
-                        <div class="image-error">
-                            <el-icon :size="60" color="var(--el-color-error)">
+                        <div class="flex flex-col items-center justify-center h-[400px] text-[var(--el-color-error)]">
+                            <el-icon :size="60" class="fill-error">
                                 <CircleClose />
                             </el-icon>
-                            <p>图片加载失败</p>
+                            <p class="mt-4 text-[14px]">图片加载失败</p>
                         </div>
                     </template>
                 </el-image>
             </div>
 
             <template #footer>
-                <div class="screenshot-preview-actions">
-                    <el-button @click="downloadScreenshot" type="primary" size="large">
+                <div class="flex justify-center gap-3 py-5">
+                    <el-button @click="downloadScreenshot" type="primary" size="large" class="min-w-[120px]">
                         下载截图
                     </el-button>
-                    <el-button @click="copyScreenshotToClipboard" type="success" size="large">
+                    <el-button @click="copyScreenshotToClipboard" type="success" size="large" class="min-w-[120px]">
                         复制到剪贴板
                     </el-button>
-                    <el-button @click="showScreenshotPreview = false" size="large">
+                    <el-button @click="showScreenshotPreview = false" size="large" class="min-w-[120px]">
                         关闭
                     </el-button>
                 </div>
@@ -365,46 +365,28 @@ defineExpose({
 
 <style scoped>
 .video-player-container {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    background: var(--el-color-black);
-    border-radius: 12px;
-    overflow: hidden;
-    box-shadow: var(--el-box-shadow);
-    min-height: 0;
+    @apply flex-1 flex flex-col bg-black rounded-[var(--size-radius-large)] overflow-hidden shadow-[var(--el-box-shadow)] min-h-0;
 }
 
 /* URL导航栏 */
 .url-navigation-bar {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 10px 16px;
-    background: linear-gradient(180deg, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.6) 100%);
-    backdrop-filter: blur(8px);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    @apply flex items-center gap-2 px-4 py-2.5 bg-gradient-to-b from-black/80 to-black/60 backdrop-blur-sm border-b border-white/10;
 }
 
 .url-input {
-    flex: 1;
+    @apply flex-1;
 }
 
 .url-input :deep(.el-input-group__prepend) {
-    background: rgba(255, 255, 255, 0.1);
-    border: none;
-    color: var(--el-color-white);
+    @apply bg-white/10 border-none text-white;
 }
 
 .url-input :deep(.el-input__wrapper) {
-    background: rgba(255, 255, 255, 0.15);
-    border: none;
-    box-shadow: none;
+    @apply bg-white/15 border-none shadow-none;
 }
 
 .url-input :deep(.el-input__inner) {
-    color: var(--el-color-white);
-    font-family: 'Consolas', 'Monaco', monospace;
+    @apply text-white font-mono;
 }
 
 .url-input :deep(.el-input__inner::placeholder) {
@@ -412,129 +394,41 @@ defineExpose({
 }
 
 .video-info-bar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 10px 16px;
-    background: linear-gradient(180deg, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0.5) 100%);
-    backdrop-filter: blur(8px);
-    color: var(--el-color-white);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.info-item {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 13px;
-}
-
-.info-item :deep(.el-icon) {
-    font-size: 16px;
-}
-
-.info-item :deep(.el-tag) {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-
-.info-actions {
-    display: flex;
-    gap: 4px;
-}
-
-.info-actions :deep(.el-button) {
-    color: var(--el-color-white);
-}
-
-.info-actions :deep(.el-button:hover) {
-    background: rgba(255, 255, 255, 0.15);
+    @apply flex items-center justify-between px-4 py-2.5 bg-gradient-to-b from-black/70 to-black/50 backdrop-blur-sm text-white border-b border-white/10;
 }
 
 .status-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
+    @apply w-2 h-2 rounded-full;
     animation: pulse 2s ease-in-out infinite;
 }
 
 /* 截图预览样式 */
 .screenshot-preview-dialog :deep(.el-dialog) {
-    background: rgba(0, 0, 0, 0.9);
-    backdrop-filter: blur(10px);
+    @apply bg-black/90 backdrop-blur-md;
 }
 
 .screenshot-preview-dialog :deep(.el-dialog__header) {
-    background: transparent;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    color: var(--el-color-white);
+    @apply bg-transparent border-b border-white/10 text-white;
 }
 
 .screenshot-preview-dialog :deep(.el-dialog__body) {
-    padding: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: transparent;
-}
-
-.screenshot-preview-container {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
+    @apply p-0 flex items-center justify-center bg-transparent;
 }
 
 .screenshot-preview-image {
-    max-width: 100%;
-    max-height: 100%;
-    object-fit: contain;
-    border-radius: 8px;
-    box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
-}
-
-.screenshot-preview-actions {
-    display: flex;
-    justify-content: center;
-    gap: 12px;
-    padding: 20px 0;
-}
-
-.screenshot-preview-actions .el-button {
-    min-width: 120px;
-}
-
-.image-error {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    height: 400px;
-    color: var(--el-color-error);
-}
-
-.image-error p {
-    margin-top: 16px;
-    font-size: 14px;
+    @apply max-w-full max-h-full object-contain rounded-lg shadow-2xl shadow-black/50;
 }
 
 .status-connected .status-dot {
-    background: var(--el-color-success);
-    box-shadow: 0 0 8px rgba(82, 196, 26, 0.5);
+    @apply bg-[var(--color-success)] shadow-[0_0_8px_rgba(34,197,94,0.5)];
 }
 
 .status-connecting .status-dot {
-    background: var(--el-color-warning);
-    box-shadow: 0 0 8px rgba(250, 173, 20, 0.5);
+    @apply bg-[var(--color-warning)] shadow-[0_0_8px_rgba(234,179,8,0.5)];
 }
 
 .status-disconnected .status-dot {
-    background: var(--el-color-danger);
-    box-shadow: 0 0 8px rgba(255, 77, 79, 0.5);
-    animation: none;
+    @apply bg-[var(--color-danger)] shadow-[0_0_8px_rgba(239,68,68,0.5)] !animate-none;
 }
 
 @keyframes pulse {
@@ -543,44 +437,16 @@ defineExpose({
 }
 
 .video-wrapper {
-    flex: 1;
-    position: relative;
-    background: var(--el-bg-color);
-    overflow: hidden;
-    min-height: 300px;
-    min-width: 400px;
-    /* 确保视频容器有固定尺寸 */
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    @apply flex-1 relative bg-[var(--el-bg-color)] overflow-hidden min-h-[var(--spacing-16)] min-w-[var(--spacing-20)] w-full h-full flex items-center justify-center;
 }
 
 .video-wrapper.black-screen {
-    background: #000000;
+    @apply bg-black;
 }
 
 /* 加载遮罩层 */
 .loading-mask {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: rgba(0, 0, 0, 0.7);
-    backdrop-filter: blur(4px);
-    z-index: 10;
-}
-
-.loading-content {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 16px;
+    @apply absolute inset-0 flex items-center justify-center bg-black/70 backdrop-blur-sm z-10;
 }
 
 .loading-content .el-icon.is-loading {
@@ -588,112 +454,34 @@ defineExpose({
 }
 
 @keyframes rotating {
-    from {
-        transform: rotate(0deg);
-    }
-    to {
-        transform: rotate(360deg);
-    }
-}
-
-.loading-text {
-    color: var(--el-color-white);
-    font-size: 14px;
-    margin: 0;
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
 }
 
 /* 错误提示层 */
 .error-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    background: rgba(0, 0, 0, 0.85);
-    backdrop-filter: blur(8px);
-    z-index: 15;
-    gap: 16px;
-}
-
-.error-text {
-    color: var(--el-color-danger);
-    font-size: 18px;
-    font-weight: 600;
-    margin: 0;
-    text-align: center;
-    padding: 0 20px;
-}
-
-.error-subtext {
-    color: var(--el-color-white);
-    font-size: 14px;
-    margin: 0;
-    text-align: center;
-    padding: 0 20px;
-    opacity: 0.8;
+    @apply absolute inset-0 flex flex-col items-center justify-center bg-black/85 backdrop-blur-sm z-15 gap-4;
 }
 
 .video-element {
-    /* 保持视频元素最大尺寸不超过容器，但保持宽高比 */
-    max-width: 100%;
-    max-height: 100%;
-    width: auto;
-    height: auto;
-    object-fit: contain;
-    background: var(--el-color-black);
-    /* 确保视频元素在容器中居中显示 */
-    display: block;
-    margin: 0 auto;
+    @apply max-w-full max-h-full w-auto h-auto object-contain bg-black block mx-auto;
 }
 
 /* 视频控制条 - B站风格 */
 .video-control-bar {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 16px 20px;
-    background: linear-gradient(0deg, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.5) 70%, rgba(0, 0, 0, 0) 100%);
-    backdrop-filter: blur(10px);
-    z-index: 20;
-    transition: opacity 0.3s ease;
-}
-
-.control-bar-left {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-.control-bar-right {
-    display: flex;
-    align-items: center;
-    gap: 12px;
+    @apply absolute bottom-0 left-0 right-0 flex items-center justify-between px-5 py-4 bg-gradient-to-t from-black/90 via-black/50 to-transparent backdrop-blur-md z-20 transition-opacity duration-300;
 }
 
 .control-button {
-    background: rgba(255, 255, 255, 0.1);
-    border: none;
-    color: #fff;
-    width: 44px;
-    height: 44px;
-    transition: all 0.2s ease;
+    @apply bg-white/10 border-none text-white w-11 h-11 transition-all duration-200;
 }
 
 .control-button:hover {
-    background: rgba(255, 255, 255, 0.25);
-    transform: scale(1.1);
+    @apply bg-white/25 scale-110;
 }
 
 .control-button :deep(.el-icon) {
-    font-size: 20px;
+    @apply text-[20px];
 }
 
 /* 控制条淡入淡出动画 */
@@ -709,30 +497,27 @@ defineExpose({
 
 @media (max-width: 768px) {
     .url-navigation-bar {
-        flex-direction: column;
-        align-items: stretch;
+        @apply flex-col items-stretch;
     }
 
-    .info-item span {
-        display: none;
+    .video-info-bar span {
+        @apply hidden;
     }
 
-    .info-item :deep(.el-tag) span {
-        display: inline;
+    .video-info-bar :deep(.el-tag) span {
+        @apply inline;
     }
 
     .video-wrapper {
-        min-height: 250px;
-        min-width: 100%;
+        @apply min-h-[var(--spacing-12)] min-w-full;
     }
 
     .control-button {
-        width: 36px;
-        height: 36px;
+        @apply w-9 h-9;
     }
 
     .control-button :deep(.el-icon) {
-        font-size: 18px;
+        @apply text-[18px];
     }
 }
 </style>

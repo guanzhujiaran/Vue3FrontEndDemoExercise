@@ -103,6 +103,4 @@ const handleSubmitSuccess = () => {
 }
 </script>
 
-<style>
-@import '@/assets/components/lottery/bili-lottery-data-tailwind.css';
-</style>
+

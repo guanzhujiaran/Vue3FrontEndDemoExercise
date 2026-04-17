@@ -936,10 +936,10 @@ onMounted(() => {
 
     <!-- 操作按钮 -->
     <el-descriptions-item align="center">
-      <div class="op-area">
+      <div class="op-area py-6">
         <el-switch
           v-model="samsclubStore.isShowPriceEcharts"
-          class="op"
+          class="op pr-3"
           inline-prompt
           active-text="展示价格图"
           inactive-text="隐藏价格图"
@@ -966,6 +966,5 @@ onMounted(() => {
   </el-descriptions>
 </template>
 
-<style scoped>
-@import '@/assets/components/samsclub/samsclub-filter-tailwind.css';
-</style>
+
+

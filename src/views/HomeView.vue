@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, inject } from 'vue'
 import { useJwtStore } from '@/stores/jwt_token'
 import biliMessage, { ElMessageBox } from '@/utils/message'
 import { CoffeeCup } from '@element-plus/icons-vue'
@@ -9,8 +9,6 @@ import { KeysEnum, useInject } from '@/models/base/provide_model.ts'
 import type { UserNavModel } from '@/models/user/user_model.ts'
 import { routes } from '@/router'
 import router from '@/router'
-import { useUserNavStore } from '@/stores/user_nav'
-const userNavStore = useUserNavStore()
 const jwtStore = useJwtStore()
 const activeTab = ref('all')
 const openGlobalLoginModal = inject(openGlobalLoginModalKey, () => { })
@@ -48,10 +46,10 @@ const handleLogoutClick = () => {
   })
     .then(() => {
       jwtStore.delete_jwt_token()
-      biliUser.value = { 
-        uid: '', 
-        user_name: '', 
-        role: '', 
+      biliUser.value = {
+        uid: '',
+        user_name: '',
+        role: '',
         face: '',
         email: '',
         level_info: {
@@ -86,146 +84,161 @@ const handleCardClick = (path: string | undefined, requiresLogin = false) => {
 
 <template>
   <div>
-    <el-main>
-      <!-- 顶部横幅 -->
-      <section class="relative overflow-hidden px-5 py-16 text-center text-[var(--el-color-white)]" :style="{
-        background:
-          'linear-gradient(135deg, var(--el-color-primary) 0%, var(--el-color-warning) 35%, var(--el-color-success) 68%, var(--el-color-info) 100%)'
-      }">
+    <el-main class="p-0!">
+      <!-- 顶部横幅 - 增强视觉效果 -->
+      <section class="relative overflow-hidden px-5 py-20 text-center text-white md:py-28"
+        style="background: var(--color-gradient-hero-primary)">
+        <!-- 半透明遮罩层提升文字可读性 -->
+        <div class="absolute inset-0 bg-linear-to-b from-black/20 via-transparent to-black/30"></div>
+        <!-- 装饰性光晕 -->
+        <div class="pointer-events-none absolute -left-20 -top-20 h-80 w-80 rounded-full bg-white/10 blur-3xl"></div>
+        <div class="pointer-events-none absolute -bottom-20 -right-20 h-80 w-80 rounded-full bg-white/10 blur-3xl">
+        </div>
+
         <div class="relative z-10 mx-auto max-w-3xl">
-          <h1 class="mb-4 text-4xl font-bold drop-shadow-lg md:text-5xl">BiliExplosion</h1>
-          <p class="mb-8 text-base opacity-90 md:text-lg">Bilibili本社爆破</p>
-          <div class="mb-6 flex flex-wrap justify-center gap-4">
-            <el-button type="primary" size="large" @click="handleLoginClick" v-if="!isLoggedIn">
+          <el-text class="mb-3 block text-5xl font-bold tracking-tight drop-shadow-lg md:text-6xl"
+            tag="h1">BiliExplosion</el-text>
+          <el-text class="mb-8 block text-lg opacity-90 md:text-xl" tag="p">哔哩哔哩本社爆破</el-text>
+          <div class="flex flex-wrap justify-center gap-3">
+            <el-button type="primary" size="large" @click="handleLoginClick" v-if="!isLoggedIn" class="shadow-lg!">
               <el-icon class="el-icon--left">
                 <User />
-              </el-icon>立即登录
+              </el-icon>
+              立即登录
             </el-button>
-            <el-button type="warning" size="large" @click="router.push('/app/lot-data/bili-data/official')" v-else>
+            <el-button type="warning" size="large" @click="router.push('/app/lot-data/bili-data/official')" v-else
+              class="shadow-lg!">
               <el-icon class="el-icon--left">
                 <DataAnalysis />
-              </el-icon>查看抽奖数据
+              </el-icon>
+              查看抽奖数据
             </el-button>
-            <el-button type="info" size="large" @click="router.push('/app/Feedback')">
+            <el-button type="info" size="large" @click="router.push('/app/Feedback')" class="shadow-lg!">
               <el-icon class="el-icon--left">
                 <ChatSquare />
-              </el-icon>提交反馈
+              </el-icon>
+              提交反馈
             </el-button>
           </div>
         </div>
-        <div class="mt-8 flex justify-center gap-10" v-if="isLoggedIn"></div>
       </section>
 
-      <!-- 功能导航区 -->
-      <section class="mx-auto w-full max-w-6xl px-5 py-10">
-        <div class="mb-8 flex flex-wrap items-center justify-between gap-5">
-          <h2 class="m-0 text-2xl font-semibold">功能导航</h2>
-          <div>
-            <el-radio-group v-model="activeTab" size="large">
-              <el-radio-button label="all" value="all">全部</el-radio-button>
-              <el-radio-button label="lottery" value="lottery">抽奖数据</el-radio-button>
-              <el-radio-button label="user" value="user">浏览器管理</el-radio-button>
-              <el-radio-button label="shopping" value="shopping">山姆会员商店</el-radio-button>
-            </el-radio-group>
-          </div>
-        </div>
-
-        <!-- 模块列表 -->
-        <grid-container item-width="300px">
-          <el-card v-for="(module, moduleIndex) in filteredModules" :key="moduleIndex" class="module-card"
-            :body-style="{ padding: '0px' }" shadow="hover">
-            <template #header style="padding: 0">
-              <div class="flex items-center gap-3 px-5 py-4" :style="{ background: module.color }">
-                <el-icon :size="24">
-                  <component :is="module.icon || CoffeeCup" />
-                </el-icon>
-                <h3 class="m-0 text-base font-semibold">{{ module.title }}</h3>
-              </div>
-            </template>
-            <template #default>
-              <div class="p-5">
-                <p class="mb-5 leading-6 text-[var(--el-text-color-regular)]">
-                  {{ module.description }}
-                </p>
-                <!-- 如果有子项，显示子项列表 -->
-                <div v-if="module.children && module.children.length" class="flex flex-col gap-3">
-                  <div v-for="(child, childIndex) in module.children" :key="childIndex"
-                    class="flex cursor-pointer items-center rounded-md border border-[var(--el-border-color)] p-3 transition hover:translate-x-1 hover:opacity-80"
-                    @click="handleCardClick(child.path, module.requiresLogin)">
-                    <div
-                      class="mr-3 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[var(--el-color-white)]"
-                      :style="{ background: child.color }">
-                      <el-icon :size="16">
-                        <component :is="child.icon || CoffeeCup" />
-                      </el-icon>
-                    </div>
-                    <div class="flex-1">
-                      <h4 class="m-0 mb-1 text-sm font-bold">{{ child.title }}</h4>
-                      <p class="m-0 text-xs text-[var(--el-text-color-secondary)]">
-                        {{ child.description }}
-                      </p>
-                    </div>
-                    <el-icon class="text-[var(--el-text-color-placeholder)]"><el-icon-arrow-right /></el-icon>
-                  </div>
-                </div>
-
-                <!-- 如果没有子项，显示直接访问按钮 -->
-                <div v-else class="mt-4 flex justify-center">
-                  <el-button type="default" :plain="true" @click="handleCardClick(module.path, module.requiresLogin)">
-                    立即访问
-                  </el-button>
-                </div>
-              </div>
-            </template>
-          </el-card>
-        </grid-container>
-      </section>
+      <div class="mt-8 flex justify-center gap-10" v-if="isLoggedIn"></div>
     </el-main>
 
+    <!-- 功能导航区 -->
+    <section class="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+      <div class="mb-6 flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <el-text class="m-0 block text-2xl font-semibold tracking-tight" tag="h2">功能导航</el-text>
+          <el-text class="mt-1 block text-sm" tag="p">选择你需要的工具开始使用</el-text>
+        </div>
+        <div>
+          <el-radio-group v-model="activeTab" size="large">
+            <el-radio-button value="all">全部</el-radio-button>
+            <el-radio-button value="lottery">抽奖数据</el-radio-button>
+            <el-radio-button value="user-center">浏览器管理</el-radio-button>
+            <el-radio-button value="shopping">山姆会员商店</el-radio-button>
+            <el-radio-button value="feedback">反馈区</el-radio-button>
+          </el-radio-group>
+        </div>
+      </div>
+
+      <!-- 模块列表：两列布局，卡片之间有间距 -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- 每个模块作为独立卡片 -->
+        <div v-for="(module, index) in filteredModules" :key="index"
+          class="flex flex-col overflow-hidden rounded-xl border border-border shadow-sm hover:shadow-md transition-all duration-200">
+          <!-- 模块头部 -->
+          <div class="flex items-center gap-3 px-5 py-4 text-white" :style="{ background: module.color }">
+            <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/20 backdrop-blur-sm">
+              <el-icon :size="20" class="text-white">
+                <component :is="module.icon || CoffeeCup" />
+              </el-icon>
+            </div>
+            <el-text class="m-0 text-base font-semibold drop-shadow-sm" tag="h3">{{ module.title }}</el-text>
+          </div>
+          <!-- 模块内容 -->
+          <div class="flex min-h-3xl flex-1 flex-col p-5 bg-bg hover:bg-fill-light/90">
+            <p class="mb-4 text-sm leading-6 text-text-regular">
+              {{ module.description }}
+            </p>
+            <!-- 如果有子项，显示子项列表 -->
+            <div v-if="module.children && module.children.length"
+              class="flex flex-col divide-y divide-border overflow-hidden rounded-lg border border-border">
+              <div v-for="(child, childIndex) in module.children" :key="childIndex"
+                class="group flex cursor-pointer items-center p-3 transition-all duration-150 hover:bg-fill-light"
+                @click="handleCardClick(child.path, module.requiresLogin)">
+                <div class="mr-3 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-white"
+                  :style="{ background: child.color }">
+                  <el-icon :size="15">
+                    <component :is="child.icon || CoffeeCup" />
+                  </el-icon>
+                </div>
+                <div class="min-w-0 flex-1">
+                  <el-text class="m-0 mb-0.5 block text-sm font-semibold" tag="h4">{{ child.title }}</el-text>
+                  <el-text class="m-0 block truncate text-xs text-text-secondary" tag="p">
+                    {{ child.description }}
+                  </el-text>
+                </div>
+                <el-icon
+                  class="shrink-0 text-text-secondary transition-transform duration-150 group-hover:translate-x-0.5">
+                  <el-icon-arrow-right />
+                </el-icon>
+              </div>
+            </div>
+
+            <!-- 如果没有子项，显示直接访问按钮 -->
+            <div v-else class="flex justify-center">
+              <el-button type="default" :plain="true" @click="handleCardClick(module.path, module.requiresLogin)">
+                立即访问
+              </el-button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- 页脚 -->
-    <div class="mt-16 bg-[var(--el-fill-color-dark)] text-[var(--el-text-color-placeholder)]">
-      <div class="mx-auto grid max-w-6xl grid-cols-1 gap-10 px-5 py-10 sm:grid-cols-2 lg:grid-cols-3">
-        <div>
-          <h3 class="mt-0 mb-4 text-lg font-semibold text-[var(--el-color-white)]">关于我</h3>
-          <p class="leading-7">
-            BiliExplosion是一个帮助B站用户管理和分析抽奖数据的工具，提供多种功能帮助您更好地参与B站活动。
-          </p>
+    <footer class="mt-16 border-t border-border-lighter bg-fill-light/50">
+      <div class="mx-auto max-w-6xl px-5 py-12">
+        <div class="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-3">
+          <div>
+            <el-text class="mb-4 block text-base font-semibold" tag="h3">关于我</el-text>
+            <el-text class="text-sm leading-7 text-text-regular">
+              BiliExplosion是一个帮助B站用户管理和分析抽奖数据的工具，提供多种功能帮助您更好地参与B站活动。
+            </el-text>
+          </div>
+          <div>
+            <el-text class="mb-4 block text-base font-semibold" tag="h3">快速链接</el-text>
+            <ul class="m-0 list-none space-y-2.5 p-0">
+              <li>
+                <el-link class="text-sm! no-underline" @click="router.push('/app/Feedback')">
+                  反馈建议
+                </el-link>
+              </li>
+              <li>
+                <el-link class="text-sm! no-underline" @click="router.push('/app/user-center')">
+                  浏览器管理
+                </el-link>
+              </li>
+              <li>
+                <el-link class="text-sm! no-underline" @click="router.push('/app/lot-data/bili-data/official')">
+                  抽奖数据
+                </el-link>
+              </li>
+            </ul>
+          </div>
+          <div>
+            <el-text class="mb-4 block text-base font-semibold" tag="h3">联系我</el-text>
+            <el-text class="block text-sm text-text-regular" tag="p">邮箱: guanzhujiaran2022@163.com</el-text>
+            <el-text class="mt-2 block text-sm text-text-secondary" tag="p">就我一个人写前后端，更新慢点见谅</el-text>
+          </div>
         </div>
-        <div>
-          <h3 class="mt-0 mb-4 text-lg font-semibold text-[var(--el-color-white)]">快速链接</h3>
-          <ul class="m-0 list-none p-0">
-            <li class="mb-2">
-              <a class="cursor-pointer text-[var(--el-text-color-placeholder)] no-underline hover:text-blue-500"
-                @click="router.push('/app/Feedback')">反馈建议</a>
-            </li>
-            <li class="mb-2">
-              <a class="cursor-pointer text-[var(--el-text-color-placeholder)] no-underline hover:text-blue-500"
-                @click="router.push('/app/user-center')">浏览器管理</a>
-            </li>
-            <li class="mb-2">
-              <a class="cursor-pointer text-[var(--el-text-color-placeholder)] no-underline hover:text-blue-500"
-                @click="router.push('/app/lot-data/bili-data/official')">抽奖数据</a>
-            </li>
-          </ul>
-        </div>
-        <div>
-          <h3 class="mt-0 mb-4 text-lg font-semibold text-[var(--el-color-white)]">联系我一个人</h3>
-          <p>邮箱: guanzhujiaran2022@163.com</p>
-          <p>就我一个人写前后端，更新慢点见谅</p>
+        <div class="mt-8 border-t border-border-lighter pt-8 text-center">
+          <el-text class="text-xs text-text-secondary" tag="p">&copy; 2025 BiliExplosion. All rights reserved.</el-text>
         </div>
       </div>
-      <div class="bg-[var(--el-bg-color-page)] py-4 text-center text-sm">
-        <p>&copy; 2025 BiliExplosion</p>
-      </div>
-    </div>
+    </footer>
   </div>
 </template>
-
-<style scoped>
-@import '@/assets/components/home/module-card-tailwind.css';
-@import '@/assets/components/home/news-section-tailwind.css';
-
-:deep(.el-card__header) {
-  padding: 0;
-}
-</style>

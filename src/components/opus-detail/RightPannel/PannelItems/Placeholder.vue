@@ -34,37 +34,9 @@ const isVisible = computed(() => {
       <el-icon class="placeholder-icon">
         <el-icon-box />
       </el-icon>
-      <p class="placeholder-text">{{ displayText }}</p>
+      <el-text class="placeholder-text" tag="p">{{ displayText }}</el-text>
     </div>
   </div>
 </template>
 
-<style scoped>
-.placeholder-container {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 200px;
-  width: 100%;
-}
 
-.placeholder-content {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 16px;
-  color: var(--el-text-color-placeholder);
-  text-align: center;
-}
-
-.placeholder-icon {
-  font-size: 48px;
-  opacity: 0.6;
-}
-
-.placeholder-text {
-  font-size: 14px;
-  margin: 0;
-  opacity: 0.8;
-}
-</style>

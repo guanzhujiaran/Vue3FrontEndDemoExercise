@@ -9,16 +9,16 @@
     <!-- 左侧: 操作选择和参数配置 -->
     <el-row :gutter="20">
       <el-col :xs="24" :md="12">
-        <el-card class="config-card" shadow="hover">
+        <el-card class="mb-5" shadow="hover">
           <template #header>
-            <div class="card-header">
+            <div class="flex items-center gap-2 font-bold">
               <el-icon><Setting /></el-icon>
               <span>操作配置</span>
             </div>
           </template>
 
           <!-- 操作选择 -->
-          <el-tabs v-model="actionTab" class="action-tabs">
+          <el-tabs v-model="actionTab" class="mb-4">
             <el-tab-pane label="系统操作" name="system">
               <el-select
                 v-model="selectedActionId"
@@ -58,7 +58,7 @@
           </el-tabs>
 
           <!-- 当前操作信息 -->
-          <div v-if="currentAction" class="action-info">
+          <div v-if="currentAction" class="mb-4">
             <el-descriptions :column="1" size="small" border>
               <el-descriptions-item label="名称">
                 {{ currentAction.name }}
@@ -73,8 +73,8 @@
           </div>
 
           <!-- 参数配置 -->
-          <div class="params-section">
-            <h4 class="section-title">参数配置</h4>
+          <div class="mb-4">
+            <h4 class="text-sm font-bold text-[var(--el-text-color-primary)] mt-0 mb-3">参数配置</h4>
 
             <!-- 动态参数表单 -->
             <el-form
@@ -94,21 +94,21 @@
                   :placeholder="param.description || param.name"
                   clearable
                 />
-                <div v-if="param.description" class="param-desc">
+                <div v-if="param.description" class="text-xs text-[var(--el-text-color-secondary)] mt-1">
                   {{ param.description }}
                 </div>
               </el-form-item>
             </el-form>
 
             <!-- JSON编辑器 -->
-            <div v-else class="json-editor">
+            <div v-else>
               <el-input
                 v-model="paramsJson"
                 type="textarea"
                 :rows="8"
                 placeholder='{"key": "value"}'
               />
-              <div class="editor-actions">
+              <div class="flex gap-2 mt-2">
                 <el-button size="small" @click="formatJson">
                   <el-icon><DocumentChecked /></el-icon>
                   格式化
@@ -122,7 +122,7 @@
           </div>
 
           <!-- 调试操作按钮 -->
-          <div class="debug-actions">
+          <div class="grid grid-cols-2 gap-2">
             <el-button
               type="primary"
               @click="previewAction"
@@ -169,9 +169,9 @@
       <!-- 右侧: 调试信息和结果 -->
       <el-col :xs="24" :md="12">
         <!-- 预览结果 -->
-        <el-card v-if="previewResult" class="result-card" shadow="hover">
+        <el-card v-if="previewResult" class="mb-5" shadow="hover">
           <template #header>
-            <div class="card-header">
+            <div class="flex items-center gap-2 font-bold">
               <el-icon><View /></el-icon>
               <span>参数预览</span>
               <el-tag :type="previewResult.is_composite ? 'warning' : 'success'" size="small">
@@ -180,7 +180,7 @@
             </div>
           </template>
 
-          <div class="preview-content">
+          <div>
             <el-descriptions :column="2" size="small" border>
               <el-descriptions-item label="操作ID">
                 {{ previewResult.action_id }}
@@ -205,20 +205,20 @@
             <div
               v-for="(step, index) in previewResult.steps_preview"
               :key="index"
-              class="step-preview"
+              class="mb-3 p-3 border border-[var(--el-border-color-lighter)] rounded bg-[var(--el-fill-color-lighter)]"
             >
-              <div class="step-header">
+              <div class="flex justify-between items-center mb-2">
                 <el-tag size="small" type="info">步骤 {{ step.step_index + 1 }}</el-tag>
-                <span class="step-action-id">{{ step.action_id }}</span>
+                <span class="text-xs text-[var(--el-text-color-secondary)]">{{ step.action_id }}</span>
               </div>
-              <div class="step-params">
-                <div class="param-block">
-                  <label>原始参数:</label>
-                  <pre>{{ JSON.stringify(step.original_params, null, 2) }}</pre>
+              <div>
+                <div class="mb-2">
+                  <label class="block text-xs text-[var(--el-text-color-regular)] mb-1">原始参数:</label>
+                  <pre class="bg-[var(--el-fill-color-light)] p-2 rounded text-xs leading-relaxed m-0 overflow-x-auto">{{ JSON.stringify(step.original_params, null, 2) }}</pre>
                 </div>
-                <div class="param-block">
-                  <label>替换后参数:</label>
-                  <pre>{{ JSON.stringify(step.replaced_params, null, 2) }}</pre>
+                <div class="mb-2">
+                  <label class="block text-xs text-[var(--el-text-color-regular)] mb-1">替换后参数:</label>
+                  <pre class="bg-[var(--el-fill-color-light)] p-2 rounded text-xs leading-relaxed m-0 overflow-x-auto">{{ JSON.stringify(step.replaced_params, null, 2) }}</pre>
                 </div>
               </div>
             </div>
@@ -226,9 +226,9 @@
         </el-card>
 
         <!-- 验证结果 -->
-        <el-card v-if="validationResult" class="result-card" shadow="hover">
+        <el-card v-if="validationResult" class="mb-5" shadow="hover">
           <template #header>
-            <div class="card-header">
+            <div class="flex items-center gap-2 font-bold">
               <el-icon><CircleCheck /></el-icon>
               <span>参数验证</span>
               <el-tag :type="validationResult.valid ? 'success' : 'danger'" size="small">
@@ -237,7 +237,7 @@
             </div>
           </template>
 
-          <div class="validation-content">
+          <div>
             <el-alert
               :title="validationResult.valid ? '参数验证通过' : '参数验证失败'"
               :type="validationResult.valid ? 'success' : 'error'"
@@ -245,17 +245,17 @@
               show-icon
             />
 
-            <div v-if="validationResult.errors.length > 0" class="error-list">
-              <h4>错误列表:</h4>
-              <ul>
-                <li v-for="(error, index) in validationResult.errors" :key="index">
+            <div v-if="validationResult.errors.length > 0">
+              <h4 class="mt-3 mb-2 text-sm text-[var(--el-text-color-primary)]">错误列表:</h4>
+              <ul class="m-0 pl-5">
+                <li v-for="(error, index) in validationResult.errors" :key="index" class="text-[13px] text-[var(--el-color-danger)] my-1">
                   {{ error }}
                 </li>
               </ul>
             </div>
 
-            <div v-if="validationResult.missing_params.length > 0" class="missing-list">
-              <h4>缺失参数:</h4>
+            <div v-if="validationResult.missing_params.length > 0">
+              <h4 class="mt-3 mb-2 text-sm text-[var(--el-text-color-primary)]">缺失参数:</h4>
               <el-tag
                 v-for="param in validationResult.missing_params"
                 :key="param"
@@ -267,8 +267,8 @@
               </el-tag>
             </div>
 
-            <div v-if="validationResult.invalid_params.length > 0" class="invalid-list">
-              <h4>无效参数:</h4>
+            <div v-if="validationResult.invalid_params.length > 0">
+              <h4 class="mt-3 mb-2 text-sm text-[var(--el-text-color-primary)]">无效参数:</h4>
               <el-tag
                 v-for="param in validationResult.invalid_params"
                 :key="param"
@@ -283,9 +283,9 @@
         </el-card>
 
         <!-- 执行结果 -->
-        <el-card v-if="executionResult" class="result-card" shadow="hover">
+        <el-card v-if="executionResult" class="mb-5" shadow="hover">
           <template #header>
-            <div class="card-header">
+            <div class="flex items-center gap-2 font-bold">
               <el-icon><VideoPlay /></el-icon>
               <span>执行结果</span>
               <el-tag :type="executionResult.success ? 'success' : 'danger'" size="small">
@@ -294,7 +294,7 @@
             </div>
           </template>
 
-          <div class="execution-content">
+          <div>
             <el-descriptions :column="2" size="small" border>
               <el-descriptions-item label="操作ID">
                 {{ executionResult.action_id }}
@@ -308,10 +308,10 @@
             </el-descriptions>
 
             <el-divider v-if="executionResult.data" content-position="left">返回数据</el-divider>
-            <pre v-if="executionResult.data" class="data-viewer">{{ JSON.stringify(executionResult.data, null, 2) }}</pre>
+            <pre v-if="executionResult.data" class="bg-[var(--el-fill-color-light)] p-3 rounded text-xs leading-relaxed m-0 overflow-x-auto">{{ JSON.stringify(executionResult.data, null, 2) }}</pre>
 
             <el-divider v-if="executionResult.error" content-position="left">错误信息</el-divider>
-            <pre v-if="executionResult.error" class="error-viewer">{{ executionResult.error }}</pre>
+            <pre v-if="executionResult.error" class="bg-[var(--el-color-danger-light-9)] text-[var(--el-color-danger)] p-3 rounded text-xs leading-relaxed m-0 overflow-x-auto">{{ executionResult.error }}</pre>
           </div>
         </el-card>
 
@@ -331,12 +331,12 @@
     </el-row>
 
     <!-- 执行日志面板 -->
-    <el-card class="log-card" shadow="never">
+    <el-card shadow="never">
       <template #header>
-        <div class="log-header">
+        <div class="flex items-center gap-2">
           <el-icon><Memo /></el-icon>
           <span>执行日志</span>
-          <div class="log-actions">
+          <div class="ml-auto flex gap-2">
             <el-button size="small" @click="clearLogs">
               <el-icon><Delete /></el-icon>
               清空
@@ -349,24 +349,28 @@
         </div>
       </template>
 
-      <div class="log-content">
+      <div>
         <el-scrollbar max-height="300px">
-          <div v-if="logs.length === 0" class="no-logs">
+          <div v-if="logs.length === 0" class="text-center">
             <el-empty description="暂无日志" :image-size="60" />
           </div>
-          <div v-else class="log-list">
+          <div v-else>
             <div
               v-for="(log, index) in logs"
               :key="index"
-              class="log-item"
-              :class="`log-${log.type}`"
+              class="flex items-center gap-2 px-2 py-2 border-b border-[#f0f0f0] font-mono text-[13px] last:border-b-0"
+              :class="{
+                'bg-[var(--el-color-danger-light-9)]': log.type === 'error',
+                'bg-[#f0f9ff]': log.type === 'success',
+                'bg-[var(--el-color-warning-light-9)]': log.type === 'warning'
+              }"
             >
-              <span class="log-time">{{ log.time }}</span>
-              <el-tag size="small" :type="getLogTagType(log.type)" class="log-type">
+              <span class="text-[var(--el-text-color-secondary)] whitespace-nowrap">{{ log.time }}</span>
+              <el-tag size="small" :type="getLogTagType(log.type)" class="min-w-[60px] text-center">
                 {{ log.type.toUpperCase() }}
               </el-tag>
-              <span class="log-message">{{ log.message }}</span>
-              <span v-if="log.duration" class="log-duration">{{ log.duration.toFixed(2) }}s</span>
+              <span class="flex-1 text-[var(--el-text-color-primary)]">{{ log.message }}</span>
+              <span v-if="log.duration" class="text-[var(--el-color-success)] whitespace-nowrap">{{ log.duration.toFixed(2) }}s</span>
             </div>
           </div>
         </el-scrollbar>
@@ -776,215 +780,9 @@ onMounted(() => {
 })
 </script>
 
-<style scoped lang="scss">
-.debug-panel {
-  .config-card,
-  .result-card {
-    margin-bottom: 20px;
-
-    .card-header {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-weight: bold;
-    }
-  }
-
-  .action-tabs {
-    margin-bottom: 16px;
-  }
-
-  .action-info {
-    margin-bottom: 16px;
-  }
-
-  .params-section {
-    margin-bottom: 16px;
-
-    .section-title {
-      font-size: 14px;
-      font-weight: bold;
-      color: #303133;
-      margin: 0 0 12px 0;
-    }
-
-    .param-desc {
-      font-size: 12px;
-      color: #909399;
-      margin-top: 4px;
-    }
-
-    .json-editor {
-      .editor-actions {
-        display: flex;
-        gap: 8px;
-        margin-top: 8px;
-      }
-    }
-  }
-
-  .debug-actions {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 8px;
-  }
-
-  .option-content {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-
-  .preview-content,
-  .validation-content,
-  .execution-content {
-    .step-preview {
-      margin-bottom: 12px;
-      padding: 12px;
-      border: 1px solid #ebeef5;
-      border-radius: 4px;
-      background-color: #fafafa;
-
-      .step-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 8px;
-
-        .step-action-id {
-          font-size: 12px;
-          color: #909399;
-        }
-      }
-
-      .step-params {
-        .param-block {
-          margin-bottom: 8px;
-
-          label {
-            display: block;
-            font-size: 12px;
-            color: #606266;
-            margin-bottom: 4px;
-          }
-
-          pre {
-            background-color: #f5f7fa;
-            padding: 8px;
-            border-radius: 4px;
-            overflow-x: auto;
-            font-size: 12px;
-            line-height: 1.5;
-            margin: 0;
-          }
-        }
-      }
-    }
-
-    .error-list,
-    .missing-list,
-    .invalid-list {
-      h4 {
-        margin: 12px 0 8px 0;
-        font-size: 14px;
-        color: #303133;
-      }
-
-      ul {
-        margin: 0;
-        padding-left: 20px;
-
-        li {
-          font-size: 13px;
-          color: #f56c6c;
-          margin: 4px 0;
-        }
-      }
-    }
-
-    .data-viewer,
-    .error-viewer {
-      background-color: #f5f7fa;
-      padding: 12px;
-      border-radius: 4px;
-      overflow-x: auto;
-      font-size: 12px;
-      line-height: 1.6;
-      margin: 0;
-    }
-
-    .error-viewer {
-      background-color: #fef0f0;
-      color: #f56c6c;
-    }
-  }
-
-  .log-card {
-    .log-header {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-
-      .log-actions {
-        margin-left: auto;
-        display: flex;
-        gap: 8px;
-      }
-    }
-
-    .log-content {
-      .no-logs {
-        text-align: center;
-      }
-
-      .log-list {
-        .log-item {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          padding: 8px;
-          border-bottom: 1px solid #f0f0f0;
-          font-family: monospace;
-          font-size: 13px;
-
-          &:last-child {
-            border-bottom: none;
-          }
-
-          .log-time {
-            color: #909399;
-            white-space: nowrap;
-          }
-
-          .log-type {
-            min-width: 60px;
-            text-align: center;
-          }
-
-          .log-message {
-            flex: 1;
-            color: #303133;
-          }
-
-          .log-duration {
-            color: #67c23a;
-            white-space: nowrap;
-          }
-
-          &.log-error {
-            background-color: #fef0f0;
-          }
-
-          &.log-success {
-            background-color: #f0f9ff;
-          }
-
-          &.log-warning {
-            background-color: #fdf6ec;
-          }
-        }
-      }
-    }
-  }
+<style scoped>
+/* option-content: 下拉选项布局 */
+.option-content {
+  @apply flex justify-between items-center;
 }
 </style>

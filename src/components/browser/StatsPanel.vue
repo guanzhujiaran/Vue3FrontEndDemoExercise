@@ -11,7 +11,7 @@
     <el-col :span="6">
       <el-card class="stat-card">
         <div class="stat-content">
-          <el-icon class="stat-icon" color="#409EFF"><UserFilled /></el-icon>
+          <el-icon class="stat-icon fill-primary"><UserFilled /></el-icon>
           <div class="stat-info">
             <div class="stat-value">{{ stats.total }}</div>
             <div class="stat-label">指纹总数</div>
@@ -22,7 +22,7 @@
     <el-col :span="6">
       <el-card class="stat-card">
         <div class="stat-content">
-          <el-icon class="stat-icon" color="#67C23A"><ChromeFilled /></el-icon>
+          <el-icon class="stat-icon fill-success"><ChromeFilled /></el-icon>
           <div class="stat-info">
             <div class="stat-value">{{ stats.chrome }}</div>
             <div class="stat-label">Chrome</div>
@@ -33,7 +33,7 @@
     <el-col :span="6">
       <el-card class="stat-card">
         <div class="stat-content">
-          <el-icon class="stat-icon" color="#E6A23C"><Monitor /></el-icon>
+          <el-icon class="stat-icon fill-warning"><Monitor /></el-icon>
           <div class="stat-info">
             <div class="stat-value">{{ stats.edge }}</div>
             <div class="stat-label">Edge</div>
@@ -44,7 +44,7 @@
     <el-col :span="6">
       <el-card class="stat-card">
         <div class="stat-content">
-          <el-icon class="stat-icon" color="#F56C6C"><Monitor /></el-icon>
+          <el-icon class="stat-icon fill-danger"><Monitor /></el-icon>
           <div class="stat-info">
             <div class="stat-value">{{ stats.windows }}</div>
             <div class="stat-label">Windows</div>
@@ -70,9 +70,3 @@ interface Props {
 
 const props = defineProps<Props>()
 </script>
-
-<style scoped>
-@import '@/assets/components/browser/stats-panel-tailwind.css';
-
-/* 基础样式已在 tailwind.css 的 @layer components 中定义 */
-</style>

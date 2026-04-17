@@ -13,4 +13,4 @@
   </CommContainer>
 </template>
 
-<style scoped></style>
+

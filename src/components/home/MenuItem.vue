@@ -1,10 +1,10 @@
 <template>
   <el-menu-item v-if="!item.children || item.children.length === 0" :index="item.path">
-    <span @click="handleMenuItemClick">{{ item.title }}</span>
+    <span  class="text-lg" @click="handleMenuItemClick">{{ item.title }}</span>
   </el-menu-item>
   <el-sub-menu v-else :index="item.path">
     <template #title
-      ><span @click="handleSubMenuClick">{{ item.title }}</span></template
+      ><span class="text-lg" @click="handleSubMenuClick">{{ item.title }}</span></template
     >
     <template v-for="child in item.children" :key="child.path">
       <MenuItem :item="child" />

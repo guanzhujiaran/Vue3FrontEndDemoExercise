@@ -67,11 +67,11 @@ defineExpose({
 </script>
 
 <template>
-  <div class="scroll-buttons">
+  <div class="fixed right-[var(--spacing-16)] bottom-[var(--spacing-16)] z-[1000] flex flex-col gap-[var(--spacing-8)] items-end">
     <!-- 回到顶部按钮 -->
     <el-button
       v-show="showBackToTop"
-      class="back-to-top-btn"
+      class="[box-shadow:0_1px_2px_rgba(0,0,0,0.1)]"
       circle
       type="info"
       @click="scrollToTop"
@@ -82,7 +82,7 @@ defineExpose({
     <!-- 滚动到底部按钮 -->
     <el-button
       v-show="showScrollToBottom"
-      class="scroll-to-bottom-btn"
+      class="[box-shadow:0_1px_2px_rgba(0,0,0,0.1)]"
       circle
       type="primary"
       @click="scrollToBottom"
@@ -91,21 +91,3 @@ defineExpose({
     </el-button>
   </div>
 </template>
-
-<style scoped>
-.scroll-buttons {
-  position: fixed;
-  right: calc(var(--component-spacing) * 4);
-  bottom: calc(var(--component-spacing) * 4);
-  z-index: 1000;
-  display: flex;
-  flex-direction: column;
-  gap: calc(var(--component-spacing) * 2);
-  align-items: flex-end;
-}
-
-.back-to-top-btn,
-.scroll-to-bottom-btn {
-  box-shadow: 0 calc(var(--component-size) * 0.0625) calc(var(--component-size) * 0.375) 0 rgba(0, 0, 0, 0.1);
-}
-</style>

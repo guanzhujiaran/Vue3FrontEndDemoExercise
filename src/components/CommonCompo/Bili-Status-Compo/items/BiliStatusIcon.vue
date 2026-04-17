@@ -52,7 +52,3 @@ const resultIcon = computed(() => {
     </el-popover>
   </div>
 </template>
-
-<style scoped lang="scss">
-@import '@/assets/bili-status-icon-tailwind.css';
-</style>

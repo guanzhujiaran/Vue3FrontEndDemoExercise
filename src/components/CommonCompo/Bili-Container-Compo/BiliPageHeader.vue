@@ -24,7 +24,3 @@ withDefaults(defineProps<Props>(), {
   tagType: 'info'
 })
 </script>
-
-<style scoped>
-@import '@/assets/components/lottery/bili-page-header-tailwind.css';
-</style>

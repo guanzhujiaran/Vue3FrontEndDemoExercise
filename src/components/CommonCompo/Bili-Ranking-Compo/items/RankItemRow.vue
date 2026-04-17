@@ -67,7 +67,3 @@ const {
     </div>
   </div>
 </template>
-
-<style scoped>
-@import '@/assets/components/ranking/rank-item-row-tailwind.css';
-</style>

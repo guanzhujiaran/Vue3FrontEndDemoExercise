@@ -7,7 +7,7 @@
  * @Description: RPA浏览器控制台 - 统一管理浏览器自动化操作和调试
 -->
 <template>
-  <div class="browser-management-view">
+  <div class="w-full">
     <!-- 标签页导航 -->
     <el-tabs v-model="activeTab" type="card" class="mb-4">
       <el-tab-pane label="RPA浏览器控制台" name="unified" :lazy="true">
@@ -62,12 +62,12 @@
       />
       
       <template #footer>
-        <span class="dialog-footer">
+        <el-text class="flex justify-end gap-2" tag="span">
           <el-button @click="showEditDialog = false">取消</el-button>
           <el-button type="primary" @click="handleSubmitForm" :loading="submitLoading">
             {{ isEditMode ? '保存' : '创建' }}
           </el-button>
-        </span>
+        </el-text>
       </template>
     </el-dialog>
   </div>
@@ -256,18 +256,3 @@ onMounted(() => {
 })
 </script>
 
-<style scoped>
-.browser-management-view {
-  width: 100%;
-}
-
-.edit-dialog-content {
-  padding: 20px 0;
-  text-align: center;
-}
-
-.edit-dialog-content p {
-  margin: 8px 0;
-  color: var(--el-text-color-regular);
-}
-</style>

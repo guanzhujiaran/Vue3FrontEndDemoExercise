@@ -123,16 +123,16 @@ const scrollbarHeight = computed(() => {
 <template>
   <FlexContainer>
     <el-container v-if="isLoggedIn">
-      <div class="user-center-layout">
+      <div class="user-center-layout h-screen flex w-full" style="height: calc(100vh - 60px - 40px); overflow: hidden;">
         <!-- 侧边栏 -->
-        <el-aside class="sidebar" :class="{ 'sidebar-collapsed': responsiveSidebarCollapsed, 'sidebar-small': isSmallScreen }">
-          <div class="sidebar-content">
+        <el-aside class="sidebar transition-all duration-300 ease-in-out p-1! sm:p-2!" :class="{ 'sidebar-collapsed': responsiveSidebarCollapsed, 'sidebar-small': isSmallScreen }" style="width: 200px; min-width: 200px; overflow: hidden;">
+          <div class="sidebar-content h-full">
             <el-menu
               :defaultActive="menuDefaultActive"
-              class="sidebar-menu"
+              class="sidebar-menu h-full border-r border-[var(--el-border-color-light)]"
               :collapse="responsiveSidebarCollapsed"
             >
-              <div class="sidebar-toggle-wrapper">
+              <div class="sidebar-toggle-wrapper flex p-2">
                 <el-button
                   link
                   :icon="responsiveSidebarCollapsed ? Expand : Fold"
@@ -143,13 +143,13 @@ const scrollbarHeight = computed(() => {
               </div>
 
               <div
-                class="user-info hover:cursor-pointer"
+                class="user-info hover:cursor-pointer mb-5 flex items-center border-b border-[var(--el-border-color)] px-5 pb-5 transition-all duration-300"
                 @click="router.push({ name: RouteName.USER_CENTER })"
               >
                 <el-avatar :icon="Avatar" />
-                <div class="user-details">
-                  <div class="user-name">{{ userInfo.user_name }}</div>
-                  <div class="user-role">
+                <div class="user-details ml-3">
+                  <el-text class="user-name text-base font-semibold text-[var(--el-text-color-primary)]" tag="div">{{ userInfo.user_name }}</el-text>
+                  <div class="user-role mt-1 text-xs text-[var(--el-text-color-secondary)]">
                     {{ userInfo.role === 'root' ? '管理员' : '普通用户' }}
                   </div>
                 </div>
@@ -159,7 +159,7 @@ const scrollbarHeight = computed(() => {
                 v-for="(child, index) in user_center_routes"
                 :key="index"
                 @click="handleMenuClick(child)"
-                class="menu-item-wrapper"
+                class="menu-item-wrapper cursor-pointer overflow-hidden transition-all duration-300 ease-in-out"
               >
                 <el-menu-item
                   :index="child.name"
@@ -168,17 +168,17 @@ const scrollbarHeight = computed(() => {
                   <el-icon v-if="child.meta.icon">
                     <component :is="child.meta.icon" />
                   </el-icon>
-                  <span>{{ child.meta.title }}</span>
+                  <el-text class="transition-all duration-300" tag="span">{{ child.meta.title }}</el-text>
                 </el-menu-item>
               </div>
             </el-menu>
           </div>
         </el-aside>
         <!-- 主内容区 -->
-        <el-main class="main-content" ref="mainContentRef">
-          <el-header class="content-header" ref="headerRef">
+        <el-main class="main-content transition-all duration-300 ease-in-out p-1! sm:p-2!" style="overflow: hidden; display: flex; flex-direction: column;" ref="mainContentRef">
+          <el-header class="content-header transition-all duration-300" style="height: 60px; display: flex; align-items: center; padding: 0 20px; background-color: var(--el-bg-color-page); border-bottom: 1px solid var(--el-border-color-light);" ref="headerRef">
             <h2>
-              {{ getCurrentRouteTitle }}
+              <el-text tag="h2">{{ getCurrentRouteTitle }}</el-text>
             </h2>
           </el-header>
           <el-scrollbar
@@ -186,7 +186,7 @@ const scrollbarHeight = computed(() => {
             wrap-style="display:flex;"
             view-style="flex-grow:1;"
           >
-            <div class="content-body">
+            <div class="content-body transition-all duration-300 p-1! sm:p-2!" style="background-color: var(--el-bg-color); min-height: 100%;">
               <RouterView v-slot="{ Component, route }">
                 <div v-if="Component">
                   <transition name="slide-fade" mode="out-in">
@@ -195,8 +195,8 @@ const scrollbarHeight = computed(() => {
                     </keep-alive>
                   </transition>
                 </div>
-                <div v-else class="empty-state">
-                  <p>未找到组件 - 路由: {{ route.path }}, 名称: {{ route.name }}</p>
+                <div v-else class="empty-state p-5 text-center text-[var(--el-text-color-secondary)]">
+                  <el-text class="my-4 text-base" tag="p">未找到组件 - 路由: {{ route.path }}, 名称: {{ route.name }}</el-text>
                 </div>
               </RouterView>
             </div>
@@ -207,7 +207,3 @@ const scrollbarHeight = computed(() => {
     <BiliErrorRouteTo v-else :props="BiliErrorRouteToTxt.unauthorized" />
   </FlexContainer>
 </template>
-
-<style scoped>
-@import '@/assets/components/user/user-center-tailwind.css';
-</style>

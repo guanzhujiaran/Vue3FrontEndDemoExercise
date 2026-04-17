@@ -7,7 +7,7 @@
  * @Description: 全局配置管理组件
 -->
 <template>
-  <div class="global-config-management space-y-6">
+  <div class="space-y-6 p-4 max-w-[1400px] mx-auto text-base">
     <!-- 功能说明 -->
     <el-alert
       v-if="showAlert"
@@ -25,9 +25,9 @@
 
     <!-- 统一配置管理卡片 -->
     <el-card>
-      <div class="config-header">
-        <h3>全局配置中心</h3>
-        <p class="config-description">统一管理浏览器默认配置和通知设置</p>
+      <div class="p-6 text-center border-b border-[var(--el-border-color-light)] mb-0">
+        <h3 class="mb-2 text-4xl font-bold text-[var(--el-text-color-primary)]">全局配置中心</h3>
+        <p class="m-0 text-lg text-[var(--el-text-color-regular)] leading-relaxed">统一管理浏览器默认配置和通知设置</p>
       </div>
       
       <!-- 统一手风琴组件 -->
@@ -35,9 +35,9 @@
         <!-- 第一部分：浏览器默认配置（在上） -->
         <el-collapse-item name="default-fingerprint-section" title="浏览器默认配置">
           <template #title>
-            <div class="main-accordion-title">
-              <el-icon><Monitor /></el-icon>
-              <span>浏览器默认配置</span>
+            <div class="flex items-center gap-3 w-full">
+              <el-icon class="text-xl text-[var(--el-color-primary)]"><Monitor /></el-icon>
+              <span class="flex-1 text-2xl font-semibold">浏览器默认配置</span>
               <span class="badge-text badge-success">指纹</span>
             </div>
           </template>
@@ -52,9 +52,9 @@
                   <!-- 基础浏览器配置 -->
                   <el-collapse-item name="browser-basic" title="基础浏览器配置">
                     <template #title>
-                      <div class="accordion-title">
-                        <el-icon><Monitor /></el-icon>
-                        <span>基础配置</span>
+                      <div class="flex items-center gap-3 w-full">
+                        <el-icon class="text-lg text-[var(--el-color-primary)]"><Monitor /></el-icon>
+                        <span class="flex-1 text-xl font-medium">基础配置</span>
                         <span class="badge-text badge-core">核心</span>
                       </div>
                     </template>
@@ -70,7 +70,7 @@
                         <el-option label="Edge" value="edge" />
                         <el-option label="Firefox" value="firefox" />
                       </el-select>
-                      <div class="form-help-text">新建浏览器时使用的浏览器类型，留空则使用后端默认值</div>
+                      <div class="text-xs text-[var(--el-text-color-secondary)] mt-1 leading-snug">新建浏览器时使用的浏览器类型，留空则使用后端默认值</div>
                     </el-form-item>
                     <el-form-item label="操作系统">
                       <el-select 
@@ -84,20 +84,20 @@
                         <el-option label="macOS" value="macos" />
                         <el-option label="Linux" value="linux" />
                       </el-select>
-                      <div class="form-help-text">新建浏览器时使用的操作系统，留空则使用后端默认值</div>
+                      <div class="text-xs text-[var(--el-text-color-secondary)] mt-1 leading-snug">新建浏览器时使用的操作系统，留空则使用后端默认值</div>
                     </el-form-item>
                   </el-collapse-item>
 
                   <!-- 屏幕分辨率配置 -->
                   <el-collapse-item name="screen-config" title="屏幕分辨率配置">
                     <template #title>
-                      <div class="accordion-title">
-                        <el-icon><FullScreen /></el-icon>
-                        <span>屏幕配置</span>
+                      <div class="flex items-center gap-3 w-full">
+                        <el-icon class="text-lg text-[var(--el-color-primary)]"><FullScreen /></el-icon>
+                        <span class="flex-1 text-xl font-medium">屏幕配置</span>
                         <span class="badge-text badge-warning">显示</span>
                       </div>
                     </template>
-                    <div class="config-section">
+                    <div class="flex flex-col gap-5">
                       <el-row :gutter="16">
                         <el-col :md="12">
                           <el-form-item label="视口宽度">
@@ -111,7 +111,7 @@
                               style="width: 100%"
                               @change="handleDefaultConfigChange"
                             />
-                            <div class="form-help-text">浏览器视口宽度，留空则使用后端默认值</div>
+                            <div class="text-xs text-[var(--el-text-color-secondary)] mt-1 leading-snug">浏览器视口宽度，留空则使用后端默认值</div>
                           </el-form-item>
                         </el-col>
                         <el-col :md="12">
@@ -126,7 +126,7 @@
                               style="width: 100%"
                               @change="handleDefaultConfigChange"
                             />
-                            <div class="form-help-text">浏览器视口高度，留空则使用后端默认值</div>
+                            <div class="text-xs text-[var(--el-text-color-secondary)] mt-1 leading-snug">浏览器视口高度，留空则使用后端默认值</div>
                           </el-form-item>
                         </el-col>
                       </el-row>
@@ -136,13 +136,13 @@
                   <!-- 语言与时区配置 -->
                   <el-collapse-item name="locale-timezone" title="语言与时区配置">
                     <template #title>
-                      <div class="accordion-title">
-                        <el-icon><Clock /></el-icon>
-                        <span>语言时区</span>
+                      <div class="flex items-center gap-3 w-full">
+                        <el-icon class="text-lg text-[var(--el-color-primary)]"><Clock /></el-icon>
+                        <span class="flex-1 text-xl font-medium">语言时区</span>
                         <span class="badge-text badge-info">区域</span>
                       </div>
                     </template>
-                    <div class="config-section">
+                    <div class="flex flex-col gap-5">
                       <el-form-item label="语言">
                         <el-input 
                           v-model="defaultFingerprintConfig.default_lang" 
@@ -150,7 +150,7 @@
                           clearable
                           @input="handleDefaultConfigChange"
                         />
-                        <div class="form-help-text">浏览器语言设置，如 zh-CN、en-US，留空则使用后端默认值</div>
+                        <div class="text-xs text-[var(--el-text-color-secondary)] mt-1 leading-snug">浏览器语言设置，如 zh-CN、en-US，留空则使用后端默认值</div>
                       </el-form-item>
                       <el-form-item label="时区">
                         <el-input 
@@ -159,7 +159,7 @@
                           clearable
                           @input="handleDefaultConfigChange"
                         />
-                        <div class="form-help-text">浏览器时区设置，如 Asia/Shanghai、America/New_York，留空则使用后端默认值</div>
+                        <div class="text-xs text-[var(--el-text-color-secondary)] mt-1 leading-snug">浏览器时区设置，如 Asia/Shanghai、America/New_York，留空则使用后端默认值</div>
                       </el-form-item>
                     </div>
                   </el-collapse-item>
@@ -167,10 +167,10 @@
               </el-form>
               
               <!-- 配置状态和操作 -->
-              <div class="config-actions">
-                <div class="config-status">
+              <div class="flex justify-between items-center py-5 border-t border-[var(--el-border-color-light)] mt-5 flex-wrap gap-4">
+                <div class="flex items-center gap-3 flex-wrap">
                   <span class="status-badge" :class="defaultConfigSaved ? 'status-saved' : 'status-unsaved'">
-                    <el-icon class="status-icon">
+                    <el-icon class="mr-1">
                       <SuccessFilled v-if="defaultConfigSaved" />
                       <WarningFilled v-else />
                     </el-icon>
@@ -180,14 +180,13 @@
                     size="default" 
                     type="danger"
                     plain
-                    @click="clearAllDefaultConfig" 
-                    class="clear-button"
+                    @click="clearAllDefaultConfig"
                   >
                     <el-icon><CircleCloseFilled /></el-icon>
                     全部设为未设置
                   </el-button>
                 </div>
-                <div class="config-buttons">
+                <div class="flex gap-3 flex-wrap">
                   <el-button 
                     @click="resetDefaultConfig"
                     :icon="RefreshLeft"
@@ -218,9 +217,9 @@
         <!-- 第二部分：全局通知配置（在下） -->
         <el-collapse-item name="notification-section" title="全局通知配置">
           <template #title>
-            <div class="main-accordion-title">
-              <el-icon><Setting /></el-icon>
-              <span>全局通知配置</span>
+            <div class="flex items-center gap-3 w-full">
+              <el-icon class="text-xl text-[var(--el-color-primary)]"><Setting /></el-icon>
+              <span class="flex-1 text-2xl font-semibold">全局通知配置</span>
               <span class="badge-text badge-primary">通知</span>
             </div>
           </template>
@@ -236,9 +235,9 @@
                 <!-- 基础设置 -->
                 <el-collapse-item name="basic" title="基础设置">
                   <template #title>
-                    <div class="accordion-title">
-                      <el-icon><Setting /></el-icon>
-                      <span>基础设置</span>
+                    <div class="flex items-center gap-3 w-full">
+                      <el-icon class="text-lg text-[var(--el-color-primary)]"><Setting /></el-icon>
+                      <span class="flex-1 text-xl font-medium">基础设置</span>
                       <span class="badge-text badge-core">核心</span>
                     </div>
                   </template>
@@ -247,27 +246,27 @@
                       v-model="notificationConfig.hitokoto" 
                       @change="handleConfigChange"
                     />
-                    <div class="form-help-text">启用后每日推送一句优美语句</div>
+                    <div class="text-xs text-[var(--el-text-color-secondary)] mt-1 leading-snug">启用后每日推送一句优美语句</div>
                   </el-form-item>
                 </el-collapse-item>
 
                 <!-- Bark推送配置 -->
                 <el-collapse-item name="bark" title="Bark推送配置">
                   <template #title>
-                    <div class="accordion-title">
-                      <el-icon><Apple /></el-icon>
-                      <span>Bark推送</span>
+                    <div class="flex items-center gap-3 w-full">
+                      <el-icon class="text-lg text-[var(--el-color-primary)]"><Apple /></el-icon>
+                      <span class="flex-1 text-xl font-medium">Bark推送</span>
                       <span class="badge-text badge-ios">iOS</span>
                     </div>
                   </template>
-                  <div class="config-section">
+                  <div class="flex flex-col gap-5">
                     <el-form-item label="推送地址">
                       <el-input 
                         v-model="notificationConfig.bark_push" 
                         placeholder="https://api.day.app/your_key"
                         @input="handleConfigChange"
                       />
-                      <div class="form-help-text">iOS设备专用推送服务</div>
+                      <div class="text-xs text-[var(--el-text-color-secondary)] mt-1 leading-snug">iOS设备专用推送服务</div>
                     </el-form-item>
                     <el-row :gutter="16">
                       <el-col :md="12">
@@ -339,13 +338,13 @@
                 <!-- Push Plus配置 -->
                 <el-collapse-item name="pushplus" title="Push Plus配置">
                   <template #title>
-                    <div class="accordion-title">
-                      <el-icon><Promotion /></el-icon>
-                      <span>Push Plus</span>
+                    <div class="flex items-center gap-3 w-full">
+                      <el-icon class="text-lg text-[var(--el-color-primary)]"><Promotion /></el-icon>
+                      <span class="flex-1 text-xl font-medium">Push Plus</span>
                       <span class="badge-text badge-warning">多平台</span>
                     </div>
                   </template>
-                  <div class="config-section">
+                  <div class="flex flex-col gap-5">
                     <el-form-item label="Token">
                       <el-input 
                         v-model="notificationConfig.push_plus_token" 
@@ -422,13 +421,13 @@
                 <!-- 微信推送器配置 -->
                 <el-collapse-item name="wxpusher" title="微信推送器配置">
                   <template #title>
-                    <div class="accordion-title">
-                      <el-icon><ChatDotRound /></el-icon>
-                      <span>微信推送器</span>
+                    <div class="flex items-center gap-3 w-full">
+                      <el-icon class="text-lg text-[var(--el-color-primary)]"><ChatDotRound /></el-icon>
+                      <span class="flex-1 text-xl font-medium">微信推送器</span>
                       <span class="badge-text badge-wechat">微信</span>
                     </div>
                   </template>
-                  <div class="config-section">
+                  <div class="flex flex-col gap-5">
                     <el-form-item label="应用Token">
                       <el-input 
                         v-model="notificationConfig.wxpusher_app_token" 
@@ -462,15 +461,15 @@
                 <!-- 其他推送服务 -->
                 <el-collapse-item name="other" title="其他推送服务">
                   <template #title>
-                    <div class="accordion-title">
-                      <el-icon><MoreFilled /></el-icon>
-                      <span>其他推送</span>
+                    <div class="flex items-center gap-3 w-full">
+                      <el-icon class="text-lg text-[var(--el-color-primary)]"><MoreFilled /></el-icon>
+                      <span class="flex-1 text-xl font-medium">其他推送</span>
                       <span class="badge-text badge-more">更多</span>
                     </div>
                   </template>
-                  <div class="config-section">
-                    <div class="sub-section">
-                      <h4>钉钉机器人</h4>
+                  <div class="flex flex-col gap-5">
+                    <div class="p-4 rounded mb-4">
+                      <h4 class="mb-4 text-sm font-semibold text-[var(--el-text-color-primary)] border-l-[3px] border-[var(--el-color-primary)] pl-2">钉钉机器人</h4>
                       <el-row :gutter="16">
                         <el-col :md="12">
                           <el-form-item label="Token">
@@ -493,8 +492,8 @@
                       </el-row>
                     </div>
                     
-                    <div class="sub-section">
-                      <h4>企业微信</h4>
+                    <div class="p-4 rounded mb-4">
+                      <h4 class="mb-4 text-sm font-semibold text-[var(--el-text-color-primary)] border-l-[3px] border-[var(--el-color-primary)] pl-2">企业微信</h4>
                       <el-form-item label="密钥">
                         <el-input 
                           v-model="notificationConfig.qywx_key" 
@@ -504,8 +503,8 @@
                       </el-form-item>
                     </div>
                     
-                    <div class="sub-section">
-                      <h4>Telegram</h4>
+                    <div class="p-4 rounded mb-4">
+                      <h4 class="mb-4 text-sm font-semibold text-[var(--el-text-color-primary)] border-l-[3px] border-[var(--el-color-primary)] pl-2">Telegram</h4>
                       <el-row :gutter="16">
                         <el-col :md="12">
                           <el-form-item label="Bot Token">
@@ -529,8 +528,8 @@
                       </el-row>
                     </div>
                     
-                    <div class="sub-section">
-                      <h4>邮件推送</h4>
+                    <div class="p-4 rounded mb-4">
+                      <h4 class="mb-4 text-sm font-semibold text-[var(--el-text-color-primary)] border-l-[3px] border-[var(--el-color-primary)] pl-2">邮件推送</h4>
                       <el-row :gutter="16">
                         <el-col :md="12">
                           <el-form-item label="SMTP服务器">
@@ -555,8 +554,8 @@
                       </el-row>
                     </div>
                     
-                    <div class="sub-section">
-                      <h4>Webhook</h4>
+                    <div class="p-4 rounded mb-4">
+                      <h4 class="mb-4 text-sm font-semibold text-[var(--el-text-color-primary)] border-l-[3px] border-[var(--el-color-primary)] pl-2">Webhook</h4>
                       <el-form-item label="Webhook地址">
                         <el-input 
                           v-model="notificationConfig.webhook_url" 
@@ -571,10 +570,10 @@
               </el-form>
               
               <!-- 配置状态和操作 -->
-              <div class="config-actions">
-                <div class="config-status">
+              <div class="flex justify-between items-center py-5 border-t border-[var(--el-border-color-light)] mt-5 flex-wrap gap-4">
+                <div class="flex items-center gap-3 flex-wrap">
                   <span class="status-badge" :class="configSaved ? 'status-saved' : 'status-unsaved'">
-                    <el-icon class="status-icon">
+                    <el-icon class="mr-1">
                       <SuccessFilled v-if="configSaved" />
                       <WarningFilled v-else />
                     </el-icon>
@@ -585,13 +584,12 @@
                     link 
                     @click="testNotification" 
                     :loading="testingNotification"
-                    class="test-button"
                   >
                     <el-icon><Bell /></el-icon>
                     测试推送
                   </el-button>
                 </div>
-                <div class="config-buttons">
+                <div class="flex gap-3 flex-wrap">
                   <el-button 
                     @click="resetConfig"
                     :icon="RefreshLeft"
@@ -1005,55 +1003,7 @@ onMounted(() => {
 </script>
 
 <style scoped>
-/* 全局容器 */
-.global-config-management {
-  padding: var(--spacing-4);
-  max-width: 1400px;
-  margin: 0 auto;
-  font-size: var(--font-size-base);
-}
-
-/* 配置头部样式 */
-.config-header {
-  padding: var(--spacing-6);
-  text-align: center;
-  border-bottom: 1px solid var(--el-border-color-light);
-  margin-bottom: 0;
-}
-
-.config-header h3 {
-  margin: 0 0 var(--spacing-2) 0;
-  font-size: var(--font-size-4xl);
-  font-weight: 700;
-  color: var(--el-text-color-primary);
-}
-
-.config-description {
-  margin: 0;
-  font-size: var(--font-size-lg);
-  color: var(--el-text-color-regular);
-  line-height: var(--line-height-relaxed);
-}
-
-/* 主手风琴样式 */
-.main-accordion {
-  border: none;
-  box-shadow: var(--el-box-shadow-lighter);
-  border-radius: var(--size-radius-base);
-  overflow: hidden;
-}
-
-.main-accordion :deep(.el-collapse-item__header) {
-  padding: var(--spacing-4) var(--spacing-5);
-  font-size: var(--font-size-lg);
-  font-weight: 600;
-  border: none;
-  border-bottom: 1px solid var(--el-border-color-light);
-  transition: all var(--transition-slow) var(--transition-timing);
-}
-
-
-/* 统一手风琴样式 */
+/* 统一手风琴样式 - 仅保留必须用 :deep() 实现的 Element Plus 内部样式 */
 .unified-accordion {
   border: none;
   box-shadow: var(--el-box-shadow-lighter);
@@ -1070,7 +1020,7 @@ onMounted(() => {
 }
 
 .unified-accordion :deep(.el-collapse-item__header) {
-  padding: var(--spacing-4) var(--spacing-5);
+  padding: 16px 20px;
   font-weight: 600;
   border: none;
   border-bottom: 1px solid var(--el-border-color-light);
@@ -1082,201 +1032,9 @@ onMounted(() => {
 }
 
 .unified-accordion :deep(.el-collapse-item__content) {
-  padding: var(--spacing-6) var(--spacing-5);
+  padding: 24px 20px;
 }
 
-/* 主手风琴标题样式 */
-.main-accordion-title {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-3);
-  width: 100%;
-}
-
-.main-accordion-title .el-icon {
-  font-size: var(--icon-size-xl);
-  color: var(--el-color-primary);
-}
-
-.main-accordion-title span {
-  flex: 1;
-  font-size: var(--font-size-2xl);
-  font-weight: 600;
-}
-
-/* 手风琴标题样式 */
-.accordion-title {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-3);
-  width: 100%;
-}
-
-.accordion-title .el-icon {
-  font-size: var(--icon-size-lg);
-  color: var(--el-color-primary);
-}
-
-.accordion-title span:not(.badge-text) {
-  flex: 1;
-  font-size: var(--font-size-xl);
-  font-weight: 500;
-}
-
-/* 配置区域样式 */
-.config-section {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-5);
-}
-
-.sub-section {
-  padding: var(--spacing-4);
-  border-radius: var(--size-radius-base);
-  margin-bottom: var(--spacing-4);
-}
-
-.sub-section h4 {
-  margin: 0 0 var(--spacing-4) 0;
-  font-size: var(--font-size-sm);
-  font-weight: 600;
-  color: var(--el-text-color-primary);
-  border-left: 3px solid var(--el-color-primary);
-  padding-left: var(--spacing-2);
-}
-
-/* 表单帮助文本 */
-.form-help-text {
-  font-size: var(--font-size-xs);
-  color: var(--el-text-color-secondary);
-  margin-top: var(--spacing-1);
-  line-height: var(--line-height-snug);
-}
-
-/* 模板卡片样式 */
-.template-card {
-  padding: var(--spacing-5);
-  border: 1px solid var(--el-border-color-light);
-  border-radius: var(--size-radius-base);
-  box-shadow: var(--el-box-shadow-lighter);
-  transition: all var(--transition-base) var(--transition-timing);
-}
-
-.template-card:hover {
-  transform: translateY(-1px);
-  box-shadow: var(--el-box-shadow-light);
-}
-
-.template-card h4 {
-  margin: 0 0 var(--spacing-4) 0;
-  font-size: var(--font-size-lg);
-  font-weight: 600;
-  color: var(--el-text-color-primary);
-  text-align: center;
-}
-
-/* 卡片样式 */
-.el-card {
-  margin-bottom: var(--spacing-5);
-  border-radius: var(--size-radius-base);
-  box-shadow: var(--el-box-shadow-light);
-}
-
-.el-card :deep(.el-card__header) {
-  font-size: var(--font-size-lg);
-  font-weight: 600;
-  border-bottom: 1px solid var(--el-border-color-light);
-}
-
-.el-card :deep(.el-card__body) {
-  padding: var(--spacing-6);
-  font-size: var(--font-size-base);
-}
-
-.config-tabs :deep(.el-tabs__content) {
-  padding: var(--spacing-5) 0;
-}
-
-.text-center .el-card :deep(.el-card__body) {
-  padding: var(--spacing-8) var(--spacing-6);
-}
-
-.el-descriptions {
-  margin-bottom: var(--spacing-4);
-}
-
-.el-tag {
-  margin-bottom: var(--spacing-1);
-}
-
-/* 响应式设计 */
-@media (max-width: 768px) {
-  .global-config-management {
-    padding: var(--spacing-3);
-  }
-  
-  .main-accordion :deep(.el-collapse-item__header),
-  .unified-accordion :deep(.el-collapse-item__header) {
-    padding: var(--spacing-3) var(--spacing-4);
-    font-size: var(--font-size-base);
-  }
-  
-  .main-accordion :deep(.el-collapse-item__content),
-  .unified-accordion :deep(.el-collapse-item__content) {
-    padding: var(--spacing-4);
-  }
-  
-  .accordion-title {
-    gap: var(--spacing-2);
-  }
-  
-  .accordion-title .el-icon {
-    font-size: var(--icon-size-sm);
-  }
-  
-  .accordion-title span {
-    font-size: var(--font-size-base);
-  }
-  
-  .sub-section {
-    padding: var(--spacing-3);
-    margin-bottom: var(--spacing-3);
-  }
-  
-  .el-form-item {
-    margin-bottom: var(--spacing-4);
-  }
-  
-  .el-card :deep(.el-card__body) {
-    padding: var(--spacing-4);
-  }
-}
-
-@media (max-width: 480px) {
-  .global-config-management {
-    padding: var(--spacing-2);
-  }
-  
-  .main-accordion :deep(.el-collapse-item__header),
-  .unified-accordion :deep(.el-collapse-item__header) {
-    padding: var(--spacing-2) var(--spacing-3);
-  }
-  
-  .main-accordion :deep(.el-collapse-item__content),
-  .unified-accordion :deep(.el-collapse-item__content) {
-    padding: var(--spacing-3);
-  }
-  
-  .sub-section {
-    padding: var(--spacing-2);
-  }
-  
-  .accordion-title .el-tag {
-    display: none; /* 在小屏幕上隐藏标签 */
-  }
-}
-
-/* 交互动画 */
 .unified-accordion :deep(.el-collapse-item__arrow) {
   transition: transform var(--transition-base) var(--transition-timing);
 }
@@ -1285,102 +1043,16 @@ onMounted(() => {
   transform: rotate(180deg);
 }
 
-/* 表单标签响应式 */
 .el-form :deep(.el-form-item__label) {
   font-weight: 500;
   color: var(--el-text-color-primary);
 }
 
-/* 输入框聚焦效果 */
-.el-input :deep(.el-input__wrapper) {
-  transition: all 0.3s ease;
+.el-form-item :deep(.el-form-item__content) {
+  line-height: var(--line-height-relaxed);
+  font-size: var(--font-size-base);
 }
 
-.el-input :deep(.el-input__wrapper:hover) {
-  box-shadow: 0 0 0 1px var(--el-input-hover-border-color) inset;
-}
-
-.el-input.is-focus :deep(.el-input__wrapper) {
-  box-shadow: 0 0 0 2px var(--el-input-focus-border-color) inset;
-}
-
-/* 行间距优化 */
-.el-row {
-  margin-bottom: -16px;
-}
-
-.el-row .el-col {
-  margin-bottom: 16px;
-}
-
-/* 配置操作区域 */
-.config-actions {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: var(--spacing-5) 0;
-  border-top: 1px solid var(--el-border-color-light);
-  margin-top: var(--spacing-5);
-  flex-wrap: wrap;
-  gap: var(--spacing-4);
-}
-
-.config-status {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-3);
-  flex-wrap: wrap;
-}
-
-.status-icon {
-  margin-right: var(--spacing-1);
-}
-
-.test-button {
-  transition: all var(--transition-base) var(--transition-timing);
-}
-
-.test-button:hover {
-  transform: translateY(-1px);
-}
-
-.clear-button {
-  transition: all var(--transition-base) var(--transition-timing);
-}
-
-.clear-button:hover {
-  transform: translateY(-1px);
-}
-
-.config-buttons {
-  display: flex;
-  gap: var(--spacing-3);
-  flex-wrap: wrap;
-}
-
-/* 响应式操作区域 */
-@media (max-width: 768px) {
-  .config-actions {
-    flex-direction: column;
-    align-items: stretch;
-    gap: var(--spacing-3);
-  }
-  
-  .config-status {
-    justify-content: center;
-  }
-  
-  .config-buttons {
-    justify-content: center;
-  }
-}
-
-/* 动画和过渡效果 */
-.config-actions * {
-  transition: all var(--transition-base) var(--transition-timing);
-}
-
-/* 表单验证反馈 */
 .el-form-item.is-error :deep(.el-input__wrapper) {
   animation: shake var(--transition-base) ease-in-out;
 }
@@ -1391,48 +1063,20 @@ onMounted(() => {
   75% { transform: translateX(4px); }
 }
 
-/* 配置完成提示 */
-.config-saved-toast {
-  animation: slideInRight var(--transition-base) ease-out;
-}
-
-@keyframes slideInRight {
-  from {
-    transform: translateX(100%);
-    opacity: 0;
-  }
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
-}
-
-/* 确保与FingerprintManagement组件样式一致 */
-code {
-  padding: var(--spacing-0) var(--spacing-1);
-  border-radius: var(--size-radius-base);
-  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-}
-
-.el-form-item :deep(.el-form-item__content) {
-  line-height: var(--line-height-relaxed);
-  font-size: var(--font-size-base);
-}
-
-/* 徽章样式 - 精致文字标签 */
+/* 徽章 - 保留颜色渐变，无法用原子类表示 */
 .badge-text {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: var(--spacing-12);
-  padding: var(--spacing-1) var(--spacing-3);
-  margin-left: var(--spacing-2);
-  font-size: var(--component-font-size-sm);
+  min-width: 3rem;
+  padding: 2px 12px;
+  margin-left: 8px;
+  font-size: 13px;
   font-weight: 500;
-  line-height: var(--line-height-normal);
-  border-radius: var(--size-radius-large);
+  line-height: 1.5;
+  border-radius: 9999px;
   white-space: nowrap;
-  transition: all var(--transition-base) var(--transition-timing);
+  transition: all 250ms cubic-bezier(0.4, 0, 0.2, 1);
   letter-spacing: 0.02em;
 }
 
@@ -1441,107 +1085,68 @@ code {
   box-shadow: var(--el-box-shadow-lighter);
 }
 
-/* 核心配置 - 紫色渐变 */
 .badge-core {
-  background: linear-gradient(135deg, var(--color-violet-500) 0%, var(--color-purple-600) 100%);
-  color: var(--el-color-white);
+  background: linear-gradient(135deg, var(--color-error) 0%, var(--color-error-dark-2) 100%);
+  color: #fff;
   box-shadow: var(--el-box-shadow-lighter);
 }
 
-/* iOS - 粉红渐变 */
 .badge-ios {
-  background: linear-gradient(135deg, var(--color-pink-400) 0%, var(--color-rose-500) 100%);
-  color: var(--el-color-white);
+  background: linear-gradient(135deg, var(--color-danger) 0%, var(--color-danger-dark-2) 100%);
+  color: #fff;
   box-shadow: var(--el-box-shadow-lighter);
 }
 
-/* Android - 蓝色渐变 */
-.badge-android {
-  background: linear-gradient(135deg, var(--color-sky-400) 0%, var(--color-cyan-400) 100%);
-  color: var(--el-color-white);
-  box-shadow: var(--el-box-shadow-lighter);
-}
-
-/* Web - 橙黄渐变 */
-.badge-web {
-  background: linear-gradient(135deg, var(--color-orange-400) 0%, var(--color-amber-300) 100%);
-  color: var(--el-color-white);
-  box-shadow: var(--el-box-shadow-lighter);
-}
-
-/* 微信 - 绿色渐变 */
 .badge-wechat {
-  background: linear-gradient(135deg, var(--color-green-500) 0%, var(--color-emerald-600) 100%);
-  color: var(--el-color-white);
+  background: linear-gradient(135deg, var(--color-success) 0%, var(--color-success-dark-2) 100%);
+  color: #fff;
   box-shadow: var(--el-box-shadow-lighter);
 }
 
-/* 更多 - 蓝紫渐变 */
 .badge-more {
-  background: linear-gradient(135deg, var(--color-violet-400) 0%, var(--color-fuchsia-300) 100%);
-  color: var(--el-color-white);
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-info) 100%);
+  color: #fff;
   box-shadow: var(--el-box-shadow-lighter);
 }
 
-/* 通用 - 灰色渐变 */
-.badge-general {
-  background: linear-gradient(135deg, var(--color-gray-300) 0%, var(--color-gray-100) 100%);
-  color: var(--el-text-color-regular);
-  box-shadow: var(--el-box-shadow-lighter);
-}
-
-/* 成功 - 绿色渐变 */
 .badge-success {
-  background: linear-gradient(135deg, var(--el-color-success) 0%, var(--el-color-success-dark-2) 100%);
-  color: var(--el-color-white);
+  @apply bg-gradient-badge-success text-white;
   box-shadow: var(--el-box-shadow-lighter);
 }
 
-/* 警告 - 橙色渐变 */
 .badge-warning {
-  background: linear-gradient(135deg, var(--el-color-warning) 0%, var(--el-color-warning-dark-2) 100%);
-  color: var(--el-color-white);
+  @apply bg-gradient-badge-warning text-white;
   box-shadow: var(--el-box-shadow-lighter);
 }
 
-/* 信息 - 灰色渐变 */
 .badge-info {
-  background: linear-gradient(135deg, var(--el-color-info) 0%, var(--el-color-info-dark-2) 100%);
-  color: var(--el-color-white);
+  @apply bg-gradient-badge-info text-white;
   box-shadow: var(--el-box-shadow-lighter);
 }
 
-/* 主要 - 蓝色渐变 */
 .badge-primary {
-  background: linear-gradient(135deg, var(--el-color-primary) 0%, var(--el-color-primary-dark-2) 100%);
-  color: var(--el-color-white);
+  @apply bg-gradient-badge-primary text-white;
   box-shadow: var(--el-box-shadow-lighter);
 }
 
-/* 状态徽章 - 配置保存状态 */
+/* 状态徽章 */
 .status-badge {
   display: inline-flex;
   align-items: center;
-  gap: var(--spacing-2);
-  padding: var(--spacing-3) var(--spacing-5);
-  min-height: var(--component-height-base);
-  font-size: var(--font-size-sm);
+  gap: 8px;
+  padding: 12px 20px;
+  min-height: 40px;
+  font-size: 14px;
   font-weight: 600;
   border-radius: var(--size-radius-base);
-  transition: all var(--transition-base) var(--transition-timing);
+  transition: all 250ms cubic-bezier(0.4, 0, 0.2, 1);
   cursor: default;
   white-space: nowrap;
   line-height: 1;
 }
 
-.status-badge .status-icon {
-  font-size: var(--icon-size-lg);
-}
-
-/* 已保存状态 - 深绿色 */
 .status-saved {
-  background: linear-gradient(135deg, var(--el-color-success) 0%, var(--el-color-success-dark-2) 100%);
-  color: var(--el-color-white);
+  @apply bg-gradient-badge-success text-white;
   box-shadow: var(--el-box-shadow-light);
 }
 
@@ -1550,10 +1155,8 @@ code {
   box-shadow: var(--el-box-shadow);
 }
 
-/* 未保存状态 - 深橙色 */
 .status-unsaved {
-  background: linear-gradient(135deg, var(--el-color-warning) 0%, var(--el-color-warning-dark-2) 100%);
-  color: var(--el-color-white);
+  @apply bg-gradient-badge-warning text-white;
   box-shadow: var(--el-box-shadow-light);
 }
 

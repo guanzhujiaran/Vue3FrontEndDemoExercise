@@ -14,7 +14,7 @@
     <!-- 卡片头部 -->
     <div class="card-header">
       <div class="browser-info">
-        <el-icon :size="24" color="#409EFF" class="browser-icon">
+        <el-icon :size="24" class="browser-icon fill-primary">
           <Monitor />
         </el-icon>
         <div class="browser-details">
@@ -121,8 +121,3 @@ const getBrowserType = (
   return browserTypes[browser] || 'info'
 }
 </script>
-
-<style scoped>
-/* 所有样式已移至 tailwind.css 中的 .fingerprint-card 相关类 */
-/* 组件现在使用全局CSS变量，支持尺寸主题切换 */
-</style>

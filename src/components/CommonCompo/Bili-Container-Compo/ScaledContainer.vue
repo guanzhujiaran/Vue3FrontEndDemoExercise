@@ -1,9 +1,9 @@
 <template>
-  <div ref="outerWrapperRef" class="scaling-outer-wrapper">
+  <div ref="outerWrapperRef" class="scaling-outer-wrapper w-[--webkit-fill-available] overflow-x-hidden flex justify-center bg-transparent p-2">
     <component
       :is="props.tag"
       ref="containerRef"
-      class="proportional-scaling-container"
+      class="proportional-scaling-container box-border bg-[var(--el-bg-color)] flex-shrink-0 rounded-[3px] border border-[var(--el-border-color-lighter)] p-2"
       :style="containerStyle"
     >
       <slot></slot>
@@ -156,7 +156,3 @@ onUnmounted(() => {
   window.removeEventListener('resize', debouncedUpdateScale)
 })
 </script>
-
-<style scoped>
-@import '@/assets/components/container/scaled-container-tailwind.css';
-</style>

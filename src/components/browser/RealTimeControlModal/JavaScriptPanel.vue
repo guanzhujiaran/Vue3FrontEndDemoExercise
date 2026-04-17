@@ -7,15 +7,15 @@
  * @Description: JavaScript执行面板组件
 -->
 <template>
-    <div class="panel-card">
-        <div class="panel-header">
+    <div class="border border-[var(--el-border-color)] rounded-lg mb-4 overflow-hidden transition-shadow duration-300 hover:shadow-[var(--el-box-shadow-light)]">
+        <div class="flex items-center gap-2 px-4 py-3 bg-[var(--el-bg-color-page)] border-b border-[var(--el-border-color)] text-[14px] font-medium text-[var(--el-text-color-primary)] [&_.el-icon]:text-[18px] [&_.el-icon]:text-[var(--el-color-primary)]">
             <el-icon><Edit /></el-icon>
-            <span>JavaScript 执行</span>
+            <el-text tag="span">JavaScript 执行</el-text>
         </div>
-        <div class="panel-body">
+        <div class="p-4">
             <el-input v-model="javascriptCode" type="textarea" :rows="6" placeholder="输入JavaScript代码..."
                 resize="none" />
-            <div class="panel-actions">
+            <div class="flex gap-2 justify-end mt-3">
                 <el-button @click="$emit('execute', javascriptCode)" type="primary" size="small">
                     <el-icon><VideoPlay /></el-icon>
                     执行
@@ -48,45 +48,3 @@ const clearCode = () => {
     javascriptCode.value = ''
 }
 </script>
-
-<style scoped>
-.panel-card {
-    border: 1px solid var(--el-border-color);
-    border-radius: 8px;
-    margin-bottom: 16px;
-    overflow: hidden;
-    transition: box-shadow 0.3s ease;
-}
-
-.panel-card:hover {
-    box-shadow: var(--el-box-shadow-light);
-}
-
-.panel-header {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 12px 16px;
-    background: var(--el-bg-color-page);
-    border-bottom: 1px solid var(--el-border-color);
-    font-size: 14px;
-    font-weight: 500;
-    color: var(--el-text-color-primary);
-}
-
-.panel-header :deep(.el-icon) {
-    font-size: 18px;
-    color: var(--el-color-primary);
-}
-
-.panel-body {
-    padding: 16px;
-}
-
-.panel-actions {
-    display: flex;
-    gap: 8px;
-    justify-content: flex-end;
-    margin-top: 12px;
-}
-</style>

@@ -159,39 +159,39 @@ const handleCloseDrawer = () => {
 
 .search-box-wrapper {
   width: 100%;
-  margin-bottom: calc(var(--component-spacing) * 2);
+  margin-bottom: var(--spacing-8);
   position: relative;
 }
 
 :deep(.el-input__wrapper) {
-  border-radius: calc(var(--component-size) * 0.625);
-  box-shadow: 0 calc(var(--component-size) * 0.0625) calc(var(--component-size) * 0.25) rgba(0, 0, 0, 0.08);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
   transition: all 0.3s ease;
 }
 
 :deep(.el-input__wrapper:hover) {
-  box-shadow: 0 calc(var(--component-size) * 0.125) calc(var(--component-size) * 0.375) rgba(0, 161, 214, 0.15);
+  box-shadow: 0 2px 6px rgba(0, 161, 214, 0.15);
 }
 
 :deep(.el-input__wrapper.is-focus) {
-  box-shadow: 0 0 0 calc(var(--component-size) * 0.03125) #00a1d6 inset;
+  box-shadow: 0 0 0 1px #00a1d6 inset;
 }
 
 :deep(.el-drawer__header) {
   margin-bottom: 0;
-  padding: calc(var(--component-spacing) * 3.2) calc(var(--component-spacing) * 4);
+  padding: var(--spacing-12) var(--spacing-16);
   border-bottom: 1px solid var(--el-border-color-lighter);
   color: var(--el-color-primary);
   font-weight: bold;
 }
 
 :deep(.el-drawer) {
-  border-radius: calc(var(--component-size) * 0.5) calc(var(--component-size) * 0.5) 0 0;
+  border-radius: var(--spacing-10) var(--spacing-10) 0 0;
 }
 
 /* 搜索结果容器 */
 .search-results-container {
-  padding: calc(var(--component-spacing) * 3);
+  padding: var(--spacing-12);
   min-height: 400px;
 }
 

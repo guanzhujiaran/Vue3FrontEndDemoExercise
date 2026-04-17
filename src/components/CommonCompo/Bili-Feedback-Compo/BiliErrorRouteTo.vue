@@ -56,7 +56,3 @@ withDefaults(
     </div>
   </centered-container>
 </template>
-
-<style scoped>
-@import '@/assets/components/feedback/bili-error-route-to-tailwind.css';
-</style>

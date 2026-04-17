@@ -172,7 +172,3 @@ onMounted(() => {
   handleLoad()
 })
 </script>
-
-<style scoped>
-@import '@/assets/components/ranking/bili-base-ranking-tailwind.css';
-</style>

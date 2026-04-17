@@ -5,9 +5,9 @@
  * @Description: 自定义操作管理面板 - 卡片式展示和管理用户自定义操作
 -->
 <template>
-  <div class="custom-action-panel">
+  <div>
     <!-- 操作栏 -->
-    <div class="action-toolbar">
+    <div class="flex gap-2 mb-5">
       <el-button type="primary" @click="showCreateDialog = true">
         <el-icon><Plus /></el-icon>
         新建操作
@@ -23,7 +23,7 @@
     </div>
 
     <!-- 自定义操作卡片列表 -->
-    <div class="action-cards">
+    <div>
       <el-row :gutter="16">
         <el-col
           v-for="action in customActions"
@@ -33,13 +33,13 @@
           :md="8"
           :lg="6"
         >
-          <el-card class="action-card" shadow="hover">
-            <div class="card-header">
-              <div class="header-left">
+          <el-card class="mb-4 h-full transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_4px_12px_rgba(0,0,0,0.15)]" shadow="hover">
+            <div class="flex justify-between items-center mb-3">
+              <div class="flex items-center gap-2">
                 <el-tag size="small" :type="action.is_composite ? 'warning' : 'success'">
                   {{ action.is_composite ? '复合' : '单一' }}
                 </el-tag>
-                <span class="action-type">{{ action.action_type }}</span>
+                <span class="text-sm text-[var(--el-text-color-secondary)]">{{ action.action_type }}</span>
               </div>
               <el-dropdown trigger="click" @command="(cmd) => handleActionCommand(cmd, action)">
                 <el-button text>
@@ -68,18 +68,18 @@
               </el-dropdown>
             </div>
 
-            <div class="card-body">
-              <h4 class="action-name">{{ action.name }}</h4>
-              <p class="action-desc">{{ action.description || '暂无描述' }}</p>
-              <div class="action-meta">
-                <span class="meta-item">
+            <div class="mb-3">
+              <h4 class="font-medium text-sm text-[var(--el-text-color-primary)] m-0 mb-1">{{ action.name }}</h4>
+              <p class="text-xs text-[var(--el-text-color-secondary)] m-0 mb-2 line-clamp-2">{{ action.description || '暂无描述' }}</p>
+              <div>
+                <span class="inline-flex items-center gap-1 text-xs text-[var(--el-text-color-secondary)]">
                   <el-icon><Clock /></el-icon>
                   {{ formatDate(action.created_at) }}
                 </span>
               </div>
             </div>
 
-            <div class="card-footer">
+            <div class="flex justify-end pt-3 border-t border-[var(--el-border-color-lighter)]">
               <el-button
                 size="small"
                 type="primary"
@@ -126,7 +126,7 @@
             placeholder="例如: my_custom_action"
             :disabled="!!editingAction"
           />
-          <div class="form-tip">唯一标识符,只能包含字母、数字和下划线</div>
+          <div class="form-tip mt-1 text-xs text-[var(--el-text-color-secondary)]">唯一标识符,只能包含字母、数字和下划线</div>
         </el-form-item>
 
         <el-form-item label="操作类型" prop="action_type">
@@ -141,7 +141,7 @@
 
         <el-form-item label="是否复合操作">
           <el-switch v-model="formData.is_composite" />
-          <div class="form-tip">复合操作可包含多个步骤</div>
+          <div class="mt-1 text-xs text-[var(--el-text-color-secondary)]">复合操作可包含多个步骤</div>
         </el-form-item>
 
         <el-form-item label="描述">
@@ -160,7 +160,7 @@
             :max="300"
             placeholder="秒"
           />
-          <span class="form-tip">操作执行的超时时间(秒)</span>
+          <span class="ml-2 text-xs text-[var(--el-text-color-secondary)]">操作执行的超时时间(秒)</span>
         </el-form-item>
 
         <el-form-item label="启用状态">
@@ -193,7 +193,7 @@
               :rows="6"
               placeholder='{"key": "value"}'
             />
-            <div class="form-tip">JSON格式的参数配置</div>
+            <div class="mt-1 text-xs text-[var(--el-text-color-secondary)]">JSON格式的参数配置</div>
           </el-form-item>
         </template>
 
@@ -207,9 +207,9 @@
             </el-button>
           </el-divider>
 
-          <div v-for="(step, index) in formData.steps" :key="index" class="step-item">
-            <div class="step-header">
-              <span class="step-number">步骤 {{ index + 1 }}</span>
+          <div v-for="(step, index) in formData.steps" :key="index" class="mb-4 p-3 border border-[var(--el-border-color-lighter)] rounded-lg bg-[var(--el-fill-color-lighter)]">
+            <div class="flex justify-between items-center mb-3">
+              <span class="font-bold text-[var(--el-color-primary)]">步骤 {{ index + 1 }}</span>
               <el-button
                 text
                 type="danger"
@@ -263,7 +263,7 @@
       width="700px"
       destroy-on-close
     >
-      <div v-if="currentDetail" class="detail-content">
+      <div v-if="currentDetail">
         <el-descriptions :column="2" border>
           <el-descriptions-item label="操作ID">
             {{ currentDetail.action_id }}
@@ -299,10 +299,10 @@
         </el-descriptions>
 
         <el-divider content-position="left">参数定义</el-divider>
-        <pre class="json-viewer">{{ JSON.stringify(currentDetail.parameters_schema, null, 2) }}</pre>
+        <pre class="bg-[var(--el-fill-color-light)] p-3 rounded text-xs leading-relaxed overflow-x-auto">{{ JSON.stringify(currentDetail.parameters_schema, null, 2) }}</pre>
 
         <el-divider content-position="left">执行步骤</el-divider>
-        <pre class="json-viewer">{{ JSON.stringify(currentDetail.steps, null, 2) }}</pre>
+        <pre class="bg-[var(--el-fill-color-light)] p-3 rounded text-xs leading-relaxed overflow-x-auto">{{ JSON.stringify(currentDetail.steps, null, 2) }}</pre>
       </div>
     </el-dialog>
 
@@ -313,7 +313,7 @@
       width="600px"
       destroy-on-close
     >
-      <div v-if="executionResult" class="result-content">
+      <div v-if="executionResult">
         <el-alert
           :title="executionResult.success ? '执行成功' : '执行失败'"
           :type="executionResult.success ? 'success' : 'error'"
@@ -321,20 +321,20 @@
           show-icon
         />
 
-        <div v-if="executionResult.execution_time" class="result-meta">
+        <div v-if="executionResult.execution_time" class="mt-3 text-sm text-[var(--el-text-color-regular)]">
           <span>执行时间: {{ executionResult.execution_time.toFixed(2) }}s</span>
         </div>
 
         <el-divider />
 
-        <div v-if="executionResult.data" class="result-data">
-          <h4>返回数据:</h4>
-          <pre class="json-viewer">{{ JSON.stringify(executionResult.data, null, 2) }}</pre>
+        <div v-if="executionResult.data">
+          <h4 class="mt-3 mb-2 text-sm text-[var(--el-text-color-primary)]">返回数据:</h4>
+          <pre class="bg-[var(--el-fill-color-light)] p-3 rounded text-xs leading-relaxed overflow-x-auto">{{ JSON.stringify(executionResult.data, null, 2) }}</pre>
         </div>
 
-        <div v-if="executionResult.error" class="result-error">
-          <h4>错误信息:</h4>
-          <pre class="error-viewer">{{ executionResult.error }}</pre>
+        <div v-if="executionResult.error">
+          <el-text class="mt-3 mb-2 text-sm text-[var(--el-text-color-primary)]" tag="h4">错误信息:</el-text>
+          <pre class="bg-[var(--el-color-danger-light-9)] text-[var(--el-color-danger)] p-3 rounded text-xs leading-relaxed overflow-x-auto">{{ executionResult.error }}</pre>
         </div>
       </div>
     </el-dialog>
@@ -741,133 +741,3 @@ onMounted(() => {
   checkBrowserStatus()
 })
 </script>
-
-<style scoped lang="scss">
-.custom-action-panel {
-  .action-toolbar {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 20px;
-  }
-
-  .action-cards {
-    .action-card {
-      margin-bottom: 16px;
-      height: 100%;
-      transition: all 0.3s;
-
-      &:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-      }
-
-      .card-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 12px;
-
-        .header-left {
-          display: flex;
-          align-items: center;
-          gap: var(--spacing-2);
-
-          .action-type {
-            /* 样式已移至 tailwind.css */
-          }
-        }
-      }
-
-      .card-body {
-        margin-bottom: var(--spacing-3);
-
-        .action-name {
-          /* 样式已移至 tailwind.css */
-        }
-
-        .action-desc {
-          /* 样式已移至 tailwind.css */
-        }
-
-        .action-meta {
-          .meta-item {
-            /* 样式已移至 tailwind.css */
-          }
-        }
-      }
-
-      .card-footer {
-        display: flex;
-        justify-content: flex-end;
-        padding-top: var(--spacing-3);
-        border-top: 1px solid var(--el-border-color-lighter);
-      }
-    }
-  }
-
-  .form-tip {
-    margin-top: var(--spacing-1);
-    font-size: var(--component-font-size-xs);
-    color: var(--el-text-color-secondary);
-  }
-
-  .step-item {
-    /* 样式已移至 tailwind.css */
-
-    .step-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: var(--spacing-3);
-
-      .step-number {
-        font-weight: bold;
-        color: var(--el-color-primary);
-      }
-    }
-  }
-
-  .detail-content {
-    .json-viewer {
-      background-color: #f5f7fa;
-      padding: 12px;
-      border-radius: 4px;
-      overflow-x: auto;
-      font-size: 12px;
-      line-height: 1.6;
-    }
-  }
-
-  .result-content {
-    .result-meta {
-      margin-top: 12px;
-      font-size: 14px;
-      color: #606266;
-    }
-
-    .result-data,
-    .result-error {
-      h4 {
-        margin: 12px 0 8px 0;
-        font-size: 14px;
-        color: #303133;
-      }
-
-      .json-viewer,
-      .error-viewer {
-        background-color: #f5f7fa;
-        padding: 12px;
-        border-radius: 4px;
-        overflow-x: auto;
-        font-size: 12px;
-        line-height: 1.6;
-      }
-
-      .error-viewer {
-        background-color: #fef0f0;
-        color: #f56c6c;
-      }
-    }
-  }
-}
-</style>

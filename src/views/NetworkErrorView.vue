@@ -144,21 +144,21 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="network-diagnosis-container">
-    <div class="diagnosis-content">
+  <div class="flex min-h-screen w-full items-center justify-center bg-gradient-hero-vibrant p-8 box-border md:p-4">
+    <div class="w-full max-w-[900px] rounded-2xl bg-[var(--el-bg-color)] p-12 shadow-[0_20px_60px_rgba(0,0,0,0.3)] md:p-6">
       <!-- 标题 -->
-      <div class="diagnosis-header">
-        <el-icon class="header-icon" :size="48">
+      <div class="mb-8 text-center">
+        <el-icon class="mb-4 text-[var(--el-color-primary)]" :size="48">
           <Connection />
         </el-icon>
-        <h1 class="header-title">网络连接诊断</h1>
-        <p class="header-subtitle">{{ props.errorMessage }}</p>
+        <el-text class="my-4 text-[2rem] text-[var(--el-text-color-primary)] md:text-2xl" tag="h1">网络连接诊断</el-text>
+        <el-text class="text-[1.1rem] text-[var(--el-text-color-regular)]" tag="p">{{ props.errorMessage }}</el-text>
       </div>
 
       <!-- Ping测试结果 -->
-      <div class="ping-results">
-        <div class="results-header">
-          <h2>服务器连接测试</h2>
+      <div class="mb-8">
+        <div class="mb-4 flex items-center justify-between md:flex-col md:items-start md:gap-4">
+          <el-text class="m-0 text-2xl text-[var(--el-text-color-primary)]" tag="h2">服务器连接测试</el-text>
           <el-button
             type="primary"
             :loading="isPinging"
@@ -174,11 +174,11 @@ onMounted(() => {
           <el-table-column prop="ip" label="IP地址" width="180" />
           <el-table-column prop="latency" label="延迟" width="120">
             <template #default="{ row }">
-              <span v-if="row.status === 'pending'">检测中...</span>
-              <span v-else-if="row.status === 'success'" style="color: var(--el-color-success)">
+              <el-text v-if="row.status === 'pending'" tag="span">检测中...</el-text>
+              <el-text v-else-if="row.status === 'success'" class="text-[var(--el-color-success)]" tag="span">
                 {{ row.latency }}ms
-              </span>
-              <span v-else style="color: var(--el-color-danger)">超时</span>
+              </el-text>
+              <el-text v-else class="text-[var(--el-color-danger)]" tag="span">超时</el-text>
             </template>
           </el-table-column>
           <el-table-column prop="status" label="状态" width="120">
@@ -192,25 +192,25 @@ onMounted(() => {
       </div>
 
       <!-- 提示信息 -->
-      <div class="diagnosis-tips">
+      <div class="mb-8">
         <el-alert
           title="诊断建议"
           type="info"
           :closable="false"
         >
           <template #default>
-            <ul>
-              <li>如果主服务器连接失败，请检查您的网络连接</li>
-              <li>如果DNS服务器连接失败，可能是DNS解析问题</li>
-              <li>如果其他外部网站可以访问，可能是服务器暂时不可用</li>
-              <li>建议刷新页面或稍后重试</li>
+            <ul class="mt-2 mb-0 pl-6">
+              <li class="mb-2 leading-relaxed">如果主服务器连接失败，请检查您的网络连接</li>
+              <li class="mb-2 leading-relaxed">如果DNS服务器连接失败，可能是DNS解析问题</li>
+              <li class="mb-2 leading-relaxed">如果其他外部网站可以访问，可能是服务器暂时不可用</li>
+              <li class="mb-2 leading-relaxed">建议刷新页面或稍后重试</li>
             </ul>
           </template>
         </el-alert>
       </div>
 
       <!-- 操作按钮 -->
-      <div class="diagnosis-actions">
+      <div class="mt-8 flex justify-center gap-4 md:flex-col">
         <el-button size="large" @click="retryPing" :loading="isPinging">
           重新检测
         </el-button>
@@ -221,108 +221,3 @@ onMounted(() => {
     </div>
   </div>
 </template>
-
-<style scoped>
-.network-diagnosis-container {
-  width: 100%;
-  min-height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  padding: 2rem;
-  box-sizing: border-box;
-}
-
-.diagnosis-content {
-  background: white;
-  border-radius: 16px;
-  padding: 3rem;
-  max-width: 900px;
-  width: 100%;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-}
-
-.diagnosis-header {
-  text-align: center;
-  margin-bottom: 2rem;
-}
-
-.header-icon {
-  color: var(--el-color-primary);
-  margin-bottom: 1rem;
-}
-
-.header-title {
-  font-size: 2rem;
-  margin: 1rem 0;
-  color: #333;
-}
-
-.header-subtitle {
-  font-size: 1.1rem;
-  color: #666;
-}
-
-.ping-results {
-  margin-bottom: 2rem;
-}
-
-.results-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1rem;
-}
-
-.results-header h2 {
-  margin: 0;
-  font-size: 1.5rem;
-  color: #333;
-}
-
-.diagnosis-tips {
-  margin-bottom: 2rem;
-}
-
-.diagnosis-tips ul {
-  margin: 0.5rem 0 0 0;
-  padding-left: 1.5rem;
-}
-
-.diagnosis-tips li {
-  margin-bottom: 0.5rem;
-  line-height: 1.6;
-}
-
-.diagnosis-actions {
-  display: flex;
-  justify-content: center;
-  gap: 1rem;
-  margin-top: 2rem;
-}
-
-@media (max-width: 768px) {
-  .network-diagnosis-container {
-    padding: 1rem;
-  }
-
-  .diagnosis-content {
-    padding: 1.5rem;
-  }
-
-  .header-title {
-    font-size: 1.5rem;
-  }
-
-  .results-header {
-    flex-direction: column;
-    gap: 1rem;
-    align-items: flex-start;
-  }
-
-  .diagnosis-actions {
-    flex-direction: column;
-  }
-}
-</style>

@@ -227,7 +227,3 @@ onBeforeUnmount(() => {
 })
 defineExpose({ setValue })
 </script>
-
-<style scoped>
-@import '@/assets/components/markdown/bili-vditor-edit-tailwind.css';
-</style>

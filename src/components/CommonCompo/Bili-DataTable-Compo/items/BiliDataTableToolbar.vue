@@ -42,7 +42,3 @@ const onSubmit = () => {
     </el-button>
   </div>
 </template>
-
-<style scoped>
-@import '@/assets/bili-data-table-toolbar-tailwind.css';
-</style>

@@ -346,7 +346,3 @@ defineExpose({
   }
 })
 </script>
-
-<style scoped>
-@import '@/assets/components/search/bili-search-box-tailwind.css';
-</style>

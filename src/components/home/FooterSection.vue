@@ -30,6 +30,3 @@
 // 不再需要导入 useRouter，因为我们使用了 RouterLink 组件
 </script>
 
-<style scoped>
-@import '@/assets/components/layout/footer-section-tailwind.css';
-</style>

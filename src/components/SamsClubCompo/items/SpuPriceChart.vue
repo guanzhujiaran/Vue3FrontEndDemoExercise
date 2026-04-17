@@ -164,7 +164,7 @@ const echartsOption = computed<EChartsOption>(() => {
         type: 'line',
         smooth: true,
         itemStyle: {
-          color: '#409EFF'
+          color: 'var(--color-primary)'
         },
         areaStyle: {
           color: generateChartColor()
@@ -214,13 +214,12 @@ const priceChartItem = useTemplateRef('priceChartItem')
             class="chart-lines"
             :option="echartsOption"
             :autoresize="{ throttle: 300 }"
-            style="height: 400px; width: 100%"
+            style="height: var(--spacing-16); width: 100%"
           ></v-chart>
       </template>
     </el-collapse-item>
   </el-collapse>
 </template>
 
-<style scoped>
-@import '@/assets/components/samsclub/spu-item-tailwind.css';
-</style>
+
+

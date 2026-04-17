@@ -223,17 +223,17 @@ const biliRankUserAtariDetailTip = computed(
 </template>
 
 <style scoped>
-@import '@/assets/tailwind.css';
+
 .user-lottery-result-wrapper {
   place-items: center;
 }
 
 .user-lottery-result {
   display: grid;
-  gap: var(--component-spacing);
+  gap: var(--spacing-4);
   color: var(--el-color-white);
-  font-size: var(--component-size);
-  margin-bottom: calc(var(--component-spacing) * 2);
+  font-size: var(--text-base);
+  margin-bottom: var(--spacing-8);
   justify-content: center;
   width: fit-content;
 }
@@ -302,15 +302,15 @@ const biliRankUserAtariDetailTip = computed(
 }
 
 .prize-info.first-prize {
-  color: #ff6744;
+  @apply text-[var(--color-danger)];
 }
 
 .prize-info.second-prize {
-  color: #44d6ff;
+  @apply text-[var(--color-primary)];
 }
 
 .prize-info.third-prize {
-  color: #ffb200;
+  @apply text-[var(--color-warning)];
 }
 
 .border-title {
@@ -354,7 +354,7 @@ const biliRankUserAtariDetailTip = computed(
   left: 0;
   right: 0;
   bottom: 0;
-  border-radius: calc(var(--component-size) * 0.25); /* 圆角 */
+  border-radius: var(--radius-sm); /* 圆角 */
   z-index: 0;
   animation: hueRotate 3s infinite alternate;
   pointer-events: none; /* 防止遮挡点击事件 */
@@ -364,33 +364,33 @@ const biliRankUserAtariDetailTip = computed(
 
 /* 不同类型对应的渐变色 */
 .border-with-text.lot-type-official::before {
-  border-image-source: linear-gradient(45deg, rgba(106, 17, 203, 0.95), rgba(37, 117, 252, 0.8));
+  border-image-source: linear-gradient(45deg, rgba(var(--color-primary) 0.95), rgba(var(--color-info) 0.8));
 }
 
 .border-with-text.lot-type-official .border-title span {
-  background-image: linear-gradient(45deg, rgba(106, 17, 203, 0.95), rgba(37, 117, 252, 0.8));
+  background-image: linear-gradient(45deg, rgba(var(--color-primary) 0.95), rgba(var(--color-info) 0.8));
   -webkit-text-fill-color: transparent;
   background-clip: text;
   font-weight: bolder;
 }
 
 .border-with-text.lot-type-reserve::before {
-  border-image-source: linear-gradient(45deg, rgba(61, 153, 112, 0.95), rgba(120, 204, 109, 0.8));
+  border-image-source: linear-gradient(45deg, rgba(var(--color-success) 0.95), rgba(var(--color-success-light-3) 0.8));
 }
 
 .border-with-text.lot-type-reserve .border-title span {
-  background-image: linear-gradient(45deg, rgba(61, 153, 112, 0.95), rgba(120, 204, 109, 0.8));
+  background-image: linear-gradient(45deg, rgba(var(--color-success) 0.95), rgba(var(--color-success-light-3) 0.8));
   -webkit-text-fill-color: transparent;
   background-clip: text;
   font-weight: bolder;
 }
 
 .border-with-text.lot-type-charge::before {
-  border-image-source: linear-gradient(45deg, rgba(255, 107, 107, 0.95), rgba(255, 204, 76, 0.8));
+  border-image-source: linear-gradient(45deg, rgba(var(--color-danger) 0.95), rgba(var(--color-warning) 0.8));
 }
 
 .border-with-text.lot-type-charge .border-title span {
-  background-image: linear-gradient(45deg, rgba(255, 107, 107, 0.95), rgba(255, 204, 76, 0.8));
+  background-image: linear-gradient(45deg, rgba(var(--color-danger) 0.95), rgba(var(--color-warning) 0.8));
   -webkit-text-fill-color: transparent;
   background-clip: text;
   font-weight: bolder;

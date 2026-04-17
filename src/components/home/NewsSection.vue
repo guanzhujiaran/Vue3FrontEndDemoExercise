@@ -1,7 +1,7 @@
 <template>
-  <section class="news-section">
-    <h2 class="section-title">最新动态</h2>
-    <div class="news-container">
+  <section class="news-section mx-auto w-full max-w-[93.75rem] px-4 py-8 md:px-8">
+    <h2 class="section-title m-0 text-lg font-semibold text-[var(--el-text-color-primary)]">最新动态</h2>
+    <div class="news-container mt-12">
       <el-timeline>
         <el-timeline-item
           v-for="(activity, index) in 4"
@@ -40,7 +40,3 @@
 <script setup lang="ts">
 import { ElTimeline, ElTimelineItem, ElCard } from 'element-plus'
 </script>
-
-<style scoped>
-@import '@/assets/components/home/news-section-tailwind.css';
-</style>

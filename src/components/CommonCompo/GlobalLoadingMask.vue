@@ -1,7 +1,7 @@
 <template>
   <transition name="fade">
-    <div v-show="globalLoading.isLoading" class="global-loading-mask">
-      <div class="loading-box">
+    <div v-show="globalLoading.isLoading" class="global-loading-mask fixed inset-0 z-[9999] flex items-center justify-center bg-black/50">
+      <div class="loading-box rounded-lg bg-[var(--el-bg-color)] p-5 text-base text-[var(--el-text-color-regular)] shadow-sm">
         {{ globalLoading.loadingText }}
       </div>
     </div>
@@ -20,6 +20,4 @@ emitter.on('loading', ({ isLoading, loadingText }) => {
 })
 </script>
 
-<style scoped>
-@import '@/assets/components/feedback/global-loading-mask-tailwind.css';
-</style>
+

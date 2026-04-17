@@ -7,7 +7,7 @@
  * @Description: JavaScript代码执行器组件 - 提供安全的JavaScript代码执行和结果展示
 -->
 <template>
-  <div class="javascript-executor">
+  <div class="p-4">
     <!-- 执行器头部 -->
     <div class="flex items-center justify-between mb-4">
       <h4 class="font-medium">JavaScript 执行器</h4>
@@ -363,10 +363,6 @@ defineExpose({
 </script>
 
 <style scoped>
-.javascript-executor {
-  padding: 16px;
-}
-
 pre {
   font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
   white-space: pre-wrap;

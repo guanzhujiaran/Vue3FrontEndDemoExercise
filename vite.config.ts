@@ -11,7 +11,6 @@ import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
 import Sitemap from 'vite-plugin-sitemap'
 import tailwindcss from '@tailwindcss/vite'
 import svgLoader from 'vite-svg-loader'
-import { heyApiPlugin } from '@hey-api/vite-plugin'
 
 const pathSrc = path.resolve(__dirname, 'src')
 export default defineConfig({
@@ -51,9 +50,9 @@ export default defineConfig({
         IconsResolver({
           enabledCollections: ['ep']
         }),
-        // Auto register Element Plus components
-        // 自动导入 Element Plus 组件
-        ElementPlusResolver()
+        ElementPlusResolver({
+          importStyle: false
+        })
       ],
 
       dts: path.resolve(pathSrc, 'components.d.ts')
@@ -66,7 +65,7 @@ export default defineConfig({
       componentInspector: true,
       launchEditor: 'C:\\Users\\Acer\\AppData\\Local\\Programs\\Lingma\\Lingma.exe'
     }),
-    tailwindcss(),
+    tailwindcss()
   ],
   resolve: {
     alias: {

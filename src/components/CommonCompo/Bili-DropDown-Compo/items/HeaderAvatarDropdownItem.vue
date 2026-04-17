@@ -8,7 +8,3 @@
     </div>
   </div>
 </template>
-
-<style scoped>
-@import '@/assets/header-avatar-dropdown-item-tailwind.css';
-</style>

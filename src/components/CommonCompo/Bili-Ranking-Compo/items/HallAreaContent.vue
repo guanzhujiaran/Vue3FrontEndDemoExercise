@@ -50,7 +50,3 @@ const emit = defineEmits(['handlePartitionChange'])
     </div>
   </div>
 </template>
-
-<style scoped>
-@import '@/assets/components/ranking/hall-area-content-tailwind.css';
-</style>

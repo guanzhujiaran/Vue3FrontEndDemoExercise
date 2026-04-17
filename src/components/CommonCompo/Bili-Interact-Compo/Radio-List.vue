@@ -8,10 +8,10 @@
       v-bind:key="i"
       class="type-selector radio-selector"
     >
-      <input type="radio" class="radio absolute opacity-0 z-10 w-[var(--component-size)] h-[var(--component-size)] cursor-pointer" v-model="props.value" :value="radio_prop.value" />
+      <input type="radio" class="radio absolute opacity-0 z-10 w-5 h-5 cursor-pointer" v-model="props.value" :value="radio_prop.value" />
       <svg
         viewBox="0 0 40 40"
-        class="radio-icon absolute top-0 left-0 w-[var(--component-size)] h-[var(--component-size)]"
+        class="radio-icon absolute top-0 left-0 w-5 h-5"
         :class="radio_prop.value == props.value ? `css-o1815x` : `css-1xneiug`"
       >
         <path
@@ -37,6 +37,3 @@ import type { BaseSettingRadioList } from '@/models/base/base_setting_model'
 
 const props = defineModel<BaseSettingRadioList>({ required: true })
 </script>
-<style scoped>
-@import '@/assets/components/interact/radio-list-tailwind.css';
-</style>
