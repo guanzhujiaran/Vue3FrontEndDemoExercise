@@ -1,20 +1,25 @@
 <template>
-  <el-card class="lottery-card" :class="['lottery-type-' + normalizedData.type.toLowerCase()]" shadow="hover"
+  <el-card class="lottery-card h-full overflow-hidden" :class="['lottery-type-' + normalizedData.type.toLowerCase()]" shadow="hover"
     body-class="lottery-card-body">
     <template #header>
       <div class="card-header">
-        <el-tag size="small" :type="typeInfo.tagType" effect="plain" class="type-tag">{{
+        <el-tag size="small" :type="typeInfo.tagType" effect="plain" class="type-tag w-fit">{{
           normalizedData.displayType
           }}</el-tag>
-        <span class="card-title" :title="normalizedData.title">{{ normalizedData.title }}</span>
+        <span class="card-title min-w-0 wrap-break-word text-sm leading-relaxed text-text-primary sm:flex-1 sm:text-base" :title="normalizedData.title">{{ normalizedData.title }}</span>
+
         <span class="card-id">ID: {{ normalizedData.id }}</span>
-        <div class="card-header-right">
+        <div class="card-header-right flex flex-row flex-wrap items-center gap-2 sm:ml-auto sm:justify-end">
+
           <el-link v-if="normalizedData.resultLink || normalizedData.sourceLink" type="primary"
+            class="w-fit text-sm sm:text-base"
             :href="normalizedData.resultLink || normalizedData.sourceLink!" target="_blank" rel="noreferrer"
             referrerpolicy="no-referrer" underline="never" @click="handleLinkClick">
             查看详情
           </el-link>
           <el-switch :active-text="BiliCommTxt.BiliLotteryCard.hasJoined"
+            class="max-w-full"
+
             :inactive-text="BiliCommTxt.BiliLotteryCard.hasNotJoined" :model-value="hasClicked" inline-prompt
             @change="handleRecordLotteryId"></el-switch>
         </div>
@@ -116,7 +121,8 @@
             </el-icon>
             <span style="margin-left: 5px">原始数据</span>
           </template>
-          <el-descriptions :column="2" border size="small">
+          <el-descriptions :column="isCompactScreen ? 1 : 2" border size="small">
+
             <el-descriptions-item label="开始时间" v-if="normalizedData.startTime">
               {{ formatTimestamp(normalizedData.startTime) }}
             </el-descriptions-item>
@@ -128,7 +134,8 @@
             </el-descriptions-item>
             <!-- Add more specific original fields if needed -->
           </el-descriptions>
-          <pre class="raw-data-pre">{{ JSON.stringify(normalizedData.originalData, null, 2) }}</pre>
+          <pre class="raw-data-pre overflow-x-auto whitespace-pre-wrap break-all rounded-md bg-fill-lighter p-3 text-xs leading-relaxed text-text-secondary">{{ JSON.stringify(normalizedData.originalData, null, 2) }}</pre>
+
         </el-collapse-item>
       </el-collapse>
     </template>
@@ -137,9 +144,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import type { PropType } from 'vue'
+import { ref, computed, type PropType, type Ref } from 'vue'
 import type { TagProps } from 'element-plus'
+import { type GlobalVarsType, ScreenTypeEnum } from '@/models/global_var/global_var_model.ts'
+import { KeysEnum, useInject } from '@/models/base/provide_model.ts'
+
 import type {
   AnchorLotteryData,
   AnyLotteryData,
@@ -189,8 +198,11 @@ const props = defineProps({
 // --- State ---
 const activeCollapseNames = ref<string[]>([])
 const ClickedBiliLotteryId = useBiliLotteryRecord()
+const globalVars = useInject(KeysEnum.GlobalVars) as Ref<GlobalVarsType>
 
 const hasClicked = computed(() => ClickedBiliLotteryId.contains(String(normalizedData.value.id)))
+const isCompactScreen = computed(() => globalVars.value.screen_size !== ScreenTypeEnum.large)
+
 
 // --- Helper Functions ---
 

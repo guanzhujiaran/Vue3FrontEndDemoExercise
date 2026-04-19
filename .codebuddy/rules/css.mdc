@@ -6,7 +6,7 @@ updatedAt: 2026-04-17T04:35:48.697Z
 provider: 
 ---
 
-css全都使用assets/theme.css里面的的color和size,vue文件使用的时候不能有style块,需要全部写成tailwind的class,如bg-primary这样的Theme variables的写法,缺少的内容可以在theme.css里面用Namespace定义,定义表格如下:
+css全都使用assets/theme.css里面的的color和size,vue文件使用的时候不能有style块,需要全部写成tailwind的class,如bg-primary这样的Theme variables的写法,缺少的css变量可以在theme.css里面用Namespace定义,定义表格如下:
 
 Namespace	Utility classes
 --color-*	Color utilities like bg-red-500, text-sky-300, and many more
@@ -27,3 +27,5 @@ Namespace	Utility classes
 --aspect-*	Aspect ratio utilities like aspect-video
 --ease-*	Transition timing function utilities like ease-out
 --animate-*	Animation utilities like animate-spin
+
+重要警告:千万不要在theme.css里面写出非css变量的定义

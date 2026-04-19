@@ -465,7 +465,7 @@
   --color-gradient-text-primary: linear-gradient(135deg,
       var(--el-color-primary) 0%,
       var(--el-color-info) 100%);
-  --color-gradient-text-primary-light: linear-gradient(135deg,
+    --color-gradient-text-primary-light: linear-gradient(135deg,
       var(--el-color-primary-light-3) 0%,
       var(--el-color-info-light-3) 100%);
 }

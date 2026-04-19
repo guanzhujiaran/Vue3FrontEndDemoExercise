@@ -1,9 +1,12 @@
 <script setup lang="ts">
 import BiliSearchBox from '@/components/CommonCompo/Bili-Search-Compo/BiliSearchBox.vue'
-import { ref, computed } from 'vue'
+import { ref, computed, type Ref } from 'vue'
 import type { SearchBoxProps } from '@/models/compo/searchbox/SearchBox.ts'
 import lotteryDataBaseApi, { type LotterySearchPaginationParams } from '@/api/lottery_data/bili/lottery_database_bili_api.ts'
 import biliMessage from '@/utils/message'
+import { type GlobalVarsType, ScreenTypeEnum } from '@/models/global_var/global_var_model.ts'
+import { KeysEnum, useInject } from '@/models/base/provide_model.ts'
+
 
 const search_box_prop = ref<SearchBoxProps>({
   placeholder: '转发、预约、充电',
@@ -21,10 +24,27 @@ const loading = ref(false)
 const prev_query_str = ref('')
 const cur_query_str = ref('')
 
+const globalVars = useInject(KeysEnum.GlobalVars) as Ref<GlobalVarsType>
+
 // 计算分页信息
 const totalPages = computed(() => Math.ceil(total.value / pageSize.value))
 const startIndex = computed(() => (currentPage.value - 1) * pageSize.value + 1)
 const endIndex = computed(() => Math.min(currentPage.value * pageSize.value, total.value))
+const drawerSize = computed(() =>
+  globalVars.value.screen_size === ScreenTypeEnum.small ? '92%' : '80%'
+)
+const searchPaginationLayout = computed(() => {
+  if (globalVars.value.screen_size === ScreenTypeEnum.small) {
+    return 'prev, pager, next'
+  }
+
+  if (globalVars.value.screen_size === ScreenTypeEnum.medium) {
+    return 'prev, pager, next, total'
+  }
+
+  return 'prev, pager, next, jumper, total'
+})
+
 
 // 执行搜索
 const performSearch = async (keyword: string, page_num: number = 1) => {
@@ -109,18 +129,19 @@ const handleCloseDrawer = () => {
       :max-history-count="search_box_prop.maxHistoryCount"
     ></BiliSearchBox>
     <el-drawer
-      style="overflow-x: scroll"
+      class="!overflow-x-hidden"
       :close-on-click-modal="true"
       v-model="isOpenDrawer"
       direction="btt"
-      size="80%"
+      :size="drawerSize"
       :modal="true"
       :title="`\&quot;${cur_query_str}\&quot; 的搜索结果`"
       @close="handleCloseDrawer"
     >
       <div class="search-results-container" v-loading="loading">
         <!-- 搜索结果统计 -->
-        <div class="search-summary" v-if="total > 0 && !loading">
+        <div class="search-summary flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:justify-between" v-if="total > 0 && !loading">
+
           <span>找到 {{ total }} 条结果</span>
           <span class="page-info">
             显示 {{ startIndex }} - {{ endIndex }} 条
@@ -134,16 +155,18 @@ const handleCloseDrawer = () => {
         <BiliLotteryCardContainer :data="data" />
         
         <!-- 分页控件 -->
-        <div class="pagination-wrapper" v-if="total > pageSize && !loading">
+        <div class="pagination-wrapper overflow-x-auto" v-if="total > pageSize && !loading">
           <el-pagination
+            class="mx-auto flex-wrap justify-center gap-y-2"
             v-model:current-page="currentPage"
             :page-size="pageSize"
             :total="total"
             :pager-count="5"
-            layout="prev, pager, next, jumper, total"
+            :layout="searchPaginationLayout"
             @current-change="handlePageChange"
           />
         </div>
+
         
         <el-divider></el-divider>
       </div>

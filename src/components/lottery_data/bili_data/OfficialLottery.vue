@@ -1,40 +1,75 @@
 <template>
-  <FlexContainer class="bili-lottery-data-panel">
-    <BiliPageHeader 
-      title="官方抽奖数据" 
-      description="B 站官方活动相关的抽奖数据"
-      tag-text="官方抽奖"
-      tag-type="success"
-    />
+  <FlexContainer class="bili-lottery-data-panel min-w-0 gap-6 pb-8">
+    <section
+      class="overflow-hidden rounded-lg border border-border-light p-px [background:var(--color-gradient-bili-data)]">
+      <div class="flex flex-col gap-6 rounded-lg bg-bg p-5 sm:p-6 xl:flex-row xl:items-end xl:justify-between">
+        <div class="min-w-0 flex-1 space-y-4">
+          <BiliPageHeader title="官方抽奖数据" description="B 站官方活动相关的抽奖数据" tag-text="官方抽奖" tag-type="success" />
 
-    <div class="search-section">
-      <BiliLotteryDataSearchBox></BiliLotteryDataSearchBox>
-    </div>
+          <dl class="grid gap-3 grid-cols-2">
+            <div class="rounded-md border border-border-light bg-fill-lighter p-4">
+              <dt class="text-xs text-text-secondary">当前收录</dt>
+              <dd class="mt-2 text-2xl font-semibold text-text-primary">
+                {{ official_lot_data_props.lot_data?.total ?? 0 }}
+              </dd>
+            </div>
+            <div class="rounded-md border border-border-light bg-fill-lighter p-4">
+              <dt class="text-xs text-text-secondary">当前页码</dt>
+              <dd class="mt-2 text-2xl font-semibold text-text-primary">
+                {{ official_lot_data_props.lot_page || 1 }}
+              </dd>
+            </div>
+          </dl>
+        </div>
 
-    <BiliPaginationDataView
-      :data="official_lot_data_props.lot_data?.items"
-      :total="official_lot_data_props.lot_data?.total"
-      :page_size="page_size"
-      v-model:CurrentPage="official_lot_data_props.lot_page"
-      v-model:Loading="official_lot_data_props.loading"
-      v-model:Error="official_lot_data_props.error"
-      :ErrorMsg="official_lot_data_props.error_msg || '网络异常，请检查网络连接'"
-      @on-mounted="official_lot_data_props.lot_page = 1"
-      @retry-on-error="() => get_lot_data(official_lot_data_props.lot_page, page_size)"
-    >
-      <template #toolbar>
-        <LotteryDataTableToolbar :refresh_data="refresh_data">
-          <template #submit-button>
-            <SubmitDynamicLotteryModal />
-          </template>
-        </LotteryDataTableToolbar>
-      </template>
-    </BiliPaginationDataView>
+        <div class="search-section w-full xl:max-w-md">
+
+          <div class="rounded-lg border border-border-light bg-bg-page p-4">
+            <div class="mb-3 flex flex-wrap items-center justify-between gap-3">
+              <div class="space-y-1">
+                <p class="text-sm font-semibold text-text-primary">快速搜索抽奖</p>
+                <p class="text-xs leading-relaxed text-text-secondary">
+                  支持关键字检索，方便先查再看，不影响当前卡片列表。
+                </p>
+              </div>
+              <el-tag type="info" effect="plain" round>独立搜索</el-tag>
+            </div>
+            <BiliLotteryDataSearchBox />
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="min-w-0 rounded-lg border border-border-light bg-bg p-4 sm:p-5 lg:p-6">
+      <BiliPaginationDataView class="min-w-0" :data="official_lot_data_props.lot_data?.items"
+        :total="official_lot_data_props.lot_data?.total" :page_size="page_size"
+        v-model:CurrentPage="official_lot_data_props.lot_page" v-model:Loading="official_lot_data_props.loading"
+        v-model:Error="official_lot_data_props.error" :ErrorMsg="official_lot_data_props.error_msg || '网络异常，请检查网络连接'"
+        @on-mounted="official_lot_data_props.lot_page = 1"
+        @retry-on-error="() => get_lot_data(official_lot_data_props.lot_page, page_size)">
+        <template #toolbar>
+          <div
+            class="mb-5 flex flex-col gap-4 rounded-lg border border-border-light bg-fill-lighter p-4 lg:flex-row lg:items-center lg:justify-between">
+            <div class="space-y-1">
+              <p class="text-sm font-semibold text-text-primary">列表操作</p>
+              <p class="text-xs leading-relaxed text-text-secondary">
+                可在这里刷新数据、打开本地设置，或直接提交新的官方抽奖信息。
+              </p>
+            </div>
+            <LotteryDataTableToolbar :refresh_data="refresh_data">
+              <template #submit-button>
+                <SubmitDynamicLotteryModal />
+              </template>
+            </LotteryDataTableToolbar>
+          </div>
+        </template>
+      </BiliPaginationDataView>
+    </section>
   </FlexContainer>
 </template>
 
 <script setup lang="ts">
-import { watch, onMounted, onUnmounted } from 'vue'
+import { computed, watch, onMounted, onUnmounted } from 'vue'
 import { useLotteryData } from '@/utils/useLotteryData.ts'
 import biliMessage from '@/utils/message'
 import SubmitDynamicLotteryModal from './SubmitDynamicLotteryModal.vue'
@@ -89,12 +124,7 @@ watch(
 
 // 刷新数据
 const refresh_data = () => {
-  get_lot_data(official_lot_data_props.value.lot_page, page_size.value)
-}
 
-// 提交成功后刷新数据
-const handleSubmitSuccess = () => {
-  official_lot_data_props.value.lot_page = 1
-  get_lot_data(1, page_size.value)
+  get_lot_data(official_lot_data_props.value.lot_page, page_size.value)
 }
 </script>

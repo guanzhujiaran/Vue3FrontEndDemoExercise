@@ -150,6 +150,9 @@ const routes: CustomRouteRecordRaw[] = [
       {
         path: 'bili-data',
         name: RouteName.BILI_DATA,
+        redirect: {
+          name: RouteName.LOTTERY_HOME
+        },
         meta: {
           title: 'B站抽奖数据',
           icon: IconList,
@@ -320,4 +323,3 @@ router.afterEach(() => {
 })
 export default router
 export { routes, user_center_routes }
-

@@ -1,28 +1,49 @@
 <template>
-  <div class="pagination-container-wrapper" ref="paginationContainer" v-loading="loading">
+  <div class="pagination-container-wrapper min-w-0" ref="paginationContainer" v-loading="loading">
     <slot name="toolbar">
       <BiliDataTableToolbar :refresh_data="refresh_data"></BiliDataTableToolbar>
     </slot>
-    <FlexContainer>
-      <slot name="contents">
-        <BiliLotteryCardContainer :data="props.data"></BiliLotteryCardContainer>
-      </slot>
-      <el-pagination
-        class="pagination"
+    <FlexContainer class="min-w-0 gap-5">
+      <div v-if="!error && props.data.length > 0" class="min-w-0">
+        <slot name="contents">
+          <BiliLotteryCardContainer :data="props.data"></BiliLotteryCardContainer>
+        </slot>
+      </div>
+
+      <div
         v-if="!error && props.data.length > 0"
-        size="small"
-        background
-        :layout="paginationLayout"
-        :total="props.total"
-        v-model:current-page="current_page"
-        :pager-count="5"
-      />
-      <bili-empty :txt="empty_msg" v-if="props.data.length === 0 && !error"></bili-empty>
-      <bili-error v-if="error" @click-retry="handleRetry"></bili-error>
+        class="flex min-w-0 justify-center border-t border-border-light px-1 pt-5"
+      >
+        <el-pagination
+          class="pagination flex-wrap justify-center gap-y-2"
+
+          size="small"
+          background
+          :layout="paginationLayout"
+          :total="props.total"
+          v-model:current-page="current_page"
+          :pager-count="5"
+        />
+      </div>
+
+      <div
+        v-if="props.data.length === 0 && !error"
+        class="rounded-lg border border-dashed border-border-light bg-fill-lighter py-10"
+      >
+        <bili-empty :txt="empty_msg"></bili-empty>
+      </div>
+
+      <div
+        v-if="error"
+        class="rounded-lg border border-danger-light-7 bg-danger-light-9 py-6"
+      >
+        <bili-error @click-retry="handleRetry"></bili-error>
+      </div>
     </FlexContainer>
     <ScrollButtons :top-threshold="300" :bottom-threshold="100" />
   </div>
 </template>
+
 <script setup lang="ts">
 import biliMessage from '@/utils/message'
 import { computed, onMounted, watch } from 'vue'
@@ -33,17 +54,21 @@ import BiliLotteryCardContainer from '@/components/lottery_data/bili_data/BiliLo
 import FlexContainer from '@/components/CommonCompo/Bili-Container-Compo/FlexContainer.vue'
 import { useScroll } from '@vueuse/core'
 
-const empty = computed(() => props.data.length === 0)
 const globalVars = useInject(KeysEnum.GlobalVars) as Ref<GlobalVarsType>
-const isSmallScreen = computed(() => {
-  return globalVars.value.screen_size !== ScreenTypeEnum.large
-})
+
 const paginationContainer = useTemplateRef<HTMLElement>('paginationContainer')
 const paginationLayout = computed(() => {
-  return isSmallScreen.value
-    ? 'prev, pager, next, total, jumper'
-    : 'prev, pager, next, jumper, total'
+  if (globalVars.value.screen_size === ScreenTypeEnum.small) {
+    return 'prev, pager, next'
+  }
+
+  if (globalVars.value.screen_size === ScreenTypeEnum.medium) {
+    return 'prev, pager, next, total'
+  }
+
+  return 'prev, pager, next, jumper, total'
 })
+
 
 interface Props {
   data: any[]
@@ -114,8 +139,9 @@ const refresh_data = () => {
   current_page.value = current_page.value === 1 ? 0 : 1
 }
 
-const { x, y } = useScroll(paginationContainer, { behavior: 'smooth' })
+const { y } = useScroll(paginationContainer, { behavior: 'smooth' })
 watch(loading, (newVal) => {
+
   if (newVal === false) {
     y.value = 0
   }

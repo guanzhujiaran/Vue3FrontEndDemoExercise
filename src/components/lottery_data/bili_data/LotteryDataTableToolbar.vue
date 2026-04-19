@@ -1,5 +1,5 @@
 <template>
-  <div class="bili-data-table-toolbar">
+  <div class="bili-data-table-toolbar flex w-full flex-col gap-3 xl:w-auto">
     <el-dialog v-model="isOpenSetting" class="setting-dialog" width="500px" :close-on-click-modal="true">
       <div class="dialog-content">
         <el-alert
@@ -30,8 +30,10 @@
       </div>
     </el-dialog>
 
-    <div class="toolbar-buttons">
-      <div class="button-row">
+    <div class="toolbar-buttons flex w-full flex-row flex-wrap items-center justify-center gap-3 sm:justify-end xl:w-auto">
+
+      <div class="button-row flex flex-wrap items-center justify-center gap-3 sm:flex-none sm:justify-end">
+
         <el-button round type="info" :icon="Setting" class="setting-btn" @click="isOpenSetting = true">
           设置
         </el-button>
@@ -39,13 +41,17 @@
           刷新
         </el-button>
       </div>
-      <div class="button-row">
+      <div class="button-row flex flex-wrap items-center justify-center gap-3 sm:flex-none sm:justify-end">
         <slot name="submit-button"></slot>
         <SubmitFeedbackModal />
       </div>
+
+
+
     </div>
   </div>
 </template>
+
 
 <script setup lang="ts">
 import { ref } from 'vue'

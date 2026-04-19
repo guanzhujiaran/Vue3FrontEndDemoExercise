@@ -127,7 +127,7 @@ const handleCardClick = (path: string | undefined, requiresLogin = false) => {
     </el-main>
 
     <!-- 功能导航区 -->
-    <section class="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+    <section class="mx-5 py-10 lg:px-40 sm:px-0 sm:mx-0">
       <div class="mb-6 flex flex-wrap items-center justify-between gap-4">
         <div>
           <el-text class="m-0 block text-2xl font-semibold tracking-tight" tag="h2">功能导航</el-text>

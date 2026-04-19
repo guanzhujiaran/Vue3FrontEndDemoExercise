@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch, type Ref } from 'vue'
+import { ref, computed, type Ref } from 'vue'
 import { type ThemeMode, useThemeStore } from '@/stores/theme.ts'
 import { useUserPrefStore, type SizeTheme } from '@/stores/user_pref.ts'
 import { useHueThemeStore } from '@/stores/hue_theme.ts'
@@ -214,7 +214,7 @@ const handleDropDownVisibleChange = (visible: boolean) => {
       </div>
     </div>
     <template #dropdown>
-      <el-dropdown-menu class="dropdown-menu py-3 px-3">
+      <el-dropdown-menu class="dropdown-menu py-3 px-3" :effect="themeStore.isDark ? 'dark' : 'light'">
         <el-dropdown-item class="login-tip hover:!text-inherit hover:!bg-inherit" v-if="!isLoggedIn">
           <HeaderDropdownLoginTip></HeaderDropdownLoginTip>
         </el-dropdown-item>
@@ -243,37 +243,43 @@ const handleDropDownVisibleChange = (visible: boolean) => {
               </div>
             </div>
           </div>
-          <el-dropdown-item :icon="User" @click="handleUserCenterClick" class="dropdown-item text-sm rounded-xl my-3">
+        <el-dropdown-item :icon="User" @click="handleUserCenterClick" class="dropdown-item text-sm rounded-xl my-3 group">
+          <div class="flex items-center justify-between w-full">
             <HeaderAvatarDropdownItem>
               <template #text>个人中心</template>
             </HeaderAvatarDropdownItem>
-          </el-dropdown-item>
+            <el-icon-arrow-right class="ml-auto h-4 w-4 text-xs text-[var(--el-text-color-secondary)] transition-colors duration-300 group-hover:text-[var(--el-text-color-primary)]" />
+          </div>
+        </el-dropdown-item>
         </template>
 
         <!-- 主题设置 -->
         <el-dropdown-item @click="handleThemeVisibleChange(true)" @hover="handleThemeVisibleChange(true)" divided
-          :icon="themeStore.getThemeIcon()" class="dropdown-item text-sm rounded-xl my-3">
+          :icon="themeStore.getThemeIcon()" class="dropdown-item text-sm rounded-xl my-3 group">
           <el-popover popper-class="header-avatar-dropdown-popover" @show="handlePopoverVisibleChange(true, 'theme')"
             @hide="handlePopoverVisibleChange(false, 'theme')" v-model:visible="themeVisible" placement="left"
-            trigger="hover" :persistent="true">
+            trigger="hover" :persistent="true" :effect="themeStore.isDark ? 'dark' : 'light'">
             <template #reference>
-              <div class="popover-reference flex items-center justify-between">
-                <span> {{ `主题：${themeStore.getThemeText()}` }}</span>
-                <el-icon-arrow-right class="dropdown-arrow ml-auto h-4 w-4 text-xs" />
+              <div class="flex items-center w-full justify-between">
+                <span>{{ `主题：${themeStore.getThemeText()}` }}</span>
+                <el-icon-arrow-right class="h-4 w-4 text-xs text-[var(--el-text-color-secondary)] transition-colors duration-300 group-hover:text-[var(--el-text-color-primary)]" />
               </div>
             </template>
             <template #default>
               <el-dropdown-item :class="{ activated: themeStore.themeMode === 'dark' }"
-                @click="handleThemeClick('dark')" :icon="Moon">
-                深色
+                @click="handleThemeClick('dark')" :icon="Moon" class="flex items-center justify-between group">
+                <span>深色</span>
+                <el-icon-arrow-right class="ml-auto h-4 w-4 text-xs text-[var(--el-text-color-secondary)] transition-colors duration-300 group-hover:text-[var(--el-text-color-primary)] activated:!text-[var(--el-color-primary)]" />
               </el-dropdown-item>
               <el-dropdown-item :class="{ activated: themeStore.themeMode === 'light' }"
-                @click="handleThemeClick('light')" :icon="Sunny">
-                浅色
+                @click="handleThemeClick('light')" :icon="Sunny" class="flex items-center justify-between group">
+                <span>浅色</span>
+                <el-icon-arrow-right class="ml-auto h-4 w-4 text-xs text-[var(--el-text-color-secondary)] transition-colors duration-300 group-hover:text-[var(--el-text-color-primary)] activated:!text-[var(--el-color-primary)]" />
               </el-dropdown-item>
               <el-dropdown-item :class="{ activated: themeStore.themeMode === 'auto' }"
-                @click="handleThemeClick('auto')" :icon="Monitor">
-                自动
+                @click="handleThemeClick('auto')" :icon="Monitor" class="flex items-center justify-between group">
+                <span>自动</span>
+                <el-icon-arrow-right class="ml-auto h-4 w-4 text-xs text-[var(--el-text-color-secondary)] transition-colors duration-300 group-hover:text-[var(--el-text-color-primary)] activated:!text-[var(--el-color-primary)]" />
               </el-dropdown-item>
             </template>
           </el-popover>
@@ -281,40 +287,39 @@ const handleDropDownVisibleChange = (visible: boolean) => {
 
         <!-- Hue主题设置 -->
         <el-dropdown-item @click="handleHueThemeVisibleChange(true)" @hover="handleHueThemeVisibleChange(true)"
-          :icon="MagicStick" class="dropdown-item text-sm rounded-xl my-3">
+          :icon="MagicStick" class="dropdown-item text-sm rounded-xl my-3 group">
           <el-popover popper-class="header-avatar-dropdown-popover" @show="handlePopoverVisibleChange(true, 'hue')"
             @hide="handlePopoverVisibleChange(false, 'hue')" v-model:visible="hueThemeVisible" placement="left"
-            trigger="hover">
+            trigger="hover" :effect="themeStore.isDark ? 'dark' : 'light'">
             <template #reference>
-              <div class="popover-reference flex items-center justify-between">
-                <span>
-                  色彩主题：{{
-                    `主题 ${hueThemeStore.currentIndex === 0 ? '默认' : hueThemeStore.currentIndex}`
-                  }}
-                </span>
-                <el-icon-arrow-right class="dropdown-arrow ml-auto h-4 w-4 text-xs" />
+              <div class="flex items-center w-full justify-between">
+                <span>色彩主题：{{ `主题 ${hueThemeStore.currentIndex === 0 ? '默认' : hueThemeStore.currentIndex}` }}</span>
+                <el-icon-arrow-right class="h-4 w-4 text-xs text-[var(--el-text-color-secondary)] transition-colors duration-300 group-hover:text-[var(--el-text-color-primary)]" />
               </div>
             </template>
             <template #default>
               <div class="hue-theme-items">
                 <el-dropdown-item v-for="theme in hueThemes" :key="theme.value"
                   :class="{ activated: hueThemeStore.currentIndex === theme.value }"
-                  @click="handleSetHueTheme(theme.value)" class="hue-theme-item">
-                  <div class="hue-theme-content flex justify-between w-full items-center">
-                    <span>{{ theme.label }}</span>
+                  @click="handleSetHueTheme(theme.value)" class="hue-theme-item flex items-center justify-between group">
+                  <span>{{ theme.label }}</span>
+                  <div class="flex items-center">
                     <el-button v-if="theme.value !== 0 && hueThemeStore.currentIndex !== theme.value"
-                      class="delete-theme-btn opacity-0 w-5 h-5 transition-opacity duration-300 hover:scale-110 hover:bg-[var(--el-color-danger)] [&_i]:mr-0" 
+                      class="delete-theme-btn opacity-0 w-5 h-5 transition-opacity duration-300 hover:scale-110 hover:bg-[var(--el-color-danger)] [&_i]:mr-0"
                       size="small" type="danger"
                       @click="handleDeleteHueTheme(theme.value, $event)" circle :icon="Delete">
                     </el-button>
+                    <el-icon-arrow-right v-if="hueThemeStore.currentIndex !== theme.value" class="ml-auto h-4 w-4 text-xs text-[var(--el-text-color-secondary)] transition-colors duration-300 group-hover:text-[var(--el-text-color-primary)] activated:!text-[var(--el-color-primary)]" />
                   </div>
                 </el-dropdown-item>
               </div>
-              <el-dropdown-item :disabled="!hueThemeStore.canGenerate" @click="handleRandomizeHueTheme()" divided>
-                {{ hueThemeStore.canGenerate ? '创建随机主题' : '已达上限' }}
+              <el-dropdown-item :disabled="!hueThemeStore.canGenerate" @click="handleRandomizeHueTheme()" divided class="flex items-center justify-between group">
+                <span>{{ hueThemeStore.canGenerate ? '创建随机主题' : '已达上限' }}</span>
+                <el-icon-arrow-right class="ml-auto h-4 w-4 text-xs text-[var(--el-text-color-secondary)] transition-colors duration-300 group-hover:text-[var(--el-text-color-primary)]" />
               </el-dropdown-item>
-              <el-dropdown-item @click="handleRestoreHueTheme()" divided>
-                恢复默认
+              <el-dropdown-item @click="handleRestoreHueTheme()" divided class="flex items-center justify-between group">
+                <span>恢复默认</span>
+                <el-icon-arrow-right class="ml-auto h-4 w-4 text-xs text-[var(--el-text-color-secondary)] transition-colors duration-300 group-hover:text-[var(--el-text-color-primary)]" />
               </el-dropdown-item>
             </template>
           </el-popover>
@@ -322,25 +327,22 @@ const handleDropDownVisibleChange = (visible: boolean) => {
 
         <!-- 大小主题设置 -->
         <el-dropdown-item @click="handleSizeThemeVisibleChange(true)" @hover="handleSizeThemeVisibleChange(true)"
-          :icon="ScaleToOriginal" class="dropdown-item text-sm rounded-xl my-3">
+          :icon="ScaleToOriginal" class="dropdown-item text-sm rounded-xl my-3 group">
           <el-popover popper-class="header-avatar-dropdown-popover" @show="handlePopoverVisibleChange(true, 'size')"
             @hide="handlePopoverVisibleChange(false, 'size')" v-model:visible="sizeThemeVisible" placement="left"
-            trigger="hover">
+            trigger="hover" :effect="themeStore.isDark ? 'dark' : 'light'">
             <template #reference>
-              <div class="popover-reference flex items-center justify-between">
-                <span>
-                  大小主题：{{
-                    sizeThemes.find((t) => t.value === userPrefStore.sizeTheme)?.label || '标准'
-                  }}
-                </span>
-                <el-icon-arrow-right class="dropdown-arrow ml-auto h-4 w-4 text-xs" />
+              <div class="flex items-center w-full justify-between">
+                <span>大小主题：{{ sizeThemes.find((t) => t.value === userPrefStore.sizeTheme)?.label || '标准' }}</span>
+                <el-icon-arrow-right class="h-4 w-4 text-xs text-[var(--el-text-color-secondary)] transition-colors duration-300 group-hover:text-[var(--el-text-color-primary)]" />
               </div>
             </template>
             <template #default>
               <el-dropdown-item v-for="theme in sizeThemes" :key="theme.value"
                 :class="{ activated: userPrefStore.sizeTheme === theme.value }"
-                @click="handleSetSizeTheme(theme.value)">
-                {{ theme.label }}
+                @click="handleSetSizeTheme(theme.value)" class="flex items-center justify-between group">
+                <span>{{ theme.label }}</span>
+                <el-icon-arrow-right v-if="userPrefStore.sizeTheme !== theme.value" class="ml-auto h-4 w-4 text-xs text-[var(--el-text-color-secondary)] transition-colors duration-300 group-hover:text-[var(--el-text-color-primary)] activated:!text-[var(--el-color-primary)]" />
               </el-dropdown-item>
             </template>
           </el-popover>

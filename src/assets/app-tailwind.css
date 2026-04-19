@@ -40,6 +40,16 @@
 }
 
 @layer components {
+  body {
+    min-width: 1060px;
+  }
+
+
+  .use-screen-safe-area {
+    max-height: unset !important;
+    max-width: unset !important;
+  }
+
   .el-message__content {
     font-size: var(--text-base)
   }
@@ -47,7 +57,27 @@
   .el-page-header__title {
     font-size: var(--text-base);
   }
-  .el-page-header__content{
+
+  .el-page-header__content {
     font-size: var(--text-2xl);
   }
+
+  .el-popover {
+    --el-popper-bg-color-dark:
+      var(--el-bg-color-overlay)
+  }
+
+  /* ==================== Element Plus 组件激活状态样式 ==================== */
+
+  /* dropdown-item 激活状态 */
+  .el-dropdown-item.activated {
+    background-color: var(--el-fill-color-lighter) !important;
+    color: var(--el-color-primary) !important;
+  }
+
+  .dark .el-dropdown-item.activated {
+    background-color: var(--el-fill-color-dark) !important;
+  }
+
+
 }
