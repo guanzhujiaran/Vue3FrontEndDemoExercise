@@ -63,7 +63,9 @@ export default defineConfig({
     vueJsx(),
     VueDevTools({
       componentInspector: true,
-      launchEditor: 'K:\\CodeBuddy\\CodeBuddy.exe'//'C:\\Users\\Acer\\AppData\\Local\\Programs\\Lingma\\Lingma.exe'
+      launchEditor: 'H:\\Trae CN\\Trae CN.exe'
+      //'K:\\CodeBuddy\\CodeBuddy.exe'
+      //'C:\\Users\\Acer\\AppData\\Local\\Programs\\Lingma\\Lingma.exe'
     }),
     tailwindcss()
   ],

@@ -1,10 +1,19 @@
-@layer theme, base, element, components, utilities;
-@import 'element-plus/dist/index.css' layer(element);
+/* 
+越后面声明的层级,优先级越高,也就是能够覆盖前面生命的样式
+目前需要改写样式直接写到components层就行了
+elementDark放到theme后面是为了确保暗色状态下直接用elementDark的样式覆盖
+这样就不需要写暗色的样式了
+*/
+@layer base, element,utilities, theme,elementDark,components;
 @import 'element-plus/theme-chalk/dark/css-vars.css' layer(elementDark);
-@import "tailwindcss";
-@import './theme.css';
+@import 'element-plus/dist/index.css' layer(element);
+@import 'tailwindcss';
 @plugin 'daisyui';
+@plugin '@tailwindcss/typography';
+@import './theme.css';
+@custom-variant dark (&:where(.dark, .dark *));
 
+/* 这一层比较重要,写在class里面的内容都在这一层 */
 @layer utilities {
   /* 菜单尺寸主题响应 */
 
@@ -43,41 +52,25 @@
   body {
     min-width: 1060px;
   }
-
-
+  .el-switch__core .el-switch__inner-wrapper {
+    @apply text-base;
+  }
   .use-screen-safe-area {
     max-height: unset !important;
     max-width: unset !important;
   }
 
   .el-message__content {
-    font-size: var(--text-base)
+    @apply text-base;
   }
-
   .el-page-header__title {
-    font-size: var(--text-base);
+    @apply text-base;
   }
 
   .el-page-header__content {
-    font-size: var(--text-2xl);
+    @apply text-2xl;
   }
-
-  .el-popover {
-    --el-popper-bg-color-dark:
-      var(--el-bg-color-overlay)
+  .el-page-header__header {
+    @apply text-primary hover:text-primary-light-3;
   }
-
-  /* ==================== Element Plus 组件激活状态样式 ==================== */
-
-  /* dropdown-item 激活状态 */
-  .el-dropdown-item.activated {
-    background-color: var(--el-fill-color-lighter) !important;
-    color: var(--el-color-primary) !important;
-  }
-
-  .dark .el-dropdown-item.activated {
-    background-color: var(--el-fill-color-dark) !important;
-  }
-
-
 }

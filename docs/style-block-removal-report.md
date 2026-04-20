@@ -14,7 +14,7 @@
 已删除的文件（只包含 @import 的简单 style 块）：
 1. SpuPriceChart.vue
 2. SubmitTopicLotteryModal.vue
-3. SubmitDynamicLotteryModal.vue
+3. SubmitDynamicLotteryModalBtn.vue
 4. BiliAtariRanking.vue
 5. LotteryPrize.vue
 6. LotteryDesc.vue

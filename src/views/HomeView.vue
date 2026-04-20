@@ -106,7 +106,7 @@ const handleCardClick = (path: string | undefined, requiresLogin = false) => {
               </el-icon>
               立即登录
             </el-button>
-            <el-button type="warning" size="large" @click="router.push('/app/lot-data/bili-data/official')" v-else
+            <el-button type="primary" size="large" @click="router.push('/app/lot-data/bili-data/official')" v-else
               class="shadow-lg!">
               <el-icon class="el-icon--left">
                 <DataAnalysis />
@@ -127,7 +127,7 @@ const handleCardClick = (path: string | undefined, requiresLogin = false) => {
     </el-main>
 
     <!-- 功能导航区 -->
-    <section class="mx-5 py-10 lg:px-40 sm:px-0 sm:mx-0">
+    <section class="mx-5 py-10 lg:mx-10 sm:px-0 sm:mx-0">
       <div class="mb-6 flex flex-wrap items-center justify-between gap-4">
         <div>
           <el-text class="m-0 block text-2xl font-semibold tracking-tight" tag="h2">功能导航</el-text>

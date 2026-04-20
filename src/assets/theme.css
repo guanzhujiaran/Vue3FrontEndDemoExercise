@@ -1,112 +1,59 @@
-@custom-variant dark (&:where(.dark, .dark *));
-
 @theme {
   /* ==================== 字体系统 ==================== */
-  --font-sans: 'Inter', 'PingFang SC', 'Microsoft YaHei', 'Hiragino Sans GB', 'Noto Sans CJK SC', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-sans:
+    'Inter', 'PingFang SC', 'Microsoft YaHei', 'Hiragino Sans GB', 'Noto Sans CJK SC', system-ui,
+    -apple-system, BlinkMacSystemFont, sans-serif;
   --font-mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', ui-monospace, monospace;
 
   /* ==================== Element Plus 主色系 ==================== */
-  --el-primary: var(--color-sky-500);
-  --el-primary-light-3: var(--color-sky-400);
-  --el-primary-light-5: var(--color-sky-300);
-  --el-primary-light-7: var(--color-sky-200);
-  --el-primary-light-8: var(--color-sky-100);
-  --el-primary-light-9: var(--color-sky-50);
-  --el-primary-dark-2: var(--color-sky-600);
+  --el-color-primary: var(--color-sky-500);
+  --el-color-primary-light-3: var(--color-sky-400);
+  --el-color-primary-light-5: var(--color-sky-300);
+  --el-color-primary-light-7: var(--color-sky-200);
+  --el-color-primary-light-8: var(--color-sky-100);
+  --el-color-primary-light-9: var(--color-sky-50);
+  --el-color-primary-dark-2: var(--color-sky-600);
 
   /* 成功/警告/危险/信息 */
-  --el-success: var(--color-green-500);
-  --el-success-light-3: var(--color-green-400);
-  --el-success-light-5: var(--color-green-300);
-  --el-success-light-7: var(--color-green-200);
-  --el-success-light-8: var(--color-green-100);
-  --el-success-light-9: var(--color-green-50);
-  --el-success-dark-2: var(--color-green-600);
+  --el-color-success: var(--color-green-500);
+  --el-color-success-light-3: var(--color-green-400);
+  --el-color-success-light-5: var(--color-green-300);
+  --el-color-success-light-7: var(--color-green-200);
+  --el-color-success-light-8: var(--color-green-100);
+  --el-color-success-light-9: var(--color-green-50);
+  --el-color-success-dark-2: var(--color-green-600);
 
-  --el-warning: var(--color-amber-500);
-  --el-warning-light-3: var(--color-amber-400);
-  --el-warning-light-5: var(--color-amber-300);
-  --el-warning-light-7: var(--color-amber-200);
-  --el-warning-light-8: var(--color-amber-100);
-  --el-warning-light-9: var(--color-amber-50);
-  --el-warning-dark-2: var(--color-amber-600);
+  --el-color-warning: var(--color-amber-500);
+  --el-color-warning-light-3: var(--color-amber-400);
+  --el-color-warning-light-5: var(--color-amber-300);
+  --el-color-warning-light-7: var(--color-amber-200);
+  --el-color-warning-light-8: var(--color-amber-100);
+  --el-color-warning-light-9: var(--color-amber-50);
+  --el-color-warning-dark-2: var(--color-amber-600);
 
-  --el-danger: var(--color-rose-500);
-  --el-danger-light-3: var(--color-rose-400);
-  --el-danger-light-5: var(--color-rose-300);
-  --el-danger-light-7: var(--color-rose-200);
-  --el-danger-light-8: var(--color-rose-100);
-  --el-danger-light-9: var(--color-rose-50);
-  --el-danger-dark-2: var(--color-rose-600);
+  --el-color-danger: var(--color-rose-500);
+  --el-color-danger-light-3: var(--color-rose-400);
+  --el-color-danger-light-5: var(--color-rose-300);
+  --el-color-danger-light-7: var(--color-rose-200);
+  --el-color-danger-light-8: var(--color-rose-100);
+  --el-color-danger-light-9: var(--color-rose-50);
+  --el-color-danger-dark-2: var(--color-rose-600);
 
-  --el-error: var(--color-purple-500);
-  --el-error-light-3: var(--color-purple-400);
-  --el-error-light-5: var(--color-purple-300);
-  --el-error-light-7: var(--color-purple-200);
-  --el-error-light-8: var(--color-purple-100);
-  --el-error-light-9: var(--color-purple-50);
-  --el-error-dark-2: var(--color-purple-600);
+  --el-color-error: var(--color-purple-500);
+  --el-color-error-light-3: var(--color-purple-400);
+  --el-color-error-light-5: var(--color-purple-300);
+  --el-color-error-light-7: var(--color-purple-200);
+  --el-color-error-light-8: var(--color-purple-100);
+  --el-color-error-light-9: var(--color-purple-50);
+  --el-color-error-dark-2: var(--color-purple-600);
 
-  --el-info: var(--color-slate-500);
-  --el-info-light-3: var(--color-slate-400);
-  --el-info-light-5: var(--color-slate-300);
-  --el-info-light-7: var(--color-slate-200);
-  --el-info-light-8: var(--color-slate-100);
-  --el-info-light-9: var(--color-slate-50);
-  --el-info-dark-2: var(--color-slate-600);
-
-  /* ==================== 基础颜色 ==================== */
-  --el-color-white: #ffffff;
-  --el-color-black: #000000;
-
-  /* ==================== 文本颜色（亮色模式优化：更佳对比度）==================== */
-  --el-text-color-primary: #1a1d23;
-  --el-text-color-regular: #4b5563;
-  --el-text-color-secondary: #6b7280;
-  --el-text-color-placeholder: #9ca3af;
-  --el-text-color-disabled: #d1d5db;
-
-  /* ==================== 边框颜色（亮色模式：更柔和）==================== */
-  --el-border-color: #e2e8f0;
-  --el-border-color-light: #edf2f7;
-  --el-border-color-lighter: #f1f5f9;
-  --el-border-color-extra-light: #f8fafc;
-  --el-border-color-dark: #cbd5e1;
-  --el-border-color-darker: #b0bec5;
-
-  /* ==================== 填充颜色（亮色模式：层次感更强）==================== */
-  --el-fill-color: #f1f5f9;
-  --el-fill-color-light: #f8fafc;
-  --el-fill-color-lighter: #fafcff;
-  --el-fill-color-extra-light: #fdfdff;
-  --el-fill-color-dark: #e2e8f0;
-  --el-fill-color-darker: #cbd5e1;
-  --el-fill-color-blank: #ffffff;
-
-  /* ==================== 背景颜色（亮色模式：轻微蓝白）==================== */
-  --el-bg-color: #ffffff;
-  --el-bg-color-page: #f4f6fb;
-  --el-bg-color-overlay: #ffffff;
-
-  /* ==================== 阴影（亮色模式：更精细多层）==================== */
-  --el-box-shadow: 0px 4px 6px -1px rgba(0, 0, 0, 0.06), 0px 2px 4px -1px rgba(0, 0, 0, 0.04);
-  --el-box-shadow-light: 0px 1px 3px rgba(0, 0, 0, 0.08), 0px 1px 2px rgba(0, 0, 0, 0.04);
-  --el-box-shadow-lighter: 0px 1px 2px rgba(0, 0, 0, 0.06);
-  --el-box-shadow-dark:
-    0px 10px 15px -3px rgba(0, 0, 0, 0.08), 0px 4px 6px -2px rgba(0, 0, 0, 0.04),
-    0px 0px 0px 1px rgba(0, 0, 0, 0.03);
-
-  /* ==================== 禁用状态颜色 ==================== */
-  --el-disabled-bg-color: var(--el-fill-color-light);
-  --el-disabled-text-color: var(--el-text-color-placeholder);
-  --el-disabled-border-color: var(--el-border-color-light);
-
-  /* ==================== 遮罩颜色 ==================== */
-  --el-overlay-color: rgba(0, 0, 0, 0.8);
-  --el-overlay-color-light: rgba(0, 0, 0, 0.7);
-  --el-overlay-color-lighter: rgba(0, 0, 0, 0.5);
-  --el-mask-color: rgba(255, 255, 255, 0.9);
-  --el-mask-color-extra-light: rgba(255, 255, 255, 0.3);
+  --el-color-info: var(--color-slate-500);
+  --el-color-info-light-3: var(--color-slate-400);
+  --el-color-info-light-5: var(--color-slate-300);
+  --el-color-info-light-7: var(--color-slate-200);
+  --el-color-info-light-8: var(--color-slate-100);
+  --el-color-info-light-9: var(--color-slate-50);
+  --el-color-info-dark-2: var(--color-slate-600);
 
   /* ==================== 统一设计系统 ==================== */
   /* 基础尺寸单位 */
@@ -183,7 +130,6 @@
   --leading-relaxed: 1.625;
   --leading-loose: 2;
 
-
   /* 组件字体大小 */
   --text-xxs: calc(var(--spacing-base) * 2.75);
   /* 11px */
@@ -235,7 +181,7 @@
   --el-border-radius-circle: var(--radius-full);
 
   /* ==================== Element Plus 组件样式覆盖 ==================== */
-  --el-input-height-large: var(--height-xl);
+  --el-input-height-large: var(--spacing-7);
   --el-input-height: var(--spacing-5);
   --el-input-height-small: var(--spacing-3);
   --el-input-border-radius: var(--radius-sm);
@@ -251,7 +197,9 @@
   --el-button-font-size: var(--text-base);
   --el-button-padding-horizontal: var(--px-base);
   --el-button-border-radius: var(--radius-sm);
-  --el-button-padding-vertical: calc((var(--el-button-height) - var(--el-button-font-size)) / 2 - 0.125rem);
+  --el-button-padding-vertical: calc(
+    (var(--el-button-height) - var(--el-button-font-size)) / 2 - 0.125rem
+  );
   --el-form-label-font-size: var(--text-base);
   --el-form-item-margin-bottom: var(--spacing-5);
   --el-link-font-size: var(--text-base);
@@ -279,7 +227,7 @@
   --el-pagination-button-border-radius: var(--radius-sm);
   --el-pagination-font-size: var(--text-base);
   --el-tag-border-radius: var(--radius-sm);
-  --el-tag-font-size: var(--text-base);
+  --el-tag-font-size: var(--text-xs);
   --el-progress-border-radius: var(--radius-sm);
   --el-switch-border-radius: var(--radius-full);
   --el-switch-core-height: calc(var(--spacing-5) - var(--spacing-1));
@@ -383,89 +331,129 @@
   --color-bg-overlay: var(--el-bg-color-overlay);
 
   /* ==================== Module Card 渐变 ==================== */
-  --color-gradient-module-primary: linear-gradient(135deg,
-      var(--el-color-primary) 0%,
-      var(--el-color-info) 100%);
-  --color-gradient-module-danger: linear-gradient(135deg,
-      var(--el-color-danger) 0%,
-      var(--el-color-warning) 100%);
-  --color-gradient-module-success: linear-gradient(135deg,
-      var(--el-color-success) 0%,
-      var(--el-color-primary) 100%);
-  --color-gradient-module-warning: linear-gradient(135deg,
-      var(--el-color-warning) 0%,
-      var(--el-color-danger) 100%);
-  --color-gradient-module-info: linear-gradient(135deg,
-      var(--el-color-info) 0%,
-      var(--el-color-primary) 100%);
+  --color-gradient-module-primary: linear-gradient(
+    135deg,
+    var(--el-color-primary) 0%,
+    var(--el-color-info) 100%
+  );
+  --color-gradient-module-danger: linear-gradient(
+    135deg,
+    var(--el-color-danger) 0%,
+    var(--el-color-warning) 100%
+  );
+  --color-gradient-module-success: linear-gradient(
+    135deg,
+    var(--el-color-success) 0%,
+    var(--el-color-primary) 100%
+  );
+  --color-gradient-module-warning: linear-gradient(
+    135deg,
+    var(--el-color-warning) 0%,
+    var(--el-color-danger) 100%
+  );
+  --color-gradient-module-info: linear-gradient(
+    135deg,
+    var(--el-color-info) 0%,
+    var(--el-color-primary) 100%
+  );
 
   /* ==================== Hero Banner 渐变 ==================== */
-  --color-gradient-hero-primary: linear-gradient(135deg,
-      var(--el-color-primary) 0%,
-      var(--el-color-warning) 35%,
-      var(--el-color-success) 68%,
-      var(--el-color-info) 100%);
-  --color-gradient-hero-vibrant: linear-gradient(225deg,
-      var(--el-color-danger) 0%,
-      var(--el-color-primary) 45%,
-      var(--el-color-info) 100%);
-  --color-gradient-hero-warm: linear-gradient(225deg,
-      var(--el-color-danger) 0%,
-      var(--el-color-warning) 40%,
-      var(--el-color-info) 80%,
-      var(--el-color-success) 100%);
-  --color-gradient-hero-cool: linear-gradient(225deg,
-      var(--el-color-primary) 0%,
-      var(--el-color-info) 40%,
-      var(--el-color-warning) 70%,
-      var(--el-color-danger) 100%);
-  --color-gradient-hero-elegant: linear-gradient(225deg,
-      var(--el-color-warning) 0%,
-      var(--el-color-success) 40%,
-      var(--el-color-primary) 80%,
-      var(--el-color-info) 100%);
+  --color-gradient-hero-primary: linear-gradient(
+    135deg,
+    var(--el-color-primary) 0%,
+    var(--el-color-warning) 35%,
+    var(--el-color-success) 68%,
+    var(--el-color-info) 100%
+  );
+  --color-gradient-hero-vibrant: linear-gradient(
+    225deg,
+    var(--el-color-danger) 0%,
+    var(--el-color-primary) 45%,
+    var(--el-color-info) 100%
+  );
+  --color-gradient-hero-warm: linear-gradient(
+    225deg,
+    var(--el-color-danger) 0%,
+    var(--el-color-warning) 40%,
+    var(--el-color-info) 80%,
+    var(--el-color-success) 100%
+  );
+  --color-gradient-hero-cool: linear-gradient(
+    225deg,
+    var(--el-color-primary) 0%,
+    var(--el-color-info) 40%,
+    var(--el-color-warning) 70%,
+    var(--el-color-danger) 100%
+  );
+  --color-gradient-hero-elegant: linear-gradient(
+    225deg,
+    var(--el-color-warning) 0%,
+    var(--el-color-success) 40%,
+    var(--el-color-primary) 80%,
+    var(--el-color-info) 100%
+  );
 
   /* ==================== 其他常用渐变 ==================== */
-  --color-gradient-bili-data: linear-gradient(225deg,
-      var(--el-color-danger) 0%,
-      var(--el-color-warning) 40%,
-      var(--el-color-primary) 80%,
-      var(--el-color-success) 100%);
-  --color-gradient-lottery-item: linear-gradient(225deg,
-      var(--el-color-success) 0%,
-      var(--el-color-info) 35%,
-      var(--el-color-primary) 70%,
-      var(--el-color-warning) 100%);
-  --color-gradient-shopping: linear-gradient(225deg,
-      var(--el-color-info) 0%,
-      var(--el-color-primary) 40%,
-      var(--el-color-danger) 80%,
-      var(--el-color-success) 100%);
+  --color-gradient-bili-data: linear-gradient(
+    225deg,
+    var(--el-color-danger) 0%,
+    var(--el-color-warning) 40%,
+    var(--el-color-primary) 80%,
+    var(--el-color-success) 100%
+  );
+  --color-gradient-lottery-item: linear-gradient(
+    225deg,
+    var(--el-color-success) 0%,
+    var(--el-color-info) 35%,
+    var(--el-color-primary) 70%,
+    var(--el-color-warning) 100%
+  );
+  --color-gradient-shopping: linear-gradient(
+    225deg,
+    var(--el-color-info) 0%,
+    var(--el-color-primary) 40%,
+    var(--el-color-danger) 80%,
+    var(--el-color-success) 100%
+  );
 
   /* ==================== 特殊用途渐变 ==================== */
-  --color-gradient-drawer-dark: linear-gradient(180deg,
-      var(--el-color-black) 0%,
-      var(--el-color-info) 96.22%);
+  --color-gradient-drawer-dark: linear-gradient(
+    180deg,
+    var(--el-color-black) 0%,
+    var(--el-color-info) 96.22%
+  );
 
   /* ==================== 徽章渐变 ==================== */
-  --color-gradient-badge-success: linear-gradient(135deg,
-      var(--el-color-success) 0%,
-      var(--el-color-success-dark-2) 100%);
-  --color-gradient-badge-warning: linear-gradient(135deg,
-      var(--el-color-warning) 0%,
-      var(--el-color-warning-dark-2) 100%);
-  --color-gradient-badge-info: linear-gradient(135deg,
-      var(--el-color-info) 0%,
-      var(--el-color-info-dark-2) 100%);
-  --color-gradient-badge-primary: linear-gradient(135deg,
-      var(--el-color-primary) 0%,
-      var(--el-color-primary-dark-2) 100%);
+  --color-gradient-badge-success: linear-gradient(
+    135deg,
+    var(--el-color-success) 0%,
+    var(--el-color-success-dark-2) 100%
+  );
+  --color-gradient-badge-warning: linear-gradient(
+    135deg,
+    var(--el-color-warning) 0%,
+    var(--el-color-warning-dark-2) 100%
+  );
+  --color-gradient-badge-info: linear-gradient(
+    135deg,
+    var(--el-color-info) 0%,
+    var(--el-color-info-dark-2) 100%
+  );
+  --color-gradient-badge-primary: linear-gradient(
+    135deg,
+    var(--el-color-primary) 0%,
+    var(--el-color-primary-dark-2) 100%
+  );
 
   /* ==================== 文本渐变 ==================== */
-  --color-gradient-text-primary: linear-gradient(135deg,
-      var(--el-color-primary) 0%,
-      var(--el-color-info) 100%);
-    --color-gradient-text-primary-light: linear-gradient(135deg,
-      var(--el-color-primary-light-3) 0%,
-      var(--el-color-info-light-3) 100%);
+  --color-gradient-text-primary: linear-gradient(
+    135deg,
+    var(--el-color-primary) 0%,
+    var(--el-color-info) 100%
+  );
+  --color-gradient-text-primary-light: linear-gradient(
+    135deg,
+    var(--el-color-primary-light-3) 0%,
+    var(--el-color-info-light-3) 100%
+  );
 }

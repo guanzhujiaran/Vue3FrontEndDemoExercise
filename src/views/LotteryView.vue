@@ -1,7 +1,7 @@
 <template>
   <FlexContainer>
     <el-page-header
-      class="mb-5"
+      class="lot-data-header mb-5"
       title="返回"
       content="B站抽奖数据"
       @back="() => router.back()"
@@ -17,6 +17,5 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
 import router from '@/router'
-import { RouteName } from '@/models/router'
 const use_router = useRouter()
 </script>

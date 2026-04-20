@@ -153,7 +153,7 @@
 
             <!-- 平台信息 -->
             <div class="mb-2">
-              <el-tag type="info" size="small">{{ instance.fingerprint_platform || '未知平台' }}</el-tag>
+              <el-tag type="info" size="small" :effect="themeStore.themeEffectString">{{ instance.fingerprint_platform || '未知平台' }}</el-tag>
             </div>
 
             <!-- 状态信息 -->
@@ -163,16 +163,17 @@
                 <el-tag :type="getSessionStatusType(instance.sessionStatus)" size="small">
                   {{ getSessionStatusText(instance.sessionStatus) }}
                 </el-tag>
+                <el-tag :effect="themeStore.themeEffectString" type="info" size="small" :effect="themeStore.themeEffectString"></el-tag>
               </div>
               <div class="flex items-center gap-2">
                 <span class="text-xs text-[var(--el-text-color-secondary)]">运行:</span>
-                <el-tag :type="instance.sessionStatus?.is_running ? 'success' : 'info'" size="small">
+                <el-tag :effect="themeStore.themeEffectString" :type="instance.sessionStatus?.is_running ? 'success' : 'info'" size="small">
                   {{ instance.sessionStatus?.is_running ? '运行中' : '未运行' }}
                 </el-tag>
               </div>
               <div class="flex items-center gap-2">
                 <span class="text-xs text-[var(--el-text-color-secondary)]">视频:</span>
-                <el-tag :type="instance.sessionStatus?.video_stream_active ? 'success' : 'info'" size="small">
+                <el-tag  :effect="themeStore.themeEffectString" :type="instance.sessionStatus?.video_stream_active ? 'success' : 'info'" size="small">
                   {{ instance.sessionStatus?.video_stream_active ? '启用' : '未启用' }}
                 </el-tag>
               </div>
@@ -346,12 +347,12 @@
               <span class="text-xs">{{ selectedInstance.sessionStatus.session_id }}</span>
             </el-descriptions-item>
             <el-descriptions-item label="生命周期状态">
-              <el-tag :type="getSessionStatusType(selectedInstance.sessionStatus)">
+              <el-tag :effect="themeStore.themeEffectString" :type="getSessionStatusType(selectedInstance.sessionStatus)">
                 {{ selectedInstance.sessionStatus.lifecycle_status }}
               </el-tag>
             </el-descriptions-item>
             <el-descriptions-item label="运行状态">
-              <el-tag :type="selectedInstance.sessionStatus.is_running ? 'success' : 'warning'">
+              <el-tag :effect="themeStore.themeEffectString" :type="selectedInstance.sessionStatus.is_running ? 'success' : 'warning'">
                 {{ selectedInstance.sessionStatus.is_running ? '运行中' : '未运行' }}
               </el-tag>
             </el-descriptions-item>
@@ -359,7 +360,7 @@
               {{ selectedInstance.sessionStatus.connected_clients }}
             </el-descriptions-item>
             <el-descriptions-item label="视频流">
-              <el-tag :type="selectedInstance.sessionStatus.video_stream_active ? 'success' : 'info'">
+              <el-tag :effect="themeStore.themeEffectString" :type="selectedInstance.sessionStatus.video_stream_active ? 'success' : 'info'">
                 {{ selectedInstance.sessionStatus.video_stream_active ? '已启用' : '未启用' }}
               </el-tag>
             </el-descriptions-item>
@@ -393,13 +394,14 @@ import type {
   BrowserSessionStatus
 } from '@/types/browser-automation-api'
 import ControlPanelContent from './ControlPanelContent.vue'
+import { useThemeStore } from '@/stores/theme'
 
 // 定义Props
 interface Props {
   fingerprints: UserBrowserInfoReadResp[]
   loading?: boolean
 }
-
+const themeStore = useThemeStore()
 const props = withDefaults(defineProps<Props>(), {
   loading: false
 })

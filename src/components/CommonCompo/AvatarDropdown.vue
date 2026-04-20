@@ -256,9 +256,9 @@ const handleDropDownVisibleChange = (visible: boolean) => {
         <!-- 主题设置 -->
         <el-dropdown-item @click="handleThemeVisibleChange(true)" @hover="handleThemeVisibleChange(true)" divided
           :icon="themeStore.getThemeIcon()" class="dropdown-item text-sm rounded-xl my-3 group">
-          <el-popover popper-class="header-avatar-dropdown-popover" @show="handlePopoverVisibleChange(true, 'theme')"
+          <el-popover width="230" popper-class="header-avatar-dropdown-popover" @show="handlePopoverVisibleChange(true, 'theme')"
             @hide="handlePopoverVisibleChange(false, 'theme')" v-model:visible="themeVisible" placement="left"
-            trigger="hover" :persistent="true" :effect="themeStore.isDark ? 'dark' : 'light'">
+            trigger="hover" :persistent="true">
             <template #reference>
               <div class="flex items-center w-full justify-between">
                 <span>{{ `主题：${themeStore.getThemeText()}` }}</span>
@@ -288,9 +288,9 @@ const handleDropDownVisibleChange = (visible: boolean) => {
         <!-- Hue主题设置 -->
         <el-dropdown-item @click="handleHueThemeVisibleChange(true)" @hover="handleHueThemeVisibleChange(true)"
           :icon="MagicStick" class="dropdown-item text-sm rounded-xl my-3 group">
-          <el-popover popper-class="header-avatar-dropdown-popover" @show="handlePopoverVisibleChange(true, 'hue')"
+          <el-popover width="230" popper-class="header-avatar-dropdown-popover" @show="handlePopoverVisibleChange(true, 'hue')"
             @hide="handlePopoverVisibleChange(false, 'hue')" v-model:visible="hueThemeVisible" placement="left"
-            trigger="hover" :effect="themeStore.isDark ? 'dark' : 'light'">
+            trigger="hover">
             <template #reference>
               <div class="flex items-center w-full justify-between">
                 <span>色彩主题：{{ `主题 ${hueThemeStore.currentIndex === 0 ? '默认' : hueThemeStore.currentIndex}` }}</span>
@@ -328,9 +328,9 @@ const handleDropDownVisibleChange = (visible: boolean) => {
         <!-- 大小主题设置 -->
         <el-dropdown-item @click="handleSizeThemeVisibleChange(true)" @hover="handleSizeThemeVisibleChange(true)"
           :icon="ScaleToOriginal" class="dropdown-item text-sm rounded-xl my-3 group">
-          <el-popover popper-class="header-avatar-dropdown-popover" @show="handlePopoverVisibleChange(true, 'size')"
+          <el-popover width="230" popper-class="header-avatar-dropdown-popover" @show="handlePopoverVisibleChange(true, 'size')"
             @hide="handlePopoverVisibleChange(false, 'size')" v-model:visible="sizeThemeVisible" placement="left"
-            trigger="hover" :effect="themeStore.isDark ? 'dark' : 'light'">
+            trigger="hover" >
             <template #reference>
               <div class="flex items-center w-full justify-between">
                 <span>大小主题：{{ sizeThemes.find((t) => t.value === userPrefStore.sizeTheme)?.label || '标准' }}</span>

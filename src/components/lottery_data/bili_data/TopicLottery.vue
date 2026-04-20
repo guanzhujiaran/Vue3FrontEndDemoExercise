@@ -23,11 +23,30 @@
       @retry-on-error="() => get_lot_data(topic_lot_data_props.lot_page, page_size)"
     >
       <template #toolbar>
-        <LotteryDataTableToolbar :refresh_data="refresh_data">
-          <template #submit-button>
-            <SubmitTopicLotteryModal />
-          </template>
-        </LotteryDataTableToolbar>
+        <div
+          class="mb-5 flex flex-col gap-4 rounded-lg border border-border-light bg-fill-lighter p-4 lg:flex-row lg:items-center lg:justify-between"
+        >
+          <div class="space-y-1">
+            <p class="text-sm font-semibold text-text-primary">列表操作</p>
+            <p class="text-xs leading-relaxed text-text-secondary">
+              可在这里刷新数据、提交新的话题抽奖信息。
+            </p>
+          </div>
+
+          <div class="flex w-full justify-end xl:w-auto">
+            <LotteryDataTableToolbar :refresh_data="refresh_data">
+            <template #submit-button>
+              <SubmitTopicLotteryModal />
+            </template>
+          </LotteryDataTableToolbar>
+          </div>
+        </div>
+      </template>
+
+      <template #contents>
+        <BiliLotteryCardContainer
+          :data="topic_lot_data_props.lot_data?.items ?? []"
+        />
       </template>
     </BiliPaginationDataView>
   </FlexContainer>
@@ -39,11 +58,7 @@ import { useLotteryData } from '@/utils/useLotteryData.ts'
 import biliMessage from '@/utils/message'
 import SubmitTopicLotteryModal from './SubmitTopicLotteryModal.vue'
 
-const {
-  page_size,
-  lotteryDataProps: topic_lot_data_props,
-  getLotData: get_lot_data
-} = useLotteryData('GetTopicLottery')
+const { page_size, lotteryDataProps: topic_lot_data_props, getLotData: get_lot_data } = useLotteryData('GetTopicLottery')
 
 // 组件挂载时加载初始数据
 onMounted(() => {
@@ -93,12 +108,6 @@ watch(
 // 刷新数据
 const refresh_data = () => {
   get_lot_data(topic_lot_data_props.value.lot_page, page_size.value)
-}
-
-// 提交成功后刷新数据
-const handleSubmitSuccess = () => {
-  topic_lot_data_props.value.lot_page = 1
-  get_lot_data(1, page_size.value)
 }
 </script>
 

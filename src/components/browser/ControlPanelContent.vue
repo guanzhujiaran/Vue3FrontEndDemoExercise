@@ -110,7 +110,7 @@
                 :type="getConnectionStatusType"
                 size="small"
                 :icon="getConnectionStatusIcon"
-                effect="dark"
+                :effect="themeStore.themeEffectString"
               >
                 {{ getConnectionStatusText }}
               </el-tag>
@@ -253,7 +253,8 @@
 import { ref, computed } from 'vue'
 import { VideoPause, VideoPlay, Refresh, Document, VideoCamera, Picture, Connection, Loading, Warning } from '@element-plus/icons-vue'
 import type { BrowserSessionStatus, UserBrowserInfoReadResp } from '@/types/browser-automation-api'
-
+import { useThemeStore } from '@/stores/theme'
+const themeStore = useThemeStore()
 // 定义Props
 interface Props {
   selectedBrowserId: number | null

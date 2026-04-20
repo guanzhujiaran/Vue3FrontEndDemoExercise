@@ -3,7 +3,7 @@ import { ref, computed, watch } from 'vue'
 import { Sunny, Moon, Monitor } from '@element-plus/icons-vue'
 import { useDark, useToggle, usePreferredDark, useStorage } from '@vueuse/core'
 export type ThemeMode = 'light' | 'dark' | 'auto'
-
+type themeEffectString = 'dark' | 'light'
 export const useThemeStore = defineStore(
   'pref_theme',
   () => {
@@ -13,6 +13,9 @@ export const useThemeStore = defineStore(
       valueDark: 'dark',
       valueLight: 'light',
       storageKey: 'vueuse-theme-appearance'
+    })
+    const themeEffectString = computed<themeEffectString>(() => {
+      return isDark.value ? 'dark' : 'light'
     })
     const toggleDark = useToggle(isDark)
 
@@ -106,7 +109,8 @@ export const useThemeStore = defineStore(
       getThemeText,
       isDark,
       toggleDark,
-      applyThemeMode
+      applyThemeMode,
+      themeEffectString
     }
   },
   {

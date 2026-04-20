@@ -18,9 +18,9 @@ const parsedData = computed(() => {
 </script>
 
 <template>
-  <div class="bili-lottery-card-arr-container grid min-w-0 grid-cols-[repeat(auto-fit,minmax(min(100%,22rem),1fr))] gap-4 lg:gap-5">
+  <div class="bili-lottery-card-arr-container grid min-w-0 grid-cols-[repeat(auto-fit,minmax(min(100%,22rem),1fr))] gap-5 lg:gap-6">
     <div
-      class="bili-lottery-card-wrapper min-w-0"
+      class="bili-lottery-card-wrapper min-w-0 rounded-xl bg-fill-light p-1"
       v-for="(item, idx) in parsedData"
       :key="idx"
       :style="{ '--card-index': idx }"

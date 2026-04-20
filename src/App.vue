@@ -102,26 +102,23 @@ onUnmounted(() => {
 
 <template>
   <!-- 网络诊断页面 - 覆盖显示 -->
-  <NetworkErrorView
-    v-if="showNetworkDiagnosis"
-    :error-message="networkErrorMessage"
-    @close="showNetworkDiagnosis = false"
-  />
+  <NetworkErrorView v-if="showNetworkDiagnosis" :error-message="networkErrorMessage"
+    @close="showNetworkDiagnosis = false" />
 
   <!-- 主应用内容 -->
   <template v-else>
     <!-- 背景图片 -->
     <img class="pointer-events-none fixed inset-0 z-[-9999] h-full w-full object-cover" :src="backgroundUrl"
-      referrerpolicy="no-referrer" alt="Background Image"/>
+      referrerpolicy="no-referrer" alt="Background Image" />
 
     <el-config-provider :locale="zhCn">
       <UseScreenSafeArea class="use-screen-safe-area">
         <div class="app-wrapper">
-          <el-container v-if="isInit" id="i_cecream">
+          <el-container v-if="isInit" id="i_cecream" class="min-h-screen">
             <el-header>
-              <HeaderBarView/>
+              <HeaderBarView />
             </el-header>
-            <el-main class="flex! flex-col">
+            <el-main class="flex! flex-col flex-1">
               <RouterView v-slot="{ Component, route }">
                 <transition name="slide-fade" mode="out-in">
                   <keep-alive :max="10">
@@ -131,7 +128,7 @@ onUnmounted(() => {
               </RouterView>
             </el-main>
           </el-container>
-          <SponsorNotification/>
+          <SponsorNotification />
           <GlobalLoadingMask />
           <LoginModal ref="loginModalRef" />
         </div>
