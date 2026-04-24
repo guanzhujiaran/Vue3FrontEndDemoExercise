@@ -83,8 +83,9 @@ ajax.interceptors.response.use(
 
     // 检查是否是未登录状态
     if (data.code === -101) {
-      // 触发未登录事件
-      emitter.emit('needLogin')
+      // 不触发未登录事件，避免自动打开登录模态框
+      // 只在控制台打印未登录信息
+      console.log('未登录状态，但不触发登录模态框')
       return data
     }
 

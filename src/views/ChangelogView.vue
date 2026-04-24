@@ -15,8 +15,22 @@ interface ChangelogEntry {
 const changelogData = ref<ChangelogEntry[]>([])
 
 onMounted(() => {
-  // 模拟从 CHANGELOG.md 解析的数据
   changelogData.value = [
+    {
+      version: '0.0.2',
+      date: '2026-04-24',
+      changes: {
+        added: [
+          '添加更新日志页面，支持版本历史查看',
+          '集成 Element Plus Timeline 组件展示更新记录',
+          '支持新增功能、优化改进、问题修复分类显示'
+        ],
+        improved: [
+          '更新日志页面响应式设计优化',
+          '深色/浅色主题适配完善'
+        ]
+      }
+    },
     {
       version: '0.0.1',
       date: '2025-08-21',

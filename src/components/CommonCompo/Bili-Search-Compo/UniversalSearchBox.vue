@@ -346,3 +346,148 @@ defineExpose({
   }
 })
 </script>
+
+<style scoped>
+.search-box {
+  position: relative;
+  width: 100%;
+}
+
+.history-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin-top: 4px;
+  background: #181818;
+  border: 1px solid #303030;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  z-index: 1000;
+  overflow: hidden;
+}
+
+.history-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom: 1px solid #303030;
+}
+
+.history-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: #f0f0f0;
+}
+
+.clear-history-btn {
+  font-size: 12px;
+  color: #999;
+  cursor: pointer;
+  padding: 2px 8px;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.clear-history-btn:hover {
+  background: #303030;
+  color: #f0f0f0;
+}
+
+.history-content {
+  padding: 12px 16px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.history-item {
+  margin-bottom: 0;
+}
+
+.history-tag {
+  display: inline-flex;
+  align-items: center;
+  background: #252525;
+  border: 1px solid #303030;
+  border-radius: 12px;
+  padding: 4px 12px;
+  font-size: 13px;
+  color: #00a1d6;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+}
+
+.history-tag:hover {
+  background: #303030;
+  border-color: #404040;
+}
+
+.remove-icon {
+  color: #999;
+  cursor: pointer;
+  margin-left: 8px;
+  font-size: 14px;
+  transition: color 0.2s;
+}
+
+.remove-icon:hover {
+  color: #f0f0f0;
+}
+
+.numeric-input-wrapper {
+  position: relative;
+}
+
+:deep(.el-input__wrapper) {
+  background: #181818;
+  border: 1px solid #303030;
+  border-radius: 8px;
+  transition: all 0.3s;
+}
+
+:deep(.el-input__wrapper:hover) {
+  border-color: #404040;
+  box-shadow: 0 0 0 1px rgba(0, 161, 214, 0.1);
+}
+
+:deep(.el-input__wrapper.is-focus) {
+  border-color: #00a1d6;
+  box-shadow: 0 0 0 1px #00a1d6 inset;
+}
+
+:deep(.el-input__inner) {
+  color: #f0f0f0;
+}
+
+:deep(.el-input__placeholder) {
+  color: #666;
+}
+
+:deep(.el-input__clear) {
+  color: #666;
+}
+
+:deep(.el-input__clear:hover) {
+  color: #999;
+}
+
+.search-btn {
+  background: #00a1d6;
+  border-color: #00a1d6;
+  border-radius: 0 8px 8px 0;
+  transition: all 0.3s;
+}
+
+.search-btn:hover {
+  background: #00b5e6;
+  border-color: #00b5e6;
+}
+
+:deep(.el-badge) {
+  position: static;
+  margin-left: 8px;
+}
+</style>

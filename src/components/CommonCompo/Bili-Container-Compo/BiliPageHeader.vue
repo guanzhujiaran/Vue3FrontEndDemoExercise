@@ -4,7 +4,7 @@
       {{ title }}
     </h2>
     <div class="bili-page-header__description flex flex-wrap items-center gap-2 text-sm text-text-secondary">
-      <el-tag v-if="tagText" :type="tagType" effect="plain">{{ tagText }}</el-tag>
+      <el-tag v-if="tagText" :type="tagType" :effect="isDark ? 'dark' : 'light'">{{ tagText }}</el-tag>
       <span class="bili-page-header__description-text leading-relaxed">{{ description }}</span>
     </div>
   </div>
@@ -12,6 +12,9 @@
 
 
 <script setup lang="ts">
+import { useThemeStore } from '@/stores/theme'
+const themeStore = useThemeStore()
+const isDark = computed(()=> themeStore.isDark)
 interface Props {
 
   title: string

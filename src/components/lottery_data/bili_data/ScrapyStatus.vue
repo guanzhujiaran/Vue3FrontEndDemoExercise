@@ -142,9 +142,18 @@ const handle_get_scrapy_status = () => {
   lottery_database_bili_api
     .get_all_scrapy_status()
     .then((res) => {
-      res.code
-        ? biliMessage.error(res.msg)
-        : (data.value = res.data)
+      // 不显示未登录错误消息
+      if (res.code === -101) {
+        console.log('未登录状态，继续显示数据')
+        // 即使未登录，也尝试显示数据
+        if (res.data) {
+          data.value = res.data
+        }
+      } else if (res.code) {
+        biliMessage.error(res.msg)
+      } else {
+        data.value = res.data
+      }
     })
     .finally(() => {
       is_loading.value = false
@@ -210,92 +219,148 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="flex w-full min-h-screen bg-bg py-6 px-4 sm:px-6 lg:px-8">
-    <div class="w-full max-w-6xl mx-auto">
-      <div class="flex justify-between items-center mb-6">
+    <div class="w-full max-w-6xl mx-auto" v-loading="is_loading" element-loading-text="加载中...">
+      <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
         <h1 class="text-2xl font-bold text-text-primary flex items-center">
-          <DataAnalysis class="mr-2 text-text-primary" />
+          <DataAnalysis class="mr-2 w-7 h-7 text-text-primary" />
           BiliBili爬虫状态监控
         </h1>
-        <div class="flex items-center space-x-4">
-          <el-switch
-            v-model="isAutoRefresh"
-            inline-prompt
-            active-text="自动刷新"
-            inactive-text="手动刷新"
-            size="large"
-            class="mr-2"
-          />
+        <div class="flex items-center space-x-4 w-full md:w-auto">
+          <div class="flex items-center space-x-2 flex-1 md:flex-none">
+            <el-switch
+              v-model="isAutoRefresh"
+              inline-prompt
+              active-text="自动刷新"
+              inactive-text="手动刷新"
+              size="large"
+            />
+          </div>
           <el-button
             type="primary"
             @click="handle_get_scrapy_status"
             :disabled="isAutoRefresh"
             :loading="is_loading"
+            class="flex-1 md:flex-none"
           >
-            <Refresh class="mr-1" />
+            <Refresh class="mr-1 w-4 h-4" />
             {{ is_loading ? '刷新中...' : '立即刷新' }}
           </el-button>
         </div>
       </div>
       
-      <div v-if="data" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <!-- 统计摘要 -->
+      <div v-if="data" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div class="bg-bg rounded-lg border border-border-light p-4 flex flex-col">
+          <div class="text-text-secondary text-sm mb-2">总爬虫数量</div>
+          <div class="text-2xl font-bold text-text-primary">{{ Object.entries(data).filter((el) => getKeyName(el[0])).length }}</div>
+        </div>
+        <div class="bg-bg rounded-lg border border-border-light p-4 flex flex-col">
+          <div class="text-text-secondary text-sm mb-2">运行中爬虫</div>
+          <div class="text-2xl font-bold text-[#67c23a]">{{ Object.entries(data).filter((el) => getKeyName(el[0]) && el[1].is_running).length }}</div>
+        </div>
+        <div class="bg-bg rounded-lg border border-border-light p-4 flex flex-col">
+          <div class="text-text-secondary text-sm mb-2">总成功数量</div>
+          <div class="text-2xl font-bold text-text-primary">{{ Object.entries(data).reduce((sum, [_, scrapy]) => sum + scrapy.succ_count, 0).toLocaleString() }}</div>
+        </div>
+        <div class="bg-bg rounded-lg border border-border-light p-4 flex flex-col">
+          <div class="text-text-secondary text-sm mb-2">总处理数量</div>
+          <div class="text-2xl font-bold text-text-primary">{{ Object.entries(data).reduce((sum, [_, scrapy]) => sum + scrapy.processed_items_count, 0).toLocaleString() }}</div>
+        </div>
+      </div>
+      
+      <div v-if="data" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <div 
           v-for="([category, scrapy_data], idx) in Object.entries(data).filter((el) => getKeyName(el[0]))" 
           :key="category"
-          class="rounded-lg overflow-hidden border border-border-light bg-bg transition-all"
+          class="rounded-lg overflow-hidden border border-border-light bg-bg transition-all duration-300 hover:shadow-lg hover:-translate-y-1"
         >
-          <div class="p-4">
+          <div class="p-4 border-b border-border-light">
             <div class="flex justify-between items-center">
               <h3 class="text-xl font-semibold text-text-primary">{{ getKeyName(category) }}</h3>
               <div 
                 class="flex items-center px-3 py-1 rounded-full text-sm font-medium"
-                :class="scrapy_data.is_running ? 'text-success' : 'text-danger'"
+                :class="scrapy_data.is_running ? 'text-[var(--color-success)]' : 'text-[#c45656]'"
               >
-                <el-icon v-if="scrapy_data.is_running" class="text-success"><Check /></el-icon>
-                <el-icon v-else class="text-danger"><Close /></el-icon>
+                <el-icon v-if="scrapy_data.is_running" class="text-[var(--color-success)] w-4 h-4"><Check /></el-icon>
+                <el-icon v-else class="text-[#c45656] w-4 h-4"><Close /></el-icon>
                 <span class="ml-1">{{ scrapy_data.is_running ? '运行中' : '已停止' }}</span>
               </div>
             </div>
           </div>
           
           <div class="p-6">
-            <div class="space-y-4">
-              <div 
-                v-for="([key, value], i) in handle_show_scrapy_data(scrapy_data)" 
-                :key="key"
-                class="flex justify-between items-center pb-2 border-b border-border-light"
-              >
-                <div class="font-medium text-text-regular flex items-center">
-                  <span v-if="key === 'is_running'" class="mr-2 text-text-secondary"><Timer /></span>
-                  <span v-else-if="key === 'succ_count' || key === 'processed_items_count' || key === 'null_count'" class="mr-2 text-text-secondary"><DataAnalysis /></span>
-                  {{ getKeyName(key) }}
+            <div class="space-y-5">
+              <!-- 运行状态 -->
+              <div class="flex flex-col">
+                <div class="font-medium text-text-regular flex items-center mb-2">
+                  <Timer class="mr-2 w-4 h-4 text-text-secondary" />
+                  运行状态
                 </div>
-                <div class="font-medium text-text-primary">
-                  <template v-if="key === 'end_params' || key === 'end_success_params' || key === 'init_params'">
-                    <el-popover placement="top" :width="300" trigger="hover">
-                      <template #reference>
-                        <span class="text-primary hover:underline cursor-pointer">{{ formatValue(key, value) }}</span>
-                      </template>
-                      <div class="params-detail p-3 rounded border border-border-light bg-bg">
-                        <pre class="text-sm text-text-regular">{{ JSON.stringify(value, null, 2) }}</pre>
-                      </div>
-                    </el-popover>
-                  </template>
-                  <template v-else-if="key === 'is_running'">
-                    <span :class="scrapy_data.is_running ? 'text-success' : 'text-danger'">
-                      {{ formatValue(key, value) }}
-                    </span>
-                  </template>
-                  <template v-else>
-                    {{ formatValue(key, value) }}
-                  </template>
+                <div class="flex items-center">
+                  <div class="w-full bg-border-light rounded-full h-2.5 mr-3">
+                    <div 
+                      class="h-2.5 rounded-full transition-all duration-500" 
+                      :class="scrapy_data.is_running ? 'bg-[#67c23a] w-full' : 'bg-[#f56c6c] w-1/4'"
+                    ></div>
+                  </div>
+                  <span :class="scrapy_data.is_running ? 'text-[#67c23a] font-medium' : 'text-[#f56c6c] font-medium'">
+                    {{ scrapy_data.is_running ? '运行中' : '已停止' }}
+                  </span>
+                </div>
+              </div>
+              
+              <!-- 数据统计 -->
+              <div class="grid grid-cols-2 gap-4">
+                <div class="bg-bg-page rounded-lg p-3 border border-border-light">
+                  <div class="text-text-secondary text-xs mb-1">成功数量</div>
+                  <div class="text-lg font-bold text-text-primary">{{ scrapy_data.succ_count.toLocaleString() }}</div>
+                </div>
+                <div class="bg-bg-page rounded-lg p-3 border border-border-light">
+                  <div class="text-text-secondary text-xs mb-1">处理数量</div>
+                  <div class="text-lg font-bold text-text-primary">{{ scrapy_data.processed_items_count.toLocaleString() }}</div>
+                </div>
+                <div class="bg-bg-page rounded-lg p-3 border border-border-light">
+                  <div class="text-text-secondary text-xs mb-1">空值数量</div>
+                  <div class="text-lg font-bold text-text-primary">{{ scrapy_data.null_count.toLocaleString() }}</div>
+                </div>
+                <div class="bg-bg-page rounded-lg p-3 border border-border-light">
+                  <div class="text-text-secondary text-xs mb-1">爬取速度</div>
+                  <div class="text-lg font-bold text-text-primary">{{ scrapy_data.crawling_speed.toFixed(4) }}s/个</div>
+                </div>
+              </div>
+              
+              <!-- 时间信息 -->
+              <div class="space-y-2">
+                <div class="flex justify-between items-center">
+                  <div class="font-medium text-text-regular">开始时间</div>
+                  <div class="text-text-primary">{{ formatValue('start_time_str', scrapy_data.start_time_str) }}</div>
+                </div>
+                <div class="flex justify-between items-center">
+                  <div class="font-medium text-text-regular">最后更新</div>
+                  <div class="text-text-primary">{{ formatValue('last_update_time_str', scrapy_data.last_update_time_str) }}</div>
+                </div>
+              </div>
+              
+              <!-- 参数信息 -->
+              <div class="space-y-2">
+                <div v-for="key in ['init_params', 'end_params', 'end_success_params']" :key="key" class="flex justify-between items-center">
+                  <div class="font-medium text-text-regular">{{ getKeyName(key) }}</div>
+                  <el-popover placement="top" :width="300" trigger="hover">
+                    <template #reference>
+                      <span class="text-primary hover:underline cursor-pointer text-sm">{{ formatValue(key, scrapy_data[key]) }}</span>
+                    </template>
+                    <div class="params-detail p-3 rounded border border-border-light bg-bg max-h-60 overflow-auto">
+                      <pre class="text-sm text-text-regular">{{ JSON.stringify(scrapy_data[key], null, 2) }}</pre>
+                    </div>
+                  </el-popover>
                 </div>
               </div>
             </div>
           </div>
           
-          <div class="p-4 border-t border-border-light">
+          <div class="p-4 border-t border-border-light bg-bg-page">
             <div class="flex items-center text-sm text-text-secondary">
-              <Clock class="mr-2 text-text-placeholder" />
+              <Clock class="mr-2 w-4 h-4 text-text-placeholder" />
               <span>持续运行：{{ formatValue('total_run_duration', scrapy_data.total_run_duration) }}</span>
             </div>
           </div>
@@ -312,72 +377,24 @@ onBeforeUnmount(() => {
   .grid-cols-1 {
     grid-template-columns: 1fr;
   }
-}
-
-/* 卡片动画效果 */
-.marquee-card {
-  transition: all 0.3s ease;
-}
-
-.marquee-card:hover {
-  transform: translateY(-5px);
-}
-
-/* 数据行高亮效果 */
-.data-row.highlight {
-  background-color: rgba(0, 128, 0, 0.05);
-  border-left: 3px solid var(--color-success);
-}
-
-/* 参数详情样式 */
-.params-detail pre {
-  margin: 0;
-  white-space: pre-wrap;
-  word-break: break-all;
-}
-
-/* 状态指示器样式 */
-.status-indicator {
-  padding: 2px 8px;
-  border-radius: 12px;
-  font-size: 12px;
-  font-weight: 500;
-}
-
-.status-indicator.running {
-  background-color: rgba(76, 175, 80, 0.2);
-  color: var(--color-success);
-}
-
-.status-indicator.stopped {
-  background-color: rgba(244, 67, 54, 0.2);
-  color: var(--color-danger);
-}
-</style>
-
-<style scoped>
-/* 响应式调整 */
-@media (max-width: 768px) {
-  .grid-cols-1 {
+  
+  .sm\:grid-cols-2 {
+    grid-template-columns: 1fr;
+  }
+  
+  .lg\:grid-cols-4 {
+    grid-template-columns: 1fr;
+  }
+  
+  .md\:grid-cols-2 {
+    grid-template-columns: 1fr;
+  }
+  
+  .lg\:grid-cols-3 {
     grid-template-columns: 1fr;
   }
 }
 
-/* 卡片动画效果 */
-.marquee-card {
-  transition: all 0.3s ease;
-}
-
-.marquee-card:hover {
-  transform: translateY(-5px);
-}
-
-/* 数据行高亮效果 */
-.data-row.highlight {
-  background-color: rgba(0, 128, 0, 0.05);
-  border-left: 3px solid #4CAF50;
-}
-
 /* 参数详情样式 */
 .params-detail pre {
   margin: 0;
@@ -385,22 +402,23 @@ onBeforeUnmount(() => {
   word-break: break-all;
 }
 
-/* 状态指示器样式 */
-.status-indicator {
-  padding: 2px 8px;
-  border-radius: 12px;
-  font-size: 12px;
-  font-weight: 500;
+/* 滚动条样式 */
+.params-detail::-webkit-scrollbar {
+  width: 6px;
 }
 
-.status-indicator.running {
-  background-color: rgba(76, 175, 80, 0.2);
-  color: #4CAF50;
+.params-detail::-webkit-scrollbar-track {
+  background: var(--color-bg-page);
+  border-radius: 3px;
 }
 
-.status-indicator.stopped {
-  background-color: rgba(244, 67, 54, 0.2);
-  color: #F44336;
+.params-detail::-webkit-scrollbar-thumb {
+  background: var(--color-border-light);
+  border-radius: 3px;
+}
+
+.params-detail::-webkit-scrollbar-thumb:hover {
+  background: var(--color-border);
 }
 </style>
 

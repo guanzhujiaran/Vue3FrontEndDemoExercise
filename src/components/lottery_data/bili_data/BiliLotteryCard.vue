@@ -1,6 +1,6 @@
 <template>
   <el-card
-    class="lottery-card h-full overflow-hidden border-border bg-bg [--el-card-border-color:var(--color-border)] [--el-card-padding:var(--spacing-4)] sm:[--el-card-padding:var(--spacing-5)]"
+    class="lottery-card h-full min-w-80 overflow-hidden border-border bg-bg [--el-card-border-color:var(--color-border)] [--el-card-padding:var(--spacing-4)] sm:[--el-card-padding:var(--spacing-5)]"
     :class="['lottery-type-' + normalizedData.type.toLowerCase()]"
     shadow="hover"
     body-class="lottery-card-body"
@@ -37,7 +37,7 @@
         </div>
 
         <div class="flex flex-col gap-3 rounded-lg border border-border-light bg-fill-lighter p-3">
-          <div class="flex items-center justify-between gap-2">
+          <div class="flex items-center justify-between gap-2 flex-nowrap">
             <!-- 查看详情按钮 -->
              
             <el-link
@@ -49,14 +49,14 @@
               rel="noreferrer"
               @click="handleLinkClick"
               link
+              icon="link"
               underline="never"
+              class="whitespace-nowrap"
             >
-              <el-icon><link /></el-icon>
-              <span>查看源动态</span>
+             查看源动态
             </el-link>
-            <el-button v-else type="info" size="default" disabled>
-              <el-icon><link /></el-icon>
-              <span>暂无源动态</span>
+            <el-button icon="link" v-else type="info" size="default" disabled class="whitespace-nowrap">
+              暂无源动态
             </el-button>
             <el-link
               v-if="resultLink"
@@ -67,18 +67,18 @@
               rel="noreferrer"
               @click="handleLinkClick"
               link
+              icon="link"
               underline="never"
+              class="whitespace-nowrap"
             >
-              <el-icon><link /></el-icon>
-              <span>查看h5抽奖详情</span>
+              查看h5抽奖详情
             </el-link>
-            <el-button v-else type="info" size="default" disabled>
-              <el-icon><link /></el-icon>
-              <span>查看h5抽奖详情</span>
+            <el-button icon="link" v-else type="info" size="default" disabled class="whitespace-nowrap">
+              查看h5抽奖详情
             </el-button>
             <!-- 参加/不参加开关 -->
-            <div class="flex items-center gap-2">
-              <span class="text-sm font-medium text-text-secondary">
+            <div class="flex items-center gap-2 whitespace-nowrap">
+              <span class="text-sm font-medium text-text-secondary whitespace-nowrap">
                 {{ hasClicked ? '已参加' : '未参加' }}
               </span>
               <el-tooltip

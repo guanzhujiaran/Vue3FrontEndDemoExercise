@@ -278,9 +278,9 @@ class LotteryDataBaseApi extends BaseApi {
    * 获取所有爬虫状态
    */
   get_all_scrapy_status(): Promise<RootObject<ScrapyStatusResp>> {
-    // 临时修改路径，使用 background_service 接口
+    // 使用 lottery_database/bili 接口
     const originalPath = this.path
-    this.path = '/api/v1/background_service/'
+    this.path = '/api/v1/lottery_database/bili/'
     const result = this._get('GetAllLotScrapyStatus')
     this.path = originalPath
     return result
