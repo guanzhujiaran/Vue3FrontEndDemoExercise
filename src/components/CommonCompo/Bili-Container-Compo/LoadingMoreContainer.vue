@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { type PropType } from 'vue'
-import { useDebounceFn, useElementSize, useScroll } from '@vueuse/core'
+import { type PropType, computed } from 'vue'
+import { useElementSize, useThrottleFn } from '@vueuse/core'
 
 const props = defineProps({
   handleLoad: {
@@ -22,26 +22,23 @@ const isError = defineModel('isError', {
   type: Boolean
 })
 const scrollContainer = useTemplateRef<HTMLElement>('scrollContainer')
+const {  height } = useElementSize(scrollContainer)
 
-const { width, height } = useElementSize(scrollContainer)
-const { x, y, isScrolling, arrivedState, directions, measure } = useScroll(scrollContainer, {
-  behavior: 'smooth'
-})
-
-const handleLoad = useDebounceFn(() => {
+const handleLoad = useThrottleFn(() => {
   if (!isMore.value || isError.value) return
   props.handleLoad()
-  y.value += 600
-  nextTick(() => {
-    measure()
-  })
 }, 2e3)
+const wrapperHeight = computed(() => {
+  return height.value
+})
 </script>
 
 <template>
-  <div class="with-loading-more-container-wrapper mb-4" ref="scrollContainer" v-loading="isLoading">
-    <el-scrollbar class="with-loading-more-container p-0 m-0 flex flex-col items-center h-[75vh] overflow-auto [&::-webkit-scrollbar]:w-0 [&::-webkit-scrollbar]:h-0" @end-reached="handleLoad" :distance="10">
-      <slot name="content"></slot>
+  <div ref="scrollContainer" class="with-loading-more-container-wrapper mb-4 flex-1" v-loading="isLoading">
+    <el-scrollbar class="with-loading-more-container h-full" :height="wrapperHeight" noresize aria-orientation="vertical" @end-reached="handleLoad" :distance="10">
+      <div class="w-full flex-1">
+        <slot name="content"></slot>
+      </div>
       <div class="loading-more-txt relative w-full text-center bg-transparent h-25" style="background-color: transparent">
         <span v-if="isMore" @click="handleLoad" class="cursor-pointer">查看更多</span>
         <span v-else-if="!isError" class="cursor-pointer">到底了喵~</span>

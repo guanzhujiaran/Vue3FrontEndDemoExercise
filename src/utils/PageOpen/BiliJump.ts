@@ -33,9 +33,9 @@ export const getBiliOpusUrl = (dynid: number | string | undefined) => {
     ? `bilibili://opus/detail/${dynid}`
     : `https://www.bilibili.com/opus/${dynid}`
 }
-export const getBiliWebView = (url: string | undefined) => {
+export const getDirectUrl = (url: string | undefined) => {
   if (!url) return ''
-  return is_mobile == 2 ? `bilibili://webview?url=${url}` : url
+  return url
 }
 export const getBiliLotteryResultUrl = (
   business_id: number | string | undefined | null,
@@ -48,5 +48,5 @@ export const getBiliLotteryResultUrl = (
       return getBiliOpusUrl(business_id)
   }
 
-  return is_mobile == 2 ? getBiliWebView(ret_url) : ret_url
+  return is_mobile == 2 ? getDirectUrl(ret_url) : ret_url
 }

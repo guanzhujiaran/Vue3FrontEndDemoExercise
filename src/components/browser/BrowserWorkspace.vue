@@ -105,8 +105,17 @@
     </el-row>
 
     <!-- 实例卡片列表 -->
-    <div v-loading="loading" class="instance-cards">
-      <el-row :gutter="16">
+    <div class="instance-cards">
+      <div v-if="loading" class="w-full">
+        <el-row :gutter="16">
+          <el-col v-for="i in 8" :key="i" :xs="24" :sm="12" :md="8" :lg="8" :xl="6" class="mb-4">
+            <el-card class="h-40">
+              <el-skeleton :rows="3" animated></el-skeleton>
+            </el-card>
+          </el-col>
+        </el-row>
+      </div>
+      <el-row v-else :gutter="16">
         <el-col 
           v-for="instance in filteredInstances" 
           :key="instance.id"

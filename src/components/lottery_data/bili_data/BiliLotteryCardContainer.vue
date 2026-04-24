@@ -18,6 +18,7 @@ const parsedData = computed(() => {
 </script>
 
 <template>
+  
   <div class="bili-lottery-card-arr-container grid min-w-0 grid-cols-[repeat(auto-fit,minmax(min(100%,22rem),1fr))] gap-5 lg:gap-6">
     <div
       class="bili-lottery-card-wrapper min-w-0 rounded-xl bg-fill-light p-1"

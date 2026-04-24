@@ -33,7 +33,8 @@ const openGlobalLoginModal = inject(openGlobalLoginModalKey, () => {})
 // 处理需要登录但未登录的情况
 const handleProtectedRouteClick = (title: string) => {
   biliMessage.info(` ${title} 功能需要登录后才能使用`)
-  openGlobalLoginModal()
+  // 不再自动打开登录modal
+  // openGlobalLoginModal()
 }
 
 // 防抖处理窗口大小变化

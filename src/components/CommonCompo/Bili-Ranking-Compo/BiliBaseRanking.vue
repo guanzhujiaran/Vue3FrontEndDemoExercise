@@ -1,31 +1,33 @@
 <template>
   <LoadingMoreContainer
-    class="rank-main bili-base-ranking"
+    class="w-full bg-gradient-to-br from-[rgba(30,30,60,0.8)] to-[rgba(15,15,30,0.9)] rounded-lg shadow-[0_8px_32px_rgba(0,0,0,0.3)] text-white"
     :handle-load="handleLoad"
     v-model:is-more="isMore"
     v-model:is-loading="isLoading"
     v-model:is-error="isError"
   >
     <template #content>
-      <div class="rank-header-info">
-        <div class="header-title">排行榜</div>
-        
+      <div class="text-center mb-6">
+        <div class="text-2xl font-bold bg-gradient-to-r from-primary to-info bg-clip-text text-transparent mb-4">排行榜</div>
       </div>
-      <div class="rank-header-panel">
-        <div class="sync-time">
-          <span class="sync-label">数据同步时间：</span>
-          <span class="sync-value">{{ syncTimeText }}</span>
+      <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4 p-4 bg-gray-900/50 rounded-lg border border-gray-800">
+        <div class="text-sm text-gray-400 flex items-center">
+          <el-icon class="mr-2 text-gray-500"><Timer /></el-icon>
+          <span class="mr-2">数据同步时间：</span>
+          <span class="text-gray-200 font-medium">{{ syncTimeText }}</span>
         </div>
-        <HallAreaContent
-          v-if="props.ranking_partitions.length"
-          v-for="partition in props.ranking_partitions"
-          :partition="partition"
-          @handlePartitionChange="handlePartitionChange"
-        >
-        </HallAreaContent>
+        <div class="flex flex-wrap gap-3">
+          <HallAreaContent
+            v-if="props.ranking_partitions.length"
+            v-for="partition in props.ranking_partitions"
+            :partition="partition"
+            @handlePartitionChange="handlePartitionChange"
+          >
+          </HallAreaContent>
+        </div>
       </div>
       <el-divider></el-divider>
-      <div class="top-rank-panel">
+      <div class="flex justify-center items-end gap-8 mb-8 min-h-[200px]">
         <RankItem
           v-for="(item, index) in topItems"
           :key="index"
@@ -36,7 +38,7 @@
         >
         </RankItem>
       </div>
-      <div class="rank-panel">
+      <div class="rounded-md p-4">
         <RankItemRow
           v-for="(item, index) in rankItems"
           :item="item"
@@ -50,7 +52,7 @@
         />
       </div>
       <BiliEmpty v-if="!isError && !isLoading && topItems.length === 0 && rankItems.length === 0"></BiliEmpty>
-      <BiliError class="rank-error" v-if="isError" @click-retry="handleLoad"></BiliError>
+      <BiliError class="mt-6" v-if="isError" @click-retry="handleLoad"></BiliError>
     </template>
   </LoadingMoreContainer>
   <slot name="DetailDrawer" :ActivedUserLotteryResult="ActivedUserLotteryResult" :activedParams="activedParams"></slot>
@@ -66,6 +68,7 @@ import RankItemRow from '@/components/CommonCompo/Bili-Ranking-Compo/items/RankI
 import LoadingMoreContainer from '@/components/CommonCompo/Bili-Container-Compo/LoadingMoreContainer.vue'
 import BiliEmpty from '@/components/CommonCompo/Bili-Feedback-Compo/BiliEmpty.vue'
 import BiliError from '@/components/CommonCompo/Bili-Feedback-Compo/BiliError.vue'
+import { Timer, ArrowDown } from '@element-plus/icons-vue'
 const isError = defineModel<boolean>('isError', { required: true })
 const syncTs = defineModel<number>('syncTs', { required: true })
 const ActivedUserLotteryResult = ref<{

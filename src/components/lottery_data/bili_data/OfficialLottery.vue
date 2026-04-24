@@ -67,7 +67,7 @@
             </div>
 
             <div class="flex w-full justify-end xl:w-auto">
-              <LotteryDataTableToolbar :refresh_data="refresh_data">
+              <LotteryDataTableToolbar :refresh_data="refresh_data" v-model:view-mode="viewMode">
               <template #submit-button>
                 <SubmitDynamicLotteryModal />
               </template>
@@ -78,6 +78,11 @@
 
         <template #contents>
           <BiliLotteryCardContainer
+            v-if="viewMode === 'card'"
+            :data="official_lot_data_props.lot_data?.items ?? []"
+          />
+          <BiliOfficialLotteryTable
+            v-else
             :data="official_lot_data_props.lot_data?.items ?? []"
           />
         </template>
@@ -87,12 +92,16 @@
 </template>
 
 <script setup lang="ts">
-import { watch, onMounted, onUnmounted } from 'vue'
+import { watch, onMounted, onUnmounted, ref } from 'vue'
 import { useLotteryData } from '@/utils/useLotteryData.ts'
 import biliMessage from '@/utils/message'
 import SubmitDynamicLotteryModal from './SubmitDynamicLotteryModal.vue'
+import { useBiliLotteryRecord } from '@/stores/bili_lottery_record.ts'
 
 const { page_size, lotteryDataProps: official_lot_data_props, getLotData: get_lot_data } = useLotteryData('GetOfficialLottery')
+
+const ClickedBiliLotteryId = useBiliLotteryRecord()
+const viewMode = ref<'card' | 'table'>(ClickedBiliLotteryId.lottery_view_mode)
 
 onMounted(() => {
   official_lot_data_props.value.lot_page = 1

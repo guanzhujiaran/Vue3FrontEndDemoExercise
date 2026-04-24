@@ -1,28 +1,24 @@
 <template>
-  <FlexContainer class="pagination-container-wrapper min-w-0" v-loading="loading">
+  <FlexContainer class="pagination-container-wrapper min-w-0">
     <slot name="toolbar">
     </slot>
     <FlexContainer class="min-w-0 gap-5">
-      <div v-if="!error && props.data.length > 0" ref="contentStartRef" class="min-w-0 scroll-mt-(--spacing-20)">
+      <div v-if="loading" class="w-full">
+        <div class="grid gap-4" :style="{ gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))' }">
+          <div v-for="i in 6" :key="i" class="rounded-xl bg-bg/50 backdrop-blur-sm p-5 border border-border-light/30">
+            <el-skeleton :rows="4" animated></el-skeleton>
+          </div>
+        </div>
+      </div>
+      <div v-else-if="props.data.length > 0" ref="contentStartRef" class="min-w-0 scroll-mt-(--spacing-20)">
         <slot name="contents">
           <BiliLotteryCardContainer :data="props.data"></BiliLotteryCardContainer>
         </slot>
       </div>
-
-      <div v-if="!error && props.data.length > 0"
-        class="flex min-w-0 justify-center border-t border-border-light px-1 pt-5">
-        <el-pagination class="pagination flex-wrap justify-center gap-y-2" size="small" background
+        <el-pagination v-if="!error && !loading && props.data.length > 0" class="pagination flex-wrap justify-center gap-y-2" size="large" background
           :layout="paginationLayout" :total="props.total" v-model:current-page="current_page" :pager-count="5" />
-      </div>
-
-      <div v-if="props.data.length === 0 && !error"
-        class="rounded-lg border border-dashed border-border-light bg-fill-lighter py-10">
-        <bili-empty :txt="empty_msg"></bili-empty>
-      </div>
-
-      <div v-if="error" class="rounded-lg py-6 mx-auto">
-        <bili-error @click-retry="handleRetry"></bili-error>
-      </div>
+        <bili-empty v-if="props.data.length === 0 && !error && !loading" :txt="empty_msg"></bili-empty>
+        <bili-error v-if="error && !loading" @click-retry="handleRetry"></bili-error>
     </FlexContainer>
     <ScrollButtons :top-threshold="300" :bottom-threshold="100" />
   </FlexContainer>

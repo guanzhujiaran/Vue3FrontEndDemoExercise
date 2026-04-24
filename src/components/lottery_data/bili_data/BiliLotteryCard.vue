@@ -37,35 +37,59 @@
         </div>
 
         <div class="flex flex-col gap-3 rounded-lg border border-border-light bg-fill-lighter p-3">
-
-
-          <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div class="flex items-center justify-between gap-2">
+            <!-- 查看详情按钮 -->
+             
             <el-link
-              v-if="detailLink"
+              v-if="sourceLink"
               type="primary"
-              class="w-fit text-sm font-semibold"
-              :href="detailLink"
+              size="default"
+              :href="sourceLink"
               target="_blank"
               rel="noreferrer"
-              referrerpolicy="no-referrer"
-              underline="never"
               @click="handleLinkClick"
+              link
+              underline="never"
             >
-              查看详情
+              <el-icon><link /></el-icon>
+              <span>查看源动态</span>
             </el-link>
-
-            <div class="flex flex-wrap items-center gap-3 sm:ml-auto">
-              <span class="text-xs font-medium text-text-secondary">参与记录</span>
-              <div class="rounded-full border border-border-light bg-bg px-2 py-1">
+            <el-button v-else type="info" size="default" disabled>
+              <el-icon><link /></el-icon>
+              <span>暂无源动态</span>
+            </el-button>
+            <el-link
+              v-if="resultLink"
+              type="primary"
+              size="default"
+              :href="resultLink"
+              target="_blank"
+              rel="noreferrer"
+              @click="handleLinkClick"
+              link
+              underline="never"
+            >
+              <el-icon><link /></el-icon>
+              <span>查看h5抽奖详情</span>
+            </el-link>
+            <el-button v-else type="info" size="default" disabled>
+              <el-icon><link /></el-icon>
+              <span>查看h5抽奖详情</span>
+            </el-button>
+            <!-- 参加/不参加开关 -->
+            <div class="flex items-center gap-2">
+              <span class="text-sm font-medium text-text-secondary">
+                {{ hasClicked ? '已参加' : '未参加' }}
+              </span>
+              <el-tooltip
+                :content="hasClicked ? '取消标记参加' : '标记为已参加'"
+                placement="top"
+              >
                 <el-switch
-                  :active-text="BiliCommTxt.BiliLotteryCard.hasJoined"
-                  :inactive-text="BiliCommTxt.BiliLotteryCard.hasNotJoined"
                   :model-value="hasClicked"
-                  class="max-w-full"
-                  inline-prompt
                   @change="handleRecordLotteryId"
                 />
-              </div>
+              </el-tooltip>
             </div>
           </div>
         </div>
@@ -264,6 +288,7 @@ import { computed, ref, type PropType, type Ref } from 'vue'
 import type { TagProps } from 'element-plus'
 import { type GlobalVarsType, ScreenTypeEnum } from '@/models/global_var/global_var_model.ts'
 import { KeysEnum, useInject } from '@/models/base/provide_model.ts'
+import { Link } from '@element-plus/icons-vue'
 
 import type {
   AnchorLotteryData,
@@ -275,27 +300,18 @@ import type {
   ReservationLotteryData,
   TopicEventData
 } from '@/models/api/lottery/lottery_card.ts'
+import { normalizeLotteryData, formatTimestamp } from '@/utils/lotteryNormalization.ts'
+import { getBiliUserSpaceUrl } from '@/utils/PageOpen/BiliJump.ts'
 import { isMobileDevice } from '@/utils/Browser/useDeviceDetect.ts'
-import {
-  getBiliLotteryResultUrl,
-  getBiliOpusUrl,
-  getBiliUserSpaceUrl,
-  getBiliWebView
-} from '@/utils/PageOpen/BiliJump.ts'
-import { BiliImg } from '@/assets/img/BiliImg.ts'
-import { useBiliLotteryRecord } from '@/stores/bili_lottery_record.ts'
 import { BiliCommTxt } from '@/assets/text/BiliCommTxt.ts'
+import { handleLotteryLinkClick, setLotteryParticipation, isLotteryParticipated } from '@/utils/lotteryParticipation'
 
 const handleRecordLotteryId = (val: boolean | number | string) => {
-  val
-    ? ClickedBiliLotteryId.enqueue(String(normalizedData.value.id))
-    : ClickedBiliLotteryId.remove(String(normalizedData.value.id))
+  setLotteryParticipation(String(normalizedData.value.id), Boolean(val))
 }
 
 const handleLinkClick = () => {
-  if (ClickedBiliLotteryId.auto_save_lottery) {
-    ClickedBiliLotteryId.enqueue(String(normalizedData.value.id))
-  }
+  handleLotteryLinkClick(String(normalizedData.value.id))
 }
 
 const is_mobile = isMobileDevice()
@@ -308,10 +324,9 @@ const props = defineProps({
 })
 
 const activeCollapseNames = ref<string[]>([])
-const ClickedBiliLotteryId = useBiliLotteryRecord()
 const globalVars = useInject(KeysEnum.GlobalVars) as Ref<GlobalVarsType>
 
-const hasClicked = computed(() => ClickedBiliLotteryId.contains(String(normalizedData.value.id)))
+const hasClicked = computed(() => isLotteryParticipated(String(normalizedData.value.id)))
 const isCompactScreen = computed(() => globalVars.value.screen_size !== ScreenTypeEnum.large)
 
 const formatTimestamp = (timestamp: number | string | null | undefined): string => {
@@ -380,7 +395,7 @@ const parseExclusiveLevel = (
     return {
       type: '充电',
       text: `充电专属: ${reqText}`,
-      link: getBiliWebView(data.upower_open_url) || undefined
+      link: getBiliUserSpaceUrl(data.upower_open_url) || undefined
     }
   } catch (e) {
     console.error('Failed to parse exclusive_level JSON:', jsonString, e)
@@ -414,282 +429,11 @@ const getRequirementTagType = (reqType: string): TagProps['type'] => {
 }
 
 const normalizedData = computed<NormalizedLottery>(() => {
-  const data = props.lotteryData as AnyLotteryData
-  const nowSec = Date.now() / 1000
-  const normalized: Partial<NormalizedLottery> = {
-    originalData: data,
-    prizes: [],
-    requirements: [],
-    senderInfo: { uid: null }
-  }
-
-  if (
-    'lottery_id' in data &&
-    (data.business_type === 1 || data.business_type === 12 || data.business_type === 10)
-  ) {
-    const dynData = data as DynamicLotteryData | ChargingLotteryData
-    normalized.id = dynData.lottery_id
-    normalized.endTime = dynData.lottery_time ?? null
-    normalized.startTime = dynData.created_at
-      ? formatTimestamp(dynData.created_at) !== 'N/A'
-        ? new Date(formatTimestamp(dynData.created_at)).getTime() / 1000
-        : null
-      : null
-    normalized.participants = dynData.participants ?? null
-    normalized.senderInfo = { uid: dynData.sender_uid_str || dynData.sender_uid || null }
-    normalized.sourceLink = getBiliOpusUrl(dynData.business_id_str)
-    normalized.resultLink =
-      dynData.lottery_detail_url && dynData.lottery_detail_url.trim() !== ''
-        ? dynData.lottery_detail_url
-        : getBiliLotteryResultUrl(dynData.business_id_str, dynData.business_type)
-    normalized.businessType = dynData.business_type
-
-    switch (data.business_type) {
-      case 1:
-        normalized.type = 'DYNAMIC'
-        normalized.displayType = '官方转发抽奖'
-        normalized.title = dynData.first_prize_cmt || `官方转发抽奖 #${dynData.lottery_id}`
-        normalized.requirements!.push({
-          type: '转发',
-          text: '转发动态',
-          link: normalized.sourceLink
-        })
-        break
-      case 12:
-        normalized.type = 'CHARGING'
-        normalized.displayType = '充电抽奖'
-        normalized.title = dynData.first_prize_cmt || `充电抽奖 #${dynData.lottery_id}`
-        normalized.requirements!.push({
-          type: '关注',
-          text: '关注UP主',
-          link:
-            normalized.senderInfo && normalized.senderInfo.uid
-              ? getBiliUserSpaceUrl(normalized.senderInfo.uid)
-              : undefined
-        })
-        break
-      case 10:
-        normalized.id = dynData.business_id_str
-        normalized.type = 'RESERVATION'
-        normalized.displayType = '预约抽奖'
-        normalized.title = dynData.first_prize_cmt || `预约抽奖 #${dynData.lottery_id}`
-        data.business_id && String(data.business_id).length > 18
-          ? normalized.requirements!.push({
-              type: '预约',
-              text: '完成直播预约(动态)',
-              link: getBiliOpusUrl(data.business_id)
-            })
-          : null
-        normalized.requirements!.push({
-          type: '预约',
-          text: '完成直播预约(空间)',
-          link: getBiliUserSpaceUrl(normalized.senderInfo.uid)
-        })
-        break
-    }
-
-    if (dynData.first_prize_cmt || (dynData.first_prize ?? 0) > 0) {
-      normalized.prizes!.push({
-        description: dynData.first_prize_cmt || '一等奖',
-        count: dynData.first_prize ?? null,
-        img: dynData.first_prize_pic || BiliImg.ranking.prize_default
-      })
-    }
-    if (dynData.second_prize_cmt || (dynData.second_prize ?? 0) > 0) {
-      normalized.prizes!.push({
-        description: dynData.second_prize_cmt || '二等奖',
-        count: dynData.second_prize ?? null,
-        img: dynData.second_prize_pic || BiliImg.ranking.prize_default
-      })
-    }
-    if (dynData.third_prize_cmt || (dynData.third_prize ?? 0) > 0) {
-      normalized.prizes!.push({
-        description: dynData.third_prize_cmt || '三等奖',
-        count: dynData.third_prize ?? null,
-        img: dynData.third_prize_pic || BiliImg.ranking.prize_default
-      })
-    }
-
-    if (dynData.exclusive_level) {
-      const chargeReq = parseExclusiveLevel(dynData.exclusive_level)
-      if (chargeReq) normalized.requirements!.push(chargeReq)
-      normalized.requirements!.push({
-        type: '转发',
-        text: '充电动态',
-        link: getBiliOpusUrl(dynData.business_id_str)
-      })
-    }
-
-    switch (dynData.status) {
-      case -1:
-        normalized.status = 'CANCELLED'
-        break
-      case 0:
-        normalized.status = normalized.endTime && nowSec < normalized.endTime ? 'ONGOING' : 'ENDED'
-        break
-      case 1:
-      case 2:
-        normalized.status = 'ENDED'
-        break
-      default:
-        normalized.status =
-          normalized.endTime && nowSec < normalized.endTime ? 'ONGOING' : 'UNKNOWN'
-    }
-  } else if ('ids' in data && 'stime' in data) {
-    const resData = data as ReservationLotteryData
-    normalized.id = resData.ids
-    normalized.type = 'RESERVATION'
-    normalized.displayType = '预约抽奖'
-    normalized.title = resData.name || `预约 #${resData.ids}`
-    normalized.endTime = resData.etime ?? null
-    normalized.startTime = resData.stime ?? null
-    normalized.participants = resData.total ?? null
-    normalized.senderInfo = { uid: resData.upmid_str || String(resData.upmid) || null }
-    normalized.sourceLink = resData.jumpUrl || null
-    normalized.resultLink = resData.jumpUrl || null
-    normalized.businessType = 10
-
-    try {
-      if (resData.jumpUrl) {
-        const url = new URL(resData.jumpUrl)
-        const typeParam = url.searchParams.get('business_type')
-        if (typeParam) normalized.businessType = parseInt(typeParam, 10) || 10
-      }
-    } catch (e) {}
-
-    normalized.prizes = parsePrizeText(resData.text)
-    normalized.requirements = []
-    resData.dynamicId_str && resData.dynamicId_str.length > 18
-      ? normalized.requirements.push({
-          type: '预约',
-          text: '完成直播预约(动态)',
-          link:
-            is_mobile == 2
-              ? `bilibili://opus/detail/${resData.dynamicId_str}?h5awaken=random`
-              : resData.jumpUrl
-        })
-      : null
-    normalized.requirements.push({
-      type: '预约',
-      text: '完成直播预约(空间)',
-      link: getBiliUserSpaceUrl(resData.upmid_str)
-    })
-    normalized.roomId = null
-    normalized.danmu = null
-
-    const state = resData.state
-    if (state === 100 && normalized.endTime && nowSec < normalized.endTime) normalized.status = 'ONGOING'
-    else if (normalized.endTime && nowSec >= normalized.endTime) normalized.status = 'ENDED'
-    else normalized.status = 'UNKNOWN'
-  } else if ('lot_id' in data && 'anchor_uid' in data) {
-    const liveData = data as AnchorLotteryData | RedPacketData
-    normalized.id = liveData.lot_id
-    normalized.type = liveData.type === 'anchor' ? 'ANCHOR' : 'RED_PACKET'
-    normalized.displayType = liveData.type === 'anchor' ? '天选时刻' : '红包抽奖'
-    normalized.title =
-      liveData.award_name || (normalized.type === 'ANCHOR' ? '天选抽奖' : '红包抽奖')
-    normalized.endTime = liveData.end_time ?? null
-    normalized.startTime = null
-    normalized.participants = null
-    normalized.senderInfo = { uid: liveData.anchor_uid ?? null }
-    normalized.sourceLink =
-      liveData.live_room_url ||
-      (liveData.room_id ? `https://live.bilibili.com/${liveData.room_id}` : null)
-    normalized.resultLink = normalized.sourceLink
-    normalized.businessType = null
-    normalized.roomId = liveData.room_id ?? null
-    normalized.danmu = liveData.danmu ?? null
-    normalized.prizes = liveData.award_name
-      ? [{ description: liveData.award_name, count: 1, img: null }]
-      : []
-
-    if (liveData.require_type === 1) normalized.requirements!.push({ type: '关注', text: '关注主播' })
-    else if (liveData.require_type === 2)
-      normalized.requirements!.push({ type: '粉丝团', text: '加入粉丝团' })
-    else if (liveData.require_type === 4 && liveData.danmu)
-      normalized.requirements!.push({ type: '弹幕', text: `发送弹幕: ${liveData.danmu}` })
-    else if (liveData.require_type && liveData.require_type > 2 && liveData.require_type !== 4)
-      normalized.requirements!.push({ type: '其他', text: `特殊要求 (${liveData.require_type})` })
-
-    normalized.status = normalized.endTime && nowSec < normalized.endTime ? 'ONGOING' : 'ENDED'
-  } else if ('jump_url' in data && 'title' in data && 'end_date_str' in data) {
-    const topicData = data as TopicEventData
-    const idFromPath = topicData.jump_url && /\/([a-zA-Z0-9]+)\.html$/.exec(topicData.jump_url)
-    const idFromQuery = topicData.jump_url && /id=(.*)/.exec(topicData.jump_url)
-    const idFromAct = topicData.jump_url && /actId=(.*)/.exec(topicData.jump_url)
-    normalized.id =
-      (idFromPath && idFromPath[1]) ||
-      (idFromQuery && idFromQuery[1]) ||
-      (idFromAct && idFromAct[1]) ||
-      topicData.lottery_sid ||
-      topicData.jump_url
-    normalized.type = 'TOPIC'
-    normalized.displayType = topicData.lot_type_text || '话题活动'
-    normalized.title = topicData.title || '未知话题活动'
-
-    const endDate = formatTimestamp(topicData.end_date_str)
-    normalized.endTime =
-      endDate !== 'N/A' && !endDate.startsWith('无法解析')
-        ? new Date(endDate).getTime() / 1000
-        : null
-    normalized.startTime = null
-    normalized.participants = null
-    normalized.senderInfo = { uid: null }
-    normalized.sourceLink = getBiliWebView(topicData.jump_url) || null
-    normalized.resultLink = normalized.sourceLink
-    normalized.businessType = null
-    normalized.prizes = topicData.lottery_pool_text
-      ? [{ description: topicData.lottery_pool_text, count: null, img: null }]
-      : []
-    normalized.requirements = [
-      {
-        type: '参与',
-        text: '参与话题活动',
-        link: is_mobile === 2 ? topicData.app_sche : topicData.jump_url
-      }
-    ]
-    normalized.roomId = null
-    normalized.danmu = null
-    normalized.status = normalized.endTime && nowSec < normalized.endTime ? 'ONGOING' : 'ENDED'
-  } else {
-    normalized.id = 'N/A'
-    normalized.type = 'UNKNOWN'
-    normalized.displayType = '未知类型'
-    normalized.title = '无法识别的数据'
-    normalized.status = 'UNKNOWN'
-    normalized.endTime = null
-    normalized.startTime = null
-    normalized.participants = null
-    normalized.prizes = []
-    normalized.requirements = []
-    normalized.roomId = null
-    normalized.danmu = null
-  }
-
-  switch (normalized.status) {
-    case 'ONGOING':
-      normalized.statusText = '进行中'
-      normalized.statusType = 'success'
-      break
-    case 'ENDED':
-      normalized.statusText = '已结束/已开奖'
-      normalized.statusType = 'error'
-      break
-    case 'CANCELLED':
-      normalized.statusText = '已取消'
-      normalized.statusType = 'warning'
-      break
-    default:
-      normalized.statusText = '未知状态'
-      normalized.statusType = 'error'
-  }
-
-  if (!normalized.title) normalized.title = `${normalized.displayType} #${normalized.id}`
-
-  return normalized as NormalizedLottery
+  return normalizeLotteryData(props.lotteryData)
 })
 
-const detailLink = computed(() => normalizedData.value.resultLink || normalizedData.value.sourceLink || null)
+const sourceLink = computed(() => normalizedData.value.sourceLink || null)
+const resultLink = computed(() => normalizedData.value.resultLink || null)
 const senderProfileLink = computed(() =>
   normalizedData.value.senderInfo.uid ? getBiliUserSpaceUrl(String(normalizedData.value.senderInfo.uid)) : null
 )
@@ -703,7 +447,7 @@ const countdownDescription = computed(() =>
     : '倒计时结束后即可前往详情页查看开奖情况。'
 )
 const deadlineReachedText = computed(() => {
-  if (normalizedData.value.status === 'CANCELLED') {
+  if (normalizedData.value.status === 'CANCELLED' || normalizedData.value.status =="UNKNOWN") {
     return '活动已取消'
   }
   return normalizedData.value.type === 'TOPIC' ? '活动已截止' : '已到开奖时间'

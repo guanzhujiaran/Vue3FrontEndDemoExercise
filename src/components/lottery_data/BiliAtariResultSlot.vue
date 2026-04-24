@@ -10,9 +10,11 @@ import lotteryDataStatisticApi from '@/api/lottery_data/bili/lottery_data_statis
 import biliMessage from '@/utils/message'
 import type { PrizeResult } from '@/models/api/lottery/lottery_prize_result.ts'
 import { BiliImg } from '@/assets/img/BiliImg.ts'
-import { gotoOpusDynamic } from '@/utils/PageOpen/BiliJump.ts'
+import { gotoOpusDynamic, getBiliLotteryResultUrl } from '@/utils/PageOpen/BiliJump.ts'
 import { useDebounceFn } from '@vueuse/core'
 import { useTourTipStore } from '@/stores/tour_tip.ts'
+import BiliEmpty from '@/components/CommonCompo/Bili-Feedback-Compo/BiliEmpty.vue'
+import BiliError from '@/components/CommonCompo/Bili-Feedback-Compo/BiliError.vue'
 
 const props = defineProps<{
   uid: number | string
@@ -22,15 +24,15 @@ const props = defineProps<{
   limit: number
 }>()
 
-const emit = defineEmits(['update:uid', 'update:lot_type', 'update:rank_type'])
-
 const data = ref<LotteryResultResp>()
 const offset = ref<number>(0)
 const isLoading = defineModel('isLoading', { required: true })
 const currentPage = ref(1)
+const isError = ref(false)
 
 const handle_lottery_result = useDebounceFn(() => {
   isLoading.value = true
+  isError.value = false
   lotteryDataStatisticApi
     .handle_lottery_result({
       uid: props.uid,
@@ -43,12 +45,24 @@ const handle_lottery_result = useDebounceFn(() => {
     .then((res) => {
       if (res.code) {
         biliMessage.error(res.msg)
+        isError.value = true
       } else {
         data.value = res.data
+        isError.value = false
       }
       isLoading.value = false
     })
-}, 1e3)
+    .catch((error) => {
+      console.error('加载抽奖结果失败:', error)
+      isError.value = true
+      isLoading.value = false
+    })
+}, 100) // 减少防抖时间到100ms
+
+onMounted(() => {
+  // 组件挂载时立即加载数据
+  handle_lottery_result()
+})
 
 
 watch(currentPage, (newVal) => {
@@ -63,7 +77,7 @@ watch([() => props.uid, () => props.lot_type, () => props.rank_type], () => {
   handle_lottery_result()
 })
 
-const getFilteredPrizeItems = (): PrizeResult[] => {
+const getFilteredPrizeItems = computed((): PrizeResult[] => {
   const filteredItems: PrizeResult[] = []
 
   if (!data.value?.prize_result) return filteredItems
@@ -85,7 +99,7 @@ const getFilteredPrizeItems = (): PrizeResult[] => {
   }
 
   return filteredItems
-}
+})
 
 const getPrizeLevel = (prize: PrizeResult): string => {
   if (prize.lottery_result.first_prize_result.some((item) => item.uid === Number(props.uid))) {
@@ -121,20 +135,35 @@ const getLotteryType = (prize: PrizeResult): string => {
       ? '预约抽奖'
       : '充电抽奖'
 }
+const gotoLotteryDetail = (prize: PrizeResult) => {
+  const url = getBiliLotteryResultUrl(prize.business_id, prize.business_type)
+  if (url) {
+    window.open(url, '_blank', 'noopener=yes,noreferrer=yes')
+  }
+}
 const biliRankUserAtariDetailTip = computed(
   () =>
     useTourTipStore().isBiliRankUserAtariDetailActive &&
-    Boolean(data.value?.prize_result.length ?? 0 > 0)
+    Boolean(data.value?.prize_result?.length ?? 0 > 0)
 )
 </script>
 
 <template>
-  <div class="user-lottery-result-wrapper">
-    <div class="user-lottery-result" v-if="data">
-      <div v-for="(prize, index) in getFilteredPrizeItems()" :key="index" class="prize-item-row">
+  <div class="user-lottery-result-wrapper place-items-center">
+    <div v-if="isLoading" class="skeleton-container w-full max-w-6xl px-4 sm:px-6">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div v-for="i in 4" :key="i" class="rounded-xl bg-bg/50 backdrop-blur-sm p-5 border border-border-light/30">
+          <el-skeleton :rows="3" animated></el-skeleton>
+        </div>
+      </div>
+    </div>
+    <BiliEmpty v-else-if="!isError && (!getFilteredPrizeItems || getFilteredPrizeItems.length === 0)"></BiliEmpty>
+    <BiliError v-else-if="isError" @click-retry="handle_lottery_result"></BiliError>
+    <div v-else class="user-lottery-result grid grid-cols-1 md:grid-cols-2 gap-6 text-[var(--el-color-white)] text-base mb-8 justify-center w-full max-w-6xl px-4 sm:px-6" v-if="getFilteredPrizeItems && getFilteredPrizeItems.length > 0">
+      <div v-for="(prize, index) in getFilteredPrizeItems" :key="index" class="prize-item-row flex w-full flex-col">
         <div
           :class="[
-            'border-with-text',
+            'border-with-text relative rounded-xl bg-bg backdrop-blur-sm p-5 border border-border-light/30 shadow-lg hover:shadow-xl transition-all duration-300',
             {
               'lot-type-official': getLotteryType(prize) === '官方抽奖',
               'lot-type-reserve': getLotteryType(prize) === '预约抽奖',
@@ -142,11 +171,17 @@ const biliRankUserAtariDetailTip = computed(
             }
           ]"
         >
-          <div class="border-title">
-            <span>{{ getLotteryType(prize) }} </span>
+          <div class="-mt-8 ml-5 border-title relative z-[2] text-center w-fit px-3 py-1 rounded-full bg-bg border border-border-light/50">
+            <span :class="{
+              'text-gradient-official': getLotteryType(prize) === '官方抽奖',
+              'text-gradient-reserve': getLotteryType(prize) === '预约抽奖',
+              'text-gradient-charge': getLotteryType(prize) === '充电抽奖'
+            }" class="text-sm font-semibold">
+              {{ getLotteryType(prize) }} 
+            </span>
           </div>
-          <div class="prize-info-wrapper">
-            <div class="prize-link">
+          <div class="prize-info-wrapper flex flex-col md:flex-row gap-4 p-[0.1rem] relative z-[1]">
+            <div class="prize-link flex items-center no-underline text-inherit shrink-0">
               <a
                 :href="
                   Boolean(prize.lottery_detail_url)
@@ -156,18 +191,19 @@ const biliRankUserAtariDetailTip = computed(
                 referrerpolicy="no-referrer"
                 target="_blank"
                 title="点击前往抽奖详情页"
+                class="flex flex-col rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-all duration-200"
               >
                 <img
                   :src="getPrizeImage(prize)"
                   alt="Prize Image"
-                  class="prize-image"
+                  class="h-24 w-24 object-cover bg-[var(--el-color-white)] transition-transform duration-300 hover:scale-105"
                   referrerpolicy="no-referrer"
                 />
               </a>
             </div>
             <div
               :class="[
-                'prize-info',
+                'prize-info flex flex-col text-base leading-7 text-[var(--el-text-color-primary)] flex-1',
                 {
                   'first-prize': getPrizeLevel(prize) === '一等奖',
                   'second-prize': getPrizeLevel(prize) === '二等奖',
@@ -175,11 +211,11 @@ const biliRankUserAtariDetailTip = computed(
                 }
               ]"
             >
-              <p class="prize-name">{{ getPrizeDescription(prize) }}</p>
-              <p class="prize-rank">奖项: {{ getPrizeLevel(prize) }}</p>
-              <p>开奖时间: {{ new Date(prize.lottery_time * 1000).toLocaleString() }}</p>
+              <p class="prize-name text-2xl font-bold mb-1">{{ getPrizeDescription(prize) }}</p>
+              <p :class="['prize-rank font-medium', { 'text-[var(--el-color-danger)]': getPrizeLevel(prize) === '一等奖', 'text-[var(--el-color-primary)]': getPrizeLevel(prize) === '二等奖', 'text-[var(--el-color-warning)]': getPrizeLevel(prize) === '三等奖' }]">奖项: {{ getPrizeLevel(prize) }}</p>
+              <p class="text-text-secondary text-sm">开奖时间: {{ new Date(prize.lottery_time * 1000).toLocaleString() }}</p>
               <p
-                class="jump-url"
+                class="jump-url cursor-pointer text-primary hover:underline text-sm mt-1"
                 v-if="
                   prize.business_type !== 10 // 非预约抽奖
                 "
@@ -187,20 +223,27 @@ const biliRankUserAtariDetailTip = computed(
               >
                 动态ID：{{ prize.business_id }}
               </p>
-              <p v-else>预约ID：{{ prize.business_id }}</p>
+              <p
+                class="jump-url cursor-pointer text-primary hover:underline text-sm mt-1"
+                v-else
+                @click="gotoLotteryDetail(prize)"
+              >
+                预约ID：{{ prize.business_id }}
+              </p>
             </div>
           </div>
         </div>
       </div>
       <el-pagination
         hide-on-single-page
-        class="prize-pagination"
+        class="prize-pagination flex mx-auto items-center mb-4 p-3 rounded-lg bg-bg/50 backdrop-blur-sm border border-border-light/30"
         size="small"
         :total="data.total"
         :page-size="props.limit"
         v-model:current-page="currentPage"
         layout="prev, pager, next,total"
         :background="false"
+        v-if="data && data.total > 0"
       ></el-pagination>
     </div>
   </div>
@@ -217,182 +260,7 @@ const biliRankUserAtariDetailTip = computed(
     <el-tour-step
       target=".prize-info"
       title="中奖信息"
-      description="包含奖品名称，奖品等级，开奖时间，（动态|预约）ID信息。非预约抽奖点击动态ID可跳转对应动态。"
+      description="包含奖品名称，奖品等级，开奖时间，（动态|预约）ID信息。点击动态ID可跳转对应动态，点击预约ID可跳转抽奖详情页。"
     ></el-tour-step>
   </el-tour>
 </template>
-
-<style scoped>
-
-.user-lottery-result-wrapper {
-  place-items: center;
-}
-
-.user-lottery-result {
-  display: grid;
-  gap: var(--spacing-4);
-  color: var(--el-color-white);
-  font-size: var(--text-base);
-  margin-bottom: var(--spacing-8);
-  justify-content: center;
-  width: fit-content;
-}
-
-.prize-info-wrapper {
-  display: flex;
-  padding: 0.1rem;
-  position: relative;
-  z-index: 1; /* 介于伪元素和标题之间 */
-}
-
-.prize-pagination {
-  display: flex;
-  margin: 0 auto;
-  align-items: center;
-}
-
-.prize-pagination {
-  margin-bottom: 1rem;
-}
-
-.prize-link {
-  display: flex;
-  align-items: center;
-  text-decoration: none;
-  color: inherit;
-  flex-shrink: 0;
-
-  padding-right: calc(var(--component-spacing) * 4);
-}
-
-.prize-link a {
-  border-radius: 12px; /* 正方形图标 */
-}
-
-.prize-image {
-  @apply h-20 w-20 rounded-lg hover:scale-110;
-  object-fit: cover;
-  background-color: var(--el-color-white);
-}
-
-.prize-info {
-  display: flex;
-  flex-direction: column;
-}
-
-.prize-info > p {
-  @apply text-lg leading-10 whitespace-nowrap text-[var(--el-text-color-primary)];
-}
-.prize-info.first-prize > .prize-rank {
-  @apply text-[var(--el-color-danger)];
-}
-.prize-info.second-prize > .prize-rank {
-  @apply text-[var(--el-color-error)];
-}
-.prize-info.third-prize > .prize-rank {
-  @apply text-[var(--el-color-primary)];
-}
-.prize-info .prize-name {
-  @apply text-3xl font-bold;
-  color: inherit;
-}
-
-.prize-info p.jump-url {
-  cursor: pointer;
-}
-
-.prize-info.first-prize {
-  @apply text-[var(--color-danger)];
-}
-
-.prize-info.second-prize {
-  @apply text-[var(--color-primary)];
-}
-
-.prize-info.third-prize {
-  @apply text-[var(--color-warning)];
-}
-
-.border-title {
-  @apply -mt-8 ml-5;
-  position: relative; /* 必须设置定位属性 */
-  z-index: 2; /* 高于伪元素的 0 */
-  background:
-    linear-gradient(rgba(24, 25, 38, 0.95), rgba(17, 17, 28, 0.95) 96.22%),
-    linear-gradient(0deg, rgba(66, 72, 94, 0.5), rgba(66, 72, 94, 0.5));
-  text-align: center;
-  width: fit-content;
-  padding: 0 calc(var(--component-spacing) * 0.4);
-}
-
-.border-title span {
-  line-height: normal;
-}
-
-.prize-item-row {
-  display: flex; /* 确保内部内容按需排列 */
-  width: 100%;
-  flex-direction: column;
-}
-
-@keyframes hueRotate {
-  100% {
-    filter: hue-rotate(360deg);
-  }
-}
-
-.border-with-text {
-  @apply relative rounded-[50%] bg-transparent p-5;
-}
-
-/* 通过伪元素实现渐变边框 */
-.border-with-text::before {
-  @apply border-5 border-solid border-transparent;
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  border-radius: var(--radius-sm); /* 圆角 */
-  z-index: 0;
-  animation: hueRotate 3s infinite alternate;
-  pointer-events: none; /* 防止遮挡点击事件 */
-  border-image-slice: 1;
-  border-image-repeat: stretch;
-}
-
-/* 不同类型对应的渐变色 */
-.border-with-text.lot-type-official::before {
-  border-image-source: linear-gradient(45deg, rgba(var(--color-primary) 0.95), rgba(var(--color-info) 0.8));
-}
-
-.border-with-text.lot-type-official .border-title span {
-  background-image: linear-gradient(45deg, rgba(var(--color-primary) 0.95), rgba(var(--color-info) 0.8));
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  font-weight: bolder;
-}
-
-.border-with-text.lot-type-reserve::before {
-  border-image-source: linear-gradient(45deg, rgba(var(--color-success) 0.95), rgba(var(--color-success-light-3) 0.8));
-}
-
-.border-with-text.lot-type-reserve .border-title span {
-  background-image: linear-gradient(45deg, rgba(var(--color-success) 0.95), rgba(var(--color-success-light-3) 0.8));
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  font-weight: bolder;
-}
-
-.border-with-text.lot-type-charge::before {
-  border-image-source: linear-gradient(45deg, rgba(var(--color-danger) 0.95), rgba(var(--color-warning) 0.8));
-}
-
-.border-with-text.lot-type-charge .border-title span {
-  background-image: linear-gradient(45deg, rgba(var(--color-danger) 0.95), rgba(var(--color-warning) 0.8));
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  font-weight: bolder;
-}
-</style>

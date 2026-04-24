@@ -204,7 +204,7 @@ const handleDropDownVisibleChange = (visible: boolean) => {
 </script>
 
 <template>
-  <el-dropdown @mouseover="headerAvatarDropdown?.handleOpen()" trigger="click" :hide-on-click="false"
+  <el-dropdown @mouseover=" headerAvatarDropdown?.handleOpen()" trigger="click" :hide-on-click="false"
     ref="headerAvatarDropdown" @visible-change="handleDropDownVisibleChange" :persistent="true" :teleported="true">
     <div class="header-avatar-wrapper cursor-pointer">
       <UserAvatarBox v-if="isLoggedIn" :src="user_face_src" size="default" :level-info="user_nav_model?.level_info"
@@ -214,7 +214,7 @@ const handleDropDownVisibleChange = (visible: boolean) => {
       </div>
     </div>
     <template #dropdown>
-      <el-dropdown-menu class="dropdown-menu py-3 px-3" :effect="themeStore.isDark ? 'dark' : 'light'">
+      <el-dropdown-menu class="dropdown-menu py-3 px-3">
         <el-dropdown-item class="login-tip hover:!text-inherit hover:!bg-inherit" v-if="!isLoggedIn">
           <HeaderDropdownLoginTip></HeaderDropdownLoginTip>
         </el-dropdown-item>

@@ -47,22 +47,22 @@ const {
 </script>
 
 <template>
-  <div class="rank-item-row" ref="rank-item-row">
-    <div class="rank-num">
-      <div class="num">{{ Item.rank }}</div>
+  <div class="flex items-center p-4 rounded-sm bg-[rgba(255,255,255,0.03)] mb-2" ref="rank-item-row">
+    <div class="w-8 h-8 flex items-center justify-center mr-4 font-bold text-sm text-gray-400 rounded-full bg-[rgba(255,255,255,0.05)]">
+      <div>{{ Item.rank }}</div>
     </div>
     <UserAvatarBox
       @click="gotoBiliUserSpace(Item.user.uid)"
-      class="hall-avatar"
+      class="mr-4"
       size="default"
       :src="Item.user.face"
     />
-    <div class="name-box">
-      <div class="name" :title="Item.user.name">{{ Item.user.name }}</div>
+    <div class="flex-1 overflow-hidden">
+      <div class="text-sm font-medium overflow-hidden text-ellipsis whitespace-nowrap text-white hover:text-primary transition-colors duration-200" :title="Item.user.name">{{ Item.user.name }}</div>
     </div>
-    <div class="score" @click="emit('score_click', Item)">
+    <div class="text-sm text-gray-400 cursor-pointer hover:text-primary transition-colors duration-200 min-w-[100px] text-right" @click="emit('score_click', Item)">
       {{ props.score_prefix }}
-      <span>{{ Item.score }}</span>
+      <span class="text-warning font-bold mx-1 text-base">{{ Item.score }}</span>
       {{ props.score_suffix }}
     </div>
   </div>

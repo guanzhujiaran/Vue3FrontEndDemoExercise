@@ -138,9 +138,17 @@ const handleCloseDrawer = () => {
       :title="`\&quot;${cur_query_str}\&quot; 的搜索结果`"
       @close="handleCloseDrawer"
     >
-      <div class="search-results-container" v-loading="loading">
+      <div class="search-results-container">
+        <div v-if="loading" class="w-full">
+          <div class="grid gap-4" :style="{ gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))' }">
+            <div v-for="i in 6" :key="i" class="rounded-xl bg-bg/50 backdrop-blur-sm p-5 border border-border-light/30">
+              <el-skeleton :rows="4" animated></el-skeleton>
+            </div>
+          </div>
+        </div>
+        <template v-else>
         <!-- 搜索结果统计 -->
-        <div class="search-summary flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:justify-between" v-if="total > 0 && !loading">
+        <div class="search-summary flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:justify-between" v-if="total > 0">
 
           <span>找到 {{ total }} 条结果</span>
           <span class="page-info">
@@ -149,13 +157,13 @@ const handleCloseDrawer = () => {
         </div>
         
         <!-- 搜索结果为空 -->
-        <el-empty v-else-if="!loading && total === 0 && cur_query_str" description="未找到相关结果" />
+        <el-empty v-else-if="total === 0 && cur_query_str" description="未找到相关结果" />
         
         <!-- 搜索结果列表 -->
         <BiliLotteryCardContainer :data="data" />
         
         <!-- 分页控件 -->
-        <div class="pagination-wrapper overflow-x-auto" v-if="total > pageSize && !loading">
+        <div class="pagination-wrapper overflow-x-auto" v-if="total > pageSize">
           <el-pagination
             class="mx-auto flex-wrap justify-center gap-y-2"
             v-model:current-page="currentPage"
@@ -169,6 +177,7 @@ const handleCloseDrawer = () => {
 
         
         <el-divider></el-divider>
+        </template>
       </div>
     </el-drawer>
   </div>

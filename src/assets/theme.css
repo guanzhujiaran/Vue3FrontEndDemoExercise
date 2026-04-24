@@ -149,9 +149,9 @@
   /* 20px */
 
   /* Element Plus 组件尺寸覆盖 */
-  --el-component-size-small: var(--spacing-3);
-  --el-component-size: var(--spacing-5);
-  --el-component-size-large: var(--spacing-7);
+  --el-component-size-small: var(--spacing-5);
+  --el-component-size: var(--spacing-7);
+  --el-component-size-large: var(--spacing-9);
 
   /* Element Plus 字体大小覆盖 */
   --el-font-size-extra-small: var(--text-xs);
@@ -181,9 +181,9 @@
   --el-border-radius-circle: var(--radius-full);
 
   /* ==================== Element Plus 组件样式覆盖 ==================== */
-  --el-input-height-large: var(--spacing-7);
-  --el-input-height: var(--spacing-5);
-  --el-input-height-small: var(--spacing-3);
+  --el-input-height-large: var(--spacing-9);
+  --el-input-height: var(--spacing-7);
+  --el-input-height-small: var(--spacing-5);
   --el-input-border-radius: var(--radius-sm);
   --el-input-border-radius-small: var(--radius-sm);
   --el-input-border-radius-large: var(--radius-sm);
@@ -414,13 +414,6 @@
     var(--el-color-primary) 40%,
     var(--el-color-danger) 80%,
     var(--el-color-success) 100%
-  );
-
-  /* ==================== 特殊用途渐变 ==================== */
-  --color-gradient-drawer-dark: linear-gradient(
-    180deg,
-    var(--el-color-black) 0%,
-    var(--el-color-info) 96.22%
   );
 
   /* ==================== 徽章渐变 ==================== */

@@ -58,8 +58,15 @@
     <StatsPanel :stats="stats" />
 
     <!-- 指纹列表 -->
-    <div v-loading="loading" class="min-h-[400px]">
-      <div class="grid gap-4" style="grid-template-columns: repeat(auto-fill, minmax(300px, 1fr))">
+    <div class="min-h-[400px]">
+      <div v-if="loading" class="w-full">
+        <div class="grid gap-4" style="grid-template-columns: repeat(auto-fill, minmax(300px, 1fr))">
+          <div v-for="i in 6" :key="i" class="rounded-xl bg-bg/50 backdrop-blur-sm p-5 border border-border-light/30">
+            <el-skeleton :rows="4" animated></el-skeleton>
+          </div>
+        </div>
+      </div>
+      <div v-else class="grid gap-4" style="grid-template-columns: repeat(auto-fill, minmax(300px, 1fr))">
         <FingerprintCard
           v-for="fingerprint in filteredFingerprints"
           :key="fingerprint.id_str || fingerprint.id"

@@ -17,14 +17,9 @@ const emit = defineEmits<{
 </script>
 
 <template>
-  <div class="rank-item-wrapper">
+  <div class="relative flex flex-col items-center">
     <el-image
-      class="full-bg-img"
-      :class="{
-        one: props.item.rank === 1,
-        two: props.item.rank === 2,
-        three: props.item.rank === 3
-      }"
+      class="absolute bottom-0 w-full h-full z-1"
       :src="
         props.item.rank === 1
           ? BiliImg.ranking.background.one
@@ -36,16 +31,16 @@ const emit = defineEmits<{
       alt=""
     />
     <div
-      class="rank-item"
+      class="relative z-2 flex flex-col items-center p-6 w-34"
       :class="{
-        one: props.item.rank === 1,
-        two: props.item.rank === 2,
-        three: props.item.rank === 3
+        'order-2 mb-8 min-h-[180px]': props.item.rank === 1,
+        'order-1 min-h-[160px]': props.item.rank === 2,
+        'order-3 min-h-[140px]': props.item.rank === 3
       }"
     >
       <UserAvatarBox
         @click="gotoBiliUserSpace(props.item.user.uid)"
-        class="hall-avatar"
+        class="mb-3 relative"
         size="large"
         :src="props.item.user.face"
       ></UserAvatarBox>
@@ -54,18 +49,18 @@ const emit = defineEmits<{
         :show-arrow="false"
         placement="top"
         effect="dark"
-        :offset="-40"
+        :offset="-70"
         :teleported="false"
       >
         <template #reference>
-          <div class="uname" :title="props.item.user.name">
+          <div class="text-sm font-medium mb-2 max-w-30 text-center overflow-hidden text-ellipsis whitespace-nowrap hover:text-primary transition-colors duration-200" :title="props.item.user.name">
             {{ props.item.user.name ?? `目前缓存中不存在昵称！UID：${props.item.user.uid}` }}
           </div>
         </template>
       </el-popover>
-      <div class="number" @click="emit('score_click', props.item)">
+      <div class="text-sm cursor-pointer hover:text-primary transition-colors duration-200 text-center" @click="emit('score_click', props.item)">
         {{ props.score_prefix }}
-        <span>{{ props.item.score }}</span>
+        <span class="text-warning font-bold mx-1 text-base">{{ props.item.score }}</span>
         {{ props.score_suffix }}
       </div>
     </div>

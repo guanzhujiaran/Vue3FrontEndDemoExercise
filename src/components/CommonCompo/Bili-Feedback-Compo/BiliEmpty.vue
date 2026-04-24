@@ -9,10 +9,8 @@ const props = defineProps({
 </script>
 
 <template>
-  <div class="empty-container bili-empty">
-    <el-space direction="vertical" alignment="center">
+  <div class="empty-container bili-empty flex justify-center items-center flex-1 flex-col"> 
       <img :src="BiliImg.ranking.status.empty" class="pic" alt="" referrerpolicy="no-referrer" />
-      <div class="txt">{{ props.txt }}</div>
-    </el-space>
+      <el-text tag="div" class="txt">{{ props.txt }}</el-text>
   </div>
 </template>

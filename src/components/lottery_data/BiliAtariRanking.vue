@@ -9,28 +9,33 @@
     v-model:sync-ts="syncTs"
   >
     <template #DetailDrawer="{ ActivedUserLotteryResult, activedParams }">
-      <div class="lottery-result-drawer" v-loading.fullscreen="isLoadingLotteryResult">
+      <div class="lottery-result-drawer">
         <el-drawer
           v-model="ActivedUserLotteryResult.isOpenDrawer"
           size="81.0%"
           direction="btt"
-          class="bg-gradient-drawer-dark"
+          class="border border-border-light shadow-xl"
+          :before="true"
+          :after="true"
+          :with-animation="true"
         >
           <template #header>
-            <div class="user-title">
+            <div class="user-title flex items-center gap-4 p-4 rounded-lg bg-bg/50 backdrop-blur-sm border border-border-light/30">
               <UserAvatarBox
                 :size="'large'"
                 :src="ActivedUserLotteryResult.user_info.face"
                 @click="gotoBiliUserSpace(ActivedUserLotteryResult.user_info.uid)"
+                class="cursor-pointer hover:scale-105 transition-transform duration-200"
               ></UserAvatarBox>
-              <p>
-                {{ ActivedUserLotteryResult.user_info.name }}
-              </p>
-              <p>UID: {{ ActivedUserLotteryResult.user_info.uid }}</p>
+              <div class="user-info">
+                <p class="text-xl font-bold text-white mb-1">{{ ActivedUserLotteryResult.user_info.name }}</p>
+                <p class="text-text-secondary">UID: {{ ActivedUserLotteryResult.user_info.uid }}</p>
+              </div>
             </div>
           </template>
           <template #default>
             <BiliAtariResultSlot
+              v-if="ActivedUserLotteryResult.isOpenDrawer"
               :limit="10"
               :rank_type="activedParams['rank_type'] as LotteryRankType"
               :lot_type="activedParams['lot_type'] as LotteryRankLotType"
@@ -64,8 +69,8 @@ import BiliAtariResultSlot from '@/components/lottery_data/BiliAtariResultSlot.v
 const isLoadingLotteryResult = ref(false)
 const ranking_partitions = ref<RankingPartition[]>([
   {
-    partitionName: '抽奖类型', // 分区的中文名称
-    partitionValue: 'lot_type', // 分区的值
+    partitionName: '抽奖类型',
+    partitionValue: 'lot_type',
     params: [
       {
         displayName: '官抽',
@@ -83,8 +88,8 @@ const ranking_partitions = ref<RankingPartition[]>([
         displayName: '全部抽奖',
         paramValue: LotteryRankLotType.total
       }
-    ], // 对应的参数名称列表
-    activeValue: LotteryRankLotType.official
+    ],
+    activeValue: LotteryRankLotType.total
   },
   {
     partitionName: '奖品类别',
@@ -107,7 +112,7 @@ const ranking_partitions = ref<RankingPartition[]>([
         displayName: '全部等级'
       }
     ],
-    activeValue: LotteryRankType.first
+    activeValue: LotteryRankType.total
   },
   {
     partitionName: '开奖时间',
@@ -134,7 +139,7 @@ const ranking_partitions = ref<RankingPartition[]>([
         displayName: '全部时间'
       }
     ],
-    activeValue: LotteryRankDateType.month
+    activeValue: LotteryRankDateType.pre_month
   }
 ])
 const isError = ref(false)
