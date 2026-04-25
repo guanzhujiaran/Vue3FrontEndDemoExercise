@@ -7,16 +7,17 @@
  * @Description: 视频播放器组件
 -->
 <template>
-    <div class="video-player-container">
+    <div class="flex-1 flex flex-col bg-black rounded-[var(--size-radius-large)] overflow-hidden shadow-[var(--el-box-shadow)] min-h-0">
         <!-- URL导航栏 -->
-        <div class="url-navigation-bar">
+        <div class="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-b from-black/80 to-black/60 backdrop-blur-sm border-b border-white/10">
             <el-input
                 v-model="navigateUrl"
                 placeholder="输入URL地址"
                 clearable
                 @keyup.enter="handleNavigate"
                 size="small"
-                class="url-input"
+                class="flex-1 bg-white/15 border-none shadow-none"
+                style="--el-input-group-prepend-bg-color: rgba(255, 255, 255, 0.1); --el-input-group-prepend-border: none; --el-input-group-prepend-color: white; --el-input-text-color: white; --el-input-placeholder-color: rgba(255, 255, 255, 0.5); font-family: monospace;"
             >
                 <template #prepend>
                     <el-icon><Promotion /></el-icon>
@@ -25,10 +26,10 @@
             <el-button type="primary" size="small" @click="handleNavigate">前往</el-button>
         </div>
 
-        <div class="video-info-bar">
+        <div class="flex items-center justify-between px-4 py-2.5 bg-gradient-to-b from-black/70 to-black/50 backdrop-blur-sm text-white border-b border-white/10">
             <div class="flex items-center gap-1.5 text-[13px]">
                 <el-tag :type="sessionStatus.type" size="small" effect="dark">
-                    <span class="status-dot" :class="connectionStatusClass"></span>
+                    <span class="w-2 h-2 rounded-full animate-pulse" :class="connectionStatusClass"></span>
                     {{ sessionStatus.text }}
                 </el-tag>
             </div>
@@ -43,13 +44,13 @@
         </div>
 
         <div
-            class="video-wrapper"
+            class="flex-1 relative bg-[var(--el-bg-color)] overflow-hidden min-h-[var(--spacing-16)] min-w-[var(--spacing-20)] w-full h-full flex items-center justify-center"
             @mouseenter="showControls = true"
             @mouseleave="showControls = false"
-            :class="{ 'black-screen': reconnectError && !isStreaming }"
+            :class="{ 'bg-black': reconnectError && !isStreaming }"
         >
             <!-- 加载遮罩层 -->
-            <div v-if="showLoadingMask || props.isReconnecting" class="loading-mask">
+            <div v-if="showLoadingMask || props.isReconnecting" class="absolute inset-0 flex items-center justify-center bg-black/70 backdrop-blur-sm z-10">
                 <div class="flex flex-col items-center gap-4">
                     <el-icon class="is-loading fill-primary" :size="60"><Loading /></el-icon>
                     <p class="text-white text-[14px] m-0">{{ props.isReconnecting ? '正在重连...' : loadingText }}</p>
@@ -57,7 +58,7 @@
             </div>
 
             <!-- 重连错误提示 -->
-            <div v-if="reconnectError && !isStreaming" class="error-overlay">
+            <div v-if="reconnectError && !isStreaming" class="absolute inset-0 flex flex-col items-center justify-center bg-black/85 backdrop-blur-sm z-15 gap-4">
                 <el-icon :size="48" class="fill-danger"><CircleClose /></el-icon>
                 <p class="text-[var(--el-color-danger)] text-[18px] font-semibold m-0 text-center px-5">{{ reconnectError }}</p>
                 <p class="text-white text-[14px] m-0 text-center px-5 opacity-80">连接已断开，请点击"开始视频"重新连接</p>
@@ -69,7 +70,7 @@
                 :autoplay="isStreaming"
                 playsinline
                 muted
-                class="video-element"
+                class="max-w-full max-h-full w-auto h-auto object-contain bg-black block mx-auto"
                 @loadedmetadata="$emit('videoMetadataLoaded')"
                 @loadeddata="$emit('videoDataLoaded')"
             >
@@ -78,14 +79,14 @@
 
             <!-- 视频控制条 - B站风格,悬浮时显示 -->
             <transition name="control-bar-fade">
-                <div v-if="showControls" class="video-control-bar">
+                <div v-if="showControls" class="absolute bottom-0 left-0 right-0 flex items-center justify-between px-5 py-4 bg-gradient-to-t from-black/90 via-black/50 to-transparent backdrop-blur-md z-20 transition-opacity duration-300">
                     <div class="flex items-center gap-3">
                         <el-button
                             :icon="Camera"
                             circle
                             size="large"
                             @click="$emit('takeScreenshot')"
-                            class="control-button"
+                            class="bg-white/10 border-none text-white w-11 h-11 transition-all duration-200 hover:bg-white/25 hover:scale-110" style="--el-button-text-color: white; --el-icon-color: white; font-size: 20px;"
                             title="截图"
                         />
                         <el-button
@@ -93,7 +94,7 @@
                             circle
                             size="large"
                             @click="$emit('toggleVideo')"
-                            class="control-button"
+                            class="bg-white/10 border-none text-white w-11 h-11 transition-all duration-200 hover:bg-white/25 hover:scale-110" style="--el-button-text-color: white; --el-icon-color: white; font-size: 20px;"
                             :title="props.isStreaming ? '停止视频' : '开始视频'"
                         />
                     </div>
@@ -103,7 +104,7 @@
                             circle
                             size="large"
                             @click="handleDebug"
-                            class="control-button"
+                            class="bg-white/10 border-none text-white w-11 h-11 transition-all duration-200 hover:bg-white/25 hover:scale-110" style="--el-button-text-color: white; --el-icon-color: white; font-size: 20px;"
                             title="调试"
                         />
                     </div>
@@ -118,13 +119,13 @@
             width="90%"
             :close-on-click-modal="true"
             :close-on-press-escape="true"
-            class="screenshot-preview-dialog"
+            style="--el-dialog-bg-color: rgba(0, 0, 0, 0.9); --el-dialog-header-bg-color: transparent; --el-dialog-header-border-color: rgba(255, 255, 255, 0.1); --el-dialog-header-text-color: white; --el-dialog-body-bg-color: transparent; --el-dialog-body-padding: 0;"
         >
             <div class="w-full h-full flex items-center justify-center p-5">
                 <el-image
                     :src="screenshotUrl"
                     fit="contain"
-                    class="screenshot-preview-image"
+                    class="max-w-full max-h-full object-contain rounded-lg shadow-2xl shadow-black/50"
                     :preview-src-list="[screenshotUrl]"
                     :initial-index="0"
                     preview-teleported
@@ -363,161 +364,4 @@ defineExpose({
 })
 </script>
 
-<style scoped>
-.video-player-container {
-    @apply flex-1 flex flex-col bg-black rounded-[var(--size-radius-large)] overflow-hidden shadow-[var(--el-box-shadow)] min-h-0;
-}
 
-/* URL导航栏 */
-.url-navigation-bar {
-    @apply flex items-center gap-2 px-4 py-2.5 bg-gradient-to-b from-black/80 to-black/60 backdrop-blur-sm border-b border-white/10;
-}
-
-.url-input {
-    @apply flex-1;
-}
-
-.url-input :deep(.el-input-group__prepend) {
-    @apply bg-white/10 border-none text-white;
-}
-
-.url-input :deep(.el-input__wrapper) {
-    @apply bg-white/15 border-none shadow-none;
-}
-
-.url-input :deep(.el-input__inner) {
-    @apply text-white font-mono;
-}
-
-.url-input :deep(.el-input__inner::placeholder) {
-    color: rgba(255, 255, 255, 0.5);
-}
-
-.video-info-bar {
-    @apply flex items-center justify-between px-4 py-2.5 bg-gradient-to-b from-black/70 to-black/50 backdrop-blur-sm text-white border-b border-white/10;
-}
-
-.status-dot {
-    @apply w-2 h-2 rounded-full;
-    animation: pulse 2s ease-in-out infinite;
-}
-
-/* 截图预览样式 */
-.screenshot-preview-dialog :deep(.el-dialog) {
-    @apply bg-black/90 backdrop-blur-md;
-}
-
-.screenshot-preview-dialog :deep(.el-dialog__header) {
-    @apply bg-transparent border-b border-white/10 text-white;
-}
-
-.screenshot-preview-dialog :deep(.el-dialog__body) {
-    @apply p-0 flex items-center justify-center bg-transparent;
-}
-
-.screenshot-preview-image {
-    @apply max-w-full max-h-full object-contain rounded-lg shadow-2xl shadow-black/50;
-}
-
-.status-connected .status-dot {
-    @apply bg-[var(--color-success)] shadow-[0_0_8px_rgba(34,197,94,0.5)];
-}
-
-.status-connecting .status-dot {
-    @apply bg-[var(--color-warning)] shadow-[0_0_8px_rgba(234,179,8,0.5)];
-}
-
-.status-disconnected .status-dot {
-    @apply bg-[var(--color-danger)] shadow-[0_0_8px_rgba(239,68,68,0.5)] !animate-none;
-}
-
-@keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.5; }
-}
-
-.video-wrapper {
-    @apply flex-1 relative bg-[var(--el-bg-color)] overflow-hidden min-h-[var(--spacing-16)] min-w-[var(--spacing-20)] w-full h-full flex items-center justify-center;
-}
-
-.video-wrapper.black-screen {
-    @apply bg-black;
-}
-
-/* 加载遮罩层 */
-.loading-mask {
-    @apply absolute inset-0 flex items-center justify-center bg-black/70 backdrop-blur-sm z-10;
-}
-
-.loading-content .el-icon.is-loading {
-    animation: rotating 2s linear infinite;
-}
-
-@keyframes rotating {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
-}
-
-/* 错误提示层 */
-.error-overlay {
-    @apply absolute inset-0 flex flex-col items-center justify-center bg-black/85 backdrop-blur-sm z-15 gap-4;
-}
-
-.video-element {
-    @apply max-w-full max-h-full w-auto h-auto object-contain bg-black block mx-auto;
-}
-
-/* 视频控制条 - B站风格 */
-.video-control-bar {
-    @apply absolute bottom-0 left-0 right-0 flex items-center justify-between px-5 py-4 bg-gradient-to-t from-black/90 via-black/50 to-transparent backdrop-blur-md z-20 transition-opacity duration-300;
-}
-
-.control-button {
-    @apply bg-white/10 border-none text-white w-11 h-11 transition-all duration-200;
-}
-
-.control-button:hover {
-    @apply bg-white/25 scale-110;
-}
-
-.control-button :deep(.el-icon) {
-    @apply text-[20px];
-}
-
-/* 控制条淡入淡出动画 */
-.control-bar-fade-enter-active,
-.control-bar-fade-leave-active {
-    transition: opacity 0.3s ease;
-}
-
-.control-bar-fade-enter-from,
-.control-bar-fade-leave-to {
-    opacity: 0;
-}
-
-@media (max-width: 768px) {
-    .url-navigation-bar {
-        @apply flex-col items-stretch;
-    }
-
-    .video-info-bar span {
-        @apply hidden;
-    }
-
-    .video-info-bar :deep(.el-tag) span {
-        @apply inline;
-    }
-
-    .video-wrapper {
-        @apply min-h-[var(--spacing-12)] min-w-full;
-    }
-
-    .control-button {
-        @apply w-9 h-9;
-    }
-
-    .control-button :deep(.el-icon) {
-        @apply text-[18px];
-    }
-}
-</style>

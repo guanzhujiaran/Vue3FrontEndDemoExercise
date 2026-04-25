@@ -7,9 +7,9 @@
  * @Description: RPA浏览器控制台 - 统一管理浏览器自动化操作和调试
 -->
 <template>
-  <div class="w-full">
+  <FlexContainer>
     <!-- 标签页导航 -->
-    <el-tabs v-model="activeTab" type="card" class="mb-4">
+    <el-tabs v-model="activeTab" type="card" class="mb-4 flex-1">
       <el-tab-pane label="RPA浏览器控制台" name="unified" :lazy="true">
         <FingerprintList 
           :fingerprints="fingerprints" 
@@ -70,7 +70,7 @@
         </el-text>
       </template>
     </el-dialog>
-  </div>
+  </FlexContainer>
 </template>
 
 <script setup lang="ts">

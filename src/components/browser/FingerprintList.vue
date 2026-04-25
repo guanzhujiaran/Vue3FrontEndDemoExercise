@@ -9,7 +9,7 @@
 <template>
   <div class="flex-1">
     <!-- 操作栏 -->
-    <div class="flex justify-between items-center mb-5 gap-4 flex-wrap">
+    <div class="mb-5 flex flex-wrap items-center justify-between gap-4">
       <div class="flex gap-2">
         <el-button type="primary" @click="$emit('create')">
           <el-icon>
@@ -27,8 +27,20 @@
       </div>
 
       <!-- 过滤器和搜索 -->
-      <div class="flex gap-2 items-center flex-wrap">
-        <el-select v-model="filterBrowser" placeholder="筛选浏览器" style="width: 150px" clearable @change="$emit('filter-change', { browser: filterBrowser, platform: filterPlatform, keyword: searchKeyword })">
+      <div class="flex flex-wrap items-center gap-2">
+        <el-select
+          v-model="filterBrowser"
+          placeholder="筛选浏览器"
+          style="width: 150px"
+          clearable
+          @change="
+            $emit('filter-change', {
+              browser: filterBrowser,
+              platform: filterPlatform,
+              keyword: searchKeyword
+            })
+          "
+        >
           <el-option label="全部浏览器" value="" />
           <el-option label="Chrome" value="chrome" />
           <el-option label="Edge" value="Edge" />
@@ -36,15 +48,33 @@
           <el-option label="Vivaldi" value="Vivaldi" />
         </el-select>
 
-        <el-select v-model="filterPlatform" placeholder="筛选平台" style="width: 150px" clearable @change="$emit('filter-change', { browser: filterBrowser, platform: filterPlatform, keyword: searchKeyword })">
+        <el-select
+          v-model="filterPlatform"
+          placeholder="筛选平台"
+          style="width: 150px"
+          clearable
+          @change="
+            $emit('filter-change', {
+              browser: filterBrowser,
+              platform: filterPlatform,
+              keyword: searchKeyword
+            })
+          "
+        >
           <el-option label="全部平台" value="" />
           <el-option label="Windows" value="windows" />
           <el-option label="Linux" value="linux" />
           <el-option label="macOS" value="macos" />
         </el-select>
 
-        <el-input v-model="searchKeyword" placeholder="搜索用户ID" style="width: 200px" clearable @clear="handleSearch"
-          @keyup.enter="handleSearch">
+        <el-input
+          v-model="searchKeyword"
+          placeholder="搜索用户ID"
+          style="width: 200px"
+          clearable
+          @clear="handleSearch"
+          @keyup.enter="handleSearch"
+        >
           <template #prefix>
             <el-icon>
               <Search />
@@ -58,15 +88,26 @@
     <StatsPanel :stats="stats" />
 
     <!-- 指纹列表 -->
-    <div class="min-h-[400px]">
+    <div class="min-h-120">
       <div v-if="loading" class="w-full">
-        <div class="grid gap-4" style="grid-template-columns: repeat(auto-fill, minmax(300px, 1fr))">
-          <div v-for="i in 6" :key="i" class="rounded-xl bg-bg/50 backdrop-blur-sm p-5 border border-border-light/30">
+        <div
+          class="grid gap-4"
+          style="grid-template-columns: repeat(auto-fill, minmax(300px, 1fr))"
+        >
+          <div
+            v-for="i in 6"
+            :key="i"
+            class="bg-bg/50 border-border-light/30 rounded-xl border p-5 backdrop-blur-sm"
+          >
             <el-skeleton :rows="4" animated></el-skeleton>
           </div>
         </div>
       </div>
-      <div v-else class="grid gap-4" style="grid-template-columns: repeat(auto-fill, minmax(300px, 1fr))">
+      <div
+        v-else-if="filteredFingerprints.length > 0"
+        class="grid gap-4"
+        style="grid-template-columns: repeat(auto-fill, minmax(300px, 1fr))"
+      >
         <FingerprintCard
           v-for="fingerprint in filteredFingerprints"
           :key="fingerprint.id_str || fingerprint.id"
@@ -80,9 +121,10 @@
       </div>
 
       <!-- 空状态 -->
-      <div v-if="filteredFingerprints.length === 0" class="flex justify-center items-center h-[200px]">
-        <el-empty description="暂无浏览器指纹数据" />
-      </div>
+      <el-empty
+        v-if="filteredFingerprints.length === 0 && !loading"
+        description="暂无浏览器指纹数据"
+      />
     </div>
   </div>
 </template>
@@ -124,9 +166,11 @@ const searchKeyword = ref('')
 // 统计数据
 const stats = computed(() => {
   const total = props.fingerprints.length
-  const chrome = props.fingerprints.filter(item => item.fingerprint_browser === 'chrome').length
-  const edge = props.fingerprints.filter(item => item.fingerprint_browser === 'Edge').length
-  const windows = props.fingerprints.filter(item => item.fingerprint_platform === 'windows').length
+  const chrome = props.fingerprints.filter((item) => item.fingerprint_browser === 'chrome').length
+  const edge = props.fingerprints.filter((item) => item.fingerprint_browser === 'Edge').length
+  const windows = props.fingerprints.filter(
+    (item) => item.fingerprint_platform === 'windows'
+  ).length
 
   return {
     total,
@@ -162,10 +206,10 @@ const filteredFingerprints = computed(() => {
 
 // 方法
 const handleSearch = () => {
-  emit('filter-change', { 
-    browser: filterBrowser.value, 
-    platform: filterPlatform.value, 
-    keyword: searchKeyword.value 
+  emit('filter-change', {
+    browser: filterBrowser.value,
+    platform: filterPlatform.value,
+    keyword: searchKeyword.value
   })
 }
 

@@ -127,7 +127,7 @@
           class="mb-4"
         >
           <el-card 
-            :class="['cursor-pointer transition-all duration-[var(--transition-base)] relative mb-4 flex-1', { 'border-[var(--color-primary)] shadow-[0_0_0_2px_rgba(64,158,255,0.2)]': selectedBrowserId === Number(instance.id) }]"
+            :class="['cursor-pointer transition-all duration-[var(--transition-base)] relative mb-4 flex-1 hover:-translate-y-0.5 hover:shadow-lg', { 'border-[var(--color-primary)] shadow-[0_0_0_2px_rgba(64,158,255,0.2)]': selectedBrowserId === Number(instance.id) }]"
             @click="handleRowClick(instance)"
           >
             <!-- 卡片选择框（仅在批量选择模式显示） -->
@@ -263,6 +263,7 @@
       class="control-drawer"
       :with-header="false"
       v-if="isMobile"
+      style="--el-drawer-body-padding: 0; overflow: hidden;"
     >
       <ControlPanelContent
         :selected-browser-id="selectedBrowserId"
@@ -303,6 +304,7 @@
       :with-header="false"
       :append-to-body="false"
       v-else
+      style="--el-drawer-body-padding: 0; overflow: hidden;"
     >
       <ControlPanelContent
         :selected-browser-id="selectedBrowserId"
@@ -1056,20 +1058,3 @@ onUnmounted(() => {
 })
 </script>
 
-<style scoped>
-/* 实例卡片 hover 效果 */
-.cursor-pointer:hover {
-  @apply -translate-y-0.5 shadow-lg;
-}
-
-/* 抽屉内边距清零 */
-.control-drawer :deep(.el-drawer__body) {
-  padding: 0;
-  overflow: hidden;
-}
-
-/* 操作按钮图标间距 */
-.action-btn :deep(.el-icon) {
-  margin-right: var(--spacing-1);
-}
-</style>

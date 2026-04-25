@@ -12,7 +12,7 @@
     :title="`通知配置 - ${currentFingerprint?.id_str || currentFingerprint?.id}`"
     width="600px"
     destroy-on-close
-    class="notify-config-modal"
+    style="--el-dialog-body-max-height: 60vh; overflow-y: auto;"
   >
     <el-form :model="form" label-width="120px" class="mb-4">
       <!-- 操作按钮 -->
@@ -432,8 +432,3 @@ const handleClose = () => {
 }
 </script>
 
-<style scoped>
-.notify-config-modal :deep(.el-dialog__body) {
-  @apply max-h-[60vh] overflow-y-auto;
-}
-</style>

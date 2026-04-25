@@ -31,14 +31,14 @@
       </div>
       
       <!-- 统一手风琴组件 -->
-      <el-collapse v-model="activeCollapses" class="unified-accordion">
+      <el-collapse v-model="activeCollapses" style="border: none; box-shadow: var(--el-box-shadow-lighter); border-radius: var(--size-radius-base); overflow: hidden;">
         <!-- 第一部分：浏览器默认配置（在上） -->
         <el-collapse-item name="default-fingerprint-section" title="浏览器默认配置">
           <template #title>
             <div class="flex items-center gap-3 w-full">
               <el-icon class="text-xl text-[var(--el-color-primary)]"><Monitor /></el-icon>
               <span class="flex-1 text-2xl font-semibold">浏览器默认配置</span>
-              <span class="badge-text badge-success">指纹</span>
+              <span class="inline-flex items-center justify-center min-w-[3rem] px-3 py-0.5 ml-2 text-xs font-medium text-white rounded-full transition-all duration-250 hover:translate-y-[-1px] hover:shadow-[var(--el-box-shadow-lighter)]" style="background: linear-gradient(135deg, var(--el-color-success) 0%, var(--el-color-success-dark-2) 100%); box-shadow: var(--el-box-shadow-lighter); letter-spacing: 0.02em;">指纹</span>
             </div>
           </template>
           <div v-loading="loadingDefaultConfig" class="min-h-[300px]">
@@ -46,7 +46,7 @@
               <el-form :model="defaultFingerprintConfig" label-width="160px" @submit.prevent>
                 <el-collapse 
                   v-model="activeDefaultConfigCollapses" 
-                  class="unified-accordion"
+                  style="border: none; box-shadow: var(--el-box-shadow-lighter); border-radius: var(--size-radius-base); overflow: hidden;"
                   @change="handleDefaultConfigAccordionChange"
                 >
                   <!-- 基础浏览器配置 -->
@@ -55,7 +55,7 @@
                       <div class="flex items-center gap-3 w-full">
                         <el-icon class="text-lg text-[var(--el-color-primary)]"><Monitor /></el-icon>
                         <span class="flex-1 text-xl font-medium">基础配置</span>
-                        <span class="badge-text badge-core">核心</span>
+                        <span class="inline-flex items-center justify-center min-w-[3rem] px-3 py-0.5 ml-2 text-xs font-medium text-white rounded-full transition-all duration-250 hover:translate-y-[-1px] hover:shadow-[var(--el-box-shadow-lighter)]" style="background: linear-gradient(135deg, var(--el-color-error) 0%, var(--el-color-error-dark-2) 100%); box-shadow: var(--el-box-shadow-lighter); letter-spacing: 0.02em;">核心</span>
                       </div>
                     </template>
                     <el-form-item label="浏览器类型">
@@ -94,7 +94,7 @@
                       <div class="flex items-center gap-3 w-full">
                         <el-icon class="text-lg text-[var(--el-color-primary)]"><FullScreen /></el-icon>
                         <span class="flex-1 text-xl font-medium">屏幕配置</span>
-                        <span class="badge-text badge-warning">显示</span>
+                        <span class="inline-flex items-center justify-center min-w-[3rem] px-3 py-0.5 ml-2 text-xs font-medium text-white rounded-full transition-all duration-250 hover:translate-y-[-1px] hover:shadow-[var(--el-box-shadow-lighter)]" style="background: linear-gradient(135deg, var(--el-color-warning) 0%, var(--el-color-warning-dark-2) 100%); box-shadow: var(--el-box-shadow-lighter); letter-spacing: 0.02em;">显示</span>
                       </div>
                     </template>
                     <div class="flex flex-col gap-5">
@@ -139,7 +139,7 @@
                       <div class="flex items-center gap-3 w-full">
                         <el-icon class="text-lg text-[var(--el-color-primary)]"><Clock /></el-icon>
                         <span class="flex-1 text-xl font-medium">语言时区</span>
-                        <span class="badge-text badge-info">区域</span>
+                        <span class="inline-flex items-center justify-center min-w-[3rem] px-3 py-0.5 ml-2 text-xs font-medium text-white rounded-full transition-all duration-250 hover:translate-y-[-1px] hover:shadow-[var(--el-box-shadow-lighter)]" style="background: linear-gradient(135deg, var(--el-color-info) 0%, var(--el-color-info-dark-2) 100%); box-shadow: var(--el-box-shadow-lighter); letter-spacing: 0.02em;">区域</span>
                       </div>
                     </template>
                     <div class="flex flex-col gap-5">
@@ -169,7 +169,7 @@
               <!-- 配置状态和操作 -->
               <div class="flex justify-between items-center py-5 border-t border-[var(--el-border-color-light)] mt-5 flex-wrap gap-4">
                 <div class="flex items-center gap-3 flex-wrap">
-                  <span class="status-badge" :class="defaultConfigSaved ? 'status-saved' : 'status-unsaved'">
+                  <span class="inline-flex items-center gap-2 px-5 py-3 min-h-[40px] text-base font-semibold rounded-[var(--size-radius-base)] transition-all duration-250 cursor-default whitespace-nowrap leading-1" :class="defaultConfigSaved ? 'bg-gradient-to-r from-[var(--el-color-success)] to-[var(--el-color-success-dark-2)] text-white shadow-[var(--el-box-shadow-light)] hover:translate-y-[-2px] hover:shadow-[var(--el-box-shadow)]' : 'bg-gradient-to-r from-[var(--el-color-warning)] to-[var(--el-color-warning-dark-2)] text-white shadow-[var(--el-box-shadow-light)] hover:translate-y-[-2px] hover:shadow-[var(--el-box-shadow)]'">
                     <el-icon class="mr-1">
                       <SuccessFilled v-if="defaultConfigSaved" />
                       <WarningFilled v-else />
@@ -220,7 +220,7 @@
             <div class="flex items-center gap-3 w-full">
               <el-icon class="text-xl text-[var(--el-color-primary)]"><Setting /></el-icon>
               <span class="flex-1 text-2xl font-semibold">全局通知配置</span>
-              <span class="badge-text badge-primary">通知</span>
+              <span class="inline-flex items-center justify-center min-w-[3rem] px-3 py-0.5 ml-2 text-xs font-medium text-white rounded-full transition-all duration-250 hover:translate-y-[-1px] hover:shadow-[var(--el-box-shadow-lighter)]" style="background: linear-gradient(135deg, var(--el-color-primary) 0%, var(--el-color-primary-dark-2) 100%); box-shadow: var(--el-box-shadow-lighter); letter-spacing: 0.02em;">通知</span>
             </div>
           </template>
           <div v-loading="loadingConfig" class="min-h-[300px]">
@@ -229,7 +229,7 @@
               <el-form :model="notificationConfig" label-width="160px" @submit.prevent>
               <el-collapse 
                 v-model="activeNotificationCollapses" 
-                class="unified-accordion"
+                style="border: none; box-shadow: var(--el-box-shadow-lighter); border-radius: var(--size-radius-base); overflow: hidden;"
                 @change="handleNotificationAccordionChange"
               >
                 <!-- 基础设置 -->
@@ -238,7 +238,7 @@
                     <div class="flex items-center gap-3 w-full">
                       <el-icon class="text-lg text-[var(--el-color-primary)]"><Setting /></el-icon>
                       <span class="flex-1 text-xl font-medium">基础设置</span>
-                      <span class="badge-text badge-core">核心</span>
+                      <span class="inline-flex items-center justify-center min-w-[3rem] px-3 py-0.5 ml-2 text-xs font-medium text-white rounded-full transition-all duration-250 hover:translate-y-[-1px] hover:shadow-[var(--el-box-shadow-lighter)]" style="background: linear-gradient(135deg, var(--el-color-error) 0%, var(--el-color-error-dark-2) 100%); box-shadow: var(--el-box-shadow-lighter); letter-spacing: 0.02em;">核心</span>
                     </div>
                   </template>
                   <el-form-item label="一言推送">
@@ -256,7 +256,7 @@
                     <div class="flex items-center gap-3 w-full">
                       <el-icon class="text-lg text-[var(--el-color-primary)]"><Apple /></el-icon>
                       <span class="flex-1 text-xl font-medium">Bark推送</span>
-                      <span class="badge-text badge-ios">iOS</span>
+                      <span class="inline-flex items-center justify-center min-w-[3rem] px-3 py-0.5 ml-2 text-xs font-medium text-white rounded-full transition-all duration-250 hover:translate-y-[-1px] hover:shadow-[var(--el-box-shadow-lighter)]" style="background: linear-gradient(135deg, var(--el-color-danger) 0%, var(--el-color-danger-dark-2) 100%); box-shadow: var(--el-box-shadow-lighter); letter-spacing: 0.02em;">iOS</span>
                     </div>
                   </template>
                   <div class="flex flex-col gap-5">
@@ -341,7 +341,7 @@
                     <div class="flex items-center gap-3 w-full">
                       <el-icon class="text-lg text-[var(--el-color-primary)]"><Promotion /></el-icon>
                       <span class="flex-1 text-xl font-medium">Push Plus</span>
-                      <span class="badge-text badge-warning">多平台</span>
+                      <span class="inline-flex items-center justify-center min-w-[3rem] px-3 py-0.5 ml-2 text-xs font-medium text-white rounded-full transition-all duration-250 hover:translate-y-[-1px] hover:shadow-[var(--el-box-shadow-lighter)]" style="background: linear-gradient(135deg, var(--el-color-warning) 0%, var(--el-color-warning-dark-2) 100%); box-shadow: var(--el-box-shadow-lighter); letter-spacing: 0.02em;">多平台</span>
                     </div>
                   </template>
                   <div class="flex flex-col gap-5">
@@ -424,7 +424,7 @@
                     <div class="flex items-center gap-3 w-full">
                       <el-icon class="text-lg text-[var(--el-color-primary)]"><ChatDotRound /></el-icon>
                       <span class="flex-1 text-xl font-medium">微信推送器</span>
-                      <span class="badge-text badge-wechat">微信</span>
+                      <span class="inline-flex items-center justify-center min-w-[3rem] px-3 py-0.5 ml-2 text-xs font-medium text-white rounded-full transition-all duration-250 hover:translate-y-[-1px] hover:shadow-[var(--el-box-shadow-lighter)]" style="background: linear-gradient(135deg, var(--el-color-success) 0%, var(--el-color-success-dark-2) 100%); box-shadow: var(--el-box-shadow-lighter); letter-spacing: 0.02em;">微信</span>
                     </div>
                   </template>
                   <div class="flex flex-col gap-5">
@@ -464,7 +464,7 @@
                     <div class="flex items-center gap-3 w-full">
                       <el-icon class="text-lg text-[var(--el-color-primary)]"><MoreFilled /></el-icon>
                       <span class="flex-1 text-xl font-medium">其他推送</span>
-                      <span class="badge-text badge-more">更多</span>
+                      <span class="inline-flex items-center justify-center min-w-[3rem] px-3 py-0.5 ml-2 text-xs font-medium text-white rounded-full transition-all duration-250 hover:translate-y-[-1px] hover:shadow-[var(--el-box-shadow-lighter)]" style="background: linear-gradient(135deg, var(--el-color-primary) 0%, var(--el-color-info) 100%); box-shadow: var(--el-box-shadow-lighter); letter-spacing: 0.02em;">更多</span>
                     </div>
                   </template>
                   <div class="flex flex-col gap-5">
@@ -572,7 +572,7 @@
               <!-- 配置状态和操作 -->
               <div class="flex justify-between items-center py-5 border-t border-[var(--el-border-color-light)] mt-5 flex-wrap gap-4">
                 <div class="flex items-center gap-3 flex-wrap">
-                  <span class="status-badge" :class="configSaved ? 'status-saved' : 'status-unsaved'">
+                  <span class="inline-flex items-center gap-2 px-5 py-3 min-h-[40px] text-base font-semibold rounded-[var(--size-radius-base)] transition-all duration-250 cursor-default whitespace-nowrap leading-1" :class="configSaved ? 'bg-gradient-to-r from-[var(--el-color-success)] to-[var(--el-color-success-dark-2)] text-white shadow-[var(--el-box-shadow-light)] hover:translate-y-[-2px] hover:shadow-[var(--el-box-shadow)]' : 'bg-gradient-to-r from-[var(--el-color-warning)] to-[var(--el-color-warning-dark-2)] text-white shadow-[var(--el-box-shadow-light)] hover:translate-y-[-2px] hover:shadow-[var(--el-box-shadow)]'">
                     <el-icon class="mr-1">
                       <SuccessFilled v-if="configSaved" />
                       <WarningFilled v-else />
@@ -1002,166 +1002,4 @@ onMounted(() => {
 })
 </script>
 
-<style scoped>
-/* 统一手风琴样式 - 仅保留必须用 :deep() 实现的 Element Plus 内部样式 */
-.unified-accordion {
-  border: none;
-  box-shadow: var(--el-box-shadow-lighter);
-  border-radius: var(--size-radius-base);
-  overflow: hidden;
-}
 
-.unified-accordion :deep(.el-collapse-item) {
-  border-bottom: 1px solid var(--el-border-color-light);
-}
-
-.unified-accordion :deep(.el-collapse-item:last-child) {
-  border-bottom: none;
-}
-
-.unified-accordion :deep(.el-collapse-item__header) {
-  padding: 16px 20px;
-  font-weight: 600;
-  border: none;
-  border-bottom: 1px solid var(--el-border-color-light);
-  transition: all var(--transition-base) var(--transition-timing);
-}
-
-.unified-accordion :deep(.el-collapse-item__wrap) {
-  border: none;
-}
-
-.unified-accordion :deep(.el-collapse-item__content) {
-  padding: 24px 20px;
-}
-
-.unified-accordion :deep(.el-collapse-item__arrow) {
-  transition: transform var(--transition-base) var(--transition-timing);
-}
-
-.unified-accordion :deep(.el-collapse-item.is-active .el-collapse-item__arrow) {
-  transform: rotate(180deg);
-}
-
-.el-form :deep(.el-form-item__label) {
-  font-weight: 500;
-  color: var(--el-text-color-primary);
-}
-
-.el-form-item :deep(.el-form-item__content) {
-  line-height: var(--line-height-relaxed);
-  font-size: var(--font-size-base);
-}
-
-.el-form-item.is-error :deep(.el-input__wrapper) {
-  animation: shake var(--transition-base) ease-in-out;
-}
-
-@keyframes shake {
-  0%, 100% { transform: translateX(0); }
-  25% { transform: translateX(-4px); }
-  75% { transform: translateX(4px); }
-}
-
-/* 徽章 - 保留颜色渐变，无法用原子类表示 */
-.badge-text {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 3rem;
-  padding: 2px 12px;
-  margin-left: 8px;
-  font-size: 13px;
-  font-weight: 500;
-  line-height: 1.5;
-  border-radius: 9999px;
-  white-space: nowrap;
-  transition: all 250ms cubic-bezier(0.4, 0, 0.2, 1);
-  letter-spacing: 0.02em;
-}
-
-.badge-text:hover {
-  transform: translateY(-1px);
-  box-shadow: var(--el-box-shadow-lighter);
-}
-
-.badge-core {
-  background: linear-gradient(135deg, var(--color-error) 0%, var(--color-error-dark-2) 100%);
-  color: #fff;
-  box-shadow: var(--el-box-shadow-lighter);
-}
-
-.badge-ios {
-  background: linear-gradient(135deg, var(--color-danger) 0%, var(--color-danger-dark-2) 100%);
-  color: #fff;
-  box-shadow: var(--el-box-shadow-lighter);
-}
-
-.badge-wechat {
-  background: linear-gradient(135deg, var(--color-success) 0%, var(--color-success-dark-2) 100%);
-  color: #fff;
-  box-shadow: var(--el-box-shadow-lighter);
-}
-
-.badge-more {
-  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-info) 100%);
-  color: #fff;
-  box-shadow: var(--el-box-shadow-lighter);
-}
-
-.badge-success {
-  @apply bg-gradient-badge-success text-white;
-  box-shadow: var(--el-box-shadow-lighter);
-}
-
-.badge-warning {
-  @apply bg-gradient-badge-warning text-white;
-  box-shadow: var(--el-box-shadow-lighter);
-}
-
-.badge-info {
-  @apply bg-gradient-badge-info text-white;
-  box-shadow: var(--el-box-shadow-lighter);
-}
-
-.badge-primary {
-  @apply bg-gradient-badge-primary text-white;
-  box-shadow: var(--el-box-shadow-lighter);
-}
-
-/* 状态徽章 */
-.status-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 12px 20px;
-  min-height: 40px;
-  font-size: 14px;
-  font-weight: 600;
-  border-radius: var(--size-radius-base);
-  transition: all 250ms cubic-bezier(0.4, 0, 0.2, 1);
-  cursor: default;
-  white-space: nowrap;
-  line-height: 1;
-}
-
-.status-saved {
-  @apply bg-gradient-badge-success text-white;
-  box-shadow: var(--el-box-shadow-light);
-}
-
-.status-saved:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--el-box-shadow);
-}
-
-.status-unsaved {
-  @apply bg-gradient-badge-warning text-white;
-  box-shadow: var(--el-box-shadow-light);
-}
-
-.status-unsaved:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--el-box-shadow);
-}
-</style>

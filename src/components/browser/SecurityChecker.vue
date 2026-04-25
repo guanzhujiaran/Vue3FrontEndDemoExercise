@@ -89,7 +89,7 @@
 
     <!-- 安全规则 -->
     <details class="mt-4">
-      <summary class="cursor-pointer text-sm font-medium text-gray-700 hover:text-gray-900">
+      <summary class="cursor-pointer text-sm font-medium text-gray-700 hover:text-gray-900 outline-none mb-2">
         安全规则说明 ▼
       </summary>
       <div class="mt-2 text-xs text-gray-600 space-y-1">
@@ -211,12 +211,3 @@ const getRiskLevelClass = (level: string) => {
 }
 </script>
 
-<style scoped>
-details summary {
-  @apply outline-none;
-}
-
-details[open] summary {
-  @apply mb-2;
-}
-</style>
