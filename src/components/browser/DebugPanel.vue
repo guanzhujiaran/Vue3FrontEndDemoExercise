@@ -780,11 +780,4 @@ onMounted(() => {
 })
 </script>
 
-<style scoped>
-@reference "tailwindcss";
 
-/* option-content: 下拉选项布局 */
-.option-content {
-  @apply flex justify-between items-center;
-}
-</style>

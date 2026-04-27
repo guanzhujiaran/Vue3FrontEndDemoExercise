@@ -1,46 +1,32 @@
 <!--
- * @Author: 星瞳 1944637830@qq.com
- * @Date: 2026-04-11 00:00:00
  * @FilePath: \Vue3FrontEndDemoExercise\src\components\browser\VisualControlPanel.vue
- * @Description: 可视化操作连接面板 - 卡片式展示浏览器控制操作
+ * @Description: 可视化操作连接面板 - 全面重构，使用统一 executeAction 接口
 -->
 <template>
-  <div class="flex flex-col gap-5">
-    <!-- 浏览器状态卡片 -->
-    <el-card shadow="hover">
-      <template #header>
-        <div class="flex items-center gap-2 font-bold">
-          <el-icon><Monitor /></el-icon>
-          <span>浏览器状态</span>
-          <el-tag :type="statusTagType" size="small">{{ statusText }}</el-tag>
-        </div>
-      </template>
-      <div class="mb-4">
-        <el-row :gutter="20">
-          <el-col :span="8">
-            <div class="flex flex-col gap-1">
-              <label class="text-[12px] text-[var(--el-text-color-secondary)]">会话ID:</label>
-              <span class="text-[14px] text-[var(--el-text-color-primary)] font-medium">{{ browserId }}</span>
-            </div>
-          </el-col>
-          <el-col :span="8">
-            <div class="flex flex-col gap-1">
-              <label class="text-[12px] text-[var(--el-text-color-secondary)]">运行状态:</label>
-              <span class="text-[14px] text-[var(--el-text-color-primary)] font-medium">{{ sessionStatus?.is_running ? '运行中' : '未运行' }}</span>
-            </div>
-          </el-col>
-          <el-col :span="8">
-            <div class="flex flex-col gap-1">
-              <label class="text-[12px] text-[var(--el-text-color-secondary)]">人工操作:</label>
-              <span class="text-[14px] text-[var(--el-text-color-primary)] font-medium">{{ operationStatus?.manual_mode ? '启用' : '禁用' }}</span>
-            </div>
-          </el-col>
-        </el-row>
+  <div class="flex flex-col gap-4">
+    <!-- 顶部状态栏 -->
+    <div class="flex flex-wrap items-center gap-3 p-4 rounded-xl border border-[var(--el-border-color-lighter)] bg-[var(--el-fill-color-lighter)]">
+      <div class="flex items-center gap-2">
+        <div :class="['w-2.5 h-2.5 rounded-full transition-all duration-500', sessionStatus?.is_running ? 'bg-green-500 shadow-[0_0_8px_rgba(74,222,128,0.8)] animate-pulse' : 'bg-gray-400']"></div>
+        <span class="font-semibold text-sm">{{ sessionStatus?.is_running ? '运行中' : '未启动' }}</span>
       </div>
-      <div class="flex gap-2 justify-end">
-        <el-button size="small" @click="refreshStatus" :loading="statusLoading">
-          <el-icon><Refresh /></el-icon>
-          刷新状态
+      <el-divider direction="vertical" />
+      <div class="flex items-center gap-1.5 text-sm text-[var(--el-text-color-secondary)]">
+        <el-icon><Key /></el-icon>
+        <span>{{ browserId }}</span>
+      </div>
+      <div v-if="sessionStatus?.lifecycle_status" class="flex items-center gap-1.5">
+        <el-tag :type="getLifecycleTagType(sessionStatus.lifecycle_status)" size="small" effect="plain">
+          {{ sessionStatus.lifecycle_status }}
+        </el-tag>
+      </div>
+      <div v-if="sessionStatus?.session_id" class="flex items-center gap-1.5 text-xs text-[var(--el-text-color-secondary)] font-mono">
+        <el-icon><Connection /></el-icon>
+        {{ sessionStatus.session_id.slice(0, 16) }}...
+      </div>
+      <div class="ml-auto flex gap-2">
+        <el-button size="small" @click="refreshStatus" :loading="statusLoading" :icon="Refresh" round>
+          刷新
         </el-button>
         <el-button
           v-if="!sessionStatus?.is_running"
@@ -48,192 +34,382 @@
           size="small"
           @click="createSession"
           :loading="creatingSession"
+          :icon="VideoPlay"
+          round
         >
-          <el-icon><VideoPlay /></el-icon>
           启动浏览器
         </el-button>
         <el-button
           v-else
           type="danger"
           size="small"
-          @click="forceRelease"
+          @click="handleForceRelease"
           :loading="releasing"
+          :icon="SwitchButton"
+          round
         >
-          <el-icon><Close /></el-icon>
-          强制释放
+          停止会话
         </el-button>
       </div>
-    </el-card>
-
-    <!-- 快捷操作卡片组 -->
-    <div>
-      <h3 class="flex items-center gap-2 text-[16px] font-bold text-[var(--el-text-color-primary)] mt-6 mb-4">
-        <el-icon><Operation /></el-icon>
-        快捷操作
-      </h3>
-      <el-row :gutter="16">
-        <!-- 导航操作 -->
-        <el-col :xs="24" :sm="12" :md="8" :lg="6">
-          <el-card
-            class="cursor-pointer transition-all duration-300 h-full hover:-translate-y-1 hover:shadow-[0_4px_12px_rgba(0,0,0,0.15)]"
-            shadow="hover"
-            @click="showNavigateDialog = true"
-          >
-            <div class="w-12 h-12 rounded-lg flex items-center justify-center mb-3 text-[24px] text-white bg-[linear-gradient(135deg,#667eea_0%,#764ba2_100%)]">
-              <el-icon><Link /></el-icon>
-            </div>
-            <div>
-              <h4 class="m-0 mb-1 text-[14px] text-[var(--el-text-color-primary)]">页面导航</h4>
-              <p class="m-0 text-[12px] text-[var(--el-text-color-secondary)]">跳转到指定URL</p>
-            </div>
-          </el-card>
-        </el-col>
-
-        <!-- 截图操作 -->
-        <el-col :xs="24" :sm="12" :md="8" :lg="6">
-          <el-card
-            class="cursor-pointer transition-all duration-300 h-full hover:-translate-y-1 hover:shadow-[0_4px_12px_rgba(0,0,0,0.15)]"
-            shadow="hover"
-            @click="captureScreenshot"
-          >
-            <div class="w-12 h-12 rounded-lg flex items-center justify-center mb-3 text-[24px] text-white bg-[linear-gradient(135deg,#f093fb_0%,#f5576c_100%)]">
-              <el-icon><Camera /></el-icon>
-            </div>
-            <div>
-              <h4 class="m-0 mb-1 text-[14px] text-[var(--el-text-color-primary)]">页面截图</h4>
-              <p class="m-0 text-[12px] text-[var(--el-text-color-secondary)]">捕获当前页面快照</p>
-            </div>
-          </el-card>
-        </el-col>
-
-        <!-- JavaScript执行 -->
-        <el-col :xs="24" :sm="12" :md="8" :lg="6">
-          <el-card
-            class="cursor-pointer transition-all duration-300 h-full hover:-translate-y-1 hover:shadow-[0_4px_12px_rgba(0,0,0,0.15)]"
-            shadow="hover"
-            @click="showJsDialog = true"
-          >
-            <div class="w-12 h-12 rounded-lg flex items-center justify-center mb-3 text-[24px] text-white bg-[linear-gradient(135deg,#4facfe_0%,#00f2fe_100%)]">
-              <el-icon><Document /></el-icon>
-            </div>
-            <div>
-              <h4 class="m-0 mb-1 text-[14px] text-[var(--el-text-color-primary)]">执行JS</h4>
-              <p class="m-0 text-[12px] text-[var(--el-text-color-secondary)]">运行自定义脚本</p>
-            </div>
-          </el-card>
-        </el-col>
-
-        <!-- 插件管理 -->
-        <el-col :xs="24" :sm="12" :md="8" :lg="6">
-          <el-card
-            class="cursor-pointer transition-all duration-300 h-full hover:-translate-y-1 hover:shadow-[0_4px_12px_rgba(0,0,0,0.15)]"
-            shadow="hover"
-            @click="togglePlugins"
-          >
-            <div class="w-12 h-12 rounded-lg flex items-center justify-center mb-3 text-[24px] text-white bg-[linear-gradient(135deg,#43e97b_0%,#38f9d7_100%)]">
-              <el-icon><Setting /></el-icon>
-            </div>
-            <div>
-              <h4 class="m-0 mb-1 text-[14px] text-[var(--el-text-color-primary)]">插件管理</h4>
-              <p class="m-0 text-[12px] text-[var(--el-text-color-secondary)]">暂停/恢复插件</p>
-            </div>
-          </el-card>
-        </el-col>
-      </el-row>
     </div>
 
-    <!-- 系统操作卡片列表 -->
-    <div>
-      <h3 class="flex items-center gap-2 text-[16px] font-bold text-[var(--el-text-color-primary)] mt-6 mb-4">
-        <el-icon><List /></el-icon>
-        系统操作
-      </h3>
-      <el-row :gutter="12">
-        <el-col
-          v-for="action in registeredActions"
-          :key="action.id"
-          :xs="24"
-          :sm="12"
-          :md="8"
-          :lg="6"
-        >
-          <el-card class="mb-3 h-full" shadow="hover">
-            <div class="flex items-center gap-2 mb-2">
-              <el-tag size="small" :type="getActionTagType(action.type)">
-                {{ action.type }}
-              </el-tag>
-              <span class="font-bold text-[14px] text-[var(--el-text-color-primary)]">{{ action.name }}</span>
-            </div>
-            <p class="text-[12px] text-[var(--el-text-color-regular)] my-2 min-h-8">{{ action.description }}</p>
-            <div class="flex justify-end">
-              <el-button
-                size="small"
-                type="primary"
-                @click="executeSystemAction(action)"
-                :disabled="!sessionStatus?.is_running"
+    <!-- 主要内容区 -->
+    <el-row :gutter="16">
+      <!-- 左侧：快捷操作 + 系统操作 -->
+      <el-col :xs="24" :lg="14">
+        <!-- 快捷操作区 -->
+        <div class="mb-4">
+          <div class="flex items-center gap-2 mb-3">
+            <el-icon class="text-[var(--el-color-primary)]"><Operation /></el-icon>
+            <span class="font-semibold text-sm text-[var(--el-text-color-primary)]">快捷操作</span>
+          </div>
+          <el-row :gutter="12">
+            <!-- 实时视频 -->
+            <el-col :xs="12" :sm="8" :md="6">
+              <div
+                class="flex flex-col items-center p-4 rounded-xl border border-[var(--el-border-color-lighter)] bg-[var(--el-bg-color)] cursor-pointer transition-all duration-200 mb-3 select-none group hover:-translate-y-1 hover:shadow-[0_4px_16px_rgba(0,0,0,0.1)] hover:border-[var(--el-color-primary-light-5)]"
+                @click="goToWebrtc"
               >
-                执行
-              </el-button>
+                <div class="w-10 h-10 rounded-lg flex items-center justify-center mb-2 text-white text-lg bg-gradient-to-br from-red-500 to-orange-500">
+                  <el-icon><VideoCamera /></el-icon>
+                </div>
+                <span class="text-sm font-medium text-[var(--el-text-color-primary)] mb-0.5">实时视频</span>
+                <span class="text-xs text-[var(--el-text-color-secondary)]">WebRTC 视频流</span>
+              </div>
+            </el-col>
+
+            <!-- 页面导航 -->
+            <el-col :xs="12" :sm="8" :md="6">
+              <div
+                class="flex flex-col items-center p-4 rounded-xl border border-[var(--el-border-color-lighter)] bg-[var(--el-bg-color)] transition-all duration-200 mb-3 select-none group"
+                :class="{ 'opacity-50 cursor-not-allowed': !sessionStatus?.is_running }"
+                @click="sessionStatus?.is_running && (showNavigateDialog = true)"
+              >
+                <div class="w-10 h-10 rounded-lg flex items-center justify-center mb-2 text-white text-lg bg-gradient-to-br from-violet-500 to-purple-600">
+                  <el-icon><Link /></el-icon>
+                </div>
+                <span class="text-sm font-medium text-[var(--el-text-color-primary)] mb-0.5">页面导航</span>
+                <span class="text-xs text-[var(--el-text-color-secondary)]">跳转到指定URL</span>
+              </div>
+            </el-col>
+
+            <!-- 页面截图 -->
+            <el-col :xs="12" :sm="8" :md="6">
+              <div
+                class="flex flex-col items-center p-4 rounded-xl border border-[var(--el-border-color-lighter)] bg-[var(--el-bg-color)] transition-all duration-200 mb-3 select-none group"
+                :class="{ 'opacity-50 cursor-not-allowed': !sessionStatus?.is_running, 'cursor-pointer hover:-translate-y-1 hover:shadow-[0_4px_16px_rgba(0,0,0,0.1)] hover:border-[var(--el-color-primary-light-5)]': sessionStatus?.is_running }"
+                @click="sessionStatus?.is_running && captureScreenshot()"
+              >
+                <div class="w-10 h-10 rounded-lg flex items-center justify-center mb-2 text-white text-lg bg-gradient-to-br from-pink-500 to-rose-500">
+                  <el-icon><Camera /></el-icon>
+                </div>
+                <span class="text-sm font-medium text-[var(--el-text-color-primary)] mb-0.5">页面截图</span>
+                <span class="text-xs text-[var(--el-text-color-secondary)]">捕获当前页面</span>
+              </div>
+            </el-col>
+
+            <!-- 执行JS -->
+            <el-col :xs="12" :sm="8" :md="6">
+              <div
+                class="flex flex-col items-center p-4 rounded-xl border border-[var(--el-border-color-lighter)] bg-[var(--el-bg-color)] transition-all duration-200 mb-3 select-none group"
+                :class="{ 'opacity-50 cursor-not-allowed': !sessionStatus?.is_running, 'cursor-pointer hover:-translate-y-1 hover:shadow-[0_4px_16px_rgba(0,0,0,0.1)] hover:border-[var(--el-color-primary-light-5)]': sessionStatus?.is_running }"
+                @click="sessionStatus?.is_running && (showJsDialog = true)"
+              >
+                <div class="w-10 h-10 rounded-lg flex items-center justify-center mb-2 text-white text-lg bg-gradient-to-br from-sky-400 to-cyan-500">
+                  <el-icon><Document /></el-icon>
+                </div>
+                <span class="text-sm font-medium text-[var(--el-text-color-primary)] mb-0.5">执行 JS</span>
+                <span class="text-xs text-[var(--el-text-color-secondary)]">运行脚本代码</span>
+              </div>
+            </el-col>
+
+            <!-- 暂停插件 -->
+            <el-col :xs="12" :sm="8" :md="6">
+              <div
+                class="flex flex-col items-center p-4 rounded-xl border border-[var(--el-border-color-lighter)] bg-[var(--el-bg-color)] transition-all duration-200 mb-3 select-none group"
+                :class="{ 'opacity-50 cursor-not-allowed': !sessionStatus?.is_running, 'cursor-pointer hover:-translate-y-1 hover:shadow-[0_4px_16px_rgba(0,0,0,0.1)] hover:border-[var(--el-color-primary-light-5)]': sessionStatus?.is_running }"
+                @click="sessionStatus?.is_running && togglePlugins()"
+              >
+                <div class="w-10 h-10 rounded-lg flex items-center justify-center mb-2 text-white text-lg bg-gradient-to-br from-emerald-400 to-teal-500">
+                  <el-icon><Setting /></el-icon>
+                </div>
+                <span class="text-sm font-medium text-[var(--el-text-color-primary)] mb-0.5">插件管理</span>
+                <span class="text-xs text-[var(--el-text-color-secondary)]">暂停/恢复插件</span>
+              </div>
+            </el-col>
+          </el-row>
+        </div>
+
+        <!-- 系统操作列表 -->
+        <div>
+          <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center gap-2">
+              <el-icon class="text-[var(--el-color-primary)]"><List /></el-icon>
+              <span class="font-semibold text-sm text-[var(--el-text-color-primary)]">系统操作</span>
+              <el-tag type="info" size="small" effect="plain">{{ registeredActions.length }}</el-tag>
             </div>
-          </el-card>
-        </el-col>
-      </el-row>
-      <el-empty v-if="registeredActions.length === 0" description="暂无系统操作" />
-    </div>
+            <el-button size="small" text @click="fetchRegisteredActions" :loading="loadingActions">
+              <el-icon><Refresh /></el-icon>
+            </el-button>
+          </div>
+
+          <el-scrollbar max-height="380px">
+            <div v-if="loadingActions" class="grid grid-cols-2 gap-2">
+              <el-skeleton v-for="i in 4" :key="i" :rows="2" animated />
+            </div>
+            <el-row v-else :gutter="10">
+              <el-col
+                v-for="action in registeredActions"
+                :key="action.id"
+                :xs="24"
+                :sm="12"
+              >
+                <div class="p-3 rounded-lg border border-[var(--el-border-color-lighter)] bg-[var(--el-bg-color)] transition-all duration-200 mb-2.5 hover:border-[var(--el-color-primary-light-5)] hover:bg-[var(--el-color-primary-light-9)]">
+                  <div class="flex items-start gap-2 mb-2">
+                    <el-tag size="small" :type="getActionTagType(action.type)" effect="plain" class="shrink-0 mt-0.5">
+                      {{ action.type }}
+                    </el-tag>
+                    <span class="font-medium text-sm text-[var(--el-text-color-primary)] leading-tight">{{ action.name }}</span>
+                  </div>
+                  <p class="text-xs text-[var(--el-text-color-secondary)] m-0 mb-2 line-clamp-2 min-h-[2rem]">
+                    {{ action.description || '暂无描述' }}
+                  </p>
+                  <div class="flex items-center justify-between">
+                    <code class="text-xs text-[var(--el-color-primary)] bg-[var(--el-color-primary-light-9)] px-1.5 py-0.5 rounded">{{ action.id }}</code>
+                    <el-button
+                      size="small"
+                      type="primary"
+                      @click="executeSystemAction(action)"
+                      :disabled="!sessionStatus?.is_running"
+                      :loading="executingActionId === action.id"
+                      plain
+                    >
+                      <el-icon><CaretRight /></el-icon>
+                      执行
+                    </el-button>
+                  </div>
+                </div>
+              </el-col>
+            </el-row>
+            <el-empty v-if="registeredActions.length === 0 && !loadingActions" description="暂无系统操作" :image-size="80" />
+          </el-scrollbar>
+        </div>
+      </el-col>
+
+      <!-- 右侧：截图预览 + 执行结果 -->
+      <el-col :xs="24" :lg="10">
+        <!-- 截图/预览区 -->
+        <el-card class="mb-4" shadow="never" :body-style="{ padding: '12px' }">
+          <template #header>
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2 text-sm font-medium">
+                <el-icon class="text-[var(--el-color-primary)]"><Monitor /></el-icon>
+                页面预览
+              </div>
+              <div class="flex gap-2">
+                <el-button
+                  v-if="screenshotUrl"
+                  size="small"
+                  :icon="Download"
+                  text
+                  @click="downloadScreenshot"
+                  title="下载截图"
+                />
+                <el-button
+                  v-if="screenshotUrl"
+                  size="small"
+                  :icon="ZoomIn"
+                  text
+                  @click="showScreenshotDialog = true"
+                  title="放大查看"
+                />
+                <el-button
+                  size="small"
+                  type="primary"
+                  :icon="Camera"
+                  text
+                  :disabled="!sessionStatus?.is_running"
+                  :loading="capturingScreenshot"
+                  @click="captureScreenshot"
+                  title="截图"
+                />
+              </div>
+            </div>
+          </template>
+          <div class="relative min-h-[160px] flex items-center justify-center bg-[var(--el-fill-color-darker)] rounded-lg overflow-hidden">
+            <img
+              v-if="screenshotUrl"
+              :src="screenshotUrl"
+              alt="页面截图"
+              class="max-w-full max-h-[280px] object-contain cursor-zoom-in"
+              @click="showScreenshotDialog = true"
+            />
+            <el-empty v-else :image-size="60" description="点击截图按钮获取画面" />
+            <div v-if="screenshotTimestamp" class="absolute bottom-1 right-2 text-xs text-white/60 bg-black/40 px-1.5 py-0.5 rounded">
+              {{ screenshotTimestamp }}
+            </div>
+          </div>
+        </el-card>
+
+        <!-- 最近执行结果 -->
+        <el-card v-if="lastActionResult" shadow="never" :body-style="{ padding: '12px' }">
+          <template #header>
+            <div class="flex items-center gap-2 text-sm font-medium">
+              <el-icon :class="lastActionResult.success ? 'text-green-500' : 'text-red-500'">
+                <component :is="lastActionResult.success ? CircleCheck : CircleClose" />
+              </el-icon>
+              上次执行结果
+              <el-tag :type="lastActionResult.success ? 'success' : 'danger'" size="small" effect="plain" class="ml-auto">
+                {{ lastActionResult.success ? '成功' : '失败' }}
+              </el-tag>
+            </div>
+          </template>
+          <el-descriptions :column="1" size="small" border>
+            <el-descriptions-item label="操作">
+              <span class="font-medium text-sm">{{ lastActionResult.action_name }}</span>
+            </el-descriptions-item>
+            <el-descriptions-item v-if="lastActionResult.execution_time != null" label="耗时">
+              {{ lastActionResult.execution_time.toFixed(2) }}s
+            </el-descriptions-item>
+          </el-descriptions>
+          <template v-if="lastActionResult.data">
+            <el-divider class="my-2" />
+            <pre class="bg-[var(--el-fill-color-light)] rounded p-2 text-xs overflow-x-auto m-0 max-h-[120px]">{{ JSON.stringify(lastActionResult.data, null, 2) }}</pre>
+          </template>
+          <template v-if="lastActionResult.error">
+            <el-divider class="my-2" />
+            <p class="text-xs text-[var(--el-color-danger)] bg-[var(--el-color-danger-light-9)] rounded p-2 m-0">{{ lastActionResult.error }}</p>
+          </template>
+        </el-card>
+      </el-col>
+    </el-row>
 
     <!-- 导航对话框 -->
-    <el-dialog v-model="showNavigateDialog" title="页面导航" width="500px">
-      <el-form :model="navigateForm" label-width="80px">
-        <el-form-item label="URL" required>
+    <el-dialog v-model="showNavigateDialog" title="页面导航" width="480px" align-center>
+      <el-form :model="navigateForm" @submit.prevent="handleNavigate">
+        <el-form-item label="目标 URL" required>
           <el-input
             v-model="navigateForm.url"
             placeholder="https://example.com"
             clearable
-          />
+            autofocus
+          >
+            <template #prefix>
+              <el-icon><Link /></el-icon>
+            </template>
+          </el-input>
+        </el-form-item>
+        <el-form-item label="等待加载">
+          <el-switch v-model="navigateForm.waitLoad" />
+          <span class="ml-2 text-xs text-[var(--el-text-color-secondary)]">等待页面完全加载</span>
         </el-form-item>
       </el-form>
       <template #footer>
         <el-button @click="showNavigateDialog = false">取消</el-button>
-        <el-button type="primary" @click="handleNavigate" :loading="navigating">
+        <el-button type="primary" @click="handleNavigate" :loading="navigating" :icon="Link">
           导航
         </el-button>
       </template>
     </el-dialog>
 
     <!-- JavaScript执行对话框 -->
-    <el-dialog v-model="showJsDialog" title="执行JavaScript" width="600px">
-      <el-form :model="jsForm" label-width="100px">
+    <el-dialog v-model="showJsDialog" title="执行 JavaScript" width="640px" align-center>
+      <el-alert class="mb-3" type="info" :closable="false" show-icon>
+        <template #title>
+          代码将在浏览器上下文中执行，使用 <code>return</code> 返回值
+        </template>
+      </el-alert>
+      <el-form :model="jsForm">
         <el-form-item label="代码" required>
           <el-input
             v-model="jsForm.code"
             type="textarea"
-            :rows="8"
-            placeholder="console.log('Hello World');"
+            :rows="10"
+            placeholder="// 示例: 获取页面标题&#10;return document.title;"
+            class="font-mono text-sm"
           />
         </el-form-item>
-        <el-form-item label="安全模式">
-          <el-switch v-model="jsForm.safeMode" />
-          <span class="ml-2 text-[12px] text-[var(--el-text-color-secondary)]">启用后将进行安全检查</span>
+        <el-form-item label="超时(秒)">
+          <el-input-number v-model="jsForm.timeout" :min="1" :max="60" />
         </el-form-item>
       </el-form>
       <template #footer>
         <el-button @click="showJsDialog = false">取消</el-button>
         <el-button type="primary" @click="handleExecuteJs" :loading="executingJs">
+          <el-icon><VideoPlay /></el-icon>
           执行
         </el-button>
       </template>
     </el-dialog>
 
-    <!-- 截图预览对话框 -->
-    <el-dialog v-model="showScreenshotDialog" title="页面截图" width="800px">
+    <!-- 截图放大对话框 -->
+    <el-dialog v-model="showScreenshotDialog" title="页面截图" width="90%" align-center>
       <div class="text-center">
-        <img v-if="screenshotUrl" :src="screenshotUrl" alt="截图" class="max-w-full max-h-[600px] border border-[var(--el-border-color-lighter)] rounded" />
+        <img
+          v-if="screenshotUrl"
+          :src="screenshotUrl"
+          alt="页面截图"
+          class="max-w-full border border-[var(--el-border-color-lighter)] rounded-lg shadow-md"
+        />
         <el-empty v-else description="暂无截图" />
       </div>
       <template #footer>
         <el-button @click="showScreenshotDialog = false">关闭</el-button>
-        <el-button type="primary" @click="downloadScreenshot" :disabled="!screenshotUrl">
+        <el-button type="primary" @click="downloadScreenshot" :disabled="!screenshotUrl" :icon="Download">
           下载截图
+        </el-button>
+      </template>
+    </el-dialog>
+
+    <!-- 执行系统操作 - 参数对话框 -->
+    <el-dialog
+      v-model="showActionParamDialog"
+      :title="`执行操作: ${pendingAction?.name}`"
+      width="520px"
+      align-center
+    >
+      <el-alert
+        v-if="pendingAction?.description"
+        class="mb-3"
+        type="info"
+        :closable="false"
+        :description="pendingAction.description"
+        show-icon
+      />
+      <div v-if="pendingAction && pendingAction.parameters && pendingAction.parameters.length > 0">
+        <el-form :model="actionParamForm" label-width="100px" size="default">
+          <el-form-item
+            v-for="param in pendingAction.parameters"
+            :key="param.name"
+            :label="param.name"
+            :required="param.required"
+          >
+            <el-input
+              v-model="actionParamForm[param.name]"
+              :placeholder="param.description || `请输入 ${param.name}`"
+            />
+            <div v-if="param.description" class="text-xs text-[var(--el-text-color-secondary)] mt-1">{{ param.description }}</div>
+          </el-form-item>
+        </el-form>
+      </div>
+      <div v-else>
+        <el-input
+          v-model="actionParamsJsonRaw"
+          type="textarea"
+          :rows="6"
+          placeholder='{"key": "value"}'
+          class="font-mono text-sm"
+        />
+        <div class="flex justify-end gap-2 mt-2">
+          <el-button size="small" @click="formatActionParamsJson">格式化</el-button>
+          <el-button size="small" @click="actionParamsJsonRaw = '{}'">清空</el-button>
+        </div>
+      </div>
+      <template #footer>
+        <el-button @click="showActionParamDialog = false">取消</el-button>
+        <el-button type="primary" @click="confirmExecuteSystemAction" :loading="executingSystemAction">
+          <el-icon><CaretRight /></el-icon>
+          执行
         </el-button>
       </template>
     </el-dialog>
@@ -242,23 +418,34 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { ElMessage } from 'element-plus'
+import { useRoute, useRouter } from 'vue-router'
+import { RouteName } from '@/models/router/index'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   Monitor,
   Refresh,
   VideoPlay,
-  Close,
   Operation,
   Link,
   Camera,
   Document,
   Setting,
-  List
+  List,
+  Key,
+  Connection,
+  Download,
+  ZoomIn,
+  CircleCheck,
+  CircleClose,
+  CaretRight,
+  SwitchButton,
+  VideoCamera
 } from '@element-plus/icons-vue'
 import { browserLiveControlApi } from '@/api/browser/browser_api'
 import type {
   ActionMetadataResponse,
-  BrowserSessionStatus
+  BrowserSessionStatus,
+  ActionResultResponse
 } from '@/types/browser-automation-api'
 
 // Props
@@ -269,55 +456,77 @@ const props = defineProps({
   }
 })
 
+// 路由
+const route = useRoute()
+const router = useRouter()
+
 // 状态管理
 const statusLoading = ref(false)
 const creatingSession = ref(false)
 const releasing = ref(false)
 const navigating = ref(false)
 const executingJs = ref(false)
+const loadingActions = ref(false)
+const capturingScreenshot = ref(false)
+const executingSystemAction = ref(false)
+const executingActionId = ref<string>('')
+
 const showNavigateDialog = ref(false)
 const showJsDialog = ref(false)
 const showScreenshotDialog = ref(false)
+const showActionParamDialog = ref(false)
 const screenshotUrl = ref('')
+const screenshotTimestamp = ref('')
 
 // 数据
 const sessionStatus = ref<BrowserSessionStatus | null>(null)
-const operationStatus = ref<any>(null)
 const registeredActions = ref<ActionMetadataResponse[]>([])
+const lastActionResult = ref<ActionResultResponse | null>(null)
+const pendingAction = ref<ActionMetadataResponse | null>(null)
+const actionParamForm = ref<Record<string, any>>({})
+const actionParamsJsonRaw = ref('{}')
 
 // 表单
-const navigateForm = ref({ url: '' })
-const jsForm = ref({ code: '', safeMode: true })
+const navigateForm = ref({ url: '', waitLoad: true })
+const jsForm = ref({ code: '', timeout: 30 })
 
-// 计算属性
-const statusText = computed(() => {
-  if (!sessionStatus.value) return '未知'
-  return sessionStatus.value.is_running ? '运行中' : '未启动'
-})
+// 获取生命周期状态颜色
+const getLifecycleTagType = (status: string) => {
+  const map: Record<string, any> = {
+    running: 'success',
+    initializing: 'warning',
+    paused: 'info',
+    stopping: 'warning',
+    stopped: 'info',
+    error: 'danger'
+  }
+  return map[status] || 'info'
+}
 
-const statusTagType = computed(() => {
-  if (!sessionStatus.value) return 'info'
-  return sessionStatus.value.is_running ? 'success' : 'info'
-})
+// 获取操作标签类型
+const getActionTagType = (type: string) => {
+  const typeMap: Record<string, any> = {
+    navigation: 'primary',
+    interaction: 'success',
+    extraction: 'warning',
+    utility: 'info'
+  }
+  return typeMap[type] || ''
+}
 
 // 获取浏览器状态
+// 注意：getOperationStatus（/control/session/operation/status）后端已删除，只保留 getBrowserSessionStatus
 const refreshStatus = async () => {
   statusLoading.value = true
   try {
-    const [sessionRes, operationRes] = await Promise.all([
-      browserLiveControlApi.getBrowserSessionStatus({ browser_id: props.browserId }),
-      browserLiveControlApi.getOperationStatus({ browser_id: props.browserId })
-    ])
-
+    console.log('[VisualControlPanel] getBrowserSessionStatus req:', { browser_id: props.browserId })
+    const sessionRes = await browserLiveControlApi.getBrowserSessionStatus({ browser_id: props.browserId })
+    console.log('[VisualControlPanel] getBrowserSessionStatus res:', sessionRes)
     if (sessionRes.code === 0 && sessionRes.data) {
       sessionStatus.value = sessionRes.data
     }
-    if (operationRes.code === 0 && operationRes.data) {
-      operationStatus.value = operationRes.data
-    }
   } catch (error) {
-    ElMessage.error('获取状态失败')
-    console.error(error)
+    console.error('[VisualControlPanel] 获取状态失败:', error)
   } finally {
     statusLoading.value = false
   }
@@ -344,26 +553,33 @@ const createSession = async () => {
   }
 }
 
-// 强制释放
-const forceRelease = async () => {
-  releasing.value = true
+// 强制停止会话（触发系统清理，stopManualOperation 后端已删除）
+const handleForceRelease = async () => {
   try {
-    const res = await browserLiveControlApi.forceReleaseBrowser(props.browserId)
+    await ElMessageBox.confirm(
+      '确定要停止当前浏览器会话吗？这将触发系统清理，中断所有正在进行的操作。',
+      '停止会话',
+      { confirmButtonText: '确定停止', cancelButtonText: '取消', type: 'warning' }
+    )
+    releasing.value = true
+    const res = await browserLiveControlApi.triggerSystemCleanup()
     if (res.code === 0) {
-      ElMessage.success('浏览器已释放')
+      ElMessage.success('清理完成，会话已停止')
       await refreshStatus()
     } else {
-      ElMessage.error(res.msg || '释放失败')
+      ElMessage.error(res.msg || '停止失败')
     }
-  } catch (error) {
-    ElMessage.error('网络错误')
-    console.error(error)
+  } catch (e: any) {
+    if (e !== 'cancel') {
+      ElMessage.error('操作失败')
+      console.error(e)
+    }
   } finally {
     releasing.value = false
   }
 }
 
-// 页面导航
+// 页面导航 - 通过 executeAction 接口
 const handleNavigate = async () => {
   if (!navigateForm.value.url) {
     ElMessage.warning('请输入URL')
@@ -372,34 +588,71 @@ const handleNavigate = async () => {
 
   navigating.value = true
   try {
-    const res = await browserLiveControlApi.navigateToUrl({
+    const res = await browserLiveControlApi.executeAction({
       browser_id: props.browserId,
-      request: { url: navigateForm.value.url }
+      req: {
+        action_id: 'navigate',
+        params: {
+          url: navigateForm.value.url,
+          wait_for_load: navigateForm.value.waitLoad
+        }
+      }
     })
-    if (res.code === 0) {
-      // 静默成功，仅在失败时提示
+    if (res.code === 0 && res.data?.success) {
+      ElMessage.success('导航成功')
       showNavigateDialog.value = false
       navigateForm.value.url = ''
+      lastActionResult.value = res.data
+      // 延迟截图
+      setTimeout(captureScreenshot, 1500)
     } else {
-      ElMessage.error(res.msg || '导航失败')
+      ElMessage.error(res.data?.error || res.msg || '导航失败')
     }
-  } catch (error) {
-    ElMessage.error('网络错误')
+  } catch (error: any) {
+    ElMessage.error(error.message || '网络错误')
     console.error(error)
   } finally {
     navigating.value = false
   }
 }
 
-// 截图
+// 截图 - 通过 executeAction 接口
 const captureScreenshot = async () => {
+  if (!sessionStatus.value?.is_running) return
+  capturingScreenshot.value = true
   try {
-    const blob = await browserLiveControlApi.getScreenshot(props.browserId)
-    screenshotUrl.value = URL.createObjectURL(blob)
-    showScreenshotDialog.value = true
-  } catch (error) {
-    ElMessage.error('截图失败')
+    const res = await browserLiveControlApi.executeAction({
+      browser_id: props.browserId,
+      req: {
+        action_id: 'screenshot',
+        params: {}
+      }
+    })
+    if (res.code === 0 && res.data) {
+      // screenshot action 返回 base64 图像数据
+      if (res.data.data && typeof res.data.data === 'string') {
+        const imgData = res.data.data.startsWith('data:')
+          ? res.data.data
+          : `data:image/png;base64,${res.data.data}`
+        screenshotUrl.value = imgData
+        screenshotTimestamp.value = new Date().toLocaleTimeString('zh-CN')
+      } else if (res.data.data && typeof res.data.data === 'object') {
+        const d = res.data.data as any
+        if (d.image_base64 || d.screenshot) {
+          const raw = d.image_base64 || d.screenshot
+          screenshotUrl.value = raw.startsWith('data:') ? raw : `data:image/png;base64,${raw}`
+          screenshotTimestamp.value = new Date().toLocaleTimeString('zh-CN')
+        }
+      }
+      lastActionResult.value = res.data
+    } else {
+      ElMessage.error(res.msg || '截图失败')
+    }
+  } catch (error: any) {
+    ElMessage.error(error.message || '截图失败')
     console.error(error)
+  } finally {
+    capturingScreenshot.value = false
   }
 }
 
@@ -412,7 +665,7 @@ const downloadScreenshot = () => {
   a.click()
 }
 
-// 执行JavaScript
+// 执行JavaScript - 通过 executeAction 接口
 const handleExecuteJs = async () => {
   if (!jsForm.value.code) {
     ElMessage.warning('请输入JavaScript代码')
@@ -421,25 +674,28 @@ const handleExecuteJs = async () => {
 
   executingJs.value = true
   try {
-    const api = jsForm.value.safeMode
-      ? browserLiveControlApi.safeExecuteJavaScript
-      : browserLiveControlApi.executeJavaScript
-
-    const res = await api({
+    const res = await browserLiveControlApi.executeAction({
       browser_id: props.browserId,
-      request: { code: jsForm.value.code }
+      req: {
+        action_id: 'execute_javascript',
+        params: {
+          code: jsForm.value.code,
+          timeout: jsForm.value.timeout
+        }
+      }
     })
 
-    if (res.code === 0) {
-      // 静默成功，结果输出到控制台
-      console.log('JS执行结果:', res.data)
+    if (res.code === 0 && res.data?.success) {
+      ElMessage.success('执行成功')
+      lastActionResult.value = res.data
       showJsDialog.value = false
       jsForm.value.code = ''
     } else {
-      ElMessage.error(res.msg || '执行失败')
+      ElMessage.error(res.data?.error || res.msg || '执行失败')
+      if (res.data) lastActionResult.value = res.data
     }
-  } catch (error) {
-    ElMessage.error('网络错误')
+  } catch (error: any) {
+    ElMessage.error(error.message || '网络错误')
     console.error(error)
   } finally {
     executingJs.value = false
@@ -450,8 +706,9 @@ const handleExecuteJs = async () => {
 const togglePlugins = async () => {
   try {
     const res = await browserLiveControlApi.pausePlugins({ browser_id: props.browserId })
-    if (res.code !== 0) {
-      // 仅在失败时提示
+    if (res.code === 0) {
+      ElMessage.success('插件操作成功')
+    } else {
       ElMessage.error(res.msg || '操作失败')
     }
   } catch (error) {
@@ -460,38 +717,109 @@ const togglePlugins = async () => {
   }
 }
 
-// 获取操作标签类型
-const getActionTagType = (type: string) => {
-  const typeMap: Record<string, any> = {
-    navigation: 'primary',
-    interaction: 'success',
-    extraction: 'warning',
-    utility: 'info'
+// 系统操作 - 打开参数配置
+const executeSystemAction = (action: ActionMetadataResponse) => {
+  if (!sessionStatus.value?.is_running) {
+    ElMessage.warning('请先启动浏览器会话')
+    return
   }
-  return typeMap[type] || ''
+  pendingAction.value = action
+  actionParamForm.value = {}
+  actionParamsJsonRaw.value = '{}'
+  // 预填充默认参数
+  if (action.parameters?.length) {
+    action.parameters.forEach((p: any) => {
+      actionParamForm.value[p.name] = p.default ?? ''
+    })
+  }
+  showActionParamDialog.value = true
 }
 
-// 执行系统操作
-const executeSystemAction = async (action: ActionMetadataResponse) => {
-  ElMessage.info(`执行操作: ${action.name}`)
-  // TODO: 实现具体操作执行逻辑
+// 确认执行系统操作
+const confirmExecuteSystemAction = async () => {
+  if (!pendingAction.value) return
+  executingSystemAction.value = true
+  executingActionId.value = pendingAction.value.id
+
+  try {
+    let params: Record<string, any> = {}
+    if (pendingAction.value.parameters?.length) {
+      params = { ...actionParamForm.value }
+    } else {
+      try {
+        params = JSON.parse(actionParamsJsonRaw.value || '{}')
+      } catch {
+        ElMessage.error('JSON 格式错误')
+        return
+      }
+    }
+
+    const res = await browserLiveControlApi.executeAction({
+      browser_id: props.browserId,
+      req: {
+        action_id: pendingAction.value.id,
+        params
+      }
+    })
+
+    if (res.code === 0 && res.data) {
+      lastActionResult.value = res.data
+      showActionParamDialog.value = false
+      if (res.data.success) {
+        ElMessage.success(`操作 "${pendingAction.value.name}" 执行成功`)
+      } else {
+        ElMessage.error(res.data.error || '执行失败')
+      }
+    } else {
+      ElMessage.error(res.msg || '执行失败')
+    }
+  } catch (error: any) {
+    ElMessage.error(error.message || '执行失败')
+    console.error(error)
+  } finally {
+    executingSystemAction.value = false
+    executingActionId.value = ''
+  }
+}
+
+// 格式化操作参数 JSON
+const formatActionParamsJson = () => {
+  try {
+    const obj = JSON.parse(actionParamsJsonRaw.value || '{}')
+    actionParamsJsonRaw.value = JSON.stringify(obj, null, 2)
+  } catch {
+    ElMessage.error('JSON 格式错误')
+  }
 }
 
 // 获取系统操作列表
 const fetchRegisteredActions = async () => {
+  loadingActions.value = true
   try {
+    console.log('[VisualControlPanel] listRegisteredActions req')
     const res = await browserLiveControlApi.listRegisteredActions()
+    console.log('[VisualControlPanel] listRegisteredActions res:', res)
     if (res.code === 0 && res.data) {
       registeredActions.value = res.data
     }
   } catch (error) {
-    console.error('获取系统操作失败:', error)
+    console.error('[VisualControlPanel] 获取系统操作失败:', error)
+  } finally {
+    loadingActions.value = false
   }
 }
 
 // 初始化
+// 跳转到实时控制 tab
+const goToWebrtc = () => {
+  router.push({ name: RouteName.BROWSER_CONSOLE_WEBRTC, params: { browserId: route.params.browserId } })
+}
+
 onMounted(() => {
+  console.log('[VisualControlPanel] mounted, browserId:', props.browserId)
   refreshStatus()
   fetchRegisteredActions()
 })
 </script>
+
+

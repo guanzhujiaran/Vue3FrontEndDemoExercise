@@ -1,8 +1,4 @@
 <!--
- * @Author: 星瞳 1944637830@qq.com
- * @Date: 2024-12-15 00:00:00
- * @LastEditors: 星瞳 1944637830@qq.com
- * @LastEditTime: 2024-12-24 00:00:00
  * @FilePath: \Vue3FrontEndDemoExercise\src\views\BrowserManagementView.vue
  * @Description: RPA浏览器控制台 - 统一管理浏览器自动化操作和调试
 -->
@@ -11,47 +7,38 @@
     <!-- 标签页导航 -->
     <el-tabs v-model="activeTab" type="card" class="mb-4 flex-1">
       <el-tab-pane label="RPA浏览器控制台" name="unified" :lazy="true">
-        <FingerprintList 
-          :fingerprints="fingerprints" 
-          :loading="loading" 
-          @refresh="loadFingerprints"
-          @edit="handleEditFingerprint" 
-          @delete="handleDeleteFingerprint" 
-          @start="handleQuickStart"
-          @create="handleCreateFingerprint" 
-        />
+    <FingerprintList 
+      :fingerprints="fingerprints" 
+      :loading="loading" 
+      @refresh="loadFingerprints"
+      @view="handleViewFingerprint"
+      @edit="handleEditFingerprint" 
+      @delete="handleDeleteFingerprint" 
+      @start="handleQuickStart"
+      @create="handleCreateFingerprint" 
+      @quick-edit="handleQuickEdit"
+    />
       </el-tab-pane>
       <el-tab-pane label="全局配置" name="global" :lazy="true">
         <GlobalConfigManagement />
       </el-tab-pane>
     </el-tabs>
 
-    <!-- 浏览器调试面板对话框 -->
-    <el-dialog 
-      v-model="showDebugPanel" 
-      title="浏览器控制台"
-      width="95%"
-      top="2vh"
-      destroy-on-close
-      :close-on-click-modal="false"
-    >
-      <BrowserDebugPanel 
-        v-if="showDebugPanel && selectedFingerprint"
-        :browser-id="String(selectedFingerprint.id)" 
-      />
-    </el-dialog>
-
     <!-- 通知配置Modal -->
     <NotifyConfigModal v-model="showNotifyConfig" :fingerprint="selectedFingerprint" @refresh="loadFingerprints" />
+
+    <!-- 指纹详情Dialog -->
+    <FingerprintDetailDialog v-model:visible="showDetailDialog" :fingerprint="selectedFingerprint" />
 
     <!-- 指纹编辑/新建Modal -->
     <el-dialog 
       v-model="showEditDialog" 
-      :title="isEditMode ? `编辑指纹 - ${selectedFingerprint?.id_str || selectedFingerprint?.id}` : '新建指纹'"
-      width="800px" 
+      :title="isEditMode ? `编辑指纹 - ${selectedFingerprint?.custom_name || selectedFingerprint?.id_str || selectedFingerprint?.id}` : '新建浏览器指纹'"
+      width="820px"
       destroy-on-close
       :close-on-click-modal="false"
       @closed="handleDialogClosed"
+      align-center
     >
       <FingerprintEditForm 
         ref="editFormRef" 
@@ -62,12 +49,25 @@
       />
       
       <template #footer>
-        <el-text class="flex justify-end gap-2" tag="span">
-          <el-button @click="showEditDialog = false">取消</el-button>
-          <el-button type="primary" @click="handleSubmitForm" :loading="submitLoading">
-            {{ isEditMode ? '保存' : '创建' }}
+        <div class="flex justify-between items-center w-full">
+          <el-button 
+            v-if="!isEditMode"
+            type="info" 
+            plain
+            @click="handleGenerateRandom"
+            :loading="generatingFingerprint"
+          >
+            <el-icon><MagicStick /></el-icon>
+            随机生成指纹
           </el-button>
-        </el-text>
+          <div v-else></div>
+          <div class="flex gap-2">
+            <el-button @click="showEditDialog = false">取消</el-button>
+            <el-button type="primary" @click="handleSubmitForm" :loading="submitLoading">
+              {{ isEditMode ? '保存更改' : '创建指纹' }}
+            </el-button>
+          </div>
+        </div>
       </template>
     </el-dialog>
   </FlexContainer>
@@ -75,32 +75,38 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { useDebounceFn } from '@vueuse/core'
 import biliMessage from '@/utils/message'
 import FingerprintList from '@/components/browser/FingerprintList.vue'
 import FingerprintEditForm from '@/components/browser/FingerprintEditForm.vue'
 import GlobalConfigManagement from '@/components/browser/GlobalConfigManagement.vue'
-import BrowserDebugPanel from '@/components/browser/BrowserDebugPanel.vue'
 import NotifyConfigModal from '@/components/browser/NotifyConfigModal.vue'
+import FingerprintDetailDialog from '@/components/browser/FingerprintDetailDialog.vue'
 import browserApi from '@/api/browser/browser_api'
 import { businessHandler } from '@/utils/businessHandler'
+import { MagicStick } from '@element-plus/icons-vue'
+import { RouteName } from '@/models/router/index'
+import { ElMessageBox } from 'element-plus'
 import type { 
   UserBrowserInfoListParams, 
   UserBrowserInfoReadResp,
   BrowserFingerprintUpsertParams 
 } from '@/types/browser-automation-api'
 
+const router = useRouter()
 const activeTab = ref('unified')
 const loading = ref(false)
 const fingerprints = ref<UserBrowserInfoReadResp[]>([])
 
 // Modal控制
-const showDebugPanel = ref(false)
 const showNotifyConfig = ref(false)
 const showEditDialog = ref(false)
+const showDetailDialog = ref(false)
 const selectedFingerprint = ref<UserBrowserInfoReadResp | null>(null)
 const isEditMode = ref(false)
 const submitLoading = ref(false)
+const generatingFingerprint = ref(false)
 const editFormRef = ref<InstanceType<typeof FingerprintEditForm>>()
 const generatedFingerprintData = ref<any>(null)
 
@@ -109,12 +115,12 @@ const loadFingerprints = async () => {
   loading.value = true
   const params: UserBrowserInfoListParams = {
     page: 1,
-    per_page: 20
+    per_page: 50
   }
 
   const result = await businessHandler(browserApi.listFingerprint(params), {
     errorMessage: '加载指纹列表失败',
-    showSuccessToast: false // 查询操作不显示成功提示
+    showSuccessToast: false
   })
 
   if (result.success && result.data) {
@@ -126,10 +132,37 @@ const loadFingerprints = async () => {
 
 const debouncedLoadFingerprints = useDebounceFn(loadFingerprints, 500)
 
-// 处理快速启动（打开调试面板）
+// 处理快速启动（跳转到控制台独立页面）
 const handleQuickStart = (fingerprint: UserBrowserInfoReadResp) => {
+  const browserId = String(fingerprint.id_str || fingerprint.id)
+  router.push({ name: RouteName.BROWSER_CONSOLE, params: { browserId } })
+}
+
+// 处理查看详情
+const handleViewFingerprint = (fingerprint: UserBrowserInfoReadResp) => {
   selectedFingerprint.value = fingerprint
-  showDebugPanel.value = true
+  showDetailDialog.value = true
+}
+
+// 处理快速修改 custom_name
+const handleQuickEdit = async (browserId: string, newName: string) => {
+  try {
+    const result = await businessHandler(
+      browserApi.renameFingerprint({ id: browserId, custom_name: newName }),
+      { successMessage: '名称修改成功', errorMessage: '名称修改失败' }
+    )
+    if (result.success) {
+      // 更新本地列表
+      const idx = fingerprints.value.findIndex(
+        (f) => String(f.id_str || f.id) === String(browserId)
+      )
+      if (idx !== -1) {
+        fingerprints.value[idx] = { ...fingerprints.value[idx], custom_name: newName }
+      }
+    }
+  } catch {
+    biliMessage.error('名称修改失败')
+  }
 }
 
 // 处理编辑指纹
@@ -142,6 +175,22 @@ const handleEditFingerprint = (fingerprint: UserBrowserInfoReadResp) => {
 
 // 处理删除指纹
 const handleDeleteFingerprint = async (fingerprint: UserBrowserInfoReadResp) => {
+  try {
+    await ElMessageBox.confirm(
+      `确定要删除指纹「${fingerprint.custom_name || fingerprint.id_str || fingerprint.id}」吗？删除后无法恢复！`,
+      '确认删除',
+      {
+        confirmButtonText: '确定删除',
+        cancelButtonText: '取消',
+        type: 'warning',
+        confirmButtonClass: 'el-button--danger'
+      }
+    )
+  } catch {
+    // 用户取消删除
+    return
+  }
+
   try {
     const result = await businessHandler(
       browserApi.deleteFingerprint({
@@ -172,34 +221,17 @@ const handleSaveFingerprint = async (data: BrowserFingerprintUpsertParams) => {
   submitLoading.value = true
   
   try {
-    if (isEditMode.value) {
-      // 编辑模式：使用upsert接口
-      const result = await businessHandler(
-        browserApi.upsertFingerprint(data),
-        {
-          successMessage: '指纹更新成功',
-          errorMessage: '指纹更新失败'
-        }
-      )
-      
-      if (result.success) {
-        showEditDialog.value = false
-        await loadFingerprints()
+    const result = await businessHandler(
+      browserApi.upsertFingerprint(data),
+      {
+        successMessage: isEditMode.value ? '指纹更新成功' : '指纹创建成功',
+        errorMessage: isEditMode.value ? '指纹更新失败' : '指纹创建失败'
       }
-    } else {
-      // 新建模式：使用upsert接口
-      const result = await businessHandler(
-        browserApi.upsertFingerprint(data),
-        {
-          successMessage: '指纹创建成功',
-          errorMessage: '指纹创建失败'
-        }
-      )
-      
-      if (result.success) {
-        showEditDialog.value = false
-        await loadFingerprints()
-      }
+    )
+    
+    if (result.success) {
+      showEditDialog.value = false
+      await loadFingerprints()
     }
   } catch (error) {
     console.error('保存指纹失败:', error)
@@ -218,6 +250,7 @@ const handleSubmitForm = async () => {
 
 // 处理生成随机指纹
 const handleGenerateRandom = async () => {
+  generatingFingerprint.value = true
   try {
     const result = await businessHandler(
       browserApi.genRandFingerprint({}),
@@ -233,6 +266,8 @@ const handleGenerateRandom = async () => {
   } catch (error) {
     console.error('生成随机指纹失败:', error)
     biliMessage.error('生成随机指纹失败，请重试')
+  } finally {
+    generatingFingerprint.value = false
   }
 }
 
@@ -255,4 +290,5 @@ onMounted(() => {
   debouncedLoadFingerprints()
 })
 </script>
+
 

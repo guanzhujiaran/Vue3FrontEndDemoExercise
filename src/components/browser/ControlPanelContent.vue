@@ -83,15 +83,15 @@
         <div v-if="sessionStatus" class="border-t border-[var(--el-border-color-lighter)] pt-4">
           <el-descriptions :column="1" border size="small">
             <el-descriptions-item label="会话ID">
-              <span class="text-xs">{{ sessionStatus.session_id }}</span>
+              <span class="text-xs">{{ sessionStatus.session_id || '未知' }}</span>
             </el-descriptions-item>
             <el-descriptions-item label="生命周期状态">
               <el-tag :type="getSessionStatusType(sessionStatus)" size="small">
-                {{ sessionStatus.lifecycle_status }}
+                {{ sessionStatus.lifecycle_state || sessionStatus.lifecycle_status || '未知' }}
               </el-tag>
             </el-descriptions-item>
             <el-descriptions-item label="连接数">
-              {{ sessionStatus.connected_clients }}
+              {{ sessionStatus.active_connections || sessionStatus.connected_clients || 0 }}
             </el-descriptions-item>
             <el-descriptions-item label="创建时间">
               {{ formatTime(sessionStatus.created_at) }}
@@ -359,8 +359,9 @@ const formatTime = (time: string | undefined) => {
   return new Date(time).toLocaleString('zh-CN')
 }
 
-const getSessionStatusType = (status: BrowserSessionStatus) => {
+const getSessionStatusType = (status: any) => {
   const typeMap: Record<string, 'primary' | 'success' | 'warning' | 'danger' | 'info'> = {
+    active: 'success',
     initializing: 'info',
     running: 'success',
     paused: 'warning',
@@ -368,6 +369,6 @@ const getSessionStatusType = (status: BrowserSessionStatus) => {
     stopped: 'info',
     error: 'danger'
   }
-  return typeMap[status.lifecycle_status] || 'info'
+  return typeMap[status.lifecycle_state || status.lifecycle_status] || 'info'
 }
 </script>

@@ -28,7 +28,7 @@
       size="default"
     >
       <!-- 基本信息 -->
-      <el-card class="form-section mb-4" shadow="never" style="--el-card-header-padding: 1rem 1.25rem; --el-card-body-padding: 1.25rem; border-bottom: 1px solid var(--el-border-color-light); background-color: var(--el-bg-color-page);">
+      <el-card class="form-section mb-4" shadow="never">
         <template #header>
           <div class="flex items-center gap-2 font-semibold text-[var(--el-text-color-primary)] [&_.el-icon]:text-[var(--el-color-primary)]">
             <el-icon><Monitor /></el-icon>
@@ -114,7 +114,7 @@
       </el-card>
 
       <!-- GPU信息 -->
-      <el-card class="form-section mb-4" shadow="never" style="--el-card-header-padding: 1rem 1.25rem; --el-card-body-padding: 1.25rem; border-bottom: 1px solid var(--el-border-color-light); background-color: var(--el-bg-color-page);">
+      <el-card class="form-section mb-4" shadow="never">
         <template #header>
           <div class="flex items-center gap-2 font-semibold text-[var(--el-text-color-primary)] [&_.el-icon]:text-[var(--el-color-primary)]">
             <el-icon><Picture /></el-icon>
@@ -153,7 +153,7 @@
       </el-card>
 
       <!-- 语言和地区 -->
-      <el-card class="form-section mb-4" shadow="never" style="--el-card-header-padding: 1rem 1.25rem; --el-card-body-padding: 1.25rem; border-bottom: 1px solid var(--el-border-color-light); background-color: var(--el-bg-color-page);">
+      <el-card class="form-section mb-4" shadow="never">
         <template #header>
           <div class="flex items-center gap-2 font-semibold text-[var(--el-text-color-primary)] [&_.el-icon]:text-[var(--el-color-primary)]">
             <el-icon><Location /></el-icon>
@@ -209,7 +209,7 @@
       </el-card>
 
       <!-- 代理设置 -->
-      <el-card class="form-section mb-4" shadow="never" style="--el-card-header-padding: 1rem 1.25rem; --el-card-body-padding: 1.25rem; border-bottom: 1px solid var(--el-border-color-light); background-color: var(--el-bg-color-page);">
+      <el-card class="form-section mb-4" shadow="never">
         <template #header>
           <div class="flex items-center gap-2 font-semibold text-[var(--el-text-color-primary)] [&_.el-icon]:text-[var(--el-color-primary)]">
             <el-icon><Connection /></el-icon>

@@ -88,6 +88,7 @@ declare module 'vue' {
     ElMenu: typeof import('element-plus/es')['ElMenu']
     ElMenuItem: typeof import('element-plus/es')['ElMenuItem']
     ElOption: typeof import('element-plus/es')['ElOption']
+    ElOptionGroup: typeof import('element-plus/es')['ElOptionGroup']
     ElPageHeader: typeof import('element-plus/es')['ElPageHeader']
     ElPagination: typeof import('element-plus/es')['ElPagination']
     ElPopconfirm: typeof import('element-plus/es')['ElPopconfirm']
@@ -96,6 +97,7 @@ declare module 'vue' {
     ElRadioGroup: typeof import('element-plus/es')['ElRadioGroup']
     ElRow: typeof import('element-plus/es')['ElRow']
     ElScrollbar: typeof import('element-plus/es')['ElScrollbar']
+    ElSegmented: typeof import('element-plus/es')['ElSegmented']
     ElSelect: typeof import('element-plus/es')['ElSelect']
     ElSkeleton: typeof import('element-plus/es')['ElSkeleton']
     ElSlider: typeof import('element-plus/es')['ElSlider']
@@ -201,6 +203,7 @@ declare module 'vue' {
     UserCenterDefaultPanel: typeof import('./components/opus-detail/RightPannel/PannelItems/SettingComponent/UserCenterDefaultPanel.vue')['default']
     VideoPlayer: typeof import('./components/browser/RealTimeControlModal/VideoPlayer.vue')['default']
     VisualControlPanel: typeof import('./components/browser/VisualControlPanel.vue')['default']
+    WebRTCStreamPanel: typeof import('./components/browser/WebRTCStreamPanel.vue')['default']
   }
   export interface GlobalDirectives {
     vLoading: typeof import('element-plus/es')['ElLoadingDirective']
@@ -285,6 +288,7 @@ declare global {
   const ElMenu: typeof import('element-plus/es')['ElMenu']
   const ElMenuItem: typeof import('element-plus/es')['ElMenuItem']
   const ElOption: typeof import('element-plus/es')['ElOption']
+  const ElOptionGroup: typeof import('element-plus/es')['ElOptionGroup']
   const ElPageHeader: typeof import('element-plus/es')['ElPageHeader']
   const ElPagination: typeof import('element-plus/es')['ElPagination']
   const ElPopconfirm: typeof import('element-plus/es')['ElPopconfirm']
@@ -293,6 +297,7 @@ declare global {
   const ElRadioGroup: typeof import('element-plus/es')['ElRadioGroup']
   const ElRow: typeof import('element-plus/es')['ElRow']
   const ElScrollbar: typeof import('element-plus/es')['ElScrollbar']
+  const ElSegmented: typeof import('element-plus/es')['ElSegmented']
   const ElSelect: typeof import('element-plus/es')['ElSelect']
   const ElSkeleton: typeof import('element-plus/es')['ElSkeleton']
   const ElSlider: typeof import('element-plus/es')['ElSlider']
@@ -398,4 +403,5 @@ declare global {
   const UserCenterDefaultPanel: typeof import('./components/opus-detail/RightPannel/PannelItems/SettingComponent/UserCenterDefaultPanel.vue')['default']
   const VideoPlayer: typeof import('./components/browser/RealTimeControlModal/VideoPlayer.vue')['default']
   const VisualControlPanel: typeof import('./components/browser/VisualControlPanel.vue')['default']
+  const WebRTCStreamPanel: typeof import('./components/browser/WebRTCStreamPanel.vue')['default']
 }

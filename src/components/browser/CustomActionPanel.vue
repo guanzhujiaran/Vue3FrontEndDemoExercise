@@ -432,14 +432,16 @@ const formRules: FormRules = {
 // 检查浏览器运行状态
 const checkBrowserStatus = async () => {
   try {
+    console.log('[CustomActionPanel] getBrowserSessionStatus req:', { browser_id: props.browserId })
     const res = await browserLiveControlApi.getBrowserSessionStatus({
       browser_id: props.browserId
     })
+    console.log('[CustomActionPanel] getBrowserSessionStatus res:', res)
     if (res.code === 0 && res.data) {
       isBrowserRunning.value = res.data.is_running
     }
   } catch (error) {
-    console.error(error)
+    console.error('[CustomActionPanel] getBrowserSessionStatus error:', error)
   }
 }
 
@@ -447,7 +449,9 @@ const checkBrowserStatus = async () => {
 const fetchCustomActions = async (silent = false) => {
   loading.value = true
   try {
+    console.log('[CustomActionPanel] listCustomActions req')
     const res = await browserLiveControlApi.listCustomActions()
+    console.log('[CustomActionPanel] listCustomActions res:', res)
     if (res.code === 0 && res.data) {
       customActions.value = res.data
     } else if (!silent) {
@@ -457,7 +461,7 @@ const fetchCustomActions = async (silent = false) => {
     if (!silent) {
       ElMessage.error(error.message || '获取操作列表失败')
     }
-    console.error(error)
+    console.error('[CustomActionPanel] listCustomActions error:', error)
   } finally {
     loading.value = false
   }
@@ -466,12 +470,14 @@ const fetchCustomActions = async (silent = false) => {
 // 获取系统操作列表
 const fetchRegisteredActions = async () => {
   try {
+    console.log('[CustomActionPanel] listRegisteredActions req')
     const res = await browserLiveControlApi.listRegisteredActions()
+    console.log('[CustomActionPanel] listRegisteredActions res:', res)
     if (res.code === 0 && res.data) {
       registeredActions.value = res.data
     }
   } catch (error) {
-    console.error(error)
+    console.error('[CustomActionPanel] listRegisteredActions error:', error)
   }
 }
 
@@ -736,6 +742,7 @@ const formatDate = (dateStr: string) => {
 
 // 初始化
 onMounted(() => {
+  console.log('[CustomActionPanel] mounted, browserId:', props.browserId)
   fetchCustomActions()
   fetchRegisteredActions()
   checkBrowserStatus()

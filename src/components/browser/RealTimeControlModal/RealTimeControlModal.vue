@@ -29,14 +29,8 @@
 
             <!-- 右侧：高级控制面板 -->
             <div class="p-4 overflow-y-auto">
-                <!-- JavaScript执行 -->
-                <JavaScriptPanel @execute="executeJavaScript" @safe-execute="safeExecuteJavaScript" />
-
                 <!-- 点击操作 -->
                 <ClickPanel @perform-click="performClick" />
-
-                <!-- 执行结果 -->
-                <ResultPanel :result="executionResult" @clear="clearResult" />
             </div>
         </div>
 
@@ -58,9 +52,7 @@ import { businessHandler } from '@/utils/businessHandler'
 import type { UserBrowserInfoReadResp } from '@/types/browser-automation-api'
 import VideoPlayer from './VideoPlayer.vue'
 import LogPanel from './LogPanel.vue'
-import JavaScriptPanel from './JavaScriptPanel.vue'
 import ClickPanel from './ClickPanel.vue'
-import ResultPanel from './ResultPanel.vue'
 
 interface Props {
     modelValue: boolean
@@ -143,7 +135,7 @@ let pollingTimer: number | null = null
 let heartbeatTimer: number | null = null
 const HEARTBEAT_INTERVAL = 30000  // 心跳间隔：30秒
 
-const executionResult = ref('')
+
 
 // 重连相关状态
 const reconnectAttempts = ref(0)  // 重连次数
@@ -201,22 +193,6 @@ const resetSessionState = () => {
     reconnectAttempts.value = 0
     isReconnecting.value = false
     reconnectError.value = ''
-}
-
-// Blob 转换为 base64 辅助函数
-const blobToBase64 = (blob: Blob): Promise<string> => {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader()
-        reader.onloadend = () => {
-            if (reader.result) {
-                resolve(reader.result as string)
-            } else {
-                reject(new Error('Failed to convert blob to base64'))
-            }
-        }
-        reader.onerror = () => reject(new Error('Failed to read blob'))
-        reader.readAsDataURL(blob)
-    })
 }
 
 // 添加日志
@@ -1084,7 +1060,7 @@ const stopVideoStreamWithBlackScreen = () => {
     }
 }
 
-// 截图
+// 截图 - 改用 executeAction 接口
 const takeScreenshot = async () => {
     if (!currentFingerprint.value) return
 
@@ -1092,42 +1068,33 @@ const takeScreenshot = async () => {
         console.log('📸 开始截图...')
         addLog('开始截图', 'info')
 
-        const blob = await browserLiveControlApi.getScreenshot({
+        const res = await browserLiveControlApi.executeAction({
             browser_id: currentFingerprint.value.id_str,
-            request: { quality: 80 }
+            req: { action_id: 'screenshot', params: {} }
         })
 
-        console.log('📸 截图返回的 Blob:', blob)
-        console.log('📸 Blob type:', blob.type)
-        console.log('📸 Blob size:', blob.size)
-        if (blob.type == "application/json") {
-            console.error('❌ 返回的不是图片类型:', blob)
-            biliMessage.error('截图失败')
-            return
-        }
-        if (!(blob instanceof Blob)) {
-            console.error('❌ 返回的不是 Blob 类型:', blob)
-            biliMessage.error('截图失败')
-            return
-        }
-
-        if (blob.size === 0) {
-            console.error('❌ 返回的 Blob 大小为 0')
-            biliMessage.error('截图数据为空')
-            return
-        }
-
-        try {
-            const base64Data = await blobToBase64(blob)
-            console.log('📸 base64 数据长度:', base64Data.length)
-            console.log('📸 base64 前50个字符:', base64Data.substring(0, 50))
-            screenshotUrl.value = base64Data
-            biliMessage.success('截图成功')
-            addLog('截图成功', 'success')
-        } catch (error) {
-            console.error('❌ Blob 转 base64 失败:', error)
-            addLog(`截图处理失败: ${error}`, 'error')
-            biliMessage.error('截图处理失败')
+        if (res.code === 0 && res.data) {
+            let imgData: string | null = null
+            if (res.data.data && typeof res.data.data === 'string') {
+                imgData = res.data.data.startsWith('data:')
+                    ? res.data.data
+                    : `data:image/png;base64,${res.data.data}`
+            } else if (res.data.data && typeof res.data.data === 'object') {
+                const d = res.data.data as any
+                const raw = d.image_base64 || d.screenshot
+                if (raw) imgData = raw.startsWith('data:') ? raw : `data:image/png;base64,${raw}`
+            }
+            if (imgData) {
+                screenshotUrl.value = imgData
+                biliMessage.success('截图成功')
+                addLog('截图成功', 'success')
+            } else {
+                biliMessage.error('截图数据为空')
+                addLog('截图数据为空', 'warning')
+            }
+        } else {
+            biliMessage.error(res.msg || '截图失败')
+            addLog(`截图失败: ${res.msg}`, 'error')
         }
     } catch (error) {
         console.error('❌ 截图失败:', error)
@@ -1136,7 +1103,7 @@ const takeScreenshot = async () => {
     }
 }
 
-// 导航到URL
+// 导航到URL - 改用 executeAction 接口
 const handleNavigate = async (url: string) => {
     if (!url || !currentFingerprint.value) return
 
@@ -1147,87 +1114,40 @@ const handleNavigate = async (url: string) => {
             return
         }
 
-        const result = await businessHandler(
-            browserLiveControlApi.navigateToUrl({
-                browser_id: currentFingerprint.value.id_str,
-                request: { url }
-            })
-        )
+        const res = await browserLiveControlApi.executeAction({
+            browser_id: currentFingerprint.value.id_str,
+            req: {
+                action_id: 'navigate',
+                params: { url, wait_for_load: true }
+            }
+        })
 
-        if (result.success) {
+        if (res.code === 0 && res.data?.success) {
             biliMessage.success('导航成功')
-            executionResult.value = `导航到: ${url}`
+
+            addLog(`导航到: ${url}`, 'success')
+        } else {
+            biliMessage.error(res.data?.error || res.msg || '导航失败')
+            addLog(`导航失败: ${res.data?.error || res.msg}`, 'error')
         }
     } catch (error) {
         biliMessage.error('导航失败')
+        addLog(`导航异常: ${error}`, 'error')
     }
 }
 
-// 执行JavaScript
-const executeJavaScript = async (code: string) => {
-    if (!code || !currentFingerprint.value) return
+// 执行JavaScript - 改用 executeAction 接口
 
-    try {
-        const sessionReady = await ensureSessionExists()
-        if (!sessionReady) {
-            biliMessage.error('无法创建浏览器会话')
-            return
-        }
-
-        const result = await businessHandler(
-            browserLiveControlApi.executeJavaScript({
-                browser_id: currentFingerprint.value.id_str,
-                request: { code }
-            })
-        )
-
-        if (result.success) {
-            executionResult.value = `执行结果: ${JSON.stringify(result.data, null, 2)}`
-            biliMessage.success('JavaScript执行成功')
-        }
-    } catch (error) {
-        biliMessage.error('JavaScript执行失败')
-    }
-}
-
-// 安全执行JavaScript
-const safeExecuteJavaScript = async (code: string) => {
-    if (!code || !currentFingerprint.value) return
-
-    try {
-        const sessionReady = await ensureSessionExists()
-        if (!sessionReady) {
-            biliMessage.error('无法创建浏览器会话')
-            return
-        }
-
-        const result = await businessHandler(
-            browserLiveControlApi.safeExecuteJavaScript({
-                browser_id: currentFingerprint.value.id_str,
-                request: { code }
-            })
-        )
-
-        if (result.success) {
-            executionResult.value = `安全执行结果: ${JSON.stringify(result.data, null, 2)}`
-            biliMessage.success('JavaScript安全执行成功')
-        }
-    } catch (error) {
-        biliMessage.error('JavaScript安全执行失败')
-    }
-}
 
 // 切换人工模式
+// 注意：stopManualOperation 后端已删除，改用 triggerSystemCleanup 清理会话
 const toggleManualMode = async () => {
     if (!currentFingerprint.value) return
 
     try {
         if (isManualMode.value) {
             const result = await businessHandler(
-                browserLiveControlApi.stopManualOperation({
-                    browser_id: currentFingerprint.value.id_str,
-                    request: { force: false }
-                })
+                browserLiveControlApi.triggerSystemCleanup()
             )
 
             if (result.success) {
@@ -1265,10 +1185,7 @@ const togglePlugins = async () => {
     try {
         if (arePluginsPaused.value) {
             const result = await businessHandler(
-                browserLiveControlApi.stopManualOperation({
-                    browser_id: currentFingerprint.value.id_str,
-                    request: { force: false, reason: '恢复插件自动操作' }
-                })
+                browserLiveControlApi.triggerSystemCleanup()
             )
 
             if (result.success) {
@@ -1299,7 +1216,7 @@ const togglePlugins = async () => {
     }
 }
 
-// 执行点击操作
+// 执行点击操作 - 改用 executeAction 接口
 const performClick = async (coords: { x: number; y: number }) => {
     if (!currentFingerprint.value) return
 
@@ -1310,32 +1227,36 @@ const performClick = async (coords: { x: number; y: number }) => {
             return
         }
 
-        const result = await businessHandler(
-            browserLiveControlApi.clickElement({
-                browser_id: currentFingerprint.value.id_str,
-                request: {
+        const res = await browserLiveControlApi.executeAction({
+            browser_id: currentFingerprint.value.id_str,
+            req: {
+                action_id: 'click',
+                params: {
                     x: coords.x,
                     y: coords.y,
                     button: 'left',
-                    double: false,
-                    wait_after: 0
+                    double_click: false
                 }
-            })
-        )
+            }
+        })
 
-        if (result.success) {
-            executionResult.value = `点击位置: (${coords.x}, ${coords.y}) - 成功`
+        if (res.code === 0 && res.data?.success) {
+
             biliMessage.success('点击操作成功')
+            addLog(`点击 (${coords.x}, ${coords.y}) 成功`, 'success')
+        } else {
+            const errMsg = res.data?.error || res.msg || '点击失败'
+            biliMessage.error(errMsg)
+            addLog(`点击失败: ${errMsg}`, 'error')
         }
     } catch (error) {
         biliMessage.error('点击操作失败')
+        addLog(`点击异常: ${error}`, 'error')
     }
 }
 
 // 清空执行结果
-const clearResult = () => {
-    executionResult.value = ''
-}
+
 
 // 处理关闭
 const handleClose = () => {

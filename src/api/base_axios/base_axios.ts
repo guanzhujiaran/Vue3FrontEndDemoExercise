@@ -81,14 +81,6 @@ ajax.interceptors.response.use(
       JwtStore.save_jwt_token(data.data.jwt_token)
     }
 
-    // 检查是否是未登录状态
-    if (data.code === -101) {
-      // 不触发未登录事件，避免自动打开登录模态框
-      // 只在控制台打印未登录信息
-      console.log('未登录状态，但不触发登录模态框')
-      return data
-    }
-
     // 检查业务错误
     if (data.code !== 0) {
       // 使用统一错误处理器，但不自动显示消息（让业务层决定）
@@ -96,13 +88,31 @@ ajax.interceptors.response.use(
         showToast: false,
         emitError: false
       })
+
+      // 将请求信息附加到 msg 中，方便 businessHandler 展示
+      const reqConfig = response.config
+      const requestInfo =
+        `[${reqConfig.method?.toUpperCase()}] ${reqConfig.baseURL || ''}${reqConfig.url || ''}` +
+        (reqConfig.params ? `?${JSON.stringify(reqConfig.params)}` : '') +
+        (reqConfig.data ? `\n  Body: ${typeof reqConfig.data === 'string' ? reqConfig.data : JSON.stringify(reqConfig.data)}` : '')
+      data.msg = data.msg
+        ? `${data.msg}\n${requestInfo}`
+        : requestInfo
     }
 
     return data
   },
   (error) => {
     // 处理错误，比如根据错误码提示用户或跳转登录页
-    console.error('API Error:', error)
+    // 提取请求信息用于调试
+    const reqConfig = error?.config
+    const requestInfo = reqConfig
+      ? `[${reqConfig.method?.toUpperCase()}] ${reqConfig.baseURL || ''}${reqConfig.url || ''}` +
+        (reqConfig.params ? `?${JSON.stringify(reqConfig.params)}` : '') +
+        (reqConfig.data ? `\n  Body: ${typeof reqConfig.data === 'string' ? reqConfig.data : JSON.stringify(reqConfig.data)}` : '')
+      : ''
+
+    console.error('API Error:', requestInfo || 'unknown', '\n', error)
 
     // 使用统一错误处理器，默认显示错误消息
     apiErrorHandler.handleError(error, {
@@ -110,10 +120,16 @@ ajax.interceptors.response.use(
       emitError: false
     })
 
+    // 在返回的 msg 中附带请求信息，方便 businessHandler 展示
+    const baseMsg = error.message || '请求发送失败'
+    const msg = requestInfo
+      ? `${baseMsg}\n${requestInfo}`
+      : baseMsg
+
     return {
       code: -9999,
       data: null,
-      msg: error.message || '请求发送失败'
+      msg
     }
   }
 )

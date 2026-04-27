@@ -117,6 +117,7 @@
           @edit="$emit('edit', fingerprint)"
           @delete="$emit('delete', fingerprint)"
           @start="$emit('start', fingerprint)"
+          @quick-edit="(...args) => $emit('quick-edit', ...args)"
         />
       </div>
 
@@ -156,6 +157,7 @@ const emit = defineEmits<{
   edit: [fingerprint: UserBrowserInfoReadResp]
   delete: [fingerprint: UserBrowserInfoReadResp]
   start: [fingerprint: UserBrowserInfoReadResp]
+  'quick-edit': [browserId: string, newName: string]
 }>()
 
 // 过滤条件

@@ -31,14 +31,14 @@
       </div>
       
       <!-- 统一手风琴组件 -->
-      <el-collapse v-model="activeCollapses" style="border: none; box-shadow: var(--el-box-shadow-lighter); border-radius: var(--size-radius-base); overflow: hidden;">
+      <el-collapse v-model="activeCollapses" class="border-0 shadow-[0_2px_12px_0_rgba(0,0,0,0.1)] rounded-lg overflow-hidden">
         <!-- 第一部分：浏览器默认配置（在上） -->
         <el-collapse-item name="default-fingerprint-section" title="浏览器默认配置">
           <template #title>
             <div class="flex items-center gap-3 w-full">
               <el-icon class="text-xl text-[var(--el-color-primary)]"><Monitor /></el-icon>
               <span class="flex-1 text-2xl font-semibold">浏览器默认配置</span>
-              <span class="inline-flex items-center justify-center min-w-[3rem] px-3 py-0.5 ml-2 text-xs font-medium text-white rounded-full transition-all duration-250 hover:translate-y-[-1px] hover:shadow-[var(--el-box-shadow-lighter)]" style="background: linear-gradient(135deg, var(--el-color-success) 0%, var(--el-color-success-dark-2) 100%); box-shadow: var(--el-box-shadow-lighter); letter-spacing: 0.02em;">指纹</span>
+              <span class="inline-flex items-center justify-center min-w-[3rem] px-3 py-0.5 ml-2 text-sm font-medium text-white rounded-full shadow-[0_2px_12px_0_rgba(0,0,0,0.1)] hover:translate-y-[-1px] hover:shadow-[0_4px_12px_0_rgba(0,0,0,0.15)] transition-all duration-250 ease-in-out letter-spacing-[0.02em] bg-gradient-badge-success">指纹</span>
             </div>
           </template>
           <div v-loading="loadingDefaultConfig" class="min-h-[300px]">
@@ -46,7 +46,7 @@
               <el-form :model="defaultFingerprintConfig" label-width="160px" @submit.prevent>
                 <el-collapse 
                   v-model="activeDefaultConfigCollapses" 
-                  style="border: none; box-shadow: var(--el-box-shadow-lighter); border-radius: var(--size-radius-base); overflow: hidden;"
+                  class="border-0 shadow-[0_2px_12px_0_rgba(0,0,0,0.1)] rounded-lg overflow-hidden"
                   @change="handleDefaultConfigAccordionChange"
                 >
                   <!-- 基础浏览器配置 -->
@@ -55,7 +55,7 @@
                       <div class="flex items-center gap-3 w-full">
                         <el-icon class="text-lg text-[var(--el-color-primary)]"><Monitor /></el-icon>
                         <span class="flex-1 text-xl font-medium">基础配置</span>
-                        <span class="inline-flex items-center justify-center min-w-[3rem] px-3 py-0.5 ml-2 text-xs font-medium text-white rounded-full transition-all duration-250 hover:translate-y-[-1px] hover:shadow-[var(--el-box-shadow-lighter)]" style="background: linear-gradient(135deg, var(--el-color-error) 0%, var(--el-color-error-dark-2) 100%); box-shadow: var(--el-box-shadow-lighter); letter-spacing: 0.02em;">核心</span>
+                        <span class="inline-flex items-center justify-center min-w-[3rem] px-3 py-0.5 ml-2 text-sm font-medium text-white rounded-full shadow-[0_2px_12px_0_rgba(0,0,0,0.1)] hover:translate-y-[-1px] hover:shadow-[0_4px_12px_0_rgba(0,0,0,0.15)] transition-all duration-250 ease-in-out letter-spacing-[0.02em] bg-gradient-to-r from-[var(--color-error)] to-[var(--color-error-dark-2)]">核心</span>
                       </div>
                     </template>
                     <el-form-item label="浏览器类型">
@@ -94,7 +94,7 @@
                       <div class="flex items-center gap-3 w-full">
                         <el-icon class="text-lg text-[var(--el-color-primary)]"><FullScreen /></el-icon>
                         <span class="flex-1 text-xl font-medium">屏幕配置</span>
-                        <span class="inline-flex items-center justify-center min-w-[3rem] px-3 py-0.5 ml-2 text-xs font-medium text-white rounded-full transition-all duration-250 hover:translate-y-[-1px] hover:shadow-[var(--el-box-shadow-lighter)]" style="background: linear-gradient(135deg, var(--el-color-warning) 0%, var(--el-color-warning-dark-2) 100%); box-shadow: var(--el-box-shadow-lighter); letter-spacing: 0.02em;">显示</span>
+                        <span class="inline-flex items-center justify-center min-w-[3rem] px-3 py-0.5 ml-2 text-sm font-medium text-white rounded-full shadow-[0_2px_12px_0_rgba(0,0,0,0.1)] hover:translate-y-[-1px] hover:shadow-[0_4px_12px_0_rgba(0,0,0,0.15)] transition-all duration-250 ease-in-out letter-spacing-[0.02em] bg-gradient-badge-warning">显示</span>
                       </div>
                     </template>
                     <div class="flex flex-col gap-5">
@@ -139,7 +139,7 @@
                       <div class="flex items-center gap-3 w-full">
                         <el-icon class="text-lg text-[var(--el-color-primary)]"><Clock /></el-icon>
                         <span class="flex-1 text-xl font-medium">语言时区</span>
-                        <span class="inline-flex items-center justify-center min-w-[3rem] px-3 py-0.5 ml-2 text-xs font-medium text-white rounded-full transition-all duration-250 hover:translate-y-[-1px] hover:shadow-[var(--el-box-shadow-lighter)]" style="background: linear-gradient(135deg, var(--el-color-info) 0%, var(--el-color-info-dark-2) 100%); box-shadow: var(--el-box-shadow-lighter); letter-spacing: 0.02em;">区域</span>
+                        <span class="inline-flex items-center justify-center min-w-[3rem] px-3 py-0.5 ml-2 text-sm font-medium text-white rounded-full shadow-[0_2px_12px_0_rgba(0,0,0,0.1)] hover:translate-y-[-1px] hover:shadow-[0_4px_12px_0_rgba(0,0,0,0.15)] transition-all duration-250 ease-in-out letter-spacing-[0.02em] bg-gradient-badge-info">区域</span>
                       </div>
                     </template>
                     <div class="flex flex-col gap-5">
@@ -169,8 +169,8 @@
               <!-- 配置状态和操作 -->
               <div class="flex justify-between items-center py-5 border-t border-[var(--el-border-color-light)] mt-5 flex-wrap gap-4">
                 <div class="flex items-center gap-3 flex-wrap">
-                  <span class="inline-flex items-center gap-2 px-5 py-3 min-h-[40px] text-base font-semibold rounded-[var(--size-radius-base)] transition-all duration-250 cursor-default whitespace-nowrap leading-1" :class="defaultConfigSaved ? 'bg-gradient-to-r from-[var(--el-color-success)] to-[var(--el-color-success-dark-2)] text-white shadow-[var(--el-box-shadow-light)] hover:translate-y-[-2px] hover:shadow-[var(--el-box-shadow)]' : 'bg-gradient-to-r from-[var(--el-color-warning)] to-[var(--el-color-warning-dark-2)] text-white shadow-[var(--el-box-shadow-light)] hover:translate-y-[-2px] hover:shadow-[var(--el-box-shadow)]'">
-                    <el-icon class="mr-1">
+                  <span :class="defaultConfigSaved ? 'inline-flex items-center gap-2 px-5 py-3 min-h-10 text-base font-semibold text-white rounded-lg shadow-[0_2px_8px_0_rgba(0,0,0,0.15)] hover:translate-y-[-2px] hover:shadow-[0_4px_12px_0_rgba(0,0,0,0.2)] transition-all duration-250 ease-in-out bg-gradient-badge-success' : 'inline-flex items-center gap-2 px-5 py-3 min-h-10 text-base font-semibold text-white rounded-lg shadow-[0_2px_8px_0_rgba(0,0,0,0.15)] hover:translate-y-[-2px] hover:shadow-[0_4px_12px_0_rgba(0,0,0,0.2)] transition-all duration-250 ease-in-out bg-gradient-badge-warning'">
+                    <el-icon>
                       <SuccessFilled v-if="defaultConfigSaved" />
                       <WarningFilled v-else />
                     </el-icon>
@@ -220,7 +220,7 @@
             <div class="flex items-center gap-3 w-full">
               <el-icon class="text-xl text-[var(--el-color-primary)]"><Setting /></el-icon>
               <span class="flex-1 text-2xl font-semibold">全局通知配置</span>
-              <span class="inline-flex items-center justify-center min-w-[3rem] px-3 py-0.5 ml-2 text-xs font-medium text-white rounded-full transition-all duration-250 hover:translate-y-[-1px] hover:shadow-[var(--el-box-shadow-lighter)]" style="background: linear-gradient(135deg, var(--el-color-primary) 0%, var(--el-color-primary-dark-2) 100%); box-shadow: var(--el-box-shadow-lighter); letter-spacing: 0.02em;">通知</span>
+              <span class="inline-flex items-center justify-center min-w-[3rem] px-3 py-0.5 ml-2 text-sm font-medium text-white rounded-full shadow-[0_2px_12px_0_rgba(0,0,0,0.1)] hover:translate-y-[-1px] hover:shadow-[0_4px_12px_0_rgba(0,0,0,0.15)] transition-all duration-250 ease-in-out letter-spacing-[0.02em] bg-gradient-badge-primary">通知</span>
             </div>
           </template>
           <div v-loading="loadingConfig" class="min-h-[300px]">
@@ -229,7 +229,7 @@
               <el-form :model="notificationConfig" label-width="160px" @submit.prevent>
               <el-collapse 
                 v-model="activeNotificationCollapses" 
-                style="border: none; box-shadow: var(--el-box-shadow-lighter); border-radius: var(--size-radius-base); overflow: hidden;"
+                class="border-0 shadow-[0_2px_12px_0_rgba(0,0,0,0.1)] rounded-lg overflow-hidden"
                 @change="handleNotificationAccordionChange"
               >
                 <!-- 基础设置 -->
@@ -238,7 +238,7 @@
                     <div class="flex items-center gap-3 w-full">
                       <el-icon class="text-lg text-[var(--el-color-primary)]"><Setting /></el-icon>
                       <span class="flex-1 text-xl font-medium">基础设置</span>
-                      <span class="inline-flex items-center justify-center min-w-[3rem] px-3 py-0.5 ml-2 text-xs font-medium text-white rounded-full transition-all duration-250 hover:translate-y-[-1px] hover:shadow-[var(--el-box-shadow-lighter)]" style="background: linear-gradient(135deg, var(--el-color-error) 0%, var(--el-color-error-dark-2) 100%); box-shadow: var(--el-box-shadow-lighter); letter-spacing: 0.02em;">核心</span>
+                      <span class="inline-flex items-center justify-center min-w-[3rem] px-3 py-0.5 ml-2 text-sm font-medium text-white rounded-full shadow-[0_2px_12px_0_rgba(0,0,0,0.1)] hover:translate-y-[-1px] hover:shadow-[0_4px_12px_0_rgba(0,0,0,0.15)] transition-all duration-250 ease-in-out letter-spacing-[0.02em] bg-gradient-to-r from-[var(--color-error)] to-[var(--color-error-dark-2)]">核心</span>
                     </div>
                   </template>
                   <el-form-item label="一言推送">
@@ -256,7 +256,7 @@
                     <div class="flex items-center gap-3 w-full">
                       <el-icon class="text-lg text-[var(--el-color-primary)]"><Apple /></el-icon>
                       <span class="flex-1 text-xl font-medium">Bark推送</span>
-                      <span class="inline-flex items-center justify-center min-w-[3rem] px-3 py-0.5 ml-2 text-xs font-medium text-white rounded-full transition-all duration-250 hover:translate-y-[-1px] hover:shadow-[var(--el-box-shadow-lighter)]" style="background: linear-gradient(135deg, var(--el-color-danger) 0%, var(--el-color-danger-dark-2) 100%); box-shadow: var(--el-box-shadow-lighter); letter-spacing: 0.02em;">iOS</span>
+                      <span class="inline-flex items-center justify-center min-w-[3rem] px-3 py-0.5 ml-2 text-sm font-medium text-white rounded-full shadow-[0_2px_12px_0_rgba(0,0,0,0.1)] hover:translate-y-[-1px] hover:shadow-[0_4px_12px_0_rgba(0,0,0,0.15)] transition-all duration-250 ease-in-out letter-spacing-[0.02em] bg-gradient-to-r from-[var(--color-danger)] to-[var(--color-danger-dark-2)]">iOS</span>
                     </div>
                   </template>
                   <div class="flex flex-col gap-5">
@@ -341,7 +341,7 @@
                     <div class="flex items-center gap-3 w-full">
                       <el-icon class="text-lg text-[var(--el-color-primary)]"><Promotion /></el-icon>
                       <span class="flex-1 text-xl font-medium">Push Plus</span>
-                      <span class="inline-flex items-center justify-center min-w-[3rem] px-3 py-0.5 ml-2 text-xs font-medium text-white rounded-full transition-all duration-250 hover:translate-y-[-1px] hover:shadow-[var(--el-box-shadow-lighter)]" style="background: linear-gradient(135deg, var(--el-color-warning) 0%, var(--el-color-warning-dark-2) 100%); box-shadow: var(--el-box-shadow-lighter); letter-spacing: 0.02em;">多平台</span>
+                      <span class="inline-flex items-center justify-center min-w-[3rem] px-3 py-0.5 ml-2 text-sm font-medium text-white rounded-full shadow-[0_2px_12px_0_rgba(0,0,0,0.1)] hover:translate-y-[-1px] hover:shadow-[0_4px_12px_0_rgba(0,0,0,0.15)] transition-all duration-250 ease-in-out letter-spacing-[0.02em] bg-gradient-badge-warning">多平台</span>
                     </div>
                   </template>
                   <div class="flex flex-col gap-5">
@@ -424,7 +424,7 @@
                     <div class="flex items-center gap-3 w-full">
                       <el-icon class="text-lg text-[var(--el-color-primary)]"><ChatDotRound /></el-icon>
                       <span class="flex-1 text-xl font-medium">微信推送器</span>
-                      <span class="inline-flex items-center justify-center min-w-[3rem] px-3 py-0.5 ml-2 text-xs font-medium text-white rounded-full transition-all duration-250 hover:translate-y-[-1px] hover:shadow-[var(--el-box-shadow-lighter)]" style="background: linear-gradient(135deg, var(--el-color-success) 0%, var(--el-color-success-dark-2) 100%); box-shadow: var(--el-box-shadow-lighter); letter-spacing: 0.02em;">微信</span>
+                      <span class="inline-flex items-center justify-center min-w-[3rem] px-3 py-0.5 ml-2 text-sm font-medium text-white rounded-full shadow-[0_2px_12px_0_rgba(0,0,0,0.1)] hover:translate-y-[-1px] hover:shadow-[0_4px_12px_0_rgba(0,0,0,0.15)] transition-all duration-250 ease-in-out letter-spacing-[0.02em] bg-gradient-to-r from-[var(--color-success)] to-[var(--color-success-dark-2)]">微信</span>
                     </div>
                   </template>
                   <div class="flex flex-col gap-5">
@@ -464,7 +464,7 @@
                     <div class="flex items-center gap-3 w-full">
                       <el-icon class="text-lg text-[var(--el-color-primary)]"><MoreFilled /></el-icon>
                       <span class="flex-1 text-xl font-medium">其他推送</span>
-                      <span class="inline-flex items-center justify-center min-w-[3rem] px-3 py-0.5 ml-2 text-xs font-medium text-white rounded-full transition-all duration-250 hover:translate-y-[-1px] hover:shadow-[var(--el-box-shadow-lighter)]" style="background: linear-gradient(135deg, var(--el-color-primary) 0%, var(--el-color-info) 100%); box-shadow: var(--el-box-shadow-lighter); letter-spacing: 0.02em;">更多</span>
+                      <span class="inline-flex items-center justify-center min-w-[3rem] px-3 py-0.5 ml-2 text-sm font-medium text-white rounded-full shadow-[0_2px_12px_0_rgba(0,0,0,0.1)] hover:translate-y-[-1px] hover:shadow-[0_4px_12px_0_rgba(0,0,0,0.15)] transition-all duration-250 ease-in-out letter-spacing-[0.02em] bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-info)]">更多</span>
                     </div>
                   </template>
                   <div class="flex flex-col gap-5">
@@ -572,8 +572,8 @@
               <!-- 配置状态和操作 -->
               <div class="flex justify-between items-center py-5 border-t border-[var(--el-border-color-light)] mt-5 flex-wrap gap-4">
                 <div class="flex items-center gap-3 flex-wrap">
-                  <span class="inline-flex items-center gap-2 px-5 py-3 min-h-[40px] text-base font-semibold rounded-[var(--size-radius-base)] transition-all duration-250 cursor-default whitespace-nowrap leading-1" :class="configSaved ? 'bg-gradient-to-r from-[var(--el-color-success)] to-[var(--el-color-success-dark-2)] text-white shadow-[var(--el-box-shadow-light)] hover:translate-y-[-2px] hover:shadow-[var(--el-box-shadow)]' : 'bg-gradient-to-r from-[var(--el-color-warning)] to-[var(--el-color-warning-dark-2)] text-white shadow-[var(--el-box-shadow-light)] hover:translate-y-[-2px] hover:shadow-[var(--el-box-shadow)]'">
-                    <el-icon class="mr-1">
+                  <span :class="configSaved ? 'inline-flex items-center gap-2 px-5 py-3 min-h-10 text-base font-semibold text-white rounded-lg shadow-[0_2px_8px_0_rgba(0,0,0,0.15)] hover:translate-y-[-2px] hover:shadow-[0_4px_12px_0_rgba(0,0,0,0.2)] transition-all duration-250 ease-in-out bg-gradient-badge-success' : 'inline-flex items-center gap-2 px-5 py-3 min-h-10 text-base font-semibold text-white rounded-lg shadow-[0_2px_8px_0_rgba(0,0,0,0.15)] hover:translate-y-[-2px] hover:shadow-[0_4px_12px_0_rgba(0,0,0,0.2)] transition-all duration-250 ease-in-out bg-gradient-badge-warning'">
+                    <el-icon>
                       <SuccessFilled v-if="configSaved" />
                       <WarningFilled v-else />
                     </el-icon>

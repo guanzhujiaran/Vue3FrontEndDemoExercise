@@ -364,4 +364,163 @@ defineExpose({
 })
 </script>
 
+<style scoped>
+@reference "tailwindcss";
 
+.video-player-container {
+    @apply flex-1 flex flex-col bg-black rounded-[var(--size-radius-large)] overflow-hidden shadow-[var(--el-box-shadow)] min-h-0;
+}
+
+/* URL导航栏 */
+.url-navigation-bar {
+    @apply flex items-center gap-2 px-4 py-2.5 bg-gradient-to-b from-black/80 to-black/60 backdrop-blur-sm border-b border-white/10;
+}
+
+.url-input {
+    @apply flex-1;
+}
+
+.url-input :deep(.el-input-group__prepend) {
+    @apply bg-white/10 border-none text-white;
+}
+
+.url-input :deep(.el-input__wrapper) {
+    @apply bg-white/15 border-none shadow-none;
+}
+
+.url-input :deep(.el-input__inner) {
+    @apply text-white font-mono;
+}
+
+.url-input :deep(.el-input__inner::placeholder) {
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.video-info-bar {
+    @apply flex items-center justify-between px-4 py-2.5 bg-gradient-to-b from-black/70 to-black/50 backdrop-blur-sm text-white border-b border-white/10;
+}
+
+.status-dot {
+    @apply w-2 h-2 rounded-full;
+    animation: pulse 2s ease-in-out infinite;
+}
+
+/* 截图预览样式 */
+.screenshot-preview-dialog :deep(.el-dialog) {
+    @apply bg-black/90 backdrop-blur-md;
+}
+
+.screenshot-preview-dialog :deep(.el-dialog__header) {
+    @apply bg-transparent border-b border-white/10 text-white;
+}
+
+.screenshot-preview-dialog :deep(.el-dialog__body) {
+    @apply p-0 flex items-center justify-center bg-transparent;
+}
+
+.screenshot-preview-image {
+    @apply max-w-full max-h-full object-contain rounded-lg shadow-2xl shadow-black/50;
+}
+
+.status-connected .status-dot {
+    @apply bg-[var(--color-success)] shadow-[0_0_8px_rgba(34,197,94,0.5)];
+}
+
+.status-connecting .status-dot {
+    @apply bg-[var(--color-warning)] shadow-[0_0_8px_rgba(234,179,8,0.5)];
+}
+
+.status-disconnected .status-dot {
+    @apply bg-[var(--color-danger)] shadow-[0_0_8px_rgba(239,68,68,0.5)] !animate-none;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+.video-wrapper {
+    @apply flex-1 relative bg-[var(--el-bg-color)] overflow-hidden min-h-[var(--spacing-16)] min-w-[var(--spacing-20)] w-full h-full flex items-center justify-center;
+}
+
+.video-wrapper.black-screen {
+    @apply bg-black;
+}
+
+/* 加载遮罩层 */
+.loading-mask {
+    @apply absolute inset-0 flex items-center justify-center bg-black/70 backdrop-blur-sm z-10;
+}
+
+.loading-content .el-icon.is-loading {
+    animation: rotating 2s linear infinite;
+}
+
+@keyframes rotating {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+/* 错误提示层 */
+.error-overlay {
+    @apply absolute inset-0 flex flex-col items-center justify-center bg-black/85 backdrop-blur-sm z-15 gap-4;
+}
+
+.video-element {
+    @apply max-w-full max-h-full w-auto h-auto object-contain bg-black block mx-auto;
+}
+
+/* 视频控制条 - B站风格 */
+.video-control-bar {
+    @apply absolute bottom-0 left-0 right-0 flex items-center justify-between px-5 py-4 bg-gradient-to-t from-black/90 via-black/50 to-transparent backdrop-blur-md z-20 transition-opacity duration-300;
+}
+
+.control-button {
+    @apply bg-white/10 border-none text-white w-11 h-11 transition-all duration-200;
+}
+
+.control-button:hover {
+    @apply bg-white/25 scale-110;
+}
+
+.control-button :deep(.el-icon) {
+    @apply text-[20px];
+}
+
+/* 控制条淡入淡出动画 */
+.control-bar-fade-enter-active,
+.control-bar-fade-leave-active {
+    transition: opacity 0.3s ease;
+}
+
+.control-bar-fade-enter-from,
+.control-bar-fade-leave-to {
+    opacity: 0;
+}
+
+@media (max-width: 768px) {
+    .url-navigation-bar {
+        @apply flex-col items-stretch;
+    }
+
+    .video-info-bar span {
+        @apply hidden;
+    }
+
+    .video-info-bar :deep(.el-tag) span {
+        @apply inline;
+    }
+
+    .video-wrapper {
+        @apply min-h-[var(--spacing-12)] min-w-full;
+    }
+
+    .control-button {
+        @apply w-9 h-9;
+    }
+
+    .control-button :deep(.el-icon) {
+        @apply text-[18px];
+    }
+}
+</style>

@@ -263,7 +263,6 @@
       class="control-drawer"
       :with-header="false"
       v-if="isMobile"
-      style="--el-drawer-body-padding: 0; overflow: hidden;"
     >
       <ControlPanelContent
         :selected-browser-id="selectedBrowserId"
@@ -304,7 +303,6 @@
       :with-header="false"
       :append-to-body="false"
       v-else
-      style="--el-drawer-body-padding: 0; overflow: hidden;"
     >
       <ControlPanelContent
         :selected-browser-id="selectedBrowserId"
@@ -501,7 +499,13 @@ const currentBrowserInfo = computed(() => {
 })
 
 const isBrowserStarted = computed(() => {
-  return sessionStatus.value?.is_running || false
+  if (!sessionStatus.value) return false
+  // 检查新的API格式（browser_running字段）
+  if ('browser_running' in sessionStatus.value) {
+    return sessionStatus.value.browser_running || false
+  }
+  // 检查旧的API格式（is_running字段）
+  return sessionStatus.value.is_running || false
 })
 
 // 方法
@@ -1057,4 +1061,3 @@ onUnmounted(() => {
   window.removeEventListener('resize', checkMobile)
 })
 </script>
-

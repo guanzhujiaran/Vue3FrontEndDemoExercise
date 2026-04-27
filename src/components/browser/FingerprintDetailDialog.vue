@@ -30,37 +30,13 @@
     </el-descriptions>
 
     <template #footer>
-      <span class="flex justify-end gap-3">
-        <el-button type="primary" @click="openDebugPanel" v-if="fingerprint">
-          <el-icon><Operation /></el-icon>
-          调试面板
-        </el-button>
-        <el-button @click="handleClose">关闭</el-button>
-      </span>
+      <el-button @click="handleClose">关闭</el-button>
     </template>
-  </el-dialog>
-
-  <!-- 调试面板对话框 -->
-  <el-dialog
-    v-model="debugPanelVisible"
-    title="前端调试面板"
-    width="90%"
-    :fullscreen="true"
-    destroy-on-close
-    @close="closeDebugPanel"
-  >
-    <BrowserDebugPanel
-      v-if="debugPanelVisible && fingerprint"
-      :browser-id="String(fingerprint.id)"
-    />
   </el-dialog>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
-import { Operation } from '@element-plus/icons-vue'
 import type { UserBrowserInfoReadResp } from '@/types/browser-automation-api'
-import BrowserDebugPanel from './BrowserDebugPanel.vue'
 
 // 定义Model
 const visible = defineModel<boolean>('visible', { default: false })
@@ -72,9 +48,6 @@ interface Props {
 
 const props = defineProps<Props>()
 
-// 调试面板可见性
-const debugPanelVisible = ref(false)
-
 // 格式化时间
 const formatTime = (time: string | undefined) => {
   if (!time) return '未知'
@@ -84,20 +57,6 @@ const formatTime = (time: string | undefined) => {
 // 关闭对话框
 const handleClose = () => {
   visible.value = false
-}
-
-// 打开调试面板
-const openDebugPanel = () => {
-  if (props.fingerprint) {
-    debugPanelVisible.value = true
-    visible.value = false
-  }
-}
-
-// 关闭调试面板
-const closeDebugPanel = () => {
-  debugPanelVisible.value = false
-  visible.value = true
 }
 </script>
 

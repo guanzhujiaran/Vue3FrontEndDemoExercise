@@ -840,38 +840,28 @@ class BrowserLiveControlApiImpl extends BrowserLiveControlApi {
   // async startManualOperation(...) { ... }
 
   /**
-   * 停止人工操作
-   * POST /api/v1/rpa/browser/control/session/manual/stop
+   * 停止人工操作（后端已删除此接口）
+   * 原路径 POST /api/v1/rpa/browser/control/session/manual/stop 在后端不存在
+   * 请改用 triggerSystemCleanup() 触发系统清理
+   * @deprecated 后端无此接口
    */
-  async stopManualOperation(params: {
+  async stopManualOperation(_params: {
     browser_id: string
     request?: SimplifiedAutomationResumeRequest
   }): Promise<RootObject<any>> {
-    const body: BodyStopManualOperationRequest = {
-      request: params.request || { force: false },
-      body: { browser_id: params.browser_id }
-    }
-    const response = await ajax.post('/api/v1/rpa/browser/control/session/manual/stop', body)
-    // 适配新的StandardResponse结构
-    if (response && 'code' in response) {
-      return { data: response.data, msg: response.msg, code: response.code } as RootObject<any>
-    }
-    return response
+    console.warn('[browserLiveControlApi] stopManualOperation 已废弃，后端无此接口，请使用 triggerSystemCleanup')
+    return { code: -1, msg: '接口已废弃，后端不存在 /control/session/manual/stop', data: null } as any
   }
 
   /**
-   * 获取操作状态
-   * POST /api/v1/rpa/browser/control/session/operation/status
+   * 获取操作状态（后端已删除此接口）
+   * 原路径 POST /api/v1/rpa/browser/control/session/operation/status 在后端不存在
+   * 会话状态已整合到 getBrowserSessionStatus() 的 /control/status 返回中
+   * @deprecated 后端无此接口
    */
-  async getOperationStatus(params: { browser_id: string }): Promise<RootObject<any>> {
-    const response = await ajax.post('/api/v1/rpa/browser/control/session/operation/status', {
-      browser_id: params.browser_id
-    })
-    // 适配新的StandardResponse结构
-    if (response && 'code' in response) {
-      return { data: response.data, msg: response.msg, code: response.code } as RootObject<any>
-    }
-    return response
+  async getOperationStatus(_params: { browser_id: string }): Promise<RootObject<any>> {
+    console.warn('[browserLiveControlApi] getOperationStatus 已废弃，后端无此接口，请使用 getBrowserSessionStatus')
+    return { code: -1, msg: '接口已废弃，后端不存在 /control/session/operation/status', data: null } as any
   }
 
   // ===== 视频流控制 =====
@@ -1160,8 +1150,10 @@ class BrowserLiveControlApiImpl extends BrowserLiveControlApi {
   }
 
   /**
-   * 获取 WebRTC ICE candidates
-   * GET /api/v1/rpa/browser/control/webrtc/ice-candidates
+   * 获取 WebRTC ICE candidates（已废弃）
+   * 后端已删除此接口，WebRTC 连接中 ICE candidates 会通过 onicecandidate 事件自动回调
+   * POST /api/v1/rpa/browser/control/webrtc/ice-candidates（已不存在）
+   * @deprecated 后端无此接口，ICE candidates 通过 WebRTC peerConnection.onicecandidate 事件获取
    */
   async getWebrtcIceCandidates(params: {
     browser_id: string
@@ -1173,37 +1165,29 @@ class BrowserLiveControlApiImpl extends BrowserLiveControlApi {
     }>
     ice_gathering_state?: string
   }>> {
-    console.log('📥 [API] 准备获取 ICE candidates 请求:', params)
-    console.log('📥 [API] 完整URL:', `${this.path}/webrtc/ice-candidates`)
-    const response = await ajax.get(`${this.path}/webrtc/ice-candidates`, {
-      params: { browser_id: params.browser_id }
-    })
-    console.log('📥 [API] ICE candidates 请求响应:', response)
-    // 适配新的StandardResponse结构
-    if (response && 'code' in response) {
-      return {
-        data: response.data,
-        msg: response.msg,
-        code: response.code
-      } as RootObject<{
-        candidates: Array<{
-          candidate?: string
-          sdpMid?: string | null
-          sdpMLineIndex?: number | null
-        }>
-        ice_gathering_state?: string
+    console.warn('[browserLiveControlApi] getWebrtcIceCandidates 已废弃，后端无此接口')
+    console.warn('[browserLiveControlApi] ICE candidates 会通过 peerConnection.onicecandidate 事件自动回调')
+    return {
+      code: -1,
+      msg: '接口已废弃，后端不存在 /webrtc/ice-candidates',
+      data: null
+    } as RootObject<{
+      candidates: Array<{
+        candidate?: string
+        sdpMid?: string | null
+        sdpMLineIndex?: number | null
       }>
-    }
-    return response
+      ice_gathering_state?: string
+    }>
   }
 
   /**
    * 获取 WebRTC 连接状态
-   * GET /api/v1/rpa/browser/control/webrtc/status
+   * POST /api/v1/rpa/browser/control/webrtc/status
    */
   async getWebrtcStatus(browser_id: string): Promise<RootObject<any>> {
-    const response = await ajax.get(`${this.path}/webrtc/status`, {
-      params: { browser_id }
+    const response = await this._post('/webrtc/status', {
+      browser_id
     })
     // 适配新的StandardResponse结构
     if (response && 'code' in response) {
@@ -1632,11 +1616,11 @@ class BrowserLiveControlApiImpl extends BrowserLiveControlApi {
   }
 
   /**
-   * 注册插件到数据库
-   * POST /api/v1/rpa/browser_live_control/plugins/register
+   * 注册插件到数据库（改用 /plugins/create，后端无 /plugins/register 路径）
+   * POST /api/v1/rpa/browser/control/plugins/create
    */
   async registerPlugin(data: PluginRegister): Promise<RootObject<PluginCreateResponse>> {
-    const response = await this._post('/plugins/register', data)
+    const response = await this._post('/plugins/create', data)
     if (response && 'code' in response) {
       return {
         data: response.data,

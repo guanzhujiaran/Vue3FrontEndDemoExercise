@@ -1,5 +1,25 @@
-import biliMessage from './message'
+import biliMessage, { ElNotification } from './message'
 import type { RootObject } from '@/models/api/base_model'
+
+/**
+ * 显示错误通知
+ * 简单错误用 ElMessage，带换行（含请求信息）的错误用 ElNotification 展示更丰富的内容
+ */
+function showErrorNotification(msg: string) {
+  if (msg.includes('\n')) {
+    const [title, ...detailLines] = msg.split('\n')
+    const detail = detailLines.join('\n').trim()
+    ElNotification({
+      type: 'error',
+      title,
+      message: detail,
+      duration: 0,
+      showClose: true
+    })
+  } else {
+    biliMessage.error(msg)
+  }
+}
 
 /**
  * 业务响应接口定义
@@ -85,7 +105,7 @@ export const businessHandler = async <T>(
       const errorMsg = response.msg || errorMessage
 
       if (autoHandleError && showErrorToast) {
-        biliMessage.error(errorMsg)
+        showErrorNotification(errorMsg)
       }
 
       // 执行错误回调函数
@@ -108,10 +128,19 @@ export const businessHandler = async <T>(
     }
   } catch (error: any) {
     // 网络错误或其他异常
-    const errorMsg = errorMessage ? errorMessage.concat(error?.message || '') : error?.message
+    // error 可能是 axios error 回调返回的 { code, msg } 对象，msg 中已包含请求信息
+    let errorMsg: string
+    if (error?.msg) {
+      // axios error 回调已格式化好 msg（含请求信息）
+      errorMsg = error.msg
+    } else if (errorMessage && error?.message) {
+      errorMsg = `${errorMessage}: ${error.message}`
+    } else {
+      errorMsg = errorMessage || error?.message || '请求失败'
+    }
 
     if (autoHandleError && showErrorToast) {
-      biliMessage.error(errorMsg)
+      showErrorNotification(errorMsg)
     }
     if (errorCallbacks && errorCallbacks.length > 0) {
       const result: BusinessHandlerResult<T> = {

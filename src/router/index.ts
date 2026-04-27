@@ -255,6 +255,85 @@ const routes: CustomRouteRecordRaw[] = [
     }
   },
   {
+    path: '/app/browser-console/:browserId',
+    name: RouteName.BROWSER_CONSOLE,
+    component: () => import('@/views/BrowserConsoleView.vue'),
+    meta: {
+      title: 'RPA控制台',
+      description: '浏览器实时控制台（路由入口，做登录和指纹检查后重定向）',
+      isHeaderShow: false,
+      requiresLogin: true,
+      hideInMenu: true
+    }
+  },
+  {
+    path: '/app/browser-console/:browserId/panel',
+    name: RouteName.BROWSER_CONSOLE_PANEL,
+    component: () => import('@/views/BrowserConsolePanelView.vue'),
+    redirect: (to) => ({ name: RouteName.BROWSER_CONSOLE_WEBRTC, params: to.params }),
+    meta: {
+      title: 'RPA控制台面板',
+      description: '浏览器实时控制台面板',
+      isHeaderShow: false,
+      requiresLogin: true,
+      hideInMenu: true
+    },
+    children: [
+      {
+        path: 'webrtc',
+        name: RouteName.BROWSER_CONSOLE_WEBRTC,
+        component: () => import('@/components/browser/WebRTCStreamPanel.vue'),
+        props: (route) => ({ browserId: route.params.browserId }),
+        meta: {
+          title: '实时控制',
+          hideInMenu: true
+        }
+      },
+      {
+        path: 'visual',
+        name: RouteName.BROWSER_CONSOLE_VISUAL,
+        component: () => import('@/components/browser/VisualControlPanel.vue'),
+        props: (route) => ({ browserId: route.params.browserId }),
+        meta: {
+          title: '可视化操作',
+          hideInMenu: true
+        }
+      },
+      {
+        path: 'custom',
+        name: RouteName.BROWSER_CONSOLE_CUSTOM,
+        component: () => import('@/components/browser/CustomActionPanel.vue'),
+        props: (route) => ({ browserId: route.params.browserId }),
+        meta: {
+          title: '自定义操作',
+          hideInMenu: true
+        }
+      },
+      {
+        path: 'debug',
+        name: RouteName.BROWSER_CONSOLE_DEBUG,
+        component: () => import('@/components/browser/DebugPanel.vue'),
+        props: (route) => ({ browserId: route.params.browserId }),
+        meta: {
+          title: 'Debug 调试',
+          hideInMenu: true
+        }
+      }
+    ]
+  },
+  {
+    path: '/app/browser-console/:browserId/not-found',
+    name: RouteName.BROWSER_CONSOLE_NOT_FOUND,
+    component: () => import('@/views/BrowserConsoleNotFoundView.vue'),
+    meta: {
+      title: '指纹不存在',
+      description: '浏览器指纹不存在或不属于当前账号',
+      isHeaderShow: false,
+      requiresLogin: true,
+      hideInMenu: true
+    }
+  },
+  {
     path: '/app/changelog',
     name: RouteName.CHANGE_LOG,
     component: () => import('@/views/ChangelogView.vue'),
@@ -309,11 +388,16 @@ const router = createRouter({
 })
 // 路由守卫 - 全局加载遮罩
 router.beforeEach((to, from) => {
-  // 如果不是首次访问（from.name存在）
-  if (from.name) {
-    emitter.emit('loading', { isLoading: true, loadingText: `正在前往：【${to.meta.title}】中` })
-  }
-  // 直接返回，不再需要调用 next()
+  if (!from.name) return true
+
+  // 同一父路由下的子路由切换（如控制台面板内 tab 切换），不显示 loading
+  const isChildRouteSwitch =
+    from.matched.length > 1 && to.matched.length > 1 &&
+    from.matched[0] === to.matched[0]
+
+  if (isChildRouteSwitch) return true
+
+  emitter.emit('loading', { isLoading: true, loadingText: `正在前往：【${to.meta.title}】中` })
   return true
 })
 
