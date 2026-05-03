@@ -1,6 +1,6 @@
 <!--
- * @FilePath: \Vue3FrontEndDemoExercise\src\components\browser\WebRTCStreamPanel.vue
- * @Description: WebRTC 实时视频流面板
+ * @FilePath: \Vue3FrontEndDemoExercise\src\components\browser\SSEStreamPanel.vue
+ * @Description: FLV 实时视频流面板
 -->
 <template>
   <div class="flex flex-col gap-3 h-full overflow-hidden">
@@ -31,13 +31,6 @@
             {{ sessionStatusText }}
           </el-tag>
         </span>
-        <span v-if="isStreaming">FPS: {{ fpsDisplay }}</span>
-        <span v-if="resolutionDisplay">{{ resolutionDisplay }}</span>
-        <template v-if="isStreaming && (bandwidthDownload > 0 || bandwidthUpload > 0)">
-          <el-divider direction="vertical" class="!mx-0 !h-3" />
-          <span class="text-blue-500 font-medium">⬇ {{ formatBandwidth(bandwidthDownload) }}</span>
-          <span class="text-green-500 font-medium">⬆ {{ formatBandwidth(bandwidthUpload) }}</span>
-        </template>
       </div>
 
       <div class="ml-auto flex gap-2">
@@ -51,19 +44,6 @@
           @click="takeScreenshot"
           round
         >截图</el-button>
-
-        <!-- 刷新流按钮 -->
-        <el-tooltip content="刷新视频流（解决卡顿或无画面）" placement="top">
-          <el-button
-            size="small"
-            :icon="RefreshRight"
-            plain
-            :disabled="!isStreaming"
-            :loading="refreshingStream"
-            @click="refreshStream"
-            round
-          >刷新</el-button>
-        </el-tooltip>
 
         <!-- 开始/停止按钮 -->
         <el-tooltip
@@ -175,7 +155,7 @@
             <!-- 加载遮罩 -->
             <div v-if="isConnecting || isReconnecting" class="absolute inset-0 flex flex-col items-center justify-center bg-base-300/80 z-10 gap-4">
               <el-icon class="is-loading text-base-content" :size="48"><Loading /></el-icon>
-              <p class="text-base-content text-sm m-0">{{ isReconnecting ? `重连中 (${reconnectAttempts}/${maxReconnectAttempts})...` : '正在建立 WebRTC 连接...' }}</p>
+              <p class="text-base-content text-sm m-0">{{ isReconnecting ? `重连中 (${reconnectAttempts}/${maxReconnectAttempts})...` : '正在建立 FLV 连接...' }}</p>
             </div>
 
             <!-- 重连失败提示 -->
@@ -188,11 +168,11 @@
             <!-- 未连接提示 -->
             <div v-if="!isStreaming && !isConnecting && !reconnectError" class="flex flex-col items-center justify-center gap-4 text-base-content/60">
               <el-icon :size="64"><VideoCamera /></el-icon>
-              <p class="text-sm m-0">点击"开始视频"建立 WebRTC 连接</p>
+              <p class="text-sm m-0">点击"开始视频"建立 FLV 连接</p>
               <p class="text-xs m-0 opacity-60">将实时显示浏览器画面</p>
             </div>
 
-            <!-- WebRTC 视频播放 -->
+            <!-- FLV 视频播放 -->
             <div
               v-show="isStreaming"
               ref="videoWrapper"
@@ -200,7 +180,7 @@
             >
               <video
                 ref="videoRef"
-                class="max-w-full max-h-full object-contain video-element"
+                class="max-w-full max-h-full object-contain"
                 muted
                 playsinline
                 @click="handleVideoClick"
@@ -316,13 +296,16 @@ import { ElScrollbar } from 'element-plus'
 import {
   VideoPlay, VideoPause, Camera, Link, List,
   Loading, CircleClose, VideoCamera, User, Pointer, Download, DArrowLeft, DArrowRight,
-  Document, Close, Plus, RefreshRight
+  Document, Close, Plus
 } from '@element-plus/icons-vue'
+import flvjs from 'flv.js'
 import { browserLiveControlApi } from '@/api/browser/browser_api'
 import browserControlApi from '@/api/browser/browser_control_api'
 import { businessHandler } from '@/utils/businessHandler'
 import biliMessage from '@/utils/message'
 import type { BrowserSessionStatus } from '@/types/browser-automation-api'
+import { useJwtStore } from '@/stores/jwt_token'
+import { useUserNavStore } from '@/stores/user_nav'
 
 const sessionState = inject<Ref<BrowserSessionStatus | undefined>>('browserSessionState')
 
@@ -331,12 +314,12 @@ let unsubscribeStopBrowser: (() => void) | null = null
 onMounted(() => {
   if (onStopBrowser) {
     unsubscribeStopBrowser = onStopBrowser(() => {
-      console.log('[WebRTCStreamPanel] Received stopBrowser notification, stopping video stream')
+      console.log('[SSEStreamPanel] Received stopBrowser notification, stopping video stream')
       stopVideoStream()
     })
   }
   if (sessionState?.value?.browser_running && sessionState?.value?.lifecycle_state === 'active') {
-    console.log('[WebRTCStreamPanel] Browser already running on mount, fetching page list')
+    console.log('[SSEStreamPanel] Browser already running on mount, fetching page list')
     refreshPagesList()
   }
   if (videoContainer.value) {
@@ -376,10 +359,10 @@ const videoInfo = ref('')
 const takingScreenshot = ref(false)
 const showScreenshotDialog = ref(false)
 
+const flvPlayer = ref<flvjs.Player | null>(null)
+const streamAbortController = ref<AbortController | null>(null)
 const videoRef = ref<HTMLVideoElement | null>(null)
 const clickOverlay = ref<HTMLDivElement | null>(null)
-const peerConnection = ref<RTCPeerConnection | null>(null)
-const streamKey = ref('')
 
 const rightPanelCollapsed = ref(false)
 
@@ -397,25 +380,17 @@ const reconnectError = ref('')
 let userManuallyStopped = false
 let reconnectTimer: number | null = null
 
-let totalReconnectCount = 0  // 总重连次数（不重置，用于上限控制）
-
 let heartbeatTimer: number | null = null
 const HEARTBEAT_INTERVAL = 30000
 
-let frameCount = 0
-let lastFrameTime = 0
-let fpsInterval: number | null = null
-
 interface PageInfo {
   page_index: number
-  page_id: string      // 页面唯一 ID（用于 heartbeat）
   title: string
   url: string
 }
 const pagesList = ref<PageInfo[]>([])
 const currentPageIndex = ref(0)
 const creatingPage = ref(false)
-const refreshingStream = ref(false)
 
 const videoWidth = ref(1920)
 const videoHeight = ref(1080)
@@ -434,26 +409,133 @@ const currentPageUrl = computed(() => {
   return currentPage?.url || ''
 })
 
-// 获取当前页面的 page_id（用于 heartbeat）
-const currentPageId = computed(() => {
-  const currentPage = pagesList.value.find(page => page.page_index === currentPageIndex.value)
-  return currentPage?.page_id || ''
-})
-
 watch(() => currentPageIndex.value, () => {
   navigateUrl.value = currentPageUrl.value
 })
+
+const refreshPagesList = async () => {
+  if (!props.browserId) return
+  try {
+    console.log('[SSEStreamPanel] refreshPagesList called, browserId:', props.browserId)
+    const res = await browserLiveControlApi.getPageList({ browser_id: props.browserId })
+    console.log('[SSEStreamPanel] getPageList response:', res)
+    if (res.code === 0 && res.data && res.data.pages) {
+      pagesList.value = res.data.pages.map((page: any) => ({
+        page_index: page.index,
+        title: page.title || '新标签页',
+        url: page.url
+      }))
+      addLog(`获取到 ${pagesList.value.length} 个页面`, 'success')
+      if (currentPageIndex.value >= pagesList.value.length && pagesList.value.length > 0) {
+        currentPageIndex.value = 0
+      }
+    } else {
+      addLog(`获取页面列表失败: ${res.msg || '未知错误'}`, 'error')
+      console.error('[SSEStreamPanel] getPageList failed:', res.msg)
+    }
+  } catch (e) {
+    addLog(`获取页面列表异常: ${e}`, 'error')
+    console.error('[SSEStreamPanel] refreshPagesList error:', e)
+  }
+}
+
+const switchToPage = async (pageIndex: number) => {
+  if (!props.browserId || pageIndex === currentPageIndex.value) return
+  const oldPageIndex = currentPageIndex.value
+  try {
+    await browserLiveControlApi.switchPage({ browser_id: props.browserId, page_index: pageIndex })
+    currentPageIndex.value = pageIndex
+    addLog(`已切换到页面 ${pageIndex + 1}`, 'success')
+
+    await refreshPagesList()
+
+    if (isStreaming.value) {
+      await stopFlvPlayer()
+      await nextTick()
+      await startFlvStream()
+    }
+  } catch (e) {
+    addLog(`切换页面失败: ${e}`, 'error')
+    currentPageIndex.value = oldPageIndex
+  }
+}
+
+const closePageByIndex = async (pageIndex: number) => {
+  if (!props.browserId || pagesList.value.length <= 1) return
+  try {
+    const res = await browserLiveControlApi.closePage({
+      browser_id: props.browserId,
+      page_index: pageIndex
+    })
+    if (res.code === 0) {
+      addLog(`已关闭页面 ${pageIndex + 1}`, 'success')
+      await refreshPagesList()
+      if (pageIndex === currentPageIndex.value && pagesList.value.length > 0) {
+        const newPageIndex = 0
+        await browserLiveControlApi.switchPage({ browser_id: props.browserId, page_index: newPageIndex })
+        currentPageIndex.value = newPageIndex
+        await refreshPagesList()
+        if (isStreaming.value) {
+          await stopFlvPlayer()
+          await nextTick()
+          await startFlvStream()
+        }
+      }
+    }
+  } catch (e) {
+    addLog(`关闭页面失败: ${e}`, 'error')
+  }
+}
+
+const createNewPage = async () => {
+  if (!props.browserId) return
+  creatingPage.value = true
+  try {
+    const res = await browserLiveControlApi.executeAction({
+      browser_id: props.browserId,
+      req: {
+        action_id: 'new_page',
+        params: {},
+        page_index: currentPageIndex.value
+      }
+    })
+    if (res.code === 0) {
+      addLog('已创建新页面', 'success')
+      await refreshPagesList()
+    }
+  } catch (e) {
+    addLog(`创建页面失败: ${e}`, 'error')
+  } finally {
+    creatingPage.value = false
+  }
+}
+
+const clickX = ref(0)
+const clickY = ref(0)
+const clicking = ref(false)
+
+interface LogItem {
+  time: string
+  message: string
+  type: 'info' | 'success' | 'warning' | 'error' | 'debug'
+}
+const logs = ref<LogItem[]>([])
+const logScrollbar = ref<InstanceType<typeof ElScrollbar>>()
+
+const heartbeatActiveClients = ref(0)
+
+const activeConnections = computed(() => heartbeatActiveClients.value)
 
 watch(() => sessionState?.value, (newState) => {
   if (newState && isStreaming.value) {
     const { session_exists, browser_running, lifecycle_state } = newState
     if (!session_exists || (!browser_running && (lifecycle_state === 'stopped' || lifecycle_state === 'error'))) {
-      console.log('[WebRTCStreamPanel] Browser terminated, stopping video stream')
+      console.log('[SSEStreamPanel] Browser terminated, stopping video stream')
       stopVideoStream()
     }
   }
   if (newState && newState.browser_running && newState.lifecycle_state === 'active') {
-    console.log('[WebRTCStreamPanel] Browser is running, fetching page list')
+    console.log('[SSEStreamPanel] Browser is running, fetching page list')
     refreshPagesList()
   }
   if (newState?.screen?.width && newState?.screen?.height) {
@@ -497,9 +579,7 @@ const browserRunning = computed(() => {
   return browser_running || lifecycle_state === 'running'
 })
 
-const activeConnections = computed(() => 1)
-
-const addLog = (message: string, type: 'info' | 'success' | 'warning' | 'error' | 'debug' = 'info') => {
+const addLog = (message: string, type: LogItem['type'] = 'info') => {
   const now = new Date()
   const time = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`
   logs.value.push({ time, message, type })
@@ -518,54 +598,21 @@ const getLogClass = (type: string) => {
   return map[type] || ''
 }
 
-const logs = ref<{ time: string; message: string; type: 'info' | 'success' | 'warning' | 'error' | 'debug' }[]>([])
-const logScrollbar = ref<InstanceType<typeof ElScrollbar>>()
-
 const stopVideoStream = () => {
-  console.log('[WebRTCStreamPanel] stopVideoStream called')
+  console.log('[SSEStreamPanel] stopVideoStream called')
   userManuallyStopped = true
   isStreaming.value = false
   isConnecting.value = false
   isReconnecting.value = false
   reconnectAttempts.value = 0
-  totalReconnectCount = 0   // 重置总计数
 
   if (reconnectTimer) {
     clearTimeout(reconnectTimer)
     reconnectTimer = null
   }
 
-  if (fpsInterval) {
-    clearInterval(fpsInterval)
-    fpsInterval = null
-  }
-
-  // 停止带宽统计
-  stopBandwidthStats()
-
-  // 关闭 WebRTC 流（使用新的 close 接口）
-  const closeStream = async () => {
-    if (streamKey.value && props.browserId) {
-      try {
-        await browserControlApi.closeWebrtcStream({
-          browser_id: props.browserId,
-          stream_key: streamKey.value
-        })
-        console.log('[WebRTCStreamPanel] WebRTC stream closed on server')
-      } catch (e) {
-        console.error('[WebRTCStreamPanel] Failed to close webrtc stream:', e)
-      }
-    }
-    streamKey.value = ''
-  }
-  
-  closeStream()
-
-  stopWebrtcConnection()
+  stopFlvPlayer()
   stopTimers()
-
-  fpsDisplay.value = 0
-  resolutionDisplay.value = ''
 
   if (sessionState?.value) {
     sessionState.value.status = 'disconnected'
@@ -574,49 +621,23 @@ const stopVideoStream = () => {
   biliMessage.info('视频流已停止')
 }
 
-const stopWebrtcConnection = async () => {
-  if (peerConnection.value) {
-    try {
-      peerConnection.value.close()
-      peerConnection.value = null
-    } catch (e) {
-      console.error('[WebRTCStreamPanel] Failed to close peer connection:', e)
-    }
+const stopFlvPlayer = async () => {
+  if (flvPlayer.value) {
+    flvPlayer.value.pause()
+    flvPlayer.value.unload()
+    flvPlayer.value.detachMediaElement()
+    flvPlayer.value.destroy()
+    flvPlayer.value = null
   }
-}
-
-const refreshStream = async () => {
-  if (!isStreaming.value || refreshingStream.value) return
-  refreshingStream.value = true
+  if (streamAbortController.value) {
+    streamAbortController.value.abort()
+    streamAbortController.value = null
+  }
   try {
-    addLog('正在刷新 WebRTC 视频流...', 'info')
-    
-    // 先关闭现有的 WebRTC 流（使用新的 close 接口）
-    if (streamKey.value) {
-      try {
-        await browserControlApi.closeWebrtcStream({
-          browser_id: props.browserId,
-          stream_key: streamKey.value
-        })
-        addLog('已发送关闭流请求', 'info')
-      } catch (e) {
-        console.error('[WebRTCStreamPanel] Failed to close webrtc stream:', e)
-      }
-    }
-    
-    // 停止当前连接
-    await stopWebrtcConnection()
-    streamKey.value = ''
-    
-    // 重新建立连接
-    await startWebrtcStream()
-    addLog('视频流刷新成功', 'success')
-    biliMessage.success('视频流已刷新')
-  } catch (e: any) {
-    addLog(`刷新失败: ${e.message || e}`, 'error')
-    biliMessage.error('刷新失败：' + (e.message || '未知错误'))
-  } finally {
-    refreshingStream.value = false
+    await browserControlApi.stopFlvStream(currentPageIndex.value, props.browserId)
+    console.log('[SSEStreamPanel] FLV stream stopped')
+  } catch (e) {
+    console.error('[SSEStreamPanel] Failed to stop FLV stream:', e)
   }
 }
 
@@ -625,15 +646,13 @@ const stopTimers = () => {
 }
 
 const startVideoStream = async () => {
-  console.log('[WebRTCStreamPanel] startVideoStream called, isStreaming:', isStreaming.value)
+  console.log('[SSEStreamPanel] startVideoStream called, isStreaming:', isStreaming.value)
   if (isStreaming.value) return
 
   isConnecting.value = true
   userManuallyStopped = false
   reconnectError.value = ''
   screenshotUrl.value = ''
-  totalReconnectCount = 0      // 重置总计数
-  reconnectAttempts.value = 0   // 重置本轮计数
 
   try {
     addLog('检查浏览器会话...', 'info')
@@ -646,7 +665,7 @@ const startVideoStream = async () => {
       }
     }
 
-    await startWebrtcStream()
+    await startFlvStream()
     startHeartbeat()
     await refreshPagesList()
 
@@ -661,11 +680,7 @@ const startVideoStream = async () => {
   }
 }
 
-const startWebrtcStream = async () => {
-  console.log('[WebRTCStreamPanel] startWebrtcStream called')
-
-  await stopWebrtcConnection()
-
+const startFlvStream = async () => {
   if (!videoRef.value) {
     await nextTick()
     if (!videoRef.value) {
@@ -673,275 +688,87 @@ const startWebrtcStream = async () => {
     }
   }
 
+  await stopFlvPlayer()
+
+  streamAbortController.value = new AbortController()
+
+  let baseUrl = import.meta.env.VITE_API_BASE_URL
+  if (!baseUrl || baseUrl === '/') {
+    baseUrl = window.location.origin
+  }
+  const streamUrl = `${baseUrl}/api/v1/rpa/browser/control/flv/stream?browser_id=${props.browserId}&page_index=${currentPageIndex.value}`
+
+  console.log('[SSEStreamPanel] Creating FLV player with URL:', streamUrl)
+
+  const jwtStore = useJwtStore()
+  const userNavStore = useUserNavStore()
+
+  const headers: Record<string, string> = {}
+  if (jwtStore.jwt) {
+    headers['Authorization'] = `Bearer ${jwtStore.jwt}`
+  }
+
+  flvPlayer.value = flvjs.createPlayer({
+    type: 'flv',
+    url: streamUrl,
+    hasAudio: false,
+    hasVideo: true,
+    isLive: true
+  }, {
+    enableWorker: false,
+    enableStashBuffer: false,
+    stashInitialSize: 128,
+    headers: headers
+  })
+
+  flvPlayer.value.attachMediaElement(videoRef.value)
+  flvPlayer.value.load()
+
+  flvPlayer.value.on(flvjs.Events.ERROR, (errType: any, errDetail: any) => {
+    console.error('[SSEStreamPanel] FLV player error:', errType, errDetail)
+    if (!isReconnecting.value && !userManuallyStopped) {
+      handleConnectionLost(`FLV stream error: ${errDetail}`)
+    }
+  })
+
+  flvPlayer.value.on(flvjs.Events.LOADING_COMPLETE, () => {
+    console.log('[SSEStreamPanel] FLV loading complete')
+    if (!isReconnecting.value && !userManuallyStopped) {
+      handleConnectionLost('FLV loading complete')
+    }
+  })
+
   try {
-    addLog('Step 1: 请求 SDP Offer...', 'info')
-    const offerRes = await browserControlApi.createWebrtcOffer({
-      browser_id: props.browserId,
-      page_index: currentPageIndex.value
-    })
-
-    if (offerRes.code !== 0) {
-      throw new Error(offerRes.msg || '获取 Offer 失败')
-    }
-
-    const offer = offerRes.data
-    console.log('[WebRTCStreamPanel] Received offer, sdp length:', offer?.sdp?.length)
-    console.log('[WebRTCStreamPanel] Offer type:', offer?.type)
-    
-    // 保存 stream_key
-    if (offer?.stream_key) {
-      streamKey.value = offer.stream_key
-      console.log('[WebRTCStreamPanel] Received stream_key:', offer.stream_key)
-    }
-
-    addLog(`收到SDP Offer (${offer?.sdp?.length || 0} bytes)`, 'success')
-
-    const pc = new RTCPeerConnection({
-      iceServers: []
-    })
-
-    pc.onicecandidate = async (event) => {
-      console.log('[WebRTCStreamPanel] ICE candidate:', event.candidate)
-      // 发送 ICE Candidate 到服务器
-      if (event.candidate && streamKey.value) {
-        try {
-          await browserControlApi.addIceCandidate({
-            browser_id: props.browserId,
-            stream_key: streamKey.value,
-            candidate: event.candidate.candidate,
-            sdpMid: event.candidate.sdpMid || '',
-            sdpMLineIndex: event.candidate.sdpMLineIndex || 0
-          })
-        } catch (e) {
-          console.error('[WebRTCStreamPanel] Failed to send ICE candidate:', e)
-        }
-      }
-    }
-
-    pc.ontrack = (event) => {
-      console.log('[WebRTCStreamPanel] Received track:', event.track.kind, 'streams:', event.streams)
-      if (event.track.kind === 'video' && event.streams[0]) {
-        console.log('[WebRTCStreamPanel] isStreaming set to true')
-        isStreaming.value = true
-        const videoEl = document.querySelector('.browser .video-element') as HTMLVideoElement
-        console.log('[WebRTCStreamPanel] Found video element:', videoEl)
-        if (videoEl) {
-          videoEl.srcObject = event.streams[0]
-          console.log('[WebRTCStreamPanel] srcObject set, calling play()')
-          videoEl.play().then(() => {
-            console.log('[WebRTCStreamPanel] Video playing successfully')
-            console.log('[WebRTCStreamPanel] videoEl.videoWidth:', videoEl.videoWidth, 'videoEl.videoHeight:', videoEl.videoHeight)
-            console.log('[WebRTCStreamPanel] videoEl.offsetWidth:', videoEl.offsetWidth, 'videoEl.offsetHeight:', videoEl.offsetHeight)
-            console.log('[WebRTCStreamPanel] videoEl.getBoundingClientRect():', videoEl.getBoundingClientRect())
-            addLog('视频播放成功', 'success')
-            startFPSCounter()
-            startBandwidthStats()  // 启动带宽统计
-          }).catch(e => {
-            console.error('[WebRTCStreamPanel] Play failed:', e)
-          })
-        } else {
-          console.error('[WebRTCStreamPanel] videoEl is null!')
-        }
-      }
-    }
-
-    pc.onconnectionstatechange = () => {
-      const state = pc.connectionState
-      console.log('[WebRTCStreamPanel] Connection state:', state)
-      if (state === 'connected') {
-        addLog('WebRTC 连接建立成功', 'success')
-      } else if (state === 'disconnected') {
-        // disconnected 可能是临时中断（ICE 保活丢失），等待几秒看能否自动恢复
-        addLog('WebRTC 连接中断，等待自动恢复...', 'warning')
-        setTimeout(() => {
-          // 延迟后检查状态是否已恢复
-          if (pc.connectionState === 'disconnected' || pc.connectionState === 'failed') {
-            console.log('[WebRTCStreamPanel] Connection did not recover, state:', pc.connectionState)
-            if (!userManuallyStopped) {
-              handleConnectionLost(`Connection ${state}`)
-            }
-          } else if (pc.connectionState === 'connected') {
-            addLog('WebRTC 连接已自动恢复', 'success')
-          }
-        }, 3000) // 等待 3 秒看能否自动恢复
-      } else if (state === 'failed') {
-        // failed 表示彻底失败，立即重连
-        if (!userManuallyStopped) {
-          handleConnectionLost(`Connection ${state}`)
-        }
-      }
-    }
-
-    pc.oniceconnectionstatechange = () => {
-      console.log('[WebRTCStreamPanel] ICE state:', pc.iceConnectionState)
-    }
-
-    addLog('Step 2: 设置远程描述...', 'info')
-    await pc.setRemoteDescription(new RTCSessionDescription(offer))
-
-    addLog('Step 3: 创建本地 Answer...', 'info')
-    const answer = await pc.createAnswer()
-    console.log('[WebRTCStreamPanel] Created answer, sdp length:', answer.sdp?.length)
-    await pc.setLocalDescription(answer)
-
-    addLog('Step 4: 发送 Answer 到服务器...', 'info')
-    
-    // 使用新的 API 格式提交 answer（包含 stream_key）
-    // 注意：answer 提交失败不中断流程，因为视频流可能已经建立
-    try {
-      const answerRes = await browserControlApi.submitWebrtcAnswer({
-        browser_id: props.browserId,
-        page_index: currentPageIndex.value,
-        answer: {
-          sdp: answer.sdp,
-          type: answer.type
-        },
-        stream_key: streamKey.value
-      })
-
-      if (answerRes.code !== 0) {
-        console.warn('[WebRTCStreamPanel] Answer submit returned non-zero code:', answerRes.msg)
-        addLog(`Answer 提交返回: ${answerRes.msg || '未知'}`, 'warning')
-      } else {
-        addLog('Answer 已发送到服务器', 'success')
-      }
-    } catch (answerErr: any) {
-      // Answer 提交失败不中断流程 - 视频流可能已经正常工作
-      console.warn('[WebRTCStreamPanel] Failed to submit answer:', answerErr)
-      addLog(`Answer 提交失败(非致命): ${answerErr.message || answerErr}`, 'warning')
-    }
-
-    peerConnection.value = pc
-    console.log('[WebRTCStreamPanel] WebRTC stream started')
-
-  } catch (e: any) {
-    console.error('[WebRTCStreamPanel] startWebrtcStream error:', e)
-    addLog(`错误: ${e.message || e}`, 'error')
+    flvPlayer.value.play()
+    isStreaming.value = true
+    addLog('FLV 连接建立成功', 'success')
+  } catch (e) {
+    console.error('[SSEStreamPanel] Play error:', e)
     throw e
   }
 }
 
-const startFPSCounter = () => {
-  frameCount = 0
-  lastFrameTime = performance.now()
-
-  if (videoRef.value) {
-    const countFrames = () => {
-      if (peerConnection.value && peerConnection.value.connectionState === 'connected') {
-        frameCount++
-      }
-      requestAnimationFrame(countFrames)
-    }
-    countFrames()
-
-    videoRef.value.addEventListener('play', () => {
-      if (fpsInterval) {
-        clearInterval(fpsInterval)
-      }
-      fpsInterval = window.setInterval(() => {
-        const now = performance.now()
-        const elapsed = (now - lastFrameTime) / 1000
-        const fps = Math.round(frameCount / elapsed)
-        fpsDisplay.value = fps
-        if (videoRef.value && videoRef.value.videoWidth && videoRef.value.videoHeight) {
-          resolutionDisplay.value = `${videoRef.value.videoWidth}x${videoRef.value.videoHeight}`
-        }
-        frameCount = 0
-        lastFrameTime = now
-      }, 1000)
-    })
-  }
-}
-
-// WebRTC 带宽统计函数
-const startBandwidthStats = () => {
-  stopBandwidthStats() // 确保没有重复的定时器
-  
-  // 初始化统计
-  const initStats = async () => {
-    if (!peerConnection.value) return
-    try {
-      const stats = await peerConnection.value.getStats()
-      stats.forEach((report: RTCStatsReport) => {
-        if (report.type === 'inbound-rtp' && (report as any).kind === 'video') {
-          lastBytesReceived = (report as any).bytesReceived || 0
-        }
-        if (report.type === 'outbound-rtp' && (report as any).kind === 'video') {
-          lastBytesSent = (report as any).bytesSent || 0
-        }
-      })
-    } catch (e) {
-      console.error('[WebRTCStreamPanel] Failed to get initial stats:', e)
-    }
-  }
-  
-  // 初始化后启动定时统计
-  initStats().then(() => {
-    bandwidthStatsInterval = window.setInterval(async () => {
-      if (!peerConnection.value || peerConnection.value.connectionState !== 'connected') return
-      
-      try {
-        const stats = await peerConnection.value.getStats()
-        let currentBytesReceived = 0
-        let currentBytesSent = 0
-        
-        stats.forEach((report: RTCStatsReport) => {
-          if (report.type === 'inbound-rtp' && (report as any).kind === 'video') {
-            currentBytesReceived = (report as any).bytesReceived || 0
-          }
-          if (report.type === 'outbound-rtp' && (report as any).kind === 'video') {
-            currentBytesSent = (report as any).bytesSent || 0
-          }
-        })
-        
-        // 计算速率 (每秒字节数)
-        bandwidthDownload.value = Math.max(0, currentBytesReceived - lastBytesReceived)
-        bandwidthUpload.value = Math.max(0, currentBytesSent - lastBytesSent)
-        
-        // 更新上次值
-        lastBytesReceived = currentBytesReceived
-        lastBytesSent = currentBytesSent
-      } catch (e) {
-        console.error('[WebRTCStreamPanel] Failed to get bandwidth stats:', e)
-      }
-    }, 1000) // 每秒更新一次
-  })
-}
-
-const stopBandwidthStats = () => {
-  if (bandwidthStatsInterval) {
-    clearInterval(bandwidthStatsInterval)
-    bandwidthStatsInterval = null
-  }
-  bandwidthDownload.value = 0
-  bandwidthUpload.value = 0
-  lastBytesReceived = 0
-  lastBytesSent = 0
-}
-
 const handleConnectionLost = async (reason: string) => {
-  console.log('[WebRTCStreamPanel] handleConnectionLost called, reason:', reason, 'totalReconnectCount:', totalReconnectCount, 'isReconnecting:', isReconnecting.value)
+  console.log('[SSEStreamPanel] handleConnectionLost called, reason:', reason, 'attempts:', reconnectAttempts.value, 'isReconnecting:', isReconnecting.value)
 
   if (userManuallyStopped || isReconnecting.value) {
-    console.log('[WebRTCStreamPanel] Skipping handleConnectionLost: userManuallyStopped or already reconnecting')
+    console.log('[SSEStreamPanel] Skipping handleConnectionLost: userManuallyStopped or already reconnecting')
     return
   }
 
   isReconnecting.value = true
-  totalReconnectCount++          // 累计总次数（不重置）
-  reconnectAttempts.value++      // 本轮计数（用于显示）
-  console.log('[WebRTCStreamPanel] Incremented counters, totalReconnectCount:', totalReconnectCount, 'roundAttempt:', reconnectAttempts.value)
+  reconnectAttempts.value++
 
-  if (totalReconnectCount > maxReconnectAttempts) {  // 用总次数判断上限
-    console.log('[WebRTCStreamPanel] Max reconnect attempts reached, stopping')
+  if (reconnectAttempts.value > maxReconnectAttempts) {
+    console.log('[SSEStreamPanel] Max reconnect attempts reached, stopping')
     reconnectError.value = `重连次数已达上限 (${maxReconnectAttempts})，请手动刷新`
     isReconnecting.value = false
     isStreaming.value = false
-    addLog('WebRTC 流重连失败，请手动刷新页面', 'error')
+    addLog('FLV 流重连失败，请手动刷新页面', 'error')
     return
   }
 
-  addLog(`WebRTC 流断开，第 ${reconnectAttempts.value} 次重连中... (总计 ${totalReconnectCount}/${maxReconnectAttempts})`, 'warning')
+  addLog(`FLV 流断开，第 ${reconnectAttempts.value} 次重连中...`, 'warning')
 
   await new Promise<void>((resolve) => {
     reconnectTimer = window.setTimeout(() => {
@@ -951,21 +778,21 @@ const handleConnectionLost = async (reason: string) => {
   })
 
   if (userManuallyStopped || !isReconnecting.value) {
-    console.log('[WebRTCStreamPanel] User stopped during reconnect delay, aborting')
+    console.log('[SSEStreamPanel] User stopped during reconnect delay, aborting')
     isReconnecting.value = false
     return
   }
 
   try {
-    await stopWebrtcConnection()
-    await startWebrtcStream()
-    reconnectAttempts.value = 0   // 重置本轮计数（总次数不重置）
+    await stopFlvPlayer()
+    await startFlvStream()
+    reconnectAttempts.value = 0
     isReconnecting.value = false
-    addLog(`WebRTC 流重连成功 (已用 ${totalReconnectCount}/${maxReconnectAttempts})`, 'success')
+    addLog('FLV 流重连成功', 'success')
   } catch (e) {
-    console.error('[WebRTCStreamPanel] Reconnect failed:', e)
+    console.error('[SSEStreamPanel] Reconnect failed:', e)
     isReconnecting.value = false
-    if (!userManuallyStopped && totalReconnectCount < maxReconnectAttempts) {  // 用总次数判断
+    if (!userManuallyStopped && reconnectAttempts.value < maxReconnectAttempts) {
       handleConnectionLost(reason)
     }
   }
@@ -976,127 +803,25 @@ const startHeartbeat = () => {
   heartbeatTimer = window.setInterval(async () => {
     if (!isStreaming.value) return
     try {
-      const heartbeatRequest: any = {
-        client_id: `client_${Date.now()}`,
-        timestamp: Math.floor(Date.now() / 1000)
-      }
-      // 只有从接口获取到真实 page_id 才传
-      if (currentPageId.value) {
-        heartbeatRequest.page_id = currentPageId.value
-      }
-
       const res = await browserLiveControlApi.sendHeartbeat({
         browser_id: props.browserId,
-        request: heartbeatRequest
+        request: { client_id: `client_${Date.now()}`, timestamp: Math.floor(Date.now() / 1000) }
       })
       if (res.code !== 0 && res.code !== 200) {
-        console.log('[WebRTCStreamPanel] Heartbeat returned error, stopping video stream:', res.msg)
+        console.log('[SSEStreamPanel] Heartbeat returned error, stopping video stream:', res.msg)
         stopVideoStream()
         return
       }
       if (res.data?.status === 'session_not_found' || res.data?.status === 'error') {
-        console.log('[WebRTCStreamPanel] Session not found or error, stopping video stream')
+        console.log('[SSEStreamPanel] Session not found or error, stopping video stream')
         stopVideoStream()
         return
       }
+      if (res.data?.active_clients !== undefined) {
+        heartbeatActiveClients.value = res.data.active_clients
+      }
     } catch {}
   }, HEARTBEAT_INTERVAL)
-}
-
-const refreshPagesList = async () => {
-  if (!props.browserId) return
-  try {
-    console.log('[WebRTCStreamPanel] refreshPagesList called, browserId:', props.browserId)
-    const res = await browserLiveControlApi.getPageList({ browser_id: props.browserId })
-    console.log('[WebRTCStreamPanel] getPageList response:', res)
-    if (res.code === 0 && res.data && res.data.pages) {
-      pagesList.value = res.data.pages.map((page: any) => ({
-        page_index: page.index,
-        page_id: page.page_id || '',  // 从接口获取 page_id，没有则为空
-        title: page.title || '新标签页',
-        url: page.url
-      }))
-      addLog(`获取到 ${pagesList.value.length} 个页面`, 'success')
-      console.log('[WebRTCStreamPanel] Pages with IDs:', pagesList.value.map(p => ({ index: p.page_index, id: p.page_id })))
-      if (currentPageIndex.value >= pagesList.value.length && pagesList.value.length > 0) {
-        currentPageIndex.value = 0
-      }
-    } else {
-      addLog(`获取页面列表失败: ${res.msg || '未知错误'}`, 'error')
-      console.error('[WebRTCStreamPanel] getPageList failed:', res.msg)
-    }
-  } catch (e) {
-    addLog(`获取页面列表异常: ${e}`, 'error')
-    console.error('[WebRTCStreamPanel] refreshPagesList error:', e)
-  }
-}
-
-const switchToPage = async (pageIndex: number) => {
-  if (!props.browserId || pageIndex === currentPageIndex.value) return
-  const oldPageIndex = currentPageIndex.value
-  try {
-    await browserLiveControlApi.switchPage({ browser_id: props.browserId, page_index: pageIndex })
-    currentPageIndex.value = pageIndex
-    addLog(`已切换到页面 ${pageIndex + 1}`, 'success')
-
-    if (isStreaming.value) {
-      await stopVideoStream()
-      await nextTick()
-      await startVideoStream()
-    }
-  } catch (e) {
-    addLog(`切换页面失败: ${e}`, 'error')
-    currentPageIndex.value = oldPageIndex
-  }
-}
-
-const closePageByIndex = async (pageIndex: number) => {
-  if (!props.browserId || pagesList.value.length <= 1) return
-  try {
-    const res = await browserLiveControlApi.closePage({
-      browser_id: props.browserId,
-      page_index: pageIndex
-    })
-    if (res.code === 0) {
-      addLog(`已关闭页面 ${pageIndex + 1}`, 'success')
-      await refreshPagesList()
-      if (pageIndex === currentPageIndex.value && pagesList.value.length > 0) {
-        const newPageIndex = 0
-        await browserLiveControlApi.switchPage({ browser_id: props.browserId, page_index: newPageIndex })
-        currentPageIndex.value = newPageIndex
-        if (isStreaming.value) {
-          await stopVideoStream()
-          await nextTick()
-          await startVideoStream()
-        }
-      }
-    }
-  } catch (e) {
-    addLog(`关闭页面失败: ${e}`, 'error')
-  }
-}
-
-const createNewPage = async () => {
-  if (!props.browserId) return
-  creatingPage.value = true
-  try {
-    const res = await browserLiveControlApi.executeAction({
-      browser_id: props.browserId,
-      req: {
-        action_id: 'new_page',
-        params: {},
-        page_index: currentPageIndex.value
-      }
-    })
-    if (res.code === 0) {
-      addLog('已创建新页面', 'success')
-      await refreshPagesList()
-    }
-  } catch (e) {
-    addLog(`创建页面失败: ${e}`, 'error')
-  } finally {
-    creatingPage.value = false
-  }
 }
 
 const takeScreenshot = async () => {
@@ -1107,21 +832,21 @@ const takeScreenshot = async () => {
       browser_id: props.browserId,
       req: { action_id: 'screenshot', params: {}, page_index: currentPageIndex.value }
     })
-    console.log('[WebRTCStreamPanel] takeScreenshot response:', JSON.stringify(res, null, 2))
+    console.log('[SSEStreamPanel] takeScreenshot response:', JSON.stringify(res, null, 2))
     if (res.code === 0 && res.data) {
       let imgData: string | null = null
-      console.log('[WebRTCStreamPanel] res.data:', res.data)
-      console.log('[WebRTCStreamPanel] typeof res.data.data:', typeof res.data.data)
+      console.log('[SSEStreamPanel] res.data:', res.data)
+      console.log('[SSEStreamPanel] typeof res.data.data:', typeof res.data.data)
       if (res.data.data && typeof res.data.data === 'string') {
         imgData = res.data.data.startsWith('data:') ? res.data.data : `data:image/png;base64,${res.data.data}`
       } else if (res.data.data && typeof res.data.data === 'object') {
         const d = res.data.data as any
-        console.log('[WebRTCStreamPanel] d:', d)
+        console.log('[SSEStreamPanel] d:', d)
         const raw = d.base64 || d.image_base64 || d.screenshot
-        console.log('[WebRTCStreamPanel] raw base64:', raw ? raw.substring(0, 100) + '...' : null)
+        console.log('[SSEStreamPanel] raw base64:', raw ? raw.substring(0, 100) + '...' : null)
         if (raw) imgData = raw.startsWith('data:') ? raw : `data:image/png;base64,${raw}`
       }
-      console.log('[WebRTCStreamPanel] imgData:', imgData ? imgData.substring(0, 100) + '...' : null)
+      console.log('[SSEStreamPanel] imgData:', imgData ? imgData.substring(0, 100) + '...' : null)
       if (imgData) {
         screenshotUrl.value = imgData
         showScreenshotDialog.value = true
@@ -1172,10 +897,6 @@ const handleNavigate = async () => {
     navigating.value = false
   }
 }
-
-const clickX = ref(0)
-const clickY = ref(0)
-const clicking = ref(false)
 
 const handleVideoClick = async (event: MouseEvent) => {
   if (!isStreaming.value || clicking.value) return

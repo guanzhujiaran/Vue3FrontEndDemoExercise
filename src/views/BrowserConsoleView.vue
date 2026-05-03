@@ -48,8 +48,15 @@ onMounted(async () => {
       // 指纹存在，跳转到控制台面板
       router.replace({ name: RouteName.BROWSER_CONSOLE_PANEL, params: { browserId } })
     } else {
-      // 指纹不存在或不属于当前账号
-      router.replace({ name: RouteName.BROWSER_CONSOLE_NOT_FOUND, params: { browserId } })
+      // 检查是否是403错误（浏览器ID不属于当前用户或不存在）
+      const responseCode = result.response?.code
+      if (responseCode === 403 || result.msg?.includes('不属于当前用户') || result.msg?.includes('不存在')) {
+        // 浏览器ID不属于当前用户或不存在，跳转到not-found页面显示提示
+        router.replace({ name: RouteName.BROWSER_CONSOLE_NOT_FOUND, params: { browserId } })
+      } else {
+        // 指纹不存在或不属于当前账号
+        router.replace({ name: RouteName.BROWSER_CONSOLE_NOT_FOUND, params: { browserId } })
+      }
     }
   } catch {
     // 网络异常，仍然尝试跳转到面板，让面板自己处理

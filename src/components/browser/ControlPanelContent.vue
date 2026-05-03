@@ -213,11 +213,11 @@
       <el-card class="mb-4" v-if="isBrowserStarted">
         <template #header>
           <div class="flex items-center justify-between w-full gap-3">
-            <span class="font-medium">标签页管理</span>
+            <span class="font-medium">页面管理</span>
             <el-button
               type="primary"
               size="small"
-              @click="$emit('refresh-tabs')"
+              @click="$emit('refresh-pages')"
               :loading="tabsLoading"
               :icon="Refresh"
             >
@@ -226,24 +226,56 @@
           </div>
         </template>
         <el-scrollbar max-height="200px">
-          <div v-if="tabsList.length > 0" class="flex flex-col gap-2">
+          <div v-if="pagesList.length > 0" class="flex flex-col gap-2">
             <div
-              v-for="tab in tabsList"
-              :key="tab.id"
-              :class="['flex items-center gap-2 px-3 py-2.5 border border-[var(--el-border-color)] rounded-[6px] cursor-pointer transition-all duration-300', 
-                tab.active ? 'bg-[var(--el-color-primary-light-9)] border-[var(--el-color-primary)]' : 'hover:bg-[var(--el-fill-color-light)] hover:border-[var(--el-color-primary)]']"
-              @click="$emit('switch-tab', tab.id)"
+              v-for="page in pagesList"
+              :key="page.page_index"
+              :class="['flex items-center gap-2 px-3 py-2.5 border border-[var(--el-border-color)] rounded-[6px] cursor-pointer transition-all duration-300',
+                page.page_index === currentPageIndex ? 'bg-[var(--el-color-primary-light-9)] border-[var(--el-color-primary)]' : 'hover:bg-[var(--el-fill-color-light)] hover:border-[var(--el-color-primary)]']"
+              @click="$emit('switch-page', page.page_index)"
             >
               <el-icon><Document /></el-icon>
               <div class="flex-1 min-w-0">
-                <el-text class="text-sm font-medium text-[var(--el-text-color-primary)] mb-0.5 truncate" tag="div">{{ tab.title || '无标题' }}</el-text>
-                <el-text class="text-xs text-[var(--el-text-color-secondary)] truncate" tag="div">{{ tab.url || '' }}</el-text>
+                <el-text class="text-sm font-medium text-[var(--el-text-color-primary)] mb-0.5 truncate" tag="div">{{ page.title || '无标题' }}</el-text>
+                <el-text class="text-xs text-[var(--el-text-color-secondary)] truncate" tag="div">{{ page.url || '' }}</el-text>
               </div>
-              <el-tag v-if="tab.active" type="success" size="small">当前</el-tag>
+              <el-tag v-if="page.page_index === currentPageIndex" type="success" size="small">当前</el-tag>
+              <el-button
+                v-if="pagesList.length > 1"
+                type="danger"
+                size="small"
+                circle
+                :icon="Close"
+                @click.stop="$emit('close-page', page.page_index)"
+              />
             </div>
           </div>
-          <el-empty v-else description="暂无标签页" :image-size="60" />
+          <el-empty v-else description="暂无页面" :image-size="60" />
         </el-scrollbar>
+      </el-card>
+
+      <!-- 页面选择器（视频流） -->
+      <el-card class="mb-4" v-if="isBrowserStarted && pagesList.length > 0">
+        <template #header>
+          <span class="font-medium">视频流页面</span>
+        </template>
+        <div class="flex items-center gap-2">
+          <el-select
+            v-model="selectedVideoPageIndex"
+            placeholder="选择页面"
+            size="default"
+            class="flex-1"
+            @change="handleVideoPageChange"
+          >
+            <el-option
+              v-for="page in pagesList"
+              :key="page.page_index"
+              :label="`页面 ${page.page_index + 1}: ${page.title || '无标题'}`"
+              :value="page.page_index"
+            />
+          </el-select>
+          <el-tag type="info" size="small">当前: {{ (currentVideoPageIndex ?? -1) + 1 }}</el-tag>
+        </div>
       </el-card>
     </div>
   </div>
@@ -251,9 +283,10 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { VideoPause, VideoPlay, Refresh, Document, VideoCamera, Picture, Connection, Loading, Warning } from '@element-plus/icons-vue'
+import { VideoPause, VideoPlay, Refresh, Document, VideoCamera, Picture, Connection, Loading, Warning, Close } from '@element-plus/icons-vue'
 import type { BrowserSessionStatus, UserBrowserInfoReadResp } from '@/types/browser-automation-api'
 import { useThemeStore } from '@/stores/theme'
+import type { PageInfo } from '@/api/browser/browser_control_api'
 const themeStore = useThemeStore()
 // 定义Props
 interface Props {
@@ -269,9 +302,11 @@ interface Props {
   screenshotLoading: boolean
   isBrowserStarted: boolean
   videoPaused: boolean
-  tabsList: Array<{ id: string; title: string; url: string; active: boolean }>
+  pagesList: PageInfo[]
   tabsLoading: boolean
   streamConnectionStatus: 'connected' | 'connecting' | 'disconnected' | 'failed'
+  currentPageIndex: number
+  currentVideoPageIndex?: number
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -287,9 +322,11 @@ const props = withDefaults(defineProps<Props>(), {
   screenshotLoading: false,
   isBrowserStarted: false,
   videoPaused: false,
-  tabsList: () => [],
+  pagesList: () => [],
   tabsLoading: false,
-  streamConnectionStatus: 'disconnected'
+  streamConnectionStatus: 'disconnected',
+  currentPageIndex: 0,
+  currentVideoPageIndex: 0
 })
 
 // 定义Emit
@@ -302,13 +339,21 @@ const emit = defineEmits<{
   'refresh-screenshot': []
   'pause-video': []
   'resume-video': []
-  'refresh-tabs': []
-  'switch-tab': [tabId: string]
+  'refresh-pages': []
+  'switch-page': [pageIndex: number]
+  'close-page': [pageIndex: number]
+  'video-page-change': [pageIndex: number]
   'video-click': [x: number, y: number]
 }>()
 
 const videoElement = ref<HTMLVideoElement | null>(null)
 const videoContainer = ref<HTMLDivElement | null>(null)
+
+const selectedVideoPageIndex = ref(props.currentVideoPageIndex ?? 0)
+
+const handleVideoPageChange = (pageIndex: number) => {
+  emit('video-page-change', pageIndex)
+}
 
 // 计算连接状态显示
 const getConnectionStatusText = computed(() => {

@@ -188,7 +188,7 @@
               </div>
               <div class="flex items-center gap-2">
                 <span class="text-xs text-[var(--el-text-color-secondary)]">连接:</span>
-                <span class="text-xs font-medium">{{ instance.sessionStatus?.connected_clients || 0 }}</span>
+                <span class="text-xs font-medium">{{ instance.sessionStatus?.active_connections || 0 }}</span>
               </div>
             </div>
 
@@ -277,9 +277,11 @@
         :screenshot-loading="screenshotLoading"
         :is-browser-started="isBrowserStarted"
         :video-paused="videoPaused"
-        :tabs-list="tabsList"
+        :pages-list="pagesList"
         :tabs-loading="tabsLoading"
         :stream-connection-status="streamConnectionStatus"
+        :current-page-index="currentPageIndex"
+        :current-video-page-index="currentVideoPageIndex"
         @create-session="createBrowserSession"
         @refresh-session="refreshSessionStatus"
         @start-video="startVideoStream"
@@ -287,8 +289,10 @@
         @refresh-screenshot="refreshScreenshot"
         @pause-video="pauseVideoStream"
         @resume-video="resumeVideoStream"
-        @refresh-tabs="refreshTabsList"
-        @switch-tab="switchTab"
+        @refresh-pages="refreshPagesList"
+        @switch-page="switchPage"
+        @close-page="closePage"
+        @video-page-change="handleVideoPageChange"
         @video-click="handleVideoClick"
         @close="showControlPanel = false"
       />
@@ -317,9 +321,11 @@
         :screenshot-loading="screenshotLoading"
         :is-browser-started="isBrowserStarted"
         :video-paused="videoPaused"
-        :tabs-list="tabsList"
+        :pages-list="pagesList"
         :tabs-loading="tabsLoading"
         :stream-connection-status="streamConnectionStatus"
+        :current-page-index="currentPageIndex"
+        :current-video-page-index="currentVideoPageIndex"
         @create-session="createBrowserSession"
         @refresh-session="refreshSessionStatus"
         @start-video="startVideoStream"
@@ -327,8 +333,10 @@
         @refresh-screenshot="refreshScreenshot"
         @pause-video="pauseVideoStream"
         @resume-video="resumeVideoStream"
-        @refresh-tabs="refreshTabsList"
-        @switch-tab="switchTab"
+        @refresh-pages="refreshPagesList"
+        @switch-page="switchPage"
+        @close-page="closePage"
+        @video-page-change="handleVideoPageChange"
         @video-click="handleVideoClick"
         @close="showControlPanel = false"
       />
@@ -366,7 +374,7 @@
               </el-tag>
             </el-descriptions-item>
             <el-descriptions-item label="连接数">
-              {{ selectedInstance.sessionStatus.connected_clients }}
+              {{ selectedInstance.sessionStatus.active_connections || 0 }}
             </el-descriptions-item>
             <el-descriptions-item label="视频流">
               <el-tag :effect="themeStore.themeEffectString" :type="selectedInstance.sessionStatus.video_stream_active ? 'success' : 'info'">
@@ -459,7 +467,9 @@ const streamUrl = ref('')
 const screenshotUrl = ref('')
 const lastScreenshotTime = ref('')
 const videoPaused = ref(false)
-const tabsList = ref<Array<{ id: string; title: string; url: string; active: boolean }>>([])
+const pagesList = ref<Array<{ page_index: number; title: string; url: string }>>([])
+const currentPageIndex = ref(0)
+const currentVideoPageIndex = ref(0)
 const tabsLoading = ref(false)
 const streamConnectionStatus = ref<'connected' | 'connecting' | 'disconnected' | 'failed'>('disconnected')
 
@@ -675,7 +685,9 @@ const handleBrowserSelect = async (browserId: number) => {
   streamUrl.value = ''
   screenshotUrl.value = ''
   videoPaused.value = false
-  tabsList.value = []
+  pagesList.value = []
+  currentPageIndex.value = 0
+  currentVideoPageIndex.value = 0
 
   try {
     // 获取会话状态
@@ -686,7 +698,7 @@ const handleBrowserSelect = async (browserId: number) => {
       startHeartbeat()
       startStatusCheck()
       await refreshScreenshot()
-      await refreshTabsList()
+      await refreshPagesList()
     }
   } catch (error) {
     console.error('选择浏览器失败', error)
@@ -715,7 +727,7 @@ const createBrowserSession = async () => {
         request
       }),
       {
-        successMessage: '浏览器会话创建成功',
+        successMessage: '浏览器启动中，大约需要等待1分钟...',
         errorMessage: '创建浏览器会话失败'
       }
     )
@@ -771,22 +783,10 @@ const startVideoStream = async () => {
   videoLoading.value = true
   streamConnectionStatus.value = 'connecting'
   try {
-    // 使用 WebRTC 连接替代旧的 startVideoStream 方法
-    const response = await businessHandler(
-      browserLiveControlApi.createWebrtcOffer({ browser_id: String(selectedBrowserId.value) }),
-      { errorMessage: '启动视频流失败' }
-    )
-
-    if (response.data?.sdp) {
-      // 这里可以添加 WebRTC 连接逻辑
-      // 目前暂时使用截图作为替代
-      streamConnectionStatus.value = 'connected'
-      // 启动视频流健康检查
-      startStreamHealthCheck()
-      // 启动心跳,说明正在观看直播
-      if (!heartbeatInterval.value) {
-        startHeartbeat()
-      }
+    streamConnectionStatus.value = 'connected'
+    startStreamHealthCheck()
+    if (!heartbeatInterval.value) {
+      startHeartbeat()
     }
   } catch (error) {
     console.error('启动视频流失败', error)
@@ -800,14 +800,9 @@ const stopVideoStream = async () => {
   if (!selectedBrowserId.value) return
 
   try {
-    await businessHandler(
-      browserLiveControlApi.closeWebrtcConnection(String(selectedBrowserId.value)),
-      { errorMessage: '停止视频流失败' }
-    )
     streamUrl.value = ''
     streamConnectionStatus.value = 'disconnected'
     stopStreamHealthCheck()
-    // 停止视频流时也停止心跳
     if (heartbeatInterval.value) {
       clearInterval(heartbeatInterval.value)
       heartbeatInterval.value = null
@@ -877,46 +872,79 @@ const resumeVideoStream = async () => {
   }
 }
 
-// 刷新标签页列表（已删除，后端不再提供此接口）
-const refreshTabsList = async () => {
+// 刷新页面列表
+const refreshPagesList = async () => {
   if (!selectedBrowserId.value) return
 
   tabsLoading.value = true
   try {
-    // 注意：标签页列表接口已在后端移除
-    biliMessage.warning('标签页列表功能已移除')
-    // const response = await businessHandler(
-    //   browserLiveControlApi.listTabs(selectedBrowserId.value.toString()),
-    //   { errorMessage: '获取标签页列表失败' }
-    // )
-    // if (response.success && response.data) {
-    //   tabsList.value = response.data
-    // }
+    const response = await businessHandler(
+      browserLiveControlApi.getPageList({ browser_id: String(selectedBrowserId.value) }),
+      { errorMessage: '获取页面列表失败' }
+    )
+    if (response.success && response.data) {
+      pagesList.value = response.data
+      // 如果当前页面索引超出范围，重置为0
+      if (currentPageIndex.value >= pagesList.value.length && pagesList.value.length > 0) {
+        currentPageIndex.value = 0
+      }
+    }
   } catch (error) {
-    console.error('获取标签页列表失败', error)
+    console.error('获取页面列表失败', error)
   }
   tabsLoading.value = false
 }
 
-// 切换标签页（已删除，后端不再提供此接口）
-const switchTab = async (tabId: string) => {
+// 切换页面
+const switchPage = async (pageIndex: number) => {
   if (!selectedBrowserId.value) return
 
   try {
-    // 注意：切换标签页接口已在后端移除
-    biliMessage.warning('切换标签页功能已移除')
-    // await businessHandler(
-    //   browserLiveControlApi.switchTab({
-    //     browser_id: selectedBrowserId.value.toString(),
-    //     tab_id: tabId
-    //   }),
-    //   { errorMessage: '切换标签页失败' }
-    // )
-    // biliMessage.success('切换标签页成功')
-    // await refreshTabsList()
-    // await refreshScreenshot()
+    await businessHandler(
+      browserLiveControlApi.switchPage({
+        browser_id: String(selectedBrowserId.value),
+        page_index: pageIndex
+      }),
+      { errorMessage: '切换页面失败' }
+    )
+    biliMessage.success('切换页面成功')
+    currentPageIndex.value = pageIndex
+    await refreshPagesList()
   } catch (error) {
-    console.error('切换标签页失败', error)
+    console.error('切换页面失败', error)
+  }
+}
+
+// 关闭页面
+const closePage = async (pageIndex: number) => {
+  if (!selectedBrowserId.value) return
+
+  try {
+    await businessHandler(
+      browserLiveControlApi.closePage({
+        browser_id: String(selectedBrowserId.value),
+        page_index: pageIndex
+      }),
+      { errorMessage: '关闭页面失败' }
+    )
+    biliMessage.success('关闭页面成功')
+    await refreshPagesList()
+  } catch (error) {
+    console.error('关闭页面失败', error)
+  }
+}
+
+// 处理视频流页面切换
+const handleVideoPageChange = async (pageIndex: number) => {
+  if (!selectedBrowserId.value) return
+
+  currentVideoPageIndex.value = pageIndex
+
+  // 如果当前正在播放视频流，需要重新创建offer
+  if (streamConnectionStatus.value === 'connected') {
+    biliMessage.info('正在切换视频流页面，请稍候...')
+    await stopVideoStream()
+    await startVideoStream()
   }
 }
 

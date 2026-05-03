@@ -63,11 +63,12 @@ export enum RouteName {
   BROWSER_MANAGEMENT = 'RPA浏览器控制台',
   BROWSER_CONSOLE = 'RPA控制台',
   BROWSER_CONSOLE_PANEL = 'RPA控制台面板',
-  BROWSER_CONSOLE_WEBRTC = 'RPA控制台-实时控制',
+  BROWSER_CONSOLE_STREAM = 'RPA控制台-实时控制',
   BROWSER_CONSOLE_VISUAL = 'RPA控制台-可视化操作',
   BROWSER_CONSOLE_CUSTOM = 'RPA控制台-自定义操作',
   BROWSER_CONSOLE_DEBUG = 'RPA控制台-Debug调试',
   BROWSER_CONSOLE_NOT_FOUND = 'RPA控制台-指纹不存在',
+  BROWSER_UNAUTHORIZED = 'RPA控制台-未授权',
   // 抽奖数据子路由
   SCRAPY_STAT = '爬虫状态',
   BILI_ATARI_RANKING = 'B站中奖名人堂',

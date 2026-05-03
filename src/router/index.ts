@@ -24,6 +24,7 @@ import {
 } from '@element-plus/icons-vue'
 import emitter from '@/utils/mitt.ts'
 import { type CustomRouteRecordRaw, RouteName } from '@/models/router/index.ts'
+import { useJwtStore } from '@/stores/jwt_token.ts'
 const user_center_routes = [
   {
     path: '',
@@ -270,7 +271,7 @@ const routes: CustomRouteRecordRaw[] = [
     path: '/app/browser-console/:browserId/panel',
     name: RouteName.BROWSER_CONSOLE_PANEL,
     component: () => import('@/views/BrowserConsolePanelView.vue'),
-    redirect: (to) => ({ name: RouteName.BROWSER_CONSOLE_WEBRTC, params: to.params }),
+    redirect: (to) => ({ name: RouteName.BROWSER_CONSOLE_STREAM, params: to.params }),
     meta: {
       title: 'RPA控制台面板',
       description: '浏览器实时控制台面板',
@@ -280,8 +281,8 @@ const routes: CustomRouteRecordRaw[] = [
     },
     children: [
       {
-        path: 'webrtc',
-        name: RouteName.BROWSER_CONSOLE_WEBRTC,
+        path: 'stream',
+        name: RouteName.BROWSER_CONSOLE_STREAM,
         component: () => import('@/components/browser/WebRTCStreamPanel.vue'),
         props: (route) => ({ browserId: route.params.browserId }),
         meta: {
@@ -373,6 +374,18 @@ const routes: CustomRouteRecordRaw[] = [
     children: user_center_routes
   },
   {
+    // RPA浏览器控制台未授权访问页面
+    path: '/app/browser-unauthorized',
+    name: RouteName.BROWSER_UNAUTHORIZED,
+    component: () => import('@/views/BrowserUnauthorizedView.vue'),
+    meta: {
+      title: '未授权访问',
+      description: '未登录状态下访问RPA浏览器控制台',
+      isHeaderShow: false,
+      hideInMenu: true
+    }
+  },
+  {
     // 404页面路由配置
     path: '/:pathMatch(.*)*',
     name: RouteName.NOT_FOUND,
@@ -386,6 +399,35 @@ const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes
 })
+// 路由守卫 - RPA浏览器控制台登录检查
+router.beforeEach((to) => {
+  const jwtStore = useJwtStore()
+  const isLoggedIn = !!jwtStore.jwt
+  const isDevMode = import.meta.env.VITE_BILI_ENV === 'dev'
+
+  // RPA浏览器控制台相关路由列表
+  const browserRoutes = [
+    RouteName.BROWSER_MANAGEMENT,
+    RouteName.BROWSER_CONSOLE,
+    RouteName.BROWSER_CONSOLE_PANEL,
+    RouteName.BROWSER_CONSOLE_STREAM,
+    RouteName.BROWSER_CONSOLE_VISUAL,
+    RouteName.BROWSER_CONSOLE_CUSTOM,
+    RouteName.BROWSER_CONSOLE_DEBUG,
+    RouteName.BROWSER_CONSOLE_NOT_FOUND
+  ]
+
+  // 检查是否访问RPA浏览器控制台相关路由
+  const isBrowserRoute = browserRoutes.includes(to.name as RouteName)
+
+  // 未登录状态下访问RPA浏览器控制台，且不是开发模式
+  if (isBrowserRoute && !isLoggedIn && !isDevMode) {
+    return { name: RouteName.BROWSER_UNAUTHORIZED }
+  }
+
+  return true
+})
+
 // 路由守卫 - 全局加载遮罩
 router.beforeEach((to, from) => {
   if (!from.name) return true

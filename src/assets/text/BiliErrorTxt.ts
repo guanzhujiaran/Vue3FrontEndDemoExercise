@@ -34,8 +34,8 @@ export const BiliErrorRouteToTxt: BiliErrorRouteToType = {
   },
   unauthorized: {
     error_img_src: BiliImg.error.un_authorized,
-    error_msg: '未授权访问',
-    error_description: '抱歉，您需要登录后才能访问此页面',
+    error_msg: '不准访问',
+    error_description: '抱歉，您需要登录后才能访问RPA浏览器控制台',
     btn_text: '返回首页',
     route_link: {
       name: RouteName.HOME

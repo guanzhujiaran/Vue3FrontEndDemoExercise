@@ -498,57 +498,16 @@ export interface TestNotificationResponse {
   message: string
   sent_channels: string[]
   failed_channels: string[]
-  results?: Record<string, {
-    success: boolean
-    message?: string
-  }>
+  results?: Record<
+    string,
+    {
+      success: boolean
+      message?: string
+    }
+  >
 }
 
-// WebRTC相关类型
-export interface WebRTCOfferRequest {
-  browser_id: number
-}
 
-export interface WebRTCOfferResponse {
-  success: boolean
-  sdp?: string
-  message?: string
-}
-
-export interface WebRTCAnswerRequest {
-  browser_id: string
-  sdp: string
-}
-
-export interface WebRTCAnswerResponse {
-  success: boolean
-  message?: string
-}
-
-export interface WebRTCIceCandidateRequest {
-  candidate: Record<string, any>
-}
-
-export interface WebRTCIceCandidateResponse {
-  success: boolean
-  message?: string
-}
-
-export interface WebRTCConnectionStatusResponse {
-  success: boolean
-  connected: boolean
-  state: 'new' | 'connecting' | 'connected' | 'disconnected' | 'failed' | 'closed'
-  message?: string
-}
-
-export interface WebRTCCloseConnectionRequest {
-  browser_id: number
-}
-
-export interface WebRTCCloseConnectionResponse {
-  success: boolean
-  message?: string
-}
 
 // SystemHealthCheckResponse 和 SystemCleanupResponse 已在前面定义
 
@@ -564,6 +523,7 @@ export interface HeartbeatRequest {
 export interface HeartbeatResponse {
   next_interval: number
   status: string
+  active_clients?: number
   message?: string
 }
 
@@ -729,25 +689,30 @@ export type SessionLifecycleStatus =
   | 'stopping'
   | 'stopped'
   | 'error'
+  | 'terminated'
 
 // 浏览器会话状态
 export interface BrowserSessionStatus {
-  session_id: string
-  browser_id: number
-  lifecycle_status: SessionLifecycleStatus
-  is_running: boolean
-  is_active: boolean
-  created_at: string
-  last_heartbeat?: string
-  expiration_time?: string
-  connected_clients: number
-  manual_operation: boolean
-  operation_priority?: string
-  video_stream_active: boolean
-  stream_url?: string
-  current_url?: string
-  headless: boolean
+  session_exists: boolean
+  browser_running: boolean
+  lifecycle_state: SessionLifecycleStatus
+  last_heartbeat: number
+  active_connections: number
+  video_streaming: boolean
+  manual_mode: boolean
+  created_at: number
+  expires_at: number | null
+  status: string
   cleanup_policy?: BrowserCleanupPolicy
+  message: string
+  screen: {
+    width: number
+    height: number
+  }
+  viewport: {
+    width: number
+    height: number
+  }
 }
 
 // 会话状态响应（兼容旧API）
@@ -812,6 +777,7 @@ export interface BrowserEffectiveNotifyRequest {
 export interface SimplifiedHeartbeatRequest {
   client_id: string
   timestamp: number
+  page_id: string  // 页面唯一 ID（用于更新 WebRTC 活跃时间）
 }
 
 export interface SimplifiedCreateSessionRequest {
@@ -955,7 +921,7 @@ export interface Body_set_cleanup_policy_api_v1_rpa_browser_live_control_browser
 // Body_video_stream_h264_api_v1_rpa_browser_live_control_stream_mjpeg_post 已删除
 // export interface Body_video_stream_h264_api_v1_rpa_browser_live_control_stream_mjpeg_post { ... }
 
-// ===== 新增WebRTC相关请求类型 =====
+// ===== 通知配置响应类型 =====
 export interface NotificationConfigEffectiveResp {
   hitokoto?: boolean
   bark_push?: string
@@ -1709,18 +1675,6 @@ export interface BodySetCleanupPolicyRequest {
   body: VerifyBrowserDependsReq
 }
 
-// WebRTC ICE Candidate请求体
-export interface BodyAddWebrtcIceCandidateRequest {
-  request: WebRTCIceCandidateRequest
-  body: VerifyBrowserDependsReq
-}
-
-// 设置WebRTC Answer请求体
-export interface BodySetWebrtcAnswerRequest {
-  request: WebRTCAnswerRequest
-  body: VerifyBrowserDependsReq
-}
-
 // ===== 响应类型扩展 =====
 
 // 管理员所有会话响应
@@ -1771,49 +1725,13 @@ export interface TestNotificationResponse {
   message: string
   sent_channels: string[]
   failed_channels: string[]
-  results?: Record<string, {
-    success: boolean
-    message?: string
-  }>
-}
-
-// WebRTC相关响应类型
-export interface WebRTCOfferResponse {
-  success: boolean
-  sdp?: string
-  message?: string
-}
-
-export interface WebRTCAnswerResponse {
-  success: boolean
-  message?: string
-}
-
-export interface WebRTCIceCandidateResponse {
-  success: boolean
-  message?: string
-}
-
-export interface WebRTCGetIceCandidatesResponse {
-  success: boolean
-  candidates: Array<{
-    candidate?: string
-    sdpMid?: string | null
-    sdpMLineIndex?: number | null
-  }>
-  ice_gathering_state?: string
-}
-
-export interface WebRTCConnectionStatusResponse {
-  success: boolean
-  connected: boolean
-  state: 'new' | 'connecting' | 'connected' | 'disconnected' | 'failed' | 'closed'
-  message?: string
-}
-
-export interface WebRTCCloseConnectionResponse {
-  success: boolean
-  message?: string
+  results?: Record<
+    string,
+    {
+      success: boolean
+      message?: string
+    }
+  >
 }
 
 // 系统清理响应
@@ -1995,4 +1913,65 @@ export interface DeleteSettingsRequest {
 // 应用默认设置请求
 export interface ApplySettingsRequest {
   browser_id: number
+}
+
+// ===== WebRTC 相关类型定义 =====
+
+// WebRTC Offer 请求
+export interface WebRTCOfferRequest {
+  page_index?: number
+}
+
+// WebRTC Answer 请求
+export interface WebRTCAnswerRequest {
+  stream_key: string
+  sdp: string
+  type: string
+}
+
+// WebRTC ICE Candidate 请求
+export interface WebRTCIceCandidateRequest {
+  stream_key: string
+  candidate: string
+  sdpMid: string
+  sdpMLineIndex: number
+}
+
+// WebRTC Close 请求
+export interface WebRTCCloseRequest {
+  stream_key: string
+}
+
+// WebRTC Offer 响应（包含stream_key）
+export interface WebRtcOfferResp {
+  sdp: string
+  type: string
+  stream_key?: string
+}
+
+// WebRTC 组合请求体类型
+export interface BodyCreateWebrtcOfferRequest {
+  req: WebRTCOfferRequest
+  body: VerifyBrowserDependsReq
+}
+
+export interface BodyHandleWebrtcAnswerRequest {
+  req: WebRTCAnswerRequest
+  body: VerifyBrowserDependsReq
+}
+
+export interface BodyAddIceCandidateRequest {
+  req: WebRTCIceCandidateRequest
+  body: VerifyBrowserDependsReq
+}
+
+export interface BodyCloseWebrtcStreamRequest {
+  req: WebRTCCloseRequest
+  body: VerifyBrowserDependsReq
+}
+
+// WebRTC SDP Offer 响应 (旧版本兼容)
+export interface WebRTCAnswer {
+  sdp: string
+  type: string
 }

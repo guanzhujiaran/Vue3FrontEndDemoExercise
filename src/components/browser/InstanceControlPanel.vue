@@ -293,7 +293,6 @@ const handleClose = () => {
 const handleVideoPlay = async () => {
   if (!isPlaying.value && props.videoStreamUrl) {
     try {
-      // 使用 WebRTC 视频流（由父组件通过 WebRTC 提供流对象）
       if (videoPlayer.value) {
         // 设置视频源
         videoPlayer.value.src = props.videoStreamUrl

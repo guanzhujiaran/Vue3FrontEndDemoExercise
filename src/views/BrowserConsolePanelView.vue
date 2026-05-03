@@ -65,7 +65,7 @@
           :collapse-transition="false"
           router
         >
-          <el-menu-item :index="consoleBasePath + '/webrtc'">
+          <el-menu-item :index="consoleBasePath + '/stream'">
             <el-icon><VideoCamera /></el-icon>
             <template #title>实时控制</template>
           </el-menu-item>
@@ -107,7 +107,7 @@
               size="small"
               type="danger"
               plain
-              :loading="operateState === 'stopping'"
+              :loading="operateState in ['launching', 'stopping']"
               :disabled="stopBtnDisabled"
               @click="stopBrowser"
             >
@@ -141,7 +141,7 @@
       <!-- 右侧内容区 -->
       <div class="flex-1 min-w-0 min-h-0 overflow-y-auto bg-bg">
         <router-view v-slot="{ Component }">
-          <component :is="Component" :session-state="sessionState" />
+          <component :is="Component"/>
         </router-view>
       </div>
     </div>
@@ -149,15 +149,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, onMounted, provide } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Monitor, ArrowLeft, Key, CopyDocument, VideoCamera, Connection, Tools, Cpu, Fold, Expand } from '@element-plus/icons-vue'
 import browserApi, { browserLiveControlApi } from '@/api/browser/browser_api'
 import { businessHandler } from '@/utils/businessHandler'
 import biliMessage from '@/utils/message'
-import type { UserBrowserInfoReadResp } from '@/types/browser-automation-api'
+import type { UserBrowserInfoReadResp, BrowserSessionStatus } from '@/types/browser-automation-api'
 import { RouteName } from '@/models/router/index'
-
 const route = useRoute()
 const router = useRouter()
 
@@ -174,26 +173,28 @@ const browserInfo = ref<UserBrowserInfoReadResp | null>(null)
 const loadingInfo = ref(false)
 
 // ===== 浏览器会话状态 =====
-interface SessionState {
-  session_exists: boolean
-  browser_running: boolean
-  lifecycle_state: string
-  status: string
-  message?: string
-  active_connections: number
-  video_streaming: boolean
-  manual_mode: boolean
+const sessionState = ref<BrowserSessionStatus>()
+
+// 停止浏览器时的回调函数类型
+type StopBrowserCallback = () => void
+
+// 存储所有注册的回调函数
+const stopBrowserCallbacks = ref<StopBrowserCallback[]>([])
+
+// 注册停止浏览器的回调函数
+const onStopBrowser = (callback: StopBrowserCallback) => {
+  stopBrowserCallbacks.value.push(callback)
+  // 返回取消注册函数
+  return () => {
+    const index = stopBrowserCallbacks.value.indexOf(callback)
+    if (index > -1) {
+      stopBrowserCallbacks.value.splice(index, 1)
+    }
+  }
 }
 
 // 前端操作状态机
 type OperateState = 'idle' | 'launching' | 'running' | 'launch_failed' | 'stopping'
-
-const sessionState = ref<SessionState | null>(null)
-
-// 监听sessionState变化
-watch(sessionState, (newVal) => {
-  console.log('[BrowserConsolePanelView] sessionState changed:', newVal)
-}, { deep: true })
 
 const statusPollingTimer = ref<ReturnType<typeof setInterval> | null>(null)
 const statusPollCount = ref(0)
@@ -238,10 +239,6 @@ const launchBtnText = computed(() => {
   }
 })
 
-const launchBtnIcon = computed(() => {
-  return operateState.value === 'launch_failed' ? 'WarningFilled' : undefined
-})
-
 const launchBtnType = computed(() => {
   return operateState.value === 'launch_failed' ? 'danger' as const : 'primary' as const
 })
@@ -249,26 +246,21 @@ const launchBtnType = computed(() => {
 const stopBtnDisabled = computed(() => operateState.value === 'launching' || operateState.value === 'stopping')
 
 // ===== 状态机转换 =====
-const refreshSessionStatus = async (): Promise<SessionState | null> => {
+const refreshSessionStatus = async (): Promise<BrowserSessionStatus | null> => {
   if (!browserId) return null
   try {
     const res = await browserLiveControlApi.getBrowserSessionStatus({ browser_id: browserId })
     // 兼容code为0或200的情况
     if ((res.code === 0 || res.code === 200) && res.data) {
-      const data = res.data as any
-      // 兼容处理：如果是新的API格式（包含browser_running字段），确保转换为正确的格式
-      sessionState.value = {
-        session_exists: data.session_exists || true,
-        browser_running: data.browser_running || false,
-        lifecycle_state: data.lifecycle_state || data.lifecycle_status || 'unknown',
-        status: data.status || data.lifecycle_state || data.lifecycle_status || 'unknown',
-        message: data.message || '',
-        active_connections: data.active_connections || data.connected_clients || 0,
-        video_streaming: data.video_streaming || data.video_stream_active || false,
-        manual_mode: data.manual_mode || data.manual_operation || false
-      }
+      const data = res.data as BrowserSessionStatus
+      sessionState.value = data
       console.log('[BrowserConsolePanelView] refreshSessionStatus updated sessionState:', sessionState.value)
       return sessionState.value
+    } else if (res.code === 403) {
+      // 浏览器ID不存在或不属于当前用户，跳转到not-found页面
+      console.log('[BrowserConsolePanelView] browser_id does not belong to current user or does not exist, redirecting to not-found')
+      router.push({ name: RouteName.BROWSER_CONSOLE_NOT_FOUND, params: { browserId } })
+      return null
     } else if (res.code === 404) {
       sessionState.value = {
         session_exists: false,
@@ -278,7 +270,15 @@ const refreshSessionStatus = async (): Promise<SessionState | null> => {
         message: res.msg || '会话不存在',
         active_connections: 0,
         video_streaming: false,
-        manual_mode: false
+        manual_mode: false,
+        last_heartbeat: 0,
+        created_at: 0,
+        expires_at: null,
+        cleanup_policy: {
+          max_idle_time: 0,
+          max_no_heartbeat_time: 0,
+          cleanup_interval: 0
+        }
       }
       return sessionState.value
     }
@@ -332,7 +332,7 @@ const startBrowser = async () => {
   try {
     const result = await businessHandler(
       browserLiveControlApi.createBrowserSession({ browser_id: browserId }),
-      { successMessage: '浏览器启动中...', errorMessage: '启动浏览器失败', showSuccessToast: true }
+      { successMessage: '浏览器启动中，大约需要等待1分钟...', errorMessage: '启动浏览器失败', showSuccessToast: true }
     )
     if (result.success) {
       // create成功后，立即查一次状态
@@ -345,6 +345,12 @@ const startBrowser = async () => {
         startLaunchPolling()
       }
     } else {
+      // 检查是否是403错误（浏览器ID不存在或不属于当前用户）
+      if (result.response?.code === 403) {
+        console.log('[BrowserConsolePanelView] browser_id does not belong to current user or does not exist, redirecting to not-found')
+        router.push({ name: RouteName.BROWSER_CONSOLE_NOT_FOUND, params: { browserId } })
+        return
+      }
       operateState.value = 'launch_failed'
     }
   } catch {
@@ -356,31 +362,48 @@ const stopBrowser = async () => {
   if (!browserId || stopBtnDisabled.value) return
   operateState.value = 'stopping'
   stopLaunchPolling()
-  try {
-    const result = await businessHandler(
-      browserLiveControlApi.triggerSystemCleanup(),
-      { successMessage: '浏览器正在关闭...', errorMessage: '关闭浏览器失败', showSuccessToast: true }
-    )
-    if (result.success) {
-      // 等待后端清理完成后回到 idle
-      const checkStopped = async (attempts = 0) => {
-        if (attempts > 10) {
-          operateState.value = 'idle'
-          refreshSessionStatus()
-          return
-        }
-        await new Promise(r => setTimeout(r, 2000))
-        const state = await refreshSessionStatus()
-        if (state && !state.browser_running && !state.session_exists) {
-          operateState.value = 'idle'
-        } else {
-          checkStopped(attempts + 1)
-        }
-      }
-      checkStopped()
-    } else {
-      operateState.value = 'idle'
+  
+  // 通知所有注册的回调函数，浏览器即将停止
+  stopBrowserCallbacks.value.forEach(callback => {
+    try {
+      callback()
+    } catch (e) {
+      console.error('[BrowserConsolePanelView] Error calling stopBrowser callback:', e)
     }
+  })
+  
+  try {
+    // 2. 再关闭浏览器会话
+    const res = await browserLiveControlApi.closeBrowserSession({
+      browser_id: browserId
+    })
+    if (res.code === 0) {
+      ElMessage.success('浏览器正在关闭...')
+      // 立即更新前端状态，给用户即时反馈
+      if (sessionState.value) {
+        sessionState.value.status = 'stopped'
+        sessionState.value.browser_running = false
+        sessionState.value.session_exists = false
+      }
+    } else {
+      ElMessage.error(res.msg || '关闭失败')
+    }
+    // 等待后端清理完成后回到 idle
+    const checkStopped = async (attempts = 0) => {
+      if (attempts > 10) {
+        operateState.value = 'idle'
+        refreshSessionStatus()
+        return
+      }
+      await new Promise(r => setTimeout(r, 2000))
+      const state = await refreshSessionStatus()
+      if (state && !state.browser_running && !state.session_exists) {
+        operateState.value = 'idle'
+      } else {
+        checkStopped(attempts + 1)
+      }
+    }
+    checkStopped()
   } catch {
     operateState.value = 'idle'
   }
@@ -409,7 +432,7 @@ const stopStatusPolling = () => {
 }
 
 // 状态轮询时，如果检测到后端状态变化，同步状态机
-const syncOperateStateFromBackend = (state: SessionState | null) => {
+const syncOperateStateFromBackend = (state: BrowserSessionStatus | null) => {
   if (!state) return
   // 不覆盖 launching / stopping 等前端操作进行中的状态
   if (operateState.value === 'launching' || operateState.value === 'stopping') return
@@ -464,15 +487,14 @@ const getBrowserTagType = (browser: string): string => {
   return map[browser] || 'info'
 }
 
+provide('browserSessionState', sessionState)
+provide('onStopBrowser', onStopBrowser)
+
 onMounted(() => {
   loadBrowserInfo()
   startStatusPolling()
 })
 
-onBeforeUnmount(() => {
-  stopStatusPolling()
-  stopLaunchPolling()
-})
 </script>
 
 

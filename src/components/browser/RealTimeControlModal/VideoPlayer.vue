@@ -2,9 +2,9 @@
  * @Author: 星瞳 1944637830@qq.com
  * @Date: 2024-12-15 00:00:00
  * @LastEditors: 星瞳 1944637830@qq.com
- * @LastEditTime: 2024-12-24 00:00:00
+ * @LastEditTime: 2026-05-01 00:00:00
  * @FilePath: \Vue3FrontEndDemoExercise\src\components\browser\RealTimeControlModal\VideoPlayer.vue
- * @Description: 视频播放器组件
+ * @Description: SSE视频播放器组件
 -->
 <template>
     <div class="flex-1 flex flex-col bg-black rounded-[var(--size-radius-large)] overflow-hidden shadow-[var(--el-box-shadow)] min-h-0">
@@ -35,7 +35,7 @@
             </div>
             <div class="flex items-center gap-1.5 text-[13px]">
                 <el-icon><User /></el-icon>
-                <span>连接数: {{ (sessionInfo as any).active_connections || sessionInfo.connections || 0 }}</span>
+                <span>连接数: {{ sessionInfo.active_connections || 0 }}</span>
             </div>
             <div class="flex items-center gap-1.5 text-[13px]">
                 <el-icon><Clock /></el-icon>
@@ -64,18 +64,16 @@
                 <p class="text-white text-[14px] m-0 text-center px-5 opacity-80">连接已断开，请点击"开始视频"重新连接</p>
             </div>
 
-            <video
-                v-if="isStreaming"
-                ref="videoPlayer"
-                :autoplay="isStreaming"
-                playsinline
-                muted
-                class="max-w-full max-h-full w-auto h-auto object-contain bg-black block mx-auto"
-                @loadedmetadata="$emit('videoMetadataLoaded')"
-                @loadeddata="$emit('videoDataLoaded')"
-            >
-                您的浏览器不支持视频播放
-            </video>
+            <!-- SSE 视频流显示区域 -->
+            <div v-if="isStreaming" class="relative w-full h-full flex items-center justify-center">
+                <img
+                    ref="videoImage"
+                    :src="currentFrameUrl"
+                    class="max-w-full max-h-full w-auto h-auto object-contain bg-black"
+                    @load="onFrameLoaded"
+                    @error="onFrameError"
+                />
+            </div>
 
             <!-- 视频控制条 - B站风格,悬浮时显示 -->
             <transition name="control-bar-fade">
@@ -172,13 +170,10 @@ import {
     CircleClose
 } from '@element-plus/icons-vue'
 
-// 保留 VideoPlay 和 VideoPause 用于视频流控制按钮的图标切换
-
 interface SessionInfo {
-    connections: number
     lastActivity: string
     status: string
-    active_connections?: number
+    active_connections: number
     last_heartbeat?: number
     session_exists?: boolean
     browser_running?: boolean
@@ -195,18 +190,16 @@ interface Props {
     isStreaming: boolean
     screenshotUrl: string
     sessionInfo: SessionInfo
-    isDisconnecting?: boolean  // 是否正在主动断开连接
-    isReconnecting?: boolean  // 是否正在重连
-    reconnectError?: string  // 重连错误信息
-    showDebugDialog?: boolean  // 是否显示调试对话框
-    isGatheringIce?: boolean  // 是否正在收集ICE候选
+    isDisconnecting?: boolean
+    isReconnecting?: boolean
+    reconnectError?: string
+    showDebugDialog?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
     isDisconnecting: false,
     isReconnecting: false,
-    reconnectError: '',
-    isGatheringIce: false
+    reconnectError: ''
 })
 
 const emit = defineEmits<{
@@ -216,18 +209,41 @@ const emit = defineEmits<{
     toggleVideo: []
     takeScreenshot: []
     navigate: [url: string]
+    frameLoaded: []
 }>()
 
-const videoPlayer = ref<HTMLVideoElement>()
-const showControls = ref(false)  // 控制条显示状态
-const navigateUrl = ref('')  // URL导航输入
-const showScreenshotPreview = ref(false)  // 截图预览显示状态
+const videoImage = ref<HTMLImageElement>()
+const showControls = ref(false)
+const navigateUrl = ref('')
+const showScreenshotPreview = ref(false)
+const currentFrameUrl = ref('')
 
 const handleNavigate = () => {
     if (navigateUrl.value.trim()) {
         emit('navigate', navigateUrl.value)
         navigateUrl.value = ''
     }
+}
+
+// 更新当前帧
+const updateFrame = (blob: Blob) => {
+    // 释放旧的 Blob URL
+    if (currentFrameUrl.value) {
+        URL.revokeObjectURL(currentFrameUrl.value)
+    }
+    // 创建新的 Blob URL
+    currentFrameUrl.value = URL.createObjectURL(blob)
+}
+
+// 帧加载完成
+const onFrameLoaded = () => {
+    emit('frameLoaded')
+    emit('videoDataLoaded')
+}
+
+// 帧加载错误
+const onFrameError = () => {
+    console.error('❌ SSE 帧加载失败')
 }
 
 // 下载截图
@@ -266,7 +282,6 @@ const copyScreenshotToClipboard = async () => {
             })
         ])
         
-        // 显示成功消息
         const biliMessage = (await import('@/utils/message')).default
         biliMessage.success('截图已复制到剪贴板')
     } catch (error) {
@@ -302,18 +317,12 @@ const connectionStatusClass = computed(() => {
 })
 
 const showLoadingMask = computed(() => {
-    // 只在连接中时显示加载遮罩，断开状态不显示（除非正在主动断开）
-    // 同时也当正在收集ICE时显示加载遮罩
     return props.sessionInfo.status === 'connecting' ||
-           (props.sessionInfo.status === 'disconnected' && props.isDisconnecting) ||
-           props.isGatheringIce
+           (props.sessionInfo.status === 'disconnected' && props.isDisconnecting)
 })
 
 const loadingText = computed(() => {
     const status = props.sessionInfo.status
-    if (props.isGatheringIce) {
-        return '正在建立连接...'
-    }
     switch (status) {
         case 'connecting':
             return '正在连接...'
@@ -327,9 +336,8 @@ const loadingText = computed(() => {
 const formatTime = (timeValue: string | number) => {
     if (!timeValue) return '未知'
     
-    // 如果是数字（时间戳），转换为日期字符串
     if (typeof timeValue === 'number') {
-        const date = new Date(timeValue * 1000) // 后端返回的是秒级时间戳
+        const date = new Date(timeValue * 1000)
         return date.toLocaleTimeString('zh-CN', {
             hour: '2-digit',
             minute: '2-digit',
@@ -337,16 +345,14 @@ const formatTime = (timeValue: string | number) => {
         })
     }
     
-    // 如果是字符串，直接返回
     return timeValue
 }
 
 const handleDebug = () => {
     console.log('🔍 调试按钮被点击')
-    console.log('📡 准备更新 showDebugDialog')
+    console.log('📡 当前视频帧:', currentFrameUrl.value)
     try {
         emit('update:showDebugDialog', true)
-        console.log('✅ showDebugDialog 已更新为 true')
     } catch (error) {
         console.error('❌ 更新失败:', error)
     }
@@ -359,8 +365,18 @@ watch(() => props.screenshotUrl, (newUrl) => {
     }
 })
 
+// 清理资源
+const cleanup = () => {
+    if (currentFrameUrl.value) {
+        URL.revokeObjectURL(currentFrameUrl.value)
+        currentFrameUrl.value = ''
+    }
+}
+
 defineExpose({
-    videoPlayer
+    videoImage,
+    updateFrame,
+    cleanup
 })
 </script>
 

@@ -32,6 +32,8 @@
         "daisyui": "^5.5.19",
         "echarts": "^6.0.0",
         "element-plus": "^2.13.7",
+        "event-source-polyfill": "^1.0.31",
+        "flv.js": "^1.6.2",
         "graphql": "^16.13.2",
         "jsonp": "^0.2.1",
         "mavon-editor": "^3.0.2",

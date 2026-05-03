@@ -37,9 +37,9 @@
       <!-- 右侧内容区 -->
       <div class="flex-1 min-w-0 min-h-0 flex flex-col">
         <div class="flex-1 min-h-0 overflow-y-auto p-3">
-          <!-- 实时视频控制（WebRTC）-->
-          <WebRTCStreamPanel
-            v-if="activeTab === 'webrtc'"
+          <!-- 实时视频控制（MJPEG）-->
+          <MJPEGStreamPanel
+            ref="mjpegPanelRef"
             :browser-id="browserId"
           />
 
@@ -48,6 +48,7 @@
             v-if="activeTab === 'visual-control'"
             :browser-id="browserId"
             @switch-tab="activeTab = $event"
+            @stop-session="handleStopSession"
           />
 
           <!-- 自定义操作管理 -->
@@ -70,10 +71,7 @@
 <script setup lang="ts">
 import { ref, markRaw } from 'vue'
 import { Connection, Tools, Cpu, VideoCamera, Fold, Expand } from '@element-plus/icons-vue'
-import VisualControlPanel from './VisualControlPanel.vue'
-import CustomActionPanel from './CustomActionPanel.vue'
-import DebugPanel from './DebugPanel.vue'
-import WebRTCStreamPanel from './WebRTCStreamPanel.vue'
+import MJPEGStreamPanel from './MJPEGStreamPanel.vue'
 
 // Props
 const props = defineProps({
@@ -85,15 +83,26 @@ const props = defineProps({
 
 // Tab 定义
 const tabs = [
-  { name: 'webrtc', label: '实时控制', icon: markRaw(VideoCamera) },
+  { name: 'mjpeg', label: '实时控制', icon: markRaw(VideoCamera) },
   { name: 'visual-control', label: '可视化操作', icon: markRaw(Connection) },
   { name: 'custom-actions', label: '自定义操作', icon: markRaw(Tools) },
   { name: 'debug', label: 'Debug 调试', icon: markRaw(Cpu) }
 ]
 
 // 状态管理
-const activeTab = ref('webrtc')
+const activeTab = ref('mjpeg')
 const isCollapsed = ref(false)
+
+// MJPEG面板引用
+const mjpegPanelRef = ref<InstanceType<typeof MJPEGStreamPanel> | null>(null)
+
+// 处理停止会话 - 先停止视频流，再触发事件
+const handleStopSession = () => {
+  // 调用 MJPEG 面板的停止视频流方法
+  if (mjpegPanelRef.value) {
+    mjpegPanelRef.value.stopVideoStream()
+  }
+}
 </script>
 
 

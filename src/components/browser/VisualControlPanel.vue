@@ -68,13 +68,13 @@
             <el-col :xs="12" :sm="8" :md="6">
               <div
                 class="flex flex-col items-center p-4 rounded-xl border border-[var(--el-border-color-lighter)] bg-[var(--el-bg-color)] cursor-pointer transition-all duration-200 mb-3 select-none group hover:-translate-y-1 hover:shadow-[0_4px_16px_rgba(0,0,0,0.1)] hover:border-[var(--el-color-primary-light-5)]"
-                @click="goToWebrtc"
+                @click="goToSse"
               >
                 <div class="w-10 h-10 rounded-lg flex items-center justify-center mb-2 text-white text-lg bg-gradient-to-br from-red-500 to-orange-500">
                   <el-icon><VideoCamera /></el-icon>
                 </div>
                 <span class="text-sm font-medium text-[var(--el-text-color-primary)] mb-0.5">实时视频</span>
-                <span class="text-xs text-[var(--el-text-color-secondary)]">WebRTC 视频流</span>
+                <span class="text-xs text-[var(--el-text-color-secondary)]">SSE 视频流</span>
               </div>
             </el-col>
 
@@ -456,6 +456,11 @@ const props = defineProps({
   }
 })
 
+// Emits
+const emit = defineEmits<{
+  (e: 'stop-session'): void
+}>()
+
 // 路由
 const route = useRoute()
 const router = useRouter()
@@ -540,7 +545,7 @@ const createSession = async () => {
       browser_id: props.browserId
     })
     if (res.code === 0) {
-      ElMessage.success('浏览器启动成功')
+      ElMessage.success('浏览器启动中，大约需要等待1分钟...')
       await refreshStatus()
     } else {
       ElMessage.error(res.msg || '启动失败')
@@ -553,22 +558,37 @@ const createSession = async () => {
   }
 }
 
-// 强制停止会话（触发系统清理，stopManualOperation 后端已删除）
+// 强制停止会话（先触发停止视频流，再关闭 session）
 const handleForceRelease = async () => {
   try {
     await ElMessageBox.confirm(
-      '确定要停止当前浏览器会话吗？这将触发系统清理，中断所有正在进行的操作。',
+      '确定要停止当前浏览器会话吗？这将中断所有正在进行的操作。',
       '停止会话',
       { confirmButtonText: '确定停止', cancelButtonText: '取消', type: 'warning' }
     )
     releasing.value = true
-    const res = await browserLiveControlApi.triggerSystemCleanup()
+    
+    // 1. 触发父组件停止视频流（父组件会调用 WebRTC 面板的 stopVideoStream）
+    emit('stop-session')
+    
+    // 2. 关闭浏览器会话
+    const res = await browserLiveControlApi.closeBrowserSession({
+      browser_id: props.browserId
+    })
     if (res.code === 0) {
-      ElMessage.success('清理完成，会话已停止')
-      await refreshStatus()
+      ElMessage.success('会话已停止')
+      // 立即更新前端状态，给用户即时反馈
+      if (sessionStatus.value) {
+        sessionStatus.value.is_running = false
+        sessionStatus.value.lifecycle_status = 'stopped'
+      }
     } else {
       ElMessage.error(res.msg || '停止失败')
     }
+    // 延迟刷新确保后端状态同步
+    setTimeout(() => {
+      refreshStatus()
+    }, 1000)
   } catch (e: any) {
     if (e !== 'cancel') {
       ElMessage.error('操作失败')
@@ -702,19 +722,9 @@ const handleExecuteJs = async () => {
   }
 }
 
-// 切换插件状态
+// 切换插件状态（后端已移除相关接口）
 const togglePlugins = async () => {
-  try {
-    const res = await browserLiveControlApi.pausePlugins({ browser_id: props.browserId })
-    if (res.code === 0) {
-      ElMessage.success('插件操作成功')
-    } else {
-      ElMessage.error(res.msg || '操作失败')
-    }
-  } catch (error) {
-    ElMessage.error('网络错误')
-    console.error(error)
-  }
+  ElMessage.warning('插件控制功能已暂时不可用')
 }
 
 // 系统操作 - 打开参数配置
@@ -811,8 +821,8 @@ const fetchRegisteredActions = async () => {
 
 // 初始化
 // 跳转到实时控制 tab
-const goToWebrtc = () => {
-  router.push({ name: RouteName.BROWSER_CONSOLE_WEBRTC, params: { browserId: route.params.browserId } })
+const goToSse = () => {
+  router.push({ name: RouteName.BROWSER_CONSOLE_STREAM, params: { browserId: route.params.browserId } })
 }
 
 onMounted(() => {
