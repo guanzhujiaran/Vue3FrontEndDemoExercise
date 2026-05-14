@@ -10,7 +10,13 @@ import type {
   WorkflowDuplicateResponse,
   WorkflowExecuteRequest,
   WorkflowExecuteResponse,
-  WorkflowExecuteResponse as WorkflowExecResp
+  WorkflowStepRequest,
+  ListFilterParams,
+  BasePaginationResp,
+  LikeResponse,
+  ReportRequest,
+  ReportResponse,
+  EnabledPlugin
 } from '@/types/browser-automation-api'
 
 class WorkflowsApi extends BaseApi {
@@ -25,14 +31,21 @@ class WorkflowsApi extends BaseApi {
     page_size?: number
     name?: string
     tags?: string[]
+    filter_type?: ListFilterParams['filter_type']
+    sort_by?: ListFilterParams['sort_by']
+    sort_order?: ListFilterParams['sort_order']
   }): Promise<RootObject<any>> {
+    const req: Record<string, any> = {
+      page: params.page || 1,
+      page_size: params.page_size || 20,
+      name: params.name || '',
+      tags: params.tags || [],
+      filter_type: params.filter_type ?? 'all',
+      sort_by: params.sort_by ?? 'updated_at',
+      sort_order: params.sort_order ?? 'desc'
+    }
     const body = {
-      req: {
-        page: params.page || 1,
-        page_size: params.page_size || 20,
-        name: params.name || '',
-        tags: params.tags || []
-      },
+      req,
       body: { browser_id: params.browser_id }
     }
     return this._post('/workflows/list', body)
@@ -52,20 +65,13 @@ class WorkflowsApi extends BaseApi {
   createWorkflow(params: {
     browser_id: string
     name: string
-    steps: Array<{
-      action_id: string
-      params?: Record<string, any>
-      loop_count?: number | null
-      loop_while?: string | null
-      loop_until?: string | null
-      retry?: number
-      condition?: string | null
-      user_data?: Record<string, any> | null
-    }>
+    steps: WorkflowStepRequest[]
     on_error?: string
     description?: string
     tags?: string[]
     user_data?: Record<string, any> | null
+    is_public?: boolean
+    enabled_plugins?: EnabledPlugin[]
   }): Promise<RootObject<any>> {
     const body = {
       req: {
@@ -74,7 +80,9 @@ class WorkflowsApi extends BaseApi {
         on_error: params.on_error || 'stop',
         description: params.description || '',
         tags: params.tags || [],
-        user_data: params.user_data || null
+        user_data: params.user_data || null,
+        is_public: params.is_public ?? false,
+        enabled_plugins: params.enabled_plugins || []
       },
       body: { browser_id: params.browser_id }
     }
@@ -85,21 +93,14 @@ class WorkflowsApi extends BaseApi {
     browser_id: string
     workflow_id: number
     name?: string
-    steps?: Array<{
-      action_id: string
-      params?: Record<string, any>
-      loop_count?: number | null
-      loop_while?: string | null
-      loop_until?: string | null
-      retry?: number
-      condition?: string | null
-      user_data?: Record<string, any> | null
-    }>
+    steps?: WorkflowStepRequest[]
     on_error?: string
     description?: string
     tags?: string[]
     user_data?: Record<string, any> | null
     is_enabled?: boolean
+    is_public?: boolean
+    enabled_plugins?: EnabledPlugin[]
   }): Promise<RootObject<any>> {
     const req: Record<string, any> = { id: params.workflow_id }
     if (params.name !== undefined) req.name = params.name
@@ -109,6 +110,8 @@ class WorkflowsApi extends BaseApi {
     if (params.tags !== undefined) req.tags = params.tags
     if (params.user_data !== undefined) req.user_data = params.user_data
     if (params.is_enabled !== undefined) req.is_enabled = params.is_enabled
+    if (params.is_public !== undefined) req.is_public = params.is_public
+    if (params.enabled_plugins !== undefined) req.enabled_plugins = params.enabled_plugins
 
     const body = {
       req,
@@ -147,16 +150,7 @@ class WorkflowsApi extends BaseApi {
     browser_id: string
     workflow_id?: number
     name?: string
-    steps?: Array<{
-      action_id: string
-      params?: Record<string, any>
-      loop_count?: number | null
-      loop_while?: string | null
-      loop_until?: string | null
-      retry?: number
-      condition?: string | null
-      user_data?: Record<string, any> | null
-    }>
+    steps?: WorkflowStepRequest[]
     user_data?: Record<string, any> | null
     on_error?: string
   }): Promise<RootObject<any>> {
@@ -174,15 +168,38 @@ class WorkflowsApi extends BaseApi {
     return this._post('/workflows/execute', body)
   }
 
-  listWorkflows(params?: {
-    skip?: number
-    limit?: number
-  }): Promise<RootObject<WorkflowListItem[]>> {
-    const requestBody: WorkflowList = {
-      skip: params?.skip || 0,
-      limit: params?.limit || 100
+  listWorkflows(params?: ListFilterParams): Promise<RootObject<BasePaginationResp<WorkflowListItem>>> {
+    const requestBody: Record<string, any> = {
+      page: params?.page ?? 1,
+      per_page: params?.per_page ?? 10,
+      filter_type: params?.filter_type ?? 'all',
+      sort_by: params?.sort_by ?? 'updated_at',
+      sort_order: params?.sort_order ?? 'desc'
     }
     return this._post('/workflows/list', requestBody)
+  }
+
+  // ===== 社区互动接口 =====
+
+  likeWorkflow(params: { browser_id: string; workflow_id: number }): Promise<RootObject<LikeResponse>> {
+    return this._post('/workflows/like', {
+      req: { id: params.workflow_id },
+      body: { browser_id: params.browser_id }
+    })
+  }
+
+  unlikeWorkflow(params: { browser_id: string; workflow_id: number }): Promise<RootObject<LikeResponse>> {
+    return this._post('/workflows/unlike', {
+      req: { id: params.workflow_id },
+      body: { browser_id: params.browser_id }
+    })
+  }
+
+  reportWorkflow(params: { browser_id: string } & ReportRequest): Promise<RootObject<ReportResponse>> {
+    return this._post('/workflows/report', {
+      req: { resource_id: params.resource_id, reason: params.reason, detail: params.detail },
+      body: { browser_id: params.browser_id }
+    })
   }
 }
 

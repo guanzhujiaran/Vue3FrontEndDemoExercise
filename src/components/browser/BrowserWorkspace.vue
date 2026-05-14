@@ -153,7 +153,7 @@
               <div class="flex items-center">
                 <el-icon 
                   :size="12" 
-                  :color="instance.sessionStatus?.is_running ? 'var(--color-success)' : 'var(--color-text-secondary)'"
+                  :color="instance.sessionStatus?.browser_running ? 'var(--color-success)' : 'var(--color-text-secondary)'"
                 >
                   <CircleCheck />
                 </el-icon>
@@ -176,8 +176,8 @@
               </div>
               <div class="flex items-center gap-2">
                 <span class="text-xs text-[var(--el-text-color-secondary)]">运行:</span>
-                <el-tag :effect="themeStore.themeEffectString" :type="instance.sessionStatus?.is_running ? 'success' : 'info'" size="small">
-                  {{ instance.sessionStatus?.is_running ? '运行中' : '未运行' }}
+                <el-tag :effect="themeStore.themeEffectString" :type="instance.sessionStatus?.browser_running ? 'success' : 'info'" size="small">
+                  {{ instance.sessionStatus?.browser_running ? '运行中' : '未运行' }}
                 </el-tag>
               </div>
               <div class="flex items-center gap-2">
@@ -195,7 +195,7 @@
             <!-- 操作按钮 -->
             <div class="flex gap-2 flex-wrap">
               <el-button
-                v-if="!instance.sessionStatus?.is_running"
+                v-if="!instance.sessionStatus?.browser_running"
                 type="primary"
                 size="small"
                 @click.stop="startSession(Number(instance.id))"
@@ -209,7 +209,7 @@
                 v-else
                 type="success"
                 size="small"
-                @click.stop="refreshSessionStatus(Number(instance.id))"
+                @click.stop="refreshSessionStatus()"
                 :loading="instance.statusLoading"
                 class="flex-1 min-w-0 text-xs"
               >
@@ -369,8 +369,8 @@
               </el-tag>
             </el-descriptions-item>
             <el-descriptions-item label="运行状态">
-              <el-tag :effect="themeStore.themeEffectString" :type="selectedInstance.sessionStatus.is_running ? 'success' : 'warning'">
-                {{ selectedInstance.sessionStatus.is_running ? '运行中' : '未运行' }}
+              <el-tag :effect="themeStore.themeEffectString" :type="selectedInstance.sessionStatus.browser_running ? 'success' : 'warning'">
+                {{ selectedInstance.sessionStatus.browser_running ? '运行中' : '未运行' }}
               </el-tag>
             </el-descriptions-item>
             <el-descriptions-item label="连接数">
@@ -510,12 +510,7 @@ const currentBrowserInfo = computed(() => {
 
 const isBrowserStarted = computed(() => {
   if (!sessionStatus.value) return false
-  // 检查新的API格式（browser_running字段）
-  if ('browser_running' in sessionStatus.value) {
-    return sessionStatus.value.browser_running || false
-  }
-  // 检查旧的API格式（is_running字段）
-  return sessionStatus.value.is_running || false
+  return sessionStatus.value.browser_running || false
 })
 
 // 方法
@@ -693,8 +688,8 @@ const handleBrowserSelect = async (browserId: number) => {
     // 获取会话状态
     await refreshSessionStatus()
 
-    // 如果会话正在运行，开始心跳
-    if (sessionStatus.value?.is_running) {
+    // 如果会话正在运行
+    if (sessionStatus.value?.browser_running) {
       startHeartbeat()
       startStatusCheck()
       await refreshScreenshot()
@@ -735,8 +730,8 @@ const createBrowserSession = async () => {
     if (result.success) {
       await refreshSessionStatus()
       
-      // 如果会话正在运行，开始心跳
-      if (sessionStatus.value?.is_running) {
+      // 如果会话正在运行
+      if (sessionStatus.value?.browser_running) {
         startHeartbeat()
         startStatusCheck()
         await refreshScreenshot()

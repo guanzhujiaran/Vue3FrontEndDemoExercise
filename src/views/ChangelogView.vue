@@ -96,7 +96,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="p-5 max-w-[800px] mx-auto">
+  <div class="p-5 mx-auto">
     <div class="text-center mb-8">
       <el-text class="text-[2rem] mb-2.5" tag="h1">更新日志</el-text>
       <el-text class="text-[var(--el-text-color-secondary)]" tag="p">查看项目的更新历史和功能变更</el-text>

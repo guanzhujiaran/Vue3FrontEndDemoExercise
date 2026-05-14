@@ -3,12 +3,9 @@ import ajax from '@/api/base_axios/base_axios'
 import type { RootObject } from '@/models/api/base_model'
 import type { AxiosRequestConfig } from 'axios'
 import type {
-  SimplifiedHeartbeatRequest,
   SimplifiedCreateSessionRequest,
-  HeartbeatResponse,
   CreateSessionResponse,
   BrowserSessionStatus,
-  BodySendHeartbeatRequest,
   BodyCreateBrowserSessionRequest
 } from '@/types/browser-automation-api'
 import { useJwtStore } from '@/stores/jwt_token'
@@ -16,7 +13,7 @@ import { useUserNavStore } from '@/stores/user_nav'
 
 export interface PageInfo {
   page_index: number
-  page_id: string       // 页面唯一 ID（用于 heartbeat 和 WebRTC）
+  page_id: string       // 页面唯一 ID
   title: string
   url: string
 }
@@ -25,20 +22,6 @@ class BrowserControlApi extends BaseApi {
   constructor() {
     super()
     this.path = '/api/v1/rpa/browser/control'
-  }
-
-  sendHeartbeat(params: {
-    browser_id: string
-    request?: SimplifiedHeartbeatRequest
-  }): Promise<RootObject<HeartbeatResponse>> {
-    const body: BodySendHeartbeatRequest = {
-      request: params.request || {
-        client_id: '',
-        timestamp: Date.now()
-      },
-      body: { browser_id: params.browser_id }
-    }
-    return this._post('/heartbeat', body)
   }
 
   createBrowserSession(params: {
@@ -51,7 +34,6 @@ class BrowserControlApi extends BaseApi {
         auto_cleanup: true,
         cleanup_policy: {
           max_idle_time: 1800,
-          max_no_heartbeat_time: 60,
           cleanup_interval: 300
         },
         expiration_time: 0

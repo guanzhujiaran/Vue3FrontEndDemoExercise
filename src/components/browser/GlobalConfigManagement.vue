@@ -625,7 +625,8 @@
 import { ref, reactive, onMounted, watch } from 'vue'
 import biliMessage from '@/utils/message'
 import { Setting, Apple, Promotion, ChatDotRound, MoreFilled, SuccessFilled, WarningFilled, RefreshLeft, Check, Document, DataAnalysis, Bell, CircleCloseFilled, Monitor, FullScreen, Clock } from '@element-plus/icons-vue'
-import browserApi from '@/api/browser/browser_api'
+import notificationApi from '@/api/browser/notification_api'
+import defaultSettingsApi from '@/api/browser/default_settings_api'
 import { asyncHandler } from '@/utils/asyncHandler'
 import type { 
   NotificationConfigCreate,
@@ -781,7 +782,7 @@ const loadConfig = async () => {
   
   // 使用 asyncHandler 处理 API 调用
   const { data: response, error } = await asyncHandler(
-    browserApi.readGlobalNotifyConfig(),
+    notificationApi.readGlobalNotifyConfig(),
     {
       errorMessage: 'API加载通知配置失败',
       showErrorToast: true
@@ -810,7 +811,7 @@ const saveConfig = async () => {
   
   // 通过API保存
   const { data: response, error } = await asyncHandler(
-    browserApi.upsertNotifyConfig(notificationConfig.value as NotificationConfigCreate),
+    notificationApi.upsertNotifyConfig(notificationConfig.value as NotificationConfigCreate),
     {
       successMessage: '通知配置保存成功',
       errorMessage: 'API保存失败',
@@ -911,7 +912,7 @@ const loadDefaultFingerprintConfig = async () => {
   loadingDefaultConfig.value = true
   
   const { data: response, error } = await asyncHandler(
-    browserApi.getDefaultSettings(),
+    defaultSettingsApi.getDefaultSettings(),
     {
       errorMessage: '加载浏览器默认配置失败',
       showErrorToast: false // 不显示错误提示，因为可能是首次使用
@@ -938,7 +939,7 @@ const saveDefaultConfig = async () => {
   savingDefaultConfig.value = true
   
   const { data: response, error } = await asyncHandler(
-    browserApi.createOrUpdateDefaultSettings(defaultFingerprintConfig.value),
+    defaultSettingsApi.createOrUpdateDefaultSettings(defaultFingerprintConfig.value),
     {
       successMessage: '浏览器默认配置保存成功',
       errorMessage: '保存失败',

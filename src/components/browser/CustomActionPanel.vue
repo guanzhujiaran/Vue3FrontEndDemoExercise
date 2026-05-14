@@ -1,318 +1,251 @@
 <!--
  * @Author: 星瞳 1944637830@qq.com
- * @Date: 2026-04-11 00:00:00
+ * @Date: 2026-05-06
  * @FilePath: \Vue3FrontEndDemoExercise\src\components\browser\CustomActionPanel.vue
- * @Description: 自定义操作管理面板 - 卡片式展示和管理用户自定义操作
+ * @Description: 自定义操作管理面板（私有模式）- 仅管理当前用户的私有操作
 -->
 <template>
-  <div>
+  <div class="flex flex-col h-full overflow-hidden">
     <!-- 操作栏 -->
-    <div class="flex gap-2 mb-5">
-      <el-button type="primary" @click="showCreateDialog = true">
+    <div class="flex flex-wrap gap-2 mb-4 p-3 rounded-xl border border-[var(--el-border-color-lighter)] bg-[var(--el-fill-color-lighter)]">
+      <el-button type="primary" size="small" @click="openCreateDialog()">
         <el-icon><Plus /></el-icon>
         新建操作
       </el-button>
-      <el-button @click="refreshActions" :loading="loading">
+      <el-button size="small" @click="refreshActions" :loading="loading">
         <el-icon><Refresh /></el-icon>
-        刷新列表
+        刷新
       </el-button>
-      <el-button @click="reloadCache">
-        <el-icon><RefreshRight /></el-icon>
-        重载缓存
-      </el-button>
+
+      <div class="ml-auto flex items-center gap-2 text-xs text-[var(--el-text-color-secondary)]">
+        <span>共 {{ customActions.length }} 个操作</span>
+      </div>
     </div>
 
-    <!-- 自定义操作卡片列表 -->
-    <div>
-      <el-row :gutter="16">
-        <el-col
+    <!-- 卡片列表 -->
+    <div class="flex-1 overflow-y-auto min-h-0 p-4">
+      <div v-if="loading" class="flex justify-center py-10">
+        <el-skeleton :rows="4" animated />
+      </div>
+
+      <div v-else class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div
           v-for="action in customActions"
           :key="action.id"
-          :xs="24"
-          :sm="12"
-          :md="8"
-          :lg="6"
+          :class="[
+            'group rounded-xl border p-4 transition-all duration-200',
+            expandedId === action.id
+              ? 'border-primary bg-primary/5 shadow-sm'
+              : 'border-[var(--el-border-color-lighter)] bg-[var(--el-bg-color)] hover:border-[var(--el-border-color)] hover:shadow-md'
+          ]"
         >
-          <el-card class="mb-4 h-full transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_4px_12px_rgba(0,0,0,0.15)]" shadow="hover">
-            <div class="flex justify-between items-center mb-3">
-              <div class="flex items-center gap-2">
-                <el-tag size="small" :type="action.is_composite ? 'warning' : 'success'">
-                  {{ action.is_composite ? '复合' : '单一' }}
-                </el-tag>
-                <span class="text-sm text-[var(--el-text-color-secondary)]">{{ action.action_type }}</span>
-              </div>
-              <el-dropdown trigger="click" @command="(cmd) => handleActionCommand(cmd, action)">
-                <el-button text>
-                  <el-icon><MoreFilled /></el-icon>
-                </el-button>
-                <template #dropdown>
-                  <el-dropdown-menu>
-                    <el-dropdown-item command="view">
-                      <el-icon><View /></el-icon>
-                      查看详情
-                    </el-dropdown-item>
-                    <el-dropdown-item command="edit">
-                      <el-icon><Edit /></el-icon>
-                      编辑
-                    </el-dropdown-item>
-                    <el-dropdown-item command="execute" divided>
-                      <el-icon><CaretRight /></el-icon>
-                      执行
-                    </el-dropdown-item>
-                    <el-dropdown-item command="delete" divided danger>
-                      <el-icon><Delete /></el-icon>
-                      删除
-                    </el-dropdown-item>
-                  </el-dropdown-menu>
-                </template>
-              </el-dropdown>
+          <!-- 卡片头部：标签 + 操作菜单 -->
+          <div class="flex items-center justify-between mb-2.5">
+            <div class="flex items-center gap-1.5 flex-wrap">
+              <el-tag size="small" :type="action.is_composite ? 'warning' : 'success'" effect="plain" round>
+                {{ action.is_composite ? '复合' : '单一' }}
+              </el-tag>
+              <el-tag v-if="action.action_type" size="small" type="info" effect="plain" round>
+                {{ action.action_type }}
+              </el-tag>
+              <el-tag v-if="action.is_verified" size="small" type="success" effect="plain" round>✓ 官方</el-tag>
+              <el-tag v-if="action.forked_from_id" size="small" type="warning" effect="plain" round>Fork</el-tag>
+              <el-tag size="small" :type="action.is_public ? 'primary' : 'info'" effect="plain" round>
+                {{ action.is_public ? '公开' : '私有' }}
+              </el-tag>
             </div>
 
-            <div class="mb-3">
-              <h4 class="font-medium text-sm text-[var(--el-text-color-primary)] m-0 mb-1">{{ action.name }}</h4>
-              <p class="text-xs text-[var(--el-text-color-secondary)] m-0 mb-2 line-clamp-2">{{ action.description || '暂无描述' }}</p>
-              <div>
-                <span class="inline-flex items-center gap-1 text-xs text-[var(--el-text-color-secondary)]">
-                  <el-icon><Clock /></el-icon>
-                  {{ formatDate(action.created_at) }}
-                </span>
-              </div>
+            <el-dropdown trigger="click" @command="(cmd: string) => handleCommand(cmd, action)" @click.stop>
+              <el-button text size="small" class="!opacity-0 group-hover:!opacity-100 transition-opacity">
+                <el-icon><MoreFilled /></el-icon>
+              </el-button>
+              <template #dropdown>
+                <el-dropdown-menu>
+                  <el-dropdown-item command="view"><el-icon><View /></el-icon> 查看完整详情</el-dropdown-item>
+                  <el-dropdown-item command="edit"><el-icon><Edit /></el-icon> 编辑</el-dropdown-item>
+                  <el-dropdown-item command="execute" divided><el-icon><CaretRight /></el-icon> 执行</el-dropdown-item>
+                  <el-dropdown-item command="delete" divided danger><el-icon><Delete /></el-icon> 删除</el-dropdown-item>
+                </el-dropdown-menu>
+              </template>
+            </el-dropdown>
+          </div>
+
+          <!-- 名称 + 描述 -->
+          <h4 class="text-sm font-semibold m-0 mb-1 truncate">{{ action.name }}</h4>
+          <p class="text-xs text-[var(--el-text-color-secondary)] m-0 mb-2.5 line-clamp-2 leading-relaxed">{{ action.description || '暂无描述' }}</p>
+
+          <!-- 底部栏：统计 + 按钮 -->
+          <div class="flex items-center gap-3 pt-2.5 border-t border-dashed border-[var(--el-border-color-lighter)]">
+            <!-- 左侧统计 -->
+            <div class="flex items-center gap-2.5 text-[11px] text-[var(--el-text-color-secondary)]">
+              <span v-if="action.likes_count != null">❤️ {{ action.likes_count }}</span>
+              <span v-if="action.forks_count != null">🔀 {{ action.forks_count }}</span>
+              <span v-if="action.steps_count != null">{{ action.steps_count }} 步</span>
+              <span v-if="action.tags?.length" class="flex items-center gap-0.5">
+                <el-tag v-for="tag in action.tags.slice(0, 2)" :key="tag" size="small" type="info" effect="plain" class="!text-[10px] !py-0 !px-1">{{ tag }}</el-tag>
+              </span>
             </div>
 
-            <div class="flex justify-end pt-3 border-t border-[var(--el-border-color-lighter)]">
+            <!-- 右侧按钮组 -->
+            <div class="flex items-center gap-1 ml-auto">
+              <el-button
+                size="small"
+                text
+                class="!text-xs"
+                :type="expandedId === action.id ? 'primary' : undefined"
+                @click="toggleDetail(action.id)"
+              >{{ expandedId === action.id ? '收起' : '详情' }}</el-button>
               <el-button
                 size="small"
                 type="primary"
-                @click="executeAction(action)"
+                class="!text-xs"
+                @click.stop="executeAction(action)"
                 :disabled="!isBrowserRunning"
-              >
-                执行
-              </el-button>
+              >执行</el-button>
             </div>
-          </el-card>
-        </el-col>
-      </el-row>
+          </div>
 
-      <el-empty
-        v-if="customActions.length === 0 && !loading"
-        description="暂无自定义操作"
-      >
-        <el-button type="primary" @click="showCreateDialog = true">
-          创建第一个操作
-        </el-button>
+          <!-- 展开的详情区域（卡片内） -->
+          <div v-if="expandedId === action.id" class="mt-3 pt-3 border-t border-[var(--el-border-color-lighter)]">
+            <div class="grid grid-cols-2 gap-x-4 gap-y-1.5 text-[11px]">
+              <div><span class="text-[var(--el-text-color-placeholder)]">ID:</span> <span class="font-mono">{{ action.id }}</span></div>
+              <div><span class="text-[var(--el-text-color-placeholder)]">Action ID:</span> <span class="font-mono truncate block">{{ action.action_id }}</span></div>
+              <div><span class="text-[var(--el-text-color-placeholder)]">类型:</span> {{ action.action_type || '-' }}</div>
+              <div><span class="text-[var(--el-text-color-placeholder)]">复合操作:</span> {{ action.is_composite ? '是' : '否' }}</div>
+              <div><span class="text-[var(--el-text-color-placeholder)]">举报数:</span> <span :class="action.reports_count > 0 ? 'text-orange-500' : ''">{{ action.reports_count ?? 0 }}</span></div>
+              <div><span class="text-[var(--el-text-color-placeholder)]">作者:</span> {{ action.author_name || '-' }}</div>
+              <div><span class="text-[var(--el-text-color-placeholder)]">创建:</span> {{ action.created_at?.split('T')[0] || '-' }}</div>
+              <div><span class="text-[var(--el-text-color-placeholder)]">更新:</span> {{ action.updated_at?.split('T')[0] || '-' }}</div>
+            </div>
+            <p v-if="action.forked_from_id" class="text-[10px] text-orange-400 mt-1.5 m-0 italic flex items-center gap-1">
+              🔀 Fork 自其他资源 (ID: {{ action.forked_from_id }})
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- 空状态 -->
+      <el-empty v-if="!loading && customActions.length === 0" description="暂无自定义操作">
+        <el-button type="primary" size="small" @click="openCreateDialog()">创建第一个操作</el-button>
       </el-empty>
+
+      <!-- 分页 -->
+      <div v-if="totalCount > 0" class="flex justify-center pt-4">
+        <el-pagination
+          v-model:current-page="pageNum"
+          :page-size="pageSize"
+          :total="totalCount"
+          layout="prev, pager, next, total"
+          size="small"
+          background
+          @current-change="onPageChange"
+        />
+      </div>
     </div>
 
     <!-- 创建/编辑对话框 -->
     <el-dialog
       v-model="showCreateDialog"
       :title="editingAction ? '编辑操作' : '新建操作'"
-      width="700px"
+      width="960px"
+      :close-on-click-modal="false"
       destroy-on-close
+      class="!max-h-[90vh]"
     >
-      <el-form
-        ref="formRef"
-        :model="formData"
-        :rules="formRules"
-        label-width="100px"
-      >
-        <el-form-item label="操作名称" prop="name">
-          <el-input v-model="formData.name" placeholder="请输入操作名称" />
-        </el-form-item>
-
-        <el-form-item label="操作ID" prop="action_id">
-          <el-input
-            v-model="formData.action_id"
-            placeholder="例如: my_custom_action"
-            :disabled="!!editingAction"
-          />
-          <div class="form-tip mt-1 text-xs text-[var(--el-text-color-secondary)]">唯一标识符,只能包含字母、数字和下划线</div>
-        </el-form-item>
-
-        <el-form-item label="操作类型" prop="action_type">
-          <el-select v-model="formData.action_type" placeholder="选择类型" style="width: 100%">
-            <el-option label="导航 (navigation)" value="navigation" />
-            <el-option label="交互 (interaction)" value="interaction" />
-            <el-option label="提取 (extraction)" value="extraction" />
-            <el-option label="工具 (utility)" value="utility" />
-            <el-option label="其他 (other)" value="other" />
-          </el-select>
-        </el-form-item>
-
-        <el-form-item label="是否复合操作">
-          <el-switch v-model="formData.is_composite" />
-          <div class="mt-1 text-xs text-[var(--el-text-color-secondary)]">复合操作可包含多个步骤</div>
-        </el-form-item>
-
-        <el-form-item label="描述">
-          <el-input
-            v-model="formData.description"
-            type="textarea"
-            :rows="3"
-            placeholder="简要描述此操作的功能"
-          />
-        </el-form-item>
-
-        <el-form-item label="超时时间">
-          <el-input-number
-            v-model="formData.timeout"
-            :min="1"
-            :max="300"
-            placeholder="秒"
-          />
-          <span class="ml-2 text-xs text-[var(--el-text-color-secondary)]">操作执行的超时时间(秒)</span>
-        </el-form-item>
-
-        <el-form-item label="启用状态">
-          <el-switch v-model="formData.is_enabled" />
-        </el-form-item>
-
-        <!-- 简单模式: 单步操作 -->
-        <template v-if="!formData.is_composite">
-          <el-divider content-position="left">操作步骤</el-divider>
-
-          <el-form-item label="目标操作" prop="target_action_id">
-            <el-select
-              v-model="formData.target_action_id"
-              placeholder="选择系统操作"
-              style="width: 100%"
-            >
-              <el-option
-                v-for="action in registeredActions"
-                :key="action.id"
-                :label="action.name"
-                :value="action.id"
-              />
-            </el-select>
+      <div class="flex flex-col gap-4 max-h-[70vh] overflow-y-auto">
+        <div class="grid grid-cols-2 gap-x-4">
+          <el-form-item label="操作名称" required class="!mb-0">
+            <el-input v-model="formData.name" placeholder="例: B站自动登录" />
           </el-form-item>
-
-          <el-form-item label="参数配置">
-            <el-input
-              v-model="formData.params_json"
-              type="textarea"
-              :rows="6"
-              placeholder='{"key": "value"}'
-            />
-            <div class="mt-1 text-xs text-[var(--el-text-color-secondary)]">JSON格式的参数配置</div>
+          <el-form-item label="描述" class="!mb-0">
+            <el-input v-model="formData.description" type="textarea" :rows="1" placeholder="简要描述此操作的功能" />
           </el-form-item>
-        </template>
+        </div>
 
-        <!-- 复合模式: 多步骤操作 -->
-        <template v-else>
-          <el-divider content-position="left">
-            步骤列表
-            <el-button size="small" type="primary" @click="addStep" style="margin-left: 10px">
-              <el-icon><Plus /></el-icon>
-              添加步骤
-            </el-button>
-          </el-divider>
-
-          <div v-for="(step, index) in formData.steps" :key="index" class="mb-4 p-3 border border-[var(--el-border-color-lighter)] rounded-lg bg-[var(--el-fill-color-lighter)]">
-            <div class="flex justify-between items-center mb-3">
-              <span class="font-bold text-[var(--el-color-primary)]">步骤 {{ index + 1 }}</span>
-              <el-button
-                text
-                type="danger"
-                size="small"
-                @click="removeStep(index)"
-                :disabled="formData.steps.length <= 1"
-              >
-                <el-icon><Delete /></el-icon>
-              </el-button>
-            </div>
-
-            <el-form-item :label="`目标操作`" :prop="`steps.${index}.action_id`">
-              <el-select
-                v-model="step.action_id"
-                placeholder="选择操作"
-                style="width: 100%"
-              >
-                <el-option
-                  v-for="action in registeredActions"
-                  :key="action.id"
-                  :label="action.name"
-                  :value="action.id"
-                />
-              </el-select>
-            </el-form-item>
-
-            <el-form-item label="参数配置">
-              <el-input
-                v-model="step.params_json"
-                type="textarea"
-                :rows="4"
-                placeholder='{"key": "value"}'
-              />
-            </el-form-item>
+        <div class="rounded-lg border border-[var(--el-border-color-lighter)] p-3 bg-[var(--el-fill-color-blank)]">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-xs font-medium text-[var(--el-text-color-secondary)] flex items-center gap-1">
+              参数定义 (parameters_schema)
+              <el-tag size="small" type="info" effect="plain">步骤中可用 &#123;&#123;变量&#125;&#125; 引用</el-tag>
+            </span>
+            <el-button size="small" text :icon="Plus" @click="addParameter">添加参数</el-button>
           </div>
-        </template>
-      </el-form>
+          <div v-for="(param, idx) in formData.parameters_schema" :key="'p'+idx" class="flex gap-2 items-start mb-2 p-2 rounded-lg bg-[var(--el-fill-color-lighter)]">
+            <el-input v-model="param.name" placeholder="参数名" class="w-28" />
+            <el-select v-model="param.type" class="w-24">
+              <el-option label="字符串" value="string" />
+              <el-option label="整数" value="int" />
+              <el-option label="浮点" value="float" />
+              <el-option label="布尔" value="boolean" />
+              <el-option label="数组" value="array" />
+            </el-select>
+            <el-switch v-model="param.required" active-text="必填" inactive-text="选填" />
+            <el-input v-model="param.default" placeholder="默认值" class="w-28" />
+            <el-button text type="danger" :icon="Delete" @click="formData.parameters_schema.splice(idx, 1)" />
+          </div>
+          <div v-if="formData.parameters_schema.length === 0" class="text-xs text-[var(--el-text-color-placeholder)] py-2 text-center">
+            无参数定义，添加后可在步骤中使用 &#123;&#123;参数名&#125;&#125; 模板语法引用
+          </div>
+        </div>
+
+        <div class="rounded-lg border border-[var(--el-border-color-lighter)] p-3 bg-[var(--el-fill-color-blank)]">
+          <CustomActionStepEditor
+            v-model="editorSteps"
+            :action-list="localRegisteredActions"
+            mode="edit"
+            title="步骤列表 (steps)"
+            empty-text="暂无步骤，点击添加按钮开始编排"
+          />
+        </div>
+      </div>
 
       <template #footer>
         <el-button @click="showCreateDialog = false">取消</el-button>
         <el-button type="primary" @click="handleSubmit" :loading="submitting">
-          保存
+          {{ editingAction ? '保存修改' : '创建' }}
         </el-button>
       </template>
     </el-dialog>
 
     <!-- 查看详情对话框 -->
-    <el-dialog
-      v-model="showDetailDialog"
-      title="操作详情"
-      width="700px"
-      destroy-on-close
-    >
+    <el-dialog v-model="showDetailDialog" title="操作详情" width="700px" destroy-on-close>
       <div v-if="currentDetail">
         <el-descriptions :column="2" border>
-          <el-descriptions-item label="操作ID">
-            {{ currentDetail.action_id }}
-          </el-descriptions-item>
-          <el-descriptions-item label="名称">
-            {{ currentDetail.name }}
-          </el-descriptions-item>
-          <el-descriptions-item label="类型">
-            {{ currentDetail.action_type }}
-          </el-descriptions-item>
+          <el-descriptions-item label="操作ID">{{ currentDetail.action_id }}</el-descriptions-item>
+          <el-descriptions-item label="名称">{{ currentDetail.name }}</el-descriptions-item>
+          <el-descriptions-item label="类型">{{ currentDetail.action_type }}</el-descriptions-item>
           <el-descriptions-item label="复合操作">
             <el-tag :type="currentDetail.is_composite ? 'warning' : 'success'" size="small">
               {{ currentDetail.is_composite ? '是' : '否' }}
             </el-tag>
           </el-descriptions-item>
-          <el-descriptions-item label="启用状态">
-            <el-tag :type="currentDetail.is_enabled ? 'success' : 'info'" size="small">
-              {{ currentDetail.is_enabled ? '已启用' : '已禁用' }}
-            </el-tag>
+          <el-descriptions-item label="可见性">
+            <VisibilityBadge :resource="currentDetail" />
           </el-descriptions-item>
-          <el-descriptions-item label="超时时间">
-            {{ currentDetail.timeout || '默认' }} 秒
-          </el-descriptions-item>
-          <el-descriptions-item label="创建时间" :span="2">
-            {{ formatDate(currentDetail.created_at) }}
-          </el-descriptions-item>
-          <el-descriptions-item label="更新时间" :span="2">
-            {{ formatDate(currentDetail.updated_at) }}
-          </el-descriptions-item>
-          <el-descriptions-item label="描述" :span="2">
-            {{ currentDetail.description || '暂无描述' }}
-          </el-descriptions-item>
+          <el-descriptions-item label="作者">{{ currentDetail.author_name || '未知' }}</el-descriptions-item>
+          <el-descriptions-item label="描述" :span="2">{{ currentDetail.description || '暂无描述' }}</el-descriptions-item>
         </el-descriptions>
 
         <el-divider content-position="left">参数定义</el-divider>
-        <pre class="bg-[var(--el-fill-color-light)] p-3 rounded text-xs leading-relaxed overflow-x-auto">{{ JSON.stringify(currentDetail.parameters_schema, null, 2) }}</pre>
+        <el-table :data="currentDetail.parameters_schema" size="small" v-if="currentDetail.parameters_schema?.length">
+          <el-table-column prop="name" label="参数名" />
+          <el-table-column prop="type" label="类型" width="80" />
+          <el-table-column prop="required" label="必填" width="60">
+            <template #default="{ row }">
+              <el-tag :type="row.required ? 'danger' : 'info'" size="small">{{ row.required ? '是' : '否' }}</el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column prop="default" label="默认值" />
+        </el-table>
+        <div v-else class="text-xs text-[var(--el-text-color-placeholder)] py-2 text-center">无参数定义</div>
 
         <el-divider content-position="left">执行步骤</el-divider>
-        <pre class="bg-[var(--el-fill-color-light)] p-3 rounded text-xs leading-relaxed overflow-x-auto">{{ JSON.stringify(currentDetail.steps, null, 2) }}</pre>
+        <pre class="bg-[var(--el-fill-color-light)] p-3 rounded text-xs leading-relaxed overflow-x-auto max-h-60">{{ JSON.stringify(currentDetail.steps, null, 2) }}</pre>
       </div>
     </el-dialog>
 
     <!-- 执行结果对话框 -->
-    <el-dialog
-      v-model="showResultDialog"
-      title="执行结果"
-      width="600px"
-      destroy-on-close
-    >
+    <el-dialog v-model="showResultDialog" title="执行结果" width="600px" destroy-on-close>
       <div v-if="executionResult">
         <el-alert
           :title="executionResult.success ? '执行成功' : '执行失败'"
@@ -320,431 +253,390 @@
           :closable="false"
           show-icon
         />
-
-        <div v-if="executionResult.execution_time" class="mt-3 text-sm text-[var(--el-text-color-regular)]">
-          <span>执行时间: {{ executionResult.execution_time.toFixed(2) }}s</span>
+        <div v-if="executionResult.execution_time" class="mt-3 text-sm">
+          执行时间: {{ executionResult.execution_time.toFixed(2) }}s
         </div>
-
         <el-divider />
-
-        <div v-if="executionResult.data">
-          <h4 class="mt-3 mb-2 text-sm text-[var(--el-text-color-primary)]">返回数据:</h4>
-          <pre class="bg-[var(--el-fill-color-light)] p-3 rounded text-xs leading-relaxed overflow-x-auto">{{ JSON.stringify(executionResult.data, null, 2) }}</pre>
-        </div>
-
-        <div v-if="executionResult.error">
-          <el-text class="mt-3 mb-2 text-sm text-[var(--el-text-color-primary)]" tag="h4">错误信息:</el-text>
-          <pre class="bg-[var(--el-color-danger-light-9)] text-[var(--el-color-danger)] p-3 rounded text-xs leading-relaxed overflow-x-auto">{{ executionResult.error }}</pre>
-        </div>
+        <pre v-if="executionResult.data" class="bg-[var(--el-fill-color-light)] p-3 rounded text-xs overflow-x-auto">{{ JSON.stringify(executionResult.data, null, 2) }}</pre>
+        <pre v-if="executionResult.error" class="bg-[var(--el-color-danger-light-9)] text-[var(--el-color-danger)] p-3 rounded text-xs overflow-x-auto">{{ executionResult.error }}</pre>
       </div>
     </el-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
-import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
+import { ref, onMounted, watch } from 'vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import {
-  Plus,
-  Refresh,
-  RefreshRight,
-  MoreFilled,
-  View,
-  Edit,
-  CaretRight,
-  Delete,
-  Clock
+  Plus, Refresh, RefreshRight, MoreFilled, View, Edit, CaretRight, Delete
 } from '@element-plus/icons-vue'
-import { browserLiveControlApi } from '@/api/browser/browser_api'
+import customActionsApi from '@/api/browser/custom_actions_api'
+import CustomActionStepEditor from './right-panel/components/CustomActionStepEditor.vue'
 import type {
   CustomActionListItem,
   CustomActionDetail,
-  ActionMetadataResponse,
-  ActionResultResponse
+  ActionResultResponse,
+  ActionParameterDef,
+  CompositeActionStep
 } from '@/types/browser-automation-api'
+import type { StepItem } from './right-panel/components/CustomActionStepEditor.vue'
+import actionsApi, { ActionsApi } from '@/api/browser/actions_api'
 
-// Props
-const props = defineProps({
-  browserId: {
-    type: String,
-    required: true
+const props = defineProps<{
+  browserId: string
+  registeredActions?: any[]
+  sharedWorkflowData?: {
+    steps: StepItem[]
+    source: 'edit' | 'debug' | null
+    actionInfo: { name: string; description: string; parameters_schema: any[]; actionId?: number } | null
+  } | null
+}>()
+
+const emit = defineEmits<{
+  'workflow-edit-open': [payload: { steps: StepItem[]; actionInfo: { name: string; description: string; parameters_schema: any[]; actionId?: number } | null }]
+  'workflow-edit-change': [steps: StepItem[]]
+  'workflow-edit-close': []
+}>()
+
+// 本地缓存注册操作列表（优先用 prop，prop 为空时自己调 API）
+const localRegisteredActions = ref<any[]>([])
+const loadingActions = ref(false)
+
+watch(() => props.registeredActions, (val) => {
+  if (val && val.length > 0) {
+    localRegisteredActions.value = val
   }
-})
+}, { immediate: true })
 
-// 状态管理
+async function ensureActionList() {
+  if (localRegisteredActions.value.length > 0) return
+  loadingActions.value = true
+  try {
+    const res = await actionsApi.getRegisteredActions({ browser_id: props.browserId })
+    if (res.code === 0 && res.data) {
+      const rawData = Array.isArray(res.data) ? res.data : (res.data.actions || [])
+      localRegisteredActions.value = rawData.map((a: any) => ActionsApi.normalizeActionMetadata(a))
+    }
+  } catch (e) {
+    console.warn('[CustomActionPanel] 获取注册操作失败:', e)
+  } finally {
+    loadingActions.value = false
+  }
+}
+
+// 状态
 const loading = ref(false)
 const submitting = ref(false)
+const isBrowserRunning = ref(false)
 const showCreateDialog = ref(false)
 const showDetailDialog = ref(false)
 const showResultDialog = ref(false)
-const isBrowserRunning = ref(false)
+
+// 分页状态
+const pageNum = ref(1)
+const pageSize = ref(8)
+const totalCount = ref(0)
+const totalPages = ref(0)
+
+// 展开详情
+const expandedId = ref<number | null>(null)
 
 // 数据
 const customActions = ref<CustomActionListItem[]>([])
-const registeredActions = ref<ActionMetadataResponse[]>([])
 const currentDetail = ref<CustomActionDetail | null>(null)
 const executionResult = ref<ActionResultResponse | null>(null)
 const editingAction = ref<CustomActionListItem | null>(null)
 
 // 表单
-const formRef = ref<FormInstance>()
-const formData = ref({
+const formData = ref<{
+  name: string
+  action_type: string
+  description: string
+  parameters_schema: ActionParameterDef[]
+  steps: CompositeActionStep[]
+  is_public: boolean
+}>({
   name: '',
-  action_id: '',
   action_type: 'interaction',
-  is_composite: false,
   description: '',
-  timeout: 30,
-  is_enabled: true,
-  target_action_id: '',
-  params_json: '{}',
-  steps: [
-    {
-      action_id: '',
-      params_json: '{}'
-    }
-  ]
+  parameters_schema: [],
+  steps: [],
+  is_public: false
 })
 
-const formRules: FormRules = {
-  name: [{ required: true, message: '请输入操作名称', trigger: 'blur' }],
-  action_id: [
-    { required: true, message: '请输入操作ID', trigger: 'blur' },
-    { pattern: /^[a-zA-Z0-9_]+$/, message: '只能包含字母、数字和下划线', trigger: 'blur' }
-  ],
-  action_type: [{ required: true, message: '请选择操作类型', trigger: 'change' }],
-  target_action_id: [
-    {
-      required: true,
-      message: '请选择目标操作',
-      trigger: 'change',
-      validator: (rule, value, callback) => {
-        if (!formData.value.is_composite && !value) {
-          callback(new Error('请选择目标操作'))
-        } else {
-          callback()
-        }
-      }
-    }
-  ]
+let stepUidCounter = 0
+
+interface EditorStep {
+  _uid: number
+  action_id: string
+  params: Record<string, any>
 }
 
-// 检查浏览器运行状态
-const checkBrowserStatus = async () => {
-  try {
-    console.log('[CustomActionPanel] getBrowserSessionStatus req:', { browser_id: props.browserId })
-    const res = await browserLiveControlApi.getBrowserSessionStatus({
-      browser_id: props.browserId
-    })
-    console.log('[CustomActionPanel] getBrowserSessionStatus res:', res)
-    if (res.code === 0 && res.data) {
-      isBrowserRunning.value = res.data.is_running
-    }
-  } catch (error) {
-    console.error('[CustomActionPanel] getBrowserSessionStatus error:', error)
-  }
-}
+const editorSteps = ref<EditorStep[]>([])
 
-// 获取自定义操作列表
+// 获取列表
 const fetchCustomActions = async (silent = false) => {
   loading.value = true
   try {
-    console.log('[CustomActionPanel] listCustomActions req')
-    const res = await browserLiveControlApi.listCustomActions()
-    console.log('[CustomActionPanel] listCustomActions res:', res)
+    const res = await customActionsApi.listCustomActions({
+      page: pageNum.value,
+      per_page: pageSize.value,
+      filter_type: 'private'
+    })
     if (res.code === 0 && res.data) {
-      customActions.value = res.data
+      // 新版分页响应：data 是 { items, total, pages, ... } 对象
+      const paginatedData = res.data as any
+      customActions.value = paginatedData.items || paginatedData || []
+      totalCount.value = paginatedData.total ?? 0
+      totalPages.value = paginatedData.pages ?? 0
+      expandedId.value = null
     } else if (!silent) {
       ElMessage.error(res.msg || '获取操作列表失败')
     }
   } catch (error: any) {
-    if (!silent) {
-      ElMessage.error(error.message || '获取操作列表失败')
-    }
-    console.error('[CustomActionPanel] listCustomActions error:', error)
+    if (!silent) ElMessage.error(error.message || '获取操作列表失败')
   } finally {
     loading.value = false
   }
 }
 
-// 获取系统操作列表
-const fetchRegisteredActions = async () => {
-  try {
-    console.log('[CustomActionPanel] listRegisteredActions req')
-    const res = await browserLiveControlApi.listRegisteredActions()
-    console.log('[CustomActionPanel] listRegisteredActions res:', res)
-    if (res.code === 0 && res.data) {
-      registeredActions.value = res.data
-    }
-  } catch (error) {
-    console.error('[CustomActionPanel] listRegisteredActions error:', error)
-  }
+// 切换详情展开
+const toggleDetail = (id: number) => {
+  expandedId.value = expandedId.value === id ? null : id
 }
 
-// 刷新列表
-const refreshActions = () => {
+// 分页变化
+const onPageChange = (page: number) => {
+  pageNum.value = page
+  expandedId.value = null
   fetchCustomActions()
-  checkBrowserStatus()
 }
 
-// 重载缓存
-const reloadCache = async () => {
-  try {
-    const res = await browserLiveControlApi.reloadCustomActions()
-    if (res.code === 0) {
-      // 静默成功，仅刷新列表
-      await fetchCustomActions(true)
+// 刷新
+const refreshActions = () => fetchCustomActions()
+
+// 打开创建/编辑对话框
+const openCreateDialog = async (action?: CustomActionListItem | null) => {
+  stepUidCounter = 0
+  await ensureActionList()
+  if (action) {
+    editingAction.value = action
+    const res = await customActionsApi.getCustomAction(action.id)
+    if (res.code === 0 && res.data) {
+      const detail = res.data
+      formData.value = {
+        name: detail.name,
+        action_type: detail.action_type || 'composite',
+        description: detail.description,
+        parameters_schema: detail.parameters_schema || [],
+        steps: detail.steps || [],
+        is_public: !!detail.is_public
+      }
+      editorSteps.value = (detail.steps || []).map((s: any) => ({
+        _uid: ++stepUidCounter,
+        action_id: s.action_id || '',
+        params: { ...(s.params || {}) }
+      }))
+      if (editorSteps.value.length === 0) {
+        editorSteps.value = [{ _uid: ++stepUidCounter, action_id: action.action_id || '', params: {} }]
+      }
     } else {
-      ElMessage.error(res.msg || '重载失败')
+      editorSteps.value = [{ _uid: ++stepUidCounter, action_id: action.action_id || '', params: {} }]
     }
-  } catch (error: any) {
-    ElMessage.error(error.message || '重载失败')
-    console.error(error)
+    showCreateDialog.value = true
+
+    emit('workflow-edit-open', {
+      steps: editorSteps.value.map(s => ({ ...s })),
+      actionInfo: editingAction.value ? {
+        name: formData.value.name,
+        description: formData.value.description,
+        parameters_schema: formData.value.parameters_schema,
+        actionId: editingAction.value.id
+      } : null
+    })
+  } else {
+    editingAction.value = null
+    formData.value = {
+      name: '',
+      action_type: 'composite',
+      description: '',
+      parameters_schema: [],
+      steps: [],
+      is_public: false
+    }
+    editorSteps.value = [{ _uid: ++stepUidCounter, action_id: '', params: {} }]
+    showCreateDialog.value = true
   }
 }
 
-// 添加步骤
-const addStep = () => {
-  formData.value.steps.push({
-    action_id: '',
-    params_json: '{}'
+// 参数定义：添加
+const addParameter = () => {
+  formData.value.parameters_schema.push({
+    name: '',
+    type: 'string',
+    required: false,
+    description: ''
   })
 }
 
-// 删除步骤
-const removeStep = (index: number) => {
-  if (formData.value.steps.length > 1) {
-    formData.value.steps.splice(index, 1)
+// 提交
+const handleSubmit = async () => {
+  if (!formData.value.name.trim()) {
+    ElMessage.warning('请输入操作名称')
+    return
   }
-}
 
-// 处理操作命令
-const handleActionCommand = async (command: string, action: CustomActionListItem) => {
-  switch (command) {
-    case 'view':
-      await viewDetail(action)
-      break
-    case 'edit':
-      editAction(action)
-      break
-    case 'execute':
-      await executeAction(action)
-      break
-    case 'delete':
-      await deleteAction(action)
-      break
+  const validSteps = editorSteps.value.filter(s => s.action_id)
+  if (validSteps.length === 0) {
+    ElMessage.warning('请至少添加一个有效步骤')
+    return
+  }
+
+  submitting.value = true
+  try {
+    const builtSteps: CompositeActionStep[] = validSteps.map(step => {
+      const cleanParams: Record<string, any> = {}
+      for (const [key, value] of Object.entries(step.params)) {
+        if (value !== null && value !== undefined && value !== '') {
+          cleanParams[key] = value
+        }
+      }
+      return {
+        action_id: step.action_id,
+        params: cleanParams
+      } as CompositeActionStep
+    })
+
+    const requestData = {
+      name: formData.value.name.trim(),
+      action_type: 'composite',
+      description: formData.value.description,
+      parameters_schema: formData.value.parameters_schema.length > 0 ? formData.value.parameters_schema : undefined,
+      steps: builtSteps,
+      is_public: formData.value.is_public
+    }
+
+    let res
+    if (editingAction.value) {
+      res = await customActionsApi.updateCustomAction({
+        id: editingAction.value.id,
+        ...requestData
+      })
+    } else {
+      res = await customActionsApi.createCustomAction(requestData)
+    }
+
+    if (res.code === 0) {
+      ElMessage.success(editingAction.value ? '更新成功' : '创建成功')
+      showCreateDialog.value = false
+      await fetchCustomActions(true)
+    } else {
+      ElMessage.error(res.msg || (editingAction.value ? '更新失败' : '创建失败'))
+    }
+  } catch (error: any) {
+    ElMessage.error(error.message || '操作失败')
+  } finally {
+    submitting.value = false
   }
 }
 
 // 查看详情
 const viewDetail = async (action: CustomActionListItem) => {
   try {
-    const res = await browserLiveControlApi.getCustomAction(action.id)
+    const res = await customActionsApi.getCustomAction(action.id)
     if (res.code === 0 && res.data) {
       currentDetail.value = res.data
       showDetailDialog.value = true
-    } else {
-      ElMessage.error(res.msg || '获取详情失败')
     }
   } catch (error: any) {
     ElMessage.error(error.message || '获取详情失败')
-    console.error(error)
   }
 }
 
-// 编辑操作
-const editAction = async (action: CustomActionListItem) => {
-  try {
-    const res = await browserLiveControlApi.getCustomAction(action.id)
-    if (res.code === 0 && res.data) {
-      editingAction.value = action
-      formData.value = {
-        name: res.data.name,
-        action_id: res.data.action_id,
-        action_type: res.data.action_type,
-        is_composite: res.data.is_composite,
-        description: res.data.description,
-        timeout: res.data.timeout || 30,
-        is_enabled: res.data.is_enabled,
-        target_action_id: res.data.steps[0]?.action_id || '',
-        params_json: JSON.stringify(res.data.steps[0]?.parameters || {}),
-        steps: res.data.steps.map((step: any) => ({
-          action_id: step.action_id,
-          params_json: JSON.stringify(step.parameters || {})
-        }))
-      }
-      showCreateDialog.value = true
-    } else {
-      ElMessage.error(res.msg || '获取操作详情失败')
-    }
-  } catch (error: any) {
-    ElMessage.error(error.message || '获取操作详情失败')
-    console.error(error)
-  }
-}
-
-// 执行操作
+// 执行
 const executeAction = async (action: CustomActionListItem) => {
   try {
+    const { browserLiveControlApi } = await import('@/api/browser/browser_api')
     const res = await browserLiveControlApi.executeAction({
       browser_id: props.browserId,
-      req: {
-        action_id: action.action_id,
-        params: {}
-      }
+      req: { action_id: action.action_id, params: {} }
     })
-
     if (res.code === 0 && res.data) {
       executionResult.value = res.data
       showResultDialog.value = true
-
-      // 不在这里显示 ElMessage，由对话框展示结果
     } else {
       ElMessage.error(res.msg || '执行失败')
     }
   } catch (error: any) {
     ElMessage.error(error.message || '执行失败')
-    console.error(error)
   }
 }
 
-// 删除操作
+// 克隆
+const handleCloneAction = async (action: CustomActionListItem) => {
+  const ok = await cloneAction(action.id)
+  if (ok) {
+    await fetchCustomActions(true)
+  }
+}
+
+// 删除
 const deleteAction = async (action: CustomActionListItem) => {
   try {
-    await ElMessageBox.confirm(
-      `确定要删除操作 "${action.name}" 吗?此操作不可恢复。`,
-      '删除确认',
-      {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning'
-      }
-    )
-
-    const res = await browserLiveControlApi.deleteCustomAction(action.id)
+    await ElMessageBox.confirm(`确定要删除操作 "${action.name}" 吗?`, '删除确认', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning'
+    })
+    const res = await customActionsApi.deleteCustomAction(action.id)
     if (res.code === 0) {
       ElMessage.success('删除成功')
       await fetchCustomActions(true)
     } else {
       ElMessage.error(res.msg || '删除失败')
     }
-  } catch (error: any) {
-    if (error !== 'cancel') {
-      ElMessage.error(error.message || '删除失败')
-      console.error(error)
-    }
-  }
+  } catch { /* cancelled */ }
 }
 
-// 提交表单
-const handleSubmit = async () => {
-  if (!formRef.value) return
-
-  await formRef.value.validate(async (valid) => {
-    if (!valid) return
-
-    submitting.value = true
-    try {
-      // 构建请求数据
-      const requestData: any = {
-        name: formData.value.name,
-        action_id: formData.value.action_id,
-        action_type: formData.value.action_type,
-        is_composite: formData.value.is_composite,
-        description: formData.value.description,
-        timeout: formData.value.timeout,
-        is_enabled: formData.value.is_enabled
-      }
-
-      if (formData.value.is_composite) {
-        // 复合操作
-        requestData.steps = formData.value.steps.map((step) => ({
-          action_id: step.action_id,
-          parameters: JSON.parse(step.params_json || '{}')
-        }))
-      } else {
-        // 简单操作
-        requestData.steps = [
-          {
-            action_id: formData.value.target_action_id,
-            parameters: JSON.parse(formData.value.params_json || '{}')
-          }
-        ]
-      }
-
-      let res
-      if (editingAction.value) {
-        // 更新
-        res = await browserLiveControlApi.updateCustomAction({
-          id: editingAction.value.id,
-          ...requestData
-        })
-      } else {
-        // 创建
-        res = await browserLiveControlApi.createCustomAction(requestData)
-      }
-
-      if (res.code === 0) {
-        ElMessage.success(editingAction.value ? '更新成功' : '创建成功')
-        showCreateDialog.value = false
-        resetForm()
-        await fetchCustomActions(true)
-      } else {
-        ElMessage.error(res.msg || (editingAction.value ? '更新失败' : '创建失败'))
-      }
-    } catch (error: any) {
-      if (error.message?.includes('JSON') || error.message?.includes('parse')) {
-        ElMessage.error('参数JSON格式错误，请检查输入')
-      } else {
-        ElMessage.error(error.message || (editingAction.value ? '更新失败' : '创建失败'))
-      }
-      console.error(error)
-    } finally {
-      submitting.value = false
-    }
-  })
-}
-
-// 重置表单
-const resetForm = () => {
-  editingAction.value = null
-  formData.value = {
-    name: '',
-    action_id: '',
-    action_type: 'interaction',
-    is_composite: false,
-    description: '',
-    timeout: 30,
-    is_enabled: true,
-    target_action_id: '',
-    params_json: '{}',
-    steps: [
-      {
-        action_id: '',
-        params_json: '{}'
-      }
-    ]
+// 命令处理
+const handleCommand = (command: string, action: CustomActionListItem) => {
+  switch (command) {
+    case 'view': viewDetail(action); break
+    case 'edit': openCreateDialog(action); break
+    case 'execute': executeAction(action); break
+    case 'clone': handleCloneAction(action); break
+    case 'delete': deleteAction(action); break
   }
-  formRef.value?.clearValidate()
 }
 
 // 格式化日期
 const formatDate = (dateStr: string) => {
   const date = new Date(dateStr)
-  return date.toLocaleString('zh-CN', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit'
-  })
+  return date.toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })
 }
 
-// 初始化
+let syncingFromShared = false
+
+watch(editorSteps, (val) => {
+  if (!showCreateDialog.value || syncingFromShared) return
+  emit('workflow-edit-change', val.map(s => ({ ...s })))
+}, { deep: true })
+
+watch(() => props.sharedWorkflowData, (data) => {
+  if (!data || !showCreateDialog.value || data.source === 'edit') return
+  if (data.steps && data.steps.length > 0) {
+    syncingFromShared = true
+    stepUidCounter = Math.max(...data.steps.map(s => s._uid), 0)
+    editorSteps.value = data.steps.map(s => ({ ...s }))
+    syncingFromShared = false
+  }
+}, { deep: true })
+
+watch(showCreateDialog, (val) => {
+  if (!val) emit('workflow-edit-close')
+})
+
 onMounted(() => {
-  console.log('[CustomActionPanel] mounted, browserId:', props.browserId)
   fetchCustomActions()
-  fetchRegisteredActions()
-  checkBrowserStatus()
 })
 </script>

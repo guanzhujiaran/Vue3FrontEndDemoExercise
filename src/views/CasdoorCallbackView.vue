@@ -20,10 +20,8 @@ const processCallback = () => {
   }
 
   try {
-    // 保存 JWT token
     jwtStore.save_jwt_token(decodeURIComponent(token))
 
-    // 保存用户信息
     const userInfo = {
       uid: decodeURIComponent(uid),
       user_name: decodeURIComponent(user_name),
@@ -41,7 +39,6 @@ const processCallback = () => {
 
     biliMessage.success('登录成功，正在跳转...')
 
-    // 跳转到首页
     setTimeout(() => {
       window.location.href = '/'
     }, 500)
@@ -55,3 +52,9 @@ onMounted(() => {
   processCallback()
 })
 </script>
+
+<template>
+  <div class="casdoor-callback">
+    <!-- 登录回调处理中 -->
+  </div>
+</template>

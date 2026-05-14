@@ -513,20 +513,6 @@ export interface TestNotificationResponse {
 
 // 浏览器实时控制相关类型定义
 
-// 心跳请求参数
-export interface HeartbeatRequest {
-  client_id: string
-  timestamp: number
-}
-
-// 心跳响应
-export interface HeartbeatResponse {
-  next_interval: number
-  status: string
-  active_clients?: number
-  message?: string
-}
-
 // 人工操作请求参数
 export interface ManualOperationRequest {
   operation_type: string
@@ -774,12 +760,6 @@ export interface BrowserEffectiveNotifyRequest {
 }
 
 // 简化版请求类型
-export interface SimplifiedHeartbeatRequest {
-  client_id: string
-  timestamp: number
-  page_id: string  // 页面唯一 ID（用于更新 WebRTC 活跃时间）
-}
-
 export interface SimplifiedCreateSessionRequest {
   headless?: boolean
   auto_cleanup?: boolean
@@ -1121,20 +1101,257 @@ export interface SystemHealthCheckResponse {
   timestamp?: string
 }
 
+// ===== 预定义动作速查表 (v2.0) =====
+
+export type PredefinedActionId =
+  | 'navigate'
+  | 'click'
+  | 'input'
+  | 'evaluate'
+  | 'llm'
+  | 'loop'
+  | 'if_else'
+  | 'wait'
+  | 'screenshot'
+  | 'new_page'
+  | 'scroll'
+  | 'hover'
+  | 'select'
+  | 'keyboard'
+  | 'download'
+  | 'navigate_back'
+
+export interface PredefinedActionDef {
+  id: PredefinedActionId
+  name: string
+  category: 'navigation' | 'interaction' | 'control_flow' | 'data' | 'utility'
+  description: string
+  core_params: string[]
+  has_children: boolean
+  parameters: ActionParameterDef[]
+}
+
+export interface ActionParameterDef {
+  name: string
+  type: 'str' | 'int' | 'float' | 'bool' | 'list' | 'dict' | 'string' | 'number' | 'boolean' | 'array' | 'object' | 'selector' | 'url' | 'code' | 'text' | 'mousebuttonenum' | 'waituntilenum' | 'elementstateenum' | 'screenshottypeenum' | 'position' | 'keyboardmodifierenum'
+  required: boolean
+  default?: any
+  description?: string
+  min?: number | null
+  max?: number | null
+  min_length?: number | null
+  max_length?: number | null
+  enum?: any[] | null
+  format?: string | null
+  pattern?: string | null
+  items?: ActionParameterDef | null
+  properties?: Record<string, ActionParameterDef> | null
+}
+
+// ===== 组合式动作步骤 (v2.0 - 替代旧的 code 字段) =====
+
+export interface CompositeActionStep {
+  action_id: string
+  params: Record<string, any>
+  output_var?: string
+  children?: CompositeActionStep[] // 嵌套子步骤 (loop/if_else 的循环体或分支)
+  condition?: string
+  loop_count?: number
+}
+
+// ===== 插件配置相关类型 (v2.0 - 多对多关联表) =====
+
+export type PluginHookType = 'before_action' | 'after_action' | 'on_success' | 'on_error' | 'on_timeout'
+
+export interface EnabledPlugin {
+  plugin_id: string
+  hook_type?: PluginHookType
+  priority?: number
+  config_params: Record<string, any>
+}
+
+export interface PluginSchemaParam {
+  name: string
+  type: 'string' | 'number' | 'boolean' | 'array' | 'object'
+  required: boolean
+  default?: any
+  description?: string
+}
+
+export interface PluginSchemaResponse {
+  plugin_id: string
+  name: string
+  description: string
+  hooks: string[]
+  parameters: PluginSchemaParam[]
+}
+
+// ===== 执行结果与日志类型 (v2.0) =====
+
+export interface ActionResult {
+  success: boolean
+  data?: any
+  execution_time?: number
+  action_id?: string
+  logs?: string[]
+  error?: string | null
+}
+
+export interface StepExecutionResult {
+  step_index: number
+  action_id: string
+  action_name?: string
+  success: boolean
+  data?: any
+  error?: string | null
+  execution_time?: number
+  logs?: string[]
+  loop_index?: number
+  loop_total?: number
+  condition_result?: boolean
+  retry_count?: number
+  retry_max?: number
+}
+
+// ===== 工作流步骤请求 (v2.0 - 增加 enabled_plugins 和控制流) =====
+
+export interface WorkflowStepRequest {
+  action_id: string
+  params: Record<string, any>
+  children?: WorkflowStepRequest[]
+  condition?: string
+  loop_count?: number
+  loop_while?: string
+  loop_until?: string
+  retry?: number
+  retry_delay?: number
+  output_var?: string
+  description?: string
+  enabled_plugins?: EnabledPlugin[]
+}
+
+// ===== 社区互动混入类型 (v2.0) =====
+
+export interface CommunityResourceMixin {
+  mid: number                       // 创建者ID
+  is_public: boolean                // true=公开, false=私有
+  likes_count: number               // 点赞数
+  reports_count: number             // 举报数
+  is_verified: boolean              // 是否官方认证
+  forks_count: number               // 被Fork次数
+  forked_from_id: number | null     // Fork来源的资源ID（null表示原创）
+  is_liked_by_me?: boolean          // 当前用户是否已点赞
+  author_name?: string              // 创建者昵称（冗余字段，后端可填充）
+}
+
+// 筛选器枚举
+export type CommunityFilter = 'all' | 'private' | 'public' | 'community' | 'verified' | 'my_forks'
+
+// 排序字段枚举
+export type CommunitySortBy = 'updated_at' | 'likes_count' | 'forks_count' | 'created_at' | 'name'
+
+// 排序方向枚举
+export type CommunitySortOrder = 'desc' | 'asc'
+
+// ===== 分页基础类型 =====
+
+export interface BasePaginationReq {
+  page: number
+  per_page: number
+}
+
+export interface BasePaginationResp<T> {
+  page: number
+  per_page: number
+  total: number
+  pages: number
+  has_next: boolean
+  has_prev: boolean
+  next_page: number | null
+  prev_page: number | null
+  items: T[]
+}
+
+// 列表筛选排序请求参数（继承分页）
+export interface ListFilterParams extends BasePaginationReq {
+  filter_type?: CommunityFilter
+  sort_by?: CommunitySortBy
+  sort_order?: CommunitySortOrder
+}
+
+// 举报请求
+export interface ReportRequest {
+  resource_type: 'action' | 'workflow' | 'plugin'
+  resource_id: number
+  reason: string
+  detail?: string
+}
+
+// 举报响应
+export interface ReportResponse {
+  success: boolean
+  message: string
+}
+
+// 点赞响应
+export interface LikeResponse {
+  success: boolean
+  liked: boolean
+  likes_count: number
+}
+
+// ===== Fork 相关类型 =====
+
+export interface ForkRequest {
+  id: number
+  new_name?: string
+}
+
+export interface ForkResponse {
+  id: number
+  action_id?: string
+  workflow_id?: string
+  name: string
+  forked_from: string
+}
+
 // ===== 自定义操作相关类型 =====
 
-export interface ActionMetadataResponse {
-  id: string
-  name: string
+export interface JsonSchemaProperty {
+  type?: string
+  default?: any
+  description?: string
+  title?: string
+  minimum?: number | null
+  maximum?: number | null
+  minLength?: number | null
+  maxLength?: number | null
+  enum?: any[]
+  format?: string | null
+  pattern?: string | null
+  items?: JsonSchemaProperty | { $ref: string }
+  properties?: Record<string, JsonSchemaProperty>
+  required?: string[]
+  anyOf?: Array<JsonSchemaProperty | { type: 'null' }>
+  $ref?: string
+  oneOf?: Array<JsonSchemaProperty | { type: 'null' }>
+}
+
+export interface JsonSchemaDef {
+  $defs?: Record<string, JsonSchemaProperty>
+  properties?: Record<string, JsonSchemaProperty>
+  required?: string[]
+  description?: string
+  title?: string
   type: string
-  description: string
-  parameters: Array<{
-    name: string
-    type: string
-    required: boolean
-    default?: any
-    description?: string
-  }>
+}
+
+export interface ActionMetadataResponse {
+  action_id: string
+  name?: string
+  description?: string
+  parameters?: ActionParameterDef[] | null
+  json_schema?: JsonSchemaDef | null
 }
 
 export interface ActionResultResponse {
@@ -1182,29 +1399,32 @@ export interface ExecuteStepResponse {
   }
 }
 
-export interface CustomActionListItem {
+export interface CustomActionListItem extends Partial<CommunityResourceMixin> {
   id: number
   action_id: string
   name: string
   action_type: string
   is_composite: boolean
   description: string
+  tags?: string[]
   created_at: string
   updated_at: string
 }
 
-export interface CustomActionDetail {
+export interface CustomActionDetail extends Partial<CommunityResourceMixin> {
   id: number
   action_id: string
   name: string
   action_type: string
-  parameters_schema: Array<Record<string, any>>
-  steps: Array<Record<string, any>>
+  parameters_schema: ActionParameterDef[]
+  steps: CompositeActionStep[]
   is_composite: boolean
-  code?: string | null
+  code?: string | null // v2.0: 废弃，保留兼容
   description: string
   timeout?: number
   is_enabled: boolean
+  tags?: string[]
+  user_data?: Record<string, any> | null
   created_at: string
   updated_at: string
 }
@@ -1263,7 +1483,7 @@ export interface PluginCreateResponse {
 
 // ===== 工作流相关类型 =====
 
-export interface WorkflowListItem {
+export interface WorkflowListItem extends Partial<CommunityResourceMixin> {
   id: number
   workflow_id: string
   name: string
@@ -1275,15 +1495,16 @@ export interface WorkflowListItem {
   updated_at: string
 }
 
-export interface WorkflowDetail {
+export interface WorkflowDetail extends Partial<CommunityResourceMixin> {
   id: number
   workflow_id: string
   name: string
-  steps: Array<Record<string, any>>
+  steps: WorkflowStepRequest[]
   on_error: string
   description: string
   tags: string[]
   is_enabled: boolean
+  user_data?: Record<string, any> | null
   created_at: string
   updated_at: string
 }
@@ -1314,6 +1535,7 @@ export interface WorkflowExecuteResponse {
   }>
   total_time?: number
   error?: string | null
+  state?: Record<string, any>
 }
 
 // ===== 请求体类型 =====
@@ -1350,23 +1572,29 @@ export interface CustomActionCreate {
   action_id: string
   name: string
   action_type?: string
-  parameters_schema?: Array<Record<string, any>>
-  steps?: Array<Record<string, any>>
+  parameters_schema?: ActionParameterDef[]
+  steps?: CompositeActionStep[]
   is_composite?: boolean
-  code?: string | null
+  code?: string | null // v2.0: 废弃
   description?: string
+  tags?: string[]
+  user_data?: Record<string, any> | null
+  is_public?: boolean
 }
 
 export interface CustomActionUpdate {
   id: number
   name?: string | null
   description?: string | null
-  parameters_schema?: Array<Record<string, any>> | null
-  steps?: Array<Record<string, any>> | null
+  parameters_schema?: ActionParameterDef[] | null
+  steps?: CompositeActionStep[] | null
   is_composite?: boolean | null
-  code?: string | null
+  code?: string | null // v2.0: 废弃
   timeout?: number | null
   is_enabled?: boolean | null
+  tags?: string[] | null
+  user_data?: Record<string, any> | null
+  is_public?: boolean | null
 }
 
 export interface CustomActionGet {
@@ -1427,8 +1655,8 @@ export interface PluginGetRequest {
   browser_info_id?: string | number | null // 浏览器实例ID
 }
 
-export interface PluginListRequest {
-  browser_info_id?: string | number | null // 浏览器实例ID
+export interface PluginListRequest extends ListFilterParams {
+  browser_info_id?: string | number | null
 }
 
 export interface PluginDeleteRequest {
@@ -1438,19 +1666,24 @@ export interface PluginDeleteRequest {
 export interface WorkflowCreate {
   workflow_id: string
   name: string
-  steps: Array<Record<string, any>>
+  steps: WorkflowStepRequest[]
   on_error?: string
   description?: string
+  tags?: string[]
+  user_data?: Record<string, any> | null
+  is_public?: boolean
 }
 
 export interface WorkflowUpdate {
   id: number
   name?: string | null
   description?: string | null
-  steps?: Array<Record<string, any>> | null
+  steps?: WorkflowStepRequest[] | null
   on_error?: string | null
   tags?: string[] | null
   is_enabled?: boolean | null
+  user_data?: Record<string, any> | null
+  is_public?: boolean | null
 }
 
 export interface WorkflowGet {
@@ -1467,9 +1700,10 @@ export interface WorkflowList {
 }
 
 export interface WorkflowExecuteRequest {
-  steps: Array<Record<string, any>>
+  steps: WorkflowStepRequest[]
   plugin_ids?: string[]
   on_error?: string
+  user_data?: Record<string, any> | null
 }
 
 // ===== 新增的API请求体类型（与新后端API结构匹配）=====
@@ -1490,11 +1724,11 @@ export interface CustomActionCreateRequest {
   name: string
   action_type?: string
   description?: string
-  parameters_schema?: Array<Record<string, any>>
-  steps?: Array<Record<string, any>>
+  parameters_schema?: ActionParameterDef[]
+  steps?: CompositeActionStep[]
   tags?: string[]
   user_data?: Record<string, any> | null
-  code?: string | null
+  code?: string | null // v2.0: 废弃
 }
 
 // 自定义操作更新请求
@@ -1502,11 +1736,11 @@ export interface CustomActionUpdateRequest {
   id: number
   name?: string | null
   description?: string | null
-  parameters_schema?: Array<Record<string, any>> | null
-  steps?: Array<Record<string, any>> | null
+  parameters_schema?: ActionParameterDef[] | null
+  steps?: CompositeActionStep[] | null
   tags?: string[] | null
   user_data?: Record<string, any> | null
-  code?: string | null
+  code?: string | null // v2.0: 废弃
   is_enabled?: boolean | null
 }
 
@@ -1536,10 +1770,11 @@ export interface PluginUpdateRequest {
 export interface WorkflowCreateRequest {
   workflow_id: string
   name: string
-  steps: Array<Record<string, any>>
+  steps: WorkflowStepRequest[]
   on_error?: string
   description?: string
   tags?: string[]
+  user_data?: Record<string, any> | null
 }
 
 // 工作流更新请求
@@ -1547,19 +1782,14 @@ export interface WorkflowUpdateRequest {
   id: number
   name?: string | null
   description?: string | null
-  steps?: Array<Record<string, any>> | null
+  steps?: WorkflowStepRequest[] | null
   on_error?: string | null
   tags?: string[] | null
   is_enabled?: boolean | null
+  user_data?: Record<string, any> | null
 }
 
 // 组合请求体类型（与新后端API结构匹配）
-
-// 发送心跳请求体
-export interface BodySendHeartbeatRequest {
-  request: SimplifiedHeartbeatRequest
-  body: VerifyBrowserDependsReq
-}
 
 // 创建浏览器会话请求体
 export interface BodyCreateBrowserSessionRequest {
@@ -1749,7 +1979,7 @@ export interface BrowserFingerprintRenameResp {
 }
 
 // 自定义操作列表项响应
-export interface CustomActionListItemResponse {
+export interface CustomActionListItemResponse extends Partial<CommunityResourceMixin> {
   id: number
   action_id: string
   name: string
@@ -1767,8 +1997,8 @@ export interface CustomActionDetailResponse {
   action_id: string
   name: string
   action_type: string
-  parameters_schema: Array<Record<string, any>>
-  steps: Array<Record<string, any>>
+  parameters_schema: ActionParameterDef[]
+  steps: CompositeActionStep[]
   is_composite: boolean
   code?: string | null
   description: string
@@ -1827,7 +2057,7 @@ export interface PluginResponse {
 }
 
 // 工作流列表项响应
-export interface WorkflowListItemResponse {
+export interface WorkflowListItemResponse extends Partial<CommunityResourceMixin> {
   id: number
   workflow_id: string
   name: string
@@ -1844,11 +2074,13 @@ export interface WorkflowDetailResponse {
   id: number
   workflow_id: string
   name: string
-  steps: Array<Record<string, any>>
+  steps: WorkflowStepRequest[]
   on_error: string
   description: string
   tags: string[]
   is_enabled: boolean
+  user_data?: Record<string, any> | null
+  enabled_plugins?: EnabledPlugin[]
   created_at: string
   updated_at: string
 }

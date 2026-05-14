@@ -240,20 +240,67 @@ const routes: CustomRouteRecordRaw[] = [
     }
   },
   {
-    path: '/app/browser-management',
+    path: '/app/browser',
     name: RouteName.BROWSER_MANAGEMENT,
     component: () => import('@/views/BrowserManagementView.vue'),
+    redirect: { name: RouteName.BROWSER_MANAGEMENT_PANEL },
     meta: {
       id: 'browser-management',
       title: RouteName.BROWSER_MANAGEMENT,
       description: 'RPA浏览器自动化操作和调试控制台',
       color: 'var(--color-gradient-hero-primary)',
-      isHeaderShow: import.meta.env.VITE_BILI_ENV === 'dev',
+      isHeaderShow: true,
       requiresLogin: true,
       icon: IconMonitor,
-      showInHome: import.meta.env.VITE_BILI_ENV === 'dev',
+      showInHome: true,
       order: 5
-    }
+    },
+    children: [
+      {
+        path: 'management',
+        name: RouteName.BROWSER_MANAGEMENT_PANEL,
+        component: () => import('@/views/BrowserManagementPanelView.vue'),
+        meta: {
+          title: '浏览器管理',
+          icon: IconMonitor,
+          description: 'RPA浏览器实时控制台',
+          isHeaderShow: true
+        }
+      },
+      {
+        path: 'community/plugins',
+        name: RouteName.RPA_BROWSER_COMMUNITY_PLUGINS,
+        component: () => import('@/components/browser/community/CommunityPluginsPanel.vue'),
+        meta: {
+          title: '社区插件',
+          icon: IconLink,
+          description: '浏览社区分享的插件',
+          isHeaderShow: true
+        }
+      },
+      {
+        path: 'community/actions',
+        name: RouteName.RPA_BROWSER_COMMUNITY_ACTIONS,
+        component: () => import('@/components/browser/community/CommunityActionsPanel.vue'),
+        meta: {
+          title: '社区操作',
+          icon: IconLink,
+          description: '浏览社区分享的自定义操作',
+          isHeaderShow: true
+        }
+      },
+      {
+        path: 'community/workflows',
+        name: RouteName.RPA_BROWSER_COMMUNITY_WORKFLOWS,
+        component: () => import('@/components/browser/community/CommunityWorkflowsPanel.vue'),
+        meta: {
+          title: '社区工作流',
+          icon: IconLink,
+          description: '浏览社区分享的工作流',
+          isHeaderShow: true
+        }
+      }
+    ]
   },
   {
     path: '/app/browser-console/:browserId',
@@ -311,6 +358,26 @@ const routes: CustomRouteRecordRaw[] = [
         }
       },
       {
+        path: 'workflow',
+        name: RouteName.BROWSER_CONSOLE_WORKFLOW,
+        component: () => import('@/components/browser/WorkflowPanel.vue'),
+        props: (route) => ({ browserId: route.params.browserId }),
+        meta: {
+          title: '工作流',
+          hideInMenu: true
+        }
+      },
+      {
+        path: 'plugins',
+        name: RouteName.BROWSER_CONSOLE_PLUGINS,
+        component: () => import('@/components/browser/PluginPanel.vue'),
+        props: (route) => ({ browserId: route.params.browserId }),
+        meta: {
+          title: '插件管理',
+          hideInMenu: true
+        }
+      },
+      {
         path: 'debug',
         name: RouteName.BROWSER_CONSOLE_DEBUG,
         component: () => import('@/components/browser/DebugPanel.vue'),
@@ -325,7 +392,8 @@ const routes: CustomRouteRecordRaw[] = [
   {
     path: '/app/browser-console/:browserId/not-found',
     name: RouteName.BROWSER_CONSOLE_NOT_FOUND,
-    component: () => import('@/views/BrowserConsoleNotFoundView.vue'),
+    component: () =>
+      import('@/views/BrowserConsoleNotFoundView.vue'),
     meta: {
       title: '指纹不存在',
       description: '浏览器指纹不存在或不属于当前账号',
@@ -408,13 +476,17 @@ router.beforeEach((to) => {
   // RPA浏览器控制台相关路由列表
   const browserRoutes = [
     RouteName.BROWSER_MANAGEMENT,
+    RouteName.BROWSER_MANAGEMENT_PANEL,
     RouteName.BROWSER_CONSOLE,
     RouteName.BROWSER_CONSOLE_PANEL,
     RouteName.BROWSER_CONSOLE_STREAM,
     RouteName.BROWSER_CONSOLE_VISUAL,
     RouteName.BROWSER_CONSOLE_CUSTOM,
     RouteName.BROWSER_CONSOLE_DEBUG,
-    RouteName.BROWSER_CONSOLE_NOT_FOUND
+    RouteName.BROWSER_CONSOLE_NOT_FOUND,
+    RouteName.RPA_BROWSER_COMMUNITY_PLUGINS,
+    RouteName.RPA_BROWSER_COMMUNITY_ACTIONS,
+    RouteName.RPA_BROWSER_COMMUNITY_WORKFLOWS
   ]
 
   // 检查是否访问RPA浏览器控制台相关路由

@@ -55,12 +55,20 @@
           <CustomActionPanel
             v-if="activeTab === 'custom-actions'"
             :browser-id="browserId"
+            :registered-actions="registeredActions"
+            :shared-workflow-data="sharedWorkflowData"
+            @workflow-edit-open="onWorkflowEditOpen"
+            @workflow-edit-change="onWorkflowEditChange"
+            @workflow-edit-close="onWorkflowEditClose"
           />
 
           <!-- Debug调试面板 -->
           <DebugPanel
             v-if="activeTab === 'debug'"
             :browser-id="browserId"
+            :registered-actions="registeredActions"
+            :shared-workflow-data="sharedWorkflowData"
+            @workflow-debug-change="onWorkflowDebugChange"
           />
         </div>
       </div>
@@ -69,9 +77,22 @@
 </template>
 
 <script setup lang="ts">
-import { ref, markRaw } from 'vue'
+import { ref, markRaw, reactive, watch } from 'vue'
 import { Connection, Tools, Cpu, VideoCamera, Fold, Expand } from '@element-plus/icons-vue'
 import MJPEGStreamPanel from './MJPEGStreamPanel.vue'
+import actionsApi, { ActionsApi } from '@/api/browser/actions_api'
+import type { StepItem } from './right-panel/components/CustomActionStepEditor.vue'
+
+export interface SharedWorkflowData {
+  steps: StepItem[]
+  source: 'edit' | 'debug' | null
+  actionInfo: {
+    name: string
+    description: string
+    parameters_schema: any[]
+    actionId?: number
+  } | null
+}
 
 // Props
 const props = defineProps({
@@ -93,16 +114,73 @@ const tabs = [
 const activeTab = ref('mjpeg')
 const isCollapsed = ref(false)
 
+// 注册操作列表（全局共享，只请求一次）
+const registeredActions = ref<any[]>([])
+
+// ═══ 共享工作流数据（左右面板同步） ═══
+const sharedWorkflowData = reactive<SharedWorkflowData>({
+  steps: [],
+  source: null,
+  actionInfo: null
+})
+
+let syncingFromEdit = false
+let syncingFromDebug = false
+
+function onWorkflowEditOpen(payload: { steps: StepItem[]; actionInfo: SharedWorkflowData['actionInfo'] }) {
+  syncingFromEdit = true
+  sharedWorkflowData.steps = payload.steps.map(s => ({ ...s }))
+  sharedWorkflowData.actionInfo = payload.actionInfo
+  sharedWorkflowData.source = 'edit'
+  syncingFromEdit = false
+}
+
+function onWorkflowEditChange(steps: StepItem[]) {
+  if (syncingFromEdit || syncingFromDebug) return
+  syncingFromEdit = true
+  sharedWorkflowData.steps = steps.map(s => ({ ...s }))
+  sharedWorkflowData.source = 'edit'
+  syncingFromEdit = false
+}
+
+function onWorkflowEditClose() {
+  sharedWorkflowData.source = null
+}
+
+function onWorkflowDebugChange(steps: StepItem[]) {
+  if (syncingFromEdit || syncingFromDebug) return
+  syncingFromDebug = true
+  sharedWorkflowData.steps = steps.map(s => ({ ...s }))
+  sharedWorkflowData.source = 'debug'
+  syncingFromDebug = false
+}
+
 // MJPEG面板引用
 const mjpegPanelRef = ref<InstanceType<typeof MJPEGStreamPanel> | null>(null)
 
 // 处理停止会话 - 先停止视频流，再触发事件
 const handleStopSession = () => {
-  // 调用 MJPEG 面板的停止视频流方法
   if (mjpegPanelRef.value) {
     mjpegPanelRef.value.stopVideoStream()
   }
 }
+
+// 加载注册操作列表（全局只请求一次）
+const loadRegisteredActions = async () => {
+  try {
+    const response = await actionsApi.getRegisteredActions({ browser_id: props.browserId })
+    if (response.code === 0 && response.data) {
+      const rawData = Array.isArray(response.data) ? response.data : (response.data.actions || [])
+      registeredActions.value = rawData.map((a: any) => ActionsApi.normalizeActionMetadata(a))
+    }
+  } catch (e) {
+    console.warn('[BrowserDebugPanel] 获取注册操作失败:', e)
+  }
+}
+
+onMounted(() => {
+  loadRegisteredActions()
+})
 </script>
 
 

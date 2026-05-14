@@ -69,17 +69,17 @@
             <el-icon><VideoCamera /></el-icon>
             <template #title>实时控制</template>
           </el-menu-item>
-          <el-menu-item :index="consoleBasePath + '/visual'">
-            <el-icon><Connection /></el-icon>
-            <template #title>可视化操作</template>
-          </el-menu-item>
           <el-menu-item :index="consoleBasePath + '/custom'">
             <el-icon><Tools /></el-icon>
             <template #title>自定义操作</template>
           </el-menu-item>
-          <el-menu-item :index="consoleBasePath + '/debug'">
-            <el-icon><Cpu /></el-icon>
-            <template #title>Debug 调试</template>
+          <el-menu-item :index="consoleBasePath + '/workflow'">
+            <el-icon><SetUp /></el-icon>
+            <template #title>工作流</template>
+          </el-menu-item>
+          <el-menu-item :index="consoleBasePath + '/plugins'">
+            <el-icon><Box /></el-icon>
+            <template #title>插件</template>
           </el-menu-item>
         </el-menu>
 
@@ -139,7 +139,7 @@
       </div>
 
       <!-- 右侧内容区 -->
-      <div class="flex-1 min-w-0 min-h-0 overflow-y-auto bg-bg">
+      <div class="flex-1 min-w-0 min-h-0 overflow-y-auto">
         <router-view v-slot="{ Component }">
           <component :is="Component"/>
         </router-view>
@@ -151,7 +151,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, provide } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Monitor, ArrowLeft, Key, CopyDocument, VideoCamera, Connection, Tools, Cpu, Fold, Expand } from '@element-plus/icons-vue'
+import { Monitor, ArrowLeft, Key, CopyDocument, VideoCamera, Tools, Fold, Expand, SetUp, Box } from '@element-plus/icons-vue'
 import browserApi, { browserLiveControlApi } from '@/api/browser/browser_api'
 import { businessHandler } from '@/utils/businessHandler'
 import biliMessage from '@/utils/message'
@@ -257,11 +257,19 @@ const refreshSessionStatus = async (): Promise<BrowserSessionStatus | null> => {
       console.log('[BrowserConsolePanelView] refreshSessionStatus updated sessionState:', sessionState.value)
       return sessionState.value
     } else if (res.code === 403) {
-      // 浏览器ID不存在或不属于当前用户，跳转到not-found页面
-      console.log('[BrowserConsolePanelView] browser_id does not belong to current user or does not exist, redirecting to not-found')
-      router.push({ name: RouteName.BROWSER_CONSOLE_NOT_FOUND, params: { browserId } })
+      // 浏览器ID不存在或不属于当前用户，跳转到管理页面
+      console.log('[BrowserConsolePanelView] browser_id does not belong to current user or does not exist, redirecting')
+      biliMessage.warning(`浏览器 "${browserId}" 不存在或无权访问`)
+      router.replace({ name: RouteName.BROWSER_MANAGEMENT })
       return null
-    } else if (res.code === 404) {
+    } else if (res.code === 404 || res.code === 422 || (res.msg && (res.msg.includes('422') || res.msg.includes('value_error') || res.msg.includes('invalid literal')))) {
+      // 浏览器ID无效或参数验证失败
+      console.log('[BrowserConsolePanelView] invalid browser_id, redirecting to management')
+      biliMessage.warning(`浏览器ID "${browserId}" 无效`)
+      router.replace({ name: RouteName.BROWSER_MANAGEMENT })
+      return null
+    } else {
+      // 其他状态码（如非200的成功响应或未知错误）
       sessionState.value = {
         session_exists: false,
         browser_running: false,
@@ -345,10 +353,11 @@ const startBrowser = async () => {
         startLaunchPolling()
       }
     } else {
-      // 检查是否是403错误（浏览器ID不存在或不属于当前用户）
-      if (result.response?.code === 403) {
-        console.log('[BrowserConsolePanelView] browser_id does not belong to current user or does not exist, redirecting to not-found')
-        router.push({ name: RouteName.BROWSER_CONSOLE_NOT_FOUND, params: { browserId } })
+      // 检查是否是403/422错误（浏览器ID不存在或不属于当前用户）
+      if (result.response?.code === 403 || result.response?.code === 422) {
+        console.log('[BrowserConsolePanelView] browser_id invalid, redirecting to management')
+        biliMessage.warning(`浏览器 "${browserId}" 不存在或无权访问`)
+        router.replace({ name: RouteName.BROWSER_MANAGEMENT })
         return
       }
       operateState.value = 'launch_failed'
@@ -456,9 +465,25 @@ const loadBrowserInfo = async () => {
     })
     if (result.success && result.data) {
       browserInfo.value = result.data as UserBrowserInfoReadResp
+    } else {
+      // 检查是否是浏览器ID无效的错误
+      const code = result.response?.code
+      const msg = result.msg || ''
+      if (code === 403 || code === 404 || code === 422 ||
+          msg.includes('422') || msg.includes('403') || msg.includes('404') ||
+          msg.includes('不存在') || msg.includes('不属于') ||
+          msg.includes('invalid literal') || msg.includes('value_error')) {
+        biliMessage.warning(`浏览器 "${browserId}" 不存在或无权访问，即将跳转...`)
+        setTimeout(() => router.replace({ name: RouteName.BROWSER_MANAGEMENT }), 1500)
+      }
     }
-  } catch {
-    // 不影响主功能，顶栏仅展示 id 即可
+  } catch (err: any) {
+    // 网络异常或严重错误
+    const errMsg = err?.msg || err?.message || ''
+    if (errMsg.includes('422') || errMsg.includes('invalid literal') || errMsg.includes('value_error')) {
+      biliMessage.warning(`浏览器ID "${browserId}" 格式无效，即将跳转...`)
+      setTimeout(() => router.replace({ name: RouteName.BROWSER_MANAGEMENT }), 1500)
+    }
   } finally {
     loadingInfo.value = false
   }

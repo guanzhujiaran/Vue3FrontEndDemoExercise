@@ -46,7 +46,7 @@
           size="small"
           :icon="Camera"
           plain
-          :disabled="!isStreaming"
+          :disabled="!browserRunning"
           :loading="takingScreenshot"
           @click="takeScreenshot"
           round
@@ -63,6 +63,19 @@
             @click="refreshStream"
             round
           >刷新</el-button>
+        </el-tooltip>
+
+        <!-- 手动刷新直播状态 -->
+        <el-tooltip :content="isStreaming ? '刷新直播状态（视频流+页面列表+会话信息）' : '刷新会话和页面状态'" placement="top">
+          <el-button
+            size="small"
+            :icon="Refresh"
+            type="warning"
+            plain
+            :loading="refreshingLiveStatus"
+            @click="handleRefreshLiveStatus"
+            round
+          >直播状态</el-button>
         </el-tooltip>
 
         <!-- 开始/停止按钮 -->
@@ -221,63 +234,95 @@
 
       </div>
 
-      <!-- 右侧面板容器 -->
-      <div class="flex items-stretch gap-0 shrink-0">
-        <!-- 切换按钮 - 始终可见 -->
-        <el-button
-          :icon="rightPanelCollapsed ? DArrowLeft : DArrowRight"
-          circle
-          size="small"
-          @click="toggleRightPanel"
-          class="self-center -ml-1 bg-white border shadow-sm z-10 hover:scale-110 transition-transform"
-          :title="rightPanelCollapsed ? '展开操作面板' : '收起操作面板'"
-        />
-
-        <!-- 右侧：操作面板 - 可折叠 -->
-        <transition name="panel-collapse">
-          <div
-            v-if="!rightPanelCollapsed"
-            class="w-72 flex flex-col gap-3 overflow-y-auto"
-          >
-        <!-- 点击操作 -->
-        <el-card shadow="never" class="flex-[0.4]">
-          <template #header>
-            <div class="flex items-center gap-2 text-sm font-medium">
-              <el-icon><Pointer /></el-icon>
-              坐标点击
-            </div>
-          </template>
-          <div class="flex gap-2 mb-2">
-            <el-input-number v-model="clickX" :min="0" placeholder="X" size="small" class="flex-1" controls-position="right" />
-            <el-input-number v-model="clickY" :min="0" placeholder="Y" size="small" class="flex-1" controls-position="right" />
+      <!-- 右侧面板区域 -->
+      <div class="flex shrink-0">
+        <!-- 拖动调整宽度的把手 -->
+        <div
+          class="w-1 cursor-col-resize transition-all duration-150 group"
+          :class="isResizing ? 'bg-primary w-2' : 'bg-gray-300 hover:bg-primary hover:w-1.5'"
+          @mousedown="startResize"
+          ref="resizeHandle"
+          title="拖动调整宽度"
+        >
+          <div class="w-full h-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+            <div class="w-0.5 h-8 bg-white/50 rounded-full"></div>
           </div>
-          <el-button size="small" type="primary" plain @click="performClick" :loading="clicking" :disabled="!isStreaming" class="w-full">
-            点击 ({{ clickX }}, {{ clickY }})
-          </el-button>
-        </el-card>
+        </div>
 
-        <!-- 日志 -->
-        <el-card shadow="never" class="flex-1">
-          <template #header>
-            <div class="flex items-center justify-between text-sm font-medium">
-              <span class="flex items-center gap-2">
-                <el-icon><List /></el-icon>
-                操作日志
-                <el-badge v-if="logs.length" :value="logs.length" :max="99" class="ml-1" />
-              </span>
-              <el-button size="small" text @click="logs = []">清空</el-button>
+        <!-- 面板内容区域 -->
+        <div
+          class="flex shrink-0 overflow-visible"
+          :style="{ width: rightPanelWidth + 'px' }"
+          ref="resizeContainer"
+        >
+          <!-- 内容区域 -->
+          <div class="flex-1 flex flex-col gap-3 p-3 overflow-auto">
+            <!-- 操作调试 Tab -->
+            <div v-if="activeTab === 'action'" class="flex-1">
+              <DebugActionPanel
+                ref="actionRef"
+                :browser-id="browserId"
+                :browser-running="browserRunning"
+                :registered-actions="registeredActions"
+                :loading-actions="loadingActions"
+                @log="(msg, t) => handleLog(msg, t)"
+                @refresh-actions="loadRegisteredActions"
+              />
             </div>
-          </template>
-          <el-scrollbar ref="logScrollbar" height="500px">
-            <div v-if="logs.length === 0" class="text-center text-xs text-secondary py-4">暂无日志</div>
-            <div v-for="(log, idx) in logs" :key="idx" :class="['flex gap-2 text-xs py-0.5 border-b border-[var(--el-border-color-lighter)] last:border-0', getLogClass(log.type)]">
-              <span class="text-[var(--el-text-color-secondary)] shrink-0 font-mono">{{ log.time }}</span>
-              <span>{{ log.message }}</span>
+
+            <!-- 插件管理 Tab -->
+            <div v-if="activeTab === 'plugin'" class="flex-1">
+              <DebugPluginPanel
+                ref="pluginRef"
+                :browser-id="browserId"
+                :browser-running="browserRunning"
+                @log="(msg, t) => handleLog(msg, t)"
+              />
             </div>
-          </el-scrollbar>
-        </el-card>
+
+            <!-- 日志 Tab -->
+            <div v-if="activeTab === 'log'" class="flex-1">
+              <RightPanelLogTab ref="logTabRef" />
+            </div>
           </div>
-        </transition>
+
+          <!-- 右侧菜单栏 - 和左侧样式完全一致 -->
+          <div class="flex flex-col shrink-0 overflow-hidden bg-bg border-l border-(--el-border-color-lighter) w-[72px]">
+            <el-menu
+              class="console-side-nav-menu"
+              :default-active="activeTab"
+              :collapse="false"
+              :collapse-transition="false"
+            >
+              <el-menu-item index="action" @click="activeTab = 'action'">
+                <i class="el-icon">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+                    <path fill="currentColor" d="M768 64H256a32 32 0 0 0-32 32v832a32 32 0 0 0 32 32h512a32 32 0 0 0 32-32V96a32 32 0 0 0-32-32m-48 130.56V192H256v2.56a128 128 0 0 1 65.472 33.92l35.84 28.864A64 64 0 0 0 416 228.032V192h256v36.032a64 64 0 0 0 58.688 63.872l35.84-28.864A128 128 0 0 1 720 194.56M256 384v416h256V384Zm32 96v224h192V480Zm320 224V384h144v416Z"/>
+                  </svg>
+                </i>
+                <template #title>自定义操作</template>
+              </el-menu-item>
+              <el-menu-item index="plugin" @click="activeTab = 'plugin'">
+                <i class="el-icon">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+                    <path fill="currentColor" d="M317.056 128 128 344.064V896h768V344.064L706.944 128zm-14.528-64h418.944a32 32 0 0 1 24.064 10.88l206.528 236.096A32 32 0 0 1 960 332.032V928a32 32 0 0 1-32 32H96a32 32 0 0 1-32-32V332.032a32 32 0 0 1 7.936-21.12L278.4 75.008A32 32 0 0 1 302.528 64"/>
+                    <path fill="currentColor" d="M64 320h896v64H64z"/>
+                    <path fill="currentColor" d="M448 327.872V640h128V327.872L526.08 128h-28.16zM448 64h128l64 256v352a32 32 0 0 1-32 32H416a32 32 0 0 1-32-32V320z"/>
+                  </svg>
+                </i>
+                <template #title>插件</template>
+              </el-menu-item>
+              <el-menu-item index="log" @click="activeTab = 'log'">
+                <i class="el-icon">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+                    <path fill="currentColor" d="M192 128h640a32 32 0 0 1 32 32v640a32 32 0 0 1-32 32H192a32 32 0 0 1-32-32V160a32 32 0 0 1 32-32m0 64V832h640V192zm64 128h512v64H256zm0 128h512v64H256zm0 128h512v64H256zm0 128h256v64H256z"/>
+                  </svg>
+                </i>
+                <template #title>日志</template>
+              </el-menu-item>
+            </el-menu>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -289,11 +334,13 @@
       :close-on-click-modal="false"
     >
       <div class="flex flex-col items-center">
-        <img
+        <el-image
           v-if="screenshotUrl"
           :src="screenshotUrl"
-          alt="截图"
-          class="max-w-full max-h-[500px] object-contain rounded-lg"
+          :preview-src-list="[screenshotUrl]"
+          :initial-index="0"
+          fit="contain"
+          class="max-w-full rounded-lg border-2 border-gray-200 shadow-sm cursor-zoom-in"
         />
         <div class="mt-4 flex gap-3">
           <el-button
@@ -312,17 +359,21 @@
 
 <script setup lang="ts">
 import { ref, nextTick, onBeforeUnmount, onMounted, computed, watch, inject, type Ref } from 'vue'
-import { ElScrollbar } from 'element-plus'
 import {
-  VideoPlay, VideoPause, Camera, Link, List,
-  Loading, CircleClose, VideoCamera, User, Pointer, Download, DArrowLeft, DArrowRight,
-  Document, Close, Plus, RefreshRight
+  VideoPlay, VideoPause, Camera, Link,
+  Loading, CircleClose, VideoCamera, User, Download,
+  Document, Close, Plus, RefreshRight, Refresh
 } from '@element-plus/icons-vue'
 import { browserLiveControlApi } from '@/api/browser/browser_api'
 import browserControlApi from '@/api/browser/browser_control_api'
-import { businessHandler } from '@/utils/businessHandler'
+import actionsApi, { ActionsApi } from '@/api/browser/actions_api'
 import biliMessage from '@/utils/message'
 import type { BrowserSessionStatus } from '@/types/browser-automation-api'
+
+import RightPanelLogTab from './right-panel/RightPanelLogTab.vue'
+import FlexContainer from '@/components/CommonCompo/Bili-Container-Compo/FlexContainer.vue'
+import DebugActionPanel from './right-panel/DebugActionPanel.vue'
+import DebugPluginPanel from './right-panel/DebugPluginPanel.vue'
 
 const sessionState = inject<Ref<BrowserSessionStatus | undefined>>('browserSessionState')
 
@@ -338,6 +389,7 @@ onMounted(() => {
   if (sessionState?.value?.browser_running && sessionState?.value?.lifecycle_state === 'active') {
     console.log('[WebRTCStreamPanel] Browser already running on mount, fetching page list')
     refreshPagesList()
+    loadRegisteredActions()
   }
   if (videoContainer.value) {
     const updateSize = () => {
@@ -353,7 +405,7 @@ onMounted(() => {
 
   nextTick(() => {
     if (clickOverlay.value) {
-      clickOverlay.value.addEventListener('wheel', handleWheel, { passive: false })
+      clickOverlay.value.addEventListener('wheel', handleWheel, { passive: true })
     }
   })
 })
@@ -380,11 +432,32 @@ const videoRef = ref<HTMLVideoElement | null>(null)
 const clickOverlay = ref<HTMLDivElement | null>(null)
 const peerConnection = ref<RTCPeerConnection | null>(null)
 const streamKey = ref('')
+const resizeContainer = ref<HTMLDivElement | null>(null)
 
-const rightPanelCollapsed = ref(false)
+const rightPanelWidth = ref(Math.floor(window.innerWidth * 0.48))
+const isResizing = ref(false)
 
-const toggleRightPanel = () => {
-  rightPanelCollapsed.value = !rightPanelCollapsed.value
+const startResize = (e: MouseEvent) => {
+  isResizing.value = true
+  const startX = e.clientX
+  const startWidth = rightPanelWidth.value
+
+  const onMouseMove = (moveEvent: MouseEvent) => {
+    if (!isResizing.value) return
+    // 往左拉时右边扩大，往右拉时右边缩小
+    const delta = startX - moveEvent.clientX
+    const newWidth = Math.max(300, Math.min(800, startWidth + delta))
+    rightPanelWidth.value = newWidth
+  }
+
+  const onMouseUp = () => {
+    isResizing.value = false
+    document.removeEventListener('mousemove', onMouseMove)
+    document.removeEventListener('mouseup', onMouseUp)
+  }
+
+  document.addEventListener('mousemove', onMouseMove)
+  document.addEventListener('mouseup', onMouseUp)
 }
 
 const navigateUrl = ref('')
@@ -397,7 +470,7 @@ const reconnectError = ref('')
 let userManuallyStopped = false
 let reconnectTimer: number | null = null
 
-let totalReconnectCount = 0  // 总重连次数（不重置，用于上限控制）
+let totalReconnectCount = 0
 
 let heartbeatTimer: number | null = null
 const HEARTBEAT_INTERVAL = 30000
@@ -408,7 +481,7 @@ let fpsInterval: number | null = null
 
 interface PageInfo {
   page_index: number
-  page_id: string      // 页面唯一 ID（用于 heartbeat）
+  page_id: string
   title: string
   url: string
 }
@@ -416,6 +489,7 @@ const pagesList = ref<PageInfo[]>([])
 const currentPageIndex = ref(0)
 const creatingPage = ref(false)
 const refreshingStream = ref(false)
+const refreshingLiveStatus = ref(false)
 
 const videoWidth = ref(1920)
 const videoHeight = ref(1080)
@@ -434,7 +508,6 @@ const currentPageUrl = computed(() => {
   return currentPage?.url || ''
 })
 
-// 获取当前页面的 page_id（用于 heartbeat）
 const currentPageId = computed(() => {
   const currentPage = pagesList.value.find(page => page.page_index === currentPageIndex.value)
   return currentPage?.page_id || ''
@@ -455,6 +528,7 @@ watch(() => sessionState?.value, (newState) => {
   if (newState && newState.browser_running && newState.lifecycle_state === 'active') {
     console.log('[WebRTCStreamPanel] Browser is running, fetching page list')
     refreshPagesList()
+    loadRegisteredActions()
   }
   if (newState?.screen?.width && newState?.screen?.height) {
     videoWidth.value = newState.screen.width
@@ -499,27 +573,53 @@ const browserRunning = computed(() => {
 
 const activeConnections = computed(() => 1)
 
-const addLog = (message: string, type: 'info' | 'success' | 'warning' | 'error' | 'debug' = 'info') => {
-  const now = new Date()
-  const time = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`
-  logs.value.push({ time, message, type })
-  nextTick(() => {
-    logScrollbar.value?.setScrollTop(999999)
-  })
+const tabs = [
+  { key: 'action', label: '操作' },
+  { key: 'plugin', label: '插件' },
+  { key: 'log', label: '日志' }
+]
+
+const activeTab = ref('action')
+
+const logTabRef = ref<InstanceType<typeof RightPanelLogTab> | null>(null)
+const actionRef = ref<InstanceType<typeof DebugActionPanel> | null>(null)
+const pluginRef = ref<InstanceType<typeof DebugPluginPanel> | null>(null)
+
+const handleLog = (message: string, type: 'info' | 'success' | 'warning' | 'error') => {
+  logTabRef.value?.addLog(message, type)
 }
 
-const getLogClass = (type: string) => {
-  const map: Record<string, string> = {
-    success: 'text-green-600',
-    error: 'text-red-500',
-    warning: 'text-yellow-600',
-    debug: 'text-[var(--el-text-color-placeholder)]'
+const registeredActions = ref<any[]>([])
+const loadingActions = ref(false)
+
+const loadRegisteredActions = async () => {
+  loadingActions.value = true
+  try {
+    const res = await actionsApi.getRegisteredActions({ browser_id: props.browserId })
+    if (res.code === 0 && res.data) {
+      const actions = Array.isArray(res.data) ? res.data : (res.data.actions || [])
+      registeredActions.value = actions.map((action: any) => {
+        const normalized = ActionsApi.normalizeActionMetadata(action)
+        return {
+          id: normalized.id,
+          action_id: normalized.action_id,
+          name: normalized.name,
+          description: normalized.description,
+          category: normalized.category || normalized.type || 'other',
+          parameters: normalized.parameters || [],
+          schema: action.schema || null
+        }
+      })
+      console.log(`[WebRTCStreamPanel] Loaded ${registeredActions.value.length} registered actions`)
+    } else {
+      console.warn('[WebRTCStreamPanel] Failed to load actions:', res.msg)
+    }
+  } catch (e: any) {
+    console.error('[WebRTCStreamPanel] Error loading actions:', e)
+  } finally {
+    loadingActions.value = false
   }
-  return map[type] || ''
 }
-
-const logs = ref<{ time: string; message: string; type: 'info' | 'success' | 'warning' | 'error' | 'debug' }[]>([])
-const logScrollbar = ref<InstanceType<typeof ElScrollbar>>()
 
 const stopVideoStream = () => {
   console.log('[WebRTCStreamPanel] stopVideoStream called')
@@ -528,7 +628,7 @@ const stopVideoStream = () => {
   isConnecting.value = false
   isReconnecting.value = false
   reconnectAttempts.value = 0
-  totalReconnectCount = 0   // 重置总计数
+  totalReconnectCount = 0
 
   if (reconnectTimer) {
     clearTimeout(reconnectTimer)
@@ -540,10 +640,8 @@ const stopVideoStream = () => {
     fpsInterval = null
   }
 
-  // 停止带宽统计
   stopBandwidthStats()
 
-  // 关闭 WebRTC 流（使用新的 close 接口）
   const closeStream = async () => {
     if (streamKey.value && props.browserId) {
       try {
@@ -570,7 +668,7 @@ const stopVideoStream = () => {
   if (sessionState?.value) {
     sessionState.value.status = 'disconnected'
   }
-  addLog('视频流已停止', 'info')
+  handleLog('视频流已停止', 'info')
   biliMessage.info('视频流已停止')
 }
 
@@ -589,34 +687,59 @@ const refreshStream = async () => {
   if (!isStreaming.value || refreshingStream.value) return
   refreshingStream.value = true
   try {
-    addLog('正在刷新 WebRTC 视频流...', 'info')
-    
-    // 先关闭现有的 WebRTC 流（使用新的 close 接口）
+    handleLog('正在刷新 WebRTC 视频流...', 'info')
+
     if (streamKey.value) {
       try {
         await browserControlApi.closeWebrtcStream({
           browser_id: props.browserId,
           stream_key: streamKey.value
         })
-        addLog('已发送关闭流请求', 'info')
+        handleLog('已发送关闭流请求', 'info')
       } catch (e) {
         console.error('[WebRTCStreamPanel] Failed to close webrtc stream:', e)
       }
     }
-    
-    // 停止当前连接
+
     await stopWebrtcConnection()
     streamKey.value = ''
-    
-    // 重新建立连接
+
     await startWebrtcStream()
-    addLog('视频流刷新成功', 'success')
+    handleLog('视频流刷新成功', 'success')
     biliMessage.success('视频流已刷新')
   } catch (e: any) {
-    addLog(`刷新失败: ${e.message || e}`, 'error')
+    handleLog(`刷新失败: ${e.message || e}`, 'error')
     biliMessage.error('刷新失败：' + (e.message || '未知错误'))
   } finally {
     refreshingStream.value = false
+  }
+}
+
+const handleRefreshLiveStatus = async () => {
+  if (refreshingLiveStatus.value) return
+  refreshingLiveStatus.value = true
+
+  const startTime = Date.now()
+  handleLog('🔄 刷新直播状态...', 'info')
+
+  try {
+    const res = await browserControlApi.getBrowserSessionStatus({
+      browser_id: props.browserId
+    })
+
+    const elapsed = Date.now() - startTime
+    if (res.code === 0) {
+      handleLog(`✅ 直播状态刷新完成 (${elapsed}ms)`, 'success')
+      biliMessage.success(`直播状态已刷新 (${elapsed}ms)`)
+    } else {
+      handleLog(`⚠️ 直播状态刷新异常: ${res.msg} (${elapsed}ms)`, 'warning')
+      biliMessage.warning(res.msg || '刷新异常')
+    }
+  } catch (e: any) {
+    handleLog(`❌ 直播状态刷新失败: ${e.message || e}`, 'error')
+    biliMessage.error('刷新失败：' + (e.message || '未知错误'))
+  } finally {
+    refreshingLiveStatus.value = false
   }
 }
 
@@ -632,14 +755,14 @@ const startVideoStream = async () => {
   userManuallyStopped = false
   reconnectError.value = ''
   screenshotUrl.value = ''
-  totalReconnectCount = 0      // 重置总计数
-  reconnectAttempts.value = 0   // 重置本轮计数
+  totalReconnectCount = 0
+  reconnectAttempts.value = 0
 
   try {
-    addLog('检查浏览器会话...', 'info')
+    handleLog('检查浏览器会话...', 'info')
     const currentState = sessionState?.value
     if (currentState && !currentState.browser_running) {
-      addLog('浏览器未运行，正在启动...（大约需要等待1分钟）', 'warning')
+      handleLog('浏览器未运行，正在启动...（大约需要等待1分钟）', 'warning')
       const createRes = await browserLiveControlApi.createBrowserSession({ browser_id: props.browserId })
       if (createRes.code !== 0) {
         throw new Error(createRes.msg || '启动浏览器失败')
@@ -652,7 +775,7 @@ const startVideoStream = async () => {
 
   } catch (error: any) {
     if (error.name !== 'AbortError') {
-      addLog(`连接失败: ${error.message || error}`, 'error')
+      handleLog(`连接失败: ${error.message || error}`, 'error')
       biliMessage.error('启动视频流失败：' + (error.message || '未知错误'))
       reconnectError.value = error.message || '连接失败'
     }
@@ -674,7 +797,7 @@ const startWebrtcStream = async () => {
   }
 
   try {
-    addLog('Step 1: 请求 SDP Offer...', 'info')
+    handleLog('Step 1: 请求 SDP Offer...', 'info')
     const offerRes = await browserControlApi.createWebrtcOffer({
       browser_id: props.browserId,
       page_index: currentPageIndex.value
@@ -688,13 +811,12 @@ const startWebrtcStream = async () => {
     console.log('[WebRTCStreamPanel] Received offer, sdp length:', offer?.sdp?.length)
     console.log('[WebRTCStreamPanel] Offer type:', offer?.type)
     
-    // 保存 stream_key
     if (offer?.stream_key) {
       streamKey.value = offer.stream_key
       console.log('[WebRTCStreamPanel] Received stream_key:', offer.stream_key)
     }
 
-    addLog(`收到SDP Offer (${offer?.sdp?.length || 0} bytes)`, 'success')
+    handleLog(`收到SDP Offer (${offer?.sdp?.length || 0} bytes)`, 'success')
 
     const pc = new RTCPeerConnection({
       iceServers: []
@@ -702,7 +824,6 @@ const startWebrtcStream = async () => {
 
     pc.onicecandidate = async (event) => {
       console.log('[WebRTCStreamPanel] ICE candidate:', event.candidate)
-      // 发送 ICE Candidate 到服务器
       if (event.candidate && streamKey.value) {
         try {
           await browserControlApi.addIceCandidate({
@@ -730,12 +851,9 @@ const startWebrtcStream = async () => {
           console.log('[WebRTCStreamPanel] srcObject set, calling play()')
           videoEl.play().then(() => {
             console.log('[WebRTCStreamPanel] Video playing successfully')
-            console.log('[WebRTCStreamPanel] videoEl.videoWidth:', videoEl.videoWidth, 'videoEl.videoHeight:', videoEl.videoHeight)
-            console.log('[WebRTCStreamPanel] videoEl.offsetWidth:', videoEl.offsetWidth, 'videoEl.offsetHeight:', videoEl.offsetHeight)
-            console.log('[WebRTCStreamPanel] videoEl.getBoundingClientRect():', videoEl.getBoundingClientRect())
-            addLog('视频播放成功', 'success')
+            handleLog('视频播放成功', 'success')
             startFPSCounter()
-            startBandwidthStats()  // 启动带宽统计
+            startBandwidthStats()
           }).catch(e => {
             console.error('[WebRTCStreamPanel] Play failed:', e)
           })
@@ -749,23 +867,20 @@ const startWebrtcStream = async () => {
       const state = pc.connectionState
       console.log('[WebRTCStreamPanel] Connection state:', state)
       if (state === 'connected') {
-        addLog('WebRTC 连接建立成功', 'success')
+        handleLog('WebRTC 连接建立成功', 'success')
       } else if (state === 'disconnected') {
-        // disconnected 可能是临时中断（ICE 保活丢失），等待几秒看能否自动恢复
-        addLog('WebRTC 连接中断，等待自动恢复...', 'warning')
+        handleLog('WebRTC 连接中断，等待自动恢复...', 'warning')
         setTimeout(() => {
-          // 延迟后检查状态是否已恢复
           if (pc.connectionState === 'disconnected' || pc.connectionState === 'failed') {
             console.log('[WebRTCStreamPanel] Connection did not recover, state:', pc.connectionState)
             if (!userManuallyStopped) {
               handleConnectionLost(`Connection ${state}`)
             }
           } else if (pc.connectionState === 'connected') {
-            addLog('WebRTC 连接已自动恢复', 'success')
+            handleLog('WebRTC 连接已自动恢复', 'success')
           }
-        }, 3000) // 等待 3 秒看能否自动恢复
+        }, 3000)
       } else if (state === 'failed') {
-        // failed 表示彻底失败，立即重连
         if (!userManuallyStopped) {
           handleConnectionLost(`Connection ${state}`)
         }
@@ -776,18 +891,16 @@ const startWebrtcStream = async () => {
       console.log('[WebRTCStreamPanel] ICE state:', pc.iceConnectionState)
     }
 
-    addLog('Step 2: 设置远程描述...', 'info')
+    handleLog('Step 2: 设置远程描述...', 'info')
     await pc.setRemoteDescription(new RTCSessionDescription(offer))
 
-    addLog('Step 3: 创建本地 Answer...', 'info')
+    handleLog('Step 3: 创建本地 Answer...', 'info')
     const answer = await pc.createAnswer()
     console.log('[WebRTCStreamPanel] Created answer, sdp length:', answer.sdp?.length)
     await pc.setLocalDescription(answer)
 
-    addLog('Step 4: 发送 Answer 到服务器...', 'info')
+    handleLog('Step 4: 发送 Answer 到服务器...', 'info')
     
-    // 使用新的 API 格式提交 answer（包含 stream_key）
-    // 注意：answer 提交失败不中断流程，因为视频流可能已经建立
     try {
       const answerRes = await browserControlApi.submitWebrtcAnswer({
         browser_id: props.browserId,
@@ -801,14 +914,13 @@ const startWebrtcStream = async () => {
 
       if (answerRes.code !== 0) {
         console.warn('[WebRTCStreamPanel] Answer submit returned non-zero code:', answerRes.msg)
-        addLog(`Answer 提交返回: ${answerRes.msg || '未知'}`, 'warning')
+        handleLog(`Answer 提交返回: ${answerRes.msg || '未知'}`, 'warning')
       } else {
-        addLog('Answer 已发送到服务器', 'success')
+        handleLog('Answer 已发送到服务器', 'success')
       }
     } catch (answerErr: any) {
-      // Answer 提交失败不中断流程 - 视频流可能已经正常工作
       console.warn('[WebRTCStreamPanel] Failed to submit answer:', answerErr)
-      addLog(`Answer 提交失败(非致命): ${answerErr.message || answerErr}`, 'warning')
+      handleLog(`Answer 提交失败(非致命): ${answerErr.message || answerErr}`, 'warning')
     }
 
     peerConnection.value = pc
@@ -816,7 +928,7 @@ const startWebrtcStream = async () => {
 
   } catch (e: any) {
     console.error('[WebRTCStreamPanel] startWebrtcStream error:', e)
-    addLog(`错误: ${e.message || e}`, 'error')
+    handleLog(`错误: ${e.message || e}`, 'error')
     throw e
   }
 }
@@ -853,11 +965,9 @@ const startFPSCounter = () => {
   }
 }
 
-// WebRTC 带宽统计函数
 const startBandwidthStats = () => {
-  stopBandwidthStats() // 确保没有重复的定时器
+  stopBandwidthStats()
   
-  // 初始化统计
   const initStats = async () => {
     if (!peerConnection.value) return
     try {
@@ -875,7 +985,6 @@ const startBandwidthStats = () => {
     }
   }
   
-  // 初始化后启动定时统计
   initStats().then(() => {
     bandwidthStatsInterval = window.setInterval(async () => {
       if (!peerConnection.value || peerConnection.value.connectionState !== 'connected') return
@@ -894,17 +1003,15 @@ const startBandwidthStats = () => {
           }
         })
         
-        // 计算速率 (每秒字节数)
         bandwidthDownload.value = Math.max(0, currentBytesReceived - lastBytesReceived)
         bandwidthUpload.value = Math.max(0, currentBytesSent - lastBytesSent)
         
-        // 更新上次值
         lastBytesReceived = currentBytesReceived
         lastBytesSent = currentBytesSent
       } catch (e) {
         console.error('[WebRTCStreamPanel] Failed to get bandwidth stats:', e)
       }
-    }, 1000) // 每秒更新一次
+    }, 1000)
   })
 }
 
@@ -928,20 +1035,19 @@ const handleConnectionLost = async (reason: string) => {
   }
 
   isReconnecting.value = true
-  totalReconnectCount++          // 累计总次数（不重置）
-  reconnectAttempts.value++      // 本轮计数（用于显示）
-  console.log('[WebRTCStreamPanel] Incremented counters, totalReconnectCount:', totalReconnectCount, 'roundAttempt:', reconnectAttempts.value)
+  totalReconnectCount++
+  reconnectAttempts.value++
 
-  if (totalReconnectCount > maxReconnectAttempts) {  // 用总次数判断上限
+  if (totalReconnectCount > maxReconnectAttempts) {
     console.log('[WebRTCStreamPanel] Max reconnect attempts reached, stopping')
     reconnectError.value = `重连次数已达上限 (${maxReconnectAttempts})，请手动刷新`
     isReconnecting.value = false
     isStreaming.value = false
-    addLog('WebRTC 流重连失败，请手动刷新页面', 'error')
+    handleLog('WebRTC 流重连失败，请手动刷新页面', 'error')
     return
   }
 
-  addLog(`WebRTC 流断开，第 ${reconnectAttempts.value} 次重连中... (总计 ${totalReconnectCount}/${maxReconnectAttempts})`, 'warning')
+  handleLog(`WebRTC 流断开，第 ${reconnectAttempts.value} 次重连中... (总计 ${totalReconnectCount}/${maxReconnectAttempts})`, 'warning')
 
   await new Promise<void>((resolve) => {
     reconnectTimer = window.setTimeout(() => {
@@ -959,13 +1065,13 @@ const handleConnectionLost = async (reason: string) => {
   try {
     await stopWebrtcConnection()
     await startWebrtcStream()
-    reconnectAttempts.value = 0   // 重置本轮计数（总次数不重置）
+    reconnectAttempts.value = 0
     isReconnecting.value = false
-    addLog(`WebRTC 流重连成功 (已用 ${totalReconnectCount}/${maxReconnectAttempts})`, 'success')
+    handleLog(`WebRTC 流重连成功 (已用 ${totalReconnectCount}/${maxReconnectAttempts})`, 'success')
   } catch (e) {
     console.error('[WebRTCStreamPanel] Reconnect failed:', e)
     isReconnecting.value = false
-    if (!userManuallyStopped && totalReconnectCount < maxReconnectAttempts) {  // 用总次数判断
+    if (!userManuallyStopped && totalReconnectCount < maxReconnectAttempts) {
       handleConnectionLost(reason)
     }
   }
@@ -980,7 +1086,6 @@ const startHeartbeat = () => {
         client_id: `client_${Date.now()}`,
         timestamp: Math.floor(Date.now() / 1000)
       }
-      // 只有从接口获取到真实 page_id 才传
       if (currentPageId.value) {
         heartbeatRequest.page_id = currentPageId.value
       }
@@ -1012,21 +1117,21 @@ const refreshPagesList = async () => {
     if (res.code === 0 && res.data && res.data.pages) {
       pagesList.value = res.data.pages.map((page: any) => ({
         page_index: page.index,
-        page_id: page.page_id || '',  // 从接口获取 page_id，没有则为空
+        page_id: page.page_id || '',
         title: page.title || '新标签页',
         url: page.url
       }))
-      addLog(`获取到 ${pagesList.value.length} 个页面`, 'success')
+      handleLog(`获取到 ${pagesList.value.length} 个页面`, 'success')
       console.log('[WebRTCStreamPanel] Pages with IDs:', pagesList.value.map(p => ({ index: p.page_index, id: p.page_id })))
       if (currentPageIndex.value >= pagesList.value.length && pagesList.value.length > 0) {
         currentPageIndex.value = 0
       }
     } else {
-      addLog(`获取页面列表失败: ${res.msg || '未知错误'}`, 'error')
+      handleLog(`获取页面列表失败: ${res.msg || '未知错误'}`, 'error')
       console.error('[WebRTCStreamPanel] getPageList failed:', res.msg)
     }
   } catch (e) {
-    addLog(`获取页面列表异常: ${e}`, 'error')
+    handleLog(`获取页面列表异常: ${e}`, 'error')
     console.error('[WebRTCStreamPanel] refreshPagesList error:', e)
   }
 }
@@ -1037,7 +1142,7 @@ const switchToPage = async (pageIndex: number) => {
   try {
     await browserLiveControlApi.switchPage({ browser_id: props.browserId, page_index: pageIndex })
     currentPageIndex.value = pageIndex
-    addLog(`已切换到页面 ${pageIndex + 1}`, 'success')
+    handleLog(`已切换到页面 ${pageIndex + 1}`, 'success')
 
     if (isStreaming.value) {
       await stopVideoStream()
@@ -1045,7 +1150,7 @@ const switchToPage = async (pageIndex: number) => {
       await startVideoStream()
     }
   } catch (e) {
-    addLog(`切换页面失败: ${e}`, 'error')
+    handleLog(`切换页面失败: ${e}`, 'error')
     currentPageIndex.value = oldPageIndex
   }
 }
@@ -1058,7 +1163,7 @@ const closePageByIndex = async (pageIndex: number) => {
       page_index: pageIndex
     })
     if (res.code === 0) {
-      addLog(`已关闭页面 ${pageIndex + 1}`, 'success')
+      handleLog(`已关闭页面 ${pageIndex + 1}`, 'success')
       await refreshPagesList()
       if (pageIndex === currentPageIndex.value && pagesList.value.length > 0) {
         const newPageIndex = 0
@@ -1072,7 +1177,7 @@ const closePageByIndex = async (pageIndex: number) => {
       }
     }
   } catch (e) {
-    addLog(`关闭页面失败: ${e}`, 'error')
+    handleLog(`关闭页面失败: ${e}`, 'error')
   }
 }
 
@@ -1089,11 +1194,11 @@ const createNewPage = async () => {
       }
     })
     if (res.code === 0) {
-      addLog('已创建新页面', 'success')
+      handleLog('已创建新页面', 'success')
       await refreshPagesList()
     }
   } catch (e) {
-    addLog(`创建页面失败: ${e}`, 'error')
+    handleLog(`创建页面失败: ${e}`, 'error')
   } finally {
     creatingPage.value = false
   }
@@ -1125,15 +1230,15 @@ const takeScreenshot = async () => {
       if (imgData) {
         screenshotUrl.value = imgData
         showScreenshotDialog.value = true
-        addLog('截图成功', 'success')
+        handleLog('截图成功', 'success')
         biliMessage.success('截图成功')
       }
     } else {
-      addLog(`截图失败: ${res.msg}`, 'error')
+      handleLog(`截图失败: ${res.msg}`, 'error')
       biliMessage.error('截图失败')
     }
   } catch (e) {
-    addLog(`截图异常: ${e}`, 'error')
+    handleLog(`截图异常: ${e}`, 'error')
     biliMessage.error('截图失败')
   } finally {
     takingScreenshot.value = false
@@ -1160,10 +1265,10 @@ const handleNavigate = async () => {
       req: { action_id: 'navigate', params: { url: navigateUrl.value, wait_for_load: true }, page_index: currentPageIndex.value }
     })
     if (res.code === 0 && res.data?.success) {
-      addLog(`导航到: ${navigateUrl.value}`, 'success')
+      handleLog(`导航到: ${navigateUrl.value}`, 'success')
       biliMessage.success('导航成功')
     } else {
-      addLog(`导航失败: ${res.data?.error || res.msg}`, 'error')
+      handleLog(`导航失败: ${res.data?.error || res.msg}`, 'error')
       biliMessage.error(res.data?.error|| res.msg || '导航失败')
     }
   } catch (e) {
@@ -1173,8 +1278,6 @@ const handleNavigate = async () => {
   }
 }
 
-const clickX = ref(0)
-const clickY = ref(0)
 const clicking = ref(false)
 
 const handleVideoClick = async (event: MouseEvent) => {
@@ -1191,9 +1294,6 @@ const handleVideoClick = async (event: MouseEvent) => {
   const actualX = Math.round(ratioX * videoWidth.value)
   const actualY = Math.round(ratioY * videoHeight.value)
 
-  clickX.value = actualX
-  clickY.value = actualY
-
   clicking.value = true
   try {
     const res = await browserLiveControlApi.executeAction({
@@ -1201,13 +1301,13 @@ const handleVideoClick = async (event: MouseEvent) => {
       req: { action_id: 'click', params: { selector: 'body', x: actualX, y: actualY, button: 'left', double_click: false }, page_index: currentPageIndex.value }
     })
     if (res.code === 0 && res.data?.success) {
-      addLog(`点击 (${actualX}, ${actualY}) 成功`, 'success')
+      handleLog(`点击 (${actualX}, ${actualY}) 成功`, 'success')
       refreshPagesList()
     } else {
-      addLog(`点击失败: ${res.data?.error || res.msg}`, 'error')
+      handleLog(`点击失败: ${res.data?.error || res.msg}`, 'error')
     }
   } catch (e) {
-    addLog(`点击异常: ${e}`, 'error')
+    handleLog(`点击异常: ${e}`, 'error')
   } finally {
     clicking.value = false
   }
@@ -1233,33 +1333,12 @@ const handleWheel = async (event: WheelEvent) => {
       req: { action_id: 'scroll', params: { x: Math.round(ratioX * videoWidth.value), y: Math.round(ratioY * videoHeight.value), delta_x: deltaX, delta_y: deltaY }, page_index: currentPageIndex.value }
     })
     if (res.code === 0 && res.data?.success) {
-      addLog(`滚动 (${deltaX}, ${deltaY}) 成功`, 'success')
+      handleLog(`滚动 (${deltaX}, ${deltaY}) 成功`, 'success')
     } else {
-      addLog(`滚动失败: ${res.data?.error || res.msg}`, 'error')
+      handleLog(`滚动失败: ${res.data?.error || res.msg}`, 'error')
     }
   } catch (e) {
-    addLog(`滚动异常: ${e}`, 'error')
-  } finally {
-    clicking.value = false
-  }
-}
-
-const performClick = async () => {
-  clicking.value = true
-  try {
-    const res = await browserLiveControlApi.executeAction({
-      browser_id: props.browserId,
-      req: { action_id: 'click', params: {selector:'body', x: clickX.value, y: clickY.value, button: 'left', double_click: false }, page_index: currentPageIndex.value }
-    })
-    if (res.code === 0 && res.data?.success) {
-      addLog(`点击 (${clickX.value}, ${clickY.value}) 成功`, 'success')
-      biliMessage.success('点击成功')
-    } else {
-      addLog(`点击失败: ${res.data?.error || res.msg}`, 'error')
-      biliMessage.error(res.data?.error || '点击失败')
-    }
-  } catch (e) {
-    biliMessage.error('点击失败')
+    handleLog(`滚动异常: ${e}`, 'error')
   } finally {
     clicking.value = false
   }
@@ -1275,6 +1354,20 @@ onBeforeUnmount(() => {
   }
   stopVideoStream()
 })
+
+const fpsDisplay = ref(0)
+const resolutionDisplay = ref('')
+const bandwidthDownload = ref(0)
+const bandwidthUpload = ref(0)
+let bandwidthStatsInterval: number | null = null
+let lastBytesReceived = 0
+let lastBytesSent = 0
+
+const formatBandwidth = (bytesPerSecond: number): string => {
+  if (bytesPerSecond < 1024) return `${bytesPerSecond} B/s`
+  if (bytesPerSecond < 1024 * 1024) return `${(bytesPerSecond / 1024).toFixed(1)} KB/s`
+  return `${(bytesPerSecond / (1024 * 1024)).toFixed(2)} MB/s`
+}
 </script>
 
 <style scoped>

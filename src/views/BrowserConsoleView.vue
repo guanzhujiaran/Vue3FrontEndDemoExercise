@@ -45,22 +45,27 @@ onMounted(async () => {
       showErrorToast: false
     })
     if (result.success && result.data) {
-      // 指纹存在，跳转到控制台面板
-      router.replace({ name: RouteName.BROWSER_CONSOLE_PANEL, params: { browserId } })
+      // 指纹存在，直接跳转到 stream 实时控制界面
+      router.replace({ name: RouteName.BROWSER_CONSOLE_STREAM, params: { browserId } })
     } else {
-      // 检查是否是403错误（浏览器ID不属于当前用户或不存在）
+      // 检查是否是403/404/422等错误（浏览器ID无效）
       const responseCode = result.response?.code
-      if (responseCode === 403 || result.msg?.includes('不属于当前用户') || result.msg?.includes('不存在')) {
-        // 浏览器ID不属于当前用户或不存在，跳转到not-found页面显示提示
-        router.replace({ name: RouteName.BROWSER_CONSOLE_NOT_FOUND, params: { browserId } })
+      if (responseCode === 403 || responseCode === 404 || responseCode === 422 ||
+          result.msg?.includes('不属于当前用户') || result.msg?.includes('不存在') ||
+          result.msg?.includes('invalid literal') || result.msg?.includes('value_error')) {
+        // 浏览器ID无效，跳转到浏览器管理页面
+        biliMessage.warning(`浏览器 "${browserId}" 不存在或无权访问`)
+        router.replace({ name: RouteName.BROWSER_MANAGEMENT })
       } else {
-        // 指纹不存在或不属于当前账号
-        router.replace({ name: RouteName.BROWSER_CONSOLE_NOT_FOUND, params: { browserId } })
+        // 其他错误也跳转到管理页
+        router.replace({ name: RouteName.BROWSER_MANAGEMENT })
       }
     }
-  } catch {
-    // 网络异常，仍然尝试跳转到面板，让面板自己处理
-    router.replace({ name: RouteName.BROWSER_CONSOLE_PANEL, params: { browserId } })
+  } catch (err: any) {
+    // 网络异常或严重错误，跳转到管理页面
+    console.error('指纹检查异常:', err)
+    biliMessage.error('无法连接到后端服务，请检查网络')
+    router.replace({ name: RouteName.BROWSER_MANAGEMENT })
   }
 })
 </script>
