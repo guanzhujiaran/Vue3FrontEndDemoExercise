@@ -67,6 +67,7 @@ withDefaults(
   justify-content: center;
   min-height: 60vh;
   padding: 40px 20px;
+  text-align: center;
 }
 
 .error-image-wrapper {
@@ -75,7 +76,7 @@ withDefaults(
 }
 
 .error-image {
-  max-width: 320px;
+  max-width: 70vw;
   width: 100%;
   height: auto;
   filter: drop-shadow(0 8px 24px rgba(64, 158, 255, 0.15));
@@ -87,6 +88,7 @@ withDefaults(
   color: var(--el-text-color-primary);
   margin: 0 0 12px 0;
   letter-spacing: 1px;
+  text-align: center;
 }
 
 .error-description {
@@ -94,6 +96,7 @@ withDefaults(
   color: var(--el-text-color-secondary);
   margin: 0 0 32px 0;
   line-height: 1.6;
+  text-align: center;
 }
 
 .countdown-container {
@@ -107,6 +110,7 @@ withDefaults(
   font-size: 14px;
   color: var(--el-text-color-placeholder);
   margin: 0;
+  text-align: center;
 }
 
 @keyframes float {

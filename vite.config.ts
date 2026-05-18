@@ -11,6 +11,7 @@ import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
 import Sitemap from 'vite-plugin-sitemap'
 import tailwindcss from '@tailwindcss/vite'
 import svgLoader from 'vite-svg-loader'
+import { heyApiPlugin } from '@hey-api/vite-plugin';
 
 const pathSrc = path.resolve(__dirname, 'src')
 export default defineConfig({
@@ -62,12 +63,19 @@ export default defineConfig({
     }),
     vueJsx(),
     VueDevTools({
-      componentInspector: true,
-      launchEditor: 'H:\\Trae CN\\Trae CN.exe'
+      componentInspector: false
+      // launchEditor: 'H:\\Trae CN\\Trae CN.exe'
       //'K:\\CodeBuddy\\CodeBuddy.exe'
       //'C:\\Users\\Acer\\AppData\\Local\\Programs\\Lingma\\Lingma.exe'
     }),
-    tailwindcss()
+    tailwindcss(),
+    heyApiPlugin({
+      config: {
+        input: 'http://localhost:8000/openapi.json', // sign up at app.heyapi.dev
+        output: 'src/api/browser/hey-api',
+        plugins: [{ name: '@hey-api/client-axios', runtimeConfigPath: 'src/api/browser/hey-api/runtime_config' }]
+      },
+    }),
   ],
   resolve: {
     alias: {

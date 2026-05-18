@@ -60,24 +60,6 @@ export enum RouteName {
   USER_INFO_CONFIG = '用户基本信息设置',
 
   USER_CENTER_DASHBOARD = '用户中心仪表盘',
-  BROWSER_MANAGEMENT = 'RPA浏览器控制台',
-  BROWSER_MANAGEMENT_PANEL = 'RPA浏览器-浏览器管理',
-  BROWSER_CONSOLE = 'RPA控制台',
-  BROWSER_CONSOLE_PANEL = 'RPA控制台面板',
-  BROWSER_CONSOLE_STREAM = 'RPA控制台-实时控制',
-  BROWSER_CONSOLE_VISUAL = 'RPA控制台-可视化操作',
-  BROWSER_CONSOLE_CUSTOM = 'RPA控制台-自定义操作',
-  BROWSER_CONSOLE_WORKFLOW = 'RPA控制台-工作流',
-  BROWSER_CONSOLE_PLUGINS = 'RPA控制台-插件',
-  BROWSER_CONSOLE_DEBUG = 'RPA控制台-Debug调试',
-  BROWSER_CONSOLE_NOT_FOUND = 'RPA控制台-指纹不存在',
-  BROWSER_UNAUTHORIZED = 'RPA控制台-未授权',
-
-  // RPA浏览器社区子路由
-  RPA_BROWSER_COMMUNITY_PLUGINS = 'RPA浏览器社区-插件',
-  RPA_BROWSER_COMMUNITY_ACTIONS = 'RPA浏览器社区-自定义操作',
-  RPA_BROWSER_COMMUNITY_WORKFLOWS = 'RPA浏览器社区-工作流',
-
   // 抽奖数据子路由
   SCRAPY_STAT = '爬虫状态',
   BILI_ATARI_RANKING = 'B站中奖名人堂',

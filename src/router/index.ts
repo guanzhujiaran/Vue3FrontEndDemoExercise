@@ -240,169 +240,6 @@ const routes: CustomRouteRecordRaw[] = [
     }
   },
   {
-    path: '/app/browser',
-    name: RouteName.BROWSER_MANAGEMENT,
-    component: () => import('@/views/BrowserManagementView.vue'),
-    redirect: { name: RouteName.BROWSER_MANAGEMENT_PANEL },
-    meta: {
-      id: 'browser-management',
-      title: RouteName.BROWSER_MANAGEMENT,
-      description: 'RPA浏览器自动化操作和调试控制台',
-      color: 'var(--color-gradient-hero-primary)',
-      isHeaderShow: true,
-      requiresLogin: true,
-      icon: IconMonitor,
-      showInHome: true,
-      order: 5
-    },
-    children: [
-      {
-        path: 'management',
-        name: RouteName.BROWSER_MANAGEMENT_PANEL,
-        component: () => import('@/views/BrowserManagementPanelView.vue'),
-        meta: {
-          title: '浏览器管理',
-          icon: IconMonitor,
-          description: 'RPA浏览器实时控制台',
-          isHeaderShow: true
-        }
-      },
-      {
-        path: 'community/plugins',
-        name: RouteName.RPA_BROWSER_COMMUNITY_PLUGINS,
-        component: () => import('@/components/browser/community/CommunityPluginsPanel.vue'),
-        meta: {
-          title: '社区插件',
-          icon: IconLink,
-          description: '浏览社区分享的插件',
-          isHeaderShow: true
-        }
-      },
-      {
-        path: 'community/actions',
-        name: RouteName.RPA_BROWSER_COMMUNITY_ACTIONS,
-        component: () => import('@/components/browser/community/CommunityActionsPanel.vue'),
-        meta: {
-          title: '社区操作',
-          icon: IconLink,
-          description: '浏览社区分享的自定义操作',
-          isHeaderShow: true
-        }
-      },
-      {
-        path: 'community/workflows',
-        name: RouteName.RPA_BROWSER_COMMUNITY_WORKFLOWS,
-        component: () => import('@/components/browser/community/CommunityWorkflowsPanel.vue'),
-        meta: {
-          title: '社区工作流',
-          icon: IconLink,
-          description: '浏览社区分享的工作流',
-          isHeaderShow: true
-        }
-      }
-    ]
-  },
-  {
-    path: '/app/browser-console/:browserId',
-    name: RouteName.BROWSER_CONSOLE,
-    component: () => import('@/views/BrowserConsoleView.vue'),
-    meta: {
-      title: 'RPA控制台',
-      description: '浏览器实时控制台（路由入口，做登录和指纹检查后重定向）',
-      isHeaderShow: false,
-      requiresLogin: true,
-      hideInMenu: true
-    }
-  },
-  {
-    path: '/app/browser-console/:browserId/panel',
-    name: RouteName.BROWSER_CONSOLE_PANEL,
-    component: () => import('@/views/BrowserConsolePanelView.vue'),
-    redirect: (to) => ({ name: RouteName.BROWSER_CONSOLE_STREAM, params: to.params }),
-    meta: {
-      title: 'RPA控制台面板',
-      description: '浏览器实时控制台面板',
-      isHeaderShow: false,
-      requiresLogin: true,
-      hideInMenu: true
-    },
-    children: [
-      {
-        path: 'stream',
-        name: RouteName.BROWSER_CONSOLE_STREAM,
-        component: () => import('@/components/browser/WebRTCStreamPanel.vue'),
-        props: (route) => ({ browserId: route.params.browserId }),
-        meta: {
-          title: '实时控制',
-          hideInMenu: true
-        }
-      },
-      {
-        path: 'visual',
-        name: RouteName.BROWSER_CONSOLE_VISUAL,
-        component: () => import('@/components/browser/VisualControlPanel.vue'),
-        props: (route) => ({ browserId: route.params.browserId }),
-        meta: {
-          title: '可视化操作',
-          hideInMenu: true
-        }
-      },
-      {
-        path: 'custom',
-        name: RouteName.BROWSER_CONSOLE_CUSTOM,
-        component: () => import('@/components/browser/CustomActionPanel.vue'),
-        props: (route) => ({ browserId: route.params.browserId }),
-        meta: {
-          title: '自定义操作',
-          hideInMenu: true
-        }
-      },
-      {
-        path: 'workflow',
-        name: RouteName.BROWSER_CONSOLE_WORKFLOW,
-        component: () => import('@/components/browser/WorkflowPanel.vue'),
-        props: (route) => ({ browserId: route.params.browserId }),
-        meta: {
-          title: '工作流',
-          hideInMenu: true
-        }
-      },
-      {
-        path: 'plugins',
-        name: RouteName.BROWSER_CONSOLE_PLUGINS,
-        component: () => import('@/components/browser/PluginPanel.vue'),
-        props: (route) => ({ browserId: route.params.browserId }),
-        meta: {
-          title: '插件管理',
-          hideInMenu: true
-        }
-      },
-      {
-        path: 'debug',
-        name: RouteName.BROWSER_CONSOLE_DEBUG,
-        component: () => import('@/components/browser/DebugPanel.vue'),
-        props: (route) => ({ browserId: route.params.browserId }),
-        meta: {
-          title: 'Debug 调试',
-          hideInMenu: true
-        }
-      }
-    ]
-  },
-  {
-    path: '/app/browser-console/:browserId/not-found',
-    name: RouteName.BROWSER_CONSOLE_NOT_FOUND,
-    component: () =>
-      import('@/views/BrowserConsoleNotFoundView.vue'),
-    meta: {
-      title: '指纹不存在',
-      description: '浏览器指纹不存在或不属于当前账号',
-      isHeaderShow: false,
-      requiresLogin: true,
-      hideInMenu: true
-    }
-  },
-  {
     path: '/app/changelog',
     name: RouteName.CHANGE_LOG,
     component: () => import('@/views/ChangelogView.vue'),
@@ -432,7 +269,7 @@ const routes: CustomRouteRecordRaw[] = [
       id: 'user-center',
       title: '用户中心',
       icon: IconUser,
-      description: '管理浏览器指纹、插件配置和通知设置',
+      description: '管理浏览器指纹、插件配置和通知设置 - 辅助自动化测试控制台',
       color: 'var(--color-gradient-hero-cool)',
       requiresLogin: true,
       showInHome: true,
@@ -442,18 +279,6 @@ const routes: CustomRouteRecordRaw[] = [
     children: user_center_routes
   },
   {
-    // RPA浏览器控制台未授权访问页面
-    path: '/app/browser-unauthorized',
-    name: RouteName.BROWSER_UNAUTHORIZED,
-    component: () => import('@/views/BrowserUnauthorizedView.vue'),
-    meta: {
-      title: '未授权访问',
-      description: '未登录状态下访问RPA浏览器控制台',
-      isHeaderShow: false,
-      hideInMenu: true
-    }
-  },
-  {
     // 404页面路由配置
     path: '/:pathMatch(.*)*',
     name: RouteName.NOT_FOUND,
@@ -461,45 +286,10 @@ const routes: CustomRouteRecordRaw[] = [
       import('@/components/CommonCompo/Bili-Feedback-Compo/items/BiliNotFoundError.vue')
   }
 ]
-// 将自定义路由类型转换为Vue Router所需的RouteRecordRaw类型
-// 由于我们使用了类型交叉，TypeScript会自动兼容这两种类型
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes
 })
-// 路由守卫 - RPA浏览器控制台登录检查
-router.beforeEach((to) => {
-  const jwtStore = useJwtStore()
-  const isLoggedIn = !!jwtStore.jwt
-  const isDevMode = import.meta.env.VITE_BILI_ENV === 'dev'
-
-  // RPA浏览器控制台相关路由列表
-  const browserRoutes = [
-    RouteName.BROWSER_MANAGEMENT,
-    RouteName.BROWSER_MANAGEMENT_PANEL,
-    RouteName.BROWSER_CONSOLE,
-    RouteName.BROWSER_CONSOLE_PANEL,
-    RouteName.BROWSER_CONSOLE_STREAM,
-    RouteName.BROWSER_CONSOLE_VISUAL,
-    RouteName.BROWSER_CONSOLE_CUSTOM,
-    RouteName.BROWSER_CONSOLE_DEBUG,
-    RouteName.BROWSER_CONSOLE_NOT_FOUND,
-    RouteName.RPA_BROWSER_COMMUNITY_PLUGINS,
-    RouteName.RPA_BROWSER_COMMUNITY_ACTIONS,
-    RouteName.RPA_BROWSER_COMMUNITY_WORKFLOWS
-  ]
-
-  // 检查是否访问RPA浏览器控制台相关路由
-  const isBrowserRoute = browserRoutes.includes(to.name as RouteName)
-
-  // 未登录状态下访问RPA浏览器控制台，且不是开发模式
-  if (isBrowserRoute && !isLoggedIn && !isDevMode) {
-    return { name: RouteName.BROWSER_UNAUTHORIZED }
-  }
-
-  return true
-})
-
 // 路由守卫 - 全局加载遮罩
 router.beforeEach((to, from) => {
   if (!from.name) return true

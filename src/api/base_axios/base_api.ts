@@ -6,7 +6,7 @@
  * @FilePath: \Vue3FrontEndDemoExercise\src\api\base_axios\base_api.ts
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
  */
-import ajax from '@/api/base_axios/base_axios'
+import baseAxiosInstance from '@/api/base_axios/base_axios'
 import type { AxiosRequestConfig } from 'axios'
 import { handleApiError, type ErrorHandlerOptions, withErrorHandler } from './error_handler'
 
@@ -17,14 +17,14 @@ class BaseApi {
   }
 
   async _get(uri: string, params?: Object, config?: AxiosRequestConfig) {
-    return await ajax.get(this.path.concat(uri), {
+    return await baseAxiosInstance.get(this.path.concat(uri), {
       params: params,
       ...config
     })
   }
 
   async _post(uri: string, data?: Object, config?: AxiosRequestConfig) {
-    return await ajax.post(this.path.concat(uri), data, config)
+    return await baseAxiosInstance.post(this.path.concat(uri), data, config)
   }
 
   /**
