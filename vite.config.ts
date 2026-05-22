@@ -73,7 +73,12 @@ export default defineConfig({
       config: {
         input: 'http://localhost:8000/openapi.json', // sign up at app.heyapi.dev
         output: 'src/api/browser/hey-api',
-        plugins: [{ name: '@hey-api/client-axios', runtimeConfigPath: 'src/api/browser/hey-api/runtime_config' }]
+        plugins: [
+          {
+            name: '@hey-api/client-ofetch',
+            runtimeConfigPath: '@/api/browser/runtime_config'
+          }
+        ]
       },
     }),
   ],

@@ -8,7 +8,6 @@ export const useUserNavStore = defineStore(
     const user_nav = ref<UserNavModel>({
       uid: '',
       user_name: '',
-      role: '',
       face: '',
       email: '',
       level_info: {
@@ -20,14 +19,19 @@ export const useUserNavStore = defineStore(
     })
 
     function save_user_nav(val: UserNavModel) {
-      user_nav.value = val
+      user_nav.value = {
+        ...val,
+        level_info: {
+          ...val.level_info,
+          current_level: String(val.level_info.current_level)
+        }
+      }
     }
 
     function delete_user_nav() {
       user_nav.value = {
         uid: '',
         user_name: '',
-        role: '',
         face: '',
         email: '',
         level_info: {

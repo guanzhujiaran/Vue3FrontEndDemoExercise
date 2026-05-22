@@ -53,8 +53,11 @@ export enum RouteName {
   USER_CENTER = '浏览器管理',
   LOTTERY_DATA = '抽奖数据',
   SAMSCLUB = '山姆会员店数据',
-  RPA_CONTROL = 'RPA控制',
-
+  RPA_BROWSER = 'RPA浏览器',
+  RPA_BROWSER_FINGERPRINT_LIST = '浏览器指纹列表',
+  RPA_BROWSER_STREAM = '浏览器Stream',
+  RPA_BROWSER_CREATE = '创建指纹',
+  RPA_BROWSER_COMMUNITY = '社区广场',
   // 用户中心子路由
   USER_GLOBAL_CONFIG = '用户全局设置',
   USER_INFO_CONFIG = '用户基本信息设置',

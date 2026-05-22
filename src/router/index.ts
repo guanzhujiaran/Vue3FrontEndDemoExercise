@@ -20,7 +20,11 @@ import {
   List as IconList,
   Trophy as IconTrophy,
   Monitor as IconMonitor,
-  Link as IconLink
+  Link as IconLink,
+  Tools as IconFingerprint,
+  Monitor as IconBrowser,
+  Share as IconShare2,
+  Connection as IconConnection
 } from '@element-plus/icons-vue'
 import emitter from '@/utils/mitt.ts'
 import { type CustomRouteRecordRaw, RouteName } from '@/models/router/index.ts'
@@ -59,6 +63,17 @@ const user_center_routes = [
  * 包含所有路由信息和元数据，如图标、描述、权限等
  */
 const routes: CustomRouteRecordRaw[] = [
+  {
+    path:'/test',
+    name:'test',
+    component:() => import('@/views/a.vue'),
+     meta: {
+      title: 'test',
+      description: 'test',
+      isHeaderShow: import.meta.env.DEV,
+      order: 0
+    }
+  },
   {
     path: '/',
     name: RouteName.HOME,
@@ -278,6 +293,91 @@ const routes: CustomRouteRecordRaw[] = [
     },
     children: user_center_routes
   },
+  {
+    path: '/app/rpa-browser',
+    name: RouteName.RPA_BROWSER,
+    component: () => import('@/views/rpa-browser/BrowserFingerprintList.vue'),
+    redirect: { name: RouteName.RPA_BROWSER_FINGERPRINT_LIST },
+    meta: {
+      id: 'rpa-browser',
+      title: 'RPA浏览器',
+      icon: IconConnection,
+      description: '浏览器指纹管理和自动化控制',
+      color: 'var(--color-gradient-hero-cool)',
+      requiresLogin: true,
+      showInHome: true,
+      order: 5,
+      isHeaderShow: true
+    },
+    children: [
+      {
+        path: '',
+        name: RouteName.RPA_BROWSER_FINGERPRINT_LIST,
+        component: () => import('@/views/rpa-browser/BrowserFingerprintList.vue'),
+        meta: {
+          title: RouteName.RPA_BROWSER_FINGERPRINT_LIST,
+          icon: IconConnection,
+          description: '浏览器指纹列表',
+          order: 1,
+          showInHome: false,
+          isHeaderShow: false
+        }
+      },
+      {
+        path: 'create',
+        name: RouteName.RPA_BROWSER_CREATE,
+        component: () => import('@/views/rpa-browser/FingerprintCreateEdit.vue'),
+        meta: {
+          title: RouteName.RPA_BROWSER_CREATE,
+          icon: IconConnection,
+          description: '创建指纹',
+          order: 2,
+          showInHome: false,
+          isHeaderShow: false
+        }
+      },
+      {
+        path: 'edit/:browserId',
+        name: 'RPA_BROWSER_EDIT',
+        component: () => import('@/views/rpa-browser/FingerprintCreateEdit.vue'),
+        meta: {
+          title: '编辑指纹',
+          icon: IconConnection,
+          description: '编辑指纹',
+          order: 3,
+          showInHome: false,
+          isHeaderShow: false
+        }
+      },
+      {
+        path: 'stream/:browserId',
+        name: RouteName.RPA_BROWSER_STREAM,
+        component: () => import('@/views/rpa-browser/BrowserStream.vue'),
+        meta: {
+          title: RouteName.RPA_BROWSER_STREAM,
+          icon: IconConnection,
+          description: '浏览器Stream控制台',
+          order: 4,
+          showInHome: false,
+          isHeaderShow: false
+        }
+      },
+      {
+        path: 'community',
+        name: RouteName.RPA_BROWSER_COMMUNITY,
+        component: () => import('@/views/rpa-browser/CommunityPage.vue'),
+        meta: {
+          title: RouteName.RPA_BROWSER_COMMUNITY,
+          icon: IconShare2,
+          description: '社区广场',
+          order: 5,
+          showInHome: false,
+          isHeaderShow: false
+        }
+      }
+    ]
+  },
+
   {
     // 404页面路由配置
     path: '/:pathMatch(.*)*',

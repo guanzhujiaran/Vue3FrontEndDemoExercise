@@ -24,7 +24,7 @@ declare module 'axios' {
 
   export function create(config?: AxiosRequestConfig): AxiosInstance
 }
-const AXIOS_REQ_AUTH_INJECTION = (config: any = AXIOS_CONFIG) => {
+export const AXIOS_REQ_AUTH_INJECTION = (config: any = AXIOS_CONFIG) => {
   // 添加 Authorization token
   const JwtStore = useJwtStore()
   const token = JwtStore.jwt
@@ -42,79 +42,28 @@ const AXIOS_REQ_AUTH_INJECTION = (config: any = AXIOS_CONFIG) => {
 
   return config
 }
-const AXIOS_REQ_ERROR_INJECTION = (error: any) => Promise.reject(error)
-const AXIOS_RES_INJECTION = (response: any) => {
-  // 如果是 Blob 类型响应，直接返回 response，不进行 JSON 处理
+export const AXIOS_REQ_ERROR_INJECTION = (error: any) => Promise.reject(error)
+export const AXIOS_RES_INJECTION = (response: any) => {
   if (response.config.responseType === 'blob') {
     return response
   }
-
+  
   const data = response.data
-
-  // 检查响应头中是否有新 token（后端自动刷新）
-  const newToken = response.headers['x-new-token'] || response.headers['X-New-Token']
-  if (newToken) {
-    const JwtStore = useJwtStore()
-    JwtStore.save_jwt_token(newToken)
-    console.log('Token 已自动刷新')
+  if (data && typeof data === 'object') {
+    response.code = data.code
+    response.msg = data.msg
+    response.ttl = data.ttl
+    response.data = data.data
   }
 
-  // 检查响应数据中是否包含新 token（兼容不同刷新方式）
-  if (data.data?.jwt_token && response.config.url?.includes('/refresh_token')) {
-    const JwtStore = useJwtStore()
-    JwtStore.save_jwt_token(data.data.jwt_token)
-  }
-
-  // 检查业务错误
-  if (data.code !== 0) {
-    // 使用统一错误处理器，但不自动显示消息（让业务层决定）
-    apiErrorHandler.handleError(data, {
+  if (response.code !== 0) {
+    apiErrorHandler.handleError(response, {
       showToast: false,
       emitError: false
     })
-
-    // 将请求信息附加到 msg 中，方便 businessHandler 展示
-    const reqConfig = response.config
-    const requestInfo =
-      `[${reqConfig.method?.toUpperCase()}] ${reqConfig.baseURL || ''}${reqConfig.url || ''}` +
-      (reqConfig.params ? `?${JSON.stringify(reqConfig.params)}` : '') +
-      (reqConfig.data ? `\n  Body: ${typeof reqConfig.data === 'string' ? reqConfig.data : JSON.stringify(reqConfig.data)}` : '')
-    data.msg = data.msg
-      ? `${data.msg}\n${requestInfo}`
-      : requestInfo
   }
 
-  return data
-}
-const AXIOS_RES_ERROR_INJECTION = (error: any) => {
-  // 处理错误，比如根据错误码提示用户或跳转登录页
-  // 提取请求信息用于调试
-  const reqConfig = error?.config
-  const requestInfo = reqConfig
-    ? `[${reqConfig.method?.toUpperCase()}] ${reqConfig.baseURL || ''}${reqConfig.url || ''}` +
-    (reqConfig.params ? `?${JSON.stringify(reqConfig.params)}` : '') +
-    (reqConfig.data ? `\n  Body: ${typeof reqConfig.data === 'string' ? reqConfig.data : JSON.stringify(reqConfig.data)}` : '')
-    : ''
-
-  console.error('API Error:', requestInfo || 'unknown', '\n', error)
-
-  // 使用统一错误处理器，默认显示错误消息
-  apiErrorHandler.handleError(error, {
-    showToast: true,
-    emitError: false
-  })
-
-  // 在返回的 msg 中附带请求信息，方便 businessHandler 展示
-  const baseMsg = error.message || '请求发送失败'
-  const msg = requestInfo
-    ? `${baseMsg}\n${requestInfo}`
-    : baseMsg
-
-  return {
-    code: -9999,
-    data: null,
-    msg
-  }
+  return response
 }
 
 export const axiosFactory = (axios_instance: AxiosInstance) => {
@@ -125,8 +74,7 @@ export const axiosFactory = (axios_instance: AxiosInstance) => {
   )
   // 响应拦截器，处理响应数据，例如错误统一处理
   axios_instance.interceptors.response.use(
-    AXIOS_RES_INJECTION,
-    AXIOS_RES_ERROR_INJECTION
+    AXIOS_RES_INJECTION
   )
 }
 // 创建 Axios 实例

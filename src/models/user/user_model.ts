@@ -5,9 +5,10 @@ export interface LoginModel {
 }
 
 export interface UserNavModel {
-  uid: string // 这里是 string，因为有可能是 bigint，所以直接用 string 表示
+  uid: string
   user_name: string
-  role: string
+  level?: string
+  role?: string
   face: string
   email: string
   level_info: UserLevelInfo
@@ -25,7 +26,7 @@ export interface UserInfo {
 
 export interface UserLevelInfo {
   current_exp: string
-  current_level: string
+  current_level: string | number
   current_min: string
   next_exp: string
 }

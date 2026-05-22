@@ -43,11 +43,11 @@ export class ApiErrorHandler {
    * @param error 错误对象
    * @param options 错误处理选项
    */
-  handleError(error: any, options: ErrorHandlerOptions = {}): void {
+  handleError(error_response: any, options: ErrorHandlerOptions = {}): void {
     const finalOptions = { ...this.defaultOptions, ...options }
     
     // 统一错误格式
-    const apiError: ApiError = this.normalizeError(error)
+    const apiError: ApiError = this.normalizeError(error_response)
     
     // 自定义处理函数
     if (finalOptions.customHandler) {
@@ -68,27 +68,27 @@ export class ApiErrorHandler {
   /**
    * 标准化错误对象
    */
-  private normalizeError(error: any): ApiError {
+  private normalizeError(error_response: any): ApiError {
     // 如果已经是标准格式
-    if (error && typeof error === 'object' && 'code' in error && 'msg' in error) {
-      return error as ApiError
+    if (error_response && typeof error_response === 'object' && 'code' in error_response && 'msg' in error_response) {
+      return error_response as ApiError
     }
     
     // Axios错误
-    if (error?.response?.data) {
-      const response = error.response.data
+    if (error_response?.response?.data) {
+      const response = error_response.response.data
       return {
-        code: response.code || error.response.status || -9999,
-        msg: response.msg || response.message || error.message || '请求失败',
+        code: response.code || error_response.response.status || -9999,
+        msg: response.msg || response.message || error_response.message || '请求失败',
         data: response.data
       }
     }
     
     // 网络错误或其他错误
     return {
-      code: error?.code || -9999,
-      msg: error?.msg || error?.message || '网络错误，请检查网络连接',
-      data: error?.data
+      code: error_response?.code || -9999,
+      msg: error_response?.msg || error_response?.message || '网络错误，请检查网络连接',
+      data: error_response?.data
     }
   }
 

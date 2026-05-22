@@ -42,6 +42,7 @@
         "mavon-editor": "^3.0.2",
         "md-editor-v3": "^6.5.0",
         "mitt": "^3.0.1",
+        "ofetch": "^1.5.1",
         "pinia": "^3.0.4",
         "pinia-plugin-persistedstate": "^4.7.1",
         "rollup-plugin-terser": "^7.0.2",
