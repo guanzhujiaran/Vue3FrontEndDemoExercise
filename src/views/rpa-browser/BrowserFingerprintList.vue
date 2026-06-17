@@ -10,6 +10,7 @@ import { listFingerprintRouterApiV1RpaBrowserListFingerprintPost, deleteFingerpr
 import { useUserNavStore } from '@/stores/user_nav'
 import biliMessage from '@/utils/message'
 import type { BrowserFingerprintListParams } from '@/api/browser/hey-api/types.gen'
+import { RouteName } from '@/models/router/index.ts'
 
 interface UserBrowserInfo {
   browser_id: string | number
@@ -141,7 +142,15 @@ const handleRename = async (browserId: string | number, currentName: string | nu
 }
 
 const handleOpenStream = (browserId: string | number) => {
-  router.push(`/app/rpa-browser/stream/${String(browserId)}`)
+  console.log('handleOpenStream called with browserId:', browserId)
+  router.push({
+    name: RouteName.RPA_BROWSER_STREAM,
+    params: { browserId: String(browserId) }
+  }).then(() => {
+    console.log('Navigation successful')
+  }).catch((err: any) => {
+    console.error('Navigation failed:', err)
+  })
 }
 
 const showBrowserIdDetail = (item: UserBrowserInfo) => {
@@ -256,7 +265,9 @@ const showBrowserIdDetail = (item: UserBrowserInfo) => {
 }
 
 const handleCreateFingerprint = () => {
-  router.push('/app/rpa-browser/create')
+  router.push({
+    name: RouteName.RPA_BROWSER_CREATE
+  })
 }
 
 onMounted(() => {
@@ -265,8 +276,8 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-[var(--el-bg-color)] p-4">
-    <BiliPageHeader title="浏览器指纹管理" description="管理你的浏览器指纹列表">
+  <FlexContainer>
+    <BiliPageHeader title="浏览器指纹管理" description="管理你的浏览器指纹列表" tag="浏览器指纹">
       <template #extra>
         <el-button type="primary" :icon="Plus" @click="handleCreateFingerprint">
           创建指纹
@@ -303,7 +314,7 @@ onMounted(() => {
               <div class="flex items-start justify-between mb-4">
                 <div class="flex-1">
                   <div class="flex items-center gap-2 mb-1">
-                    <span class="text-cyan-400 text-xs font-mono tracking-wider">FINGERPRINT</span>
+                    <span class="text-cyan-400 text-xs font-mono tracking-wider">浏览器指纹</span>
                   </div>
                   <h3 class="text-xl font-bold text-white group-hover:text-cyan-300 transition-colors">
                     {{ item.custom_name || '未命名' }}
@@ -313,33 +324,42 @@ onMounted(() => {
                   size="small" 
                   class="bg-gradient-to-r from-purple-600 to-pink-600 text-white border-none"
                 >
-                  {{ item.browser || item.fingerprint_browser || 'Unknown' }}
+                  {{ item.browser || item.fingerprint_browser || '未知' }}
                 </el-tag>
               </div>
 
               <div class="bg-black/30 rounded-lg p-3 mb-4 border border-cyan-500/20">
-                <div class="text-xs text-cyan-400/70 mb-1 font-mono">BROWSER_ID</div>
+                <div class="text-xs text-cyan-400/70 mb-1 font-mono">浏览器ID</div>
                 <div class="text-sm text-gray-200 font-mono break-all hover:text-cyan-300 transition-colors cursor-pointer" 
                      @click="showBrowserIdDetail(item)">
                   {{ (item.browser_id_str || item.browser_id)?.toString() || 'N/A' }}
                 </div>
               </div>
 
-              <div class="grid grid-cols-2 gap-3 mb-4">
+              <div class="grid grid-cols-3 gap-3 mb-4">
                 <div class="bg-black/20 rounded-lg p-2 border border-purple-500/20">
                   <div class="flex items-center gap-2">
                     <el-icon class="text-purple-400"><Monitor /></el-icon>
-                    <span class="text-xs text-gray-400">Platform</span>
+                    <span class="text-xs text-gray-400">平台</span>
                   </div>
-                  <div class="text-sm text-white mt-1">{{ item.platform || item.fingerprint_platform || 'Unknown' }}</div>
+                  <div class="text-sm text-white mt-1">{{ item.platform || item.fingerprint_platform || '未知' }}</div>
                 </div>
                 <div class="bg-black/20 rounded-lg p-2 border border-pink-500/20">
                   <div class="flex items-center gap-2">
                     <el-icon class="text-pink-400"><Clock /></el-icon>
-                    <span class="text-xs text-gray-400">Created</span>
+                    <span class="text-xs text-gray-400">创建时间</span>
                   </div>
                   <div class="text-sm text-white mt-1">
-                    {{ item.created_at ? new Date(item.created_at).toLocaleDateString() : 'Unknown' }}
+                    {{ item.created_at ? new Date(item.created_at).toLocaleDateString() : '未知' }}
+                  </div>
+                </div>
+                <div class="bg-black/20 rounded-lg p-2 border border-cyan-500/20">
+                  <div class="flex items-center gap-2">
+                    <el-icon class="text-cyan-400"><Clock /></el-icon>
+                    <span class="text-xs text-gray-400">更新时间</span>
+                  </div>
+                  <div class="text-sm text-white mt-1">
+                    {{ item.updated_at ? new Date(item.updated_at).toLocaleDateString() : '未知' }}
                   </div>
                 </div>
               </div>
@@ -401,5 +421,5 @@ onMounted(() => {
         </el-empty>
       </CenteredContainer>
     </FlexContainer>
-  </div>
+  </FlexContainer>
 </template>

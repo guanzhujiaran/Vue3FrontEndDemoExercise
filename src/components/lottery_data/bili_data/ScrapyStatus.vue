@@ -349,8 +349,8 @@ onBeforeUnmount(() => {
                     <template #reference>
                       <span class="text-primary hover:underline cursor-pointer text-sm">{{ formatValue(key, scrapy_data[key]) }}</span>
                     </template>
-                    <div class="params-detail p-3 rounded border border-border-light bg-bg max-h-60 overflow-auto">
-                      <pre class="text-sm text-text-regular">{{ JSON.stringify(scrapy_data[key], null, 2) }}</pre>
+                    <div class="params-detail-scroll p-3 rounded border border-border-light bg-bg max-h-60 overflow-auto">
+                      <pre class="text-sm text-text-regular m-0 whitespace-pre-wrap break-all">{{ JSON.stringify(scrapy_data[key], null, 2) }}</pre>
                     </div>
                   </el-popover>
                 </div>
@@ -370,57 +370,3 @@ onBeforeUnmount(() => {
     </div>
   </div>
 </template>
-
-<style scoped>
-/* 响应式调整 */
-@media (max-width: 768px) {
-  .grid-cols-1 {
-    grid-template-columns: 1fr;
-  }
-  
-  .sm\:grid-cols-2 {
-    grid-template-columns: 1fr;
-  }
-  
-  .lg\:grid-cols-4 {
-    grid-template-columns: 1fr;
-  }
-  
-  .md\:grid-cols-2 {
-    grid-template-columns: 1fr;
-  }
-  
-  .lg\:grid-cols-3 {
-    grid-template-columns: 1fr;
-  }
-}
-
-/* 参数详情样式 */
-.params-detail pre {
-  margin: 0;
-  white-space: pre-wrap;
-  word-break: break-all;
-}
-
-/* 滚动条样式 */
-.params-detail::-webkit-scrollbar {
-  width: 6px;
-}
-
-.params-detail::-webkit-scrollbar-track {
-  background: var(--color-bg-page);
-  border-radius: 3px;
-}
-
-.params-detail::-webkit-scrollbar-thumb {
-  background: var(--color-border-light);
-  border-radius: 3px;
-}
-
-.params-detail::-webkit-scrollbar-thumb:hover {
-  background: var(--color-border);
-}
-</style>
-
-
-

@@ -239,26 +239,26 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="comment-section" ref="comment_section" v-loading="is_loading_comment">
-    <div class="navbar">
-      <div class="comment-title">
-        <h2>评论</h2>
-        <div class="comment-count">
+  <div class="flex flex-col" ref="comment_section" v-loading="is_loading_comment">
+    <div class="flex h-full mb-[calc(var(--component-spacing)*6.4)]">
+      <div class="flex items-center">
+        <h2 class="m-0 font-bold text-base">评论</h2>
+        <div class="mr-(--spacing-20) ml-(--spacing-10) text-sm font-normal text-text-secondary">
           {{ comment_list_resp.total_num }}
         </div>
       </div>
       <div class="sort-actions">
         <button
-          class="sort-btn"
-          :class="data.sort_by === 'hot' ? 'active' : ''"
+          class="h-full px-(--spacing-12) text-sm text-text-secondary hover:cursor-pointer"
+          :class="data.sort_by === 'hot' ? 'text-text-primary' : ''"
           @click="() => (data.sort_by = 'hot')"
         >
           最热
         </button>
-        <div class="sort-div"></div>
+        <div class="inline-block h-[9px] mx-(--spacing-6) border-l border-text-secondary align-bottom"></div>
         <button
-          class="sort-btn"
-          :class="data.sort_by === 'time' ? 'active' : ''"
+          class="h-full px-(--spacing-12) text-sm text-text-secondary hover:cursor-pointer"
+          :class="data.sort_by === 'time' ? 'text-text-primary' : ''"
           @click="() => (data.sort_by = 'time')"
         >
           最新
@@ -277,7 +277,7 @@ onUnmounted(() => {
     </div>
     <div class="comment-list-section" v-if="comment_list_resp.replies.length">
       <ul
-        class="comment-list"
+        class="p-0 m-0 list-none min-w-fit"
         :style="{
           width: comment_list_width + 'px'
         }"
@@ -299,6 +299,7 @@ onUnmounted(() => {
             <div class="expander">
               <div class="expander-contents">
                 <ul
+                  class="list-none m-0 p-0"
                   v-if="comment_list_resp.replies[idx] && comment_list_resp.replies[idx].replies && comment_list_resp.replies[idx].replies.length > 0"
                   v-loading="expander_reply_loading_set.has(comment_list_resp.replies[idx].rpid || '')"
                 >
@@ -320,7 +321,7 @@ onUnmounted(() => {
                     />
                   </li>
                 </ul>
-                <div class="expander-footer">
+                <div class="ml-(--spacing-40) text-sm text-text-secondary mt-(--spacing-6)">
                   <div
                     class="view-more"
                     v-if="
@@ -332,7 +333,7 @@ onUnmounted(() => {
                   >
                     <span>共 {{ comment_list_resp.replies[idx].rcount }} 条回复，</span>
                     <button
-                      class="button"
+                      class="inline-flex items-center justify-center box-border border-none outline-none select-none appearance-none bg-transparent text-inherit font-inherit h-full relative z-0 py-(--spacing-1) text-text-secondary cursor-pointer hover:text-primary before:content-[''] before:absolute before:inset-0 before:rounded-[inherit] before:bg-transparent"
                       @click="
                         () => {
                           if (comment_list_resp.replies[idx]) {
@@ -347,7 +348,7 @@ onUnmounted(() => {
                   </div>
                   <el-pagination
                     v-if="comment_list_resp.replies[idx] && is_expander_active_set.has(comment_list_resp.replies[idx].rpid || '')"
-                    class="reply-pagination"
+                    class="flex items-center text-base text-text-primary"
                     size="default"
                     :hide-on-single-page="true"
                     :total="parseInt(BigInt(comment_list_resp.replies[idx].rcount || 0).toString())"
@@ -379,7 +380,7 @@ onUnmounted(() => {
             </div>
           </div>
           <div
-            class="comment-reply-wrap"
+            class="mr-(--spacing-40) ml-(--spacing-40) mt-(--spacing-16)"
             v-if="
               comment_section_stat.is_reply_section_active &&
               (comment_section_stat.root === __comment_item.rpid ||
@@ -392,11 +393,11 @@ onUnmounted(() => {
               v-model:comment_content="comment_section_stat.reply_content"
             />
           </div>
-          <div class="div-line"></div>
+          <div class="pb-(--spacing-12) ml-(--spacing-4) border-b border-border-lighter"></div>
         </li>
       </ul>
       <el-pagination
-        class="comment-pagination"
+        class="pt-(--spacing-12) pb-(--spacing-16) mx-auto w-1/2 text-base"
         :size="isSmallScreen ? 'small' : 'large'"
         background
         :layout="paginationLayout"
@@ -412,143 +413,3 @@ onUnmounted(() => {
     </div>
   </div>
 </template>
-
-<style scoped>
-.comment-section {
-  display: flex;
-  flex-direction: column;
-}
-
-.reply-pagination {
-  display: flex;
-  align-items: center;
-  font-size: var(--text-base);
-  color: var(--el-text-color-primary);
-}
-
-.comment-pagination {
-  padding-top: var(--spacing-12);
-  padding-bottom: var(--spacing-16);
-  margin: auto;
-  width: 50%;
-  font-size: var(--text-base);
-}
-
-.expander-footer .button:not([disabled]):hover {
-  color: var(--el-color-primary);
-}
-
-.expander-footer .button:before {
-  background-color: transparent;
-  border-radius: inherit;
-  content: '';
-  inset: 0;
-  position: absolute;
-}
-
-.expander-footer .button {
-  text-rendering: auto;
-  letter-spacing: normal;
-  word-spacing: normal;
-  text-align: center;
-  text-transform: none;
-  text-indent: 0;
-  text-shadow: none;
-  margin: 0;
-  padding-block: var(--spacing-1);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  box-sizing: border-box;
-  border: none;
-  outline: none;
-  user-select: none;
-  appearance: none;
-  background: rgba(0, 0, 0, 0);
-  text-decoration: none;
-  position: relative;
-  z-index: 0;
-  height: 100%;
-  font: inherit;
-  color: var(--el-text-color-secondary);
-  cursor: pointer;
-}
-
-.expander-footer {
-  margin-left: var(--spacing-40);
-  font-size: var(--text-sm);
-  color: var(--el-text-color-secondary);
-  margin-top: var(--spacing-6);
-}
-
-.comment-reply-wrap {
-  margin-right: var(--spacing-40);
-  margin-left: var(--spacing-40);
-  margin-top: var(--spacing-16);
-}
-
-.comment-list {
-  padding-inline-start: 0;
-  min-width: fit-content;
-}
-
-.div-line {
-  padding-bottom: var(--spacing-12);
-  margin-left: var(--spacing-4);
-  border-bottom: 1px solid var(--el-border-color-lighter);
-}
-
-.sort-actions .sort-div {
-  display: inline-block;
-  height: 9px;
-  margin: 0 var(--spacing-6);
-  border-left: solid 1px var(--el-text-color-secondary);
-  vertical-align: bottom;
-}
-
-.comment-title .comment-count {
-  margin: 0 var(--spacing-20) 0 var(--spacing-10);
-  font-size: var(--text-sm);
-  font-weight: 400;
-  color: var(--el-text-color-secondary);
-}
-
-.comment-title h2 {
-  margin: 0;
-  font-weight: 700;
-  font-size: var(--text-base);
-}
-
-.comment-title {
-  display: flex;
-  align-items: center;
-}
-
-.navbar {
-  display: flex;
-  height: 100%;
-  margin-bottom: calc(var(--component-spacing) * 6.4);
-}
-
-.sort-btn.active {
-  color: var(--el-text-color-primary);
-}
-
-.sort-btn:hover {
-  cursor: pointer;
-}
-
-.sort-btn {
-  height: 100%;
-  padding-inline-start: var(--spacing-12);
-  padding-inline-end: var(--spacing-12);
-  font-size: var(--text-sm);
-  color: var(--el-text-color-secondary);
-}
-ul,
-li {
-  list-style: none; /* 去除项目符号 */
-  margin: 0; /* 去除外边距 */
-  padding: 0; /* 去除内边距 */
-}
-</style>

@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { ref, onMounted, inject, computed } from 'vue'
+import { ref, onMounted } from 'vue'
 import { Search, Refresh, VideoPlay, Folder, Tools } from '@element-plus/icons-vue'
+import { useDebounceFn } from '@vueuse/core'
 import { ElMessageBox } from 'element-plus'
-import FlexContainer from '@/components/CommonCompo/Bili-Container-Compo/FlexContainer.vue'
 import { listRegisteredActionsApiV1RpaBrowserControlActionsRegisteredPost, getPagesListApiV1RpaBrowserControlPagesListPost, getPageInfoApiV1RpaBrowserControlOperationGetPageInfoPost } from '@/api/browser/hey-api'
 import { useUserNavStore } from '@/stores/user_nav'
 import biliMessage from '@/utils/message'
@@ -33,7 +33,7 @@ const loadRegisteredActions = async () => {
     const response = await listRegisteredActionsApiV1RpaBrowserControlActionsRegisteredPost({
       headers: {
         'x-bili-mid': userNavStore.user_nav.uid,
-        'x-bili-level': userNavStore.user_nav.level_info.current_level
+        'x-bili-level': String(userNavStore.user_nav.level_info.current_level)
       }
     })
 
@@ -53,7 +53,7 @@ const loadPagesList = async () => {
       query: { browser_id: props.browserId },
       headers: {
         'x-bili-mid': userNavStore.user_nav.uid,
-        'x-bili-level': userNavStore.user_nav.level_info.current_level
+        'x-bili-level': String(userNavStore.user_nav.level_info.current_level)
       }
     })
 
@@ -89,7 +89,7 @@ const handleExecuteAction = async () => {
         headers: {
           'Content-Type': 'application/json',
           'x-bili-mid': userNavStore.user_nav.uid,
-          'x-bili-level': userNavStore.user_nav.level_info.current_level
+          'x-bili-level': String(userNavStore.user_nav.level_info.current_level)
         },
         body: JSON.stringify({
           script: actionParams.value.script,
@@ -119,9 +119,10 @@ const handleSaveAsWorkflow = async () => {
   }
 }
 
-const handleRefreshPages = () => {
-  loadPagesList()
-}
+const handleRefreshPages = useDebounceFn(async () => {
+  await loadPagesList()
+  biliMessage.success('页面列表刷新成功')
+}, 500)
 
 const toggleToolbox = () => {
   isToolboxVisible.value = !isToolboxVisible.value
@@ -144,11 +145,11 @@ onMounted(() => {
         <el-option v-for="page in pagesList" :key="page.index" :label="`页面 ${page.index + 1}`" :value="page.index" />
       </el-select>
 
-      <el-button size="small" :icon="Refresh" @click="handleRefreshPages">刷新</el-button>
+      <el-button size="small" :icon="Refresh" @click="handleRefreshPages" :disabled="!props.isSessionConnected">刷新</el-button>
 
       <div class="flex-1"></div>
 
-      <el-button size="small" type="primary" :icon="Tools" @click="toggleToolbox">工具箱</el-button>
+      <el-button size="small" type="primary" :icon="Tools" @click="toggleToolbox" :disabled="!props.isSessionConnected">工具箱</el-button>
     </div>
 
     <div class="flex-1 flex overflow-hidden">

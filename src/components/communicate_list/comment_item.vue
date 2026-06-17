@@ -155,26 +155,29 @@ const is_loading_md = ref<boolean>(true)
 
 <template>
   <div
-    class="comment-item"
+    class="flex mb-(--spacing-8)"
     @mouseenter="is_mouse_in = true"
     @mouseleave="is_mouse_in = false"
     v-loading="is_loading_md"
   >
-    <el-avatar class="user-avater" :size="is_root ? 'var(--spacing-16)' : 'var(--spacing-10)'">
+    <el-avatar
+      class="relative left-(--spacing-2) top-(--spacing-2) w-(--component-height-lg) h-(--component-height-lg) origin-left-top shrink-0"
+      :size="is_root ? 'var(--spacing-16)' : 'var(--spacing-10)'"
+    >
       <img
         :src="reply_item.member.avatar ? reply_item.member.avatar : BiliImg.face.noface"
         referrerpolicy="no-referrer"
         alt="头像加载失败"
       />
     </el-avatar>
-    <div class="comment-main">
-      <el-card shadow="never" body-style="border:none;padding:0px;">
+    <div class="w-full relative pl-(--spacing-3) pt-(--spacing-2) leading-normal">
+      <el-card class="comment-main-card" shadow="never" body-style="border:none;padding:0px;">
         <template #header class="header">
-          <div class="user-info">
-            <div class="user-name">
+          <div class="inline-flex items-center">
+            <div class="text-text-primary text-base font-medium">
               {{ reply_item.member.uname }}
             </div>
-            <div class="user-level">
+            <div class="ml-(--spacing-2) w-(--spacing-3) h-(--spacing-3)">
               <img
                 width="100%"
                 height="100%"
@@ -184,7 +187,11 @@ const is_loading_md = ref<boolean>(true)
                 style="max-width: var(--spacing-5); max-height: var(--spacing-5)"
               />
             </div>
-            <div id="user-up" v-if="up_mid && String(up_mid) === String(reply_item.member.mid)">
+            <div
+              id="user-up"
+              class="ml-(--spacing-2) w-(--spacing-3) h-(--spacing-3)"
+              v-if="up_mid && String(up_mid) === String(reply_item.member.mid)"
+            >
               <img
                 width="100%"
                 height="100%"
@@ -206,13 +213,15 @@ const is_loading_md = ref<boolean>(true)
           </div>
         </template>
         <template #footer>
-          <div class="comment-footer">
-            <div class="pubdate">
+          <div
+            class="w-[-webkit-fill-available] flex items-center relative mt-(--spacing-2) text-md text-text-secondary h-(--component-height-md) flex-wrap [&>:not(:first-child)]:ml-(--spacing-4)"
+          >
+            <div class="whitespace-nowrap">
               {{ utils.formatDateTS(reply_item.ctime) }}
             </div>
             <div id="like">
               <button
-                class="like-btn"
+                class="p-0 outline-none border-none bg-transparent h-(--component-height-xs) text-md text-text-secondary inline-flex items-center cursor-pointer align-middle hover:text-primary"
                 @click="handleLike"
                 :style="{
                   color: String(interact_btn_active) === '1' ? 'var(--color-primary)' : ''
@@ -220,12 +229,12 @@ const is_loading_md = ref<boolean>(true)
               >
                 <img :src="likeActiveSvg" v-if="interact_btn_active == 1" class="svg-icon" />
                 <img :src="likeSvg" v-else class="svg-icon" />
-                <span id="count">{{ reply_item.like }}</span>
+                <span class="ml-(--spacing-2)">{{ reply_item.like }}</span>
               </button>
             </div>
             <div id="dislike">
               <button
-                class="dislike-btn"
+                class="p-0 outline-none border-none bg-transparent h-(--component-height-xs) text-md text-text-secondary inline-flex items-center cursor-pointer align-middle hover:text-primary"
                 @click="handleHate"
                 :style="{
                   color: String(interact_btn_active) === '2' ? 'var(--color-primary)' : ''
@@ -233,30 +242,45 @@ const is_loading_md = ref<boolean>(true)
               >
                 <img :src="dislikeActiveSvg" fill="currentColor" v-if="interact_btn_active == 2" class="svg-icon" />
                 <img :src="dislikeSvg" v-else class="svg-icon" />
-                <span id="count">{{ reply_item.dislike }}</span>
+                <span class="ml-(--spacing-2)">{{ reply_item.dislike }}</span>
               </button>
             </div>
             <div id="reply">
-              <button class="reply-btn" @click="handle_pop_up_reply_area">回复</button>
+              <button
+                class="p-0 outline-none border-none bg-transparent h-(--component-height-xs) text-md text-text-secondary inline-flex items-center cursor-pointer align-middle hover:text-primary"
+                @click="handle_pop_up_reply_area"
+              >
+                回复
+              </button>
             </div>
             <div
               id="more"
+              class="ml-auto mr-(--spacing-6) w-(--component-height-base) h-(--component-height-base) relative scale-[1.4] z-[1600]"
               v-show="is_mouse_in || is_comment_menu_open"
               :style="{ 'padding-right': is_root ? '0' : 'var(--spacing-8)' }"
             >
               <button
-                class="more-btn"
+                class="p-0 outline-none border-none bg-transparent h-(--component-height-xs) text-md text-text-secondary inline-flex items-center cursor-pointer align-middle hover:text-primary"
                 @click="() => (is_comment_menu_open = !is_comment_menu_open)"
               >
                 <img :src="moreSvg" fill="currentColor" class="svg-icon" />
               </button>
               <div
-                class="comment-menu"
+                class="right-0 absolute top-(--spacing-3) z-[2000]"
                 v-show="is_comment_menu_open"
                 @mouseleave="is_comment_menu_open = false"
               >
-                <ul id="options">
-                  <li v-if="is_up && is_root" @click="handle_top(reply_item)">置顶</li>
+                <ul
+                  id="options"
+                  class="block absolute top-(--spacing-5) right-0 m-0 p-0 z-10 w-(--spacing-12) list-none rounded-sm text-base text-text-primary bg-bg shadow-[var(--el-box-shadow-light)] overflow-hidden"
+                >
+                  <li
+                    v-if="is_up && is_root"
+                    class="box-border w-full flex items-center h-(--spacing-5) px-(--spacing-4) cursor-pointer select-none"
+                    @click="handle_top(reply_item)"
+                  >
+                    置顶
+                  </li>
                   <el-popconfirm
                     :show-arrow="false"
                     confirm-button-text="是"
@@ -268,19 +292,24 @@ const is_loading_md = ref<boolean>(true)
                     :offset="12"
                   >
                     <template #reference>
-                      <li v-if="String(reply_item.member.mid) === String(user_nav.uid) || is_up">
+                      <li
+                        v-if="String(reply_item.member.mid) === String(user_nav.uid) || is_up"
+                        class="box-border w-full flex items-center h-(--spacing-5) px-(--spacing-4) cursor-pointer select-none"
+                      >
                         删除
                       </li>
                     </template>
                   </el-popconfirm>
                   <li
                     v-if="String(reply_item.member.mid) !== String(user_nav.uid) || is_up"
+                    class="box-border w-full flex items-center h-(--spacing-5) px-(--spacing-4) cursor-pointer select-none"
                     @click="handle_black_list(reply_item)"
                   >
                     加入黑名单
                   </li>
                   <li
                     v-if="String(reply_item.member.mid) !== String(user_nav.uid) || is_up"
+                    class="box-border w-full flex items-center h-(--spacing-5) px-(--spacing-4) cursor-pointer select-none"
                     @click="handle_report(reply_item)"
                   >
                     举报
@@ -291,103 +320,12 @@ const is_loading_md = ref<boolean>(true)
           </div>
         </template>
       </el-card>
-      <div class="comment-tag" v-if="is_root && reply_item.up_action.like">UP主觉得很赞</div>
+      <div
+        class="w-fit text-text-regular bg-fill-light p-(--spacing-1) rounded-sm box-border text-xs leading-none"
+        v-if="is_root && reply_item.up_action.like"
+      >
+        UP主觉得很赞
+      </div>
     </div>
   </div>
 </template>
-
-<style scoped>
-#options li {
-  @apply box-border w-full flex items-center h-[var(--spacing-5)] px-[var(--spacing-4)] cursor-pointer select-none;
-}
-
-#options {
-  @apply block absolute top-[var(--spacing-5)] right-0 m-0 p-0 z-[10] w-[var(--spacing-12)] list-none rounded-[var(--size-radius-base)] text-[var(--component-font-size-base)] text-[var(--color-text-primary)] bg-[var(--color-bg)] shadow-[var(--el-box-shadow-light)] overflow-hidden;
-}
-
-.comment-menu {
-  @apply right-0 absolute top-[var(--spacing-3)] z-[2000];
-}
-
-#more {
-  @apply ml-auto mr-[var(--spacing-6)] w-[var(--component-height-base)] h-[var(--component-height-base)] relative scale-[1.4] z-[1600];
-}
-
-#count {
-  @apply ml-[var(--spacing-2)];
-}
-
-.comment-tag {
-  @apply w-fit text-[var(--color-text-regular)] bg-[var(--color-fill-light)] p-[var(--spacing-1)] rounded-[var(--size-radius-base)] box-border text-[var(--component-font-size-xs)] leading-none;
-}
-
-.like-btn:hover,
-.dislike-btn:hover,
-.reply-btn:hover,
-.more-btn:hover {
-  @apply text-[var(--color-primary)];
-}
-
-.like-btn,
-.dislike-btn,
-.reply-btn,
-.more-btn {
-  @apply p-0 outline-none border-none bg-transparent h-[var(--component-height-xs)] text-[var(--component-font-size-md)] text-[var(--color-text-secondary)] inline-flex items-center cursor-pointer align-middle;
-}
-
-.comment-footer > :not(:first-child) {
-  @apply ml-[var(--spacing-4)];
-}
-
-.comment-content :deep(.v-note-wrapper) {
-  border: unset;
-}
-
-.comment-footer {
-  @apply w-[-webkit-fill-available] flex items-center relative mt-[var(--spacing-2)] text-[var(--component-font-size-md)] text-[var(--color-text-secondary)] h-[var(--component-height-md)] flex-wrap;
-}
-
-.comment-footer .pubdate {
-  @apply whitespace-nowrap;
-}
-
-.comment-main :deep(.el-card) {
-  @apply overflow-visible border-none;
-}
-
-.comment-main :deep(.el-card__footer) {
-  @apply border-t-none p-0;
-}
-
-.comment-main :deep(.el-card__header) {
-  @apply border-b-none mb-[var(--spacing-2)] p-0;
-}
-
-.user-level {
-  @apply ml-[var(--spacing-2)] w-[var(--spacing-3)] h-[var(--spacing-3)];
-}
-
-.user-info #user-up {
-  @apply ml-[var(--spacing-2)] w-[var(--spacing-3)] h-[var(--spacing-3)];
-}
-
-.user-name {
-  @apply text-[var(--color-text-primary)] text-[var(--component-font-size-base)] font-medium;
-}
-
-.user-info {
-  @apply inline-flex items-center;
-}
-
-.comment-item {
-  @apply flex mb-[var(--spacing-8)];
-}
-
-.comment-main {
-  @apply w-full relative pl-[var(--spacing-3)] pt-[var(--spacing-2)] leading-[var(--line-height-normal)];
-}
-
-.user-avater {
-  @apply relative left-[var(--spacing-2)] top-[var(--spacing-2)] w-[var(--component-height-lg)] h-[var(--component-height-lg)] origin-left-top scale-1 flex-shrink-0;
-}
-</style>

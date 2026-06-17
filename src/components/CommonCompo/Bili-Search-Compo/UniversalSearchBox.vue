@@ -1,6 +1,6 @@
 <template>
-  <div class="search-box">
-    <div :class="mode === 'numeric' ? 'numeric-input-wrapper' : ''">
+  <div class="universal-search-box relative w-full">
+    <div :class="mode === 'numeric' ? 'relative' : ''">
       <el-input
         ref="autocompleteRef"
         v-model="query"
@@ -27,30 +27,37 @@
         v-if="
           isHistoryVisible && (mode === 'text' ? searchHistory.length > 0 : historyItems.length > 0)
         "
-        class="history-dropdown"
+        class="absolute top-full left-0 right-0 mt-1 z-[1000] overflow-hidden rounded-sm border border-border bg-bg shadow-[0_4px_12px_rgba(0,0,0,0.3)]"
         @mousedown.prevent
       >
-        <div class="history-header">
-          <span class="history-title">搜索历史</span>
-          <span class="clear-history-btn" @click="clearHistory">清空</span>
+        <div class="flex justify-between items-center py-3 px-4 border-b border-border">
+          <span class="text-sm font-medium text-text-primary">搜索历史</span>
+          <span
+            class="text-xs text-text-secondary cursor-pointer py-0.5 px-2 rounded-xs transition-all duration-200 hover:bg-fill hover:text-text-primary"
+            @click="clearHistory"
+          >
+            清空
+          </span>
         </div>
-        <div class="history-content">
+        <div class="p-3 flex flex-wrap gap-2">
           <div
             v-for="(item, index) in mode === 'text'
               ? searchHistory.filter((i) => i.type === 'history')
               : historyItems"
             :key="index"
-            class="history-item"
+            class="mb-0"
             @click="
               selectHistoryItem(mode === 'text' ? (item as HistoryItem).value : (item as string))
             "
           >
-            <div class="history-tag">
+            <div
+              class="inline-flex items-center relative bg-fill border border-border rounded-xl py-1 px-3 text-sm text-primary cursor-pointer transition-all duration-200 hover:bg-fill-dark hover:border-border-dark"
+            >
               {{ mode === 'text' ? (item as HistoryItem).value : item }}
               <el-badge :style="{ width: 0 }" color="transparent" :offset="[5, -5]">
                 <template #content>
                   <el-icon
-                    class="remove-icon"
+                    class="text-text-secondary cursor-pointer ml-2 text-sm transition-colors duration-200 hover:text-text-primary"
                     @click.stop="
                       mode === 'text'
                         ? deleteHistory((item as HistoryItem).value)
@@ -346,148 +353,3 @@ defineExpose({
   }
 })
 </script>
-
-<style scoped>
-.search-box {
-  position: relative;
-  width: 100%;
-}
-
-.history-dropdown {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  right: 0;
-  margin-top: 4px;
-  background: #181818;
-  border: 1px solid #303030;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  z-index: 1000;
-  overflow: hidden;
-}
-
-.history-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px 16px;
-  border-bottom: 1px solid #303030;
-}
-
-.history-title {
-  font-size: 14px;
-  font-weight: 500;
-  color: #f0f0f0;
-}
-
-.clear-history-btn {
-  font-size: 12px;
-  color: #999;
-  cursor: pointer;
-  padding: 2px 8px;
-  border-radius: 4px;
-  transition: all 0.2s;
-}
-
-.clear-history-btn:hover {
-  background: #303030;
-  color: #f0f0f0;
-}
-
-.history-content {
-  padding: 12px 16px;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.history-item {
-  margin-bottom: 0;
-}
-
-.history-tag {
-  display: inline-flex;
-  align-items: center;
-  background: #252525;
-  border: 1px solid #303030;
-  border-radius: 12px;
-  padding: 4px 12px;
-  font-size: 13px;
-  color: #00a1d6;
-  cursor: pointer;
-  transition: all 0.2s;
-  position: relative;
-}
-
-.history-tag:hover {
-  background: #303030;
-  border-color: #404040;
-}
-
-.remove-icon {
-  color: #999;
-  cursor: pointer;
-  margin-left: 8px;
-  font-size: 14px;
-  transition: color 0.2s;
-}
-
-.remove-icon:hover {
-  color: #f0f0f0;
-}
-
-.numeric-input-wrapper {
-  position: relative;
-}
-
-:deep(.el-input__wrapper) {
-  background: #181818;
-  border: 1px solid #303030;
-  border-radius: 8px;
-  transition: all 0.3s;
-}
-
-:deep(.el-input__wrapper:hover) {
-  border-color: #404040;
-  box-shadow: 0 0 0 1px rgba(0, 161, 214, 0.1);
-}
-
-:deep(.el-input__wrapper.is-focus) {
-  border-color: #00a1d6;
-  box-shadow: 0 0 0 1px #00a1d6 inset;
-}
-
-:deep(.el-input__inner) {
-  color: #f0f0f0;
-}
-
-:deep(.el-input__placeholder) {
-  color: #666;
-}
-
-:deep(.el-input__clear) {
-  color: #666;
-}
-
-:deep(.el-input__clear:hover) {
-  color: #999;
-}
-
-.search-btn {
-  background: #00a1d6;
-  border-color: #00a1d6;
-  border-radius: 0 8px 8px 0;
-  transition: all 0.3s;
-}
-
-.search-btn:hover {
-  background: #00b5e6;
-  border-color: #00b5e6;
-}
-
-:deep(.el-badge) {
-  position: static;
-  margin-left: 8px;
-}
-</style>

@@ -988,14 +988,7 @@ export const getBrowserInfoApiV1RpaBrowserControlBrowserInfoPost = <ThrowOnError
  * Returns:
  * CreateSessionResponse: 会话创建结果
  */
-export const createBrowserSessionApiV1RpaBrowserControlCreatePost = <ThrowOnError extends boolean = false>(options: Options<CreateBrowserSessionApiV1RpaBrowserControlCreatePostData, ThrowOnError>) => (options.client ?? client).post<CreateBrowserSessionApiV1RpaBrowserControlCreatePostResponses, CreateBrowserSessionApiV1RpaBrowserControlCreatePostErrors, ThrowOnError>({
-    url: '/api/v1/rpa/browser/control/create',
-    ...options,
-    headers: {
-        'Content-Type': 'application/json',
-        ...options.headers
-    }
-});
+export const createBrowserSessionApiV1RpaBrowserControlCreatePost = <ThrowOnError extends boolean = false>(options: Options<CreateBrowserSessionApiV1RpaBrowserControlCreatePostData, ThrowOnError>) => (options.client ?? client).post<CreateBrowserSessionApiV1RpaBrowserControlCreatePostResponses, CreateBrowserSessionApiV1RpaBrowserControlCreatePostErrors, ThrowOnError>({ url: '/api/v1/rpa/browser/control/create', ...options });
 
 /**
  * Browser Session Status

@@ -2,7 +2,6 @@
 import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ArrowLeft, Refresh, Check } from '@element-plus/icons-vue'
-import { ElMessageBox } from 'element-plus'
 import BiliPageHeader from '@/components/CommonCompo/Bili-Container-Compo/BiliPageHeader.vue'
 import CenteredContainer from '@/components/CommonCompo/Bili-Container-Compo/CenteredContainer.vue'
 import { upsertFingerprintRouterApiV1RpaBrowserUpsertFingerprintPost, genRandFingerprintRouterApiV1RpaBrowserGenRandFingerprintPost, readFingerprintRouterApiV1RpaBrowserReadFingerprintPost } from '@/api/browser/hey-api'
@@ -117,11 +116,6 @@ const handleGenerateRandom = async () => {
 }
 
 const handleSubmit = async () => {
-  if (!formData.value.custom_name?.trim()) {
-    biliMessage.warning('请输入指纹名称')
-    return
-  }
-
   loading.value = true
   try {
     const response = await upsertFingerprintRouterApiV1RpaBrowserUpsertFingerprintPost({
@@ -157,112 +151,136 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-[var(--el-bg-color)] p-4">
-    <BiliPageHeader :title="isEdit ? '编辑指纹' : '创建指纹'" description="创建或编辑浏览器指纹配置">
+  <FlexContainer class="fingerprint-cyber-container">
+    <BiliPageHeader :title="isEdit ? '编辑指纹' : '创建指纹'" description="配置你的数字身份">
       <template #extra>
-        <el-button :icon="ArrowLeft" @click="handleBack">返回</el-button>
+        <el-button :icon="ArrowLeft" @click="handleBack" class="cyber-btn">返回</el-button>
       </template>
     </BiliPageHeader>
 
-    <CenteredContainer class="mt-4 max-w-4xl">
+    <CenteredContainer class="pt-10 w-full">
       <div v-if="loading && isEdit" class="w-full">
         <el-skeleton :rows="10" animated></el-skeleton>
       </div>
 
-      <el-form v-else v-model="formData" label-position="top" class="w-full">
-        <el-card class="mb-4">
-          <template #header>
-            <div class="flex items-center justify-between">
-              <span class="font-semibold">基本信息</span>
-              <el-button type="primary" size="small" :icon="Refresh" :loading="generating" @click="handleGenerateRandom">
-                随机生成
-              </el-button>
+      <el-form v-else v-model="formData" label-position="top" class="w-full cyber-form">
+        <div class="cyber-grid-bg"></div>
+
+        <div class="cyber-cards-container">
+          <el-card class="cyber-card">
+            <template #header>
+              <div class="flex items-center justify-between">
+                <div class="cyber-title">
+                  <span class="cyber-icon animate-pulse-glow">◈</span>
+                  <span>基础配置</span>
+                </div>
+                <el-button type="primary" size="small" :icon="Refresh" :loading="generating" @click="handleGenerateRandom" class="cyber-btn cyber-btn-primary">
+                  随机生成
+                </el-button>
+              </div>
+            </template>
+
+            <el-form-item label="指纹名称">
+              <el-input v-model="formData.custom_name" placeholder="留空将自动生成" clearable class="cyber-input" />
+            </el-form-item>
+
+            <el-form-item label="代理服务器">
+              <el-input v-model="formData.proxy_server" placeholder="例如: 127.0.0.1:7890" clearable class="cyber-input" />
+            </el-form-item>
+          </el-card>
+
+          <el-card class="cyber-card">
+            <template #header>
+              <div class="cyber-title">
+                <span class="cyber-icon animate-pulse-glow">◈</span>
+                <span>平台信息</span>
+              </div>
+            </template>
+
+            <div class="cyber-grid">
+              <el-form-item label="平台">
+                <el-select v-model="formData.fingerprint_platform" placeholder="选择平台" clearable class="w-full cyber-select">
+                  <el-option label="Windows" value="windows" />
+                  <el-option label="Linux" value="linux" />
+                  <el-option label="macOS" value="macos" />
+                </el-select>
+              </el-form-item>
+
+              <el-form-item label="平台版本">
+                <el-input v-model="formData.fingerprint_platform_version" placeholder="例如: 10.0.19041" clearable class="cyber-input" />
+              </el-form-item>
             </div>
-          </template>
 
-          <el-form-item label="指纹名称" required>
-            <el-input v-model="formData.custom_name" placeholder="请输入指纹名称" clearable />
-          </el-form-item>
+            <div class="cyber-grid">
+              <el-form-item label="浏览器">
+                <el-select v-model="formData.fingerprint_browser" placeholder="选择浏览器" clearable class="w-full cyber-select">
+                  <el-option label="Chrome" value="chrome" />
+                  <el-option label="Edge" value="edge" />
+                  <el-option label="Opera" value="opera" />
+                  <el-option label="Vivaldi" value="vivaldi" />
+                </el-select>
+              </el-form-item>
 
-          <el-form-item label="代理服务器">
-            <el-input v-model="formData.proxy_server" placeholder="例如: http://127.0.0.1:7890" clearable />
-          </el-form-item>
-        </el-card>
+              <el-form-item label="浏览器版本">
+                <el-input v-model="formData.fingerprint_brand_version" placeholder="例如: 125.0.0.1" clearable class="cyber-input" />
+              </el-form-item>
+            </div>
+          </el-card>
 
-        <el-card class="mb-4">
-          <template #header>
-            <span class="font-semibold">平台信息</span>
-          </template>
+          <el-card class="cyber-card">
+            <template #header>
+              <div class="cyber-title">
+                <span class="cyber-icon animate-pulse-glow">◈</span>
+                <span>硬件指纹</span>
+              </div>
+            </template>
 
-          <el-form-item label="平台">
-            <el-select v-model="formData.fingerprint_platform" placeholder="请选择平台" clearable class="w-full">
-              <el-option label="Windows" value="windows" />
-              <el-option label="Linux" value="linux" />
-              <el-option label="macOS" value="macos" />
-            </el-select>
-          </el-form-item>
+            <el-form-item label="CPU核心数">
+              <el-input-number v-model="formData.fingerprint_hardware_concurrency" :min="1" :max="128" class="cyber-input-number" />
+            </el-form-item>
 
-          <el-form-item label="平台版本">
-            <el-input v-model="formData.fingerprint_platform_version" placeholder="例如: 10.0.19041" clearable />
-          </el-form-item>
+            <div class="cyber-grid">
+              <el-form-item label="GPU厂商">
+                <el-input v-model="formData.fingerprint_gpu_vendor" placeholder="例如: Intel" clearable class="cyber-input" />
+              </el-form-item>
 
-          <el-form-item label="浏览器">
-            <el-select v-model="formData.fingerprint_browser" placeholder="请选择浏览器" clearable class="w-full">
-              <el-option label="Chrome" value="chrome" />
-              <el-option label="Edge" value="Edge" />
-              <el-option label="Opera" value="Opera" />
-              <el-option label="Vivaldi" value="Vivaldi" />
-            </el-select>
-          </el-form-item>
+              <el-form-item label="GPU渲染器">
+                <el-input v-model="formData.fingerprint_gpu_renderer" placeholder="例如: Intel Iris OpenGL Engine" clearable class="cyber-input" />
+              </el-form-item>
+            </div>
+          </el-card>
 
-          <el-form-item label="浏览器版本">
-            <el-input v-model="formData.fingerprint_brand_version" placeholder="例如: 125.0.0.1" clearable />
-          </el-form-item>
-        </el-card>
+          <el-card class="cyber-card">
+            <template #header>
+              <div class="cyber-title">
+                <span class="cyber-icon animate-pulse-glow">◈</span>
+                <span>语言时区</span>
+              </div>
+            </template>
 
-        <el-card class="mb-4">
-          <template #header>
-            <span class="font-semibold">硬件信息</span>
-          </template>
+            <div class="cyber-grid">
+              <el-form-item label="语言">
+                <el-input v-model="formData.lang" placeholder="例如: zh-CN" clearable class="cyber-input" />
+              </el-form-item>
 
-          <el-form-item label="CPU核心数">
-            <el-input-number v-model="formData.fingerprint_hardware_concurrency" :min="1" :max="128" class="w-full" />
-          </el-form-item>
+              <el-form-item label="接受语言">
+                <el-input v-model="formData.accept_lang" placeholder="例如: zh-CN,zh;q=0.9,en;q=0.8" clearable class="cyber-input" />
+              </el-form-item>
+            </div>
 
-          <el-form-item label="GPU厂商">
-            <el-input v-model="formData.fingerprint_gpu_vendor" placeholder="例如: Intel" clearable />
-          </el-form-item>
+            <el-form-item label="时区">
+              <el-input v-model="formData.timezone" placeholder="例如: Asia/Shanghai" clearable class="cyber-input" />
+            </el-form-item>
+          </el-card>
+        </div>
 
-          <el-form-item label="GPU渲染器">
-            <el-input v-model="formData.fingerprint_gpu_renderer" placeholder="例如: Intel Iris OpenGL Engine" clearable />
-          </el-form-item>
-        </el-card>
-
-        <el-card class="mb-4">
-          <template #header>
-            <span class="font-semibold">语言和时区</span>
-          </template>
-
-          <el-form-item label="语言">
-            <el-input v-model="formData.lang" placeholder="例如: zh-CN" clearable />
-          </el-form-item>
-
-          <el-form-item label="接受语言">
-            <el-input v-model="formData.accept_lang" placeholder="例如: zh-CN,zh;q=0.9,en;q=0.8" clearable />
-          </el-form-item>
-
-          <el-form-item label="时区">
-            <el-input v-model="formData.timezone" placeholder="例如: Asia/Shanghai" clearable />
-          </el-form-item>
-        </el-card>
-
-        <div class="flex justify-end gap-4">
-          <el-button size="large" @click="handleBack">取消</el-button>
-          <el-button type="primary" size="large" :icon="Check" :loading="loading" @click="handleSubmit">
-            {{ isEdit ? '保存' : '创建' }}
+        <div class="cyber-actions">
+          <el-button size="large" @click="handleBack" class="cyber-btn">取消</el-button>
+          <el-button type="primary" size="large" :icon="Check" :loading="loading" @click="handleSubmit" class="cyber-btn cyber-btn-primary">
+            {{ isEdit ? '保存配置' : '创建指纹' }}
           </el-button>
         </div>
       </el-form>
     </CenteredContainer>
-  </div>
+  </FlexContainer>
 </template>

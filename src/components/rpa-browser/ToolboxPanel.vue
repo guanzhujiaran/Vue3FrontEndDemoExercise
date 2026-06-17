@@ -38,7 +38,7 @@ const loadPrivateActions = async () => {
       },
       headers: {
         'x-bili-mid': userNavStore.user_nav.uid,
-        'x-bili-level': userNavStore.user_nav.level_info.current_level
+        'x-bili-level': String(userNavStore.user_nav.level_info.current_level)
       }
     })
 
@@ -63,7 +63,7 @@ const loadPublicActions = async () => {
       },
       headers: {
         'x-bili-mid': userNavStore.user_nav.uid,
-        'x-bili-level': userNavStore.user_nav.level_info.current_level
+        'x-bili-level': String(userNavStore.user_nav.level_info.current_level)
       }
     })
 
@@ -86,7 +86,7 @@ const loadPlugins = async () => {
       },
       headers: {
         'x-bili-mid': userNavStore.user_nav.uid,
-        'x-bili-level': userNavStore.user_nav.level_info.current_level
+        'x-bili-level': String(userNavStore.user_nav.level_info.current_level)
       }
     })
 
@@ -103,7 +103,7 @@ const loadPlugins = async () => {
       },
       headers: {
         'x-bili-mid': userNavStore.user_nav.uid,
-        'x-bili-level': userNavStore.user_nav.level_info.current_level
+        'x-bili-level': String(userNavStore.user_nav.level_info.current_level)
       }
     })
 
@@ -126,7 +126,7 @@ const loadWorkflows = async () => {
       },
       headers: {
         'x-bili-mid': userNavStore.user_nav.uid,
-        'x-bili-level': userNavStore.user_nav.level_info.current_level
+        'x-bili-level': String(userNavStore.user_nav.level_info.current_level)
       }
     })
 
@@ -143,7 +143,7 @@ const loadWorkflows = async () => {
       },
       headers: {
         'x-bili-mid': userNavStore.user_nav.uid,
-        'x-bili-level': userNavStore.user_nav.level_info.current_level
+        'x-bili-level': String(userNavStore.user_nav.level_info.current_level)
       }
     })
 

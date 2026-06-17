@@ -321,7 +321,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-[var(--el-bg-color)] p-4">
+  <FlexContainer>
     <BiliPageHeader title="社区广场" description="发现和分享自定义动作、插件和工作流">
     </BiliPageHeader>
 
@@ -478,5 +478,5 @@ onMounted(() => {
         />
       </div>
     </FlexContainer>
-  </div>
+  </FlexContainer>
 </template>

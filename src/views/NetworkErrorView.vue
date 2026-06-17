@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { Connection, RefreshRight } from '@element-plus/icons-vue'
 
 // 定义 props
@@ -24,6 +24,9 @@ const pingResults = ref<Array<{
   latency: number
   status: 'success' | 'error' | 'pending'
 }>>([])
+
+// 存储所有定时器引用以便清理
+const timeoutIds: ReturnType<typeof setTimeout>[] = []
 
 // 要检测的服务器列表
 const servers = [
@@ -68,6 +71,7 @@ const pingServer = async (host: string): Promise<{ ip: string; latency: number; 
     // 通过HTTP请求测量延迟
     const controller = new AbortController()
     const timeoutId = setTimeout(() => controller.abort(), 5000) // 5秒超时
+    timeoutIds.push(timeoutId)
 
     // 使用当前域名的API接口进行ping测试
     const response = await fetch('/api/v1/ping', {
@@ -77,6 +81,7 @@ const pingServer = async (host: string): Promise<{ ip: string; latency: number; 
     })
 
     clearTimeout(timeoutId)
+    timeoutIds.splice(timeoutIds.indexOf(timeoutId), 1)
     const endTime = performance.now()
     const latency = Math.round(endTime - startTime)
 
@@ -140,6 +145,11 @@ const goHome = () => {
 onMounted(() => {
   // 自动开始ping测试
   runPingTests()
+})
+
+onUnmounted(() => {
+  // 清理所有定时器
+  timeoutIds.forEach(id => clearTimeout(id))
 })
 </script>
 

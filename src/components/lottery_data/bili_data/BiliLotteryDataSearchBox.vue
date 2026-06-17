@@ -121,7 +121,7 @@ const handleCloseDrawer = () => {
 </script>
 
 <template>
-  <div class="search-box-wrapper">
+  <div class="lottery-data-search-box w-full mb-(--spacing-8) relative">
     <BiliSearchBox
       @search="handleSearch"
       :placeholder="search_box_prop.placeholder"
@@ -129,7 +129,7 @@ const handleCloseDrawer = () => {
       :max-history-count="search_box_prop.maxHistoryCount"
     ></BiliSearchBox>
     <el-drawer
-      class="!overflow-x-hidden"
+      class="lottery-data-search-drawer !overflow-x-hidden"
       :close-on-click-modal="true"
       v-model="isOpenDrawer"
       direction="btt"
@@ -138,7 +138,7 @@ const handleCloseDrawer = () => {
       :title="`\&quot;${cur_query_str}\&quot; 的搜索结果`"
       @close="handleCloseDrawer"
     >
-      <div class="search-results-container">
+      <div class="p-(--spacing-12) min-h-[400px]">
         <div v-if="loading" class="w-full">
           <div class="grid gap-4" :style="{ gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))' }">
             <div v-for="i in 6" :key="i" class="rounded-xl bg-bg/50 backdrop-blur-sm p-5 border border-border-light/30">
@@ -148,10 +148,12 @@ const handleCloseDrawer = () => {
         </div>
         <template v-else>
         <!-- 搜索结果统计 -->
-        <div class="search-summary flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:justify-between" v-if="total > 0">
-
+        <div
+          class="flex flex-col items-start gap-2 py-[calc(var(--component-spacing)*2)] mb-[calc(var(--component-spacing)*2)] text-sm text-text-secondary border-b border-border-lighter sm:flex-row sm:items-center sm:justify-between"
+          v-if="total > 0"
+        >
           <span>找到 {{ total }} 条结果</span>
-          <span class="page-info">
+          <span class="text-primary font-medium">
             显示 {{ startIndex }} - {{ endIndex }} 条
           </span>
         </div>
@@ -163,7 +165,10 @@ const handleCloseDrawer = () => {
         <BiliLotteryCardContainer :data="data" />
         
         <!-- 分页控件 -->
-        <div class="pagination-wrapper overflow-x-auto" v-if="total > pageSize">
+        <div
+          class="flex justify-center overflow-x-auto py-[calc(var(--component-spacing)*4)] mt-[calc(var(--component-spacing)*2)] border-t border-border-lighter"
+          v-if="total > pageSize"
+        >
           <el-pagination
             class="mx-auto flex-wrap justify-center gap-y-2"
             v-model:current-page="currentPage"
@@ -182,87 +187,3 @@ const handleCloseDrawer = () => {
     </el-drawer>
   </div>
 </template>
-
-<style scoped>
-:deep(.el-drawer__body) {
-  padding: 0;
-  min-width: 100%;
-}
-
-.search-box-wrapper {
-  width: 100%;
-  margin-bottom: var(--spacing-8);
-  position: relative;
-}
-
-:deep(.el-input__wrapper) {
-  border-radius: var(--radius-sm);
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
-  transition: all 0.3s ease;
-}
-
-:deep(.el-input__wrapper:hover) {
-  box-shadow: 0 2px 6px rgba(0, 161, 214, 0.15);
-}
-
-:deep(.el-input__wrapper.is-focus) {
-  box-shadow: 0 0 0 1px #00a1d6 inset;
-}
-
-:deep(.el-drawer__header) {
-  margin-bottom: 0;
-  padding: var(--spacing-12) var(--spacing-16);
-  border-bottom: 1px solid var(--el-border-color-lighter);
-  color: var(--el-color-primary);
-  font-weight: bold;
-}
-
-:deep(.el-drawer) {
-  border-radius: var(--spacing-10) var(--spacing-10) 0 0;
-}
-
-/* 搜索结果容器 */
-.search-results-container {
-  padding: var(--spacing-12);
-  min-height: 400px;
-}
-
-/* 搜索统计信息 */
-.search-summary {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: calc(var(--component-spacing) * 2) 0;
-  margin-bottom: calc(var(--component-spacing) * 2);
-  color: var(--el-text-color-secondary);
-  font-size: 14px;
-  border-bottom: 1px solid var(--el-border-color-lighter);
-}
-
-.page-info {
-  color: var(--el-color-primary);
-  font-weight: 500;
-}
-
-/* 分页容器 */
-.pagination-wrapper {
-  display: flex;
-  justify-content: center;
-  padding: calc(var(--component-spacing) * 4) 0;
-  margin-top: calc(var(--component-spacing) * 2);
-  border-top: 1px solid var(--el-border-color-lighter);
-}
-
-:deep(.el-pagination) {
-  white-space: nowrap;
-}
-
-/* 加载状态 */
-:deep(.el-loading-spinner) {
-  color: var(--el-color-primary);
-}
-
-:deep(.el-loading-spinner .path) {
-  stroke: var(--el-color-primary);
-}
-</style>

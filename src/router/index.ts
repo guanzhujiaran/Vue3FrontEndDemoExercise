@@ -296,7 +296,7 @@ const routes: CustomRouteRecordRaw[] = [
   {
     path: '/app/rpa-browser',
     name: RouteName.RPA_BROWSER,
-    component: () => import('@/views/rpa-browser/BrowserFingerprintList.vue'),
+    component: () => import('@/views/rpa-browser/RpaBrowserLayout.vue'),
     redirect: { name: RouteName.RPA_BROWSER_FINGERPRINT_LIST },
     meta: {
       id: 'rpa-browser',

@@ -971,15 +971,6 @@ export type ReportRequest = {
 };
 
 /**
- * SimplifiedCreateSessionRequest
- *
- * 简化版创建会话请求（不包含browser_id）
- */
-export type SimplifiedCreateSessionRequest = {
-    [key: string]: unknown;
-};
-
-/**
  * SortBy
  */
 export type SortBy = 'updated_at' | 'likes_count' | 'forks_count' | 'created_at' | 'name';
@@ -1335,6 +1326,24 @@ export type StandardResponseNotificationConfigDeleteResp = {
  * StandardResponse[NotificationConfigUpsertResp]
  */
 export type StandardResponseNotificationConfigUpsertResp = {
+    /**
+     * Code
+     */
+    code: number;
+    /**
+     * Data
+     */
+    data?: unknown | null;
+    /**
+     * Msg
+     */
+    msg?: string;
+};
+
+/**
+ * StandardResponse[PagesListResponse]
+ */
+export type StandardResponsePagesListResponse = {
     /**
      * Code
      */
@@ -2286,7 +2295,7 @@ export type ReadFingerprintRouterApiV1RpaBrowserReadFingerprintPostData = {
         /**
          * Browser Id
          */
-        browser_id: number | string | null;
+        browser_id: number | string;
     };
     url: '/api/v1/rpa/browser/read_fingerprint';
 };
@@ -2326,7 +2335,7 @@ export type DeleteFingerprintRouterApiV1RpaBrowserDeleteFingerprintPostData = {
         /**
          * Browser Id
          */
-        browser_id: number | string | null;
+        browser_id: number | string;
     };
     url: '/api/v1/rpa/browser/delete_fingerprint';
 };
@@ -2436,7 +2445,7 @@ export type RenameFingerprintRouterApiV1RpaBrowserRenameFingerprintPostData = {
         /**
          * Browser Id
          */
-        browser_id: number | string | null;
+        browser_id: number | string;
     };
     url: '/api/v1/rpa/browser/rename_fingerprint';
 };
@@ -2721,7 +2730,7 @@ export type ApplyDefaultSettingsToBrowserApiV1RpaBrowserDefaultSettingsApplyPost
         /**
          * Browser Id
          */
-        browser_id: number | null;
+        browser_id: number | string;
     };
     url: '/api/v1/rpa/browser/default-settings/apply';
 };
@@ -4155,7 +4164,7 @@ export type OpenPageApiV1RpaBrowserControlOperationOpenPagePostData = {
         /**
          * Browser Id
          */
-        browser_id: number | null;
+        browser_id: number | string;
     };
     url: '/api/v1/rpa/browser/control/operation/open_page';
 };
@@ -4195,7 +4204,7 @@ export type ClosePageApiV1RpaBrowserControlOperationClosePagePostData = {
         /**
          * Browser Id
          */
-        browser_id: number | null;
+        browser_id: number | string;
     };
     url: '/api/v1/rpa/browser/control/operation/close_page';
 };
@@ -4235,7 +4244,7 @@ export type SwitchPageApiV1RpaBrowserControlOperationSwitchPagePostData = {
         /**
          * Browser Id
          */
-        browser_id: number | null;
+        browser_id: number | string;
     };
     url: '/api/v1/rpa/browser/control/operation/switch_page';
 };
@@ -4275,7 +4284,7 @@ export type ExecuteJsApiV1RpaBrowserControlOperationExecuteJsPostData = {
         /**
          * Browser Id
          */
-        browser_id: number | null;
+        browser_id: number | string;
     };
     url: '/api/v1/rpa/browser/control/operation/execute_js';
 };
@@ -4315,7 +4324,7 @@ export type GetPageInfoApiV1RpaBrowserControlOperationGetPageInfoPostData = {
         /**
          * Browser Id
          */
-        browser_id: number | null;
+        browser_id: number | string;
     };
     url: '/api/v1/rpa/browser/control/operation/get_page_info';
 };
@@ -4355,7 +4364,7 @@ export type GetBrowserInfoApiV1RpaBrowserControlBrowserInfoPostData = {
         /**
          * Browser Id
          */
-        browser_id: number | null;
+        browser_id: number | string;
     };
     url: '/api/v1/rpa/browser/control/browser/info';
 };
@@ -4379,7 +4388,7 @@ export type GetBrowserInfoApiV1RpaBrowserControlBrowserInfoPostResponses = {
 export type GetBrowserInfoApiV1RpaBrowserControlBrowserInfoPostResponse = GetBrowserInfoApiV1RpaBrowserControlBrowserInfoPostResponses[keyof GetBrowserInfoApiV1RpaBrowserControlBrowserInfoPostResponses];
 
 export type CreateBrowserSessionApiV1RpaBrowserControlCreatePostData = {
-    body: SimplifiedCreateSessionRequest;
+    body?: never;
     headers: {
         /**
          * X-Bili-Mid
@@ -4395,7 +4404,7 @@ export type CreateBrowserSessionApiV1RpaBrowserControlCreatePostData = {
         /**
          * Browser Id
          */
-        browser_id: number | null;
+        browser_id: number | string;
     };
     url: '/api/v1/rpa/browser/control/create';
 };
@@ -4435,7 +4444,7 @@ export type BrowserSessionStatusApiV1RpaBrowserControlStatusPostData = {
         /**
          * Browser Id
          */
-        browser_id: number | null;
+        browser_id: number | string;
     };
     url: '/api/v1/rpa/browser/control/status';
 };
@@ -4475,7 +4484,7 @@ export type CloseBrowserSessionApiV1RpaBrowserControlClosePostData = {
         /**
          * Browser Id
          */
-        browser_id: number | null;
+        browser_id: number | string;
     };
     url: '/api/v1/rpa/browser/control/close';
 };
@@ -4515,7 +4524,7 @@ export type GetPagesListApiV1RpaBrowserControlPagesListPostData = {
         /**
          * Browser Id
          */
-        browser_id: number | null;
+        browser_id: number | string;
     };
     url: '/api/v1/rpa/browser/control/pages/list';
 };
@@ -4533,7 +4542,7 @@ export type GetPagesListApiV1RpaBrowserControlPagesListPostResponses = {
     /**
      * Successful Response
      */
-    200: StandardResponseDict;
+    200: StandardResponsePagesListResponse;
 };
 
 export type GetPagesListApiV1RpaBrowserControlPagesListPostResponse = GetPagesListApiV1RpaBrowserControlPagesListPostResponses[keyof GetPagesListApiV1RpaBrowserControlPagesListPostResponses];
@@ -4560,7 +4569,7 @@ export type SwitchPageApiV1RpaBrowserControlPagesSwitchPostData = {
         /**
          * Browser Id
          */
-        browser_id: number | null;
+        browser_id: number | string;
     };
     url: '/api/v1/rpa/browser/control/pages/switch';
 };
@@ -4605,7 +4614,7 @@ export type ClosePageApiV1RpaBrowserControlPagesClosePostData = {
         /**
          * Browser Id
          */
-        browser_id: number | null;
+        browser_id: number | string;
     };
     url: '/api/v1/rpa/browser/control/pages/close';
 };
@@ -4645,7 +4654,7 @@ export type CreateWebrtcOfferApiV1RpaBrowserControlWebrtcOfferPostData = {
         /**
          * Browser Id
          */
-        browser_id: number | null;
+        browser_id: number | string;
     };
     url: '/api/v1/rpa/browser/control/webrtc/offer';
 };
@@ -4683,7 +4692,7 @@ export type HandleWebrtcAnswerApiV1RpaBrowserControlWebrtcAnswerPostData = {
         /**
          * Browser Id
          */
-        browser_id: number | null;
+        browser_id: number | string;
     };
     url: '/api/v1/rpa/browser/control/webrtc/answer';
 };
@@ -4721,7 +4730,7 @@ export type AddIceCandidateApiV1RpaBrowserControlWebrtcIceCandidatePostData = {
         /**
          * Browser Id
          */
-        browser_id: number | null;
+        browser_id: number | string;
     };
     url: '/api/v1/rpa/browser/control/webrtc/ice-candidate';
 };
@@ -4759,7 +4768,7 @@ export type CloseWebrtcStreamApiV1RpaBrowserControlWebrtcClosePostData = {
         /**
          * Browser Id
          */
-        browser_id: number | null;
+        browser_id: number | string;
     };
     url: '/api/v1/rpa/browser/control/webrtc/close';
 };
@@ -4797,7 +4806,7 @@ export type GetWebrtcStatusApiV1RpaBrowserControlWebrtcStatusPostData = {
         /**
          * Browser Id
          */
-        browser_id: number | null;
+        browser_id: number | string;
     };
     url: '/api/v1/rpa/browser/control/webrtc/status';
 };

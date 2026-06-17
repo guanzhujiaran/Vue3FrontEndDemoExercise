@@ -27,7 +27,7 @@ const comment_content = defineModel<string>('comment_content')
 
 <template>
   <el-card
-    class="submit-comment-section"
+    class="bg-bg min-w-fit"
     shadow="hover"
     :body-style="{
       'padding-top': 'calc(var(--component-spacing) * 1)',
@@ -38,31 +38,19 @@ const comment_content = defineModel<string>('comment_content')
   >
     <BiliVditorEdit
       ref="biliVditorEdit"
-      class="markdown-editor"
+      class="min-h-(--spacing-40) transition-[height] duration-1000 ease-in-out"
       v-model="comment_content"
       v-model:is_loading="is_loading"
       v-model:placeholder="props.placeholder"
       v-model:is_valid="is_valid"
     />
-    <el-button :disabled="!is_valid" class="submit-btn" type="primary" @click="handle_btn_click"
-      >发送
+    <el-button
+      :disabled="!is_valid"
+      class="float-right m-[calc(var(--component-spacing)*0.6)_calc(var(--component-spacing)*0.6)_calc(var(--component-spacing)*0.2)_0]"
+      type="primary"
+      @click="handle_btn_click"
+    >
+      发送
     </el-button>
   </el-card>
 </template>
-
-<style scoped>
-.markdown-editor {
-  min-height: var(--spacing-40);
-  transition: height 1s ease; /* 平滑过渡效果 */
-}
-
-.submit-btn {
-  float: right;
-  margin: calc(var(--component-spacing) * 0.6) calc(var(--component-spacing) * 0.6) calc(var(--component-spacing) * 0.2) 0;
-}
-
-.submit-comment-section {
-  background: var(--el-bg-color);
-  min-width: fit-content;
-}
-</style>
