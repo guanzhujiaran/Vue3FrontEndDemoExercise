@@ -66,7 +66,9 @@ export interface ReserveInfoResp {
   reserve_sid: number
   available: boolean
   app_sche: string
-  raw: Record<string, any>
+  dynamic_id?: number | null
+  dynamic_id_str?: string | null
+  total?: number | null
   extra_fields?: Record<string, any> | null
 }
 

@@ -3,11 +3,12 @@ import { computed } from 'vue'
 import BiliLotteryCard from '@/components/lottery_data/bili_data/BiliLotteryCard.vue'
 import type {
   DynamicLotteryData,
-  ReservationLotteryData
+  ReservationLotteryData,
+  ReserveInfoFlatData
 } from '@/models/api/lottery/lottery_card.ts'
 
 const lotteryDataArr = withDefaults(
-  defineProps<{ data: (DynamicLotteryData | ReservationLotteryData)[] }>(),
+  defineProps<{ data: (DynamicLotteryData | ReservationLotteryData | ReserveInfoFlatData)[] }>(),
   {
     data: () => []
   }

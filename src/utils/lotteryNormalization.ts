@@ -5,6 +5,7 @@ import type {
   DynamicLotteryData,
   RedPacketData,
   ReservationLotteryData,
+  ReserveInfoFlatData,
   TopicEventData
 } from '@/models/api/lottery/lottery_card.ts'
 import type { NormalizedLottery } from '@/models/api/lottery/lottery_card.ts'
@@ -18,6 +19,91 @@ import {
 import { isMobileDevice } from '@/utils/Browser/useDeviceDetect.ts'
 
 const is_mobile = isMobileDevice()
+
+const extractSpaceUid = (
+  reserveUrl?: string | null,
+  appSche?: string | null
+): string | null => {
+  if (reserveUrl) {
+    const match = reserveUrl.match(/space\.bilibili\.com\/(\d+)/)
+    if (match?.[1]) return match[1]
+  }
+  if (appSche) {
+    const match = appSche.match(/space\/(\d+)/)
+    if (match?.[1]) return match[1]
+  }
+  return null
+}
+
+const buildReserveTitle = (
+  lotteryPrizeInfo: string,
+  reserveSid: number,
+  prizes: Array<{ description: string; count: number | null; img: null }>
+): string => {
+  if (prizes.length > 0) {
+    return prizes.length > 1
+      ? `${prizes[0].description} 等${prizes.length}项奖品`
+      : prizes[0].description
+  }
+  const stripped = lotteryPrizeInfo.replace(/^预约有奖[：:]\s*/, '').trim()
+  return stripped || `预约抽奖 #${reserveSid}`
+}
+
+const normalizeFlatReserveInfo = (
+  resData: ReserveInfoFlatData,
+  originalData: AnyLotteryData,
+  nowSec: number
+): Partial<NormalizedLottery> => {
+  const uid = extractSpaceUid(resData.reserve_url, resData.app_sche)
+  const dynamicIdStr = resData.dynamic_id_str ?? (resData.dynamic_id != null ? String(resData.dynamic_id) : null)
+  const prizes = parsePrizeText(resData.lottery_prize_info)
+
+  const normalized: Partial<NormalizedLottery> = {
+    originalData,
+    id: resData.reserve_sid,
+    type: 'RESERVATION',
+    displayType: '预约抽奖',
+    title: buildReserveTitle(resData.lottery_prize_info, resData.reserve_sid, prizes),
+    endTime: resData.etime ?? null,
+    startTime: null,
+    participants: resData.total ?? null,
+    senderInfo: { uid },
+    sourceLink: dynamicIdStr
+      ? getBiliOpusUrl(dynamicIdStr)
+      : resData.reserve_url || (uid ? getBiliUserSpaceUrl(uid) : null),
+    resultLink: getDirectUrl(resData.jump_url) || null,
+    businessType: 10,
+    prizes,
+    requirements: [],
+    roomId: null,
+    danmu: null
+  }
+
+  if (dynamicIdStr && dynamicIdStr.length > 18) {
+    normalized.requirements!.push({
+      type: '预约',
+      text: '完成直播预约(动态)',
+      link: getBiliOpusUrl(dynamicIdStr)
+    })
+  }
+  normalized.requirements!.push({
+    type: '预约',
+    text: '完成直播预约(空间)',
+    link: resData.reserve_url || (uid ? getBiliUserSpaceUrl(uid) : undefined)
+  })
+
+  if (!resData.available) {
+    normalized.status = 'CANCELLED'
+  } else if (normalized.endTime && nowSec < normalized.endTime) {
+    normalized.status = 'ONGOING'
+  } else if (normalized.endTime && nowSec >= normalized.endTime) {
+    normalized.status = 'ENDED'
+  } else {
+    normalized.status = 'UNKNOWN'
+  }
+
+  return normalized
+}
 
 export const formatTimestamp = (timestamp: number | string | null | undefined): string => {
   if (timestamp === null || timestamp === undefined || timestamp === '') {
@@ -266,6 +352,11 @@ export const normalizeLotteryData = (data: AnyLotteryData): NormalizedLottery =>
       normalized.status = 'ONGOING'
     else if (normalized.endTime && nowSec >= normalized.endTime) normalized.status = 'ENDED'
     else normalized.status = 'UNKNOWN'
+  } else if ('reserve_sid' in actualData && 'lottery_prize_info' in actualData) {
+    Object.assign(
+      normalized,
+      normalizeFlatReserveInfo(actualData as ReserveInfoFlatData, data, nowSec)
+    )
   } else if ('lot_id' in actualData && 'anchor_uid' in actualData) {
     const liveData = actualData as AnchorLotteryData | RedPacketData
     normalized.id = liveData.lot_id

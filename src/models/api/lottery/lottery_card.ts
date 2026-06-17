@@ -113,6 +113,21 @@ export interface ReservationLotteryData {
   start_show_time?: number
 }
 
+/** GetReserveLottery 接口返回的扁平预约抽奖数据 */
+export interface ReserveInfoFlatData {
+  reserve_url: string
+  lottery_prize_info: string
+  etime: number
+  jump_url: string
+  reserve_sid: number
+  available: boolean
+  app_sche: string
+  dynamic_id?: number | null
+  dynamic_id_str?: string | null
+  total?: number | null
+  raw?: ReservationLotteryData | null
+}
+
 export interface TopicEventData {
   jump_url?: string
   title?: string
@@ -154,6 +169,7 @@ export type AnyLotteryData =
   | DynamicLotteryData
   | ChargingLotteryData
   | ReservationLotteryData
+  | ReserveInfoFlatData
   | TopicEventData
   | AnchorLotteryData
   | RedPacketData
