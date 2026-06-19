@@ -381,6 +381,20 @@ function handleNestedReorder(childIndex: number, nestedBranch: 'true' | 'false' 
   const [moved] = targetArr.splice(from, 1)
   targetArr.splice(to, 0, moved)
 }
+
+/** 嵌套分支内卡片展开/收起 */
+function handleNestedToggleExpand(childIndex: number, nestedBranch: 'true' | 'false' | 'loop', subIndex: number) {
+  const key = `${childIndex}-${nestedBranch}-${subIndex}` as unknown as number
+  if (props.expandedItems.has(key)) {
+    props.expandedItems.delete(key)
+  } else {
+    props.expandedItems.add(key)
+    const item = props.items[childIndex]
+    const targetArr = nestedBranch === 'true' ? item?.trueBranch : nestedBranch === 'false' ? item?.falseBranch : item?.loopBody
+    const child = targetArr?.[subIndex]
+    if (child && !child.formData) child.formData = {}
+  }
+}
 </script>
 
 <template>
@@ -488,6 +502,7 @@ function handleNestedReorder(childIndex: number, nestedBranch: 'true' | 'false' 
                           @select-all="handleNestedSelectAll(bi, 'true')"
                           @reorder="(from: number, to: number) => handleNestedReorder(bi, 'true', from, to)"
                           @item:remove="(sub: number) => handleNestedRemove(bi, 'true', sub)"
+                          @item:toggle-expand="(sub: number) => handleNestedToggleExpand(bi, 'true', sub)"
                           @item:toggle-select="(sub: number) => { const s = getNestedSelected(bi, 'true'); s.has(sub) ? s.delete(sub) : s.add(sub); }"
                         />
                       </div>
@@ -512,6 +527,7 @@ function handleNestedReorder(childIndex: number, nestedBranch: 'true' | 'false' 
                           @select-all="handleNestedSelectAll(bi, 'false')"
                           @reorder="(from: number, to: number) => handleNestedReorder(bi, 'false', from, to)"
                           @item:remove="(sub: number) => handleNestedRemove(bi, 'false', sub)"
+                          @item:toggle-expand="(sub: number) => handleNestedToggleExpand(bi, 'false', sub)"
                           @item:toggle-select="(sub: number) => { const s = getNestedSelected(bi, 'false'); s.has(sub) ? s.delete(sub) : s.add(sub); }"
                         />
                       </div>
@@ -549,6 +565,7 @@ function handleNestedReorder(childIndex: number, nestedBranch: 'true' | 'false' 
                           @select-all="handleNestedSelectAll(bi, 'loop')"
                           @reorder="(from: number, to: number) => handleNestedReorder(bi, 'loop', from, to)"
                           @item:remove="(sub: number) => handleNestedRemove(bi, 'loop', sub)"
+                          @item:toggle-expand="(sub: number) => handleNestedToggleExpand(bi, 'loop', sub)"
                           @item:toggle-select="(sub: number) => { const s = getNestedSelected(bi, 'loop'); s.has(sub) ? s.delete(sub) : s.add(sub); }"
                         />
                       </div>

@@ -220,7 +220,6 @@ defineExpose({ droppedItems, getSteps, startEditCustomAction })
                     </template>
                     <div class="mt-1">
                       <BranchContainer branch="loop" :items="item.loopBody || []" :parent-index="index"
-                        :branch-path="[]"
                         :selected-items="getBranchSelected(index, 'loop')" :expanded-items="expandedItems"
                         :feedback-map="operationFeedback" :operating-map="branchOperating"
                         @drop="(e: DragEvent, insertIndex?: number) => handleBranchDrop(e, index, 'loop', insertIndex)"
@@ -262,7 +261,6 @@ defineExpose({ droppedItems, getSteps, startEditCustomAction })
                         <template #label><span class="text-xs font-medium text-(--el-color-success)">True 分支<span v-if="item.trueBranch && item.trueBranch.length > 0" class="text-text-placeholder ml-1">({{ item.trueBranch.length }} 步)</span></span></template>
                         <div class="p-2 overflow-auto">
                           <BranchContainer branch="true" :items="item.trueBranch || []" :parent-index="index"
-                            :branch-path="[]"
                             :selected-items="getBranchSelected(index, 'true')" :expanded-items="expandedItems"
                             :feedback-map="operationFeedback" :operating-map="branchOperating"
                             @drop="(e: DragEvent, insertIndex?: number) => handleBranchDrop(e, index, 'true', insertIndex)"
@@ -284,7 +282,6 @@ defineExpose({ droppedItems, getSteps, startEditCustomAction })
                         <template #label><span class="text-xs font-medium text-(--el-color-danger)">False 分支<span v-if="item.falseBranch && item.falseBranch.length > 0" class="text-text-placeholder ml-1">({{ item.falseBranch.length }} 步)</span></span></template>
                         <div class="p-2 overflow-auto">
                           <BranchContainer branch="false" :items="item.falseBranch || []" :parent-index="index"
-                            :branch-path="[]"
                             :selected-items="getBranchSelected(index, 'false')" :expanded-items="expandedItems"
                             :feedback-map="operationFeedback" :operating-map="branchOperating"
                             @drop="(e: DragEvent, insertIndex?: number) => handleBranchDrop(e, index, 'false', insertIndex)"

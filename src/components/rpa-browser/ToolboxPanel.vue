@@ -336,8 +336,9 @@ const handleDragStart = (event: DragEvent, nodeData: unknown) => {
     
     console.log('拖拽数据:', actionData)
     const jsonData = JSON.stringify(actionData)
+    event.dataTransfer.setData('text/plain', jsonData)
     event.dataTransfer.setData('application/json', jsonData)
-    event.dataTransfer.effectAllowed = 'copy'
+    event.dataTransfer.effectAllowed = 'copyMove'
   }
 }
 
