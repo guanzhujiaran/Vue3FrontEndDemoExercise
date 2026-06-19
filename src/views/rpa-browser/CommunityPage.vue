@@ -20,13 +20,13 @@ const pageSize = ref(20)
 const total = ref(0)
 const loading = ref(false)
 
-const actionsList = ref<any[]>([])
-const pluginsList = ref<any[]>([])
-const workflowsList = ref<any[]>([])
+const actionsList = ref<unknown[]>([])
+const pluginsList = ref<unknown[]>([])
+const workflowsList = ref<unknown[]>([])
 
 const sortBy = ref<SortBy>('updated_at')
 const sortOrder = ref<SortOrder>('desc')
-const filterType = ref<FilterType>('all')
+const filterType = ref<FilterType>('community')
 
 const sortOptions = [
   { label: '更新时间', value: 'updated_at' },
@@ -54,7 +54,7 @@ const loadActionsList = async () => {
     })
 
     if (response.data?.code === 0 && response.data?.data) {
-      const data = response.data.data as any
+      const data = response.data.data as { items?: unknown[]; total?: number }
       actionsList.value = data.items || []
       total.value = data.total || 0
     }
@@ -83,7 +83,7 @@ const loadPluginsList = async () => {
     })
 
     if (response.data?.code === 0 && response.data?.data) {
-      const data = response.data.data as any
+      const data = response.data.data as { items?: unknown[]; total?: number }
       pluginsList.value = data.items || []
       total.value = data.total || 0
     }
@@ -112,7 +112,7 @@ const loadWorkflowsList = async () => {
     })
 
     if (response.data?.code === 0 && response.data?.data) {
-      const data = response.data.data as any
+      const data = response.data.data as { items?: unknown[]; total?: number }
       workflowsList.value = data.items || []
       total.value = data.total || 0
     }
@@ -222,7 +222,7 @@ const handleForkAction = async (actionId: number) => {
     } else {
       biliMessage.error(response.data?.msg || 'Fork失败')
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     if (error !== 'cancel') {
       biliMessage.error('Fork失败')
     }
@@ -251,7 +251,7 @@ const handleForkPlugin = async (pluginId: number) => {
     } else {
       biliMessage.error(response.data?.msg || 'Fork失败')
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     if (error !== 'cancel') {
       biliMessage.error('Fork失败')
     }
@@ -280,14 +280,14 @@ const handleForkWorkflow = async (workflowId: number) => {
     } else {
       biliMessage.error(response.data?.msg || 'Fork失败')
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     if (error !== 'cancel') {
       biliMessage.error('Fork失败')
     }
   }
 }
 
-const handleReport = async (item: any, type: string) => {
+const handleReport = async (item: unknown, type: string) => {
   try {
     await ElMessageBox.prompt('请输入举报原因', '举报', {
       confirmButtonText: '确定',
@@ -345,7 +345,7 @@ onMounted(() => {
     <FlexContainer class="mt-4">
       <div v-if="loading" class="w-full">
         <div class="grid gap-4" style="grid-template-columns: repeat(auto-fill, minmax(350px, 1fr))">
-          <div v-for="i in 6" :key="i" class="rounded-xl bg-[var(--el-bg-color)] p-5 border border-[var(--el-border-color-light)]">
+          <div v-for="i in 6" :key="i" class="rounded-xl  p-5 border border-[var(--el-border-color-light)]">
             <el-skeleton :rows="4" animated></el-skeleton>
           </div>
         </div>
@@ -354,18 +354,18 @@ onMounted(() => {
       <div v-else-if="activeTab === 'actions' && actionsList.length > 0" class="w-full">
         <div class="grid gap-4" style="grid-template-columns: repeat(auto-fill, minmax(350px, 1fr))">
           <div v-for="item in actionsList" :key="item.id"
-            class="rounded-xl bg-[var(--el-bg-color)] p-5 border border-[var(--el-border-color-light)] hover:border-[var(--el-color-primary)] transition-all duration-300">
+            class="rounded-xl  p-5 border border-[var(--el-border-color-light)] hover:border-[var(--el-color-primary)] transition-all duration-300">
             <div class="flex flex-col gap-3">
               <div class="flex items-center justify-between">
                 <el-text class="text-lg font-semibold truncate flex-1 mr-2">{{ item.name }}</el-text>
                 <el-tag size="small" type="info">{{ item.action_type || 'custom' }}</el-tag>
               </div>
 
-              <el-text class="text-sm text-[var(--el-text-color-secondary)] line-clamp-2">
+              <el-text class="text-sm text-text-secondary line-clamp-2">
                 {{ item.description || '无描述' }}
               </el-text>
 
-              <div class="flex items-center gap-4 text-sm text-[var(--el-text-color-secondary)]">
+              <div class="flex items-center gap-4 text-sm text-text-secondary">
                 <div class="flex items-center gap-1">
                   <el-icon><Star /></el-icon>
                   <span>{{ item.likes_count || 0 }}</span>
@@ -391,18 +391,18 @@ onMounted(() => {
       <div v-else-if="activeTab === 'plugins' && pluginsList.length > 0" class="w-full">
         <div class="grid gap-4" style="grid-template-columns: repeat(auto-fill, minmax(350px, 1fr))">
           <div v-for="item in pluginsList" :key="item.id"
-            class="rounded-xl bg-[var(--el-bg-color)] p-5 border border-[var(--el-border-color-light)] hover:border-[var(--el-color-primary)] transition-all duration-300">
+            class="rounded-xl  p-5 border border-[var(--el-border-color-light)] hover:border-[var(--el-color-primary)] transition-all duration-300">
             <div class="flex flex-col gap-3">
               <div class="flex items-center justify-between">
                 <el-text class="text-lg font-semibold truncate flex-1 mr-2">{{ item.name }}</el-text>
                 <el-tag size="small" type="info">{{ item.hook_type || 'plugin' }}</el-tag>
               </div>
 
-              <el-text class="text-sm text-[var(--el-text-color-secondary)] line-clamp-2">
+              <el-text class="text-sm text-text-secondary line-clamp-2">
                 {{ item.description || '无描述' }}
               </el-text>
 
-              <div class="flex items-center gap-4 text-sm text-[var(--el-text-color-secondary)]">
+              <div class="flex items-center gap-4 text-sm text-text-secondary">
                 <div class="flex items-center gap-1">
                   <el-icon><Star /></el-icon>
                   <span>{{ item.likes_count || 0 }}</span>
@@ -428,18 +428,18 @@ onMounted(() => {
       <div v-else-if="activeTab === 'workflows' && workflowsList.length > 0" class="w-full">
         <div class="grid gap-4" style="grid-template-columns: repeat(auto-fill, minmax(350px, 1fr))">
           <div v-for="item in workflowsList" :key="item.id"
-            class="rounded-xl bg-[var(--el-bg-color)] p-5 border border-[var(--el-border-color-light)] hover:border-[var(--el-color-primary)] transition-all duration-300">
+            class="rounded-xl  p-5 border border-[var(--el-border-color-light)] hover:border-[var(--el-color-primary)] transition-all duration-300">
             <div class="flex flex-col gap-3">
               <div class="flex items-center justify-between">
                 <el-text class="text-lg font-semibold truncate flex-1 mr-2">{{ item.name }}</el-text>
                 <el-tag size="small" type="info">工作流</el-tag>
               </div>
 
-              <el-text class="text-sm text-[var(--el-text-color-secondary)] line-clamp-2">
+              <el-text class="text-sm text-text-secondary line-clamp-2">
                 {{ item.description || '无描述' }}
               </el-text>
 
-              <div class="flex items-center gap-4 text-sm text-[var(--el-text-color-secondary)]">
+              <div class="flex items-center gap-4 text-sm text-text-secondary">
                 <div class="flex items-center gap-1">
                   <el-icon><Star /></el-icon>
                   <span>{{ item.likes_count || 0 }}</span>

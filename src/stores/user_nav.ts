@@ -17,7 +17,12 @@ export const useUserNavStore = defineStore(
         next_exp: '--'
       }
     })
-
+    const user_header = computed(()=>{
+      return {
+        'x-bili-mid': user_nav.value.uid || '',
+        'x-bili-level': String(user_nav.value.level_info.current_level) || ''
+      }
+    })
     function save_user_nav(val: UserNavModel) {
       user_nav.value = {
         ...val,
@@ -43,7 +48,7 @@ export const useUserNavStore = defineStore(
       }
     }
 
-    return { user_nav, save_user_nav, delete_user_nav }
+    return { user_nav, save_user_nav, delete_user_nav,user_header }
   },
   {
     persist: {

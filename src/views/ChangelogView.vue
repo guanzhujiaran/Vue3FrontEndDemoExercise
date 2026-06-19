@@ -99,7 +99,7 @@ onMounted(() => {
   <div class="p-5 mx-auto">
     <div class="text-center mb-8">
       <el-text class="text-[2rem] mb-2.5" tag="h1">更新日志</el-text>
-      <el-text class="text-[var(--el-text-color-secondary)]" tag="p">查看项目的更新历史和功能变更</el-text>
+      <el-text class="text-text-secondary" tag="p">查看项目的更新历史和功能变更</el-text>
     </div>
     
     <div class="bg-[var(--el-bg-color-page)] rounded-lg p-5">
@@ -115,21 +115,21 @@ onMounted(() => {
             <div v-if="entry.changes.added && entry.changes.added.length > 0" class="my-4">
               <el-text class="mt-4 mb-2.5 text-[var(--el-text-color-primary)] font-medium" tag="h4">新增功能</el-text>
               <ul class="pl-5">
-                <li v-for="(item, i) in entry.changes.added" :key="i" class="mb-1.5 leading-relaxed text-[var(--el-text-color-regular)]">{{ item }}</li>
+                <li v-for="(item, i) in entry.changes.added" :key="i" class="mb-1.5 leading-relaxed text-text-regular">{{ item }}</li>
               </ul>
             </div>
             
             <div v-if="entry.changes.improved && entry.changes.improved.length > 0" class="my-4">
               <el-text class="mt-4 mb-2.5 text-[var(--el-text-color-primary)] font-medium" tag="h4">功能优化</el-text>
               <ul class="pl-5">
-                <li v-for="(item, i) in entry.changes.improved" :key="i" class="mb-1.5 leading-relaxed text-[var(--el-text-color-regular)]">{{ item }}</li>
+                <li v-for="(item, i) in entry.changes.improved" :key="i" class="mb-1.5 leading-relaxed text-text-regular">{{ item }}</li>
               </ul>
             </div>
             
             <div v-if="entry.changes.fixed && entry.changes.fixed.length > 0" class="my-4">
               <el-text class="mt-4 mb-2.5 text-[var(--el-text-color-primary)] font-medium" tag="h4">问题修复</el-text>
               <ul class="pl-5">
-                <li v-for="(item, i) in entry.changes.fixed" :key="i" class="mb-1.5 leading-relaxed text-[var(--el-text-color-regular)]">{{ item }}</li>
+                <li v-for="(item, i) in entry.changes.fixed" :key="i" class="mb-1.5 leading-relaxed text-text-regular">{{ item }}</li>
               </ul>
             </div>
           </el-card>

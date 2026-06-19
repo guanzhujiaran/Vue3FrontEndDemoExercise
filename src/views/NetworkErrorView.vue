@@ -35,7 +35,6 @@ const servers = [
   { name: '百度服务器', host: 'www.baidu.com' }
 ]
 
-// 获取主服务器的IP地址
 const getServerIP = async (hostname: string): Promise<string> => {
   const dohServers = [
     'https://dns.alidns.com/resolve',
@@ -44,13 +43,15 @@ const getServerIP = async (hostname: string): Promise<string> => {
 
   for (const dohUrl of dohServers) {
     try {
-      // 使用国内 DoH API 查询 IP 地址
       const response = await fetch(`${dohUrl}?name=${hostname}&type=A`, {
         headers: { accept: 'application/dns-json' }
       })
       const data = await response.json()
       if (data.Answer && data.Answer.length > 0) {
-        return data.Answer[0].data
+        const aRecord = data.Answer.find((r: { type: number }) => r.type === 1)
+        if (aRecord) {
+          return aRecord.data
+        }
       }
     } catch (error) {
       console.error(`DNS查询失败 (${dohUrl}):`, error)
@@ -60,20 +61,16 @@ const getServerIP = async (hostname: string): Promise<string> => {
   return '未知'
 }
 
-// Ping服务器（通过HTTP请求模拟）
-const pingServer = async (host: string): Promise<{ ip: string; latency: number; success: boolean }> => {
+const pingOwnServer = async (host: string): Promise<{ ip: string; latency: number; success: boolean }> => {
   const startTime = performance.now()
 
   try {
-    // 尝试获取IP地址
     const ip = await getServerIP(host)
 
-    // 通过HTTP请求测量延迟
     const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 5000) // 5秒超时
+    const timeoutId = setTimeout(() => controller.abort(), 5000)
     timeoutIds.push(timeoutId)
 
-    // 使用当前域名的API接口进行ping测试
     const response = await fetch('/api/v1/ping', {
       method: 'GET',
       signal: controller.signal,
@@ -102,6 +99,31 @@ const pingServer = async (host: string): Promise<{ ip: string; latency: number; 
   }
 }
 
+const pingExternalServer = async (host: string): Promise<{ ip: string; latency: number; success: boolean }> => {
+  const startTime = performance.now()
+
+  try {
+    const ip = await getServerIP(host)
+    const endTime = performance.now()
+    const latency = Math.round(endTime - startTime)
+
+    return {
+      ip,
+      latency,
+      success: ip !== '未知'
+    }
+  } catch (error) {
+    const endTime = performance.now()
+    const latency = Math.round(endTime - startTime)
+
+    return {
+      ip: '未知',
+      latency,
+      success: false
+    }
+  }
+}
+
 // 执行所有ping测试
 const runPingTests = async () => {
   isPinging.value = true
@@ -115,7 +137,10 @@ const runPingTests = async () => {
       status: 'pending'
     })
 
-    const result = await pingServer(server.host)
+    const isOwnServer = server.host === window.location.hostname
+    const result = isOwnServer
+      ? await pingOwnServer(server.host)
+      : await pingExternalServer(server.host)
 
     // 更新结果
     const index = pingResults.value.findIndex(r => r.host === server.name)
@@ -155,14 +180,14 @@ onUnmounted(() => {
 
 <template>
   <div class="flex min-h-screen w-full items-center justify-center bg-gradient-hero-vibrant p-8 box-border md:p-4">
-    <div class="w-full max-w-[900px] rounded-2xl bg-[var(--el-bg-color)] p-12 shadow-[0_20px_60px_rgba(0,0,0,0.3)] md:p-6">
+    <div class="w-full max-w-[900px] rounded-2xl  p-12 shadow-[0_20px_60px_rgba(0,0,0,0.3)] md:p-6">
       <!-- 标题 -->
       <div class="mb-8 text-center">
         <el-icon class="mb-4 text-[var(--el-color-primary)]" :size="48">
           <Connection />
         </el-icon>
         <el-text class="my-4 text-[2rem] text-[var(--el-text-color-primary)] md:text-2xl" tag="h1">网络连接诊断</el-text>
-        <el-text class="text-[1.1rem] text-[var(--el-text-color-regular)]" tag="p">{{ props.errorMessage }}</el-text>
+        <el-text class="text-[1.1rem] text-text-regular" tag="p">{{ props.errorMessage }}</el-text>
       </div>
 
       <!-- Ping测试结果 -->

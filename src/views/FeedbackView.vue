@@ -16,7 +16,7 @@ const comment_section_base_info = ref<CommentSectionBaseInfo>({ oid: 2, type: 1 
           target="_blank"
           rel="noreferrer"
         >
-          <el-text class="p-4 text-center text-sm text-[var(--el-text-color-regular)]" tag="div">璞熤和AC站比较厉害，数据均采集自互联网公开内容</el-text>
+          <el-text class="p-4 text-center text-sm text-text-regular" tag="div">璞熤和AC站比较厉害，数据均采集自互联网公开内容</el-text>
         </el-link>
       </el-tooltip>
     </div>

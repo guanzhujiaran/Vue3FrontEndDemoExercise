@@ -5,6 +5,56 @@ export type ClientOptions = {
 };
 
 /**
+ * ActionExecuteRequest
+ *
+ * 执行操作请求
+ */
+export type ActionExecuteRequest = {
+    /**
+     * Action Id
+     *
+     * 操作ID
+     */
+    action_id: string;
+    /**
+     * Params
+     *
+     * 操作参数
+     */
+    params?: {
+        [key: string]: unknown;
+    };
+    /**
+     * Variables
+     *
+     * 变量池
+     */
+    variables?: {
+        [key: string]: unknown;
+    };
+    /**
+     * Input Vars
+     *
+     * 输入变量，会被合并到 variables 变量池中
+     */
+    input_vars?: {
+        [key: string]: unknown;
+    };
+    /**
+     * Output Vars
+     *
+     * 输出变量名称列表
+     */
+    output_vars?: Array<string>;
+    /**
+     * Page Index
+     *
+     * 页面索引，指定在哪个 tab 页执行操作
+     */
+    page_index?: number | null;
+};
+
+/**
  * ActionForkRequest
  *
  * Fork 自定义操作请求
@@ -25,11 +75,64 @@ export type ActionForkRequest = {
 };
 
 /**
- * ActionType
+ * ActionPreviewRequest
  *
- * 操作类型
+ * 预览参数替换请求
  */
-export type ActionType = 'navigation' | 'click' | 'input' | 'scroll' | 'hover' | 'wait' | 'screenshot' | 'evaluate' | 'select' | 'keyboard' | 'mouse' | 'llm' | 'loop' | 'if_else' | 'custom' | 'composite';
+export type ActionPreviewRequest = {
+    /**
+     * Action Id
+     *
+     * 操作ID
+     */
+    action_id: string;
+    /**
+     * Params
+     *
+     * 参数
+     */
+    params?: {
+        [key: string]: unknown;
+    };
+    /**
+     * Input Vars
+     *
+     * 输入变量，会被合并到预览变量池中
+     */
+    input_vars?: {
+        [key: string]: unknown;
+    };
+};
+
+/**
+ * ActionValidateRequest
+ *
+ * 验证参数请求
+ */
+export type ActionValidateRequest = {
+    /**
+     * Action Id
+     *
+     * 操作ID
+     */
+    action_id: string;
+    /**
+     * Params
+     *
+     * 待验证参数
+     */
+    params?: {
+        [key: string]: unknown;
+    };
+    /**
+     * Input Vars
+     *
+     * 输入变量，会被合并到变量池中
+     */
+    input_vars?: {
+        [key: string]: unknown;
+    };
+};
 
 /**
  * BrowserEnum
@@ -147,6 +250,13 @@ export type BrowserFingerprintUpsertParams = {
 };
 
 /**
+ * BuiltinActionType
+ *
+ * 内置操作类型
+ */
+export type BuiltinActionType = 'click' | 'input' | 'wait' | 'scroll' | 'navigate' | 'screenshot' | 'llm' | 'hover' | 'new_page' | 'get_text' | 'loop' | 'composite' | 'if_else';
+
+/**
  * ClosePageRequest
  *
  * 关闭页面请求
@@ -180,18 +290,21 @@ export type CommunityListRequest = {
 };
 
 /**
- * CustomActionCreateRequest
+ * CompositeActionCreateRequest
  *
- * 创建自定义操作请求
+ * 创建复合操作请求 - 与 CompositeActionModel 数据库模型对齐
  */
-export type CustomActionCreateRequest = {
+export type CompositeActionCreateRequest = {
     /**
      * Name
      *
      * 操作显示名称（必填）
      */
     name: string;
-    action_type?: ActionType;
+    /**
+     * 操作类型
+     */
+    action_type?: BuiltinActionType;
     /**
      * Description
      *
@@ -200,6 +313,8 @@ export type CustomActionCreateRequest = {
     description?: string;
     /**
      * Parameters Schema
+     *
+     * 参数定义JSON
      */
     parameters_schema?: Array<{
         [key: string]: unknown;
@@ -214,16 +329,22 @@ export type CustomActionCreateRequest = {
     }>;
     /**
      * Tags
+     *
+     * 标签列表
      */
     tags?: Array<string>;
     /**
-     * User Data
+     * Input Vars
      *
-     * 自定义数据
+     * 输入变量定义
      */
-    user_data?: {
-        [key: string]: unknown;
-    } | null;
+    input_vars?: Array<InputVarDefinition>;
+    /**
+     * Output Vars
+     *
+     * 输出变量名称列表
+     */
+    output_vars?: Array<string>;
     /**
      * Is Public
      *
@@ -231,19 +352,37 @@ export type CustomActionCreateRequest = {
      */
     is_public?: boolean;
     /**
-     * Enabled Plugins
+     * Timeout
      *
-     * 该动作内部引用的插件ID列表
+     * 超时时间(毫秒)
      */
-    enabled_plugins?: Array<string>;
+    timeout?: number;
+    /**
+     * Retry On Error
+     *
+     * 错误时重试
+     */
+    retry_on_error?: boolean;
+    /**
+     * Retry Times
+     *
+     * 重试次数
+     */
+    retry_times?: number;
+    /**
+     * Retry Delay
+     *
+     * 重试延迟(秒)
+     */
+    retry_delay?: number;
 };
 
 /**
- * CustomActionListRequest
+ * CompositeActionListRequest
  *
- * 获取自定义操作列表请求
+ * 获取复合操作列表请求
  */
-export type CustomActionListRequest = {
+export type CompositeActionListRequest = {
     /**
      * Page
      */
@@ -267,11 +406,11 @@ export type CustomActionListRequest = {
 };
 
 /**
- * CustomActionUpdateRequest
+ * CompositeActionUpdateRequest
  *
- * 更新自定义操作请求
+ * 更新复合操作请求
  */
-export type CustomActionUpdateRequest = {
+export type CompositeActionUpdateRequest = {
     /**
      * Id
      *
@@ -292,43 +431,136 @@ export type CustomActionUpdateRequest = {
     description?: string | null;
     /**
      * Parameters Schema
+     *
+     * 参数定义JSON
      */
     parameters_schema?: Array<{
         [key: string]: unknown;
     }> | null;
     /**
      * Steps
+     *
+     * 步骤列表JSON
      */
     steps?: Array<{
         [key: string]: unknown;
     }> | null;
     /**
      * Tags
+     *
+     * 标签列表
      */
     tags?: Array<string> | null;
     /**
-     * User Data
+     * Input Vars
+     *
+     * 输入变量定义
      */
-    user_data?: {
-        [key: string]: unknown;
-    } | null;
+    input_vars?: Array<InputVarDefinition> | null;
+    /**
+     * Output Vars
+     *
+     * 输出变量名称列表
+     */
+    output_vars?: Array<string> | null;
     /**
      * Is Enabled
+     *
+     * 是否启用
      */
     is_enabled?: boolean | null;
     /**
      * Is Public
+     *
+     * 是否公开
      */
     is_public?: boolean | null;
     /**
      * Timeout
+     *
+     * 超时时间(毫秒)
      */
     timeout?: number | null;
     /**
-     * Enabled Plugins
+     * Retry On Error
+     *
+     * 错误时重试
      */
-    enabled_plugins?: Array<string> | null;
+    retry_on_error?: boolean | null;
+    /**
+     * Retry Times
+     *
+     * 重试次数
+     */
+    retry_times?: number | null;
+    /**
+     * Retry Delay
+     *
+     * 重试延迟(秒)
+     */
+    retry_delay?: number | null;
 };
+
+/**
+ * ConditionRule
+ *
+ * 可递归组合的条件规则 —— 支持 AND / OR / NOT 组合多个原子条件
+ *
+ * 使用示例:
+ * # 简单条件
+ * ConditionRule(
+ * logic=LogicOperator.AND,
+ * condition=ParamsCondition(
+ * field="logged_in",
+ * condition_value_type=ConditionValueType.BOOLEAN,
+ * condition_value=True,
+ * ),
+ * )
+ *
+ * # 组合条件: (A AND B) OR C
+ * ConditionRule(
+ * logic=LogicOperator.OR,
+ * rules=[
+ * ConditionRule(
+ * logic=LogicOperator.AND,
+ * rules=[
+ * ConditionRule(condition=ParamsCondition(...)),  # A
+ * ConditionRule(condition=ParamsCondition(...)),  # B
+ * ],
+ * ),
+ * ConditionRule(condition=ParamsCondition(...)),  # C
+ * ],
+ * )
+ */
+export type ConditionRule = {
+    /**
+     * 组合逻辑: AND / OR / NOT
+     */
+    logic?: LogicOperator;
+    /**
+     * 原子条件（叶子节点，与 rules 互斥）
+     */
+    condition?: ParamsCondition | null;
+    /**
+     * Rules
+     *
+     * 子规则列表（分支节点，与 condition 互斥）
+     */
+    rules?: Array<ConditionRule> | null;
+    /**
+     * Description
+     *
+     * 可选描述（便于调试）
+     */
+    description?: string | null;
+};
+
+/**
+ * ConditionValueType
+ *
+ * 条件值类型 —— 限制用户只能使用这三种类型做判断
+ */
+export type ConditionValueType = 'BOOLEAN' | 'NULL' | 'STRING';
 
 /**
  * DeleteSettingsRequest
@@ -340,23 +572,45 @@ export type DeleteSettingsRequest = {
 };
 
 /**
- * ExecuteJSRequest
+ * ExecuteStepRequest
  *
- * 执行JavaScript请求
+ * 单步执行请求
  */
-export type ExecuteJsRequest = {
+export type ExecuteStepRequest = {
     /**
-     * Script
+     * Action Id
      *
-     * 要执行的JavaScript代码
+     * 操作ID
      */
-    script: string;
+    action_id: string;
+    /**
+     * Params
+     *
+     * 操作参数
+     */
+    params?: {
+        [key: string]: unknown;
+    };
+    /**
+     * Variables
+     *
+     * 变量池
+     */
+    variables?: {
+        [key: string]: unknown;
+    };
+    /**
+     * Step Index
+     *
+     * 步骤索引
+     */
+    step_index?: number;
     /**
      * Page Index
      *
-     * 执行脚本的页面索引
+     * 页面索引，指定在哪个 tab 页执行操作
      */
-    page_index?: number;
+    page_index?: number | null;
 };
 
 /**
@@ -396,6 +650,51 @@ export type HttpValidationError = {
      */
     detail?: Array<ValidationError>;
 };
+
+/**
+ * InputVarDefinition
+ *
+ * 输入变量定义
+ */
+export type InputVarDefinition = {
+    /**
+     * Name
+     *
+     * 变量名称
+     */
+    name: string;
+    /**
+     * Type
+     *
+     * 变量类型: string/number/boolean/array/object
+     */
+    type?: string;
+    /**
+     * Default
+     *
+     * 默认值
+     */
+    default?: unknown | null;
+    /**
+     * Required
+     *
+     * 是否必填
+     */
+    required?: boolean;
+    /**
+     * Description
+     *
+     * 变量描述
+     */
+    description?: string;
+};
+
+/**
+ * LogicOperator
+ *
+ * 逻辑运算符 —— 支持 AND / OR / NOT 组合多个原子条件
+ */
+export type LogicOperator = 'AND' | 'OR' | 'NOT';
 
 /**
  * MigrationRequest
@@ -760,6 +1059,58 @@ export type OpenPageRequest = {
 };
 
 /**
+ * ParamsCondition
+ *
+ * 单个原子条件：检查 variables 上下文中某字段值是否匹配期望值
+ *
+ * 使用示例:
+ * # 检查 is_logged_in 是否为 True
+ * ParamsCondition(
+ * field="is_logged_in",
+ * condition_value_type=ConditionValueType.BOOLEAN,
+ * condition_value=True,
+ * )
+ *
+ * # 检查 error_msg 是否为空
+ * ParamsCondition(
+ * field="error_msg",
+ * condition_value_type=ConditionValueType.NULL,
+ * condition_value=None,
+ * )
+ *
+ * # 检查 status 是否等于 "success"
+ * ParamsCondition(
+ * field="status",
+ * condition_value_type=ConditionValueType.STRING,
+ * condition_value="success",
+ * )
+ */
+export type ParamsCondition = {
+    /**
+     * Field
+     *
+     * 要检查的变量名（对应 variables 中的 key）
+     */
+    field: string;
+    /**
+     * 条件值类型: BOOLEAN / NULL / STRING
+     */
+    condition_value_type: ConditionValueType;
+    /**
+     * Condition Value
+     *
+     * 期望匹配的值
+     */
+    condition_value: boolean | string | null;
+    /**
+     * Description
+     *
+     * 可选描述（便于调试）
+     */
+    description?: string | null;
+};
+
+/**
  * PermissionConfigList
  *
  * 权限配置列表
@@ -813,9 +1164,43 @@ export type PermissionLevelConfig = {
 export type PlatformEnum = 'windows' | 'linux' | 'macos';
 
 /**
+ * PluginConfig
+ *
+ * 工作流插件配置 - 单个插件的运行时配置
+ */
+export type PluginConfig = {
+    /**
+     * Plugin Id
+     *
+     * 插件ID
+     */
+    plugin_id: string;
+    /**
+     * Config Params
+     *
+     * 插件配置参数
+     */
+    config_params?: {
+        [key: string]: unknown;
+    };
+    /**
+     * Hook Type
+     *
+     * 钩子类型: before_action/after_action/on_success/on_error/on_timeout
+     */
+    hook_type: string;
+    /**
+     * Priority
+     *
+     * 优先级
+     */
+    priority?: number;
+};
+
+/**
  * PluginCreateRequest
  *
- * 创建插件挂载请求
+ * 创建插件挂载请求 - 与 UserPlugin 数据库模型对齐
  */
 export type PluginCreateRequest = {
     /**
@@ -827,7 +1212,7 @@ export type PluginCreateRequest = {
     /**
      * Hook Type
      *
-     * 钩子类型: before_action, after_action, on_error
+     * 钩子类型: before_action, after_action, on_success, on_error, on_timeout
      */
     hook_type: string;
     /**
@@ -999,6 +1384,42 @@ export type StandardResponseActionForkResponse = {
 };
 
 /**
+ * StandardResponse[ActionPreviewResponse]
+ */
+export type StandardResponseActionPreviewResponse = {
+    /**
+     * Code
+     */
+    code: number;
+    /**
+     * Data
+     */
+    data?: unknown | null;
+    /**
+     * Msg
+     */
+    msg?: string;
+};
+
+/**
+ * StandardResponse[ActionValidateResponse]
+ */
+export type StandardResponseActionValidateResponse = {
+    /**
+     * Code
+     */
+    code: number;
+    /**
+     * Data
+     */
+    data?: unknown | null;
+    /**
+     * Msg
+     */
+    msg?: string;
+};
+
+/**
  * StandardResponse[AdminAllSessionsResponse]
  */
 export type StandardResponseAdminAllSessionsResponse = {
@@ -1035,9 +1456,9 @@ export type StandardResponseBaseFingerprintBrowserInitParams = {
 };
 
 /**
- * StandardResponse[BasePaginationResp[CustomActionListItemResponse]]
+ * StandardResponse[BasePaginationResp[CompositeActionListItemResponse]]
  */
-export type StandardResponseBasePaginationRespCustomActionListItemResponse = {
+export type StandardResponseBasePaginationRespCompositeActionListItemResponse = {
     /**
      * Code
      */
@@ -1251,6 +1672,24 @@ export type StandardResponseCloseSessionResponse = {
 };
 
 /**
+ * StandardResponse[CompositeActionDetailResponse]
+ */
+export type StandardResponseCompositeActionDetailResponse = {
+    /**
+     * Code
+     */
+    code: number;
+    /**
+     * Data
+     */
+    data?: unknown | null;
+    /**
+     * Msg
+     */
+    msg?: string;
+};
+
+/**
  * StandardResponse[CreateSessionResponse]
  */
 export type StandardResponseCreateSessionResponse = {
@@ -1269,9 +1708,9 @@ export type StandardResponseCreateSessionResponse = {
 };
 
 /**
- * StandardResponse[CustomActionDetailResponse]
+ * StandardResponse[ExecuteStepResponse]
  */
-export type StandardResponseCustomActionDetailResponse = {
+export type StandardResponseExecuteStepResponse = {
     /**
      * Code
      */
@@ -1416,6 +1855,24 @@ export type StandardResponsePluginForkResponse = {
  * StandardResponse[TestNotificationResponse]
  */
 export type StandardResponseTestNotificationResponse = {
+    /**
+     * Code
+     */
+    code: number;
+    /**
+     * Data
+     */
+    data?: unknown | null;
+    /**
+     * Msg
+     */
+    msg?: string;
+};
+
+/**
+ * StandardResponse[Union[ActionResultResponse, NoneType]]
+ */
+export type StandardResponseUnionActionResultResponseNoneType = {
     /**
      * Code
      */
@@ -1917,17 +2374,11 @@ export type WorkflowCreateRequest = {
      */
     name: string;
     /**
-     * Steps
+     * Custom Action Id
      *
-     * 步骤列表
+     * 要执行的自定义动作ID
      */
-    steps: Array<WorkflowStepRequest>;
-    /**
-     * On Error
-     *
-     * 错误处理: stop=停止, continue=继续
-     */
-    on_error?: string;
+    custom_action_id?: string | null;
     /**
      * Description
      *
@@ -1935,53 +2386,91 @@ export type WorkflowCreateRequest = {
      */
     description?: string;
     /**
-     * Tags
+     * Trigger Type
      *
-     * 标签列表
+     * 触发类型: manual/cron
      */
-    tags?: Array<string>;
+    trigger_type?: string;
     /**
-     * User Data
+     * Trigger Config
      *
-     * 自定义数据
+     * 触发配置
      */
-    user_data?: {
+    trigger_config?: {
         [key: string]: unknown;
-    } | null;
+    };
+    /**
+     * Is Public
+     *
+     * 是否公开给所有用户
+     */
+    is_public?: boolean;
     /**
      * Enabled Plugins
      *
-     * 启用的插件ID列表
+     * 关联的插件列表
      */
-    enabled_plugins?: Array<string>;
+    enabled_plugins?: Array<PluginConfig> | null;
 };
 
 /**
  * WorkflowExecuteRequest
  *
- * 执行工作流请求
+ * 执行工作流请求 - 支持内联步骤或引用已保存操作
  */
 export type WorkflowExecuteRequest = {
     /**
-     * Name
+     * Browser Id
      *
-     * 工作流名称
+     * 浏览器ID
      */
-    name?: string | null;
+    browser_id?: number;
+    /**
+     * Action Id
+     *
+     * 要执行的自定义操作ID（可选）
+     */
+    action_id?: string | null;
+    /**
+     * Workflow Id
+     *
+     * 工作流ID（用于关联插件）
+     */
+    workflow_id?: string | null;
     /**
      * Steps
      *
-     * 步骤列表
+     * 内联步骤列表（不提供 action_id 时使用）
      */
-    steps: Array<WorkflowStepRequest>;
+    steps?: Array<WorkflowStepRequest> | null;
     /**
-     * User Data
+     * Name
      *
-     * 自定义数据
+     * 工作流名称（用于内联步骤）
      */
-    user_data?: {
+    name?: string | null;
+    /**
+     * Variables
+     *
+     * 变量池
+     */
+    variables?: {
         [key: string]: unknown;
-    } | null;
+    };
+    /**
+     * Input Data
+     *
+     * 输入数据
+     */
+    input_data?: {
+        [key: string]: unknown;
+    };
+    /**
+     * Output Vars
+     *
+     * 输出变量名称列表
+     */
+    output_vars?: Array<string>;
     /**
      * On Error
      *
@@ -2053,29 +2542,29 @@ export type WorkflowStepExecuteRequest = {
     /**
      * Browser Id
      *
-     * 浏览器会话 ID
+     * 浏览器ID
      */
     browser_id: string;
     /**
-     * Step Index
-     *
-     * 步骤索引（从 0 开始）
-     */
-    step_index: number;
-    /**
      * Steps
      *
-     * 完整步骤列表
+     * 步骤列表
      */
     steps: Array<WorkflowStepRequest>;
     /**
+     * Step Index
+     *
+     * 要执行的步骤索引
+     */
+    step_index: number;
+    /**
      * User Data
      *
-     * 自定义数据
+     * 用户数据
      */
     user_data?: {
         [key: string]: unknown;
-    } | null;
+    };
     /**
      * Page Index
      *
@@ -2087,24 +2576,72 @@ export type WorkflowStepExecuteRequest = {
 /**
  * WorkflowStepRequest
  *
- * 工作流步骤请求
+ * 工作流步骤请求 - 与 WorkflowStep 模型对齐，与 BaseAction 创建参数对齐
  * 定义工作流中单个步骤的配置。
  */
 export type WorkflowStepRequest = {
     /**
      * Action Id
      *
-     * 操作ID，如 click, input, llm, my_custom_action
+     * 操作ID，如 click, input, llm, my_composite_action
      */
     action_id: string;
     /**
+     * Action Type
+     *
+     * 操作类型
+     */
+    action_type?: BuiltinActionType | string | null;
+    /**
+     * Mid
+     *
+     * 用户ID
+     */
+    mid?: number | null;
+    /**
      * Params
      *
-     * 操作参数，支持模板
+     * 操作参数，支持 {{变量名}} 模板替换
      */
     params?: {
         [key: string]: unknown;
     };
+    /**
+     * Retry
+     *
+     * 失败重试次数
+     */
+    retry?: number;
+    /**
+     * 执行条件规则（结构化条件，不使用 eval）
+     */
+    condition?: ConditionRule | null;
+    /**
+     * Output Var
+     *
+     * 结果变量键名
+     */
+    output_var?: string | null;
+    /**
+     * Input Vars
+     *
+     * 输入变量
+     */
+    input_vars?: {
+        [key: string]: unknown;
+    };
+    /**
+     * Output Vars
+     *
+     * 输出变量名称列表
+     */
+    output_vars?: Array<string>;
+    /**
+     * Timeout
+     *
+     * 超时时间(毫秒)
+     */
+    timeout?: number;
     /**
      * Children
      *
@@ -2129,26 +2666,6 @@ export type WorkflowStepRequest = {
      * 条件退出，表达式为true时退出
      */
     loop_until?: string | null;
-    /**
-     * Retry
-     *
-     * 失败重试次数
-     */
-    retry?: number;
-    /**
-     * Condition
-     *
-     * 执行条件表达式
-     */
-    condition?: string | null;
-    /**
-     * User Data
-     *
-     * 步骤级自定义数据
-     */
-    user_data?: {
-        [key: string]: unknown;
-    } | null;
 };
 
 /**
@@ -2170,37 +2687,37 @@ export type WorkflowUpdateRequest = {
      */
     name?: string | null;
     /**
+     * Custom Action Id
+     *
+     * 要执行的自定义动作ID
+     */
+    custom_action_id?: string | null;
+    /**
      * Description
      *
      * 新描述
      */
     description?: string | null;
     /**
-     * Steps
+     * Trigger Type
      *
-     * 新步骤列表
+     * 触发类型
      */
-    steps?: Array<WorkflowStepRequest> | null;
+    trigger_type?: string | null;
     /**
-     * On Error
+     * Trigger Config
      *
-     * 错误处理策略
+     * 触发配置
      */
-    on_error?: string | null;
-    /**
-     * Tags
-     *
-     * 标签列表
-     */
-    tags?: Array<string> | null;
-    /**
-     * User Data
-     *
-     * 自定义数据
-     */
-    user_data?: {
+    trigger_config?: {
         [key: string]: unknown;
     } | null;
+    /**
+     * Is Public
+     *
+     * 是否公开
+     */
+    is_public?: boolean | null;
     /**
      * Is Enabled
      *
@@ -2210,9 +2727,9 @@ export type WorkflowUpdateRequest = {
     /**
      * Enabled Plugins
      *
-     * 启用的插件ID列表
+     * 关联的插件列表
      */
-    enabled_plugins?: Array<string> | null;
+    enabled_plugins?: Array<PluginConfig> | null;
 };
 
 export type GenRandFingerprintRouterApiV1RpaBrowserGenRandFingerprintPostData = {
@@ -2786,7 +3303,7 @@ export type ListRegisteredActionsApiV1RpaBrowserControlActionsRegisteredPostResp
 export type ListRegisteredActionsApiV1RpaBrowserControlActionsRegisteredPostResponse = ListRegisteredActionsApiV1RpaBrowserControlActionsRegisteredPostResponses[keyof ListRegisteredActionsApiV1RpaBrowserControlActionsRegisteredPostResponses];
 
 export type CreateCustomActionApiV1RpaBrowserControlCustomActionsCreatePostData = {
-    body: CustomActionCreateRequest;
+    body: CompositeActionCreateRequest;
     headers: {
         /**
          * X-Bili-Mid
@@ -2815,13 +3332,13 @@ export type CreateCustomActionApiV1RpaBrowserControlCustomActionsCreatePostRespo
     /**
      * Successful Response
      */
-    200: StandardResponseCustomActionDetailResponse;
+    200: StandardResponseCompositeActionDetailResponse;
 };
 
 export type CreateCustomActionApiV1RpaBrowserControlCustomActionsCreatePostResponse = CreateCustomActionApiV1RpaBrowserControlCustomActionsCreatePostResponses[keyof CreateCustomActionApiV1RpaBrowserControlCustomActionsCreatePostResponses];
 
 export type ListCustomActionsApiV1RpaBrowserControlCustomActionsListPostData = {
-    body?: CustomActionListRequest;
+    body: CompositeActionListRequest;
     headers: {
         /**
          * X-Bili-Mid
@@ -2850,7 +3367,7 @@ export type ListCustomActionsApiV1RpaBrowserControlCustomActionsListPostResponse
     /**
      * Successful Response
      */
-    200: StandardResponseBasePaginationRespCustomActionListItemResponse;
+    200: StandardResponseBasePaginationRespCompositeActionListItemResponse;
 };
 
 export type ListCustomActionsApiV1RpaBrowserControlCustomActionsListPostResponse = ListCustomActionsApiV1RpaBrowserControlCustomActionsListPostResponses[keyof ListCustomActionsApiV1RpaBrowserControlCustomActionsListPostResponses];
@@ -2890,13 +3407,13 @@ export type GetCustomActionApiV1RpaBrowserControlCustomActionsGetPostResponses =
     /**
      * Successful Response
      */
-    200: StandardResponseCustomActionDetailResponse;
+    200: StandardResponseCompositeActionDetailResponse;
 };
 
 export type GetCustomActionApiV1RpaBrowserControlCustomActionsGetPostResponse = GetCustomActionApiV1RpaBrowserControlCustomActionsGetPostResponses[keyof GetCustomActionApiV1RpaBrowserControlCustomActionsGetPostResponses];
 
 export type UpdateCustomActionApiV1RpaBrowserControlCustomActionsUpdatePostData = {
-    body: CustomActionUpdateRequest;
+    body: CompositeActionUpdateRequest;
     headers: {
         /**
          * X-Bili-Mid
@@ -2925,7 +3442,7 @@ export type UpdateCustomActionApiV1RpaBrowserControlCustomActionsUpdatePostRespo
     /**
      * Successful Response
      */
-    200: StandardResponseCustomActionDetailResponse;
+    200: StandardResponseCompositeActionDetailResponse;
 };
 
 export type UpdateCustomActionApiV1RpaBrowserControlCustomActionsUpdatePostResponse = UpdateCustomActionApiV1RpaBrowserControlCustomActionsUpdatePostResponses[keyof UpdateCustomActionApiV1RpaBrowserControlCustomActionsUpdatePostResponses];
@@ -3007,16 +3524,6 @@ export type ForkCustomActionApiV1RpaBrowserControlCustomActionsForkPostResponse 
 
 export type GetActionForksApiV1RpaBrowserControlCustomActionsIdForksGetData = {
     body?: never;
-    headers: {
-        /**
-         * X-Bili-Mid
-         */
-        'x-bili-mid': string;
-        /**
-         * X-Bili-Level
-         */
-        'x-bili-level': string;
-    };
     path: {
         /**
          * Id
@@ -3049,10 +3556,210 @@ export type GetActionForksApiV1RpaBrowserControlCustomActionsIdForksGetResponses
     /**
      * Successful Response
      */
-    200: StandardResponseBasePaginationRespCustomActionListItemResponse;
+    200: StandardResponseBasePaginationRespCompositeActionListItemResponse;
 };
 
 export type GetActionForksApiV1RpaBrowserControlCustomActionsIdForksGetResponse = GetActionForksApiV1RpaBrowserControlCustomActionsIdForksGetResponses[keyof GetActionForksApiV1RpaBrowserControlCustomActionsIdForksGetResponses];
+
+export type ExecuteActionApiV1RpaBrowserControlActionsExecutePostData = {
+    body: ActionExecuteRequest;
+    headers: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid': string;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level': string;
+    };
+    path?: never;
+    query: {
+        /**
+         * Browser Id
+         */
+        browser_id: number | string;
+    };
+    url: '/api/v1/rpa/browser/control/actions/execute';
+};
+
+export type ExecuteActionApiV1RpaBrowserControlActionsExecutePostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ExecuteActionApiV1RpaBrowserControlActionsExecutePostError = ExecuteActionApiV1RpaBrowserControlActionsExecutePostErrors[keyof ExecuteActionApiV1RpaBrowserControlActionsExecutePostErrors];
+
+export type ExecuteActionApiV1RpaBrowserControlActionsExecutePostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseUnionActionResultResponseNoneType;
+};
+
+export type ExecuteActionApiV1RpaBrowserControlActionsExecutePostResponse = ExecuteActionApiV1RpaBrowserControlActionsExecutePostResponses[keyof ExecuteActionApiV1RpaBrowserControlActionsExecutePostResponses];
+
+export type ExecuteWorkflowApiV1RpaBrowserControlWorkflowsExecutePostData = {
+    body: WorkflowExecuteRequest;
+    headers: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid': string;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level': string;
+    };
+    path?: never;
+    query: {
+        /**
+         * Browser Id
+         */
+        browser_id: number | string;
+    };
+    url: '/api/v1/rpa/browser/control/workflows/execute';
+};
+
+export type ExecuteWorkflowApiV1RpaBrowserControlWorkflowsExecutePostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ExecuteWorkflowApiV1RpaBrowserControlWorkflowsExecutePostError = ExecuteWorkflowApiV1RpaBrowserControlWorkflowsExecutePostErrors[keyof ExecuteWorkflowApiV1RpaBrowserControlWorkflowsExecutePostErrors];
+
+export type ExecuteWorkflowApiV1RpaBrowserControlWorkflowsExecutePostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseWorkflowExecuteResponse;
+};
+
+export type ExecuteWorkflowApiV1RpaBrowserControlWorkflowsExecutePostResponse = ExecuteWorkflowApiV1RpaBrowserControlWorkflowsExecutePostResponses[keyof ExecuteWorkflowApiV1RpaBrowserControlWorkflowsExecutePostResponses];
+
+export type PreviewActionParamsApiV1RpaBrowserControlActionsPreviewPostData = {
+    body: ActionPreviewRequest;
+    headers: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid': string;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level': string;
+    };
+    path?: never;
+    query: {
+        /**
+         * Browser Id
+         */
+        browser_id: number | string;
+    };
+    url: '/api/v1/rpa/browser/control/actions/preview';
+};
+
+export type PreviewActionParamsApiV1RpaBrowserControlActionsPreviewPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type PreviewActionParamsApiV1RpaBrowserControlActionsPreviewPostError = PreviewActionParamsApiV1RpaBrowserControlActionsPreviewPostErrors[keyof PreviewActionParamsApiV1RpaBrowserControlActionsPreviewPostErrors];
+
+export type PreviewActionParamsApiV1RpaBrowserControlActionsPreviewPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseActionPreviewResponse;
+};
+
+export type PreviewActionParamsApiV1RpaBrowserControlActionsPreviewPostResponse = PreviewActionParamsApiV1RpaBrowserControlActionsPreviewPostResponses[keyof PreviewActionParamsApiV1RpaBrowserControlActionsPreviewPostResponses];
+
+export type ValidateActionParamsApiV1RpaBrowserControlActionsValidatePostData = {
+    body: ActionValidateRequest;
+    headers: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid': string;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level': string;
+    };
+    path?: never;
+    query: {
+        /**
+         * Browser Id
+         */
+        browser_id: number | string;
+    };
+    url: '/api/v1/rpa/browser/control/actions/validate';
+};
+
+export type ValidateActionParamsApiV1RpaBrowserControlActionsValidatePostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ValidateActionParamsApiV1RpaBrowserControlActionsValidatePostError = ValidateActionParamsApiV1RpaBrowserControlActionsValidatePostErrors[keyof ValidateActionParamsApiV1RpaBrowserControlActionsValidatePostErrors];
+
+export type ValidateActionParamsApiV1RpaBrowserControlActionsValidatePostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseActionValidateResponse;
+};
+
+export type ValidateActionParamsApiV1RpaBrowserControlActionsValidatePostResponse = ValidateActionParamsApiV1RpaBrowserControlActionsValidatePostResponses[keyof ValidateActionParamsApiV1RpaBrowserControlActionsValidatePostResponses];
+
+export type ExecuteActionStepApiV1RpaBrowserControlActionsExecuteStepPostData = {
+    body: ExecuteStepRequest;
+    headers: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid': string;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level': string;
+    };
+    path?: never;
+    query: {
+        /**
+         * Browser Id
+         */
+        browser_id: number | string;
+    };
+    url: '/api/v1/rpa/browser/control/actions/execute-step';
+};
+
+export type ExecuteActionStepApiV1RpaBrowserControlActionsExecuteStepPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ExecuteActionStepApiV1RpaBrowserControlActionsExecuteStepPostError = ExecuteActionStepApiV1RpaBrowserControlActionsExecuteStepPostErrors[keyof ExecuteActionStepApiV1RpaBrowserControlActionsExecuteStepPostErrors];
+
+export type ExecuteActionStepApiV1RpaBrowserControlActionsExecuteStepPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseExecuteStepResponse;
+};
+
+export type ExecuteActionStepApiV1RpaBrowserControlActionsExecuteStepPostResponse = ExecuteActionStepApiV1RpaBrowserControlActionsExecuteStepPostResponses[keyof ExecuteActionStepApiV1RpaBrowserControlActionsExecuteStepPostResponses];
 
 export type CreateWorkflowApiV1RpaBrowserControlWorkflowsCreatePostData = {
     body: WorkflowCreateRequest;
@@ -3363,41 +4070,6 @@ export type GetWorkflowForksApiV1RpaBrowserControlWorkflowsIdForksGetResponses =
 
 export type GetWorkflowForksApiV1RpaBrowserControlWorkflowsIdForksGetResponse = GetWorkflowForksApiV1RpaBrowserControlWorkflowsIdForksGetResponses[keyof GetWorkflowForksApiV1RpaBrowserControlWorkflowsIdForksGetResponses];
 
-export type ExecuteWorkflowApiV1RpaBrowserControlWorkflowsExecutePostData = {
-    body: WorkflowExecuteRequest;
-    headers: {
-        /**
-         * X-Bili-Mid
-         */
-        'x-bili-mid': string;
-        /**
-         * X-Bili-Level
-         */
-        'x-bili-level': string;
-    };
-    path?: never;
-    query?: never;
-    url: '/api/v1/rpa/browser/control/workflows/execute';
-};
-
-export type ExecuteWorkflowApiV1RpaBrowserControlWorkflowsExecutePostErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type ExecuteWorkflowApiV1RpaBrowserControlWorkflowsExecutePostError = ExecuteWorkflowApiV1RpaBrowserControlWorkflowsExecutePostErrors[keyof ExecuteWorkflowApiV1RpaBrowserControlWorkflowsExecutePostErrors];
-
-export type ExecuteWorkflowApiV1RpaBrowserControlWorkflowsExecutePostResponses = {
-    /**
-     * Successful Response
-     */
-    200: StandardResponseWorkflowExecuteResponse;
-};
-
-export type ExecuteWorkflowApiV1RpaBrowserControlWorkflowsExecutePostResponse = ExecuteWorkflowApiV1RpaBrowserControlWorkflowsExecutePostResponses[keyof ExecuteWorkflowApiV1RpaBrowserControlWorkflowsExecutePostResponses];
-
 export type ExecuteWorkflowStepApiV1RpaBrowserControlWorkflowsExecuteStepPostData = {
     body: WorkflowStepExecuteRequest;
     headers: {
@@ -3692,7 +4364,7 @@ export type ListCommunityActionsApiV1RpaBrowserControlCommunityActionsListPostRe
     /**
      * Successful Response
      */
-    200: StandardResponseBasePaginationRespCustomActionListItemResponse;
+    200: StandardResponseBasePaginationRespCompositeActionListItemResponse;
 };
 
 export type ListCommunityActionsApiV1RpaBrowserControlCommunityActionsListPostResponse = ListCommunityActionsApiV1RpaBrowserControlCommunityActionsListPostResponses[keyof ListCommunityActionsApiV1RpaBrowserControlCommunityActionsListPostResponses];
@@ -4266,46 +4938,6 @@ export type SwitchPageApiV1RpaBrowserControlOperationSwitchPagePostResponses = {
 };
 
 export type SwitchPageApiV1RpaBrowserControlOperationSwitchPagePostResponse = SwitchPageApiV1RpaBrowserControlOperationSwitchPagePostResponses[keyof SwitchPageApiV1RpaBrowserControlOperationSwitchPagePostResponses];
-
-export type ExecuteJsApiV1RpaBrowserControlOperationExecuteJsPostData = {
-    body: ExecuteJsRequest;
-    headers: {
-        /**
-         * X-Bili-Mid
-         */
-        'x-bili-mid': string;
-        /**
-         * X-Bili-Level
-         */
-        'x-bili-level': string;
-    };
-    path?: never;
-    query: {
-        /**
-         * Browser Id
-         */
-        browser_id: number | string;
-    };
-    url: '/api/v1/rpa/browser/control/operation/execute_js';
-};
-
-export type ExecuteJsApiV1RpaBrowserControlOperationExecuteJsPostErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type ExecuteJsApiV1RpaBrowserControlOperationExecuteJsPostError = ExecuteJsApiV1RpaBrowserControlOperationExecuteJsPostErrors[keyof ExecuteJsApiV1RpaBrowserControlOperationExecuteJsPostErrors];
-
-export type ExecuteJsApiV1RpaBrowserControlOperationExecuteJsPostResponses = {
-    /**
-     * Successful Response
-     */
-    200: StandardResponseDict;
-};
-
-export type ExecuteJsApiV1RpaBrowserControlOperationExecuteJsPostResponse = ExecuteJsApiV1RpaBrowserControlOperationExecuteJsPostResponses[keyof ExecuteJsApiV1RpaBrowserControlOperationExecuteJsPostResponses];
 
 export type GetPageInfoApiV1RpaBrowserControlOperationGetPageInfoPostData = {
     body: GetPageInfoRequest;
@@ -5040,7 +5672,7 @@ export type ListReportsAdminApiAdminApiReportsListPostData = {
      */
     body?: {
         [key: string]: unknown;
-    };
+    } | null;
     headers: {
         /**
          * X-Bili-Mid

@@ -3,7 +3,7 @@
     <component
       :is="props.tag"
       ref="containerRef"
-      class="proportional-scaling-container box-border bg-[var(--el-bg-color)] flex-shrink-0 rounded-[3px] border border-[var(--el-border-color-lighter)] p-2"
+      class="proportional-scaling-container box-border bg-bg flex-shrink-0 rounded-[3px] border border-[var(--el-border-color-lighter)] p-2"
       :style="containerStyle"
     >
       <slot></slot>

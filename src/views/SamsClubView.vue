@@ -15,10 +15,10 @@
           <WarningFilled />
         </el-icon>
         <el-text class="mb-4 text-xl font-semibold text-[var(--el-text-color-primary)]" tag="h3">服主 Sam's Club 账号已被封禁</el-text>
-        <el-text class="mb-3 px-5 text-[15px] leading-relaxed text-[var(--el-text-color-regular)]" tag="p">
+        <el-text class="mb-3 px-5 text-[15px] leading-relaxed text-text-regular" tag="p">
           由于服主(管理员)的 Sam's Club 账号被封禁，商品数据无法正常更新。
         </el-text>
-        <el-text class="px-5 text-sm leading-snug text-[var(--el-text-color-secondary)]" tag="p">
+        <el-text class="px-5 text-sm leading-snug text-text-secondary" tag="p">
           这可能导致商品价格、库存等信息不是最新的。服主正在努力恢复服务，请您耐心等待。
         </el-text>
         <el-divider></el-divider>

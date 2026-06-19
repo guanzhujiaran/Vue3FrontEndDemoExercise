@@ -71,7 +71,7 @@ provide('headerBarView', {
 </script>
 
 <template>
-  <div id="bili-header" class="sticky top-0 z-50 border-b border-[var(--el-border-color-light)] bg-[var(--el-bg-color)]/90 backdrop-blur-md backdrop-saturate-150 shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
+  <div id="bili-header" class="sticky top-0 z-50 border-b border-[var(--el-border-color-light)] bg-bg/90 backdrop-blur-md backdrop-saturate-150 shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
     <div class="flex items-center justify-between w-full px-2 md:px-0 lg:px-4 relative">
       <el-menu :default-active="route.path" mode="horizontal" 
                class="flex-1 overflow-x-auto min-w-0 z-10 border-b-0! overflow-x-auto! overflow-y-hidden! whitespace-nowrap! flex-nowrap! bg-transparent!"

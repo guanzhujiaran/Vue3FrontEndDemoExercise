@@ -1,7 +1,7 @@
 <template>
   <transition name="fade">
     <div v-show="globalLoading.isLoading" class="global-loading-mask fixed inset-0 z-[9999] flex items-center justify-center bg-black/50">
-      <div class="loading-box rounded-lg bg-[var(--el-bg-color)] p-5 text-base text-[var(--el-text-color-regular)] shadow-sm">
+      <div class="loading-box rounded-lg bg-bg p-5 text-base text-text-regular shadow-sm">
         {{ globalLoading.loadingText }}
       </div>
     </div>

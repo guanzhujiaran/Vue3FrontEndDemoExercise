@@ -143,13 +143,13 @@ const scrollbarHeight = computed(() => {
               </div>
 
               <div
-                class="user-info hover:cursor-pointer mb-5 flex items-center border-b border-[var(--el-border-color)] px-5 pb-5 transition-all duration-300"
+                class="user-info hover:cursor-pointer mb-5 flex items-center border-b border-border px-5 pb-5 transition-all duration-300"
                 @click="router.push({ name: RouteName.USER_CENTER })"
               >
                 <el-avatar :icon="Avatar" />
                 <div class="user-details ml-3">
                   <el-text class="user-name text-base font-semibold text-[var(--el-text-color-primary)]" tag="div">{{ userInfo.user_name }}</el-text>
-                  <div class="user-role mt-1 text-xs text-[var(--el-text-color-secondary)]">
+                  <div class="user-role mt-1 text-xs text-text-secondary">
                     {{ userInfo.role === 'root' ? '管理员' : '普通用户' }}
                   </div>
                 </div>
@@ -195,7 +195,7 @@ const scrollbarHeight = computed(() => {
                     </keep-alive>
                   </transition>
                 </div>
-                <div v-else class="empty-state p-5 text-center text-[var(--el-text-color-secondary)]">
+                <div v-else class="empty-state p-5 text-center text-text-secondary">
                   <el-text class="my-4 text-base" tag="p">未找到组件 - 路由: {{ route.path }}, 名称: {{ route.name }}</el-text>
                 </div>
               </RouterView>

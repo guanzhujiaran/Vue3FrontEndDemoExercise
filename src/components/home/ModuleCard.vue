@@ -16,7 +16,7 @@
         <div
           v-for="(child, childIndex) in module.children"
           :key="childIndex"
-          class="child-item flex items-center rounded p-6 border cursor-pointer transition-all duration-200 ease-in-out border-[var(--el-border-color)]/50 hover:border-[var(--el-border-color)] hover:translate-x-2"
+          class="child-item flex items-center rounded p-6 border cursor-pointer transition-all duration-200 ease-in-out border-border/50 hover:border-border hover:translate-x-2"
           @click="handleCardClick(child.path, module.requiresLogin)"
         >
           <div class="child-icon flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full text-white mr-6" :class="getGradientClass(child.color)">
