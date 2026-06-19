@@ -40,10 +40,12 @@ export function useDebugboxItems(browserId: string, editMode: boolean, initialSt
   /** 列表容器 dragover：在条目间隙中也计算插入位置 */
   function handleListDragover(event: DragEvent) {
     event.preventDefault()
-    if (!event.dataTransfer?.types.includes('application/json') && !dragSource.value) return
-    if (event.dataTransfer) {
-      event.dataTransfer.dropEffect = 'move'
-    }
+    const dt = event.dataTransfer
+    if (!dt) return
+    // 检查是否有拖拽数据（同时检查 text/plain 和 application/json，因为 dragover 时浏览器可能不暴露 application/json）
+    const hasDragData = dt.types.includes('text/plain') || dt.types.includes('application/json')
+    if (!hasDragData && !dragSource.value) return
+    dt.dropEffect = 'move'
     const listEl = event.currentTarget as HTMLElement
     const items = Array.from(listEl.querySelectorAll('[data-drag-item]')) as HTMLElement[]
     const mouseY = event.clientY
@@ -166,7 +168,7 @@ export function useDebugboxItems(browserId: string, editMode: boolean, initialSt
   function handleItemDragOver(event: DragEvent, index: number) {
     event.preventDefault()
     const dt = event.dataTransfer
-    if (dt && (dt.types.includes('application/json') || dt.types.includes('text/plain'))) {
+    if (dt && (dt.types.includes('text/plain') || dt.types.includes('application/json'))) {
       dt.dropEffect = dragSource.value ? 'move' : 'copy'
       const rect = (event.currentTarget as HTMLElement).getBoundingClientRect()
       dragOverIndex.value = event.clientY < rect.top + rect.height / 2 ? index : index + 1

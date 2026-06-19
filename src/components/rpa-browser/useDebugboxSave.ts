@@ -91,12 +91,17 @@ export function useDebugboxSave(
     saveDialogVisible.value = true
   }
 
-  function openSaveBranchDialog(parentIndex: number, branch: 'true' | 'false' | 'loop', childIndex: number) {
+  function openSaveBranchDialog(parentIndex: number, branch: 'true' | 'false' | 'loop', childIndex: number, nestedBranch?: string, nestedIndex?: number) {
     const item = droppedItems.value[parentIndex]
     if (!item) return
     const targetBranch = branch === 'true' ? item.trueBranch : branch === 'false' ? item.falseBranch : item.loopBody
     if (!targetBranch || !targetBranch[childIndex]) return
-    const branchItem = targetBranch[childIndex]
+    let branchItem = targetBranch[childIndex]
+    if (nestedBranch != null && nestedIndex != null) {
+      const nestedTarget = nestedBranch === 'true' ? branchItem.trueBranch : nestedBranch === 'false' ? branchItem.falseBranch : branchItem.loopBody
+      if (!nestedTarget || !nestedTarget[nestedIndex]) return
+      branchItem = nestedTarget[nestedIndex]
+    }
     saveMultiItems.value = []
     saveDialogItem.value = branchItem
     saveDialogIndex.value = -1

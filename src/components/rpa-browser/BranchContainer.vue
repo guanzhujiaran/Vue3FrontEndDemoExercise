@@ -70,7 +70,7 @@ const emit = defineEmits<{
   'item:execute': [childIndex: number, nestedBranch?: string, nestedIndex?: number]
   'item:preview': [childIndex: number, nestedBranch?: string, nestedIndex?: number]
   'item:validate': [childIndex: number, nestedBranch?: string, nestedIndex?: number]
-  'item:saveAs': [childIndex: number]
+  'item:saveAs': [childIndex: number, nestedBranch?: string, nestedIndex?: number]
   'item:toggleExpand': [childIndex: number]
   'item:remove': [childIndex: number]
   'item:toggleSelect': [childIndex: number]
@@ -106,7 +106,7 @@ const getDragJSON = (e: DragEvent) => e.dataTransfer?.getData('text/plain') || e
 
 const hasDragData = (e: DragEvent) => {
   const dt = e.dataTransfer
-  return dt && (dt.types.includes('application/json') || dt.types.includes('text/plain'))
+  return dt && (dt.types.includes('text/plain') || dt.types.includes('application/json'))
 }
 
 const onItemDragOver = (e: DragEvent, index: number) => {
@@ -149,8 +149,14 @@ const onItemDrop = (e: DragEvent, index: number) => {
           const src = parsed.source
           const selectedIndices: number[] = (parsed.selectedIndices as number[]) || [src.index]
 
+          // 判断是否为同一容器（需同时比较 parentIndex、branch 和 path 长度，避免嵌套容器误匹配）
+          const sameContainer = src?.container === 'branch' &&
+            src.parentIndex === props.parentIndex &&
+            src.branch === props.branch &&
+            (src.path?.length || 0) === (props.branchPath?.length || 0)
+
           // 自身拖放检查
-          if (selectedIndices.length <= 1 && src?.container === 'branch' && src.parentIndex === props.parentIndex && src.branch === props.branch && src.index === index) {
+          if (selectedIndices.length <= 1 && sameContainer && src.index === index) {
             dragIdx.value = null
             return
           }
@@ -159,7 +165,7 @@ const onItemDrop = (e: DragEvent, index: number) => {
           const insertIdx = e.clientY < rect.top + rect.height / 2 ? index : index + 1
 
           // 多选移动：同一容器内直接批量搬运
-          if (selectedIndices.length > 1 && src?.container === 'branch' && src.parentIndex === props.parentIndex && src.branch === props.branch) {
+          if (selectedIndices.length > 1 && sameContainer) {
             // 目标不在选中范围内
             if (selectedIndices.includes(index)) { dragIdx.value = null; return }
             // 降序排序，从后往前 splice 避免索引偏移
@@ -217,6 +223,8 @@ const onRootDragOver = (e: DragEvent) => {
 }
 
 const onRootDrop = (e: DragEvent) => {
+  e.preventDefault()
+  e.stopPropagation()
   const idx = externalDropTarget.value
   externalDropTarget.value = null
   dragIdx.value = null
@@ -254,7 +262,55 @@ const isEmpty = computed(() => props.items.length === 0)
 const allSelected = computed(() => props.items.length > 0 && props.selectedItems.size === props.items.length)
 const someSelected = computed(() => props.selectedItems.size > 0 && props.selectedItems.size < props.items.length)
 
-const feedbackKey = (childIndex: number) => `${props.parentIndex}-${props.branch}-${childIndex}`
+const feedbackKey = (childIndex: number) => {
+  const pathParts: string[] = []
+  if (props.branchPath) {
+    for (const p of props.branchPath) {
+      pathParts.push(String(p.parentIndex), p.branch)
+    }
+  }
+  pathParts.push(String(props.parentIndex), props.branch, String(childIndex))
+  return pathParts.join('-')
+}
+
+/** 从 feedback detail 中提取预览数据 */
+function extractPreviewData(bi: number) {
+  const fb = props.feedbackMap[feedbackKey(bi)]
+  if (!fb || fb.kind !== 'preview' || !fb.detail) {
+    return { vars: [] as { key: string; value: unknown }[], found: [] as string[], replaced: [] as { key: string; value: unknown }[], tree: [] as { type: string; level: number; variables: { key: string; value: unknown }[]; branchLabel?: string; action_id?: string }[] }
+  }
+  const detail = fb.detail as Record<string, unknown>
+  // 预览变量
+  const varsObj = detail.preview_variables as Record<string, unknown> | undefined
+  const vars = varsObj ? Object.entries(varsObj).map(([k, v]) => ({ key: k, value: v })) : []
+  // 已解析变量
+  const found = Array.isArray(detail.found_params) ? (detail.found_params as string[]) : []
+  // 参数替换
+  const replacedObj = detail.replaced_params as Record<string, unknown> | undefined
+  const replaced = replacedObj ? Object.entries(replacedObj).map(([k, v]) => ({ key: k, value: v })) : []
+  // 步骤展开树
+  const tree: { type: string; level: number; variables: { key: string; value: unknown }[]; branchLabel?: string; action_id?: string }[] = []
+  const stepsPreview = detail.steps_preview as Record<string, unknown>[] | undefined
+  if (stepsPreview) {
+    const walkStep = (step: Record<string, unknown>, level: number) => {
+      const stepVars = step.preview_variables as Record<string, unknown> | undefined
+      const varEntries = stepVars ? Object.entries(stepVars).map(([k, v]) => ({ key: k, value: v })) : []
+      tree.push({ type: 'step', level, action_id: (step.action_id as string) || '', variables: varEntries })
+      const branches = step.branches as Record<string, unknown[]> | undefined
+      if (branches) {
+        for (const [label, bSteps] of [['True 分支', branches.true], ['False 分支', branches.false]] as const) {
+          if (bSteps?.length) { tree.push({ type: 'label', level: level + 1, variables: [], branchLabel: label }); for (const bs of bSteps) walkStep(bs as Record<string, unknown>, level + 1) }
+        }
+      }
+      const loopPreview = step.loop_preview as Record<string, unknown>[] | undefined
+      if (loopPreview?.length) { tree.push({ type: 'label', level: level + 1, variables: [], branchLabel: '循环体' }); for (const ls of loopPreview) walkStep(ls as Record<string, unknown>, level + 1) }
+      const children = step.children as Record<string, unknown>[] | undefined
+      if (children) for (const ch of children) walkStep(ch as Record<string, unknown>, level + 1)
+    }
+    for (const step of stepsPreview) walkStep(step, 1)
+  }
+  return { vars, found, replaced, tree }
+}
 const isExpanded = (childIndex: number) => props.expandedItems.has(feedbackKey(childIndex) as unknown as number)
 const isOperating = (childIndex: number) => !!props.operatingMap[feedbackKey(childIndex)]
 
@@ -296,11 +352,13 @@ function handleNestedDrop(childIndex: number, nestedBranch: 'true' | 'false' | '
     // 本容器内卡片移到嵌套分支
     if (parsed.__dragType === 'card') {
       const src = parsed.source
-      if (
-        src?.container === 'branch' &&
+      // 判断是否为同一容器（需同时比较 parentIndex、branch 和 path 长度，避免嵌套容器误匹配）
+      const sameContainer = src?.container === 'branch' &&
         src.parentIndex === props.parentIndex &&
-        src.branch === props.branch
-      ) {
+        src.branch === props.branch &&
+        (src.path?.length || 0) === (props.branchPath?.length || 0)
+
+      if (sameContainer) {
         const selectedIndices: number[] = (parsed.selectedIndices as number[]) || [src.index]
         // 不能拖入自身
         if (selectedIndices.length <= 1 && src.index === childIndex) return
@@ -382,10 +440,12 @@ function handleNestedReorder(childIndex: number, nestedBranch: 'true' | 'false' 
   targetArr.splice(to, 0, moved)
 }
 
-/** 嵌套分支内执行/预览/验证 —— 向上 emit 带上嵌套上下文 */
-function handleNestedBranchAction(childIndex: number, nestedBranch: 'true' | 'false' | 'loop', subIndex: number, action: 'execute' | 'preview' | 'validate' | 'closeFeedback') {
+/** 嵌套分支内执行/预览/验证/另存为 —— 向上 emit 带上嵌套上下文 */
+function handleNestedBranchAction(childIndex: number, nestedBranch: 'true' | 'false' | 'loop', subIndex: number, action: 'execute' | 'preview' | 'validate' | 'closeFeedback' | 'saveAs') {
   if (action === 'closeFeedback') {
     emit('item:closeFeedback', childIndex, nestedBranch, subIndex)
+  } else if (action === 'saveAs') {
+    emit('item:saveAs', childIndex, nestedBranch, subIndex)
   } else {
     emit(`item:${action}` as 'item:execute', childIndex, nestedBranch, subIndex)
   }
@@ -393,7 +453,14 @@ function handleNestedBranchAction(childIndex: number, nestedBranch: 'true' | 'fa
 
 /** 嵌套分支内卡片展开/收起 */
 function handleNestedToggleExpand(childIndex: number, nestedBranch: 'true' | 'false' | 'loop', subIndex: number) {
-  const key = `${childIndex}-${nestedBranch}-${subIndex}` as unknown as number
+  const pathParts: string[] = []
+  if (props.branchPath) {
+    for (const p of props.branchPath) {
+      pathParts.push(String(p.parentIndex), p.branch)
+    }
+  }
+  pathParts.push(String(props.parentIndex), props.branch, String(childIndex), nestedBranch, String(subIndex))
+  const key = pathParts.join('-') as unknown as number
   if (props.expandedItems.has(key)) {
     props.expandedItems.delete(key)
   } else {
@@ -444,7 +511,7 @@ function handleNestedToggleExpand(childIndex: number, nestedBranch: 'true' | 'fa
           </div>
 
           <!-- 拖拽手柄 -->
-          <div class="mt-2 cursor-move drag-handle" draggable="true" @dragstart="(e: DragEvent) => onItemDragStart(e, bi)">
+          <div class="mt-2 cursor-move drag-handle" draggable="true" @dragstart="(e: DragEvent) => onItemDragStart(e, bi)" @mousedown.stop>
             <el-icon class="text-gray-400"><Rank /></el-icon>
           </div>
 
@@ -505,14 +572,17 @@ function handleNestedToggleExpand(childIndex: number, nestedBranch: 'true' | 'fa
                           :branch-path="childBranchPath"
                           :selected-items="getNestedSelected(bi, 'true')"
                           :expanded-items="props.expandedItems"
-                          :feedback-map="{}"
-                          :operating-map="{}"
+                          :feedback-map="props.feedbackMap"
+                          :operating-map="props.operatingMap"
                           @drop="(e: DragEvent, idx?: number) => handleNestedDrop(bi, 'true', e, idx)"
                           @select-all="handleNestedSelectAll(bi, 'true')"
+                          @save-multi="emit('saveMulti')"
+                          @execute-all="emit('executeAll')"
                           @reorder="(from: number, to: number) => handleNestedReorder(bi, 'true', from, to)"
                           @item:execute="(sub: number) => handleNestedBranchAction(bi, 'true', sub, 'execute')"
                           @item:preview="(sub: number) => handleNestedBranchAction(bi, 'true', sub, 'preview')"
                           @item:validate="(sub: number) => handleNestedBranchAction(bi, 'true', sub, 'validate')"
+                          @item:save-as="(sub: number) => handleNestedBranchAction(bi, 'true', sub, 'saveAs')"
                           @item:close-feedback="(sub: number) => handleNestedBranchAction(bi, 'true', sub, 'closeFeedback')"
                           @item:remove="(sub: number) => handleNestedRemove(bi, 'true', sub)"
                           @item:toggle-expand="(sub: number) => handleNestedToggleExpand(bi, 'true', sub)"
@@ -534,14 +604,17 @@ function handleNestedToggleExpand(childIndex: number, nestedBranch: 'true' | 'fa
                           :branch-path="childBranchPath"
                           :selected-items="getNestedSelected(bi, 'false')"
                           :expanded-items="props.expandedItems"
-                          :feedback-map="{}"
-                          :operating-map="{}"
+                          :feedback-map="props.feedbackMap"
+                          :operating-map="props.operatingMap"
                           @drop="(e: DragEvent, idx?: number) => handleNestedDrop(bi, 'false', e, idx)"
                           @select-all="handleNestedSelectAll(bi, 'false')"
+                          @save-multi="emit('saveMulti')"
+                          @execute-all="emit('executeAll')"
                           @reorder="(from: number, to: number) => handleNestedReorder(bi, 'false', from, to)"
                           @item:execute="(sub: number) => handleNestedBranchAction(bi, 'false', sub, 'execute')"
                           @item:preview="(sub: number) => handleNestedBranchAction(bi, 'false', sub, 'preview')"
                           @item:validate="(sub: number) => handleNestedBranchAction(bi, 'false', sub, 'validate')"
+                          @item:save-as="(sub: number) => handleNestedBranchAction(bi, 'false', sub, 'saveAs')"
                           @item:close-feedback="(sub: number) => handleNestedBranchAction(bi, 'false', sub, 'closeFeedback')"
                           @item:remove="(sub: number) => handleNestedRemove(bi, 'false', sub)"
                           @item:toggle-expand="(sub: number) => handleNestedToggleExpand(bi, 'false', sub)"
@@ -576,14 +649,17 @@ function handleNestedToggleExpand(childIndex: number, nestedBranch: 'true' | 'fa
                           :branch-path="childBranchPath"
                           :selected-items="getNestedSelected(bi, 'loop')"
                           :expanded-items="props.expandedItems"
-                          :feedback-map="{}"
-                          :operating-map="{}"
+                          :feedback-map="props.feedbackMap"
+                          :operating-map="props.operatingMap"
                           @drop="(e: DragEvent, idx?: number) => handleNestedDrop(bi, 'loop', e, idx)"
                           @select-all="handleNestedSelectAll(bi, 'loop')"
+                          @save-multi="emit('saveMulti')"
+                          @execute-all="emit('executeAll')"
                           @reorder="(from: number, to: number) => handleNestedReorder(bi, 'loop', from, to)"
                           @item:execute="(sub: number) => handleNestedBranchAction(bi, 'loop', sub, 'execute')"
                           @item:preview="(sub: number) => handleNestedBranchAction(bi, 'loop', sub, 'preview')"
                           @item:validate="(sub: number) => handleNestedBranchAction(bi, 'loop', sub, 'validate')"
+                          @item:save-as="(sub: number) => handleNestedBranchAction(bi, 'loop', sub, 'saveAs')"
                           @item:close-feedback="(sub: number) => handleNestedBranchAction(bi, 'loop', sub, 'closeFeedback')"
                           @item:remove="(sub: number) => handleNestedRemove(bi, 'loop', sub)"
                           @item:toggle-expand="(sub: number) => handleNestedToggleExpand(bi, 'loop', sub)"
@@ -612,6 +688,10 @@ function handleNestedToggleExpand(childIndex: number, nestedBranch: 'true' | 'fa
             <div v-if="feedbackMap[feedbackKey(bi)]" class="mt-2">
               <OperationFeedbackPanel
                 :feedback="feedbackMap[feedbackKey(bi)]"
+                :preview-variables="extractPreviewData(bi).vars"
+                :preview-found-params="extractPreviewData(bi).found"
+                :preview-replaced-params="extractPreviewData(bi).replaced"
+                :preview-nested-tree="extractPreviewData(bi).tree"
                 @close="emit('item:closeFeedback', bi)"
               />
             </div>

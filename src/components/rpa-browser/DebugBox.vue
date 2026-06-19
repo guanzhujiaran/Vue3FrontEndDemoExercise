@@ -191,7 +191,7 @@ defineExpose({ droppedItems, getSteps, startEditCustomAction })
               <input type="checkbox" :checked="selectedIndices.has(index)" @change="toggleSelect(index)"
                 class="w-4 h-4 rounded border-gray-300 text-(--el-color-primary) cursor-pointer focus:ring-2 focus:ring-(--el-color-primary-light-5)" />
             </div>
-            <div class="mt-2 cursor-move drag-handle" draggable="true" @dragstart="(e: DragEvent) => handleItemDragStart(e, index)" @dragend="handleItemDragEnd">
+            <div class="mt-2 cursor-move drag-handle" draggable="true" @dragstart="(e: DragEvent) => handleItemDragStart(e, index)" @dragend="handleItemDragEnd" @mousedown.stop>
               <el-icon class="text-gray-400"><Rank /></el-icon>
             </div>
 
@@ -232,7 +232,7 @@ defineExpose({ droppedItems, getSteps, startEditCustomAction })
                         @item:toggle-expand="(bi: number) => toggleBranchExpand(index, 'loop', bi)"
                         @item:remove="(bi: number) => handleRemoveBranchItem(index, 'loop', bi)"
                         @item:toggle-select="(bi: number) => toggleBranchSelect(index, 'loop', bi)"
-                        @item:save-as="(bi: number) => openSaveBranchDialog(index, 'loop', bi)"
+                        @item:save-as="(bi: number, nb?: string, ni?: number) => openSaveBranchDialog(index, 'loop', bi, nb, ni)"
                         @item:close-feedback="(bi: number, nb?: string, ni?: number) => closeOperationFeedback(nb != null && ni != null ? `${index}-loop-${bi}-${nb}-${ni}` : `${index}-loop-${bi}`)"
                         @reorder="(from: number, to: number) => reorderBranchItem(index, 'loop', from, to)" />
                     </div>
@@ -273,7 +273,7 @@ defineExpose({ droppedItems, getSteps, startEditCustomAction })
                             @item:toggle-expand="(bi: number) => toggleBranchExpand(index, 'true', bi)"
                             @item:remove="(bi: number) => handleRemoveBranchItem(index, 'true', bi)"
                             @item:toggle-select="(bi: number) => toggleBranchSelect(index, 'true', bi)"
-                            @item:save-as="(bi: number) => openSaveBranchDialog(index, 'true', bi)"
+                            @item:save-as="(bi: number, nb?: string, ni?: number) => openSaveBranchDialog(index, 'true', bi, nb, ni)"
                             @item:close-feedback="(bi: number, nb?: string, ni?: number) => closeOperationFeedback(nb != null && ni != null ? `${index}-true-${bi}-${nb}-${ni}` : `${index}-true-${bi}`)"
                             @reorder="(from: number, to: number) => reorderBranchItem(index, 'true', from, to)" />
                         </div>
@@ -294,7 +294,7 @@ defineExpose({ droppedItems, getSteps, startEditCustomAction })
                             @item:toggle-expand="(bi: number) => toggleBranchExpand(index, 'false', bi)"
                             @item:remove="(bi: number) => handleRemoveBranchItem(index, 'false', bi)"
                             @item:toggle-select="(bi: number) => toggleBranchSelect(index, 'false', bi)"
-                            @item:save-as="(bi: number) => openSaveBranchDialog(index, 'false', bi)"
+                            @item:save-as="(bi: number, nb?: string, ni?: number) => openSaveBranchDialog(index, 'false', bi, nb, ni)"
                             @item:close-feedback="(bi: number, nb?: string, ni?: number) => closeOperationFeedback(nb != null && ni != null ? `${index}-false-${bi}-${nb}-${ni}` : `${index}-false-${bi}`)"
                             @reorder="(from: number, to: number) => reorderBranchItem(index, 'false', from, to)" />
                         </div>

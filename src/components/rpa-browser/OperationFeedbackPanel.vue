@@ -258,6 +258,10 @@ const formatValue = (value: unknown): string => {
           </div>
         </div>
       </div>
+      <!-- 预览成功但无详细数据时的兜底显示 -->
+      <div v-if="fb.success && props.previewReplacedParams.length === 0 && props.previewFoundParams.length === 0 && props.previewVariables.length === 0 && props.previewNestedTree.length === 0" class="px-3 py-3 text-center">
+        <span class="text-(--el-color-primary) text-sm">✓ {{ fb.summary }}</span>
+      </div>
     </template>
 
     <!-- ====== 验证结果 ====== -->

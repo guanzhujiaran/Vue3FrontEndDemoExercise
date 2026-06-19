@@ -322,11 +322,7 @@ const loadBasicActions = async () => {
 const handleDragStart = (event: DragEvent, nodeData: unknown) => {
   if (event.dataTransfer && nodeData) {
     console.log('拖拽开始，原始数据:', nodeData)
-    // el-tree-v2 的 node 对象中，实际数据在 data 属性中
-    const actualData = (nodeData as Record<string, unknown>).data || nodeData as Record<string, unknown>
-    
-    // 只提取必要的数据，避免包含 parent 等循环引用
-    const actionData = { ...actualData as Record<string, unknown> }
+    const actionData = { ...(nodeData as Record<string, unknown>) }
     // 移除可能导致循环引用的字段
     delete actionData.parent
     delete actionData.children
@@ -481,29 +477,31 @@ const handleEditCustomAction = async (nodeData: Record<string, unknown>) => {
             @node-collapse="handleNodeCollapse"
             class="tree-drag-drop"
           >
-            <template #default="{ node }">
+            <template #default="{ node, data }">
               <div 
                 v-if="!node.children || node.children.length === 0"
                 class="flex items-center justify-between w-full gap-2"
                 :class="{ 'cursor-grab active:cursor-grabbing': true }"
                 :draggable="true"
-                @dragstart="handleDragStart($event, node)"
+                @dragstart="handleDragStart($event, data)"
+                @mousedown.stop
+                @dragstart.stop
               >
                 <span class="flex items-center gap-2 min-w-0">
-                  <component :is="node.data.type === 'plugin' ? Box : Bell" class="w-4 h-4 shrink-0" />
+                  <component :is="data.type === 'plugin' ? Box : Bell" class="w-4 h-4 shrink-0" />
                   <span class="truncate">{{ node.label }}</span>
                 </span>
                 <span class="flex items-center gap-1 shrink-0">
                   <el-button
-                    v-if="node.data.type === 'action'"
+                    v-if="data.type === 'action'"
                     size="small"
                     text
                     :icon="Edit"
                     class="p-0.5 h-auto"
-                    @click.stop="handleEditCustomAction(node.data as Record<string, unknown>)"
+                    @click.stop="handleEditCustomAction(data as Record<string, unknown>)"
                   />
                   <span class="text-xs text-text-secondary">
-                    {{ node.data.type === 'plugin' ? '插件' : '动作' }}
+                    {{ data.type === 'plugin' ? '插件' : '动作' }}
                   </span>
                 </span>
               </div>
@@ -566,29 +564,31 @@ const handleEditCustomAction = async (nodeData: Record<string, unknown>) => {
             @node-collapse="handleNodeCollapse"
             class="tree-drag-drop"
           >
-            <template #default="{ node }">
+            <template #default="{ node, data }">
               <div 
                 v-if="!node.children || node.children.length === 0"
                 class="flex items-center justify-between w-full gap-2"
                 :class="{ 'cursor-grab active:cursor-grabbing': true }"
                 :draggable="true"
-                @dragstart="handleDragStart($event, node)"
+                @dragstart="handleDragStart($event, data)"
+                @mousedown.stop
+                @dragstart.stop
               >
                 <span class="flex items-center gap-2 min-w-0">
-                  <component :is="node.data.type === 'plugin' ? Box : Bell" class="w-4 h-4 shrink-0" />
+                  <component :is="data.type === 'plugin' ? Box : Bell" class="w-4 h-4 shrink-0" />
                   <span class="truncate">{{ node.label }}</span>
                 </span>
                 <span class="flex items-center gap-1 shrink-0">
                   <el-button
-                    v-if="node.data.type === 'action'"
+                    v-if="data.type === 'action'"
                     size="small"
                     text
                     :icon="Edit"
                     class="!p-0.5 !h-auto"
-                    @click.stop="handleEditCustomAction(node.data as Record<string, unknown>)"
+                    @click.stop="handleEditCustomAction(data as Record<string, unknown>)"
                   />
                   <span class="text-xs text-text-secondary">
-                    {{ node.data.type === 'plugin' ? '插件' : '动作' }}
+                    {{ data.type === 'plugin' ? '插件' : '动作' }}
                   </span>
                 </span>
               </div>
@@ -647,11 +647,13 @@ const handleEditCustomAction = async (nodeData: Record<string, unknown>) => {
             :height="treeHeight"
             class="tree-drag-drop"
           >
-            <template #default="{ node }">
+            <template #default="{ node, data }">
               <div 
                 class="flex items-center justify-between w-full cursor-grab active:cursor-grabbing"
                 draggable="true"
-                @dragstart="handleDragStart($event, node)"
+                @dragstart="handleDragStart($event, data)"
+                @mousedown.stop
+                @dragstart.stop
               >
                 <span class="flex items-center gap-2">
                   <el-icon><Tools class="w-4 h-4" /></el-icon>
