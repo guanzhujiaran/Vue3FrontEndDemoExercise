@@ -282,13 +282,25 @@ export function useDebugboxExecution(
   }
 
   // ── 分支单动作执行 ──────────────────────────────────
-  async function executeBranchItem(parentIndex: number, branch: 'true' | 'false' | 'loop', childIndex: number) {
-    const item = droppedItems.value[parentIndex]
-    if (!item) return
-    const items = branch === 'true' ? item.trueBranch : branch === 'false' ? item.falseBranch : item.loopBody
-    if (!items || !items[childIndex]) return
-    const child = items[childIndex]
-    const childKey = `${parentIndex}-${branch}-${childIndex}`
+  /** 按嵌套路径定位条目 */
+  function resolveNestedItem(dropped: DroppedItem[], parentIndex: number, branch: 'true' | 'false' | 'loop', childIndex: number, nestedBranch?: string, nestedIndex?: number): { item: DroppedItem; key: string } | null {
+    const parent = dropped[parentIndex]
+    if (!parent) return null
+    const items = branch === 'true' ? parent.trueBranch : branch === 'false' ? parent.falseBranch : parent.loopBody
+    if (!items || !items[childIndex]) return null
+    if (nestedBranch != null && nestedIndex != null) {
+      const nestedParent = items[childIndex]
+      const nestedItems = nestedBranch === 'true' ? nestedParent.trueBranch : nestedBranch === 'false' ? nestedParent.falseBranch : nestedParent.loopBody
+      if (!nestedItems || !nestedItems[nestedIndex]) return null
+      return { item: nestedItems[nestedIndex], key: `${parentIndex}-${branch}-${childIndex}-${nestedBranch}-${nestedIndex}` }
+    }
+    return { item: items[childIndex], key: `${parentIndex}-${branch}-${childIndex}` }
+  }
+
+  async function executeBranchItem(parentIndex: number, branch: 'true' | 'false' | 'loop', childIndex: number, nestedBranch?: string, nestedIndex?: number) {
+    const resolved = resolveNestedItem(droppedItems.value, parentIndex, branch, childIndex, nestedBranch, nestedIndex)
+    if (!resolved) return
+    const { item: child, key: childKey } = resolved
 
     branchOperating.value[childKey] = true
     try {
@@ -320,13 +332,10 @@ export function useDebugboxExecution(
     }
   }
 
-  async function previewBranchItem(parentIndex: number, branch: 'true' | 'false' | 'loop', childIndex: number) {
-    const item = droppedItems.value[parentIndex]
-    if (!item) return
-    const items = branch === 'true' ? item.trueBranch : branch === 'false' ? item.falseBranch : item.loopBody
-    if (!items || !items[childIndex]) return
-    const child = items[childIndex]
-    const childKey = `${parentIndex}-${branch}-${childIndex}`
+  async function previewBranchItem(parentIndex: number, branch: 'true' | 'false' | 'loop', childIndex: number, nestedBranch?: string, nestedIndex?: number) {
+    const resolved = resolveNestedItem(droppedItems.value, parentIndex, branch, childIndex, nestedBranch, nestedIndex)
+    if (!resolved) return
+    const { item: child, key: childKey } = resolved
 
     branchOperating.value[childKey] = true
     try {
@@ -348,13 +357,10 @@ export function useDebugboxExecution(
     }
   }
 
-  async function validateBranchItem(parentIndex: number, branch: 'true' | 'false' | 'loop', childIndex: number) {
-    const item = droppedItems.value[parentIndex]
-    if (!item) return
-    const items = branch === 'true' ? item.trueBranch : branch === 'false' ? item.falseBranch : item.loopBody
-    if (!items || !items[childIndex]) return
-    const child = items[childIndex]
-    const childKey = `${parentIndex}-${branch}-${childIndex}`
+  async function validateBranchItem(parentIndex: number, branch: 'true' | 'false' | 'loop', childIndex: number, nestedBranch?: string, nestedIndex?: number) {
+    const resolved = resolveNestedItem(droppedItems.value, parentIndex, branch, childIndex, nestedBranch, nestedIndex)
+    if (!resolved) return
+    const { item: child, key: childKey } = resolved
 
     branchOperating.value[childKey] = true
     try {

@@ -67,14 +67,14 @@ const emit = defineEmits<{
   selectAll: []
   saveMulti: []
   executeAll: []
-  'item:execute': [childIndex: number]
-  'item:preview': [childIndex: number]
-  'item:validate': [childIndex: number]
+  'item:execute': [childIndex: number, nestedBranch?: string, nestedIndex?: number]
+  'item:preview': [childIndex: number, nestedBranch?: string, nestedIndex?: number]
+  'item:validate': [childIndex: number, nestedBranch?: string, nestedIndex?: number]
   'item:saveAs': [childIndex: number]
   'item:toggleExpand': [childIndex: number]
   'item:remove': [childIndex: number]
   'item:toggleSelect': [childIndex: number]
-  'item:closeFeedback': [childIndex: number]
+  'item:closeFeedback': [childIndex: number, nestedBranch?: string, nestedIndex?: number]
   /** 拖拽排序：from → to */
   reorder: [fromIndex: number, toIndex: number]
 }>()
@@ -382,6 +382,15 @@ function handleNestedReorder(childIndex: number, nestedBranch: 'true' | 'false' 
   targetArr.splice(to, 0, moved)
 }
 
+/** 嵌套分支内执行/预览/验证 —— 向上 emit 带上嵌套上下文 */
+function handleNestedBranchAction(childIndex: number, nestedBranch: 'true' | 'false' | 'loop', subIndex: number, action: 'execute' | 'preview' | 'validate' | 'closeFeedback') {
+  if (action === 'closeFeedback') {
+    emit('item:closeFeedback', childIndex, nestedBranch, subIndex)
+  } else {
+    emit(`item:${action}` as 'item:execute', childIndex, nestedBranch, subIndex)
+  }
+}
+
 /** 嵌套分支内卡片展开/收起 */
 function handleNestedToggleExpand(childIndex: number, nestedBranch: 'true' | 'false' | 'loop', subIndex: number) {
   const key = `${childIndex}-${nestedBranch}-${subIndex}` as unknown as number
@@ -501,6 +510,10 @@ function handleNestedToggleExpand(childIndex: number, nestedBranch: 'true' | 'fa
                           @drop="(e: DragEvent, idx?: number) => handleNestedDrop(bi, 'true', e, idx)"
                           @select-all="handleNestedSelectAll(bi, 'true')"
                           @reorder="(from: number, to: number) => handleNestedReorder(bi, 'true', from, to)"
+                          @item:execute="(sub: number) => handleNestedBranchAction(bi, 'true', sub, 'execute')"
+                          @item:preview="(sub: number) => handleNestedBranchAction(bi, 'true', sub, 'preview')"
+                          @item:validate="(sub: number) => handleNestedBranchAction(bi, 'true', sub, 'validate')"
+                          @item:close-feedback="(sub: number) => handleNestedBranchAction(bi, 'true', sub, 'closeFeedback')"
                           @item:remove="(sub: number) => handleNestedRemove(bi, 'true', sub)"
                           @item:toggle-expand="(sub: number) => handleNestedToggleExpand(bi, 'true', sub)"
                           @item:toggle-select="(sub: number) => { const s = getNestedSelected(bi, 'true'); s.has(sub) ? s.delete(sub) : s.add(sub); }"
@@ -526,6 +539,10 @@ function handleNestedToggleExpand(childIndex: number, nestedBranch: 'true' | 'fa
                           @drop="(e: DragEvent, idx?: number) => handleNestedDrop(bi, 'false', e, idx)"
                           @select-all="handleNestedSelectAll(bi, 'false')"
                           @reorder="(from: number, to: number) => handleNestedReorder(bi, 'false', from, to)"
+                          @item:execute="(sub: number) => handleNestedBranchAction(bi, 'false', sub, 'execute')"
+                          @item:preview="(sub: number) => handleNestedBranchAction(bi, 'false', sub, 'preview')"
+                          @item:validate="(sub: number) => handleNestedBranchAction(bi, 'false', sub, 'validate')"
+                          @item:close-feedback="(sub: number) => handleNestedBranchAction(bi, 'false', sub, 'closeFeedback')"
                           @item:remove="(sub: number) => handleNestedRemove(bi, 'false', sub)"
                           @item:toggle-expand="(sub: number) => handleNestedToggleExpand(bi, 'false', sub)"
                           @item:toggle-select="(sub: number) => { const s = getNestedSelected(bi, 'false'); s.has(sub) ? s.delete(sub) : s.add(sub); }"
@@ -564,6 +581,10 @@ function handleNestedToggleExpand(childIndex: number, nestedBranch: 'true' | 'fa
                           @drop="(e: DragEvent, idx?: number) => handleNestedDrop(bi, 'loop', e, idx)"
                           @select-all="handleNestedSelectAll(bi, 'loop')"
                           @reorder="(from: number, to: number) => handleNestedReorder(bi, 'loop', from, to)"
+                          @item:execute="(sub: number) => handleNestedBranchAction(bi, 'loop', sub, 'execute')"
+                          @item:preview="(sub: number) => handleNestedBranchAction(bi, 'loop', sub, 'preview')"
+                          @item:validate="(sub: number) => handleNestedBranchAction(bi, 'loop', sub, 'validate')"
+                          @item:close-feedback="(sub: number) => handleNestedBranchAction(bi, 'loop', sub, 'closeFeedback')"
                           @item:remove="(sub: number) => handleNestedRemove(bi, 'loop', sub)"
                           @item:toggle-expand="(sub: number) => handleNestedToggleExpand(bi, 'loop', sub)"
                           @item:toggle-select="(sub: number) => { const s = getNestedSelected(bi, 'loop'); s.has(sub) ? s.delete(sub) : s.add(sub); }"

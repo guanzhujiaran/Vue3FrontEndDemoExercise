@@ -226,14 +226,14 @@ defineExpose({ droppedItems, getSteps, startEditCustomAction })
                         @select-all="toggleBranchSelectAll(index, 'loop')"
                         @save-multi="handleSaveBranchMulti(index, 'loop')"
                         @execute-all="handleExecuteBranchAll(index, 'loop')"
-                        @item:execute="(bi: number) => executeBranchItem(index, 'loop', bi)"
-                        @item:preview="(bi: number) => previewBranchItem(index, 'loop', bi)"
-                        @item:validate="(bi: number) => validateBranchItem(index, 'loop', bi)"
+                        @item:execute="(bi: number, nb?: string, ni?: number) => executeBranchItem(index, 'loop', bi, nb, ni)"
+                        @item:preview="(bi: number, nb?: string, ni?: number) => previewBranchItem(index, 'loop', bi, nb, ni)"
+                        @item:validate="(bi: number, nb?: string, ni?: number) => validateBranchItem(index, 'loop', bi, nb, ni)"
                         @item:toggle-expand="(bi: number) => toggleBranchExpand(index, 'loop', bi)"
                         @item:remove="(bi: number) => handleRemoveBranchItem(index, 'loop', bi)"
                         @item:toggle-select="(bi: number) => toggleBranchSelect(index, 'loop', bi)"
                         @item:save-as="(bi: number) => openSaveBranchDialog(index, 'loop', bi)"
-                        @item:close-feedback="(bi: number) => closeOperationFeedback(`${index}-loop-${bi}`)"
+                        @item:close-feedback="(bi: number, nb?: string, ni?: number) => closeOperationFeedback(nb != null && ni != null ? `${index}-loop-${bi}-${nb}-${ni}` : `${index}-loop-${bi}`)"
                         @reorder="(from: number, to: number) => reorderBranchItem(index, 'loop', from, to)" />
                     </div>
                   </el-collapse-item>
@@ -267,14 +267,14 @@ defineExpose({ droppedItems, getSteps, startEditCustomAction })
                             @select-all="toggleBranchSelectAll(index, 'true')"
                             @save-multi="handleSaveBranchMulti(index, 'true')"
                             @execute-all="handleExecuteBranchAll(index, 'true')"
-                            @item:execute="(bi: number) => executeBranchItem(index, 'true', bi)"
-                            @item:preview="(bi: number) => previewBranchItem(index, 'true', bi)"
-                            @item:validate="(bi: number) => validateBranchItem(index, 'true', bi)"
+                            @item:execute="(bi: number, nb?: string, ni?: number) => executeBranchItem(index, 'true', bi, nb, ni)"
+                            @item:preview="(bi: number, nb?: string, ni?: number) => previewBranchItem(index, 'true', bi, nb, ni)"
+                            @item:validate="(bi: number, nb?: string, ni?: number) => validateBranchItem(index, 'true', bi, nb, ni)"
                             @item:toggle-expand="(bi: number) => toggleBranchExpand(index, 'true', bi)"
                             @item:remove="(bi: number) => handleRemoveBranchItem(index, 'true', bi)"
                             @item:toggle-select="(bi: number) => toggleBranchSelect(index, 'true', bi)"
                             @item:save-as="(bi: number) => openSaveBranchDialog(index, 'true', bi)"
-                            @item:close-feedback="(bi: number) => closeOperationFeedback(`${index}-true-${bi}`)"
+                            @item:close-feedback="(bi: number, nb?: string, ni?: number) => closeOperationFeedback(nb != null && ni != null ? `${index}-true-${bi}-${nb}-${ni}` : `${index}-true-${bi}`)"
                             @reorder="(from: number, to: number) => reorderBranchItem(index, 'true', from, to)" />
                         </div>
                       </el-tab-pane>
@@ -288,14 +288,14 @@ defineExpose({ droppedItems, getSteps, startEditCustomAction })
                             @select-all="toggleBranchSelectAll(index, 'false')"
                             @save-multi="handleSaveBranchMulti(index, 'false')"
                             @execute-all="handleExecuteBranchAll(index, 'false')"
-                            @item:execute="(bi: number) => executeBranchItem(index, 'false', bi)"
-                            @item:preview="(bi: number) => previewBranchItem(index, 'false', bi)"
-                            @item:validate="(bi: number) => validateBranchItem(index, 'false', bi)"
+                            @item:execute="(bi: number, nb?: string, ni?: number) => executeBranchItem(index, 'false', bi, nb, ni)"
+                            @item:preview="(bi: number, nb?: string, ni?: number) => previewBranchItem(index, 'false', bi, nb, ni)"
+                            @item:validate="(bi: number, nb?: string, ni?: number) => validateBranchItem(index, 'false', bi, nb, ni)"
                             @item:toggle-expand="(bi: number) => toggleBranchExpand(index, 'false', bi)"
                             @item:remove="(bi: number) => handleRemoveBranchItem(index, 'false', bi)"
                             @item:toggle-select="(bi: number) => toggleBranchSelect(index, 'false', bi)"
                             @item:save-as="(bi: number) => openSaveBranchDialog(index, 'false', bi)"
-                            @item:close-feedback="(bi: number) => closeOperationFeedback(`${index}-false-${bi}`)"
+                            @item:close-feedback="(bi: number, nb?: string, ni?: number) => closeOperationFeedback(nb != null && ni != null ? `${index}-false-${bi}-${nb}-${ni}` : `${index}-false-${bi}`)"
                             @reorder="(from: number, to: number) => reorderBranchItem(index, 'false', from, to)" />
                         </div>
                       </el-tab-pane>
