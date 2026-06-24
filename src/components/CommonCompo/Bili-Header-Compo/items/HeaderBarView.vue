@@ -25,9 +25,23 @@ const checkScreenSize = () => {
     globalVars.value.screen_size = ScreenTypeEnum.large // 大屏
   }
 }
-// 根据路由配置生成导航数据
+const isLoggedIn = computed(() => !!biliUser.value.uid)
+
+// 递归过滤掉未登录时不可见的路由项（requiresLogin 且未登录则隐藏）
+const filterByLogin = (items: any[]): any[] => {
+  return items
+    .filter((item) => isLoggedIn.value || !item.requiresLogin)
+    .map((item) => ({
+      ...item,
+      children: item.children ? filterByLogin(item.children) : undefined
+    }))
+    .filter((item) => !item.children || item.children.length > 0)
+}
+
+// 根据路由配置生成导航数据（未登录时隐藏需要登录的入口）
 const navigationData = computed(() => {
-  return processRoutesForHeader(routes, '', true) // 传入true表示显示所有路由
+  const allRoutes = processRoutesForHeader(routes, '', true)
+  return filterByLogin(allRoutes)
 })
 const openGlobalLoginModal = inject(openGlobalLoginModalKey, () => {})
 // 处理需要登录但未登录的情况

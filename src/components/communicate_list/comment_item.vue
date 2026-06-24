@@ -5,14 +5,8 @@ import utils from '@/utils/mixin.ts'
 import feedbackCommentApi from '@/api/feedback/comment.ts'
 import biliMessage from '@/utils/message'
 import { useDebounceFn } from '@vueuse/core'
-import likeSvg from '@/assets/svgs/like.svg?url'
-import likeActiveSvg from '@/assets/svgs/like_active.svg?url'
-import dislikeSvg from '@/assets/svgs/dislike.svg?url'
-import dislikeActiveSvg from '@/assets/svgs/dislike_active.svg?url'
-import moreSvg from '@/assets/svgs/more.svg?url'
-import { useUserNavStore } from '@/stores/user_nav.ts'
-import BiliVditorEdit from '@/components/CommonCompo/Bili-Markdown-Compo/BiliVditorEdit.vue'
 import { BiliImg } from '@/assets/img/BiliImg.ts'
+import { useUserNavStore } from '@/stores/user_nav.ts'
 
 const { user_nav } = useUserNavStore()
 const reply_item = defineModel<ReplyItem>('reply_item', { required: true })
@@ -31,20 +25,10 @@ const comment_section_stat = defineModel<CommentSectionStat>('comment_section_st
   required: true
 })
 
-defineExpose({ comment_section_stat })
-
-const is_root = computed(() => {
-  return !BigInt(reply_item.value.root)
-})
-const comment_content = computed(() => {
-  return reply_item.value.content.message ?? ''
-})
+const is_root = computed(() => !BigInt(reply_item.value.root))
+const comment_content = computed(() => reply_item.value.content.message ?? '')
 const interaction_btn_clickable = ref<boolean>(true)
-/**
- *
- * @param rpid
- * @param action
- */
+
 const handle_comment_interaction = async (rpid: string | number, action: 0 | 1 | 2) => {
   let origin_action = reply_item.value.action
   if (origin_action === action) {
@@ -59,7 +43,7 @@ const handle_comment_interaction = async (rpid: string | number, action: 0 | 1 |
   for (;;) {
     evt.prev = evt.next
     switch (evt.prev) {
-      case 0: //action==0
+      case 0:
         if (origin_action === 0) return
         if (origin_action === 1) {
           like_num_change = -1
@@ -72,7 +56,7 @@ const handle_comment_interaction = async (rpid: string | number, action: 0 | 1 |
           break
         }
         break
-      case 1: //action==1
+      case 1:
         if (origin_action === 0) {
           like_num_change = 1
           evt.next = 99
@@ -86,7 +70,7 @@ const handle_comment_interaction = async (rpid: string | number, action: 0 | 1 |
           break
         }
         break
-      case 2: //action==2
+      case 2:
         if (origin_action === 0) {
           dislike_num_change = -1
           evt.next = 99
@@ -150,181 +134,153 @@ const handle_pop_up_reply_area = () => {
 const interact_btn_active = computed<number>(() => reply_item.value.action)
 const is_mouse_in = ref<boolean>(false)
 const is_comment_menu_open = ref<boolean>(false)
-const is_loading_md = ref<boolean>(true)
+
+// B站风格: 解析评论内容中的 @提及 和 emoji
+const renderedContent = computed(() => {
+  let msg = comment_content.value
+  // 替换 @用户名 为链接样式
+  if (reply_item.value.content.members && reply_item.value.content.members.length > 0) {
+    reply_item.value.content.members.forEach((m) => {
+      msg = msg.replace(`@${m.uname}`, `<span class="text-primary">@${m.uname}</span>`)
+    })
+  }
+  return msg
+})
 </script>
 
 <template>
   <div
-    class="flex mb-(--spacing-8)"
+    class="bili-comment-item flex gap-3 py-3"
+    :class="{ 'opacity-70': is_root === false }"
     @mouseenter="is_mouse_in = true"
     @mouseleave="is_mouse_in = false"
-    v-loading="is_loading_md"
   >
+    <!-- 左侧头像 -->
     <el-avatar
-      class="relative left-(--spacing-2) top-(--spacing-2) w-(--component-height-lg) h-(--component-height-lg) origin-left-top shrink-0"
-      :size="is_root ? 'var(--spacing-16)' : 'var(--spacing-10)'"
+      :size="is_root ? 48 : 28"
+      class="shrink-0 mt-0.5"
     >
       <img
-        :src="reply_item.member.avatar ? reply_item.member.avatar : BiliImg.face.noface"
+        :src="reply_item.member.avatar || BiliImg.face.noface"
         referrerpolicy="no-referrer"
-        alt="头像加载失败"
+        alt="头像"
       />
     </el-avatar>
-    <div class="w-full relative pl-(--spacing-3) pt-(--spacing-2) leading-normal">
-      <el-card class="comment-main-card" shadow="never" body-style="border:none;padding:0px;">
-        <template #header class="header">
-          <div class="inline-flex items-center">
-            <div class="text-text-primary text-base font-medium">
-              {{ reply_item.member.uname }}
-            </div>
-            <div class="ml-(--spacing-2) w-(--spacing-3) h-(--spacing-3)">
-              <img
-                width="100%"
-                height="100%"
-                :src="`https://i0.hdslb.com/bfs/seed/jinkela/short/webui/user-profile/img/level_${reply_item.member.level_info.current_level ?? 0}.svg`"
-                referrerpolicy="no-referrer"
-                :alt="JSON.stringify(reply_item.member.level_info.current_level)"
-                style="max-width: var(--spacing-5); max-height: var(--spacing-5)"
-              />
-            </div>
-            <div
-              id="user-up"
-              class="ml-(--spacing-2) w-(--spacing-3) h-(--spacing-3)"
-              v-if="up_mid && String(up_mid) === String(reply_item.member.mid)"
-            >
-              <img
-                width="100%"
-                height="100%"
-                src="//i0.hdslb.com/bfs/seed/jinkela/short/webui/comments/img/icons/up_pb.svg"
-                referrerpolicy="no-referrer"
-                style="max-width: var(--spacing-5); max-height: var(--spacing-5)"
-              />
-            </div>
-          </div>
-        </template>
-        <template #default>
-          <div class="comment-content">
-            <BiliVditorEdit
-              v-model="comment_content"
-              style="min-height: var(--spacing-10); line-height: var(--spacing-4); overflow: visible; font-size: var(--spacing-4)"
-              v-model:is_loading="is_loading_md"
-              :is_preview="true"
-            />
-          </div>
-        </template>
-        <template #footer>
-          <div
-            class="w-[-webkit-fill-available] flex items-center relative mt-(--spacing-2) text-md text-text-secondary h-(--component-height-md) flex-wrap [&>:not(:first-child)]:ml-(--spacing-4)"
-          >
-            <div class="whitespace-nowrap">
-              {{ utils.formatDateTS(reply_item.ctime) }}
-            </div>
-            <div id="like">
-              <button
-                class="p-0 outline-none border-none bg-transparent h-(--component-height-xs) text-md text-text-secondary inline-flex items-center cursor-pointer align-middle hover:text-primary"
-                @click="handleLike"
-                :style="{
-                  color: String(interact_btn_active) === '1' ? 'var(--color-primary)' : ''
-                }"
-              >
-                <img :src="likeActiveSvg" v-if="interact_btn_active == 1" class="svg-icon" />
-                <img :src="likeSvg" v-else class="svg-icon" />
-                <span class="ml-(--spacing-2)">{{ reply_item.like }}</span>
-              </button>
-            </div>
-            <div id="dislike">
-              <button
-                class="p-0 outline-none border-none bg-transparent h-(--component-height-xs) text-md text-text-secondary inline-flex items-center cursor-pointer align-middle hover:text-primary"
-                @click="handleHate"
-                :style="{
-                  color: String(interact_btn_active) === '2' ? 'var(--color-primary)' : ''
-                }"
-              >
-                <img :src="dislikeActiveSvg" fill="currentColor" v-if="interact_btn_active == 2" class="svg-icon" />
-                <img :src="dislikeSvg" v-else class="svg-icon" />
-                <span class="ml-(--spacing-2)">{{ reply_item.dislike }}</span>
-              </button>
-            </div>
-            <div id="reply">
-              <button
-                class="p-0 outline-none border-none bg-transparent h-(--component-height-xs) text-md text-text-secondary inline-flex items-center cursor-pointer align-middle hover:text-primary"
-                @click="handle_pop_up_reply_area"
-              >
-                回复
-              </button>
-            </div>
-            <div
-              id="more"
-              class="ml-auto mr-(--spacing-6) w-(--component-height-base) h-(--component-height-base) relative scale-[1.4] z-[1600]"
-              v-show="is_mouse_in || is_comment_menu_open"
-              :style="{ 'padding-right': is_root ? '0' : 'var(--spacing-8)' }"
-            >
-              <button
-                class="p-0 outline-none border-none bg-transparent h-(--component-height-xs) text-md text-text-secondary inline-flex items-center cursor-pointer align-middle hover:text-primary"
-                @click="() => (is_comment_menu_open = !is_comment_menu_open)"
-              >
-                <img :src="moreSvg" fill="currentColor" class="svg-icon" />
-              </button>
-              <div
-                class="right-0 absolute top-(--spacing-3) z-[2000]"
-                v-show="is_comment_menu_open"
-                @mouseleave="is_comment_menu_open = false"
-              >
-                <ul
-                  id="options"
-                  class="block absolute top-(--spacing-5) right-0 m-0 p-0 z-10 w-(--spacing-12) list-none rounded-sm text-base text-text-primary bg-bg shadow-[var(--el-box-shadow-light)] overflow-hidden"
-                >
-                  <li
-                    v-if="is_up && is_root"
-                    class="box-border w-full flex items-center h-(--spacing-5) px-(--spacing-4) cursor-pointer select-none"
-                    @click="handle_top(reply_item)"
-                  >
-                    置顶
-                  </li>
-                  <el-popconfirm
-                    :show-arrow="false"
-                    confirm-button-text="是"
-                    cancel-button-text="否"
-                    icon=""
-                    title="是否删除评论？"
-                    @confirm="handle_delete(reply_item)"
-                    placement="top"
-                    :offset="12"
-                  >
-                    <template #reference>
-                      <li
-                        v-if="String(reply_item.member.mid) === String(user_nav.uid) || is_up"
-                        class="box-border w-full flex items-center h-(--spacing-5) px-(--spacing-4) cursor-pointer select-none"
-                      >
-                        删除
-                      </li>
-                    </template>
-                  </el-popconfirm>
-                  <li
-                    v-if="String(reply_item.member.mid) !== String(user_nav.uid) || is_up"
-                    class="box-border w-full flex items-center h-(--spacing-5) px-(--spacing-4) cursor-pointer select-none"
-                    @click="handle_black_list(reply_item)"
-                  >
-                    加入黑名单
-                  </li>
-                  <li
-                    v-if="String(reply_item.member.mid) !== String(user_nav.uid) || is_up"
-                    class="box-border w-full flex items-center h-(--spacing-5) px-(--spacing-4) cursor-pointer select-none"
-                    @click="handle_report(reply_item)"
-                  >
-                    举报
-                  </li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        </template>
-      </el-card>
+
+    <!-- 右侧内容 -->
+    <div class="flex-1 min-w-0">
+      <!-- 用户信息行 -->
+      <div class="flex items-center gap-2 mb-1 flex-wrap">
+        <span class="text-sm font-medium text-text-primary">{{ reply_item.member.uname }}</span>
+        
+        <!-- 等级图标 -->
+        <img
+          v-if="reply_item.member.level_info?.current_level"
+          :src="`https://i0.hdslb.com/bfs/seed/jinkela/short/webui/user-profile/img/level_${reply_item.member.level_info.current_level}.svg`"
+          class="w-4 h-4"
+          referrerpolicy="no-referrer"
+          :alt="'Lv' + reply_item.member.level_info.current_level"
+        />
+        
+        <!-- UP主标识 -->
+        <span
+          v-if="is_root && String(up_mid) === String(reply_item.member.mid)"
+          class="inline-flex items-center px-1.5 py-px text-[10px] leading-none rounded-sm bg-primary/15 text-primary font-medium"
+        >UP</span>
+        
+        <!-- 时间 -->
+        <span class="text-xs text-text-placeholder ml-auto">{{ utils.formatDateTS(reply_item.ctime) }}</span>
+      </div>
+
+      <!-- 评论内容 -->
+      <div class="text-sm text-text-primary leading-relaxed mb-2 break-words">
+        <span v-html="renderedContent"></span>
+      </div>
+
+      <!-- UP主赞过 -->
       <div
-        class="w-fit text-text-regular bg-fill-light p-(--spacing-1) rounded-sm box-border text-xs leading-none"
-        v-if="is_root && reply_item.up_action.like"
+        v-if="is_root && reply_item.up_action?.like"
+        class="inline-flex items-center gap-1 mb-2 px-2 py-0.5 rounded-sm bg-primary/8 text-[11px] text-primary"
       >
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M14.6 8H12V5.6c0-.7-.6-1.3-1.3-1.3-.3 0-.5.1-.7.3L6.3 9c-.3.3-.3.7-.3 1v9.3c0 .4.3.7.7.7h10.4c.8 0 1.5-.4 1.9-1.1l2.6-5.5c.1-.3.2-.7.1-1-.1-.4-.4-.7-.7-.9-.2-.1-.3-.1-.5-.1H17V6.7c0-.7-.6-1.3-1.3-1.3-.4 0-.8.2-1.1.6zM4 10H2v10h2c.6 0 1-.4 1-1v-8c0-.6-.4-1-1-1z" fill="currentColor"/></svg>
         UP主觉得很赞
+      </div>
+
+      <!-- 操作栏 -->
+      <div class="flex items-center gap-4 text-text-placeholder text-sm select-none">
+        <!-- 点赞 -->
+        <button
+          class="bili-action-btn flex items-center gap-1 hover:text-primary transition-colors"
+          :class="{ 'text-primary!': interact_btn_active === 1 }"
+          @click="handleLike"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" :fill="interact_btn_active === 1 ? 'currentColor' : 'none'" :stroke="interact_btn_active === 1 ? 'none' : 'currentColor'" stroke-width="2">
+            <path d="M14.6 8H12V5.6c0-.7-.6-1.3-1.3-1.3-.3 0-.5.1-.7.3L6.3 9c-.3.3-.3.7-.3 1v9.3c0 .4.3.7.7.7h10.4c.8 0 1.5-.4 1.9-1.1l2.6-5.5c.1-.3.2-.7.1-1-.1-.4-.4-.7-.7-.9-.2-.1-.3-.1-.5-.1H17V6.7c0-.7-.6-1.3-1.3-1.3-.4 0-.8.2-1.1.6z"/>
+          </svg>
+          <span v-if="Number(reply_item.like) > 0">{{ reply_item.like }}</span>
+        </button>
+
+        <!-- 点踩 -->
+        <button
+          class="bili-action-btn flex items-center gap-1 hover:text-primary transition-colors"
+          :class="{ 'text-primary!': interact_btn_active === 2 }"
+          @click="handleHate"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" :fill="interact_btn_active === 2 ? 'currentColor' : 'none'" :stroke="interact_btn_active === 2 ? 'none' : 'currentColor'" stroke-width="2" style="transform: rotate(180deg)">
+            <path d="M14.6 8H12V5.6c0-.7-.6-1.3-1.3-1.3-.3 0-.5.1-.7.3L6.3 9c-.3.3-.3.7-.3 1v9.3c0 .4.3.7.7.7h10.4c.8 0 1.5-.4 1.9-1.1l2.6-5.5c.1-.3.2-.7.1-1-.1-.4-.4-.7-.7-.9-.2-.1-.3-.1-.5-.1H17V6.7c0-.7-.6-1.3-1.3-1.3-.4 0-.8.2-1.1.6z"/>
+          </svg>
+        </button>
+
+        <!-- 回复 -->
+        <button
+          class="bili-action-btn hover:text-primary transition-colors"
+          @click="handle_pop_up_reply_area"
+        >
+          回复
+        </button>
+
+        <!-- 更多菜单 -->
+        <div
+          class="relative ml-auto"
+          v-show="is_mouse_in || is_comment_menu_open"
+        >
+          <button
+            class="bili-action-btn hover:text-primary transition-colors"
+            @click="() => (is_comment_menu_open = !is_comment_menu_open)"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>
+          </button>
+          <div
+            v-show="is_comment_menu_open"
+            class="absolute right-0 top-6 z-50 min-w-[100px] rounded-md bg-bg shadow-lg border border-border-light overflow-hidden"
+            @mouseleave="is_comment_menu_open = false"
+          >
+            <div
+              v-if="is_up && is_root"
+              class="px-3 py-2 text-sm cursor-pointer hover:bg-bg-secondary transition-colors"
+              @click="handle_top(reply_item)"
+            >置顶</div>
+            <el-popconfirm
+              confirm-button-text="删除"
+              cancel-button-text="取消"
+              title="确定删除这条评论吗？"
+              @confirm="handle_delete(reply_item)"
+              placement="left"
+            >
+              <template #reference>
+                <div
+                  v-if="String(reply_item.member.mid) === String(user_nav.uid) || is_up"
+                  class="px-3 py-2 text-sm cursor-pointer hover:bg-bg-secondary transition-colors text-red-400"
+                >删除</div>
+              </template>
+            </el-popconfirm>
+            <div
+              v-if="String(reply_item.member.mid) !== String(user_nav.uid)"
+              class="px-3 py-2 text-sm cursor-pointer hover:bg-bg-secondary transition-colors"
+              @click="handle_report(reply_item)"
+            >举报</div>
+          </div>
+        </div>
       </div>
     </div>
   </div>

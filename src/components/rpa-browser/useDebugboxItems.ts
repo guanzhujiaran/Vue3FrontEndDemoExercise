@@ -1,8 +1,5 @@
 import { ref, watch, onMounted } from 'vue'
-import type { DroppedItem } from './debugbox-types'
-
-/** 嵌套路径中的一步 */
-export interface BranchPathStep { parentIndex: number; branch: 'true' | 'false' | 'loop' }
+import type { DroppedItem, BranchPathStep } from './debugbox-types'
 
 /** 内部拖拽来源位置（已有的卡片被拖拽时） */
 export interface DragSourceMain { container: 'main'; index: number }
@@ -344,6 +341,29 @@ export function useDebugboxItems(browserId: string, editMode: boolean, initialSt
   }
 
   // ── 序列化 ───────────────────────────────────────────
+
+  /** 将 LoopConfig 转换为后端 params 字段 */
+  function serializeLoopConfig(item: DroppedItem): Record<string, unknown> {
+    const lc = item.loopConfig
+    if (!lc) return {}
+    const mapping: Record<string, string> = {}
+    if (lc.paramMapping?.length) {
+      for (const m of lc.paramMapping) {
+        if (m.targetParam && m.sourcePath) {
+          mapping[m.targetParam] = m.sourcePath
+        }
+      }
+    }
+    return {
+      loop_source: lc.loopSource,
+      count: lc.count,
+      loop_items_var: lc.loopItemsVar || undefined,
+      loop_item_var: lc.loopItemVar || 'loop_item',
+      loop_index_var: lc.loopIndexVar || 'loop_index',
+      param_mapping: Object.keys(mapping).length > 0 ? mapping : undefined,
+    }
+  }
+
   function serializeBranchSteps(items: DroppedItem[]): Record<string, unknown>[] {
     return items.map(item => {
       const step: Record<string, unknown> = {
@@ -356,6 +376,10 @@ export function useDebugboxItems(browserId: string, editMode: boolean, initialSt
       if (item.trueBranch?.length) (step.params as Record<string, unknown>).TrueBranch = serializeBranchSteps(item.trueBranch)
       if (item.falseBranch?.length) (step.params as Record<string, unknown>).FalseBranch = serializeBranchSteps(item.falseBranch)
       if (item.loopBody?.length) (step.params as Record<string, unknown>).loopBranch = serializeBranchSteps(item.loopBody)
+      // 序列化循环配置
+      if (item.action_type === 'loop' || item.action_id === 'loop') {
+        Object.assign(step.params as Record<string, unknown>, serializeLoopConfig(item))
+      }
       return step
     })
   }
@@ -377,6 +401,10 @@ export function useDebugboxItems(browserId: string, editMode: boolean, initialSt
     if (item.trueBranch?.length) params.TrueBranch = serializeBranchSteps(item.trueBranch)
     if (item.falseBranch?.length) params.FalseBranch = serializeBranchSteps(item.falseBranch)
     if (item.loopBody?.length) params.loopBranch = serializeBranchSteps(item.loopBody)
+    // 序列化循环配置
+    if (item.action_type === 'loop' || item.action_id === 'loop') {
+      Object.assign(params, serializeLoopConfig(item))
+    }
     return params
   }
 
@@ -396,6 +424,10 @@ export function useDebugboxItems(browserId: string, editMode: boolean, initialSt
       if (item.trueBranch?.length) (step.params as Record<string, unknown>).TrueBranch = serializeBranchSteps(item.trueBranch)
       if (item.falseBranch?.length) (step.params as Record<string, unknown>).FalseBranch = serializeBranchSteps(item.falseBranch)
       if (item.loopBody?.length) (step.params as Record<string, unknown>).loopBranch = serializeBranchSteps(item.loopBody)
+      // 序列化循环配置
+      if (item.action_type === 'loop' || item.action_id === 'loop') {
+        Object.assign(step.params as Record<string, unknown>, serializeLoopConfig(item))
+      }
       if (item.step_children?.length) step.step_children = item.step_children
       return step
     })

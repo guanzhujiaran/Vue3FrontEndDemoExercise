@@ -1,34 +1,34 @@
 <template>
-  <div class="user-base-info-config">
-    <div class="config-section">
-      <h3>个人信息</h3>
-      <div class="config-item">
-        <label>昵称</label>
-        <el-input 
-          v-model="userName" 
-          placeholder="请输入用户名（2-24个字符）" 
+  <div class="user-base-info-config flex flex-col gap-4 p-4">
+    <div class="config-section flex flex-col gap-3">
+      <h3 class="text-lg font-medium text-text-primary">个人信息</h3>
+      <div class="config-item flex flex-col gap-1">
+        <label class="text-sm text-text-regular">昵称</label>
+        <el-input
+          v-model="userName"
+          placeholder="请输入用户名（2-24个字符）"
           :maxlength="24"
           show-word-limit
         />
       </div>
-      <div class="config-item">
-        <label>用户名</label>
-        <span class="userinfo-descript">{{ userid }}</span>
+      <div class="config-item flex flex-col gap-1">
+        <label class="text-sm text-text-regular">用户名</label>
+        <span class="userinfo-descript text-sm text-text-secondary">{{ userid }}</span>
       </div>
-      <div class="config-item">
-        <label>个性签名</label>
-        <el-input 
-          v-model="userSign" 
-          placeholder="请输入个性签名（最多70个字符）" 
+      <div class="config-item flex flex-col gap-1">
+        <label class="text-sm text-text-regular">个性签名</label>
+        <el-input
+          v-model="userSign"
+          placeholder="请输入个性签名（最多70个字符）"
           type="textarea"
           :maxlength="70"
           show-word-limit
           :rows="3"
         />
       </div>
-      
-      <div class="config-item">
-        <label>性别</label>
+
+      <div class="config-item flex flex-col gap-1">
+        <label class="text-sm text-text-regular">性别</label>
         <el-select v-model="sex" placeholder="请选择性别">
           <el-option label="男" value="男" />
           <el-option label="女" value="女" />
@@ -37,9 +37,9 @@
           <el-option label="永雏塔菲" value="永雏塔菲" />
         </el-select>
       </div>
-      
-      <div class="config-item">
-        <label>生日</label>
+
+      <div class="config-item flex flex-col gap-1">
+        <label class="text-sm text-text-regular">生日</label>
         <el-date-picker
           v-model="birthday"
           type="date"
@@ -49,8 +49,8 @@
         />
       </div>
     </div>
-    
-    <div class="config-actions">
+
+    <div class="config-actions flex gap-2">
       <el-button type="primary" @click="saveSettings" :loading="saving">保存设置</el-button>
       <el-button @click="loadUserInfo">重新加载</el-button>
     </div>
@@ -62,7 +62,6 @@ import { ref, onMounted } from 'vue'
 import biliMessage from '@/utils/message'
 import userApi from '@/api/user/user_api.ts'
 import type { User_base_info_config_form } from '@/models/user/user_setting/user_base_info_config_model.ts'
-import '@/assets/components/user/user-base-info-config-tailwind.css'
 import { businessHandler } from '@/utils/businessHandler'
 
 // 设置项

@@ -61,11 +61,11 @@ export type ActionExecuteRequest = {
  */
 export type ActionForkRequest = {
     /**
-     * Id
+     * Action Id
      *
-     * 原操作ID
+     * 原操作的 action_id
      */
-    id: number;
+    action_id: string;
     /**
      * New Name
      *
@@ -254,7 +254,7 @@ export type BrowserFingerprintUpsertParams = {
  *
  * 内置操作类型
  */
-export type BuiltinActionType = 'click' | 'input' | 'wait' | 'scroll' | 'navigate' | 'screenshot' | 'llm' | 'hover' | 'new_page' | 'get_text' | 'loop' | 'composite' | 'if_else';
+export type BuiltinActionType = 'click' | 'input' | 'wait' | 'scroll' | 'navigate' | 'screenshot' | 'llm' | 'hover' | 'new_page' | 'get_text' | 'get_window' | 'loop' | 'composite' | 'if_else';
 
 /**
  * ClosePageRequest
@@ -378,6 +378,34 @@ export type CompositeActionCreateRequest = {
 };
 
 /**
+ * CompositeActionDeleteRequest
+ *
+ * 删除自定义操作请求
+ */
+export type CompositeActionDeleteRequest = {
+    /**
+     * Action Id
+     *
+     * 操作的 action_id（如 ca_xxx）
+     */
+    action_id: string;
+};
+
+/**
+ * CompositeActionGetRequest
+ *
+ * 获取自定义操作详情请求
+ */
+export type CompositeActionGetRequest = {
+    /**
+     * Action Id
+     *
+     * 操作的 action_id（如 ca_xxx）
+     */
+    action_id: string;
+};
+
+/**
  * CompositeActionListRequest
  *
  * 获取复合操作列表请求
@@ -412,11 +440,11 @@ export type CompositeActionListRequest = {
  */
 export type CompositeActionUpdateRequest = {
     /**
-     * Id
+     * Action Id
      *
-     * 操作数据库ID
+     * 操作的 action_id（如 ca_xxx）
      */
-    id: number;
+    action_id: string;
     /**
      * Name
      *
@@ -1729,6 +1757,24 @@ export type StandardResponseExecuteStepResponse = {
  * StandardResponse[List[ActionMetadataResponse]]
  */
 export type StandardResponseListActionMetadataResponse = {
+    /**
+     * Code
+     */
+    code: number;
+    /**
+     * Data
+     */
+    data?: unknown | null;
+    /**
+     * Msg
+     */
+    msg?: string;
+};
+
+/**
+ * StandardResponse[List[str]]
+ */
+export type StandardResponseListStr = {
     /**
      * Code
      */
@@ -3373,12 +3419,7 @@ export type ListCustomActionsApiV1RpaBrowserControlCustomActionsListPostResponse
 export type ListCustomActionsApiV1RpaBrowserControlCustomActionsListPostResponse = ListCustomActionsApiV1RpaBrowserControlCustomActionsListPostResponses[keyof ListCustomActionsApiV1RpaBrowserControlCustomActionsListPostResponses];
 
 export type GetCustomActionApiV1RpaBrowserControlCustomActionsGetPostData = {
-    /**
-     * Request
-     */
-    body: {
-        [key: string]: unknown;
-    };
+    body: CompositeActionGetRequest;
     headers: {
         /**
          * X-Bili-Mid
@@ -3448,12 +3489,7 @@ export type UpdateCustomActionApiV1RpaBrowserControlCustomActionsUpdatePostRespo
 export type UpdateCustomActionApiV1RpaBrowserControlCustomActionsUpdatePostResponse = UpdateCustomActionApiV1RpaBrowserControlCustomActionsUpdatePostResponses[keyof UpdateCustomActionApiV1RpaBrowserControlCustomActionsUpdatePostResponses];
 
 export type DeleteCustomActionApiV1RpaBrowserControlCustomActionsDeletePostData = {
-    /**
-     * Request
-     */
-    body: {
-        [key: string]: unknown;
-    };
+    body: CompositeActionDeleteRequest;
     headers: {
         /**
          * X-Bili-Mid
@@ -3486,6 +3522,41 @@ export type DeleteCustomActionApiV1RpaBrowserControlCustomActionsDeletePostRespo
 };
 
 export type DeleteCustomActionApiV1RpaBrowserControlCustomActionsDeletePostResponse = DeleteCustomActionApiV1RpaBrowserControlCustomActionsDeletePostResponses[keyof DeleteCustomActionApiV1RpaBrowserControlCustomActionsDeletePostResponses];
+
+export type ListCustomActionTagsApiV1RpaBrowserControlCustomActionsTagsPostData = {
+    body?: never;
+    headers: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid': string;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level': string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/rpa/browser/control/custom-actions/tags';
+};
+
+export type ListCustomActionTagsApiV1RpaBrowserControlCustomActionsTagsPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ListCustomActionTagsApiV1RpaBrowserControlCustomActionsTagsPostError = ListCustomActionTagsApiV1RpaBrowserControlCustomActionsTagsPostErrors[keyof ListCustomActionTagsApiV1RpaBrowserControlCustomActionsTagsPostErrors];
+
+export type ListCustomActionTagsApiV1RpaBrowserControlCustomActionsTagsPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseListStr;
+};
+
+export type ListCustomActionTagsApiV1RpaBrowserControlCustomActionsTagsPostResponse = ListCustomActionTagsApiV1RpaBrowserControlCustomActionsTagsPostResponses[keyof ListCustomActionTagsApiV1RpaBrowserControlCustomActionsTagsPostResponses];
 
 export type ForkCustomActionApiV1RpaBrowserControlCustomActionsForkPostData = {
     body: ActionForkRequest;

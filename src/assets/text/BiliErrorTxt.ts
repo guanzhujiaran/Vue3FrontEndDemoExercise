@@ -18,6 +18,8 @@ export type BiliErrorDetailType = {
 type BiliErrorRouteToType = {
   not_found: BiliErrorDetailType
   unauthorized: BiliErrorDetailType
+  others_lot_dyn_login_required: BiliErrorDetailType
+  rpa_browser_login_required: BiliErrorDetailType
   unknown: BiliErrorDetailType
   network_error: BiliErrorDetailType
 }
@@ -36,6 +38,24 @@ export const BiliErrorRouteToTxt: BiliErrorRouteToType = {
     error_img_src: BiliImg.error.un_authorized,
     error_msg: '不准访问',
     error_description: '抱歉，您需要登录后才能访问辅助自动化测试控制台',
+    btn_text: '返回首页',
+    route_link: {
+      name: RouteName.HOME
+    }
+  },
+  others_lot_dyn_login_required: {
+    error_img_src: BiliImg.error.un_authorized,
+    error_msg: '未授权访问',
+    error_description: '抱歉，您需要登录后才能访问第三方抽奖动态页面',
+    btn_text: '返回首页',
+    route_link: {
+      name: RouteName.HOME
+    }
+  },
+  rpa_browser_login_required: {
+    error_img_src: BiliImg.error.un_authorized,
+    error_msg: '未授权访问',
+    error_description: '抱歉，您需要登录后才能访问RPA浏览器页面',
     btn_text: '返回首页',
     route_link: {
       name: RouteName.HOME

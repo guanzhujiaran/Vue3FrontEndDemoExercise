@@ -105,6 +105,7 @@ export const processRoutesForHome = (routes: RouteRecordRaw[], parentPath = ''):
                 description: typedChildMeta.description,
                 path: childPath,
                 color: typedChildMeta.color,
+                requiresLogin: typedChildMeta.requiresLogin || false,
                 order: typedChildMeta.order || 0
               })
             }

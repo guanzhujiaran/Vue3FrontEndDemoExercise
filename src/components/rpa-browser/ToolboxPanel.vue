@@ -74,6 +74,27 @@ const getActionLabel = (actionId: string, jsonSchema?: Record<string, unknown>) 
   return actionTitleMap[actionId] || jsonSchema?.title || actionId
 }
 
+const getTooltipContent = (data: Record<string, unknown>) => {
+  const parts: string[] = []
+  const desc = data.description || (data.json_schema as Record<string, unknown>)?.description
+  if (desc) parts.push(String(desc))
+
+  const tags = data.tags as string[] | undefined
+  if (tags?.length) parts.push(`标签: ${tags.join(', ')}`)
+
+  if (data.steps_count != null) parts.push(`步骤数: ${data.steps_count}`)
+
+  if (data.is_public != null) parts.push(`可见性: ${data.is_public ? '公开' : '私有'}`)
+
+  if (data.action_id) parts.push(`ID: ${data.action_id}`)
+
+  return parts.join('<br/>') || '暂无描述'
+}
+
+const getTooltipEffect = (data: Record<string, unknown>): 'dark' | 'light' => {
+  return data.is_public ? 'light' : 'dark'
+}
+
 // 生成树节点
 const generateTreeData = (type: string) => {
   let data: unknown[] = []
@@ -107,12 +128,12 @@ const generateTreeData = (type: string) => {
     label: '自定义动作',
     icon: Folder,
     children: actions.map(action => ({
-      id: `action-${action.id}`,
+      id: `action-${action.action_id}`,
       label: action.name,
       children: [],
       type: 'action',
       // 优先使用 action 本身的 action_id，然后是 action_type，最后才是自定义
-      action_id: action.action_id || action.action_type || `custom-${action.id}`,
+      action_id: action.action_id || action.action_type || `custom-${action.action_id}`,
       action_type: action.action_type || action.action_id || 'custom',
       json_schema: action.json_schema,
       name: action.name,
@@ -188,8 +209,8 @@ const loadPrivateActions = async (page: number = 1) => {
       }
     })
 
-    if (response.data?.code === 0 && response.data?.data) {
-      const data = response.data.data as { items?: unknown[]; total?: number }
+    if (response?.code === 0 && response?.data) {
+      const data = response.data as { items?: unknown[]; total?: number }
       privateActions.value = data.items || []
       privateActionsTotal.value = data.total || 0
       privateActionsPage.value = page
@@ -213,8 +234,8 @@ const loadPrivatePlugins = async (page: number = 1) => {
       }
     })
 
-    if (response.data?.code === 0 && response.data?.data) {
-      const data = response.data.data as { items?: unknown[]; total?: number }
+    if (response?.code === 0 && response?.data) {
+      const data = response.data as { items?: unknown[]; total?: number }
       privatePlugins.value = data.items || []
       privatePluginsTotal.value = data.total || 0
       privatePluginsPage.value = page
@@ -240,8 +261,8 @@ const loadPublicActions = async (page: number = 1) => {
       }
     })
 
-    if (response.data?.code === 0 && response.data?.data) {
-      const data = response.data.data as { items?: unknown[]; total?: number }
+    if (response?.code === 0 && response?.data) {
+      const data = response.data as { items?: unknown[]; total?: number }
       publicActions.value = data.items || []
       publicActionsTotal.value = data.total || 0
       publicActionsPage.value = page
@@ -265,8 +286,8 @@ const loadPublicPlugins = async (page: number = 1) => {
       }
     })
 
-    if (response.data?.code === 0 && response.data?.data) {
-      const data = response.data.data as { items?: unknown[]; total?: number }
+    if (response?.code === 0 && response?.data) {
+      const data = response.data as { items?: unknown[]; total?: number }
       publicPlugins.value = data.items || []
       publicPluginsTotal.value = data.total || 0
       publicPluginsPage.value = page
@@ -285,8 +306,8 @@ const loadRegisteredActions = async () => {
       }
     })
 
-    if (response.data?.code === 0 && response.data?.data) {
-      const data = response.data.data as unknown[]
+    if (response?.code === 0 && response?.data) {
+      const data = response.data as unknown[]
       registeredActions.value = data
       registeredActionsTotal.value = data.length
     }
@@ -421,14 +442,14 @@ const handleEditCustomAction = async (nodeData: Record<string, unknown>) => {
   }
   try {
     const response = await getCustomActionApiV1RpaBrowserControlCustomActionsGetPost({
-      body: { id: actionId },
+      body: { action_id: actionId },
       headers: {
         'x-bili-mid': userNavStore.user_nav.uid,
         'x-bili-level': String(userNavStore.user_nav.level_info.current_level)
       }
     })
-    if (response.data?.code === 0 && response.data?.data) {
-      const detail = response.data.data as Record<string, unknown>
+    if (response?.code === 0 && response?.data) {
+      const detail = response.data as Record<string, unknown>
       emit('edit-action', detail)
     } else {
       ElMessage.error('获取操作详情失败')
@@ -489,7 +510,16 @@ const handleEditCustomAction = async (nodeData: Record<string, unknown>) => {
               >
                 <span class="flex items-center gap-2 min-w-0">
                   <component :is="data.type === 'plugin' ? Box : Bell" class="w-4 h-4 shrink-0" />
-                  <span class="truncate">{{ node.label }}</span>
+                  <el-tooltip
+                    :content="getTooltipContent(data as Record<string, unknown>)"
+                    :effect="getTooltipEffect(data as Record<string, unknown>)"
+                    raw-content
+                    placement="right"
+                    :show-after="500"
+                    popper-class="toolbox-tooltip"
+                  >
+                    <span class="truncate">{{ node.label }}</span>
+                  </el-tooltip>
                 </span>
                 <span class="flex items-center gap-1 shrink-0">
                   <el-button
@@ -576,7 +606,16 @@ const handleEditCustomAction = async (nodeData: Record<string, unknown>) => {
               >
                 <span class="flex items-center gap-2 min-w-0">
                   <component :is="data.type === 'plugin' ? Box : Bell" class="w-4 h-4 shrink-0" />
-                  <span class="truncate">{{ node.label }}</span>
+                  <el-tooltip
+                    :content="getTooltipContent(data as Record<string, unknown>)"
+                    :effect="getTooltipEffect(data as Record<string, unknown>)"
+                    raw-content
+                    placement="right"
+                    :show-after="500"
+                    popper-class="toolbox-tooltip"
+                  >
+                    <span class="truncate">{{ node.label }}</span>
+                  </el-tooltip>
                 </span>
                 <span class="flex items-center gap-1 shrink-0">
                   <el-button
@@ -657,7 +696,16 @@ const handleEditCustomAction = async (nodeData: Record<string, unknown>) => {
               >
                 <span class="flex items-center gap-2">
                   <el-icon><Tools class="w-4 h-4" /></el-icon>
-                  <span>{{ node.label }}</span>
+                  <el-tooltip
+                    :content="getTooltipContent(data as Record<string, unknown>)"
+                    :effect="getTooltipEffect(data as Record<string, unknown>)"
+                    raw-content
+                    placement="right"
+                    :show-after="500"
+                    popper-class="toolbox-tooltip"
+                  >
+                    <span>{{ node.label }}</span>
+                  </el-tooltip>
                 </span>
                 <span class="text-xs text-text-secondary">预置动作</span>
               </div>

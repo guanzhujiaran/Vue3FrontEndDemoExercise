@@ -1,19 +1,13 @@
 import { ref, type Ref } from 'vue'
-import {
-  createCustomActionApiV1RpaBrowserControlCustomActionsCreatePost,
-  updateCustomActionApiV1RpaBrowserControlCustomActionsUpdatePost,
-} from '@/api/browser/hey-api'
+import { createCustomActionApiV1RpaBrowserControlCustomActionsCreatePost } from '@/api/browser/hey-api'
 import type { BuiltinActionType } from '@/api/browser/hey-api'
 import { useUserNavStore } from '@/stores/user_nav'
 import biliMessage from '@/utils/message'
-import type { DroppedItem, OperationFeedback } from './debugbox-types'
+import type { BranchPathStep, DroppedItem } from './debugbox-types'
 
 export function useDebugboxSave(
   droppedItems: Ref<DroppedItem[]>,
   selectedIndices: Ref<Set<number>>,
-  operationFeedback: Ref<Record<string, OperationFeedback>>,
-  expandedItems: Ref<Set<number>>,
-  getSteps: () => Record<string, unknown>[],
   serializeBranchSteps: (items: DroppedItem[]) => Record<string, unknown>[],
 ) {
   const userNavStore = useUserNavStore()
@@ -25,16 +19,6 @@ export function useDebugboxSave(
   const saveDialogItem = ref<DroppedItem | null>(null)
   const saveDialogIndex = ref(-1)
   const saveMultiItems = ref<DroppedItem[]>([])
-
-  // ── 编辑模式状态 ─────────────────────────────────────
-  const internalEditMode = ref(false)
-  const editingActionId = ref<string | null>(null)
-  const editingActionName = ref('')
-  const editingActionDescription = ref('')
-  const editSaving = ref(false)
-  const savedItemsBeforeEdit = ref<DroppedItem[]>([])
-  const savedFeedbackBeforeEdit = ref<Record<string, OperationFeedback>>({})
-  const savedExpandedBeforeEdit = ref<Set<number>>(new Set())
 
   function apiHeaders() {
     return {
@@ -61,18 +45,28 @@ export function useDebugboxSave(
     }
   }
 
-  /** 根据输入/输出参数自动生成默认描述 */
+  /** 递归收集单个 item 及其所有嵌套分支中的模板变量、输入、输出 */
+  function collectItemInfo(item: DroppedItem, templateSet: Set<string>, inputSet: Set<string>, outputSet: Set<string>): void {
+    extractTemplateVars(item.formData, templateSet)
+    extractTemplateVars(item.config_params, templateSet)
+    if (item.input_vars) Object.keys(item.input_vars).filter(k => k).forEach(k => inputSet.add(k))
+    if (item.output_vars) item.output_vars.filter(k => k).forEach(k => outputSet.add(k))
+    // 递归遍历嵌套分支体/循环体
+    if (item.trueBranch) item.trueBranch.forEach(child => collectItemInfo(child, templateSet, inputSet, outputSet))
+    if (item.falseBranch) item.falseBranch.forEach(child => collectItemInfo(child, templateSet, inputSet, outputSet))
+    if (item.loopBody) item.loopBody.forEach(child => collectItemInfo(child, templateSet, inputSet, outputSet))
+  }
+
+  /** 根据输入/输出参数自动生成默认描述（含嵌套分支/循环体） */
   function generateDefaultDescription(item: DroppedItem): string {
     const parts: string[] = []
-    // 从 formData / config_params 中提取 {{xxx}} 模板变量
     const templateVars = new Set<string>()
-    extractTemplateVars(item.formData, templateVars)
-    extractTemplateVars(item.config_params, templateVars)
+    const inputSet = new Set<string>()
+    const outputSet = new Set<string>()
+    collectItemInfo(item, templateVars, inputSet, outputSet)
     if (templateVars.size > 0) parts.push(`需要输入：${[...templateVars].join('、')}`)
-    const inputKeys = item.input_vars ? Object.keys(item.input_vars).filter(k => k) : []
-    const outputKeys = (item.output_vars || []).filter(k => k)
-    if (inputKeys.length > 0) parts.push(`输入：${inputKeys.join('、')}`)
-    if (outputKeys.length > 0) parts.push(`输出：${outputKeys.join('、')}`)
+    if (inputSet.size > 0) parts.push(`输入：${[...inputSet].join('、')}`)
+    if (outputSet.size > 0) parts.push(`输出：${[...outputSet].join('、')}`)
     return parts.join('\n')
   }
 
@@ -91,17 +85,21 @@ export function useDebugboxSave(
     saveDialogVisible.value = true
   }
 
-  function openSaveBranchDialog(parentIndex: number, branch: 'true' | 'false' | 'loop', childIndex: number, nestedBranch?: string, nestedIndex?: number) {
+  function openSaveBranchDialog(parentIndex: number, branch: 'true' | 'false' | 'loop', childIndex: number, path?: BranchPathStep[]) {
     const item = droppedItems.value[parentIndex]
     if (!item) return
-    const targetBranch = branch === 'true' ? item.trueBranch : branch === 'false' ? item.falseBranch : item.loopBody
-    if (!targetBranch || !targetBranch[childIndex]) return
-    let branchItem = targetBranch[childIndex]
-    if (nestedBranch != null && nestedIndex != null) {
-      const nestedTarget = nestedBranch === 'true' ? branchItem.trueBranch : nestedBranch === 'false' ? branchItem.falseBranch : branchItem.loopBody
-      if (!nestedTarget || !nestedTarget[nestedIndex]) return
-      branchItem = nestedTarget[nestedIndex]
+    let items = branch === 'true' ? item.trueBranch : branch === 'false' ? item.falseBranch : item.loopBody
+    if (!items) return
+    if (path) {
+      for (const step of path) {
+        const nestedParent = items[step.parentIndex]
+        if (!nestedParent) return
+        items = step.branch === 'true' ? nestedParent.trueBranch : step.branch === 'false' ? nestedParent.falseBranch : nestedParent.loopBody
+        if (!items) return
+      }
     }
+    if (!items[childIndex]) return
+    const branchItem = items[childIndex]
     saveMultiItems.value = []
     saveDialogItem.value = branchItem
     saveDialogIndex.value = -1
@@ -113,16 +111,13 @@ export function useDebugboxSave(
     saveDialogVisible.value = true
   }
 
-  /** 为多个 items 汇总生成默认描述 */
+  /** 为多个 items 汇总生成默认描述（递归遍历所有嵌套分支体/循环体） */
   function generateMultiDescription(items: DroppedItem[]): string {
     const templateSet = new Set<string>()
     const inputSet = new Set<string>()
     const outputSet = new Set<string>()
     for (const item of items) {
-      extractTemplateVars(item.formData, templateSet)
-      extractTemplateVars(item.config_params, templateSet)
-      if (item.input_vars) Object.keys(item.input_vars).filter(k => k).forEach(k => inputSet.add(k))
-      if (item.output_vars) item.output_vars.filter(k => k).forEach(k => outputSet.add(k))
+      collectItemInfo(item, templateSet, inputSet, outputSet)
     }
     const parts: string[] = []
     if (templateSet.size > 0) parts.push(`需要输入：${[...templateSet].join('、')}`)
@@ -176,9 +171,9 @@ export function useDebugboxSave(
             input_vars: [], output_vars: [], timeout: 30000, retry_on_error: false, retry_times: 0, retry_delay: 1.0 },
           headers: apiHeaders(),
         })
-        if (response.data?.code === 0) { biliMessage.success('自定义操作保存成功'); saveDialogVisible.value = false; saveMultiItems.value = [] }
+        if (response?.code === 0) { biliMessage.success('自定义操作保存成功'); saveDialogVisible.value = false; saveMultiItems.value = [] }
         else {
-          const msg = response.data?.msg || `保存失败 (code: ${response.data?.code})`
+          const msg = response?.msg || `保存失败 (code: ${response?.code})`
           console.error('[DebugboxSave] 复合动作保存失败:', response.data)
           biliMessage.error(msg)
         }
@@ -217,9 +212,9 @@ export function useDebugboxSave(
         },
         headers: apiHeaders(),
       })
-      if (response.data?.code === 0) { biliMessage.success('自定义操作保存成功'); saveDialogVisible.value = false }
+      if (response?.code === 0) { biliMessage.success('自定义操作保存成功'); saveDialogVisible.value = false }
       else {
-        const msg = response.data?.msg || `保存失败 (code: ${response.data?.code})`
+        const msg = response?.msg || `保存失败 (code: ${response?.code})`
         console.error('[DebugboxSave] 单项动作保存失败:', response.data)
         biliMessage.error(msg)
       }
@@ -231,81 +226,9 @@ export function useDebugboxSave(
     finally { saveDialogLoading.value = false }
   }
 
-  // ── 编辑自定义操作 ───────────────────────────────────
-  function convertStepsToItems(steps: Record<string, unknown>[]): DroppedItem[] {
-    return steps.map((step, i) => {
-      const sp = (step.params || {}) as Record<string, unknown>
-      let loopBody: DroppedItem[] | undefined
-      if (sp.loopBranch && Array.isArray(sp.loopBranch)) {
-        loopBody = convertStepsToItems(sp.loopBranch as Record<string, unknown>[])
-        delete sp.loopBranch
-      }
-      return {
-        id: `edit-step-${i}-${Date.now()}`, name: (step.action_id as string) || `步骤${i + 1}`,
-        action_id: step.action_id as string || '', action_type: (step.action_type as string) || (step.action_id as string) || '',
-        description: '', type: 'action', formData: { ...sp },
-        input_vars: (step.input_vars || {}) as Record<string, unknown>,
-        output_vars: (step.output_vars || []) as string[], config_params: {},
-        trueBranch: [], falseBranch: [], loopBody,
-      }
-    })
-  }
-
-  function startEditCustomAction(actionDetail: Record<string, unknown>) {
-    savedItemsBeforeEdit.value = [...droppedItems.value]
-    savedFeedbackBeforeEdit.value = { ...operationFeedback.value }
-    savedExpandedBeforeEdit.value = new Set(expandedItems.value)
-    internalEditMode.value = true
-    editingActionId.value = actionDetail.id as string
-    editingActionName.value = (actionDetail.name as string) || ''
-    editingActionDescription.value = (actionDetail.description as string) || ''
-    const steps = actionDetail.steps
-    droppedItems.value = steps && Array.isArray(steps) ? convertStepsToItems(steps as Record<string, unknown>[]) : []
-    expandedItems.value = new Set(droppedItems.value.map((_, i) => i))
-    operationFeedback.value = {}
-  }
-
-  function cancelEdit() {
-    droppedItems.value = [...savedItemsBeforeEdit.value]
-    operationFeedback.value = { ...savedFeedbackBeforeEdit.value }
-    expandedItems.value = new Set(savedExpandedBeforeEdit.value)
-    internalEditMode.value = false
-    editingActionId.value = null
-    editingActionName.value = ''
-    editingActionDescription.value = ''
-    savedItemsBeforeEdit.value = []
-    savedFeedbackBeforeEdit.value = {}
-    savedExpandedBeforeEdit.value = new Set()
-  }
-
-  async function confirmEdit() {
-    if (!editingActionId.value) return
-    const steps = getSteps()
-    editSaving.value = true
-    try {
-      const response = await updateCustomActionApiV1RpaBrowserControlCustomActionsUpdatePost({
-        body: { id: Number(editingActionId.value), name: editingActionName.value || undefined, description: editingActionDescription.value || undefined, steps },
-        headers: apiHeaders(),
-      })
-      if (response.data?.code === 0) { biliMessage.success('自定义操作更新成功'); cancelEdit() }
-      else {
-        const msg = (response.data?.msg as string) || `更新失败 (code: ${response.data?.code})`
-        console.error('[DebugboxSave] 自定义操作更新失败:', response.data)
-        biliMessage.error(msg); internalEditMode.value = false
-      }
-    } catch (error: unknown) {
-      const msg = error instanceof Error ? error.message : String(error)
-      console.error('[DebugboxSave] 自定义操作更新异常:', error)
-      biliMessage.error(msg ? `更新失败: ${msg}` : '网络异常，更新失败'); internalEditMode.value = false
-    }
-    finally { editSaving.value = false; editingActionId.value = null; editingActionName.value = ''; editingActionDescription.value = ''; savedItemsBeforeEdit.value = [] }
-  }
-
   // ── 导出 ─────────────────────────────────────────────
   return {
     saveDialogVisible, saveDialogLoading, saveDialogForm, saveDialogItem, saveDialogIndex, saveMultiItems,
     openSaveDialog, openSaveBranchDialog, handleSaveMulti, handleSaveBranchMulti, handleSaveDialogConfirm,
-    internalEditMode, editingActionId, editingActionName, editingActionDescription, editSaving,
-    startEditCustomAction, cancelEdit, confirmEdit, convertStepsToItems,
   }
 }

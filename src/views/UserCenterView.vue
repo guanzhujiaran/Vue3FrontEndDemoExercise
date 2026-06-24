@@ -125,7 +125,7 @@ const scrollbarHeight = computed(() => {
     <el-container v-if="isLoggedIn">
       <div class="user-center-layout h-screen flex w-full" style="height: calc(100vh - 60px - 40px); overflow: hidden;">
         <!-- 侧边栏 -->
-        <el-aside class="sidebar transition-all duration-300 ease-in-out p-1! sm:p-2!" :class="{ 'sidebar-collapsed': responsiveSidebarCollapsed, 'sidebar-small': isSmallScreen }" style="width: 200px; min-width: 200px; overflow: hidden;">
+        <el-aside class="sidebar transition-all duration-300 ease-in-out p-0" :class="{ 'sidebar-collapsed': responsiveSidebarCollapsed, 'sidebar-small': isSmallScreen }">
           <div class="sidebar-content h-full">
             <el-menu
               :defaultActive="menuDefaultActive"
@@ -175,7 +175,7 @@ const scrollbarHeight = computed(() => {
           </div>
         </el-aside>
         <!-- 主内容区 -->
-        <el-main class="main-content transition-all duration-300 ease-in-out p-1! sm:p-2!" style="overflow: hidden; display: flex; flex-direction: column;" ref="mainContentRef">
+        <el-main class="main-content transition-all duration-300 ease-in-out p-0 pl-1 sm:pl-2 " style="overflow: hidden; display: flex; flex-direction: column;" ref="mainContentRef">
           <el-header class="content-header transition-all duration-300" style="height: 60px; display: flex; align-items: center; padding: 0 20px; background-color: var(--el-bg-color-page); border-bottom: 1px solid var(--el-border-color-light);" ref="headerRef">
             <h2>
               <el-text tag="h2">{{ getCurrentRouteTitle }}</el-text>

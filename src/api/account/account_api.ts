@@ -1,29 +1,29 @@
-import BaseApi from '../base_axios/base_api'
+import { client } from '@/api/bili_lottery_data/hey-api/client.gen'
 import type { RootObject } from '@/models/api/base_model.ts'
 import type { AccountInfoModel, AccountRunningStatus, AccountSettingModel, AccountMsgSessionModel } from '@/models/account/account_model'
 
-/*
- * @Author: 星瞳 1944637830@qq.com
- * @Date: 2024-05-30 23:35:42
- * @LastEditors: 星瞳 1944637830@qq.com
- * @LastEditTime: 2024-06-29 19:31:56
- * @FilePath: \Vue3FrontEndDemoExercise\src\api\user\login.ts
- * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
- */
-class AccountApi extends BaseApi {
-  constructor() {
-    super()
-    this.path = '/api/v1/account/'
-  }
+class AccountApi {
   GetAllAccounts(): Promise<RootObject<Array<AccountInfoModel>>> {
-    return this._get('all_accounts')
+    return client.get({
+      url: '/api/v1/account/all_accounts',
+    }) as Promise<RootObject<Array<AccountInfoModel>>>
   }
+
   AddAccount(new_account_name: string): Promise<RootObject<null>> {
-    return this._post('add_account', { account_name: new_account_name })
+    return client.post({
+      url: '/api/v1/account/add_account',
+      body: { account_name: new_account_name },
+      headers: { 'Content-Type': 'application/json' },
+    }) as Promise<RootObject<null>>
   }
+
   GetAccountInfoByAccountName(account_name: string): Promise<RootObject<AccountInfoModel>> {
-    return this._get('get_account_info', { account_name: account_name })
+    return client.get({
+      url: '/api/v1/account/get_account_info',
+      query: { account_name: account_name },
+    }) as Promise<RootObject<AccountInfoModel>>
   }
+
   GetAccountLotterySettingByAccountName(account_name: string): Promise<
     RootObject<{
       account_name: string
@@ -32,24 +32,44 @@ class AccountApi extends BaseApi {
       }
     }>
   > {
-    return this._get('get_account_setting', { account_name: account_name })
+    return client.get({
+      url: '/api/v1/account/get_account_setting',
+      query: { account_name: account_name },
+    }) as Promise<RootObject<{
+      account_name: string
+      info: {
+        settings: AccountSettingModel
+      }
+    }>>
   }
+
   save_account_setting(account_name: string, settings: Object): Promise<RootObject<string>> {
-    return this._post('save_account_setting', {
-      account_name: account_name,
-      settings: settings
-    })
+    return client.post({
+      url: '/api/v1/account/save_account_setting',
+      body: {
+        account_name: account_name,
+        settings: settings,
+      },
+      headers: { 'Content-Type': 'application/json' },
+    }) as Promise<RootObject<string>>
   }
-  GetAccountRunningStatus(account_name: string):Promise<RootObject<AccountRunningStatus>> {
-    return this._get('get_account_running_status', {
-      account_name: account_name
-    })
+
+  GetAccountRunningStatus(account_name: string): Promise<RootObject<AccountRunningStatus>> {
+    return client.get({
+      url: '/api/v1/account/get_account_running_status',
+      query: {
+        account_name: account_name,
+      },
+    }) as Promise<RootObject<AccountRunningStatus>>
   }
 
   GetAccountMessages(account_name: string): Promise<RootObject<Array<AccountMsgSessionModel>>> {
-    return this._get('get_account_messages', {
-      account_name: account_name
-    })
+    return client.get({
+      url: '/api/v1/account/get_account_messages',
+      query: {
+        account_name: account_name,
+      },
+    }) as Promise<RootObject<Array<AccountMsgSessionModel>>>
   }
 }
 

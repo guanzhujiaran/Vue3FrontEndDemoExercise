@@ -53,8 +53,8 @@ const loadActionsList = async () => {
       }
     })
 
-    if (response.data?.code === 0 && response.data?.data) {
-      const data = response.data.data as { items?: unknown[]; total?: number }
+    if (response?.code === 0 && response?.data) {
+      const data = response.data as { items?: unknown[]; total?: number }
       actionsList.value = data.items || []
       total.value = data.total || 0
     }
@@ -82,8 +82,8 @@ const loadPluginsList = async () => {
       }
     })
 
-    if (response.data?.code === 0 && response.data?.data) {
-      const data = response.data.data as { items?: unknown[]; total?: number }
+    if (response?.code === 0 && response?.data) {
+      const data = response.data as { items?: unknown[]; total?: number }
       pluginsList.value = data.items || []
       total.value = data.total || 0
     }
@@ -111,8 +111,8 @@ const loadWorkflowsList = async () => {
       }
     })
 
-    if (response.data?.code === 0 && response.data?.data) {
-      const data = response.data.data as { items?: unknown[]; total?: number }
+    if (response?.code === 0 && response?.data) {
+      const data = response.data as { items?: unknown[]; total?: number }
       workflowsList.value = data.items || []
       total.value = data.total || 0
     }
@@ -147,11 +147,11 @@ const handleLikeAction = async (actionId: number) => {
       }
     })
 
-    if (response.data?.code === 0) {
+    if (response?.code === 0) {
       biliMessage.success('点赞成功')
       loadData()
     } else {
-      biliMessage.error(response.data?.msg || '点赞失败')
+      biliMessage.error(response?.msg || '点赞失败')
     }
   } catch (error) {
     biliMessage.error('点赞失败')
@@ -168,11 +168,11 @@ const handleLikePlugin = async (pluginId: number) => {
       }
     })
 
-    if (response.data?.code === 0) {
+    if (response?.code === 0) {
       biliMessage.success('点赞成功')
       loadData()
     } else {
-      biliMessage.error(response.data?.msg || '点赞失败')
+      biliMessage.error(response?.msg || '点赞失败')
     }
   } catch (error) {
     biliMessage.error('点赞失败')
@@ -189,11 +189,11 @@ const handleLikeWorkflow = async (workflowId: number) => {
       }
     })
 
-    if (response.data?.code === 0) {
+    if (response?.code === 0) {
       biliMessage.success('点赞成功')
       loadData()
     } else {
-      biliMessage.error(response.data?.msg || '点赞失败')
+      biliMessage.error(response?.msg || '点赞失败')
     }
   } catch (error) {
     biliMessage.error('点赞失败')
@@ -216,11 +216,11 @@ const handleForkAction = async (actionId: number) => {
       }
     })
 
-    if (response.data?.code === 0) {
+    if (response?.code === 0) {
       biliMessage.success('Fork成功')
       loadData()
     } else {
-      biliMessage.error(response.data?.msg || 'Fork失败')
+      biliMessage.error(response?.msg || 'Fork失败')
     }
   } catch (error: unknown) {
     if (error !== 'cancel') {
@@ -245,11 +245,11 @@ const handleForkPlugin = async (pluginId: number) => {
       }
     })
 
-    if (response.data?.code === 0) {
+    if (response?.code === 0) {
       biliMessage.success('Fork成功')
       loadData()
     } else {
-      biliMessage.error(response.data?.msg || 'Fork失败')
+      biliMessage.error(response?.msg || 'Fork失败')
     }
   } catch (error: unknown) {
     if (error !== 'cancel') {
@@ -274,11 +274,11 @@ const handleForkWorkflow = async (workflowId: number) => {
       }
     })
 
-    if (response.data?.code === 0) {
+    if (response?.code === 0) {
       biliMessage.success('Fork成功')
       loadData()
     } else {
-      biliMessage.error(response.data?.msg || 'Fork失败')
+      biliMessage.error(response?.msg || 'Fork失败')
     }
   } catch (error: unknown) {
     if (error !== 'cancel') {

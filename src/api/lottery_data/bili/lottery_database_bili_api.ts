@@ -4,13 +4,41 @@
  * @LastEditors: 星瞳 1944637830@qq.com
  * @LastEditTime: 2024-10-23 02:03:17
  * @FilePath: \Vue3FrontEndDemoExercise\src\api\lottery_data\bili\lottery_database_bili_api.ts
- * @Description: B 站抽奖数据库 API 接口定义
+ * @Description: B 站抽奖数据库 API 接口定义（基于 hey-api 生成的客户端）
  */
-import BaseApi from '@/api/base_axios/base_api'
+import {
+  getReserveLotteryApiV1LotteryDatabaseBiliGetReserveLotteryPost,
+  getOfficialLotteryApiV1LotteryDatabaseBiliGetOfficialLotteryPost,
+  getChargeLotteryApiV1LotteryDatabaseBiliGetChargeLotteryPost,
+  getLiveLotteryApiV1LotteryDatabaseBiliGetLiveLotteryPost,
+  getTopicLotteryApiV1LotteryDatabaseBiliGetTopicLotteryPost,
+  getAllLotteryApiV1LotteryDatabaseBiliGetAllLotteryPost,
+  addDynamicLotteryApiV1LotteryDatabaseBiliAddDynamicLotteryPost,
+  bulkAddDynamicLotteryApiV1LotteryDatabaseBiliBulkAddDynamicLotteryPost,
+  addTopicLotteryApiV1LotteryDatabaseBiliAddTopicLotteryPost,
+  addOthersLotDynApiV1LotteryDatabaseBiliAddOthersLotDynPost,
+  searchLotteryByKeywordApiV1LotteryDatabaseBiliSearchLotteryByKeywordPost,
+  submitFeedbackApiV1LotteryDatabaseBiliSubmitFeedbackPost,
+  getOthersLotDynListApiV1LotteryDatabaseBiliGetOthersLotDynListPost,
+  getLotteryFilterParamsApiV1LotteryDatabaseBiliGetLotteryFilterParamsGet,
+  getAllLotScrapyStatusApiV1LotteryDatabaseBiliGetAllLotScrapyStatusGet,
+} from '@/api/bili_lottery_data/hey-api'
+import type {
+  LotteryAdvancedQueryParams,
+  LotteryPaginationParams,
+  LotterySearchPaginationParams,
+  AddDynamicLotteryReq,
+  BulkAddDynamicLotteryReq,
+  AddTopicLotteryReq,
+  SubmitFeedbackReq,
+  OthersLotDynSortEnum,
+  OthersLotDynSortOrderEnum,
+  TimePresetEnum,
+} from '@/api/bili_lottery_data/hey-api'
 import type { RootObject } from '@/models/api/base_model.ts'
 import type { LotDataView, ScrapyStatusResp } from '@/models/api/lottery/lotdata'
 
-// ==================== 响应类型定义 ====================
+// ==================== 响应类型定义（兼容旧接口） ====================
 
 export interface AddDynamicLotteryResp {
   dynamic_id_or_url: string
@@ -36,7 +64,6 @@ export interface BulkAddDynamicLotteryResp {
   extra_fields?: Record<string, any> | null
 }
 
-// 一般抽奖响应
 export interface CommonLotteryResp {
   dynId: string
   dynamicUrl: string
@@ -57,7 +84,6 @@ export interface CommonLotteryResp {
   extra_fields?: Record<string, any> | null
 }
 
-// 预约抽奖响应
 export interface ReserveInfoResp {
   reserve_url: string
   lottery_prize_info: string
@@ -72,7 +98,6 @@ export interface ReserveInfoResp {
   extra_fields?: Record<string, any> | null
 }
 
-// 官方抽奖响应
 export interface OfficialLotteryResp {
   jump_url: string
   app_sche: string
@@ -85,7 +110,6 @@ export interface OfficialLotteryResp {
   extra_fields?: Record<string, any> | null
 }
 
-// 充电抽奖响应
 export interface ChargeLotteryResp {
   jump_url: string
   app_sche: string
@@ -99,7 +123,6 @@ export interface ChargeLotteryResp {
   extra_fields?: Record<string, any> | null
 }
 
-// 直播抽奖响应
 export interface LiveLotteryResp {
   live_room_url: string
   app_schema: string
@@ -115,7 +138,6 @@ export interface LiveLotteryResp {
   extra_fields?: Record<string, any> | null
 }
 
-// 话题抽奖响应
 export interface TopicLotteryResp {
   jump_url: string
   app_sche: string
@@ -127,7 +149,6 @@ export interface TopicLotteryResp {
   extra_fields?: Record<string, any> | null
 }
 
-// 所有抽奖响应（GetAllLottery）
 export interface AllLotteryResp {
   common_lottery: CommonLotteryResp[]
   must_join_common_lottery: CommonLotteryResp[]
@@ -136,156 +157,209 @@ export interface AllLotteryResp {
   extra_fields?: Record<string, any> | null
 }
 
-// 分页参数
-export interface LotteryPaginationParams {
-  page_num: number
-  page_size: number
+export interface OthersLotDynItem {
+  dynId: number
+  dynamicUrl: string | null
+  authorName: string | null
+  up_uid: number | null
+  pubTime: string | null
+  dynContent: string | null
+  commentCount: number | null
+  repostCount: number | null
+  highlightWords: string | null
+  officialLotType: string | null
+  isOfficialAccount: number | null
+  isManualReply: string | null
+  isFollowed: number | null
+  isLot: number | null
+  hashTag: string | null
+  created_at: string | null
+  dynId_str?: string
+  up_uid_str?: string | null
+  extra_fields?: Record<string, any> | null
 }
 
-export interface LotteryWithLimitTimePaginationParams extends LotteryPaginationParams {
-  limit_time: number
+export interface OthersLotDynListParams extends LotteryPaginationParams {
+  sort_by?: string
+  sort_order?: string
+  is_lot?: boolean | null
+  created_at_preset?: string | null
+  pub_time_preset?: string | null
+  pub_time_start?: number | null
+  pub_time_end?: number | null
+  created_at_start?: number | null
+  created_at_end?: number | null
 }
 
-export interface LotterySearchPaginationParams extends LotteryPaginationParams {
-  keyword: string
+export interface FilterEnumValue {
+  label: string
+  value: string
 }
 
-// ==================== API 类定义 ====================
+export interface FilterParamMeta {
+  param_name: string
+  display_name: string
+  param_type: string
+  widget: string
+  enum_values: FilterEnumValue[] | null
+  default_value: any | null
+  description: string
+  required: boolean
+  placeholder: string | null
+}
 
-class LotteryDataBaseApi extends BaseApi {
-  constructor() {
-    super()
-    this.path = '/api/v1/lottery_database/bili/'
-  }
+export interface EndpointFilterMeta {
+  endpoint_path: string
+  display_name: string
+  params: FilterParamMeta[]
+}
 
+export interface LotteryFilterParamsResp {
+  endpoints: EndpointFilterMeta[]
+}
+
+// ==================== API 类定义（基于 hey-api 生成客户端） ====================
+
+class LotteryDataBaseApi {
   // ==================== 获取各类抽奖数据 ====================
 
-  /**
-   * 获取一般抽奖数据
-   */
-  getCommonLottery(round_num: number = 2): Promise<RootObject<CommonLotteryResp[]>> {
-    return this._post('GetCommonLottery', { round_num })
-  }
-
-  /**
-   * 获取预约抽奖数据（分页）
-   */
-  getReserveLottery(
-    params: LotteryWithLimitTimePaginationParams
+  async getReserveLottery(
+    params: LotteryAdvancedQueryParams
   ): Promise<RootObject<LotDataView<ReserveInfoResp>>> {
-    return this._post('GetReserveLottery', params)
+    const res = await getReserveLotteryApiV1LotteryDatabaseBiliGetReserveLotteryPost({
+      body: params as any,
+    })
+    return res as any
   }
 
-  /**
-   * 获取官方抽奖数据（分页）
-   */
-  getOfficialLottery(
-    params: LotteryWithLimitTimePaginationParams
+  async getOfficialLottery(
+    params: LotteryAdvancedQueryParams
   ): Promise<RootObject<LotDataView<OfficialLotteryResp>>> {
-    return this._post('GetOfficialLottery', params)
+    const res = await getOfficialLotteryApiV1LotteryDatabaseBiliGetOfficialLotteryPost({
+      body: params as any,
+    })
+    return res as any
   }
 
-  /**
-   * 获取充电抽奖数据（分页）
-   */
-  getChargeLottery(
-    params: LotteryWithLimitTimePaginationParams
+  async getChargeLottery(
+    params: LotteryAdvancedQueryParams
   ): Promise<RootObject<LotDataView<ChargeLotteryResp>>> {
-    return this._post('GetChargeLottery', params)
+    const res = await getChargeLotteryApiV1LotteryDatabaseBiliGetChargeLotteryPost({
+      body: params as any,
+    })
+    return res as any
   }
 
-  /**
-   * 获取直播抽奖数据（分页）
-   */
-  getLiveLottery(
-    params: LotteryPaginationParams
+  async getLiveLottery(
+    params: LotteryAdvancedQueryParams
   ): Promise<RootObject<LotDataView<LiveLotteryResp>>> {
-    return this._post('GetLiveLottery', params)
+    const res = await getLiveLotteryApiV1LotteryDatabaseBiliGetLiveLotteryPost({
+      body: params as any,
+    })
+    return res as any
   }
 
-  /**
-   * 获取话题抽奖数据（分页）
-   */
-  getTopicLottery(
-    params: LotteryPaginationParams
+  async getTopicLottery(
+    params: LotteryAdvancedQueryParams
   ): Promise<RootObject<LotDataView<TopicLotteryResp>>> {
-    return this._post('GetTopicLottery', params)
+    const res = await getTopicLotteryApiV1LotteryDatabaseBiliGetTopicLotteryPost({
+      body: params as any,
+    })
+    return res as any
   }
 
-  /**
-   * 获取一轮的所有抽奖信息
-   */
-  getAllLottery(round_num: number): Promise<RootObject<AllLotteryResp>> {
-    return this._get('GetAllLottery', { round_num })
+  async getAllLottery(round_num: number): Promise<RootObject<AllLotteryResp>> {
+    const res = await getAllLotteryApiV1LotteryDatabaseBiliGetAllLotteryPost({
+      query: { round_num },
+    })
+    return res as any
   }
 
   // ==================== 提交抽奖数据 ====================
 
-  /**
-   * 提交单个动态抽奖
-   */
-  addDynamicLottery(dynamic_id_or_url: string): Promise<RootObject<AddDynamicLotteryResp>> {
-    return this._post(
-      'AddDynamicLottery',
-      { dynamic_id_or_url },
-      {
-        timeout: 0
-      }
-    )
+  async addDynamicLottery(dynamic_id_or_url: string): Promise<RootObject<AddDynamicLotteryResp>> {
+    const res = await addDynamicLotteryApiV1LotteryDatabaseBiliAddDynamicLotteryPost({
+      body: { dynamic_id_or_url } as AddDynamicLotteryReq,
+    })
+    return res as any
   }
 
-  /**
-   * 批量提交动态抽奖
-   */
-  bulkAddDynamicLottery(
+  async bulkAddDynamicLottery(
     dynamic_id_or_urls: string[]
   ): Promise<RootObject<BulkAddDynamicLotteryResp[]>> {
-    return this._post(
-      'BulkAddDynamicLottery',
-      { dynamic_id_or_urls },
-      {
-        timeout: 0
-      }
-    )
+    const res = await bulkAddDynamicLotteryApiV1LotteryDatabaseBiliBulkAddDynamicLotteryPost({
+      body: { dynamic_id_or_urls } as BulkAddDynamicLotteryReq,
+    })
+    return res as any
   }
 
-  /**
-   * 提交话题抽奖
-   */
-  addTopicLottery(topic_id: string | number): Promise<RootObject<AddTopicLotteryResp>> {
-    return this._post('AddTopicLottery', { topic_id }, { timeout: 0 })
+  async addTopicLottery(topic_id: string | number): Promise<RootObject<AddTopicLotteryResp>> {
+    const res = await addTopicLotteryApiV1LotteryDatabaseBiliAddTopicLotteryPost({
+      body: { topic_id } as AddTopicLotteryReq,
+    })
+    return res as any
+  }
+
+  async addOthersLotDyn(dynamic_id_or_url: string): Promise<RootObject<AddDynamicLotteryResp>> {
+    const res = await addOthersLotDynApiV1LotteryDatabaseBiliAddOthersLotDynPost({
+      body: { dynamic_id_or_url } as AddDynamicLotteryReq,
+    })
+    return res as any
   }
 
   // ==================== 搜索与反馈 ====================
 
-  /**
-   * 根据关键词搜索抽奖信息
-   */
-  searchLotteryByKeyword(
+  async searchLotteryByKeyword(
     params: LotterySearchPaginationParams
   ): Promise<RootObject<LotDataView<any>>> {
-    return this._post('SearchLotteryByKeyword', params)
+    const res = await searchLotteryByKeywordApiV1LotteryDatabaseBiliSearchLotteryByKeywordPost({
+      body: params as any,
+    })
+    return res as any
   }
 
-  /**
-   * 提交反馈信息
-   */
-  submitFeedback(message: string): Promise<RootObject<Record<string, any>>> {
-    return this._post('SubmitFeedback', { message })
+  async submitFeedback(message: string): Promise<RootObject<Record<string, any>>> {
+    const res = await submitFeedbackApiV1LotteryDatabaseBiliSubmitFeedbackPost({
+      body: { message } as SubmitFeedbackReq,
+    })
+    return res as any
+  }
+
+  // ==================== 第三方抽奖动态列表 ====================
+
+  async getOthersLotDynList(
+    params: OthersLotDynListParams
+  ): Promise<RootObject<LotDataView<OthersLotDynItem>>> {
+    const { page_num, page_size, sort_by, sort_order, is_lot, created_at_preset, pub_time_preset, pub_time_start, pub_time_end, created_at_start, created_at_end } = params
+    const res = await getOthersLotDynListApiV1LotteryDatabaseBiliGetOthersLotDynListPost({
+      body: { page_num, page_size },
+      query: {
+        sort_by: sort_by as OthersLotDynSortEnum,
+        sort_order: sort_order as OthersLotDynSortOrderEnum,
+        is_lot: is_lot ?? undefined,
+        created_at_preset: created_at_preset as TimePresetEnum | undefined,
+        pub_time_preset: pub_time_preset as TimePresetEnum | undefined,
+        pub_time_start: pub_time_start ?? undefined,
+        pub_time_end: pub_time_end ?? undefined,
+        created_at_start: created_at_start ?? undefined,
+        created_at_end: created_at_end ?? undefined,
+      },
+    })
+    return res as any
+  }
+
+  // ==================== 筛选参数元数据 ====================
+
+  async getLotteryFilterParams(): Promise<RootObject<LotteryFilterParamsResp>> {
+    const res = await getLotteryFilterParamsApiV1LotteryDatabaseBiliGetLotteryFilterParamsGet()
+    return res as any
   }
 
   // ==================== 爬虫状态 ====================
 
-  /**
-   * 获取所有爬虫状态
-   */
-  get_all_scrapy_status(): Promise<RootObject<ScrapyStatusResp>> {
-    // 使用 lottery_database/bili 接口
-    const originalPath = this.path
-    this.path = '/api/v1/lottery_database/bili/'
-    const result = this._get('GetAllLotScrapyStatus')
-    this.path = originalPath
-    return result
+  async get_all_scrapy_status(): Promise<RootObject<ScrapyStatusResp>> {
+    const res = await getAllLotScrapyStatusApiV1LotteryDatabaseBiliGetAllLotScrapyStatusGet()
+    return res as any
   }
 
   // ==================== 兼容旧版的方法（已废弃） ====================
@@ -293,7 +367,7 @@ class LotteryDataBaseApi extends BaseApi {
   /**
    * @deprecated 请使用新的具体方法替代
    */
-  handle_lottery_data(
+  async handle_lottery_data(
     { page_num, page_size }: { page_num: number; page_size: number },
     data_type:
       | 'GetOfficialLottery'
@@ -303,13 +377,27 @@ class LotteryDataBaseApi extends BaseApi {
       | 'GetTopicLottery'
       | string
   ): Promise<RootObject<LotDataView<any> | undefined>> {
-    return this._get(data_type, { page_num, page_size })
+    const params = { page_num, page_size }
+    switch (data_type) {
+      case 'GetOfficialLottery':
+        return this.getOfficialLottery(params)
+      case 'GetReserveLottery':
+        return this.getReserveLottery(params)
+      case 'GetChargeLottery':
+        return this.getChargeLottery(params)
+      case 'GetLiveLottery':
+        return this.getLiveLottery(params)
+      case 'GetTopicLottery':
+        return this.getTopicLottery(params)
+      default:
+        return this.getOfficialLottery(params)
+    }
   }
 
   /**
    * @deprecated 请使用 addDynamicLottery 替代
    */
-  handle_add_dynamic_lottery_data({
+  async handle_add_dynamic_lottery_data({
     dynamic_id_or_url
   }: {
     dynamic_id_or_url: string
@@ -320,7 +408,7 @@ class LotteryDataBaseApi extends BaseApi {
   /**
    * @deprecated 请使用 bulkAddDynamicLottery 替代
    */
-  handle_bulk_add_dynamic_lottery_data({
+  async handle_bulk_add_dynamic_lottery_data({
     dynamic_id_or_urls
   }: {
     dynamic_id_or_urls: string[]
@@ -331,7 +419,7 @@ class LotteryDataBaseApi extends BaseApi {
   /**
    * @deprecated 请使用 addTopicLottery 替代
    */
-  handle_add_topic_lottery_data({
+  async handle_add_topic_lottery_data({
     topic_id
   }: {
     topic_id: string | number
@@ -342,18 +430,16 @@ class LotteryDataBaseApi extends BaseApi {
   /**
    * @deprecated 请使用 searchLotteryByKeyword 替代
    */
-  handle_search_lottery_data({ keyword }: { keyword: string }): Promise<RootObject<any[]>> {
-    // 返回兼容的数组格式
-    return this.searchLotteryByKeyword({ keyword, page_num: 1, page_size: 20 }).then(resp => {
-      if (resp.code === 0 && resp.data) {
-        const lotData = resp.data as LotDataView<any>
-        return {
-          ...resp,
-          data: lotData.items || []
-        } as unknown as RootObject<any[]>
-      }
-      return resp as unknown as RootObject<any[]>
-    })
+  async handle_search_lottery_data({ keyword }: { keyword: string }): Promise<RootObject<any[]>> {
+    const resp = await this.searchLotteryByKeyword({ keyword, page_num: 1, page_size: 20 })
+    if (resp.code === 0 && resp.data) {
+      const lotData = resp.data as LotDataView<any>
+      return {
+        ...resp,
+        data: lotData.items || []
+      } as unknown as RootObject<any[]>
+    }
+    return resp as unknown as RootObject<any[]>
   }
 }
 

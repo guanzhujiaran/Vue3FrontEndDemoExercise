@@ -3,45 +3,55 @@
  * @Date: 2024-10-21 18:29:18
  * @LastEditors: 星瞳 1944637830@qq.com
  * @LastEditTime: 2024-10-23 02:03:17
- * @FilePath: \Vue3FrontEndDemoExercise\src\api\lottery_data\bili\lottery_database_bili_api.ts
- * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
+ * @FilePath: \Vue3FrontEndDemoExercise\src\api\lottery_data\bili\lottery_data_statistic_api.ts
+ * @Description: B 站抽奖数据统计 API（基于 hey-api 生成的客户端）
  */
-import BaseApi from '@/api/base_axios/base_api'
+import {
+  lotteryHofApiV1LotteryDatabaseBiliLotteryHofLotTypeGet,
+  lotteryResultApiV1LotteryDatabaseBiliLotteryResultGet,
+} from '@/api/bili_lottery_data/hey-api'
+import type {
+  BiliLotStatisticLotTypeEnum,
+  BiliLotStatisticRankTypeEnum,
+  BiliLotStatisticRankDateTypeEnum,
+} from '@/api/bili_lottery_data/hey-api'
 import type { RootObject } from '@/models/api/base_model.ts'
 import type {
-  LotDataView,
   LotteryRankResp,
   LotteryResultResp,
-  ScrapyStatusResp
 } from '@/models/api/lottery/lotdata'
 import {
   LotteryRankDateType,
   LotteryRankLotType,
-  LotteryRankType
+  LotteryRankType,
 } from '@/models/api/lottery/lotdata'
 
-class LotteryDataStatisticApi extends BaseApi {
-  constructor() {
-    super()
-    this.path = '/api/v1/lottery_database/bili'
-  }
-
-  handle_lottery_rank(
+class LotteryDataStatisticApi {
+  async handle_lottery_rank(
     { offset, limit }: { offset: number; limit: number },
     date: LotteryRankDateType,
     lot_type: LotteryRankLotType,
-    rank_type: LotteryRankType
+    rank_type: LotteryRankType,
   ): Promise<RootObject<LotteryRankResp>> {
-    return this._get('/lottery_hof/'.concat(lot_type), { date, rank_type, offset, limit })
+    const res = await lotteryHofApiV1LotteryDatabaseBiliLotteryHofLotTypeGet({
+      path: { lot_type: lot_type as unknown as BiliLotStatisticLotTypeEnum },
+      query: {
+        date: date as unknown as BiliLotStatisticRankDateTypeEnum,
+        rank_type: rank_type as unknown as BiliLotStatisticRankTypeEnum,
+        offset,
+        limit,
+      },
+    })
+    return res.data as any
   }
 
-  handle_lottery_result({
+  async handle_lottery_result({
     uid,
     date,
     lot_type,
     rank_type,
     offset,
-    limit
+    limit,
   }: {
     uid: number | string
     date: LotteryRankDateType
@@ -50,7 +60,17 @@ class LotteryDataStatisticApi extends BaseApi {
     offset: number
     limit: number
   }): Promise<RootObject<LotteryResultResp>> {
-    return this._get('/lottery_result', { uid, date, lot_type, rank_type, offset, limit })
+    const res = await lotteryResultApiV1LotteryDatabaseBiliLotteryResultGet({
+      query: {
+        uid,
+        date: date as unknown as BiliLotStatisticRankDateTypeEnum,
+        lot_type: lot_type as unknown as BiliLotStatisticLotTypeEnum,
+        rank_type: rank_type as unknown as BiliLotStatisticRankTypeEnum,
+        offset,
+        limit,
+      },
+    })
+    return res.data as any
   }
 }
 

@@ -4,27 +4,30 @@
  * @LastEditors: 星瞳 1944637830@qq.com
  * @LastEditTime: 2024-06-30 11:56:28
  * @FilePath: \Vue3FrontEndDemoExercise\src\api\do_lottery\bili_do_lottery_api.ts
- * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
+ * @Description: B 站执行抽奖 API（基于 hey-api 生成的客户端）
  */
-import BaseApi from '@/api/base_axios/base_api'
+import { client } from '@/api/bili_lottery_data/hey-api/client.gen'
 import type { RootObject } from '@/models/api/base_model.ts'
 
-class DolotteryApi extends BaseApi {
-  constructor() {
-    super()
-    this.path = '/api/v1/do_lottery/bili/'
-  }
-
+class DolotteryApi {
   run_account_lottery_task(account_name: string): Promise<RootObject<boolean | undefined>> {
-    return this._post('run', {
-      account_name: account_name
-    })
+    return client.post({
+      url: '/api/v1/do_lottery/bili/run',
+      body: {
+        account_name: account_name,
+      },
+      headers: { 'Content-Type': 'application/json' },
+    }) as Promise<RootObject<boolean | undefined>>
   }
 
   stop_account_lottery_task(account_name: string): Promise<RootObject<boolean | undefined>> {
-    return this._post('stop', {
-      account_name: account_name
-    })
+    return client.post({
+      url: '/api/v1/do_lottery/bili/stop',
+      body: {
+        account_name: account_name,
+      },
+      headers: { 'Content-Type': 'application/json' },
+    }) as Promise<RootObject<boolean | undefined>>
   }
 }
 

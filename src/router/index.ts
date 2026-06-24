@@ -28,7 +28,6 @@ import {
 } from '@element-plus/icons-vue'
 import emitter from '@/utils/mitt.ts'
 import { type CustomRouteRecordRaw, RouteName } from '@/models/router/index.ts'
-import { useJwtStore } from '@/stores/jwt_token.ts'
 const user_center_routes = [
   {
     path: '',
@@ -233,6 +232,21 @@ const routes: CustomRouteRecordRaw[] = [
               order: 13,
               isHeaderShow: true
             }
+          },
+          {
+            path: 'others-dyn-list',
+            name: RouteName.OTHERS_LOT_DYN_LIST,
+            component: () => import('@/components/lottery_data/bili_data/OthersLotDynList.vue'),
+            meta: {
+              title: '第三方抽奖动态',
+              icon: IconShare2,
+              description: 'B站第三方非官方号发布的抽奖动态列表',
+              color: 'var(--color-gradient-lottery-item)',
+              requiresLogin: true,
+              showInHome: true,
+              order: 14,
+              isHeaderShow: true
+            }
           }
         ]
       }
@@ -320,7 +334,7 @@ const routes: CustomRouteRecordRaw[] = [
           description: '浏览器指纹列表',
           order: 1,
           showInHome: false,
-          isHeaderShow: false
+          isHeaderShow: true
         }
       },
       {
@@ -373,6 +387,19 @@ const routes: CustomRouteRecordRaw[] = [
           order: 5,
           showInHome: false,
           isHeaderShow: false
+        }
+      },
+      {
+        path: 'actions',
+        name: RouteName.RPA_BROWSER_ACTION_MANAGEMENT,
+        component: () => import('@/views/rpa-browser/ActionManagement.vue'),
+        meta: {
+          title: RouteName.RPA_BROWSER_ACTION_MANAGEMENT,
+          icon: IconConnection,
+          description: '管理自定义动作',
+          order: 6,
+          showInHome: false,
+          isHeaderShow: true
         }
       }
     ]

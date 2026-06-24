@@ -8,6 +8,7 @@ export const createClientConfig: CreateClientConfig = (config) => ({
   ...AXIOS_CONFIG,
   baseUrl:'',
   timeout:30000,
+  responseStyle: 'data',
   onRequest: ({ options }) => {
     const JwtStore = useJwtStore()
     const token = JwtStore.jwt

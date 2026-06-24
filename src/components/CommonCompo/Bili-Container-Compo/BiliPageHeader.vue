@@ -7,7 +7,7 @@
       <slot name="extra"></slot>
     </div>
     <div class="bili-page-header__description flex flex-wrap items-center gap-2 text-sm text-text-secondary">
-      <el-tag v-if="tagText" :type="tagType" :effect="isDark ? 'dark' : 'light'">{{ tagText }}</el-tag>
+      <el-tag v-if="tagText" :type="tagType || undefined" :effect="isDark ? 'dark' : 'light'">{{ tagText }}</el-tag>
       <span class="bili-page-header__description-text leading-relaxed">{{ description }}</span>
     </div>
   </div>
@@ -23,7 +23,7 @@ interface Props {
   title: string
   description?: string
   tagText?: string
-  tagType?: 'success' | 'warning' | 'info' | 'danger'
+  tagType?: '' | 'success' | 'warning' | 'info' | 'danger'
 }
 
 withDefaults(defineProps<Props>(), {

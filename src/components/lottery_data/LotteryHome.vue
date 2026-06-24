@@ -1,8 +1,29 @@
 <script setup lang="ts">
+import { ref, computed, inject } from 'vue'
+import type { Component } from 'vue'
 import router from '@/router'
-import { Setting, DataAnalysis, Trophy, Promotion, Lightning, CreditCard, ChatDotRound } from '@element-plus/icons-vue'
+import { ElMessageBox } from 'element-plus'
+import { Setting, DataAnalysis, Trophy, Promotion, Lightning, CreditCard, ChatDotRound, Share } from '@element-plus/icons-vue'
+import { useInject, KeysEnum } from '@/models/base/provide_model.ts'
+import type { UserNavModel } from '@/models/user/user_model.ts'
+import { openGlobalLoginModalKey } from '@/models/inject/inject_type.ts'
 
-const navigationItems = [
+interface NavigationItem {
+  title: string
+  description: string
+  path: string
+  icon: Component
+  color: string
+  /** 是否需要登录才能访问，未登录时隐藏该入口 */
+  requiresLogin?: boolean
+}
+
+const biliUser = useInject(KeysEnum.BiliUser) as Ref<UserNavModel>
+const isLoggedIn = computed(() => !!biliUser.value.uid)
+
+const openGlobalLoginModal = inject(openGlobalLoginModalKey, () => {})
+
+const allNavigationItems: NavigationItem[] = [
   {
     title: '爬虫状态',
     description: '查看数据爬虫的运行状态',
@@ -44,11 +65,40 @@ const navigationItems = [
     path: '/app/lot-data/bili-data/topic',
     icon: ChatDotRound,
     color: 'var(--color-gradient-lottery-item)'
+  },
+  {
+    title: '第三方抽奖动态',
+    description: 'B站第三方非官方号发布的抽奖动态列表',
+    path: '/app/lot-data/bili-data/others-dyn-list',
+    icon: Share,
+    color: 'var(--color-gradient-lottery-item)',
+    requiresLogin: true
   }
 ]
 
-const goTo = (path: string) => {
-  router.push(path)
+// 权限控制：未登录时隐藏需要登录的入口（如第三方抽奖动态），仅对已登录用户显示
+const navigationItems = computed<NavigationItem[]>(() => {
+  if (isLoggedIn.value) {
+    return allNavigationItems
+  }
+  return allNavigationItems.filter((item) => !item.requiresLogin)
+})
+
+const goTo = (item: NavigationItem) => {
+  // 需要登录的入口在未登录时引导登录（防御性校验，正常情况下入口已被隐藏）
+  if (item.requiresLogin && !isLoggedIn.value) {
+    ElMessageBox.confirm('该功能需要登录才能使用，是否立即登录?', '提示', {
+      confirmButtonText: '立即登录',
+      cancelButtonText: '取消',
+      type: 'info'
+    })
+      .then(() => {
+        openGlobalLoginModal()
+      })
+      .catch(() => {})
+    return
+  }
+  router.push(item.path)
 }
 </script>
 
@@ -104,7 +154,7 @@ const goTo = (path: string) => {
         <!-- 每个功能作为独立卡片 -->
         <div v-for="item in navigationItems" :key="item.path"
           class="flex cursor-pointer flex-col overflow-hidden rounded-xl border border-border shadow-sm hover:shadow-md transition-all duration-200"
-          @click="goTo(item.path)">
+          @click="goTo(item)">
           <!-- 卡片头部 -->
           <div class="flex items-center gap-3 px-5 py-4 text-white" :style="{ background: item.color }">
             <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/20 backdrop-blur-sm">

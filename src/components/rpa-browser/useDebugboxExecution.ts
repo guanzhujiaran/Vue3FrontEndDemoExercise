@@ -8,7 +8,7 @@ import {
 import type { ActionPreviewResponse } from '@/api/browser/hey-api'
 import { useUserNavStore } from '@/stores/user_nav'
 import biliMessage from '@/utils/message'
-import type { DroppedItem, OperationFeedback, OperationKind, ActionResultResponse, StepResultItem, NestedPreviewNode } from './debugbox-types'
+import type { DroppedItem, OperationFeedback, OperationKind, ActionResultResponse, StepResultItem, NestedPreviewNode, BranchPathStep } from './debugbox-types'
 
 export function useDebugboxExecution(
   droppedItems: Ref<DroppedItem[]>,
@@ -39,8 +39,8 @@ export function useDebugboxExecution(
     }
   }
 
-  function formatApiError(response: { data?: { msg?: string } | null } | undefined, fallback: string) {
-    return response?.data?.msg || fallback
+  function formatApiError(response: { msg?: string } | undefined | null, fallback: string) {
+    return (response as any)?.msg || fallback
   }
 
   // ── 反馈 ─────────────────────────────────────────────
@@ -73,13 +73,13 @@ export function useDebugboxExecution(
       const response = await executeActionApiV1RpaBrowserControlActionsExecutePost({
         query: { browser_id: browserId }, body, headers: apiHeaders(),
       })
-      if (response.data?.code !== 0) {
+      if (response?.code !== 0) {
         const msg = formatApiError(response, '执行失败')
         biliMessage.error(msg)
         setOperationFeedback(index, 'execute', false, msg, { error: msg })
         return
       }
-      const result = response.data.data as ActionResultResponse | undefined
+      const result = response.data as ActionResultResponse | undefined
       if (result?.success) {
         const summary = `执行成功${result.execution_time != null ? `（${result.execution_time.toFixed(2)}s）` : ''}`
         biliMessage.success(summary)
@@ -110,13 +110,13 @@ export function useDebugboxExecution(
       const response = await previewActionParamsApiV1RpaBrowserControlActionsPreviewPost({
         query: { browser_id: browserId }, body: { action_id: item.action_id, params: getActionParams(item), input_vars: getInputVars(item), output_vars: getOutputVars(item) }, headers: apiHeaders(),
       })
-      if (response.data?.code !== 0) {
+      if (response?.code !== 0) {
         const msg = formatApiError(response, '预览失败')
         biliMessage.error(msg)
         setOperationFeedback(index, 'preview', false, msg, { error: msg })
         return
       }
-      const result = response.data.data
+      const result = response.data
       const found = result?.found_params?.length ? `已解析变量: ${result.found_params.join(', ')}` : '预览完成'
       biliMessage.success('预览成功')
       setOperationFeedback(index, 'preview', true, found, result ?? {})
@@ -141,13 +141,13 @@ export function useDebugboxExecution(
       const response = await validateActionParamsApiV1RpaBrowserControlActionsValidatePost({
         query: { browser_id: browserId }, body: { action_id: item.action_id, params: getActionParams(item), input_vars: getInputVars(item), output_vars: getOutputVars(item) }, headers: apiHeaders(),
       })
-      if (response.data?.code !== 0) {
+      if (response?.code !== 0) {
         const msg = formatApiError(response, '参数验证失败')
         biliMessage.error(msg)
         setOperationFeedback(index, 'validate', false, msg, { error: msg })
         return
       }
-      const result = response.data.data
+      const result = response.data
       if (result?.valid) {
         biliMessage.success('参数验证通过')
         setOperationFeedback(index, 'validate', true, '参数验证通过', result)
@@ -194,8 +194,8 @@ export function useDebugboxExecution(
         query: { browser_id: browserId }, body: { steps, variables: {}, input_data: {}, output_vars: [] }, headers: apiHeaders(),
       })
 
-      if (response.data?.code === 0) {
-        const result = response.data.data as { results?: Array<{ success: boolean; data?: unknown; action_id: string; action_name?: string; error?: string | null; execution_time?: number; variables?: Record<string, unknown>; replaced_params?: Record<string, unknown> }>; summary?: { total: number; success: number; failed: number } } | undefined
+      if (response?.code === 0) {
+        const result = response.data as { results?: Array<{ success: boolean; data?: unknown; action_id: string; action_name?: string; error?: string | null; execution_time?: number; variables?: Record<string, unknown>; replaced_params?: Record<string, unknown> }>; summary?: { total: number; success: number; failed: number } } | undefined
         const stepResults = result?.results ?? []
         const summary = result?.summary
 
@@ -250,8 +250,8 @@ export function useDebugboxExecution(
       const response = await executeWorkflowApiV1RpaBrowserControlWorkflowsExecutePost({
         query: { browser_id: browserId }, body: { steps, variables: {}, input_data: {}, output_vars: [] }, headers: apiHeaders(),
       })
-      if (response.data?.code === 0) {
-        const result = response.data.data as { results?: Array<{ success: boolean; data?: unknown; action_id: string; action_name?: string; error?: string | null; execution_time?: number; variables?: Record<string, unknown>; replaced_params?: Record<string, unknown> }>; summary?: { total: number; success: number; failed: number } } | undefined
+      if (response?.code === 0) {
+        const result = response.data as { results?: Array<{ success: boolean; data?: unknown; action_id: string; action_name?: string; error?: string | null; execution_time?: number; variables?: Record<string, unknown>; replaced_params?: Record<string, unknown> }>; summary?: { total: number; success: number; failed: number } } | undefined
         const stepResults = result?.results ?? []
         for (let i = 0; i < items.length && i < stepResults.length; i++) {
           const childKey = `${parentIndex}-${branch}-${i}`
@@ -282,23 +282,29 @@ export function useDebugboxExecution(
   }
 
   // ── 分支单动作执行 ──────────────────────────────────
-  /** 按嵌套路径定位条目 */
-  function resolveNestedItem(dropped: DroppedItem[], parentIndex: number, branch: 'true' | 'false' | 'loop', childIndex: number, nestedBranch?: string, nestedIndex?: number): { item: DroppedItem; key: string } | null {
+  /** 按嵌套路径定位条目（支持任意深度） */
+  function resolveNestedItem(dropped: DroppedItem[], parentIndex: number, branch: 'true' | 'false' | 'loop', childIndex: number, path?: BranchPathStep[]): { item: DroppedItem; key: string } | null {
     const parent = dropped[parentIndex]
     if (!parent) return null
-    const items = branch === 'true' ? parent.trueBranch : branch === 'false' ? parent.falseBranch : parent.loopBody
-    if (!items || !items[childIndex]) return null
-    if (nestedBranch != null && nestedIndex != null) {
-      const nestedParent = items[childIndex]
-      const nestedItems = nestedBranch === 'true' ? nestedParent.trueBranch : nestedBranch === 'false' ? nestedParent.falseBranch : nestedParent.loopBody
-      if (!nestedItems || !nestedItems[nestedIndex]) return null
-      return { item: nestedItems[nestedIndex], key: `${parentIndex}-${branch}-${childIndex}-${nestedBranch}-${nestedIndex}` }
+    let items = branch === 'true' ? parent.trueBranch : branch === 'false' ? parent.falseBranch : parent.loopBody
+    if (!items) return null
+    const keyParts: string[] = [String(parentIndex), branch]
+    if (path) {
+      for (const step of path) {
+        const nestedParent = items[step.parentIndex]
+        if (!nestedParent) return null
+        items = step.branch === 'true' ? nestedParent.trueBranch : step.branch === 'false' ? nestedParent.falseBranch : nestedParent.loopBody
+        if (!items) return null
+        keyParts.push(String(step.parentIndex), step.branch)
+      }
     }
-    return { item: items[childIndex], key: `${parentIndex}-${branch}-${childIndex}` }
+    if (!items[childIndex]) return null
+    keyParts.push(String(childIndex))
+    return { item: items[childIndex], key: keyParts.join('-') }
   }
 
-  async function executeBranchItem(parentIndex: number, branch: 'true' | 'false' | 'loop', childIndex: number, nestedBranch?: string, nestedIndex?: number) {
-    const resolved = resolveNestedItem(droppedItems.value, parentIndex, branch, childIndex, nestedBranch, nestedIndex)
+  async function executeBranchItem(parentIndex: number, branch: 'true' | 'false' | 'loop', childIndex: number, path?: BranchPathStep[]) {
+    const resolved = resolveNestedItem(droppedItems.value, parentIndex, branch, childIndex, path)
     if (!resolved) return
     const { item: child, key: childKey } = resolved
 
@@ -307,13 +313,13 @@ export function useDebugboxExecution(
       const response = await executeActionApiV1RpaBrowserControlActionsExecutePost({
         query: { browser_id: browserId }, body: { action_id: child.action_id, params: getActionParams(child), input_vars: getInputVars(child), output_vars: getOutputVars(child), step_children: getStepChildren(child) }, headers: apiHeaders(),
       })
-      if (response.data?.code !== 0) {
+      if (response?.code !== 0) {
         const msg = formatApiError(response, '执行失败')
         biliMessage.error(msg)
         setOperationFeedback(childKey, 'execute', false, msg, { error: msg })
         return
       }
-      const result = response.data.data as ActionResultResponse | undefined
+      const result = response.data as ActionResultResponse | undefined
       if (result?.success) {
         const summary = `执行成功${result.execution_time != null ? `（${result.execution_time.toFixed(2)}s）` : ''}`
         biliMessage.success(summary)
@@ -332,8 +338,8 @@ export function useDebugboxExecution(
     }
   }
 
-  async function previewBranchItem(parentIndex: number, branch: 'true' | 'false' | 'loop', childIndex: number, nestedBranch?: string, nestedIndex?: number) {
-    const resolved = resolveNestedItem(droppedItems.value, parentIndex, branch, childIndex, nestedBranch, nestedIndex)
+  async function previewBranchItem(parentIndex: number, branch: 'true' | 'false' | 'loop', childIndex: number, path?: BranchPathStep[]) {
+    const resolved = resolveNestedItem(droppedItems.value, parentIndex, branch, childIndex, path)
     if (!resolved) return
     const { item: child, key: childKey } = resolved
 
@@ -342,12 +348,12 @@ export function useDebugboxExecution(
       const response = await previewActionParamsApiV1RpaBrowserControlActionsPreviewPost({
         query: { browser_id: browserId }, body: { action_id: child.action_id, params: getActionParams(child), input_vars: getInputVars(child), output_vars: getOutputVars(child) }, headers: apiHeaders(),
       })
-      if (response.data?.code !== 0) {
+      if (response?.code !== 0) {
         const msg = formatApiError(response, '预览失败')
         setOperationFeedback(childKey, 'preview', false, msg, { error: msg })
         return
       }
-      const result = response.data.data
+      const result = response.data
       const found = result?.found_params?.length ? `已解析变量: ${result.found_params.join(', ')}` : '预览完成'
       setOperationFeedback(childKey, 'preview', true, found, result ?? {})
     } catch (e) {
@@ -357,8 +363,8 @@ export function useDebugboxExecution(
     }
   }
 
-  async function validateBranchItem(parentIndex: number, branch: 'true' | 'false' | 'loop', childIndex: number, nestedBranch?: string, nestedIndex?: number) {
-    const resolved = resolveNestedItem(droppedItems.value, parentIndex, branch, childIndex, nestedBranch, nestedIndex)
+  async function validateBranchItem(parentIndex: number, branch: 'true' | 'false' | 'loop', childIndex: number, path?: BranchPathStep[]) {
+    const resolved = resolveNestedItem(droppedItems.value, parentIndex, branch, childIndex, path)
     if (!resolved) return
     const { item: child, key: childKey } = resolved
 
@@ -367,11 +373,11 @@ export function useDebugboxExecution(
       const response = await validateActionParamsApiV1RpaBrowserControlActionsValidatePost({
         query: { browser_id: browserId }, body: { action_id: child.action_id, params: getActionParams(child), input_vars: getInputVars(child), output_vars: getOutputVars(child) }, headers: apiHeaders(),
       })
-      if (response.data?.code !== 0) {
+      if (response?.code !== 0) {
         setOperationFeedback(childKey, 'validate', false, '验证失败', { error: '验证失败' })
         return
       }
-      const result = response.data.data
+      const result = response.data
       if (result?.valid) {
         setOperationFeedback(childKey, 'validate', true, '参数验证通过', result)
       } else {

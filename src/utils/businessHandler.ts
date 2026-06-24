@@ -104,6 +104,8 @@ export const businessHandler = async <T>(
       // 业务失败
       const errorMsg = response.msg || errorMessage
 
+      console.error(`[businessHandler] 业务错误: ${errorMsg}`, '响应数据:', response)
+
       if (autoHandleError && showErrorToast) {
         showErrorNotification(errorMsg)
       }
@@ -128,6 +130,8 @@ export const businessHandler = async <T>(
     }
   } catch (error: any) {
     // 网络错误或其他异常
+    console.error('[businessHandler] 网络/异常错误:', error)
+
     // error 可能是 axios error 回调返回的 { code, msg } 对象，msg 中已包含请求信息
     let errorMsg: string
     if (error?.msg) {

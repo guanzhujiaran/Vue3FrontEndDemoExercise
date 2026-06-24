@@ -10,7 +10,7 @@ export interface LotteryPrize {
 
 export interface BaseNormalizedLottery {
   id: number | string
-  type: 'DYNAMIC' | 'CHARGING' | 'RESERVATION' | 'TOPIC' | 'ANCHOR' | 'RED_PACKET' | 'UNKNOWN'
+  type: 'DYNAMIC' | 'CHARGING' | 'RESERVATION' | 'TOPIC' | 'ANCHOR' | 'RED_PACKET' | 'THIRD_PARTY' | 'UNKNOWN'
   displayType: string
   title: string
   status: 'ONGOING' | 'ENDED' | 'CANCELLED' | 'UNKNOWN'
@@ -28,6 +28,22 @@ export interface BaseNormalizedLottery {
   businessType?: number | null
   roomId?: number | null
   danmu?: string | null
+  /** 第三方抽奖专用：UP主名称 */
+  authorName?: string | null
+  /** 第三方抽奖专用：发布时间 */
+  pubTime?: string | null
+  /** 第三方抽奖专用：收录时间 */
+  createdAt?: string | null
+  /** 第三方抽奖专用：评论数 */
+  commentCount?: number | null
+  /** 第三方抽奖专用：转发数 */
+  repostCount?: number | null
+  /** 第三方抽奖专用：动态原文内容 */
+  dynContent?: string | null
+  /** 第三方抽奖专用：抽奖类型（如"官方抽奖"） */
+  officialLotType?: string | null
+  /** 第三方抽奖专用：开奖时间原文（BERT 提取，如"6月24日"） */
+  lotteryTimeText?: string | null
 }
 
 export type NormalizedLottery = BaseNormalizedLottery
@@ -164,6 +180,38 @@ export interface RedPacketData {
   danmu?: string | null
 } // Added danmu?
 
+/** 第三方抽奖奖品信息（BERT 提取） */
+export interface OthersLotPrizeInfo {
+  dynId: number
+  prize_names: string[]
+  /** 开奖时间原文（如"6月24日"） */
+  lottery_time?: string | null
+  dynId_str?: string
+}
+
+/** 第三方抽奖动态条目（GetOthersLotDynList 接口返回） */
+export interface OthersLotDynItem {
+  dynId: number
+  dynamicUrl: string | null
+  authorName: string | null
+  up_uid: number | null
+  pubTime: string | null
+  dynContent: string | null
+  commentCount: number | null
+  repostCount: number | null
+  highlightWords: string | null
+  officialLotType: string | null
+  isOfficialAccount: number | null
+  isManualReply: string | null
+  isFollowed: number | null
+  isLot: number | null
+  hashTag: string | null
+  created_at: string | null
+  dynId_str?: string
+  up_uid_str?: string | null
+  prize_info?: OthersLotPrizeInfo | null
+}
+
 // Union type for the prop
 export type AnyLotteryData =
   | DynamicLotteryData
@@ -173,3 +221,4 @@ export type AnyLotteryData =
   | TopicEventData
   | AnchorLotteryData
   | RedPacketData
+  | OthersLotDynItem

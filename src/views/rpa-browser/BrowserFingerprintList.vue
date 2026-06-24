@@ -8,7 +8,7 @@ import CenteredContainer from '@/components/CommonCompo/Bili-Container-Compo/Cen
 import BiliPageHeader from '@/components/CommonCompo/Bili-Container-Compo/BiliPageHeader.vue'
 import { listFingerprintRouterApiV1RpaBrowserListFingerprintPost, deleteFingerprintRouterApiV1RpaBrowserDeleteFingerprintPost, renameFingerprintRouterApiV1RpaBrowserRenameFingerprintPost } from '@/api/browser/hey-api'
 import { useUserNavStore } from '@/stores/user_nav'
-import biliMessage from '@/utils/message'
+import { businessHandler } from '@/utils/businessHandler'
 import type { BrowserFingerprintListParams } from '@/api/browser/hey-api/types.gen'
 import { RouteName } from '@/models/router/index.ts'
 
@@ -45,35 +45,28 @@ const loading = ref(false)
 
 const loadFingerprintList = async () => {
   loading.value = true
-  try {
-    const params: BrowserFingerprintListParams = {
-      page: currentPage.value,
-      per_page: pageSize.value
-    }
-    
-    const response = await listFingerprintRouterApiV1RpaBrowserListFingerprintPost({
+  const params: BrowserFingerprintListParams = {
+    page: currentPage.value,
+    per_page: pageSize.value
+  }
+
+  // businessHandler 直接接收 hey-api 返回的 {code, data, msg}（responseStyle='data' 已解包）
+  const result = await businessHandler<{ items?: UserBrowserInfo[]; total?: number }>(
+    listFingerprintRouterApiV1RpaBrowserListFingerprintPost({
       body: params,
       headers: {
         'x-bili-mid': userNavStore.user_nav.uid,
         'x-bili-level': String(userNavStore.user_nav.level_info.current_level)
       }
-    })
-    if (response.data?.code === 0 && response.data?.data) {
-      const data = response.data.data as any
-      console.log('API返回的数据:', data)
-      console.log('items数组第一个元素:', data.items?.[0])
-      fingerprintList.value = data.items || []
-      total.value = data.total || 0
-    } else {
-      console.error('获取指纹列表失败:', response.data?.msg || '未知错误')
-      console.error('response.data?.code:', response.data?.code)
-      console.error('response.data?.data:', response.data?.data)
-    }
-  } catch (error) {
-    console.error('网络异常:', error)
-  } finally {
-    loading.value = false
+    }) as any,
+    { successMessage: '', errorMessage: '获取指纹列表失败', showSuccessToast: false }
+  )
+
+  if (result.success && result.data) {
+    fingerprintList.value = result.data.items || []
+    total.value = result.data.total || 0
   }
+  loading.value = false
 }
 
 const handlePageChange = (page: number) => {
@@ -88,57 +81,49 @@ const handleDelete = async (browserId: string | number) => {
       cancelButtonText: '取消',
       type: 'warning'
     })
+  } catch {
+    return // 用户取消
+  }
 
-    const response = await deleteFingerprintRouterApiV1RpaBrowserDeleteFingerprintPost({
+  await businessHandler(
+    deleteFingerprintRouterApiV1RpaBrowserDeleteFingerprintPost({
       query: { browser_id: String(browserId) },
       headers: {
         'x-bili-mid': userNavStore.user_nav.uid,
         'x-bili-level': String(userNavStore.user_nav.level_info.current_level)
       }
-    })
-
-    if (response.data?.code === 0) {
-      biliMessage.success('删除成功')
-      loadFingerprintList()
-    } else {
-      biliMessage.error(response.data?.msg || '删除失败')
-    }
-  } catch (error: any) {
-    if (error !== 'cancel') {
-      biliMessage.error('删除失败')
-    }
-  }
+    }) as any,
+    { successMessage: '删除成功', errorMessage: '删除失败' }
+  )
+  loadFingerprintList()
 }
 
 const handleRename = async (browserId: string | number, currentName: string | null) => {
+  let newName: string
   try {
-    const { value: newName } = await ElMessageBox.prompt('请输入新的名称', '重命名', {
+    const result = await ElMessageBox.prompt('请输入新的名称', '重命名', {
       confirmButtonText: '确定',
       cancelButtonText: '取消',
       inputValue: currentName || '',
       type: 'info'
     })
+    newName = result.value
+  } catch {
+    return // 用户取消
+  }
 
-    const response = await renameFingerprintRouterApiV1RpaBrowserRenameFingerprintPost({
+  await businessHandler(
+    renameFingerprintRouterApiV1RpaBrowserRenameFingerprintPost({
       body: { custom_name: newName },
       query: { browser_id: String(browserId) },
       headers: {
         'x-bili-mid': userNavStore.user_nav.uid,
         'x-bili-level': String(userNavStore.user_nav.level_info.current_level)
       }
-    })
-
-    if (response.data?.code === 0) {
-      biliMessage.success('重命名成功')
-      loadFingerprintList()
-    } else {
-      biliMessage.error(response.data?.msg || '重命名失败')
-    }
-  } catch (error: any) {
-    if (error !== 'cancel') {
-      biliMessage.error('重命名失败')
-    }
-  }
+    }) as any,
+    { successMessage: '重命名成功', errorMessage: '重命名失败' }
+  )
+  loadFingerprintList()
 }
 
 const handleOpenStream = (browserId: string | number) => {

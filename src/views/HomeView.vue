@@ -23,13 +23,22 @@ const routeModules = computed(() => {
   return modules
 })
 
-// 根据当前选择的标签过滤模块
+// 根据当前选择的标签过滤模块，未登录时隐藏需要登录的模块卡片
 const filteredModules = computed(() => {
-  if (activeTab.value === 'all') {
-    return routeModules.value
+  let modules = routeModules.value
+  if (activeTab.value !== 'all') {
+    modules = modules.filter((module: any) => module.id === activeTab.value)
   }
-  return routeModules.value.filter((module: any) => module.id === activeTab.value)
+  if (!isLoggedIn.value) {
+    modules = modules.filter((module: any) => !module.requiresLogin)
+  }
+  return modules
 })
+// 未登录时隐藏需要登录的子项入口
+const visibleChildren = (children: any[]) => {
+  if (isLoggedIn.value) return children
+  return children.filter((child: any) => !child.requiresLogin)
+}
 const biliUser = useInject(KeysEnum.BiliUser) as Ref<UserNavModel>
 const isLoggedIn = computed(() => !!biliUser.value.uid)
 // 处理登录按钮点击
@@ -137,7 +146,8 @@ const handleCardClick = (path: string | undefined, requiresLogin = false) => {
           <el-radio-group v-model="activeTab" size="large">
             <el-radio-button value="all">全部</el-radio-button>
             <el-radio-button value="lottery">抽奖数据</el-radio-button>
-            <el-radio-button value="user-center">浏览器管理</el-radio-button>
+            <el-radio-button v-if="isLoggedIn" value="user-center">用户中心</el-radio-button>
+            <el-radio-button v-if="isLoggedIn" value="rpa-browser">RPA浏览器</el-radio-button>
             <el-radio-button value="shopping">山姆会员商店</el-radio-button>
             <el-radio-button value="feedback">反馈区</el-radio-button>
           </el-radio-group>
@@ -166,9 +176,9 @@ const handleCardClick = (path: string | undefined, requiresLogin = false) => {
             <!-- 如果有子项，显示子项列表 -->
             <div v-if="module.children && module.children.length"
               class="flex flex-col divide-y divide-border overflow-hidden rounded-lg border border-border">
-              <div v-for="(child, childIndex) in module.children" :key="childIndex"
+              <div v-for="(child, childIndex) in visibleChildren(module.children)" :key="childIndex"
                 class="group flex cursor-pointer items-center p-3 transition-all duration-150 hover:bg-fill-light"
-                @click="handleCardClick(child.path, module.requiresLogin)">
+                @click="handleCardClick(child.path, child.requiresLogin || module.requiresLogin)">
                 <div class="mr-3 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-white"
                   :style="{ background: child.color }">
                   <el-icon :size="15">

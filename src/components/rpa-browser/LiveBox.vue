@@ -67,13 +67,13 @@ const fetchPagesList = async (): Promise<PageInfo | null> => {
       query: { browser_id: props.browserId },
       body: {}
     })
-    if (response.data?.code === 0) {
-      console.log('获取页面信息成功:', response.data?.data)
-      return response.data?.data as PageInfo | null
+    if (response?.code === 0) {
+      console.log('获取页面信息成功:', response?.data)
+      return response?.data as PageInfo | null
     } else {
-      const errorCode = response.data?.code
+      const errorCode = response?.code
       if (errorCode !== 404) {
-        biliMessage.error(response.data?.msg || '获取页面信息失败')
+        biliMessage.error(response?.msg || '获取页面信息失败')
       }
       return null
     }
@@ -91,10 +91,10 @@ const closeWebRtcStream = async () => {
       body: { stream_key: streamKey.value || '' }
     })
 
-    if (response.data?.code === 0) {
+    if (response?.code === 0) {
       biliMessage.success('关闭 WebRTC 流成功')
     } else {
-      biliMessage.error(response.data?.msg || '关闭 WebRTC 流失败')
+      biliMessage.error(response?.msg || '关闭 WebRTC 流失败')
     }
   } catch (error) {
     console.error('Failed to close WebRTC stream:', error)
@@ -109,7 +109,7 @@ const loadWebrtcStatus = async () => {
       headers: getHeaders()
     })
 
-    if (response.data?.code === 0 && response.data?.data) {
+    if (response?.code === 0 && response?.data) {
       const data = response.data.data as Record<string, unknown>
       // 更新连接数 - 优先使用 total_streams_count，如果不存在则使用 active_streams.length
       if (typeof data.total_streams_count === 'number') {
@@ -237,7 +237,7 @@ const initWebRTC = async () => {
       body: { page_index: currentPageIndex.value }
     })
 
-    if (offerResponse.data?.code === 0 && offerResponse.data?.data) {
+    if (offerResponse?.code === 0 && offerResponse?.data) {
       const offerData = offerResponse.data.data
       streamKey.value = offerData.stream_key
 
@@ -262,7 +262,7 @@ const initWebRTC = async () => {
         }
       })
 
-      if (answerResponse.data?.code === 0) {
+      if (answerResponse?.code === 0) {
         console.log('WebRTC answer sent successfully')
       }
     }
@@ -329,11 +329,11 @@ const handleAddPage = async () => {
       body: { url: 'about:blank', page_index: -1 }
     })
 
-    if (response.data?.code === 0) {
+    if (response?.code === 0) {
       biliMessage.success('新建页面成功')
       await loadPagesList()
     } else {
-      biliMessage.error(response.data?.msg || '新建页面失败')
+      biliMessage.error(response?.msg || '新建页面失败')
     }
   } catch (error) {
     console.error('Failed to open page:', error)
@@ -359,11 +359,11 @@ const handleClosePage = async (index: number) => {
       body: { page_index: index }
     })
 
-    if (response.data?.code === 0) {
+    if (response?.code === 0) {
       biliMessage.success('关闭页面成功')
       await loadPagesList()
     } else {
-      biliMessage.error(response.data?.msg || '关闭页面失败')
+      biliMessage.error(response?.msg || '关闭页面失败')
     }
   } catch (error) {
     console.error('Failed to close page:', error)
@@ -388,7 +388,7 @@ const handleSwitchPage = async (index: number) => {
       body: { page_index: index }
     })
 
-    if (response.data?.code === 0) {
+    if (response?.code === 0) {
       currentPageIndex.value = index
       await loadPagesList()
 
@@ -400,7 +400,7 @@ const handleSwitchPage = async (index: number) => {
         }, 500)
       }
     } else {
-      biliMessage.error(response.data?.msg || '切换页面失败')
+      biliMessage.error(response?.msg || '切换页面失败')
     }
   } catch (error) {
     console.error('Failed to switch page:', error)

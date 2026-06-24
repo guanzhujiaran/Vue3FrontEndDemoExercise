@@ -7,12 +7,11 @@ import type {
   ReplyMainResp
 } from '@/models/api/communication/comment_model'
 import submit_comment_section from '@/components/communicate_list/submit_comment_section.vue'
-import { computed, onMounted, ref, watch, useTemplateRef, onUnmounted } from 'vue'
+import { computed, onMounted, ref, watch, useTemplateRef } from 'vue'
 import feedbackCommentApi from '@/api/feedback/comment.ts'
 import biliMessage from '@/utils/message'
 import { KeysEnum, useInject } from '@/models/base/provide_model.ts'
 import { type GlobalVarsType, ScreenTypeEnum } from '@/models/global_var/global_var_model.ts'
-import { useDebounceFn } from '@vueuse/core'
 
 const is_expander_active_set = ref<Set<string | number>>(new Set())
 const expander_reply_loading_set = ref<Set<string | number>>(new Set())
@@ -221,68 +220,50 @@ const handle_comment_reply_page_change = (reply_item: ReplyItem, page_num: numbe
 }
 onMounted(() => {
   handle_get_reply_main()
-  window.addEventListener('resize', handle_view_width_change)
-  handle_view_width_change()
-})
-const comment_list_width = ref(0)
-const handle_view_width_change = useDebounceFn(() => {
-  let expected_width = Math.ceil(
-    globalVars.value.screen_size === 'large' || globalVars.value.screen_size === 'medium'
-      ? 0.7 * innerWidth
-      : 0.75 * innerWidth
-  )
-  comment_list_width.value = expected_width > 1920 ? 1920 : expected_width
-}, 200)
-onUnmounted(() => {
-  window.removeEventListener('resize', handle_view_width_change)
 })
 </script>
 
 <template>
-  <div class="flex flex-col" ref="comment_section" v-loading="is_loading_comment">
-    <div class="flex h-full mb-[calc(var(--component-spacing)*6.4)]">
-      <div class="flex items-center">
-        <h2 class="m-0 font-bold text-base">评论</h2>
-        <div class="mr-(--spacing-20) ml-(--spacing-10) text-sm font-normal text-text-secondary">
-          {{ comment_list_resp.total_num }}
-        </div>
+  <div class="bili-comment-section flex flex-col" ref="comment_section" v-loading="is_loading_comment">
+    <!-- 评论头部：标题 + 排序 -->
+    <div class="flex items-center justify-between mb-4">
+      <div class="flex items-center gap-2">
+        <h2 class="m-0 text-base font-bold text-text-primary">评论</h2>
+        <span class="text-sm text-text-placeholder">{{ comment_list_resp.total_num }}</span>
       </div>
-      <div class="sort-actions">
+      <div class="flex items-center gap-3">
         <button
-          class="h-full px-(--spacing-12) text-sm text-text-secondary hover:cursor-pointer"
-          :class="data.sort_by === 'hot' ? 'text-text-primary' : ''"
+          class="text-sm cursor-pointer border-none bg-transparent px-0 transition-colors"
+          :class="data.sort_by === 'hot' ? 'text-primary font-medium' : 'text-text-placeholder hover:text-text-secondary'"
           @click="() => (data.sort_by = 'hot')"
         >
-          最热
+          按热度
         </button>
-        <div class="inline-block h-[9px] mx-(--spacing-6) border-l border-text-secondary align-bottom"></div>
+        <span class="text-text-placeholder text-xs">|</span>
         <button
-          class="h-full px-(--spacing-12) text-sm text-text-secondary hover:cursor-pointer"
-          :class="data.sort_by === 'time' ? 'text-text-primary' : ''"
+          class="text-sm cursor-pointer border-none bg-transparent px-0 transition-colors"
+          :class="data.sort_by === 'time' ? 'text-primary font-medium' : 'text-text-placeholder hover:text-text-secondary'"
           @click="() => (data.sort_by = 'time')"
         >
-          最新
+          按时间
         </button>
       </div>
     </div>
-    <div class="submit-comment-section-wrap">
+
+    <!-- 提交评论输入区 -->
+    <div class="submit-comment-section-wrap w-full max-w-4xl mb-6">
       <submit_comment_section
         :submit_comment="submit_comment"
-        placeholder="输入提交反馈评论..."
+        placeholder="发一条友善的评论"
         v-model:comment_content="comment_content"
-        :style="{
-          'max-width': `${comment_list_width}px`
-        }"
       />
     </div>
-    <div class="comment-list-section" v-if="comment_list_resp.replies.length">
-      <ul
-        class="p-0 m-0 list-none min-w-fit"
-        :style="{
-          width: comment_list_width + 'px'
-        }"
-      >
-        <li v-for="(__comment_item, idx) in comment_list_resp.replies" :key="idx">
+
+    <!-- 评论列表 -->
+    <div class="comment-list-section w-full max-w-4xl" v-if="comment_list_resp.replies.length">
+      <ul class="p-0 m-0 list-none">
+        <li v-for="(__comment_item, idx) in comment_list_resp.replies" :key="idx" class="border-b border-border-lighter last:border-b-0">
+          <!-- 主评论 -->
           <comment_item
             v-if="comment_list_resp.replies[idx]"
             :up_mid="comment_list_resp.upper.mid"
@@ -295,92 +276,91 @@ onUnmounted(() => {
             v-model:comment_section_stat="comment_section_stat"
             v-model:reply_item="comment_list_resp.replies[idx]"
           />
-          <div class="replies">
-            <div class="expander">
-              <div class="expander-contents">
-                <ul
-                  class="list-none m-0 p-0"
-                  v-if="comment_list_resp.replies[idx] && comment_list_resp.replies[idx].replies && comment_list_resp.replies[idx].replies.length > 0"
-                  v-loading="expander_reply_loading_set.has(comment_list_resp.replies[idx].rpid || '')"
-                >
-                  <li
-                    v-for="(__comment_reply_item, cr_idx) in comment_list_resp.replies[idx].replies"
-                    :key="`${idx}_${cr_idx}`"
-                  >
-                    <comment_item
-                      v-if="comment_list_resp.replies[idx] && comment_list_resp.replies[idx].replies && comment_list_resp.replies[idx].replies[cr_idx]"
-                      :up_mid="comment_list_resp.upper.mid"
-                      :methods="{
-                        handle_top,
-                        handle_delete,
-                        handle_black_list,
-                        handle_report
-                      }"
-                      v-model:comment_section_stat="comment_section_stat"
-                      v-model:reply_item="comment_list_resp.replies[idx].replies[cr_idx]"
-                    />
-                  </li>
-                </ul>
-                <div class="ml-(--spacing-40) text-sm text-text-secondary mt-(--spacing-6)">
-                  <div
-                    class="view-more"
-                    v-if="
-                      comment_list_resp.replies[idx] &&
-                      BigInt(comment_list_resp.replies[idx].rcount) >
-                        BigInt(comment_list_resp.replies[idx].replies?.length || 0) &&
-                      !is_expander_active_set.has(comment_list_resp.replies[idx].rpid || '')
-                    "
-                  >
-                    <span>共 {{ comment_list_resp.replies[idx].rcount }} 条回复，</span>
-                    <button
-                      class="inline-flex items-center justify-center box-border border-none outline-none select-none appearance-none bg-transparent text-inherit font-inherit h-full relative z-0 py-(--spacing-1) text-text-secondary cursor-pointer hover:text-primary before:content-[''] before:absolute before:inset-0 before:rounded-[inherit] before:bg-transparent"
-                      @click="
-                        () => {
-                          if (comment_list_resp.replies[idx]) {
-                            is_expander_active_set.add(comment_list_resp.replies[idx].rpid)
-                            handle_comment_reply_page_change(comment_list_resp.replies[idx], 1)
-                          }
-                        }
-                      "
-                    >
-                      点击查看
-                    </button>
-                  </div>
-                  <el-pagination
-                    v-if="comment_list_resp.replies[idx] && is_expander_active_set.has(comment_list_resp.replies[idx].rpid || '')"
-                    class="flex items-center text-base text-text-primary"
-                    size="default"
-                    :hide-on-single-page="true"
-                    :total="parseInt(BigInt(comment_list_resp.replies[idx].rcount || 0).toString())"
-                    :page-size="10"
-                    :pager-count="5"
-                    layout="slot, prev, pager, next"
-                    prev-text="上一页"
-                    next-text="下一页"
-                    v-model:current-page="comment_list_resp.replies[idx].current_page"
-                    @update:current-page="
-                      (cur_page) => {
-                        if (comment_list_resp.replies[idx]) {
-                          handle_comment_reply_page_change(comment_list_resp.replies[idx], cur_page)
-                        }
+
+          <!-- 子回复区 -->
+          <div class="bili-sub-reply-section" v-if="comment_list_resp.replies[idx]">
+            <!-- 已加载的子回复列表 -->
+            <ul
+              class="list-none m-0 p-0"
+              v-if="comment_list_resp.replies[idx].replies && comment_list_resp.replies[idx].replies.length > 0"
+              v-loading="expander_reply_loading_set.has(comment_list_resp.replies[idx].rpid || '')"
+            >
+              <li
+                v-for="(__comment_reply_item, cr_idx) in comment_list_resp.replies[idx].replies"
+                :key="`${idx}_${cr_idx}`"
+                class="ml-12 pl-4 py-2 border-l-2 border-border-lighter bg-bg-secondary/30 rounded-r-md"
+              >
+                <comment_item
+                  v-if="comment_list_resp.replies[idx] && comment_list_resp.replies[idx].replies && comment_list_resp.replies[idx].replies[cr_idx]"
+                  :up_mid="comment_list_resp.upper.mid"
+                  :methods="{
+                    handle_top,
+                    handle_delete,
+                    handle_black_list,
+                    handle_report
+                  }"
+                  v-model:comment_section_stat="comment_section_stat"
+                  v-model:reply_item="comment_list_resp.replies[idx].replies[cr_idx]"
+                />
+              </li>
+            </ul>
+
+            <!-- 查看更多子回复 / 分页 -->
+            <div class="ml-12 pl-4 text-sm text-text-placeholder mt-1">
+              <!-- 未展开：显示"共X条回复" -->
+              <div
+                class="view-more py-1"
+                v-if="
+                  comment_list_resp.replies[idx] &&
+                  BigInt(comment_list_resp.replies[idx].rcount) >
+                    BigInt(comment_list_resp.replies[idx].replies?.length || 0) &&
+                  !is_expander_active_set.has(comment_list_resp.replies[idx].rpid || '')
+                "
+              >
+                <span
+                  class="inline-flex items-center gap-1 cursor-pointer text-primary hover:text-primary/80 transition-colors"
+                  @click="
+                    () => {
+                      if (comment_list_resp.replies[idx]) {
+                        is_expander_active_set.add(comment_list_resp.replies[idx].rpid)
+                        handle_comment_reply_page_change(comment_list_resp.replies[idx], 1)
                       }
-                    "
-                  >
-                    <slot name="default">
-                      共
-                      {{
-                        Math.ceil(
-                          parseInt(BigInt(comment_list_resp.replies[idx].rcount || 0).toString()) / 10
-                        )
-                      }}页
-                    </slot>
-                  </el-pagination>
-                </div>
+                    }
+                  "
+                >
+                  共 {{ comment_list_resp.replies[idx].rcount }} 条回复
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>
+                </span>
               </div>
+
+              <!-- 已展开：分页器 -->
+              <el-pagination
+                v-if="comment_list_resp.replies[idx] && is_expander_active_set.has(comment_list_resp.replies[idx].rpid || '')"
+                class="mt-2"
+                size="small"
+                background
+                :hide-on-single-page="true"
+                :total="parseInt(BigInt(comment_list_resp.replies[idx].rcount || 0).toString())"
+                :page-size="10"
+                :pager-count="5"
+                layout="prev, pager, next"
+                prev-text="上一页"
+                next-text="下一页"
+                v-model:current-page="comment_list_resp.replies[idx].current_page"
+                @update:current-page="
+                  (cur_page) => {
+                    if (comment_list_resp.replies[idx]) {
+                      handle_comment_reply_page_change(comment_list_resp.replies[idx], cur_page)
+                    }
+                  }
+                "
+              />
             </div>
           </div>
+
+          <!-- 子回复提交区 -->
           <div
-            class="mr-(--spacing-40) ml-(--spacing-40) mt-(--spacing-16)"
+            class="ml-12 pl-4 mt-3 mb-2"
             v-if="
               comment_section_stat.is_reply_section_active &&
               (comment_section_stat.root === __comment_item.rpid ||
@@ -393,23 +373,28 @@ onUnmounted(() => {
               v-model:comment_content="comment_section_stat.reply_content"
             />
           </div>
-          <div class="pb-(--spacing-12) ml-(--spacing-4) border-b border-border-lighter"></div>
         </li>
       </ul>
-      <el-pagination
-        class="pt-(--spacing-12) pb-(--spacing-16) mx-auto w-1/2 text-base"
-        :size="isSmallScreen ? 'small' : 'large'"
-        background
-        :layout="paginationLayout"
-        :total="comment_list_resp.total_num"
-        v-model:current-page="data.current_page"
-        :pager-count="5"
-      >
-        <slot name="default">
-          共
-          {{ Math.ceil(parseInt(BigInt(comment_list_resp.total_num).toString()) / 10) }}页
-        </slot>
-      </el-pagination>
+
+      <!-- 底部分页 -->
+      <div class="flex justify-center py-6">
+        <el-pagination
+          size="small"
+          background
+          :layout="paginationLayout"
+          :total="comment_list_resp.total_num"
+          v-model:current-page="data.current_page"
+          :pager-count="5"
+        />
+      </div>
+    </div>
+
+    <!-- 空状态 -->
+    <div v-else class="flex flex-col items-center justify-center py-16 text-text-placeholder">
+      <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" opacity="0.3">
+        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+      </svg>
+      <p class="mt-3 text-sm">还没有评论，快来抢沙发吧~</p>
     </div>
   </div>
 </template>

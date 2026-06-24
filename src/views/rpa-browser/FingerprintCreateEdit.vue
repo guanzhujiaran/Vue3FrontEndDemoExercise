@@ -46,10 +46,10 @@ const loadFingerprintData = async () => {
         'x-bili-mid': userNavStore.user_nav.uid,
         'x-bili-level': userNavStore.user_nav.level_info.current_level
       }
-    })
+    }) as any  // responseStyle='data' → 直接返回 {code, data, msg}
 
-    if (response.data?.code === 0 && response.data?.data) {
-      const data = response.data.data as any
+    if (response?.code === 0 && response?.data) {
+      const data = response.data as any
       formData.value = {
         browser_id: browserId,
         custom_name: data.custom_name || '',
@@ -66,7 +66,7 @@ const loadFingerprintData = async () => {
         proxy_server: data.proxy_server || ''
       }
     } else {
-      biliMessage.error(response.data?.msg || '获取指纹信息失败')
+      biliMessage.error(response?.msg || '获取指纹信息失败')
       router.back()
     }
   } catch (error) {
@@ -86,10 +86,10 @@ const handleGenerateRandom = async () => {
         'x-bili-mid': userNavStore.user_nav.uid,
         'x-bili-level': userNavStore.user_nav.level_info.current_level
       }
-    })
+    }) as any  // responseStyle='data' → 直接返回 {code, data, msg}
 
-    if (response.data?.code === 0 && response.data?.data) {
-      const data = response.data.data as any
+    if (response?.code === 0 && response?.data) {
+      const data = response.data as any
       formData.value = {
         ...formData.value,
         fingerprint_platform: data.fingerprint_platform || '',
@@ -106,7 +106,7 @@ const handleGenerateRandom = async () => {
       }
       biliMessage.success('随机生成成功')
     } else {
-      biliMessage.error(response.data?.msg || '随机生成失败')
+      biliMessage.error(response?.msg || '随机生成失败')
     }
   } catch (error) {
     biliMessage.error('网络异常，请稍后重试')
@@ -124,13 +124,13 @@ const handleSubmit = async () => {
         'x-bili-mid': userNavStore.user_nav.uid,
         'x-bili-level': userNavStore.user_nav.level_info.current_level
       }
-    })
+    }) as any  // responseStyle='data' → 直接返回 {code, data, msg}
 
-    if (response.data?.code === 0) {
+    if (response?.code === 0) {
       biliMessage.success(isEdit ? '更新成功' : '创建成功')
       router.push('/app/rpa-browser')
     } else {
-      biliMessage.error(response.data?.msg || (isEdit ? '更新失败' : '创建失败'))
+      biliMessage.error(response?.msg || (isEdit ? '更新失败' : '创建失败'))
     }
   } catch (error) {
     biliMessage.error('网络异常，请稍后重试')

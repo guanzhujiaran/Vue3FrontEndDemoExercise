@@ -3,6 +3,7 @@ import type {
   AnyLotteryData,
   ChargingLotteryData,
   DynamicLotteryData,
+  OthersLotDynItem,
   RedPacketData,
   ReservationLotteryData,
   ReserveInfoFlatData,
@@ -177,6 +178,31 @@ export const parseExclusiveLevel = (
     console.error('Failed to parse exclusive_level JSON:', jsonString, e)
     return { type: '充电', text: '充电专属 (解析失败)' }
   }
+}
+
+/**
+ * 解析中文日期文本（如 "6月24日"、"6月24日18:00"）为秒级时间戳。
+ * 优先使用 referenceDate（如动态发布时间）的年份，否则使用当前年份。
+ */
+const parseChineseDateToTs = (
+  text: string | null | undefined,
+  referenceDate?: string | null
+): number | null => {
+  if (!text) return null
+  const m = text.match(/(\d{1,2})\s*月\s*(\d{1,2})\s*日(?:\s*(\d{1,2})\s*[:：]\s*(\d{1,2}))?/)
+  if (!m) return null
+  const month = parseInt(m[1], 10)
+  const day = parseInt(m[2], 10)
+  const hour = m[3] ? parseInt(m[3], 10) : 0
+  const minute = m[4] ? parseInt(m[4], 10) : 0
+  let year = new Date().getFullYear()
+  if (referenceDate) {
+    const ref = new Date(referenceDate)
+    if (!isNaN(ref.getTime())) year = ref.getFullYear()
+  }
+  const d = new Date(year, month - 1, day, hour, minute, 0)
+  if (isNaN(d.getTime())) return null
+  return Math.floor(d.getTime() / 1000)
 }
 
 export const normalizeLotteryData = (data: AnyLotteryData): NormalizedLottery => {
@@ -389,6 +415,74 @@ export const normalizeLotteryData = (data: AnyLotteryData): NormalizedLottery =>
       normalized.requirements!.push({ type: '其他', text: `特殊要求 (${liveData.require_type})` })
 
     normalized.status = normalized.endTime && nowSec < normalized.endTime ? 'ONGOING' : 'ENDED'
+  } else if ('dynId' in actualData && 'dynamicUrl' in actualData) {
+    // 第三方抽奖动态（OthersLotDynItem）
+    const dynData = actualData as OthersLotDynItem
+    const dynIdStr = dynData.dynId_str || String(dynData.dynId)
+    normalized.id = dynIdStr
+    normalized.type = 'THIRD_PARTY'
+    normalized.displayType = '第三方抽奖'
+    normalized.title = dynData.authorName
+      ? `${dynData.authorName} 的抽奖动态`
+      : `第三方抽奖 #${dynIdStr}`
+    normalized.startTime = dynData.pubTime ? new Date(dynData.pubTime).getTime() / 1000 : null
+    normalized.participants = null
+    normalized.senderInfo = { uid: dynData.up_uid_str || String(dynData.up_uid ?? ''), name: dynData.authorName }
+    normalized.sourceLink = getBiliOpusUrl(dynIdStr)
+    normalized.resultLink = dynData.dynamicUrl || null
+    normalized.businessType = null
+    normalized.prizes = []
+    normalized.requirements = []
+    normalized.roomId = null
+    normalized.danmu = null
+    normalized.authorName = dynData.authorName
+    normalized.pubTime = dynData.pubTime
+    normalized.createdAt = dynData.created_at
+    normalized.commentCount = dynData.commentCount
+    normalized.repostCount = dynData.repostCount
+    normalized.dynContent = dynData.dynContent
+    normalized.officialLotType = dynData.officialLotType
+
+    // 开奖时间（BERT 提取，如"6月24日"）：解析为时间戳，并保留原文用于展示
+    const lotteryTimeText = dynData.prize_info?.lottery_time ?? null
+    normalized.lotteryTimeText = lotteryTimeText
+    const parsedEndTime = parseChineseDateToTs(lotteryTimeText, dynData.pubTime)
+    normalized.endTime = parsedEndTime
+
+    // 奖品信息（BERT 提取）—— 映射为统一的 LotteryPrize 结构
+    if (dynData.prize_info?.prize_names?.length) {
+      normalized.prizes = dynData.prize_info.prize_names.map(name => ({
+        description: name,
+        count: null,
+        img: null
+      }))
+    }
+
+    // 从动态内容中解析参与要求
+    const content = dynData.dynContent || ''
+    if (content.includes('转发') || content.includes('repo')) {
+      normalized.requirements.push({ type: '转发', text: '转发动态', link: normalized.sourceLink || undefined })
+    }
+    if (content.includes('评论') || content.includes('留言')) {
+      normalized.requirements.push({ type: '评论', text: '评论动态', link: normalized.sourceLink || undefined })
+    }
+    if (content.includes('关注')) {
+      normalized.requirements.push({
+        type: '关注',
+        text: '关注UP主',
+        link: normalized.senderInfo.uid ? getBiliUserSpaceUrl(String(normalized.senderInfo.uid)) : undefined
+      })
+    }
+    if (content.includes('点赞')) {
+      normalized.requirements.push({ type: '点赞', text: '点赞动态', link: normalized.sourceLink || undefined })
+    }
+
+    // 状态：有开奖时间则按时间判断，否则依据 isLot
+    if (normalized.endTime) {
+      normalized.status = nowSec < normalized.endTime ? 'ONGOING' : 'ENDED'
+    } else {
+      normalized.status = dynData.isLot === 1 ? 'ONGOING' : 'UNKNOWN'
+    }
   } else if (
     ('jump_url' in actualData || 'app_sche' in actualData) &&
     ('lottery_text' in actualData || 'title' in actualData)

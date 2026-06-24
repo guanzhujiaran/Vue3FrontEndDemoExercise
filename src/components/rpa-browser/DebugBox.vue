@@ -4,9 +4,11 @@ import { Delete, Rank, ArrowDown, ArrowUp, VideoPlay, FolderAdd, View, Check, Cl
 import ActionCard from './ActionCard.vue'
 import ActionParamsForm from './ActionParamsForm.vue'
 import ConditionEditor from './ConditionEditor.vue'
+import LoopEditor from './LoopEditor.vue'
 import OperationFeedbackPanel from './OperationFeedbackPanel.vue'
 import BranchContainer from './BranchContainer.vue'
-import type { DroppedItem } from './debugbox-types'
+import type { DroppedItem, BranchPathStep, LoopConfig } from './debugbox-types'
+import { defaultLoopConfig } from './debugbox-types'
 import { useDebugboxItems } from './useDebugboxItems'
 import { useDebugboxExecution } from './useDebugboxExecution'
 import { useDebugboxSave } from './useDebugboxSave'
@@ -33,6 +35,15 @@ const {
   toggleExpand, toggleExpandAll, toggleBranchExpand, removeItem,
   serializeBranchSteps, getActionParams, getInputVars, getOutputVars, getStepChildren, getSteps,
 } = useDebugboxItems(props.browserId, props.editMode ?? false, props.initialSteps)
+
+// ── 循环配置 ──────────────────────────────────────────
+/** 确保 loop 类型的 item 有 loopConfig */
+function ensureLoopConfig(item: DroppedItem): LoopConfig {
+  if (!item.loopConfig) {
+    item.loopConfig = defaultLoopConfig()
+  }
+  return item.loopConfig
+}
 
 // ── 选择逻辑 ──────────────────────────────────────────
 const selectedIndices = ref<Set<number>>(new Set())
@@ -112,20 +123,18 @@ const {
   getActionParams, getInputVars, getOutputVars, getStepChildren, serializeBranchSteps, selectedIndices,
 )
 
-// ── 保存 & 编辑 ───────────────────────────────────────
+// ── 保存 ───────────────────────────────────────────────
 const {
   saveDialogVisible, saveDialogLoading, saveDialogForm, saveDialogItem, saveDialogIndex, saveMultiItems,
   openSaveDialog, openSaveBranchDialog, handleSaveMulti, handleSaveBranchMulti, handleSaveDialogConfirm,
-  internalEditMode, editingActionId, editingActionName, editingActionDescription, editSaving,
-  startEditCustomAction, cancelEdit, confirmEdit,
-} = useDebugboxSave(droppedItems, selectedIndices, operationFeedback, expandedItems, getSteps, serializeBranchSteps)
+} = useDebugboxSave(droppedItems, selectedIndices, serializeBranchSteps)
 
 // ── 计算属性 ──────────────────────────────────────────
 const selectedCount = computed(() => selectedIndices.value.size)
 const totalCount = computed(() => droppedItems.value.length)
 
 // ── 暴露给父组件 ─────────────────────────────────────
-defineExpose({ droppedItems, getSteps, startEditCustomAction })
+defineExpose({ droppedItems, getSteps })
 </script>
 
 <template>
@@ -135,29 +144,10 @@ defineExpose({ droppedItems, getSteps, startEditCustomAction })
     @drop="handleDrop"
   >
     <div class="flex-0 p-3 border-b border-border text-(--el-text-color-primary)">
-      <template v-if="internalEditMode">
-        <div class="flex items-center justify-between">
-          <h3 class="font-medium text-sm">编辑自定义操作</h3>
-          <div class="flex items-center gap-2">
-            <el-button size="small" @click="cancelEdit" :disabled="editSaving">取消</el-button>
-            <el-button size="small" type="primary" :loading="editSaving" @click="confirmEdit">保存</el-button>
-          </div>
-        </div>
-        <div class="grid grid-cols-2 gap-3 mt-2">
-          <div>
-            <label class="text-xs text-color-secondary">名称</label>
-            <el-input v-model="editingActionName" size="small" placeholder="操作名称" maxlength="50" show-word-limit />
-          </div>
-          <div>
-            <label class="text-xs text-color-secondary">描述</label>
-            <el-input v-model="editingActionDescription" size="small" placeholder="操作描述" maxlength="200" show-word-limit />
-          </div>
-        </div>
-      </template>
-      <template v-else>
-        <h3 class="font-medium text-sm">调试面板</h3>
-        <p class="text-xs text-color-secondary mt-1">从工具箱拖拽动作到此处，构建工作流</p>
-      </template>
+      <h3 class="font-medium text-sm">{{ props.editMode ? '步骤列表' : '调试面板' }}</h3>
+      <p class="text-xs text-color-secondary mt-1">
+        {{ props.editMode ? '拖拽动作到此处调整步骤' : '从工具箱拖拽动作到此处，构建工作流' }}
+      </p>
     </div>
 
     <el-scrollbar class="debug-box-content p-3 h-full">
@@ -187,7 +177,7 @@ defineExpose({ droppedItems, getSteps, startEditCustomAction })
           @drop="(e: DragEvent) => handleItemDrop(e, index)"
         >
           <div class="flex items-start gap-2 p-1 rounded border border-border hover:border-(--el-color-primary) transition-colors">
-            <div v-if="!props.editMode && !internalEditMode" class="mt-1.5 shrink-0">
+            <div v-if="!props.editMode" class="mt-1.5 shrink-0">
               <input type="checkbox" :checked="selectedIndices.has(index)" @change="toggleSelect(index)"
                 class="w-4 h-4 rounded border-gray-300 text-(--el-color-primary) cursor-pointer focus:ring-2 focus:ring-(--el-color-primary-light-5)" />
             </div>
@@ -206,38 +196,6 @@ defineExpose({ droppedItems, getSteps, startEditCustomAction })
                   <el-button size="small" :icon="Check" :loading="operatingIndex === index && operatingKind === 'validate'" @click="validateAction(index)" class="validate-btn w-20 ml-0">验证</el-button>
                   <el-button size="small" :icon="FolderAdd" @click="openSaveDialog(index)" class="save-btn w-20 ml-0">另存为</el-button>
                 </div>
-              </div>
-
-              <!-- loop 循环体 -->
-              <div v-if="item.action_type === 'loop' || item.action_id === 'loop'" class="mt-2">
-                <el-collapse v-model="branchCollapseState[String(index)]" accordion class="bg-transparent">
-                  <el-collapse-item name="loop">
-                    <template #title>
-                      <div class="flex items-center justify-between w-full">
-                        <span class="text-xs font-medium text-(--el-color-warning)">循环体</span>
-                        <span v-if="item.loopBody && item.loopBody.length > 0" class="text-xs text-text-placeholder">{{ item.loopBody.length }} 步</span>
-                      </div>
-                    </template>
-                    <div class="mt-1">
-                      <BranchContainer branch="loop" :items="item.loopBody || []" :parent-index="index"
-                        :selected-items="getBranchSelected(index, 'loop')" :expanded-items="expandedItems"
-                        :feedback-map="operationFeedback" :operating-map="branchOperating"
-                        @drop="(e: DragEvent, insertIndex?: number) => handleBranchDrop(e, index, 'loop', insertIndex)"
-                        @select-all="toggleBranchSelectAll(index, 'loop')"
-                        @save-multi="handleSaveBranchMulti(index, 'loop')"
-                        @execute-all="handleExecuteBranchAll(index, 'loop')"
-                        @item:execute="(bi: number, nb?: string, ni?: number) => executeBranchItem(index, 'loop', bi, nb, ni)"
-                        @item:preview="(bi: number, nb?: string, ni?: number) => previewBranchItem(index, 'loop', bi, nb, ni)"
-                        @item:validate="(bi: number, nb?: string, ni?: number) => validateBranchItem(index, 'loop', bi, nb, ni)"
-                        @item:toggle-expand="(bi: number) => toggleBranchExpand(index, 'loop', bi)"
-                        @item:remove="(bi: number) => handleRemoveBranchItem(index, 'loop', bi)"
-                        @item:toggle-select="(bi: number) => toggleBranchSelect(index, 'loop', bi)"
-                        @item:save-as="(bi: number, nb?: string, ni?: number) => openSaveBranchDialog(index, 'loop', bi, nb, ni)"
-                        @item:close-feedback="(bi: number, nb?: string, ni?: number) => closeOperationFeedback(nb != null && ni != null ? `${index}-loop-${bi}-${nb}-${ni}` : `${index}-loop-${bi}`)"
-                        @reorder="(from: number, to: number) => reorderBranchItem(index, 'loop', from, to)" />
-                    </div>
-                  </el-collapse-item>
-                </el-collapse>
               </div>
 
               <div v-if="expandedItems.has(index)" class="mt-2 p-3 rounded border border-border space-y-4">
@@ -267,14 +225,14 @@ defineExpose({ droppedItems, getSteps, startEditCustomAction })
                             @select-all="toggleBranchSelectAll(index, 'true')"
                             @save-multi="handleSaveBranchMulti(index, 'true')"
                             @execute-all="handleExecuteBranchAll(index, 'true')"
-                            @item:execute="(bi: number, nb?: string, ni?: number) => executeBranchItem(index, 'true', bi, nb, ni)"
-                            @item:preview="(bi: number, nb?: string, ni?: number) => previewBranchItem(index, 'true', bi, nb, ni)"
-                            @item:validate="(bi: number, nb?: string, ni?: number) => validateBranchItem(index, 'true', bi, nb, ni)"
+                            @item:execute="(bi: number, p?: BranchPathStep[]) => executeBranchItem(index, 'true', bi, p)"
+                            @item:preview="(bi: number, p?: BranchPathStep[]) => previewBranchItem(index, 'true', bi, p)"
+                            @item:validate="(bi: number, p?: BranchPathStep[]) => validateBranchItem(index, 'true', bi, p)"
                             @item:toggle-expand="(bi: number) => toggleBranchExpand(index, 'true', bi)"
                             @item:remove="(bi: number) => handleRemoveBranchItem(index, 'true', bi)"
                             @item:toggle-select="(bi: number) => toggleBranchSelect(index, 'true', bi)"
-                            @item:save-as="(bi: number, nb?: string, ni?: number) => openSaveBranchDialog(index, 'true', bi, nb, ni)"
-                            @item:close-feedback="(bi: number, nb?: string, ni?: number) => closeOperationFeedback(nb != null && ni != null ? `${index}-true-${bi}-${nb}-${ni}` : `${index}-true-${bi}`)"
+                            @item:save-as="(bi: number, p?: BranchPathStep[]) => openSaveBranchDialog(index, 'true', bi, p)"
+                            @item:close-feedback="(bi: number, p?: BranchPathStep[]) => closeOperationFeedback(p ? `${index}-true-${p.map(s => `${s.parentIndex}-${s.branch}`).join('-')}-${bi}` : `${index}-true-${bi}`)"
                             @reorder="(from: number, to: number) => reorderBranchItem(index, 'true', from, to)" />
                         </div>
                       </el-tab-pane>
@@ -288,18 +246,53 @@ defineExpose({ droppedItems, getSteps, startEditCustomAction })
                             @select-all="toggleBranchSelectAll(index, 'false')"
                             @save-multi="handleSaveBranchMulti(index, 'false')"
                             @execute-all="handleExecuteBranchAll(index, 'false')"
-                            @item:execute="(bi: number, nb?: string, ni?: number) => executeBranchItem(index, 'false', bi, nb, ni)"
-                            @item:preview="(bi: number, nb?: string, ni?: number) => previewBranchItem(index, 'false', bi, nb, ni)"
-                            @item:validate="(bi: number, nb?: string, ni?: number) => validateBranchItem(index, 'false', bi, nb, ni)"
+                            @item:execute="(bi: number, p?: BranchPathStep[]) => executeBranchItem(index, 'false', bi, p)"
+                            @item:preview="(bi: number, p?: BranchPathStep[]) => previewBranchItem(index, 'false', bi, p)"
+                            @item:validate="(bi: number, p?: BranchPathStep[]) => validateBranchItem(index, 'false', bi, p)"
                             @item:toggle-expand="(bi: number) => toggleBranchExpand(index, 'false', bi)"
                             @item:remove="(bi: number) => handleRemoveBranchItem(index, 'false', bi)"
                             @item:toggle-select="(bi: number) => toggleBranchSelect(index, 'false', bi)"
-                            @item:save-as="(bi: number, nb?: string, ni?: number) => openSaveBranchDialog(index, 'false', bi, nb, ni)"
-                            @item:close-feedback="(bi: number, nb?: string, ni?: number) => closeOperationFeedback(nb != null && ni != null ? `${index}-false-${bi}-${nb}-${ni}` : `${index}-false-${bi}`)"
+                            @item:save-as="(bi: number, p?: BranchPathStep[]) => openSaveBranchDialog(index, 'false', bi, p)"
+                            @item:close-feedback="(bi: number, p?: BranchPathStep[]) => closeOperationFeedback(p ? `${index}-false-${p.map(s => `${s.parentIndex}-${s.branch}`).join('-')}-${bi}` : `${index}-false-${bi}`)"
                             @reorder="(from: number, to: number) => reorderBranchItem(index, 'false', from, to)" />
                         </div>
                       </el-tab-pane>
                     </el-tabs>
+                  </div>
+                </template>
+
+                <!-- loop 类型 -->
+                <template v-else-if="item.action_type === 'loop' || item.action_id === 'loop'">
+                  <div class="pb-3 border-b border-(--el-border-color-lighter)">
+                    <LoopEditor
+                      :model-value="ensureLoopConfig(item)"
+                      @update:model-value="val => { item.loopConfig = val }"
+                    />
+                  </div>
+                  <div>
+                    <el-card shadow="never" body-style="padding: 12px;">
+                      <div class="flex items-center gap-2 mb-2">
+                        <span class="text-sm font-semibold text-(--el-text-color-primary)">循环体</span>
+                        <span class="text-xs text-text-secondary">拖拽动作到此处</span>
+                        <el-tag size="small" type="primary" effect="plain" v-if="item.loopBody && item.loopBody.length > 0">{{ item.loopBody.length }} 步</el-tag>
+                      </div>
+                      <BranchContainer branch="loop" :items="item.loopBody || []" :parent-index="index"
+                        :selected-items="getBranchSelected(index, 'loop')" :expanded-items="expandedItems"
+                        :feedback-map="operationFeedback" :operating-map="branchOperating"
+                        @drop="(e: DragEvent, insertIndex?: number) => handleBranchDrop(e, index, 'loop', insertIndex)"
+                        @select-all="toggleBranchSelectAll(index, 'loop')"
+                        @save-multi="handleSaveBranchMulti(index, 'loop')"
+                        @execute-all="handleExecuteBranchAll(index, 'loop')"
+                        @item:execute="(bi: number, p?: BranchPathStep[]) => executeBranchItem(index, 'loop', bi, p)"
+                        @item:preview="(bi: number, p?: BranchPathStep[]) => previewBranchItem(index, 'loop', bi, p)"
+                        @item:validate="(bi: number, p?: BranchPathStep[]) => validateBranchItem(index, 'loop', bi, p)"
+                        @item:toggle-expand="(bi: number) => toggleBranchExpand(index, 'loop', bi)"
+                        @item:remove="(bi: number) => handleRemoveBranchItem(index, 'loop', bi)"
+                        @item:toggle-select="(bi: number) => toggleBranchSelect(index, 'loop', bi)"
+                        @item:save-as="(bi: number, p?: BranchPathStep[]) => openSaveBranchDialog(index, 'loop', bi, p)"
+                        @item:close-feedback="(bi: number, p?: BranchPathStep[]) => closeOperationFeedback(p ? `${index}-loop-${p.map(s => `${s.parentIndex}-${s.branch}`).join('-')}-${bi}` : `${index}-loop-${bi}`)"
+                        @reorder="(from: number, to: number) => reorderBranchItem(index, 'loop', from, to)" />
+                    </el-card>
                   </div>
                 </template>
 
@@ -344,7 +337,7 @@ defineExpose({ droppedItems, getSteps, startEditCustomAction })
     </el-scrollbar>
 
     <!-- 底部工具栏 -->
-    <div v-if="!props.editMode && !internalEditMode && totalCount > 0" class="flex-0 p-3 border-t border-border bg-(--el-fill-color-light)">
+    <div v-if="!props.editMode && totalCount > 0" class="flex-0 p-3 border-t border-border bg-(--el-fill-color-light)">
       <div class="flex items-center justify-between">
         <div class="flex items-center gap-2">
           <el-button size="small" :icon="expandedItems.size === 0 ? ArrowDown : ArrowUp" @click="toggleExpandAll">

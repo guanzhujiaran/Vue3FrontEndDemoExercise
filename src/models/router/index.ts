@@ -58,6 +58,7 @@ export enum RouteName {
   RPA_BROWSER_STREAM = '浏览器Stream',
   RPA_BROWSER_CREATE = '创建指纹',
   RPA_BROWSER_COMMUNITY = '社区广场',
+  RPA_BROWSER_ACTION_MANAGEMENT = '动作管理',
   // 用户中心子路由
   USER_GLOBAL_CONFIG = '用户全局设置',
   USER_INFO_CONFIG = '用户基本信息设置',
@@ -73,6 +74,7 @@ export enum RouteName {
   RESERVE_LOTTERY = '预约抽奖',
   CHARGE_LOTTERY = '充电抽奖',
   TOPIC_LOTTERY = '话题抽奖',
+  OTHERS_LOT_DYN_LIST = '第三方抽奖动态',
 
   // 404 页面
   NOT_FOUND = 'NotFound',

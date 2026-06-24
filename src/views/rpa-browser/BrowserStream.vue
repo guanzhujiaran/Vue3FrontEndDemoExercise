@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { ref, onMounted, provide } from 'vue'
+import { ref, computed, onMounted, provide } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { VideoPlay, VideoPause, Refresh, Camera, ArrowLeft, Tools } from '@element-plus/icons-vue'
+import { VideoPlay, VideoPause, Refresh, Camera, ArrowLeft, Tools, Minus } from '@element-plus/icons-vue'
 import { useDebounceFn } from '@vueuse/core'
 import { ElMessageBox, ElDialog } from 'element-plus'
 import BiliPageHeader from '@/components/CommonCompo/Bili-Container-Compo/BiliPageHeader.vue'
@@ -9,9 +9,12 @@ import FlexContainer from '@/components/CommonCompo/Bili-Container-Compo/FlexCon
 import { readFingerprintRouterApiV1RpaBrowserReadFingerprintPost, createBrowserSessionApiV1RpaBrowserControlCreatePost, closeBrowserSessionApiV1RpaBrowserControlClosePost, browserSessionStatusApiV1RpaBrowserControlStatusPost, getWebrtcStatusApiV1RpaBrowserControlWebrtcStatusPost, executeActionApiV1RpaBrowserControlActionsExecutePost, getPageInfoApiV1RpaBrowserControlOperationGetPageInfoPost } from '@/api/browser/hey-api'
 import { useUserNavStore } from '@/stores/user_nav'
 import biliMessage from '@/utils/message'
+import { businessHandler } from '@/utils/businessHandler'
 import LiveBox from '@/components/rpa-browser/LiveBox.vue'
 import DebugBox from '@/components/rpa-browser/DebugBox.vue'
 import ToolboxPanel from '@/components/rpa-browser/ToolboxPanel.vue'
+import EditCustomActionDialog from '@/components/rpa-browser/EditCustomActionDialog.vue'
+import MinimizeBar from '@/components/rpa-browser/MinimizeBar.vue'
 import { RouteName } from '@/models/router/index.ts'
 import { useBrowserSessionState } from '@/composables/useBrowserSessionState'
 
@@ -64,6 +67,28 @@ const isLoading = ref(false)
 const splitterSize = ref(50)
 const isLoadingInfo = ref(true)
 const toolboxVisible = ref(false)
+const toolboxMinimized = ref(false)
+const toolboxDialogVisible = computed(() => toolboxVisible.value && !toolboxMinimized.value)
+
+function handleToolboxMinimize() {
+  toolboxMinimized.value = true
+}
+
+function handleToolboxRestore() {
+  toolboxMinimized.value = false
+}
+
+function handleToolboxClose() {
+  toolboxMinimized.value = false
+  toolboxVisible.value = false
+}
+
+function handleToolboxDialogUpdate(val: boolean) {
+  if (!val) {
+    if (toolboxMinimized.value) return
+    toolboxVisible.value = false
+  }
+}
 
 provide('isStreaming', isStreaming)
 provide('browserSessionStatus', browserSessionStatus)
@@ -73,36 +98,33 @@ provide('downloadSpeed', downloadSpeed)
 
 const loadBrowserInfo = async () => {
   isLoadingInfo.value = true
-  try {
-    if (!userNavStore.user_nav.uid) {
-      console.warn('User uid is empty, please login first')
-      biliMessage.warning('请先登录')
-      router.push({ name: RouteName.HOME })
-      return
-    }
-    
-    const response = await readFingerprintRouterApiV1RpaBrowserReadFingerprintPost({
+  
+  if (!userNavStore.user_nav.uid) {
+    console.warn('User uid is empty, please login first')
+    biliMessage.warning('请先登录')
+    router.push({ name: RouteName.HOME })
+    isLoadingInfo.value = false
+    return
+  }
+
+  const result = await businessHandler<BrowserInfo>(
+    readFingerprintRouterApiV1RpaBrowserReadFingerprintPost({
       query: { browser_id: browserId },
       headers: {
         'x-bili-mid': userNavStore.user_nav.uid,
         'x-bili-level': String(userNavStore.user_nav.level_info.current_level)
       }
-    })
+    }) as any,
+    { successMessage: '', errorMessage: '获取指纹信息失败', showSuccessToast: false }
+  )
 
-    if (response.data?.code === 0 && response.data?.data) {
-      browserInfo.value = response.data.data
-    } else {
-      console.error('Failed to load browser info:', response.data)
-      biliMessage.error(response.data?.msg || '获取指纹信息失败')
-      router.push({ name: RouteName.RPA_BROWSER_FINGERPRINT_LIST })
-    }
-  } catch (error) {
-    console.error('Failed to load browser info:', error)
-    biliMessage.error('网络异常，请稍后重试')
+  if (result.success && result.data) {
+    browserInfo.value = result.data
+  } else {
     router.push({ name: RouteName.RPA_BROWSER_FINGERPRINT_LIST })
-  } finally {
-    isLoadingInfo.value = false
   }
+  
+  isLoadingInfo.value = false
 }
 
 const handleStartSession = async () => {
@@ -114,10 +136,10 @@ const handleStartSession = async () => {
       query: { browser_id: browserId },
       headers: userNavStore.user_header,
       timeout: 300000 // 5分钟超时，浏览器启动可能需要较长时间
-    })
+    }) as any  // responseStyle='data' → 直接返回 {code, data, msg}
 
-    if (response.data?.code === 0) {
-      const data = response.data.data
+    if (response?.code === 0) {
+      const data = response.data
 
       if (data.browser_started) {
         biliMessage.info(data.message || '会话已存在，返回现有会话信息')
@@ -131,7 +153,7 @@ const handleStartSession = async () => {
         await fetchPagesList()
       }
     } else {
-      const msg = response.data?.msg || '创建会话失败'
+      const msg = response?.msg || '创建会话失败'
       biliMessage.error(msg)
       onSessionStartFailed(msg)
     }
@@ -158,15 +180,15 @@ const handleStopSession = async () => {
         'x-bili-mid': userNavStore.user_nav.uid,
         'x-bili-level': userNavStore.user_nav.level_info.current_level
       }
-    })
+    }) as any  // responseStyle='data' → 直接返回 {code, data, msg}
 
-    if (response.data?.code === 0) {
+    if (response?.code === 0) {
       biliMessage.success('会话已关闭')
       isStreaming.value = false
       onSessionStopped()
     } else {
-      const msg = response.data?.msg || '关闭会话失败'
-      const code = response.data?.code ?? 0
+      const msg = response?.msg || '关闭会话失败'
+      const code = response?.code ?? 0
       biliMessage.error(msg)
       onSessionStopFailed(msg, code)
     }
@@ -193,7 +215,7 @@ const loadBrowserSessionStatus = async () => {
       }
     })
 
-    onStatusResponse(response.data)
+    onStatusResponse(response)
 
     // 如果浏览器已连接，获取页面列表
     if (isConnected.value) {
@@ -208,16 +230,16 @@ const loadBrowserSessionStatus = async () => {
 
 const loadWebrtcStatus = async () => {
   try {
-    const response = await getWebrtcStatusApiV1RpaBrowserControlWebrtcStatusPost({
+    const response: any = await getWebrtcStatusApiV1RpaBrowserControlWebrtcStatusPost({
       query: { browser_id: browserId },
       headers: {
         'x-bili-mid': userNavStore.user_nav.uid,
         'x-bili-level': userNavStore.user_nav.level_info.current_level
       }
-    })
+    })  // responseStyle='data' → 直接返回 {code, data, msg}
 
-    if (response.data?.code === 0 && response.data?.data) {
-      const data = response.data.data
+    if (response?.code === 0 && response?.data) {
+      const data = response.data
       if (data.enabled && data.active_streams && data.active_streams.length > 0) {
         webrtcStatus.value = 'connected'
       } else {
@@ -253,18 +275,19 @@ const getHeaders = () => ({
 // 调用 get_page_info API 获取页面信息
 const fetchPagesList = async () => {
   try {
-    const response = await getPageInfoApiV1RpaBrowserControlOperationGetPageInfoPost({
+    const response: any = await getPageInfoApiV1RpaBrowserControlOperationGetPageInfoPost({
       headers: getHeaders(),
       query: { browser_id: browserId },
       body: {}
-    })
-    if (response.data?.code === 0) {
-      console.log('获取页面信息成功:', response.data?.data)
-      return response.data?.data
+    })  // responseStyle='data' → 直接返回 {code, data, msg}
+
+    if (response?.code === 0) {
+      console.log('获取页面信息成功:', response?.data)
+      return response?.data
     } else {
-      const errorCode = response.data?.code
+      const errorCode = response?.code
       if (errorCode !== 404) {
-        biliMessage.error(response.data?.msg || '获取页面信息失败')
+        biliMessage.error(response?.msg || '获取页面信息失败')
       }
       return null
     }
@@ -276,7 +299,7 @@ const fetchPagesList = async () => {
 
 const executeAction = async (actionId: string, params: Record<string, unknown> = {}, pageIndex?: number) => {
   try {
-    const response = await executeActionApiV1RpaBrowserControlActionsExecutePost({
+    const response: any = await executeActionApiV1RpaBrowserControlActionsExecutePost({
       query: { browser_id: browserId },
       headers: getHeaders(),
       body: {
@@ -284,14 +307,17 @@ const executeAction = async (actionId: string, params: Record<string, unknown> =
         params,
         page_index: pageIndex
       }
-    })
+    })  // responseStyle='data' → 直接返回 {code, data, msg}
 
     // 检查操作执行结果，如果失败则显示错误提示
-    if (response.data?.code === 0 && response.data?.data) {
-      const result = response.data.data
+    if (response?.code === 0 && response?.data) {
+      const result = response.data
       if (result.success === false) {
         biliMessage.error(result.error || '操作执行失败')
       }
+    } else if (response?.code !== 0) {
+      // API 级别错误（如浏览器未运行、页面不存在等）
+      biliMessage.error(response?.msg || '操作执行失败')
     }
 
     // 执行操作后刷新页面列表状态
@@ -300,14 +326,31 @@ const executeAction = async (actionId: string, params: Record<string, unknown> =
     return response
   } catch (error) {
     console.error('Failed to execute action:', error)
+    biliMessage.error('网络异常，操作执行失败')
     throw error
   }
 }
 
-const debugBoxRef = ref<InstanceType<typeof DebugBox> | null>(null)
+interface EditDialogInstance {
+  id: number
+  actionDetail: Record<string, unknown>
+}
+
+const editDialogs = ref<EditDialogInstance[]>([])
+let editDialogIdCounter = 0
 
 const handleEditAction = (actionDetail: Record<string, unknown>) => {
-  debugBoxRef.value?.startEditCustomAction(actionDetail)
+  editDialogs.value.push({
+    id: ++editDialogIdCounter,
+    actionDetail,
+  })
+}
+
+const handleEditDialogClose = (id: number) => {
+  const index = editDialogs.value.findIndex(d => d.id === id)
+  if (index !== -1) {
+    editDialogs.value.splice(index, 1)
+  }
 }
 
 const handleBack = () => {
@@ -323,14 +366,14 @@ const handleScreenshot = async () => {
   executingScreenshot.value = true
 
   try {
-    const response = await executeActionApiV1RpaBrowserControlActionsExecutePost({
+    const response: any = await executeActionApiV1RpaBrowserControlActionsExecutePost({
       query: { browser_id: browserId },
       headers: getHeaders(),
       body: { action_id: 'screenshot', params: {} }
-    })
+    })  // responseStyle='data' → 直接返回 {code, data, msg}
 
-    if (response.data?.code === 0 && response.data?.data) {
-      const result = response.data.data as Record<string, unknown>
+    if (response?.code === 0 && response?.data) {
+      const result = response.data as Record<string, unknown>
       if (result.success === true && typeof result.data === 'object' && result.data !== null) {
         const screenshotData = result.data as { base64?: string; format?: string; size?: number }
         const format = screenshotData.format || 'png'
@@ -347,7 +390,7 @@ const handleScreenshot = async () => {
         biliMessage.error(typeof result.error === 'string' ? result.error : '截图失败')
       }
     } else {
-      biliMessage.error(response.data?.msg || '截图请求失败')
+      biliMessage.error(response?.msg || '截图请求失败')
     }
   } catch (error) {
     console.error('截图失败:', error)
@@ -458,8 +501,8 @@ onMounted(() => {
         <el-splitter-panel class="live-box-container" collapsible size="40%" min="30%">
           <LiveBox :browser-id="browserId" :is-streaming="isStreaming" @toggle-stream="handleToggleStream" @webrtc-status-change="handleWebrtcStatusChange"/>
         </el-splitter-panel>
-        <el-splitter-panel class="debug-box-container overflow-hidden" collapsible min="30%"> 
-          <DebugBox ref="debugBoxRef" :browser-id="browserId" />
+        <el-splitter-panel class="debug-box-container overflow-hidden" collapsible min="30%">
+          <DebugBox :browser-id="browserId" />
         </el-splitter-panel>
       </el-splitter>
     </div>
@@ -498,8 +541,7 @@ onMounted(() => {
 
     <!-- 工具箱对话框 -->
     <el-dialog
-      v-model="toolboxVisible"
-      title="工具箱"
+      :model-value="toolboxDialogVisible"
       width="520px"
       :modal-penetrable="true"
       :modal="false"
@@ -507,11 +549,43 @@ onMounted(() => {
       :draggable="true"
       :close-on-click-modal="false"
       :destroy-on-close="false"
+      modal-class="toolbox-overlay"
       class="toolbox-dialog"
+      @update:model-value="handleToolboxDialogUpdate"
     >
+      <template #header>
+        <div class="relative w-full">
+          <span class="font-medium text-sm">工具箱</span>
+          <button
+            class="absolute top-1/2 -translate-y-1/2 right-8 w-5 h-5 flex items-center justify-center cursor-pointer hover:text-color-secondary"
+            title="最小化"
+            @click="handleToolboxMinimize"
+          >
+            <el-icon :size="14"><Minus /></el-icon>
+          </button>
+        </div>
+      </template>
       <div class="h-[60vh] overflow-auto">
         <ToolboxPanel :browser-id="browserId" @edit-action="handleEditAction" />
       </div>
     </el-dialog>
+
+    <!-- 工具箱最小化浮动标签 -->
+    <MinimizeBar
+      v-if="toolboxMinimized && toolboxVisible"
+      title="工具箱"
+      @restore="handleToolboxRestore"
+      @close="handleToolboxClose"
+    />
+
+    <!-- 编辑自定义操作弹窗（支持同时开启多个，独立于调试面板） -->
+    <EditCustomActionDialog
+      v-for="dialog in editDialogs"
+      :key="dialog.id"
+      :model-value="true"
+      :action-detail="dialog.actionDetail"
+      :browser-id="browserId"
+      @update:model-value="(val: boolean) => { if (!val) handleEditDialogClose(dialog.id) }"
+    />
   </FlexContainer>
 </template>

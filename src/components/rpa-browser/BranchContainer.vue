@@ -5,6 +5,9 @@ import ActionCard from './ActionCard.vue'
 import ActionParamsForm from './ActionParamsForm.vue'
 import OperationFeedbackPanel from './OperationFeedbackPanel.vue'
 import ConditionEditor from './ConditionEditor.vue'
+import LoopEditor from './LoopEditor.vue'
+import type { BranchPathStep, LoopConfig } from './debugbox-types'
+import { defaultLoopConfig } from './debugbox-types'
 
 /**
  * 分支容器 —— True/False/Loop 分支的拖拽区域，含条目列表与操作栏。
@@ -67,14 +70,14 @@ const emit = defineEmits<{
   selectAll: []
   saveMulti: []
   executeAll: []
-  'item:execute': [childIndex: number, nestedBranch?: string, nestedIndex?: number]
-  'item:preview': [childIndex: number, nestedBranch?: string, nestedIndex?: number]
-  'item:validate': [childIndex: number, nestedBranch?: string, nestedIndex?: number]
-  'item:saveAs': [childIndex: number, nestedBranch?: string, nestedIndex?: number]
+  'item:execute': [childIndex: number, path?: BranchPathStep[]]
+  'item:preview': [childIndex: number, path?: BranchPathStep[]]
+  'item:validate': [childIndex: number, path?: BranchPathStep[]]
+  'item:saveAs': [childIndex: number, path?: BranchPathStep[]]
   'item:toggleExpand': [childIndex: number]
   'item:remove': [childIndex: number]
   'item:toggleSelect': [childIndex: number]
-  'item:closeFeedback': [childIndex: number, nestedBranch?: string, nestedIndex?: number]
+  'item:closeFeedback': [childIndex: number, path?: BranchPathStep[]]
   /** 拖拽排序：from → to */
   reorder: [fromIndex: number, toIndex: number]
 }>()
@@ -262,6 +265,14 @@ const isEmpty = computed(() => props.items.length === 0)
 const allSelected = computed(() => props.items.length > 0 && props.selectedItems.size === props.items.length)
 const someSelected = computed(() => props.selectedItems.size > 0 && props.selectedItems.size < props.items.length)
 
+/** 确保 loop 类型的 item 有 loopConfig */
+function ensureLoopConfig(item: DroppedItem): LoopConfig {
+  if (!item.loopConfig) {
+    item.loopConfig = defaultLoopConfig()
+  }
+  return item.loopConfig
+}
+
 const feedbackKey = (childIndex: number) => {
   const pathParts: string[] = []
   if (props.branchPath) {
@@ -440,14 +451,16 @@ function handleNestedReorder(childIndex: number, nestedBranch: 'true' | 'false' 
   targetArr.splice(to, 0, moved)
 }
 
-/** 嵌套分支内执行/预览/验证/另存为 —— 向上 emit 带上嵌套上下文 */
-function handleNestedBranchAction(childIndex: number, nestedBranch: 'true' | 'false' | 'loop', subIndex: number, action: 'execute' | 'preview' | 'validate' | 'closeFeedback' | 'saveAs') {
+/** 嵌套分支内执行/预览/验证/另存为 —— 向上 emit 带上嵌套路径（支持任意深度） */
+function handleNestedBranchAction(childIndex: number, nestedBranch: 'true' | 'false' | 'loop', subIndex: number, action: 'execute' | 'preview' | 'validate' | 'closeFeedback' | 'saveAs', incomingPath?: BranchPathStep[]) {
+  const step: BranchPathStep = { parentIndex: childIndex, branch: nestedBranch }
+  const path: BranchPathStep[] = incomingPath ? [step, ...incomingPath] : [step]
   if (action === 'closeFeedback') {
-    emit('item:closeFeedback', childIndex, nestedBranch, subIndex)
+    emit('item:closeFeedback', subIndex, path)
   } else if (action === 'saveAs') {
-    emit('item:saveAs', childIndex, nestedBranch, subIndex)
+    emit('item:saveAs', subIndex, path)
   } else {
-    emit(`item:${action}` as 'item:execute', childIndex, nestedBranch, subIndex)
+    emit(`item:${action}` as 'item:execute', subIndex, path)
   }
 }
 
@@ -579,11 +592,11 @@ function handleNestedToggleExpand(childIndex: number, nestedBranch: 'true' | 'fa
                           @save-multi="emit('saveMulti')"
                           @execute-all="emit('executeAll')"
                           @reorder="(from: number, to: number) => handleNestedReorder(bi, 'true', from, to)"
-                          @item:execute="(sub: number) => handleNestedBranchAction(bi, 'true', sub, 'execute')"
-                          @item:preview="(sub: number) => handleNestedBranchAction(bi, 'true', sub, 'preview')"
-                          @item:validate="(sub: number) => handleNestedBranchAction(bi, 'true', sub, 'validate')"
-                          @item:save-as="(sub: number) => handleNestedBranchAction(bi, 'true', sub, 'saveAs')"
-                          @item:close-feedback="(sub: number) => handleNestedBranchAction(bi, 'true', sub, 'closeFeedback')"
+                          @item:execute="(sub: number, p?: BranchPathStep[]) => handleNestedBranchAction(bi, 'true', sub, 'execute', p)"
+                          @item:preview="(sub: number, p?: BranchPathStep[]) => handleNestedBranchAction(bi, 'true', sub, 'preview', p)"
+                          @item:validate="(sub: number, p?: BranchPathStep[]) => handleNestedBranchAction(bi, 'true', sub, 'validate', p)"
+                          @item:save-as="(sub: number, p?: BranchPathStep[]) => handleNestedBranchAction(bi, 'true', sub, 'saveAs', p)"
+                          @item:close-feedback="(sub: number, p?: BranchPathStep[]) => handleNestedBranchAction(bi, 'true', sub, 'closeFeedback', p)"
                           @item:remove="(sub: number) => handleNestedRemove(bi, 'true', sub)"
                           @item:toggle-expand="(sub: number) => handleNestedToggleExpand(bi, 'true', sub)"
                           @item:toggle-select="(sub: number) => { const s = getNestedSelected(bi, 'true'); s.has(sub) ? s.delete(sub) : s.add(sub); }"
@@ -611,11 +624,11 @@ function handleNestedToggleExpand(childIndex: number, nestedBranch: 'true' | 'fa
                           @save-multi="emit('saveMulti')"
                           @execute-all="emit('executeAll')"
                           @reorder="(from: number, to: number) => handleNestedReorder(bi, 'false', from, to)"
-                          @item:execute="(sub: number) => handleNestedBranchAction(bi, 'false', sub, 'execute')"
-                          @item:preview="(sub: number) => handleNestedBranchAction(bi, 'false', sub, 'preview')"
-                          @item:validate="(sub: number) => handleNestedBranchAction(bi, 'false', sub, 'validate')"
-                          @item:save-as="(sub: number) => handleNestedBranchAction(bi, 'false', sub, 'saveAs')"
-                          @item:close-feedback="(sub: number) => handleNestedBranchAction(bi, 'false', sub, 'closeFeedback')"
+                          @item:execute="(sub: number, p?: BranchPathStep[]) => handleNestedBranchAction(bi, 'false', sub, 'execute', p)"
+                          @item:preview="(sub: number, p?: BranchPathStep[]) => handleNestedBranchAction(bi, 'false', sub, 'preview', p)"
+                          @item:validate="(sub: number, p?: BranchPathStep[]) => handleNestedBranchAction(bi, 'false', sub, 'validate', p)"
+                          @item:save-as="(sub: number, p?: BranchPathStep[]) => handleNestedBranchAction(bi, 'false', sub, 'saveAs', p)"
+                          @item:close-feedback="(sub: number, p?: BranchPathStep[]) => handleNestedBranchAction(bi, 'false', sub, 'closeFeedback', p)"
                           @item:remove="(sub: number) => handleNestedRemove(bi, 'false', sub)"
                           @item:toggle-expand="(sub: number) => handleNestedToggleExpand(bi, 'false', sub)"
                           @item:toggle-select="(sub: number) => { const s = getNestedSelected(bi, 'false'); s.has(sub) ? s.delete(sub) : s.add(sub); }"
@@ -626,48 +639,45 @@ function handleNestedToggleExpand(childIndex: number, nestedBranch: 'true' | 'fa
                 </div>
               </template>
 
-              <!-- loop 类型：循环体容器 -->
+              <!-- loop 类型 -->
               <template v-else-if="branchItem.action_type === 'loop' || branchItem.action_id === 'loop'">
+                <div class="pb-3 border-b border-(--el-border-color-lighter)">
+                  <LoopEditor
+                    :model-value="ensureLoopConfig(branchItem)"
+                    @update:model-value="val => { branchItem.loopConfig = val }"
+                  />
+                </div>
                 <div>
-                  <div class="flex items-center gap-2 mb-2">
-                    <span class="text-sm font-semibold text-(--el-color-warning)">循环体</span>
-                    <span class="text-xs text-text-secondary">拖拽动作到循环体内</span>
-                  </div>
-                  <el-collapse v-model="nestedCollapseState[`${bi}`]" accordion class="bg-transparent">
-                    <el-collapse-item name="loop">
-                      <template #title>
-                        <div class="flex items-center justify-between w-full">
-                          <span class="text-xs font-medium text-(--el-color-warning)">循环体</span>
-                          <span v-if="branchItem.loopBody && branchItem.loopBody.length > 0" class="text-xs text-text-placeholder">{{ branchItem.loopBody.length }} 步</span>
-                        </div>
-                      </template>
-                      <div class="mt-1">
-                        <BranchContainer
-                          branch="loop"
-                          :items="branchItem.loopBody || []"
-                          :parent-index="bi"
-                          :branch-path="childBranchPath"
-                          :selected-items="getNestedSelected(bi, 'loop')"
-                          :expanded-items="props.expandedItems"
-                          :feedback-map="props.feedbackMap"
-                          :operating-map="props.operatingMap"
-                          @drop="(e: DragEvent, idx?: number) => handleNestedDrop(bi, 'loop', e, idx)"
-                          @select-all="handleNestedSelectAll(bi, 'loop')"
-                          @save-multi="emit('saveMulti')"
-                          @execute-all="emit('executeAll')"
-                          @reorder="(from: number, to: number) => handleNestedReorder(bi, 'loop', from, to)"
-                          @item:execute="(sub: number) => handleNestedBranchAction(bi, 'loop', sub, 'execute')"
-                          @item:preview="(sub: number) => handleNestedBranchAction(bi, 'loop', sub, 'preview')"
-                          @item:validate="(sub: number) => handleNestedBranchAction(bi, 'loop', sub, 'validate')"
-                          @item:save-as="(sub: number) => handleNestedBranchAction(bi, 'loop', sub, 'saveAs')"
-                          @item:close-feedback="(sub: number) => handleNestedBranchAction(bi, 'loop', sub, 'closeFeedback')"
-                          @item:remove="(sub: number) => handleNestedRemove(bi, 'loop', sub)"
-                          @item:toggle-expand="(sub: number) => handleNestedToggleExpand(bi, 'loop', sub)"
-                          @item:toggle-select="(sub: number) => { const s = getNestedSelected(bi, 'loop'); s.has(sub) ? s.delete(sub) : s.add(sub); }"
-                        />
-                      </div>
-                    </el-collapse-item>
-                  </el-collapse>
+                  <el-card shadow="never" body-style="padding: 12px;">
+                    <div class="flex items-center gap-2 mb-2">
+                      <span class="text-sm font-semibold text-(--el-text-color-primary)">循环体</span>
+                      <span class="text-xs text-text-secondary">拖拽动作到此处</span>
+                      <el-tag size="small" type="primary" effect="plain" v-if="branchItem.loopBody && branchItem.loopBody.length > 0">{{ branchItem.loopBody.length }} 步</el-tag>
+                    </div>
+                    <BranchContainer
+                      branch="loop"
+                      :items="branchItem.loopBody || []"
+                      :parent-index="bi"
+                      :branch-path="childBranchPath"
+                      :selected-items="getNestedSelected(bi, 'loop')"
+                      :expanded-items="props.expandedItems"
+                      :feedback-map="props.feedbackMap"
+                      :operating-map="props.operatingMap"
+                      @drop="(e: DragEvent, idx?: number) => handleNestedDrop(bi, 'loop', e, idx)"
+                      @select-all="handleNestedSelectAll(bi, 'loop')"
+                      @save-multi="emit('saveMulti')"
+                      @execute-all="emit('executeAll')"
+                      @reorder="(from: number, to: number) => handleNestedReorder(bi, 'loop', from, to)"
+                      @item:execute="(sub: number, p?: BranchPathStep[]) => handleNestedBranchAction(bi, 'loop', sub, 'execute', p)"
+                      @item:preview="(sub: number, p?: BranchPathStep[]) => handleNestedBranchAction(bi, 'loop', sub, 'preview', p)"
+                      @item:validate="(sub: number, p?: BranchPathStep[]) => handleNestedBranchAction(bi, 'loop', sub, 'validate', p)"
+                      @item:save-as="(sub: number, p?: BranchPathStep[]) => handleNestedBranchAction(bi, 'loop', sub, 'saveAs', p)"
+                      @item:close-feedback="(sub: number, p?: BranchPathStep[]) => handleNestedBranchAction(bi, 'loop', sub, 'closeFeedback', p)"
+                      @item:remove="(sub: number) => handleNestedRemove(bi, 'loop', sub)"
+                      @item:toggle-expand="(sub: number) => handleNestedToggleExpand(bi, 'loop', sub)"
+                      @item:toggle-select="(sub: number) => { const s = getNestedSelected(bi, 'loop'); s.has(sub) ? s.delete(sub) : s.add(sub); }"
+                    />
+                  </el-card>
                 </div>
               </template>
 

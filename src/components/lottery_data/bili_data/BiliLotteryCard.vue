@@ -73,9 +73,6 @@
             >
               查看h5抽奖详情
             </el-link>
-            <el-button icon="link" v-else type="info" size="default" disabled class="whitespace-nowrap">
-              查看h5抽奖详情
-            </el-button>
             <!-- 参加/不参加开关 -->
             <div class="flex items-center gap-2 whitespace-nowrap">
               <span class="text-sm font-medium text-text-secondary whitespace-nowrap">
@@ -98,22 +95,22 @@
 
     <template #default>
       <div class="main-content-wrapper flex h-full flex-col gap-4">
-        <section
-          v-if="normalizedData.endTime !== null"
-          class="rounded-lg border border-border-light bg-bg-page p-4"
-        >
+        <section class="rounded-lg border border-border-light bg-bg-page p-4">
           <div class="space-y-3">
             <p class="text-xs font-medium text-text-secondary">{{ countdownTitle }}</p>
 
             <div class="rounded-lg border border-border-light bg-bg px-4 py-3 sm:min-w-(--spacing-40)">
               <el-countdown
-                v-if="normalizedData.status === 'ONGOING'"
+                v-if="normalizedData.endTime !== null && normalizedData.status === 'ONGOING'"
                 class="lottery__countdown text-sm font-semibold text-text-primary sm:text-base"
                 :value="normalizedData.endTime * 1e3"
                 format="DD 天 HH 时 mm 分 ss 秒"
               />
-              <div v-else class="text-sm font-semibold text-text-primary sm:text-base">
+              <div v-else-if="normalizedData.endTime !== null" class="text-sm font-semibold text-text-primary sm:text-base">
                 {{ deadlineReachedText }}
+              </div>
+              <div v-else class="text-sm font-medium text-text-placeholder">
+                暂无开奖时间
               </div>
             </div>
           </div>
@@ -164,10 +161,67 @@
           </div>
         </section>
 
+        <section
+          v-if="normalizedData.type === 'THIRD_PARTY' && normalizedData.dynContent"
+          :class="['rounded-lg border border-border-light bg-fill-lighter p-4']"
+        >
+          <div class="mb-2 flex flex-wrap items-center justify-between gap-2">
+            <p class="text-sm font-semibold text-text-primary">动态内容</p>
+            <span class="rounded-full bg-bg px-3 py-1 text-xs font-medium text-text-secondary">
+              原文展示
+            </span>
+          </div>
+          <el-text
+            :line-clamp="dynContentExpanded ? undefined : 5"
+            size="large"
+            class="cursor-pointer select-text whitespace-pre-wrap break-words"
+            @click="dynContentExpanded = !dynContentExpanded"
+          >
+            {{ normalizedData.dynContent }}
+          </el-text>
+          <div class="mt-1 text-right">
+            <el-link
+              type="primary"
+              underline="hover"
+              size="small"
+              @click="dynContentExpanded = !dynContentExpanded"
+            >
+              {{ dynContentExpanded ? '收起' : '展开全部' }}
+            </el-link>
+          </div>
+        </section>
+
         <LotteryPrize
-          v-if="normalizedData.prizes.length > 0 && normalizedData.type !== 'TOPIC'"
+          v-if="normalizedData.prizes.length > 0 && normalizedData.type !== 'TOPIC' && normalizedData.type !== 'THIRD_PARTY'"
+          :class="{ 'mt-auto': normalizedData.requirements.length === 0 }"
           :prizes="normalizedData.prizes"
         />
+
+        <section
+          v-if="normalizedData.type === 'THIRD_PARTY' && normalizedData.prizes.length > 0"
+          :class="['rounded-lg border border-border-light bg-fill-lighter p-4', { 'mt-auto': normalizedData.requirements.length === 0 }]"
+        >
+          <div class="flex flex-wrap items-start justify-between gap-3">
+            <div class="space-y-1">
+              <p class="text-sm font-semibold text-text-primary">奖品列表</p>
+              <p class="text-xs leading-relaxed text-text-secondary">
+                自动提取的奖品名称，仅供参考。
+              </p>
+            </div>
+            <span class="rounded-full bg-bg px-3 py-1 text-xs font-medium text-text-secondary">
+              {{ normalizedData.prizes.length }} 项
+            </span>
+          </div>
+          <div class="mt-3 space-y-2">
+            <div
+              v-for="(prize, index) in normalizedData.prizes"
+              :key="`${prize.description}-${index}`"
+              class="rounded-lg border border-border-light bg-bg px-3 py-3 text-sm leading-relaxed text-text-primary"
+            >
+              {{ prize.description }}
+            </div>
+          </div>
+        </section>
 
         <section
           v-if="normalizedData.type === 'TOPIC' && normalizedData.prizes.length > 0"
@@ -324,6 +378,7 @@ const props = defineProps({
 })
 
 const activeCollapseNames = ref<string[]>([])
+const dynContentExpanded = ref(false)
 const globalVars = useInject(KeysEnum.GlobalVars) as Ref<GlobalVarsType>
 
 const hasClicked = computed(() => isLotteryParticipated(String(normalizedData.value.id)))
@@ -439,8 +494,26 @@ const senderProfileLink = computed(() =>
 )
 const statusIcon = computed(() => normalizedData.value.statusType || 'info')
 const deadlineText = computed(() => formatTimestamp(normalizedData.value.endTime))
-const timeSummaryLabel = computed(() => (normalizedData.value.type === 'TOPIC' ? '活动截止' : '截止时间'))
-const countdownTitle = computed(() => (normalizedData.value.type === 'TOPIC' ? '活动截止倒计时' : '开奖倒计时'))
+const timeSummaryLabel = computed(() => {
+  switch (normalizedData.value.type) {
+    case 'TOPIC':
+      return '活动截止'
+    case 'THIRD_PARTY':
+      return '开奖时间'
+    default:
+      return '截止时间'
+  }
+})
+const countdownTitle = computed(() => {
+  switch (normalizedData.value.type) {
+    case 'TOPIC':
+      return '活动截止倒计时'
+    case 'THIRD_PARTY':
+      return '开奖倒计时'
+    default:
+      return '开奖倒计时'
+  }
+})
 const countdownDescription = computed(() =>
   normalizedData.value.type === 'TOPIC'
     ? '活动结束后通常会在活动页公布后续结果。'
@@ -460,7 +533,9 @@ const summaryItems = computed(() => {
   const items: Array<{ label: string; value: string; hint?: string; link?: string }> = [
     {
       label: timeSummaryLabel.value,
-      value: deadlineText.value,
+      value: normalizedData.value.type === 'THIRD_PARTY'
+        ? (normalizedData.value.lotteryTimeText || (normalizedData.value.endTime ? formatTimestamp(normalizedData.value.endTime) : '暂无'))
+        : deadlineText.value,
       hint: normalizedData.value.endTime !== null ? '以站内活动页展示为准' : '暂无截止时间'
     }
   ]
@@ -473,7 +548,7 @@ const summaryItems = computed(() => {
     })
   }
 
-  if (normalizedData.value.prizes.length > 0) {
+  if (normalizedData.value.prizes.length > 0 && normalizedData.value.type !== 'THIRD_PARTY') {
     items.push({
       label: '抽取名额',
       value: totalPrizeCount.value > 0 ? `${totalPrizeCount.value} 名` : '待公布',
@@ -484,7 +559,7 @@ const summaryItems = computed(() => {
     })
   }
 
-  if (normalizedData.value.senderInfo.uid) {
+  if (normalizedData.value.type !== 'THIRD_PARTY' && normalizedData.value.senderInfo.uid) {
     items.push({
       label: '发起者 UID',
       value: String(normalizedData.value.senderInfo.uid),
@@ -499,6 +574,53 @@ const summaryItems = computed(() => {
     })
   }
 
+  // 第三方抽奖专用字段
+  if (normalizedData.value.displayType === '第三方抽奖') {
+    if (normalizedData.value.authorName) {
+      items.push({
+        label: 'UP主',
+        value: String(normalizedData.value.authorName),
+        hint: '动态发布者',
+        link: senderProfileLink.value || undefined
+      })
+    }
+    if (normalizedData.value.officialLotType) {
+      items.push({
+        label: '抽奖类型',
+        value: String(normalizedData.value.officialLotType),
+        hint: '动态标注的抽奖类型'
+      })
+    }
+    if (normalizedData.value.pubTime) {
+      items.push({
+        label: '发布时间',
+        value: formatTimestamp(normalizedData.value.pubTime),
+        hint: '动态发布时间'
+      })
+    }
+    if (normalizedData.value.createdAt) {
+      items.push({
+        label: '收录时间',
+        value: formatTimestamp(normalizedData.value.createdAt),
+        hint: '数据库收录时间'
+      })
+    }
+    if (normalizedData.value.commentCount !== null && normalizedData.value.commentCount !== undefined) {
+      items.push({
+        label: '评论数',
+        value: normalizedData.value.commentCount >= 0 ? `${normalizedData.value.commentCount}` : '暂无',
+        hint: '数据仅供参考'
+      })
+    }
+    if (normalizedData.value.repostCount !== null && normalizedData.value.repostCount !== undefined) {
+      items.push({
+        label: '转发数',
+        value: normalizedData.value.repostCount >= 0 ? `${normalizedData.value.repostCount}` : '暂无',
+        hint: '数据仅供参考'
+      })
+    }
+  }
+
   if (normalizedData.value.type === 'TOPIC' && normalizedData.value.prizes.length > 0) {
     items.push({
       label: '奖品池摘要',
@@ -507,7 +629,7 @@ const summaryItems = computed(() => {
     })
   }
 
-  return items.slice(0, 4)
+  return items.slice(0, normalizedData.value.type === 'THIRD_PARTY' ? 6 : 4)
 })
 
 const typeInfo = computed(() => {
@@ -523,6 +645,8 @@ const typeInfo = computed(() => {
     case 'RED_PACKET':
       return { tagType: 'danger' as TagProps['type'] }
     case 'TOPIC':
+      return { tagType: 'info' as TagProps['type'] }
+    case 'THIRD_PARTY':
       return { tagType: 'info' as TagProps['type'] }
     default:
       return { tagType: 'info' as TagProps['type'] }
@@ -543,6 +667,8 @@ const headerDescription = computed(() => {
       return '直播间红包抽奖活动'
     case 'TOPIC':
       return '话题活动抽奖，参与话题即可有机会获奖'
+    case 'THIRD_PARTY':
+      return '第三方（非官方号）发布的抽奖动态，参与条件以动态内容为准'
     default:
       return ''
   }

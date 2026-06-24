@@ -81,6 +81,18 @@ export default defineConfig({
         ]
       },
     }),
+    heyApiPlugin({
+      config: {
+        input: 'http://localhost:23333/openapi.json',
+        output: 'src/api/bili_lottery_data/hey-api',
+        plugins: [
+          {
+            name: '@hey-api/client-ofetch',
+            runtimeConfigPath: '@/api/bili_lottery_data/runtime_config'
+          }
+        ]
+      },
+    }),
   ],
   resolve: {
     alias: {
