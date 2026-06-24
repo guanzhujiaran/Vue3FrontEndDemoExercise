@@ -60,6 +60,22 @@ function apiHeaders() {
   }
 }
 
+const getTooltipContent = (item: ActionItem) => {
+  const parts: string[] = []
+  if (item.description) parts.push(item.description)
+  if (item.tags?.length) parts.push(`标签: ${item.tags.join(', ')}`)
+  parts.push(`步骤数: ${item.steps_count}`)
+  parts.push(`可见性: ${item.is_public ? '公开' : '私有'}`)
+  parts.push(`点赞: ${item.likes_count}`)
+  parts.push(`Fork: ${item.forks_count}`)
+  parts.push(`ID: ${item.action_id}`)
+  return parts.join('<br/>')
+}
+
+const getTooltipEffect = (item: ActionItem): 'dark' | 'light' => {
+  return item.is_public ? 'light' : 'dark'
+}
+
 const loadActions = async () => {
   loading.value = true
   const result = await businessHandler<{ items?: ActionItem[]; total?: number }>(
@@ -255,9 +271,17 @@ onMounted(() => {
 
       <!-- 动作卡片列表 -->
       <div v-else class="grid gap-4" style="grid-template-columns: repeat(auto-fill, minmax(340px, 1fr))">
-        <div
+        <el-tooltip
           v-for="item in filteredList"
           :key="item.action_id"
+          :content="getTooltipContent(item)"
+          :effect="getTooltipEffect(item)"
+          raw-content
+          placement="top"
+          :show-after="500"
+          popper-class="toolbox-tooltip"
+        >
+        <div
           class="rounded-xl p-5 border border-[var(--el-border-color-light)] hover:border-[var(--el-color-primary)] transition-colors flex flex-col gap-3"
         >
           <!-- 名称行 -->
@@ -307,6 +331,7 @@ onMounted(() => {
             <el-button size="small" type="danger" :icon="Delete" @click="handleDelete(item)">删除</el-button>
           </div>
         </div>
+        </el-tooltip>
       </div>
 
       <!-- 分页 -->

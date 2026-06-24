@@ -177,7 +177,7 @@ const renderedContent = computed(() => {
         <img
           v-if="reply_item.member.level_info?.current_level"
           :src="`https://i0.hdslb.com/bfs/seed/jinkela/short/webui/user-profile/img/level_${reply_item.member.level_info.current_level}.svg`"
-          class="w-4 h-4"
+          class="w-8 h-8"
           referrerpolicy="no-referrer"
           :alt="'Lv' + reply_item.member.level_info.current_level"
         />
@@ -202,7 +202,7 @@ const renderedContent = computed(() => {
         v-if="is_root && reply_item.up_action?.like"
         class="inline-flex items-center gap-1 mb-2 px-2 py-0.5 rounded-sm bg-primary/8 text-[11px] text-primary"
       >
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M14.6 8H12V5.6c0-.7-.6-1.3-1.3-1.3-.3 0-.5.1-.7.3L6.3 9c-.3.3-.3.7-.3 1v9.3c0 .4.3.7.7.7h10.4c.8 0 1.5-.4 1.9-1.1l2.6-5.5c.1-.3.2-.7.1-1-.1-.4-.4-.7-.7-.9-.2-.1-.3-.1-.5-.1H17V6.7c0-.7-.6-1.3-1.3-1.3-.4 0-.8.2-1.1.6zM4 10H2v10h2c.6 0 1-.4 1-1v-8c0-.6-.4-1-1-1z" fill="currentColor"/></svg>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M14.6 8H12V5.6c0-.7-.6-1.3-1.3-1.3-.3 0-.5.1-.7.3L6.3 9c-.3.3-.3.7-.3 1v9.3c0 .4.3.7.7.7h10.4c.8 0 1.5-.4 1.9-1.1l2.6-5.5c.1-.3.2-.7.1-1-.1-.4-.4-.7-.7-.9-.2-.1-.3-.1-.5-.1H17V6.7c0-.7-.6-1.3-1.3-1.3-.4 0-.8.2-1.1.6zM4 10H2v10h2c.6 0 1-.4 1-1v-8c0-.6-.4-1-1-1z" fill="currentColor"/></svg>
         UP主觉得很赞
       </div>
 
@@ -214,7 +214,7 @@ const renderedContent = computed(() => {
           :class="{ 'text-primary!': interact_btn_active === 1 }"
           @click="handleLike"
         >
-          <svg width="16" height="16" viewBox="0 0 24 24" :fill="interact_btn_active === 1 ? 'currentColor' : 'none'" :stroke="interact_btn_active === 1 ? 'none' : 'currentColor'" stroke-width="2">
+          <svg width="20" height="20" viewBox="0 0 24 24" :fill="interact_btn_active === 1 ? 'currentColor' : 'none'" :stroke="interact_btn_active === 1 ? 'none' : 'currentColor'" stroke-width="2">
             <path d="M14.6 8H12V5.6c0-.7-.6-1.3-1.3-1.3-.3 0-.5.1-.7.3L6.3 9c-.3.3-.3.7-.3 1v9.3c0 .4.3.7.7.7h10.4c.8 0 1.5-.4 1.9-1.1l2.6-5.5c.1-.3.2-.7.1-1-.1-.4-.4-.7-.7-.9-.2-.1-.3-.1-.5-.1H17V6.7c0-.7-.6-1.3-1.3-1.3-.4 0-.8.2-1.1.6z"/>
           </svg>
           <span v-if="Number(reply_item.like) > 0">{{ reply_item.like }}</span>
@@ -226,7 +226,7 @@ const renderedContent = computed(() => {
           :class="{ 'text-primary!': interact_btn_active === 2 }"
           @click="handleHate"
         >
-          <svg width="16" height="16" viewBox="0 0 24 24" :fill="interact_btn_active === 2 ? 'currentColor' : 'none'" :stroke="interact_btn_active === 2 ? 'none' : 'currentColor'" stroke-width="2" style="transform: rotate(180deg)">
+          <svg width="20" height="20" viewBox="0 0 24 24" :fill="interact_btn_active === 2 ? 'currentColor' : 'none'" :stroke="interact_btn_active === 2 ? 'none' : 'currentColor'" stroke-width="2" style="transform: rotate(180deg)">
             <path d="M14.6 8H12V5.6c0-.7-.6-1.3-1.3-1.3-.3 0-.5.1-.7.3L6.3 9c-.3.3-.3.7-.3 1v9.3c0 .4.3.7.7.7h10.4c.8 0 1.5-.4 1.9-1.1l2.6-5.5c.1-.3.2-.7.1-1-.1-.4-.4-.7-.7-.9-.2-.1-.3-.1-.5-.1H17V6.7c0-.7-.6-1.3-1.3-1.3-.4 0-.8.2-1.1.6z"/>
           </svg>
         </button>
@@ -242,13 +242,13 @@ const renderedContent = computed(() => {
         <!-- 更多菜单 -->
         <div
           class="relative ml-auto"
-          v-show="is_mouse_in || is_comment_menu_open"
+          :class="is_mouse_in || is_comment_menu_open ? 'visible' : 'invisible'"
         >
           <button
             class="bili-action-btn hover:text-primary transition-colors"
             @click="() => (is_comment_menu_open = !is_comment_menu_open)"
           >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>
           </button>
           <div
             v-show="is_comment_menu_open"
