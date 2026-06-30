@@ -197,8 +197,10 @@ declare module 'vue' {
     UserAvatarBox: typeof import('./components/CommonCompo/Bili-User-Compo/UserAvatarBox.vue')['default']
     UserBaseInfoConfig: typeof import('./components/opus-detail/RightPannel/PannelItems/SettingComponent/UserBaseInfoConfig.vue')['default']
     UserCenterDefaultPanel: typeof import('./components/opus-detail/RightPannel/PannelItems/SettingComponent/UserCenterDefaultPanel.vue')['default']
+    WorkflowEditDialog: typeof import('./components/rpa-browser/WorkflowEditDialog.vue')['default']
   }
   export interface GlobalDirectives {
+    vInfiniteScroll: typeof import('element-plus/es')['ElInfiniteScroll']
     vLoading: typeof import('element-plus/es')['ElLoadingDirective']
   }
 }
@@ -390,4 +392,5 @@ declare global {
   const UserAvatarBox: typeof import('./components/CommonCompo/Bili-User-Compo/UserAvatarBox.vue')['default']
   const UserBaseInfoConfig: typeof import('./components/opus-detail/RightPannel/PannelItems/SettingComponent/UserBaseInfoConfig.vue')['default']
   const UserCenterDefaultPanel: typeof import('./components/opus-detail/RightPannel/PannelItems/SettingComponent/UserCenterDefaultPanel.vue')['default']
+  const WorkflowEditDialog: typeof import('./components/rpa-browser/WorkflowEditDialog.vue')['default']
 }

@@ -12,6 +12,7 @@
       <el-alert
         title="提交 B 站话题活动抽奖"
         type="info"
+        :effect="themeStore.themeEffectString"
         :closable="false"
         show-icon
         class="mb-4"
@@ -56,6 +57,9 @@ import { ref, reactive } from 'vue'
 import biliMessage from '@/utils/message'
 import { Upload, Check, RefreshLeft, Promotion } from '@element-plus/icons-vue'
 import lotteryDataBaseApi from '@/api/lottery_data/bili/lottery_database_bili_api'
+import { useThemeStore } from '@/stores/theme'
+
+const themeStore = useThemeStore()
 
 const dialogVisible = ref(false)
 const loading = ref(false)

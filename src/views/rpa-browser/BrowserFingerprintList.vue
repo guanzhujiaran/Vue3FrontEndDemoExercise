@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { Delete, Edit, VideoPlay, Plus, Monitor, Clock, Search } from '@element-plus/icons-vue'
+import { Delete, Edit, VideoPlay, Plus, Monitor, Clock, Search, SetUp } from '@element-plus/icons-vue'
 import { ElMessageBox } from 'element-plus'
 import FlexContainer from '@/components/CommonCompo/Bili-Container-Compo/FlexContainer.vue'
 import CenteredContainer from '@/components/CommonCompo/Bili-Container-Compo/CenteredContainer.vue'
@@ -264,9 +264,14 @@ onMounted(() => {
   <FlexContainer>
     <BiliPageHeader title="浏览器指纹管理" description="管理你的浏览器指纹列表" tag="浏览器指纹">
       <template #extra>
-        <el-button type="primary" :icon="Plus" @click="handleCreateFingerprint">
-          创建指纹
-        </el-button>
+        <div class="flex items-center gap-2">
+          <el-button :icon="SetUp" @click="router.push({ name: RouteName.RPA_BROWSER_WORKFLOW_MANAGEMENT })">
+            工作流管理
+          </el-button>
+          <el-button type="primary" :icon="Plus" @click="handleCreateFingerprint">
+            创建指纹
+          </el-button>
+        </div>
       </template>
     </BiliPageHeader>
 

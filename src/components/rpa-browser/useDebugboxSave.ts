@@ -7,7 +7,7 @@ import type { BranchPathStep, DroppedItem } from './debugbox-types'
 
 export function useDebugboxSave(
   droppedItems: Ref<DroppedItem[]>,
-  selectedIndices: Ref<Set<number>>,
+  selectedIds: Ref<Set<string>>,
   serializeBranchSteps: (items: DroppedItem[]) => Record<string, unknown>[],
 ) {
   const userNavStore = useUserNavStore()
@@ -19,13 +19,6 @@ export function useDebugboxSave(
   const saveDialogItem = ref<DroppedItem | null>(null)
   const saveDialogIndex = ref(-1)
   const saveMultiItems = ref<DroppedItem[]>([])
-
-  function apiHeaders() {
-    return {
-      'x-bili-mid': userNavStore.user_nav.uid,
-      'x-bili-level': String(userNavStore.user_nav.level_info.current_level),
-    }
-  }
 
   function makeTimestamp() {
     const now = new Date()
@@ -127,8 +120,8 @@ export function useDebugboxSave(
   }
 
   function handleSaveMulti() {
-    saveMultiItems.value = selectedIndices.value.size > 0
-      ? [...selectedIndices.value].sort((a, b) => a - b).map(i => droppedItems.value[i])
+    saveMultiItems.value = selectedIds.value.size > 0
+      ? droppedItems.value.filter(i => selectedIds.value.has(i.id))
       : [...droppedItems.value]
     if (saveMultiItems.value.length === 0) { biliMessage.warning('没有可保存的动作'); return }
     saveDialogItem.value = saveMultiItems.value[0]
@@ -169,7 +162,7 @@ export function useDebugboxSave(
           body: { name: saveDialogForm.value.name, action_type: 'composite' as BuiltinActionType, description: saveDialogForm.value.description,
             parameters_schema: [], steps, is_public: saveDialogForm.value.isPublic, tags: [],
             input_vars: [], output_vars: [], timeout: 30000, retry_on_error: false, retry_times: 0, retry_delay: 1.0 },
-          headers: apiHeaders(),
+          headers: userNavStore.user_header,
         })
         if (response?.code === 0) { biliMessage.success('自定义操作保存成功'); saveDialogVisible.value = false; saveMultiItems.value = [] }
         else {
@@ -210,7 +203,7 @@ export function useDebugboxSave(
           steps: [stepData], is_public: saveDialogForm.value.isPublic, tags: [],
           input_vars: [], output_vars: [], timeout: 30000, retry_on_error: false, retry_times: 0, retry_delay: 1.0,
         },
-        headers: apiHeaders(),
+        headers: userNavStore.user_header,
       })
       if (response?.code === 0) { biliMessage.success('自定义操作保存成功'); saveDialogVisible.value = false }
       else {

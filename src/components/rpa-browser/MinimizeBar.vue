@@ -66,8 +66,8 @@ function handleClick() {
         class="flex items-center gap-1 px-2 py-3 cursor-move [writing-mode:vertical-rl]"
         @mousedown="handleDragStart"
       >
-        <el-icon class="text-color-secondary"><Tools /></el-icon>
-        <span class="text-sm">{{ title }}</span>
+        <el-icon class="text-color-primary"><Tools /></el-icon>
+        <span class="text-xl">{{ title }}</span>
       </div>
       <button
         class="absolute -top-1.5 -right-1.5 w-4 h-4 flex items-center justify-center rounded-full bg-bg border border-border cursor-pointer hover:text-danger"

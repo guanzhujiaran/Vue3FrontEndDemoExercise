@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, type Component } from 'vue'
 import { Mouse, Edit, Top, View, Timer, Camera, Connection, SetUp, RefreshRight, Star, Grid, Cpu, Link, QuestionFilled } from '@element-plus/icons-vue'
+import type { ActionDetail } from './debugbox-types'
 
 interface Props {
   action: {
@@ -11,6 +12,8 @@ interface Props {
     }
     name?: string
     description?: string
+    /** 后端 action_detail：仅 ca_ 自定义操作有此字段 */
+    action_detail?: ActionDetail
   }
   selected?: boolean
   configParams?: Record<string, unknown>
@@ -116,6 +119,26 @@ const configParamsEntries = computed(() => {
     .filter(([_, value]) => value !== undefined && value !== null && value !== '')
     .map(([key, value]) => ({ key, value: String(value) }))
 })
+
+/** 是否有 action_detail（仅 ca_ 自定义操作） */
+const hasActionDetail = computed(() => !!props.action.action_detail)
+
+/** action_detail 中的标签 */
+const detailTags = computed(() => {
+  const tags = props.action.action_detail?.tags
+  return Array.isArray(tags) && tags.length > 0 ? tags : []
+})
+
+/** action_detail 中的元信息标记 */
+const detailBadges = computed(() => {
+  const ad = props.action.action_detail
+  if (!ad) return []
+  const badges: string[] = []
+  if (ad.is_public) badges.push('公开')
+  if (ad.is_verified) badges.push('已认证')
+  if (ad.likes_count && ad.likes_count > 0) badges.push(`${ad.likes_count} 赞`)
+  return badges
+})
 </script>
 
 <template>
@@ -137,7 +160,17 @@ const configParamsEntries = computed(() => {
             <span class="font-medium text-sm text-[var(--el-text-color-primary)]">{{ actionTitle }}</span>
             <span class="text-xs text-text-secondary font-mono">{{ action.action_id }}</span>
           </div>
-          <div v-if="actionDescription" class="text-xs text-text-secondary leading-relaxed line-clamp-2">{{ actionDescription }}</div>
+          <div v-if="actionDescription" class="text-xs text-text-secondary leading-relaxed line-clamp-2 mb-1">{{ actionDescription }}</div>
+
+          <!-- action_detail 标签和元信息 -->
+          <div v-if="hasActionDetail" class="flex flex-wrap items-center gap-1 mt-1">
+            <el-tag v-for="tag in detailTags" :key="tag" size="small" type="info">{{ tag }}</el-tag>
+            <span
+              v-for="badge in detailBadges"
+              :key="badge"
+              class="text-xs px-1.5 py-0.5 rounded bg-[var(--el-color-primary-light-9)] text-[var(--el-color-primary)]"
+            >{{ badge }}</span>
+          </div>
         </div>
       </div>
       

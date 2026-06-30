@@ -118,10 +118,10 @@ onUnmounted(() => {
             <el-header>
               <HeaderBarView />
             </el-header>
-            <el-main class="flex! flex-col flex-1 p-0 mt-3 mx-6">
+            <el-main class="flex! flex-col flex-1 p-0 mt-3 mx-6 text-text-primary">
               <RouterView v-slot="{ Component, route }">
                 <transition name="slide-fade" mode="out-in">
-                  <keep-alive :max="10">
+                  <keep-alive :max="30">
                     <component :is="Component" />
                   </keep-alive>
                 </transition>

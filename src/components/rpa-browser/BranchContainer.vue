@@ -49,13 +49,13 @@ interface Props {
   parentIndex: number
   /** 从主列表到当前容器的嵌套路径（用于跨层拖放定位源位置） */
   branchPath?: Array<{ parentIndex: number; branch: 'true' | 'false' | 'loop' }>
-  /** 选中的子项索引集合 */
-  selectedItems: Set<number>
-  /** 展开的子项 key 集合 */
-  expandedItems: Set<unknown>
-  /** 操作反馈映射 */
+  /** 选中的子项 id 集合（以 item.id 为 key，重排序后跟随卡片） */
+  selectedItems: Set<string>
+  /** 展开的子项 id 集合（以 item.id 为 key） */
+  expandedItems: Set<string>
+  /** 操作反馈映射（key 为 item.id） */
   feedbackMap: Record<string, OperationFeedback>
-  /** 执行中 mapping */
+  /** 执行中 mapping（key 为 item.id 或 `${parentIndex}-${branch}` 表示批量） */
   operatingMap: Record<string, boolean>
   /** 是否操作全部 */
   executingAll?: boolean
@@ -77,7 +77,8 @@ const emit = defineEmits<{
   'item:toggleExpand': [childIndex: number]
   'item:remove': [childIndex: number]
   'item:toggleSelect': [childIndex: number]
-  'item:closeFeedback': [childIndex: number, path?: BranchPathStep[]]
+  /** 关闭反馈：直接传递 item.id */
+  'item:closeFeedback': [id: string]
   /** 拖拽排序：from → to */
   reorder: [fromIndex: number, toIndex: number]
 }>()
@@ -94,9 +95,12 @@ const onItemDragStart = (e: DragEvent, index: number) => {
       __dragType: 'card',
       source: { container: 'branch', parentIndex: props.parentIndex, branch: props.branch, index, path: props.branchPath || [] }
     }
-    // 多选时附带全部选中项的索引（升序）
-    if (props.selectedItems.size > 1 && props.selectedItems.has(index)) {
-      payload.selectedIndices = [...props.selectedItems].sort((a, b) => a - b)
+    // 多选时附带全部选中项的索引（升序）。selectedItems 以 item.id 为 key，此处转回当前索引
+    const currentItem = props.items[index]
+    if (currentItem && props.selectedItems.size > 1 && props.selectedItems.has(currentItem.id)) {
+      payload.selectedIndices = props.items
+        .map((it, i) => props.selectedItems.has(it.id) ? i : -1)
+        .filter(i => i >= 0)
     }
     const json = JSON.stringify(payload)
     e.dataTransfer.setData('text/plain', json)
@@ -273,16 +277,8 @@ function ensureLoopConfig(item: DroppedItem): LoopConfig {
   return item.loopConfig
 }
 
-const feedbackKey = (childIndex: number) => {
-  const pathParts: string[] = []
-  if (props.branchPath) {
-    for (const p of props.branchPath) {
-      pathParts.push(String(p.parentIndex), p.branch)
-    }
-  }
-  pathParts.push(String(props.parentIndex), props.branch, String(childIndex))
-  return pathParts.join('-')
-}
+/** 反馈 key：直接使用 branchItem.id，重排序后状态依然准确 */
+const feedbackKey = (childIndex: number) => props.items[childIndex]?.id ?? ''
 
 /** 从 feedback detail 中提取预览数据 */
 function extractPreviewData(bi: number) {
@@ -322,16 +318,22 @@ function extractPreviewData(bi: number) {
   }
   return { vars, found, replaced, tree }
 }
-const isExpanded = (childIndex: number) => props.expandedItems.has(feedbackKey(childIndex) as unknown as number)
-const isOperating = (childIndex: number) => !!props.operatingMap[feedbackKey(childIndex)]
+const isExpanded = (childIndex: number) => {
+  const id = props.items[childIndex]?.id
+  return !!id && props.expandedItems.has(id)
+}
+const isOperating = (childIndex: number) => {
+  const id = props.items[childIndex]?.id
+  return !!id && !!props.operatingMap[id]
+}
 
 // ========== 递归嵌套分支状态（局部管理） ==========
-/** 嵌套 if_else 的当前激活 tab (子项 index → 'true'|'false') */
+/** 嵌套 if_else 的当前激活 tab (key 为 item.id) */
 const nestedIfElseActiveTab = reactive<Record<string, 'true' | 'false'>>({})
 /** 嵌套 loop 的折叠状态 */
 const nestedCollapseState = reactive<Record<string, string[]>>({})
-/** 嵌套分支的选中项映射 "childIndex-true/false/loop" → Set<number> */
-const nestedSelectedMap = reactive<Record<string, Set<number>>>({})
+/** 嵌套分支的选中项映射 "childIndex-true/false/loop" → Set<item.id> */
+const nestedSelectedMap = reactive<Record<string, Set<string>>>({})
 
 /** 确保嵌套分支数据存在 */
 function ensureNestedBranch(item: DroppedItem) {
@@ -341,7 +343,7 @@ function ensureNestedBranch(item: DroppedItem) {
 }
 
 /** 获取嵌套选中集合 */
-function getNestedSelected(childIndex: number, branch: string): Set<number> {
+function getNestedSelected(childIndex: number, branch: string): Set<string> {
   const key = `${childIndex}-${branch}`
   if (!nestedSelectedMap[key]) nestedSelectedMap[key] = new Set()
   return nestedSelectedMap[key]

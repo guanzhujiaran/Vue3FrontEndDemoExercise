@@ -12,6 +12,9 @@ import { defaultLoopConfig } from './debugbox-types'
 import { useDebugboxItems } from './useDebugboxItems'
 import { useDebugboxExecution } from './useDebugboxExecution'
 import { useDebugboxSave } from './useDebugboxSave'
+import { useThemeStore } from '@/stores/theme'
+
+const themeStore = useThemeStore()
 
 // ── Props ──────────────────────────────────────────────
 interface Props {
@@ -26,11 +29,9 @@ const isSessionConnected = inject<Ref<boolean>>('isSessionConnected', ref(false)
 
 // ── 条目管理 ──────────────────────────────────────────
 const {
-  droppedItems, dragOverIndex, dragSource, expandedItems,
-  branchCollapseState, ifElseActiveTab,
-  initBranchForItem,
-  handleDragOver, handleListDragover, handleDrop,
-  handleItemDragStart, handleItemDragOver, handleItemDragEnd, handleItemDrop,
+  droppedItems, dragOverIndex, expandedItems, ifElseActiveTab,
+  handleDrop,
+  handleItemDragStart, handleItemDragEnter, handleItemDragEnd, handleItemDrop,
   handleBranchDrop, removeBranchItem, reorderBranchItem,
   toggleExpand, toggleExpandAll, toggleBranchExpand, removeItem,
   serializeBranchSteps, getActionParams, getInputVars, getOutputVars, getStepChildren, getSteps,
@@ -46,28 +47,36 @@ function ensureLoopConfig(item: DroppedItem): LoopConfig {
 }
 
 // ── 选择逻辑 ──────────────────────────────────────────
-const selectedIndices = ref<Set<number>>(new Set())
-const branchSelectedMap = ref<Record<string, Set<number>>>({})
+/** 选中状态以 item.id 为 key，重排序后依然跟随卡片 */
+const selectedIds = ref<Set<string>>(new Set())
+const branchSelectedMap = ref<Record<string, Set<string>>>({})
 
 function toggleSelect(index: number) {
-  const next = new Set(selectedIndices.value)
-  next.has(index) ? next.delete(index) : next.add(index)
-  selectedIndices.value = next
+  const item = droppedItems.value[index]
+  if (!item) return
+  const next = new Set(selectedIds.value)
+  next.has(item.id) ? next.delete(item.id) : next.add(item.id)
+  selectedIds.value = next
 }
 function toggleSelectAll() {
-  selectedIndices.value = selectedIndices.value.size === droppedItems.value.length
+  selectedIds.value = selectedIds.value.size === droppedItems.value.length
     ? new Set()
-    : new Set(droppedItems.value.map((_, i) => i))
+    : new Set(droppedItems.value.map(i => i.id))
 }
 
 const getBranchSelectedKey = (parentIndex: number, branch: string) => `${parentIndex}-${branch}`
-function getBranchSelected(parentIndex: number, branch: string): Set<number> {
+function getBranchSelected(parentIndex: number, branch: string): Set<string> {
   return branchSelectedMap.value[getBranchSelectedKey(parentIndex, branch)] ?? new Set()
 }
 function toggleBranchSelect(parentIndex: number, branch: string, childIndex: number) {
+  const parent = droppedItems.value[parentIndex]
+  if (!parent) return
+  const targetBranch = branch === 'true' ? parent.trueBranch : branch === 'false' ? parent.falseBranch : parent.loopBody
+  const child = targetBranch?.[childIndex]
+  if (!child) return
   const key = getBranchSelectedKey(parentIndex, branch)
   const current = new Set(branchSelectedMap.value[key] ?? [])
-  current.has(childIndex) ? current.delete(childIndex) : current.add(childIndex)
+  current.has(child.id) ? current.delete(child.id) : current.add(child.id)
   branchSelectedMap.value = { ...branchSelectedMap.value, [key]: current }
 }
 function toggleBranchSelectAll(parentIndex: number, branch: string) {
@@ -79,39 +88,40 @@ function toggleBranchSelectAll(parentIndex: number, branch: string) {
   const current = branchSelectedMap.value[key]
   branchSelectedMap.value = {
     ...branchSelectedMap.value,
-    [key]: current && current.size === targetBranch.length ? new Set() : new Set(targetBranch.map((_, i) => i)),
+    [key]: current && current.size === targetBranch.length ? new Set() : new Set(targetBranch.map(i => i.id)),
   }
 }
 
-/** 辅佐函数：去掉 deletedIndex 并将更大的索引 -1 */
-function shiftSelectedSet(prev: Set<number>, deletedIndex: number): Set<number> {
-  const next = new Set<number>()
-  for (const si of prev) {
-    if (si < deletedIndex) next.add(si)
-    else if (si > deletedIndex) next.add(si - 1)
-  }
+/** 辅佐函数：从集合中移除指定 id */
+function removeFromSelectedSet(prev: Set<string>, id: string): Set<string> {
+  const next = new Set(prev)
+  next.delete(id)
   return next
 }
 
-// 删除主列表条目时同步修正多选框
+// 删除主列表条目时同步清理多选
 function handleRemoveItem(index: number) {
-  selectedIndices.value = shiftSelectedSet(selectedIndices.value, index)
+  const item = droppedItems.value[index]
+  if (item) selectedIds.value = removeFromSelectedSet(selectedIds.value, item.id)
   removeItem(index)
 }
 
-// 删除分支条目时同步修正分支多选框
+// 删除分支条目时同步清理分支多选
 function handleRemoveBranchItem(parentIndex: number, branch: 'true' | 'false' | 'loop', childIndex: number) {
+  const parent = droppedItems.value[parentIndex]
+  const targetBranch = parent ? (branch === 'true' ? parent.trueBranch : branch === 'false' ? parent.falseBranch : parent.loopBody) : undefined
+  const child = targetBranch?.[childIndex]
   const key = getBranchSelectedKey(parentIndex, branch)
   const current = branchSelectedMap.value[key]
-  if (current) {
-    branchSelectedMap.value = { ...branchSelectedMap.value, [key]: shiftSelectedSet(current, childIndex) }
+  if (current && child) {
+    branchSelectedMap.value = { ...branchSelectedMap.value, [key]: removeFromSelectedSet(current, child.id) }
   }
   removeBranchItem(parentIndex, branch, childIndex)
 }
 
 // ── 执行引擎 ──────────────────────────────────────────
 const {
-  operatingIndex, operatingKind, operationFeedback, executingSelected, branchOperating,
+  operatingId, operatingKind, operationFeedback, executingSelected, branchOperating,
   executeAction, previewAction, validateAction,
   handleExecuteSelected, handleExecuteBranchAll,
   executeBranchItem, previewBranchItem, validateBranchItem,
@@ -120,17 +130,17 @@ const {
   validateMissingParams, validateInvalidParams, validateErrors,
 } = useDebugboxExecution(
   droppedItems, props.browserId, isSessionConnected,
-  getActionParams, getInputVars, getOutputVars, getStepChildren, serializeBranchSteps, selectedIndices,
+  getActionParams, getInputVars, getOutputVars, getStepChildren, serializeBranchSteps, selectedIds,
 )
 
 // ── 保存 ───────────────────────────────────────────────
 const {
   saveDialogVisible, saveDialogLoading, saveDialogForm, saveDialogItem, saveDialogIndex, saveMultiItems,
   openSaveDialog, openSaveBranchDialog, handleSaveMulti, handleSaveBranchMulti, handleSaveDialogConfirm,
-} = useDebugboxSave(droppedItems, selectedIndices, serializeBranchSteps)
+} = useDebugboxSave(droppedItems, selectedIds, serializeBranchSteps)
 
 // ── 计算属性 ──────────────────────────────────────────
-const selectedCount = computed(() => selectedIndices.value.size)
+const selectedCount = computed(() => selectedIds.value.size)
 const totalCount = computed(() => droppedItems.value.length)
 
 // ── 暴露给父组件 ─────────────────────────────────────
@@ -140,7 +150,7 @@ defineExpose({ droppedItems, getSteps })
 <template>
   <div
     class="debug-box-wrapper bg-bg/70 h-full flex flex-col"
-    @dragover="handleDragOver"
+    @dragover.prevent
     @drop="handleDrop"
   >
     <div class="flex-0 p-3 border-b border-border text-(--el-text-color-primary)">
@@ -157,7 +167,7 @@ defineExpose({ droppedItems, getSteps })
         <p class="text-xs mt-1">从右侧工具箱选择动作插件</p>
       </div>
 
-      <div v-else class="space-y-3" @dragover="handleListDragover">
+      <div v-else class="space-y-3" @dragover.prevent>
         <!-- 批量执行总览横幅 -->
         <div v-if="operationFeedback['__batch__']" class="p-3 rounded border text-xs" :class="(operationFeedback['__batch__'] as any).success ? 'border-(--el-color-primary) bg-(--el-color-primary-light-9)' : 'border-(--el-color-warning) bg-(--el-color-warning-light-9)'">
           <div class="flex items-center gap-2">
@@ -173,12 +183,12 @@ defineExpose({ droppedItems, getSteps })
           data-drag-item
           class="group relative"
           :class="{ 'opacity-50': dragOverIndex === index }"
-          @dragover="(e: DragEvent) => handleItemDragOver(e, index)"
+          @dragenter="(e: DragEvent) => handleItemDragEnter(e, index)"
           @drop="(e: DragEvent) => handleItemDrop(e, index)"
         >
           <div class="flex items-start gap-2 p-1 rounded border border-border hover:border-(--el-color-primary) transition-colors">
             <div v-if="!props.editMode" class="mt-1.5 shrink-0">
-              <input type="checkbox" :checked="selectedIndices.has(index)" @change="toggleSelect(index)"
+              <input type="checkbox" :checked="selectedIds.has(item.id)" @change="toggleSelect(index)"
                 class="w-4 h-4 rounded border-gray-300 text-(--el-color-primary) cursor-pointer focus:ring-2 focus:ring-(--el-color-primary-light-5)" />
             </div>
             <div class="mt-2 cursor-move drag-handle" draggable="true" @dragstart="(e: DragEvent) => handleItemDragStart(e, index)" @dragend="handleItemDragEnd" @mousedown.stop>
@@ -191,14 +201,14 @@ defineExpose({ droppedItems, getSteps })
                   <ActionCard :action="{ action_id: item.action_type || item.action_id, json_schema: item.json_schema, name: item.name, description: item.description }" :config-params="item.config_params" />
                 </div>
                 <div class="grid grid-cols-2 gap-3 shrink-0 py-1 button-stack">
-                  <el-button size="small" :icon="VideoPlay" type="primary" :loading="operatingIndex === index && operatingKind === 'execute'" @click="executeAction(index)" class="execute-btn w-20">执行</el-button>
-                  <el-button size="small" :icon="View" :loading="operatingIndex === index && operatingKind === 'preview'" @click="previewAction(index)" class="preview-btn w-20 ml-0">预览</el-button>
-                  <el-button size="small" :icon="Check" :loading="operatingIndex === index && operatingKind === 'validate'" @click="validateAction(index)" class="validate-btn w-20 ml-0">验证</el-button>
+                  <el-button size="small" :icon="VideoPlay" type="primary" :loading="operatingId === item.id && operatingKind === 'execute'" @click="executeAction(index)" class="execute-btn w-20">执行</el-button>
+                  <el-button size="small" :icon="View" :loading="operatingId === item.id && operatingKind === 'preview'" @click="previewAction(index)" class="preview-btn w-20 ml-0">预览</el-button>
+                  <el-button size="small" :icon="Check" :loading="operatingId === item.id && operatingKind === 'validate'" @click="validateAction(index)" class="validate-btn w-20 ml-0">验证</el-button>
                   <el-button size="small" :icon="FolderAdd" @click="openSaveDialog(index)" class="save-btn w-20 ml-0">另存为</el-button>
                 </div>
               </div>
 
-              <div v-if="expandedItems.has(index)" class="mt-2 p-3 rounded border border-border space-y-4">
+              <div v-if="expandedItems.has(item.id)" class="mt-2 p-3 rounded border border-border space-y-4">
                 <!-- if_else 类型 -->
                 <template v-if="item.action_type === 'if_else' || item.action_id === 'if_else'">
                   <div class="pb-3 border-b border-(--el-border-color-lighter)">
@@ -210,11 +220,11 @@ defineExpose({ droppedItems, getSteps })
                       <span class="text-sm font-semibold text-(--el-text-color-primary)">分支操作</span>
                       <span class="text-xs text-text-secondary">拖拽动作到对应分支中</span>
                     </div>
-                    <el-alert class="mb-2" type="info" :closable="true" show-icon>
+                    <el-alert class="mb-2" type="info" :effect="themeStore.themeEffectString" :closable="true" show-icon>
                       <template #title><span class="text-xs"><b>执行规则</b>：未设条件 → 走 <b>False 分支</b>；命中分支为空 → <b>跳过</b>并视为成功；分支有步骤 → <b>顺序执行</b></span></template>
                     </el-alert>
-                    <el-tabs :model-value="ifElseActiveTab[String(index)] ?? 'true'" type="border-card" class="if-else-branch-tabs"
-                      @update:model-value="ifElseActiveTab[String(index)] = $event as 'true' | 'false'">
+                    <el-tabs :model-value="ifElseActiveTab[item.id] ?? 'true'" type="border-card" class="if-else-branch-tabs"
+                      @update:model-value="ifElseActiveTab[item.id] = $event as 'true' | 'false'">
                       <el-tab-pane name="true">
                         <template #label><span class="text-xs font-medium text-(--el-color-success)">True 分支<span v-if="item.trueBranch && item.trueBranch.length > 0" class="text-text-placeholder ml-1">({{ item.trueBranch.length }} 步)</span></span></template>
                         <div class="p-2 overflow-auto">
@@ -232,7 +242,7 @@ defineExpose({ droppedItems, getSteps })
                             @item:remove="(bi: number) => handleRemoveBranchItem(index, 'true', bi)"
                             @item:toggle-select="(bi: number) => toggleBranchSelect(index, 'true', bi)"
                             @item:save-as="(bi: number, p?: BranchPathStep[]) => openSaveBranchDialog(index, 'true', bi, p)"
-                            @item:close-feedback="(bi: number, p?: BranchPathStep[]) => closeOperationFeedback(p ? `${index}-true-${p.map(s => `${s.parentIndex}-${s.branch}`).join('-')}-${bi}` : `${index}-true-${bi}`)"
+                            @item:close-feedback="(id: string) => closeOperationFeedback(id)"
                             @reorder="(from: number, to: number) => reorderBranchItem(index, 'true', from, to)" />
                         </div>
                       </el-tab-pane>
@@ -253,7 +263,7 @@ defineExpose({ droppedItems, getSteps })
                             @item:remove="(bi: number) => handleRemoveBranchItem(index, 'false', bi)"
                             @item:toggle-select="(bi: number) => toggleBranchSelect(index, 'false', bi)"
                             @item:save-as="(bi: number, p?: BranchPathStep[]) => openSaveBranchDialog(index, 'false', bi, p)"
-                            @item:close-feedback="(bi: number, p?: BranchPathStep[]) => closeOperationFeedback(p ? `${index}-false-${p.map(s => `${s.parentIndex}-${s.branch}`).join('-')}-${bi}` : `${index}-false-${bi}`)"
+                            @item:close-feedback="(id: string) => closeOperationFeedback(id)"
                             @reorder="(from: number, to: number) => reorderBranchItem(index, 'false', from, to)" />
                         </div>
                       </el-tab-pane>
@@ -290,7 +300,7 @@ defineExpose({ droppedItems, getSteps })
                         @item:remove="(bi: number) => handleRemoveBranchItem(index, 'loop', bi)"
                         @item:toggle-select="(bi: number) => toggleBranchSelect(index, 'loop', bi)"
                         @item:save-as="(bi: number, p?: BranchPathStep[]) => openSaveBranchDialog(index, 'loop', bi, p)"
-                        @item:close-feedback="(bi: number, p?: BranchPathStep[]) => closeOperationFeedback(p ? `${index}-loop-${p.map(s => `${s.parentIndex}-${s.branch}`).join('-')}-${bi}` : `${index}-loop-${bi}`)"
+                        @item:close-feedback="(id: string) => closeOperationFeedback(id)"
                         @reorder="(from: number, to: number) => reorderBranchItem(index, 'loop', from, to)" />
                     </el-card>
                   </div>
@@ -306,23 +316,23 @@ defineExpose({ droppedItems, getSteps })
               </div>
 
               <!-- 操作反馈面板 -->
-              <div v-if="operationFeedback[index]" class="mt-2">
-                <OperationFeedbackPanel :feedback="operationFeedback[index] as any"
-                  :exec-steps="execResultSteps(index)"
-                  :preview-replaced-params="previewReplacedParams(index)"
-                  :preview-found-params="previewFoundParams(index)"
-                  :preview-variables="previewVariables(index)"
-                  :preview-nested-tree="nestedPreviewTree(index)"
-                  :validate-missing-params="validateMissingParams(index)"
-                  :validate-invalid-params="validateInvalidParams(index)"
-                  :validate-errors="validateErrors(index)"
-                  @close="closeOperationFeedback(index)" />
+              <div v-if="operationFeedback[item.id]" class="mt-2">
+                <OperationFeedbackPanel :feedback="operationFeedback[item.id] as any"
+                  :exec-steps="execResultSteps(item.id)"
+                  :preview-replaced-params="previewReplacedParams(item.id)"
+                  :preview-found-params="previewFoundParams(item.id)"
+                  :preview-variables="previewVariables(item.id)"
+                  :preview-nested-tree="nestedPreviewTree(item.id)"
+                  :validate-missing-params="validateMissingParams(item.id)"
+                  :validate-invalid-params="validateInvalidParams(item.id)"
+                  :validate-errors="validateErrors(item.id)"
+                  @close="closeOperationFeedback(item.id)" />
               </div>
             </div>
 
             <div class="flex flex-col gap-1 mt-2">
               <button class="expand-more-params-btn p-1 rounded hover:bg-(--el-fill-color) transition-colors" @click.stop="toggleExpand(index)">
-                <el-icon class="text-(--el-text-color-primary)"><component :is="expandedItems.has(index) ? ArrowUp : ArrowDown" /></el-icon>
+                <el-icon class="text-(--el-text-color-primary)"><component :is="expandedItems.has(item.id) ? ArrowUp : ArrowDown" /></el-icon>
               </button>
               <button class="p-1 rounded hover:bg-(--el-color-danger-light) transition-colors" @click.stop="handleRemoveItem(index)">
                 <el-icon class="text-red-500"><Delete /></el-icon>

@@ -35,7 +35,7 @@ const wrapperHeight = computed(() => {
 
 <template>
   <div ref="scrollContainer" class="with-loading-more-container-wrapper mb-4 flex-1" v-loading="isLoading">
-    <el-scrollbar class="with-loading-more-container h-full" :height="wrapperHeight" noresize aria-orientation="vertical" @end-reached="handleLoad" :distance="10">
+    <el-scrollbar no-resize class="with-loading-more-container h-full" :height="wrapperHeight" noresize aria-orientation="vertical" @end-reached="handleLoad" :distance="10">
       <div class="w-full flex-1">
         <slot name="content"></slot>
       </div>

@@ -21,30 +21,24 @@ const HUES: Hue[] = [
   'rose'
 ]
 
-// 默认主题（fallback）
-const DEFAULT_THEME: ElTheme = {
-  primary: 'sky',
-  success: 'green',
-  warning: 'amber',
-  danger: 'rose',
-  error: 'rose',
-  info: 'slate'
-}
+
 
 // 从 theme 对象生成 CSS 变量
-function applyThemeToDOM(theme: ElTheme) {
+function applyThemeToDOM(theme: ElTheme | null) {
+  if (!theme) {
+    return
+  }
   const html = document.documentElement
   const roles = Object.keys(theme) as (keyof ElTheme)[]
-
   roles.forEach((role) => {
     const hue = theme[role]
-    html.style.setProperty(`--el-color-${role}`, `var(--color-${hue}-500)`)
-    html.style.setProperty(`--el-color-${role}-light-3`, `var(--color-${hue}-400)`)
-    html.style.setProperty(`--el-color-${role}-light-5`, `var(--color-${hue}-300)`)
-    html.style.setProperty(`--el-color-${role}-light-7`, `var(--color-${hue}-200)`)
-    html.style.setProperty(`--el-color-${role}-light-8`, `var(--color-${hue}-100)`)
-    html.style.setProperty(`--el-color-${role}-light-9`, `var(--color-${hue}-50)`)
-    html.style.setProperty(`--el-color-${role}-dark-2`, `var(--color-${hue}-600)`)
+    html.style.setProperty(`--el-color-${role}`, `var(--color-${hue}-800)`)
+    html.style.setProperty(`--el-color-${role}-light-3`, `var(--color-${hue}-700)`)
+    html.style.setProperty(`--el-color-${role}-light-5`, `var(--color-${hue}-600)`)
+    html.style.setProperty(`--el-color-${role}-light-7`, `var(--color-${hue}-500)`)
+    html.style.setProperty(`--el-color-${role}-light-8`, `var(--color-${hue}-400)`)
+    html.style.setProperty(`--el-color-${role}-light-9`, `var(--color-${hue}-300)`)
+    html.style.setProperty(`--el-color-${role}-dark-2`, `var(--color-${hue}-900)`)
   })
 }
 
@@ -62,22 +56,25 @@ function generateRandomTheme(): ElTheme {
 
 export const useHueThemeStore = defineStore('hue_theme', () => {
   // 历史记录（最多保留 20 个）
-  const history = ref<{id: number, theme: ElTheme}[]>([{id: 0, theme: DEFAULT_THEME}])
+  const history = ref<{ id: number, theme: ElTheme | null }[]>([{ id: 0, theme: null }])
   const currentIndex = ref(0)
   const nextId = ref(1) // 用于生成唯一ID
   const MAX_HISTORY_COUNT = 20
 
   // 计算属性
   const currentTheme = computed(() => {
+    if (currentIndex.value === 0) {
+      return null
+    }
     const item = history.value.find(item => item.id === currentIndex.value)
-    return item ? item.theme : DEFAULT_THEME
+    return item ? item.theme : null
   })
-  
+
   const canGenerate = computed(() => history.value.length < MAX_HISTORY_COUNT)
 
   // 应用当前主题到 DOM
   function applyCurrentTheme() {
-    applyThemeToDOM(currentTheme.value!)
+    applyThemeToDOM(currentTheme.value)
   }
 
   // 生成并添加新主题
@@ -89,9 +86,9 @@ export const useHueThemeStore = defineStore('hue_theme', () => {
 
     const newTheme = generateRandomTheme()
     const newId = nextId.value++
-    
+
     // 添加新主题到历史记录
-    history.value.push({id: newId, theme: newTheme})
+    history.value.push({ id: newId, theme: newTheme })
     currentIndex.value = newId
 
     applyCurrentTheme()
@@ -112,7 +109,7 @@ export const useHueThemeStore = defineStore('hue_theme', () => {
     }
 
     history.value.splice(index, 1)
-    
+
     saveToLocalStorage()
     return true
   }
@@ -140,21 +137,21 @@ export const useHueThemeStore = defineStore('hue_theme', () => {
     if (raw) {
       try {
         const data = JSON.parse(raw)
-        history.value = data.history || [{id: 0, theme: DEFAULT_THEME}]
+        history.value = data.history || [{ id: 0, theme: null }]
         currentIndex.value = data.currentIndex ?? 0
         nextId.value = data.nextId ?? history.value.length
-        
+
         // 确保当前索引有效
         const hasCurrent = history.value.some(item => item.id === currentIndex.value)
         if (!hasCurrent) {
           currentIndex.value = 0
         }
-        
+
         applyCurrentTheme()
       } catch (e) {
         console.warn('Failed to restore theme from localStorage', e)
         // fallback
-        history.value = [{id: 0, theme: DEFAULT_THEME}]
+        history.value = [{ id: 0, theme: null }]
         currentIndex.value = 0
         nextId.value = 1
         applyCurrentTheme()

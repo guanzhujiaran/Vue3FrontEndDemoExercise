@@ -1,18 +1,17 @@
+@layer base, element,utilities, theme,elementDark,components;
+@import 'element-plus/theme-chalk/dark/css-vars.css' layer(elementDark);
+@import 'element-plus/dist/index.css' layer(element);
+@plugin 'daisyui';
+@plugin '@tailwindcss/typography';
+@import './theme.css';
+@import 'tailwindcss';
+@custom-variant dark (&:where(.dark, .dark *));
 /* 
 越后面声明的层级,优先级越高,也就是能够覆盖前面生命的样式
 目前需要改写样式直接写到components层就行了
 elementDark放到theme后面是为了确保暗色状态下直接用elementDark的样式覆盖
 这样就不需要写暗色的样式了
 */
-@layer base, element,utilities, theme,elementDark,components;
-@import 'element-plus/theme-chalk/dark/css-vars.css' layer(elementDark);
-@import 'element-plus/dist/index.css' layer(element);
-@import 'tailwindcss';
-@plugin 'daisyui';
-@plugin '@tailwindcss/typography';
-@import './theme.css';
-@custom-variant dark (&:where(.dark, .dark *));
-
 /* 这一层比较重要,写在class里面的内容都在这一层 */
 @layer utilities {
   /* 菜单尺寸主题响应 */

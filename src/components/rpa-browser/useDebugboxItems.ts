@@ -1,5 +1,7 @@
 import { ref, watch, onMounted } from 'vue'
 import type { DroppedItem, BranchPathStep } from './debugbox-types'
+import { listRegisteredActionsApiV1RpaBrowserControlActionsRegisteredPost } from '@/api/browser/hey-api'
+import { useUserNavStore } from '@/stores/user_nav'
 
 /** 内部拖拽来源位置（已有的卡片被拖拽时） */
 export interface DragSourceMain { container: 'main'; index: number }
@@ -12,8 +14,10 @@ export function useDebugboxItems(browserId: string, editMode: boolean, initialSt
   const dragOverIndex = ref<number | null>(null)
   /** 正在拖拽的已有卡片来源（用于跨容器移动） */
   const dragSource = ref<DragSource | null>(null)
-  const expandedItems = ref<Set<number>>(new Set())
+  /** 展开状态以 item.id 为 key，避免重排序后状态错位 */
+  const expandedItems = ref<Set<string>>(new Set())
   const branchCollapseState = ref<Record<string, string[]>>({})
+  /** if_else 激活 tab 以 item.id 为 key */
   const ifElseActiveTab = ref<Record<string, 'true' | 'false'>>({})
 
   // ── 初始化分支 ───────────────────────────────────────
@@ -27,32 +31,8 @@ export function useDebugboxItems(browserId: string, editMode: boolean, initialSt
   }
 
   // ── 拖拽：主区域 ─────────────────────────────────────
-  function handleDragOver(event: DragEvent) {
-    event.preventDefault()
-    if (event.dataTransfer) {
-      event.dataTransfer.dropEffect = 'move'
-    }
-  }
-
-  /** 列表容器 dragover：在条目间隙中也计算插入位置 */
-  function handleListDragover(event: DragEvent) {
-    event.preventDefault()
-    const dt = event.dataTransfer
-    if (!dt) return
-    // 检查是否有拖拽数据（同时检查 text/plain 和 application/json，因为 dragover 时浏览器可能不暴露 application/json）
-    const hasDragData = dt.types.includes('text/plain') || dt.types.includes('application/json')
-    if (!hasDragData && !dragSource.value) return
-    dt.dropEffect = 'move'
-    const listEl = event.currentTarget as HTMLElement
-    const items = Array.from(listEl.querySelectorAll('[data-drag-item]')) as HTMLElement[]
-    const mouseY = event.clientY
-    let insertAt = droppedItems.value.length
-    for (let i = 0; i < items.length; i++) {
-      const rect = items[i].getBoundingClientRect()
-      if (mouseY < rect.top + rect.height / 2) { insertAt = i; break }
-    }
-    dragOverIndex.value = insertAt
-  }
+  // dragover 仅用 Vue .prevent 修饰符阻止默认行为（允许 drop），无需自定义函数
+  // 插入位置由 handleItemDragEnter 在进入条目时计算（dragenter 只触发一次，不会高频触发）
 
   /** 从来源位置移除条目并返回（支持嵌套分支路径） */
   function removeFromSource(source: DragSource): DroppedItem | null {
@@ -162,13 +142,17 @@ export function useDebugboxItems(browserId: string, editMode: boolean, initialSt
     event.dataTransfer.setData('application/json', json)
   }
 
-  function handleItemDragOver(event: DragEvent, index: number) {
-    event.preventDefault()
+  /** 条目 dragenter：仅在鼠标进入条目时触发一次（不会像 dragover 那样高频触发），
+   *  计算插入位置并更新指示线 */
+  function handleItemDragEnter(event: DragEvent, index: number) {
     const dt = event.dataTransfer
-    if (dt && (dt.types.includes('text/plain') || dt.types.includes('application/json'))) {
-      dt.dropEffect = dragSource.value ? 'move' : 'copy'
-      const rect = (event.currentTarget as HTMLElement).getBoundingClientRect()
-      dragOverIndex.value = event.clientY < rect.top + rect.height / 2 ? index : index + 1
+    if (!dt) return
+    if (!dt.types.includes('text/plain') && !dt.types.includes('application/json') && !dragSource.value) return
+    dt.dropEffect = dragSource.value ? 'move' : 'copy'
+    const rect = (event.currentTarget as HTMLElement).getBoundingClientRect()
+    const newInsertAt = event.clientY < rect.top + rect.height / 2 ? index : index + 1
+    if (dragOverIndex.value !== newInsertAt) {
+      dragOverIndex.value = newInsertAt
     }
   }
   function handleItemDragEnd() { dragOverIndex.value = null; dragSource.value = null }
@@ -305,39 +289,41 @@ export function useDebugboxItems(browserId: string, editMode: boolean, initialSt
 
   // ── 主列表 CRUD ──────────────────────────────────────
   function toggleExpand(index: number) {
-    if (expandedItems.value.has(index)) {
-      expandedItems.value.delete(index)
+    const item = droppedItems.value[index]
+    if (!item) return
+    if (expandedItems.value.has(item.id)) {
+      expandedItems.value.delete(item.id)
     } else {
-      expandedItems.value.add(index)
-      const item = droppedItems.value[index]
-      if (item && !item.formData) item.formData = {}
+      expandedItems.value.add(item.id)
+      if (!item.formData) item.formData = {}
     }
   }
 
   function toggleExpandAll() {
     expandedItems.value = expandedItems.value.size === 0
-      ? new Set(droppedItems.value.map((_, i) => i))
+      ? new Set(droppedItems.value.map(i => i.id))
       : new Set()
   }
 
   // 分支内卡片展开/收起
   function toggleBranchExpand(parentIndex: number, branch: string, childIndex: number) {
-    const key = `${parentIndex}-${branch}-${childIndex}` as unknown as number
-    if (expandedItems.value.has(key)) {
-      expandedItems.value.delete(key)
+    const parent = droppedItems.value[parentIndex]
+    const targetBranch = branch === 'true' ? parent?.trueBranch : branch === 'false' ? parent?.falseBranch : parent?.loopBody
+    const child = targetBranch?.[childIndex]
+    if (!child) return
+    if (expandedItems.value.has(child.id)) {
+      expandedItems.value.delete(child.id)
     } else {
-      expandedItems.value.add(key)
+      expandedItems.value.add(child.id)
       // 确保 formData 存在
-      const parent = droppedItems.value[parentIndex]
-      const targetBranch = branch === 'true' ? parent?.trueBranch : branch === 'false' ? parent?.falseBranch : parent?.loopBody
-      const child = targetBranch?.[childIndex]
-      if (child && !child.formData) child.formData = {}
+      if (!child.formData) child.formData = {}
     }
   }
 
   function removeItem(index: number) {
+    const item = droppedItems.value[index]
+    if (item) expandedItems.value.delete(item.id)
     droppedItems.value.splice(index, 1)
-    expandedItems.value.delete(index)
   }
 
   // ── 序列化 ───────────────────────────────────────────
@@ -354,14 +340,26 @@ export function useDebugboxItems(browserId: string, editMode: boolean, initialSt
         }
       }
     }
-    return {
+    const result: Record<string, unknown> = {
       loop_source: lc.loopSource,
       count: lc.count,
       loop_items_var: lc.loopItemsVar || undefined,
       loop_item_var: lc.loopItemVar || 'loop_item',
       loop_index_var: lc.loopIndexVar || 'loop_index',
       param_mapping: Object.keys(mapping).length > 0 ? mapping : undefined,
+      break_condition: lc.breakCondition ?? undefined,
+      continue_condition: lc.continueCondition ?? undefined,
     }
+    // json_list 模式：解析 JSON 字符串为列表传给后端
+    if (lc.loopSource === 'json_list' && lc.loopItemsJson?.trim()) {
+      try {
+        const parsed = JSON.parse(lc.loopItemsJson)
+        if (Array.isArray(parsed)) {
+          result.loop_items_json = parsed
+        }
+      } catch { /* JSON 解析失败则忽略，后端会报错 */ }
+    }
+    return result
   }
 
   function serializeBranchSteps(items: DroppedItem[]): Record<string, unknown>[] {
@@ -457,6 +455,38 @@ export function useDebugboxItems(browserId: string, editMode: boolean, initialSt
     try { localStorage.removeItem(DRAFT_KEY) } catch (e) { console.error('清空暂存数据失败:', e) }
   }
 
+  // ── 刷新 registered action 定义 ─────────────────────
+  const userNavStore = useUserNavStore()
+
+  /** 拉取服务器端 registered action 定义，用最新 json_schema 刷新缓存 items（递归处理分支） */
+  async function refreshRegisteredSchemas(items: DroppedItem[]) {
+    try {
+      const res = await listRegisteredActionsApiV1RpaBrowserControlActionsRegisteredPost({ headers: userNavStore.user_header })
+      if (res?.code !== 0 || !res?.data) return
+      const schemaMap = new Map<string, DroppedItem['json_schema']>()
+      for (const a of (res.data as unknown[]) || []) {
+        const meta = a as Record<string, unknown>
+        const id = meta.action_id
+        if (typeof id === 'string' && meta.json_schema) {
+          schemaMap.set(id, meta.json_schema as DroppedItem['json_schema'])
+        }
+      }
+      if (schemaMap.size === 0) return
+      const apply = (list: DroppedItem[]) => {
+        for (const item of list) {
+          const schema = schemaMap.get(item.action_id) || schemaMap.get(item.action_type)
+          if (schema) item.json_schema = schema
+          if (item.trueBranch?.length) apply(item.trueBranch)
+          if (item.falseBranch?.length) apply(item.falseBranch)
+          if (item.loopBody?.length) apply(item.loopBody)
+        }
+      }
+      apply(items)
+    } catch (e) {
+      console.error('刷新 registered action 定义失败:', e)
+    }
+  }
+
   // ── 生命周期 ─────────────────────────────────────────
   onMounted(() => {
     if (initialSteps && initialSteps.length > 0) {
@@ -465,7 +495,10 @@ export function useDebugboxItems(browserId: string, editMode: boolean, initialSt
       return
     }
     const draft = loadDraft()
-    if (draft) droppedItems.value = draft
+    if (draft) {
+      droppedItems.value = draft
+      void refreshRegisteredSchemas(droppedItems.value)
+    }
   })
 
   watch(droppedItems, (items) => {
@@ -477,8 +510,8 @@ export function useDebugboxItems(browserId: string, editMode: boolean, initialSt
     droppedItems, dragOverIndex, dragSource, expandedItems,
     branchCollapseState, ifElseActiveTab,
     initBranchForItem,
-    handleDragOver, handleListDragover, handleDrop,
-    handleItemDragStart, handleItemDragOver, handleItemDragEnd, handleItemDrop,
+    handleDrop,
+    handleItemDragStart, handleItemDragEnter, handleItemDragEnd, handleItemDrop,
     handleBranchDrop,
     removeBranchItem, reorderBranchItem,
     toggleExpand, toggleExpandAll, toggleBranchExpand, removeItem,

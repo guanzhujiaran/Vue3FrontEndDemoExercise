@@ -12,6 +12,7 @@
     <el-alert
       title="提交第三方（非官方号）发布的抽奖动态，后台将自动获取动态详情并解析"
       type="info"
+      :effect="themeStore.themeEffectString"
       :closable="false"
       show-icon
       class="mb-4"
@@ -66,6 +67,9 @@ import { usePermission } from '@vueuse/core'
 import biliMessage from '@/utils/message'
 import { Upload, Link, Check, RefreshLeft, DocumentCopy } from '@element-plus/icons-vue'
 import lotteryDataBaseApi from '@/api/lottery_data/bili/lottery_database_bili_api'
+import { useThemeStore } from '@/stores/theme'
+
+const themeStore = useThemeStore()
 
 const dialogVisible = ref(false)
 const loading = ref(false)

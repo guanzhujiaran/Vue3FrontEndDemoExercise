@@ -268,9 +268,23 @@ class LotteryDataBaseApi {
     return res as any
   }
 
-  async getAllLottery(round_num: number): Promise<RootObject<AllLotteryResp>> {
+  async getAllLottery(
+    created_at_preset: string | null = '30d',
+    created_at_start: number | null = null,
+    created_at_end: number | null = null,
+    pub_time_preset: string | null = '30d',
+    pub_time_start: number | null = null,
+    pub_time_end: number | null = null,
+  ): Promise<RootObject<AllLotteryResp>> {
     const res = await getAllLotteryApiV1LotteryDatabaseBiliGetAllLotteryPost({
-      query: { round_num },
+      query: {
+        created_at_preset,
+        created_at_start,
+        created_at_end,
+        pub_time_preset,
+        pub_time_start,
+        pub_time_end,
+      },
     })
     return res as any
   }

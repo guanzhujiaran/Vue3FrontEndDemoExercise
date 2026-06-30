@@ -254,7 +254,7 @@ export type BrowserFingerprintUpsertParams = {
  *
  * 内置操作类型
  */
-export type BuiltinActionType = 'click' | 'input' | 'wait' | 'scroll' | 'navigate' | 'screenshot' | 'llm' | 'hover' | 'new_page' | 'get_text' | 'get_window' | 'loop' | 'composite' | 'if_else';
+export type BuiltinActionType = 'click' | 'input' | 'wait' | 'scroll' | 'navigate' | 'screenshot' | 'llm' | 'hover' | 'new_page' | 'get_text' | 'get_window' | 'fetch_external_data' | 'print' | 'loop' | 'composite' | 'if_else';
 
 /**
  * ClosePageRequest
@@ -431,6 +431,24 @@ export type CompositeActionListRequest = {
      * 排序方向
      */
     sort_order?: SortOrder;
+    /**
+     * Name
+     *
+     * 按名称搜索（模糊匹配）
+     */
+    name?: string | null;
+    /**
+     * Tag
+     *
+     * 按标签筛选
+     */
+    tag?: string | null;
+    /**
+     * Tag Exact
+     *
+     * 标签精确匹配（true）或模糊匹配（false）
+     */
+    tag_exact?: boolean;
 };
 
 /**
@@ -738,6 +756,24 @@ export type MigrationRequest = {
      * Auto Upgrade
      */
     auto_upgrade?: boolean;
+};
+
+/**
+ * NameSearchRequest
+ *
+ * 操作名称搜索请求（用于输入联想）
+ */
+export type NameSearchRequest = {
+    /**
+     * Keyword
+     *
+     * 搜索关键字
+     */
+    keyword?: string | null;
+    /**
+     * 筛选类型
+     */
+    filter_type?: FilterType;
 };
 
 /**
@@ -1772,6 +1808,24 @@ export type StandardResponseListActionMetadataResponse = {
 };
 
 /**
+ * StandardResponse[List[TagWithCount]]
+ */
+export type StandardResponseListTagWithCount = {
+    /**
+     * Code
+     */
+    code: number;
+    /**
+     * Data
+     */
+    data?: unknown | null;
+    /**
+     * Msg
+     */
+    msg?: string;
+};
+
+/**
  * StandardResponse[List[str]]
  */
 export type StandardResponseListStr = {
@@ -2168,6 +2222,24 @@ export type StandardResponseInt = {
 };
 
 /**
+ * StandardResponse[list[RpcMethodInfoResponse]]
+ */
+export type StandardResponseListRpcMethodInfoResponse = {
+    /**
+     * Code
+     */
+    code: number;
+    /**
+     * Data
+     */
+    data?: unknown | null;
+    /**
+     * Msg
+     */
+    msg?: string;
+};
+
+/**
  * StandardResponse[str]
  */
 export type StandardResponseStr = {
@@ -2197,6 +2269,24 @@ export type SwitchPageRequest = {
      * 目标页面索引
      */
     page_index?: number;
+};
+
+/**
+ * TagSearchRequest
+ *
+ * 标签搜索请求
+ */
+export type TagSearchRequest = {
+    /**
+     * Keyword
+     *
+     * 搜索关键字
+     */
+    keyword?: string | null;
+    /**
+     * 筛选类型（用于统计标签下操作数量）
+     */
+    filter_type?: FilterType;
 };
 
 /**
@@ -3558,6 +3648,76 @@ export type ListCustomActionTagsApiV1RpaBrowserControlCustomActionsTagsPostRespo
 
 export type ListCustomActionTagsApiV1RpaBrowserControlCustomActionsTagsPostResponse = ListCustomActionTagsApiV1RpaBrowserControlCustomActionsTagsPostResponses[keyof ListCustomActionTagsApiV1RpaBrowserControlCustomActionsTagsPostResponses];
 
+export type SearchCustomActionTagsApiV1RpaBrowserControlCustomActionsTagsSearchPostData = {
+    body: TagSearchRequest;
+    headers: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid': string;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level': string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/rpa/browser/control/custom-actions/tags/search';
+};
+
+export type SearchCustomActionTagsApiV1RpaBrowserControlCustomActionsTagsSearchPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type SearchCustomActionTagsApiV1RpaBrowserControlCustomActionsTagsSearchPostError = SearchCustomActionTagsApiV1RpaBrowserControlCustomActionsTagsSearchPostErrors[keyof SearchCustomActionTagsApiV1RpaBrowserControlCustomActionsTagsSearchPostErrors];
+
+export type SearchCustomActionTagsApiV1RpaBrowserControlCustomActionsTagsSearchPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseListTagWithCount;
+};
+
+export type SearchCustomActionTagsApiV1RpaBrowserControlCustomActionsTagsSearchPostResponse = SearchCustomActionTagsApiV1RpaBrowserControlCustomActionsTagsSearchPostResponses[keyof SearchCustomActionTagsApiV1RpaBrowserControlCustomActionsTagsSearchPostResponses];
+
+export type SearchCustomActionNamesApiV1RpaBrowserControlCustomActionsNamesSearchPostData = {
+    body: NameSearchRequest;
+    headers: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid': string;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level': string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/rpa/browser/control/custom-actions/names/search';
+};
+
+export type SearchCustomActionNamesApiV1RpaBrowserControlCustomActionsNamesSearchPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type SearchCustomActionNamesApiV1RpaBrowserControlCustomActionsNamesSearchPostError = SearchCustomActionNamesApiV1RpaBrowserControlCustomActionsNamesSearchPostErrors[keyof SearchCustomActionNamesApiV1RpaBrowserControlCustomActionsNamesSearchPostErrors];
+
+export type SearchCustomActionNamesApiV1RpaBrowserControlCustomActionsNamesSearchPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseListStr;
+};
+
+export type SearchCustomActionNamesApiV1RpaBrowserControlCustomActionsNamesSearchPostResponse = SearchCustomActionNamesApiV1RpaBrowserControlCustomActionsNamesSearchPostResponses[keyof SearchCustomActionNamesApiV1RpaBrowserControlCustomActionsNamesSearchPostResponses];
+
 export type ForkCustomActionApiV1RpaBrowserControlCustomActionsForkPostData = {
     body: ActionForkRequest;
     headers: {
@@ -3831,6 +3991,22 @@ export type ExecuteActionStepApiV1RpaBrowserControlActionsExecuteStepPostRespons
 };
 
 export type ExecuteActionStepApiV1RpaBrowserControlActionsExecuteStepPostResponse = ExecuteActionStepApiV1RpaBrowserControlActionsExecuteStepPostResponses[keyof ExecuteActionStepApiV1RpaBrowserControlActionsExecuteStepPostResponses];
+
+export type ListSystemServicesApiV1RpaBrowserControlSystemServicesListGetData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/rpa/browser/control/system-services/list';
+};
+
+export type ListSystemServicesApiV1RpaBrowserControlSystemServicesListGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseListRpcMethodInfoResponse;
+};
+
+export type ListSystemServicesApiV1RpaBrowserControlSystemServicesListGetResponse = ListSystemServicesApiV1RpaBrowserControlSystemServicesListGetResponses[keyof ListSystemServicesApiV1RpaBrowserControlSystemServicesListGetResponses];
 
 export type CreateWorkflowApiV1RpaBrowserControlWorkflowsCreatePostData = {
     body: WorkflowCreateRequest;

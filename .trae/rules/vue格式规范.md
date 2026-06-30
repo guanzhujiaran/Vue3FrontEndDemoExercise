@@ -1,6 +1,5 @@
 ---
-alwaysApply: false
-globs: *.vue,*.ts
+alwaysApply: true
 ---
 # Vue + Tailwind CSS 样式与主题规范
 
@@ -14,6 +13,7 @@ globs: *.vue,*.ts
 - **禁止直接使用底层 CSS 变量**：严禁在模板或样式中使用 `var(--el-color-primary-light-3)` 等底层基础变量。如果 `theme.css` 中定义了 `--color-primary-light-3: var(--el-color-primary-light-3);`，必须将其视为独立变量，直接使用对应的 Tailwind class（如 `text-primary-light-3`）。
 - **禁止在模板中手写 `var()`**：严禁写出类似 `text-[var(--color-info-light-3)]` 的写法，必须转换为对应的 Tailwind 预设类名。
 - **优先使用element plus组件**：例如使用el-text代替传统的p标签，使用el-button代替传统的button标签等。
+- **禁止使用small尺寸**：所有elementplus组件尺寸必须使用large/default尺寸，此外的组件可以使用自定义主题里面的尺寸，尽量选择大号的尺寸。
 
 ## 3. 元素命名与标识规范
 - **功能级命名**：每个具有具体业务功能的元素，必须带有带有明确功能名称的标识。

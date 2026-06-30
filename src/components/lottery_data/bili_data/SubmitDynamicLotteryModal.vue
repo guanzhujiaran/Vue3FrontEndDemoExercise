@@ -12,6 +12,7 @@
       <el-alert
         title="支持以下抽奖类型：官方转发抽奖、充电抽奖、预约抽奖"
         type="info"
+        :effect="themeStore.themeEffectString"
         :closable="false"
         show-icon
         class="mb-4"
@@ -101,6 +102,9 @@ import biliMessage from '@/utils/message'
 import { Upload, Link, Check, RefreshLeft, DocumentCopy } from '@element-plus/icons-vue'
 import lotteryDataBaseApi from '@/api/lottery_data/bili/lottery_database_bili_api'
 import { usePermission } from '@vueuse/core'
+import { useThemeStore } from '@/stores/theme'
+
+const themeStore = useThemeStore()
 
 const dialogVisible = ref(false)
 const loading = ref(false)

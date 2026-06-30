@@ -68,7 +68,14 @@ const splitterSize = ref(50)
 const isLoadingInfo = ref(true)
 const toolboxVisible = ref(false)
 const toolboxMinimized = ref(false)
-const toolboxDialogVisible = computed(() => toolboxVisible.value && !toolboxMinimized.value)
+const toolboxDialogVisible = computed({
+  get: () => toolboxVisible.value && !toolboxMinimized.value,
+  set: (val: boolean) => {
+    if (!val && !toolboxMinimized.value) {
+      toolboxVisible.value = false
+    }
+  },
+})
 
 function handleToolboxMinimize() {
   toolboxMinimized.value = true
@@ -83,11 +90,9 @@ function handleToolboxClose() {
   toolboxVisible.value = false
 }
 
-function handleToolboxDialogUpdate(val: boolean) {
-  if (!val) {
-    if (toolboxMinimized.value) return
-    toolboxVisible.value = false
-  }
+function openToolbox() {
+  toolboxVisible.value = true
+  toolboxMinimized.value = false
 }
 
 provide('isStreaming', isStreaming)
@@ -427,7 +432,7 @@ onMounted(() => {
       <template #extra>
         <div class="flex items-center gap-4">
           <div class="flex items-center gap-2">
-            <span class="text-text-secondary text-sm">浏览器:</span>
+            <span >浏览器:</span>
             <el-tag :type="isConnected ? 'success' : isConnecting ? 'warning' : 'info'">
               <span class="flex items-center gap-1">
                 <span
@@ -473,7 +478,7 @@ onMounted(() => {
       <div class="flex items-center justify-between px-4 py-2 border-t border-border bg-[var(--el-fill-color-light)]">
         <div class="flex items-center gap-4">
           <div class="flex items-center gap-2">
-            <span class="text-text-secondary text-sm">WebRTC:</span>
+            <span>WebRTC:</span>
             <el-tag :type="webrtcStatus === 'connected' ? 'success' : webrtcStatus === 'connecting' ? 'warning' : 'info'">
               <span class="flex items-center gap-1">
                 <span :class="['w-2 h-2 rounded-full', webrtcStatus === 'connected' ? 'bg-green-500 animate-pulse' : webrtcStatus === 'connecting' ? 'bg-yellow-500 animate-pulse' : 'bg-gray-400']"></span>
@@ -493,7 +498,7 @@ onMounted(() => {
 
         <div class="flex items-center gap-2">
           <el-button size="large" :icon="Camera" :loading="executingScreenshot" @click="handleScreenshot">截图</el-button>
-          <el-button size="large" type="primary" :icon="Tools" @click="toolboxVisible = true">工具箱</el-button>
+          <el-button size="large" type="primary" :icon="Tools" @click="openToolbox">工具箱</el-button>
         </div>
       </div>
 
@@ -541,7 +546,7 @@ onMounted(() => {
 
     <!-- 工具箱对话框 -->
     <el-dialog
-      :model-value="toolboxDialogVisible"
+      v-model="toolboxDialogVisible"
       width="520px"
       :modal-penetrable="true"
       :modal="false"
@@ -551,13 +556,12 @@ onMounted(() => {
       :destroy-on-close="false"
       modal-class="toolbox-overlay"
       class="toolbox-dialog"
-      @update:model-value="handleToolboxDialogUpdate"
     >
       <template #header>
-        <div class="relative w-full">
-          <span class="font-medium text-sm">工具箱</span>
+        <div class="flex">
+          <span class="text-2xl">工具箱</span>
           <button
-            class="absolute top-1/2 -translate-y-1/2 right-8 w-5 h-5 flex items-center justify-center cursor-pointer hover:text-color-secondary"
+            class="ml-auto mr-3 cursor-pointer hover:text-color-secondary"
             title="最小化"
             @click="handleToolboxMinimize"
           >
@@ -565,9 +569,7 @@ onMounted(() => {
           </button>
         </div>
       </template>
-      <div class="h-[60vh] overflow-auto">
-        <ToolboxPanel :browser-id="browserId" @edit-action="handleEditAction" />
-      </div>
+      <ToolboxPanel :browser-id="browserId" @edit-action="handleEditAction" />
     </el-dialog>
 
     <!-- 工具箱最小化浮动标签 -->

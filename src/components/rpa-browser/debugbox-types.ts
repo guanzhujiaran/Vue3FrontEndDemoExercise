@@ -1,5 +1,22 @@
 import type { ActionPreviewResponse, ActionValidateResponse } from '@/api/browser/hey-api'
 
+/** 前端 ConditionRule 类型（与后端 ConditionRule 对齐） */
+export type ConditionValueType = 'BOOLEAN' | 'NULL' | 'STRING'
+
+export interface ParamsCondition {
+  field: string
+  condition_value_type: ConditionValueType
+  condition_value: boolean | null | string
+  description?: string | null
+}
+
+export interface ConditionRule {
+  logic: string
+  condition?: ParamsCondition | null
+  rules?: ConditionRule[] | null
+  description?: string | null
+}
+
 /** 嵌套分支路径中的一步：在 items[parentIndex].branch 数组中 */
 export interface BranchPathStep {
   parentIndex: number
@@ -29,17 +46,23 @@ export interface LoopParamMapping {
 /** 循环配置 */
 export interface LoopConfig {
   /** 循环来源 */
-  loopSource: 'fixed_count' | 'variable' | 'expression'
+  loopSource: 'fixed_count' | 'variable' | 'expression' | 'json_list'
   /** 固定次数 */
   count: number
   /** 变量引用路径（loop_source=variable 时） */
   loopItemsVar: string
   /** 表达式（loop_source=expression 时） */
   loopItemsExpr: string
+  /** 直接传入的 JSON 列表（loop_source=json_list 时），存储为 JSON 字符串 */
+  loopItemsJson: string
   /** 循环项变量名（默认 'loop_item'） */
   loopItemVar: string
   /** 循环索引变量名（默认 'loop_index'） */
   loopIndexVar: string
+  /** break 条件规则（结构化条件），每次迭代开始前评估，为真时跳出整个循环 */
+  breakCondition: ConditionRule | null
+  /** continue 条件规则（结构化条件），每次迭代开始前评估，为真时跳过当前迭代 */
+  continueCondition: ConditionRule | null
   /** 参数映射列表 */
   paramMapping: LoopParamMapping[]
 }
@@ -50,8 +73,11 @@ export function defaultLoopConfig(): LoopConfig {
     count: 1,
     loopItemsVar: '',
     loopItemsExpr: '',
+    loopItemsJson: '',
     loopItemVar: 'loop_item',
     loopIndexVar: 'loop_index',
+    breakCondition: null,
+    continueCondition: null,
     paramMapping: [],
   }
 }
@@ -83,7 +109,32 @@ export interface DroppedItem {
   loopConfig?: LoopConfig
   step_children?: Record<string, unknown>[]
   label?: string
+  /** 后端 action_detail：从数据库实时查询的自定义操作完整信息 */
+  action_detail?: Record<string, unknown>
   [key: string]: unknown
+}
+
+/** action_detail 的类型结构（后端 get_validated_action_details 返回） */
+export interface ActionDetail {
+  action_id: string
+  name: string
+  version: string
+  action_type: string
+  description: string
+  mid: string
+  tags: string[]
+  input_vars: Record<string, unknown>[]
+  output_vars: string[]
+  is_enabled: boolean
+  is_public: boolean
+  timeout: number
+  retry_on_error: boolean
+  retry_times: number
+  retry_delay: number
+  likes_count: number
+  is_verified: boolean
+  forks_count: number
+  forked_from_id: number | null
 }
 
 export type OperationKind = 'validate' | 'preview' | 'execute'

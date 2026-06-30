@@ -401,6 +401,19 @@ const routes: CustomRouteRecordRaw[] = [
           showInHome: false,
           isHeaderShow: true
         }
+      },
+      {
+        path: 'workflows',
+        name: RouteName.RPA_BROWSER_WORKFLOW_MANAGEMENT,
+        component: () => import('@/views/rpa-browser/WorkflowManagement.vue'),
+        meta: {
+          title: RouteName.RPA_BROWSER_WORKFLOW_MANAGEMENT,
+          icon: IconConnection,
+          description: '管理工作流配置与执行',
+          order: 7,
+          showInHome: false,
+          isHeaderShow: true
+        }
       }
     ]
   },

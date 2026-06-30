@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import { Plus, Delete, QuestionFilled } from '@element-plus/icons-vue'
+import { useThemeStore } from '@/stores/theme'
 
 /**
  * ConditionEditor —— 条件判断专用编辑器（v2）
@@ -57,6 +58,8 @@ const emit = defineEmits<{
 }>()
 
 // ======================== 状态 ========================
+
+const themeStore = useThemeStore()
 
 let idCounter = 0
 const genId = () => `cond_${++idCounter}`
@@ -288,12 +291,12 @@ const previewText = computed(() => {
 <template>
   <div class="condition-editor space-y-3">
     <!-- 头部 -->
-    <div class="flex items-center justify-between">
+    <div class="condition-editor__header flex items-center justify-between">
       <div class="flex items-center gap-2">
-        <span class="text-sm font-semibold text-(--el-text-color-primary)">条件规则</span>
-        <span class="text-xs text-(--el-text-color-secondary)">({{ conditionItems.length }} 项)</span>
+        <el-text class="condition-editor__title font-semibold" type="primary">条件规则</el-text>
+        <el-text class="condition-editor__count text-xs" type="info">({{ conditionItems.length }} 项)</el-text>
       </div>
-      <el-button size="small" :icon="Plus" @click="addCondition" type="primary" plain>添加条件</el-button>
+      <el-button :icon="Plus" @click="addCondition" type="primary" plain>添加条件</el-button>
     </div>
 
     <!-- 条件列表 -->
@@ -303,89 +306,87 @@ const previewText = computed(() => {
         :key="item.id"
       >
         <!-- 条件间逻辑连接符（非首项） -->
-        <div v-if="index > 0" class="flex items-center justify-center py-1">
+        <div v-if="index > 0" class="condition-editor__connector flex items-center justify-center py-1">
           <div class="flex items-center gap-1">
-            <span class="text-xxs text-(--el-text-color-placeholder) px-2">—</span>
+            <el-text class="text-xxs px-2" type="info">—</el-text>
             <el-select
               :model-value="conditionItems[index - 1].logic"
               @update:model-value="setLogic(index - 1, $event as LogicOp)"
-              size="small"
-              class="logic-connector"
+              class="w-[110px]"
             >
-              <el-option value="AND">
-                <span class="text-xs font-bold text-(--el-color-success)">AND</span>
-                <span class="text-xxs text-(--el-text-color-secondary) ml-1">且</span>
+              <el-option value="AND" label="AND">
+                <el-text class="text-xs font-bold" type="success">AND</el-text>
+                <el-text class="text-xxs ml-1" type="info">且</el-text>
               </el-option>
-              <el-option value="OR">
-                <span class="text-xs font-bold text-(--el-color-warning)">OR</span>
-                <span class="text-xxs text-(--el-text-color-secondary) ml-1">或</span>
+              <el-option value="OR" label="OR">
+                <el-text class="text-xs font-bold" type="warning">OR</el-text>
+                <el-text class="text-xxs ml-1" type="info">或</el-text>
               </el-option>
             </el-select>
-            <span class="text-xxs text-(--el-text-color-placeholder) px-2">—</span>
+            <el-text class="text-xxs px-2" type="info">—</el-text>
           </div>
         </div>
 
         <!-- 条件卡片 -->
         <div
-          class="p-3 rounded border transition-colors"
+          class="condition-editor__card p-3 rounded border transition-colors"
           :class="[
             item.negate
-              ? 'border-(--el-color-danger-light-5) bg-(--el-color-danger-light-9)'
-              : 'border-border bg-(--el-fill-color-lighter)',
-            !item.negate ? 'hover:border-(--el-color-primary-light-5)' : '',
+              ? 'border-danger-light-5'
+              : 'border-border',
+            !item.negate ? 'hover:border-primary-light-5' : '',
           ]"
         >
           <!-- 顶部操作栏 -->
-          <div class="flex items-center justify-between mb-2">
+          <div class="condition-editor__card-header flex items-center justify-between mb-2">
             <div class="flex items-center gap-1.5">
               <span
-                class="inline-flex items-center justify-center w-5 h-5 rounded-full text-xxs font-bold text-white shrink-0"
-                :class="item.negate ? 'bg-(--el-color-danger)' : index % 2 === 0 ? 'bg-(--el-color-primary)' : 'bg-(--el-color-success)'"
+                class="condition-editor__badge inline-flex items-center justify-center w-5 h-5 rounded-full text-xxs font-bold text-white shrink-0"
+                :class="item.negate ? 'bg-danger' : index % 2 === 0 ? 'bg-primary' : 'bg-success'"
               >{{ index + 1 }}</span>
-              <span class="text-xs font-medium text-(--el-text-color-regular)">条件 {{ index + 1 }}</span>
+              <el-text class="text-xs font-medium">条件 {{ index + 1 }}</el-text>
               <!-- 逻辑标签 -->
-              <span
-                class="text-xxs font-mono px-1.5 py-0.5 rounded"
-                :class="item.logic === 'AND'
-                  ? 'bg-(--el-color-success-light-9) text-(--el-color-success)'
-                  : 'bg-(--el-color-warning-light-9) text-(--el-color-warning)'"
-              >{{ item.logic }}</span>
+              <el-tag
+                size="default"
+                :type="item.logic === 'AND' ? 'success' : 'warning'"
+                class="text-xxs font-mono"
+              >{{ item.logic }}</el-tag>
               <!-- NOT 标签 -->
-              <span
+              <el-tag
                 v-if="item.negate"
-                class="text-xxs font-mono px-1.5 py-0.5 rounded bg-(--el-color-danger-light-9) text-(--el-color-danger)"
-              >NOT</span>
+                size="default"
+                type="danger"
+                class="text-xxs font-mono"
+              >NOT</el-tag>
             </div>
             <div class="flex items-center gap-1">
               <!-- NOT 切换 -->
               <el-tooltip content="取反 (NOT)：条件为假时走 True 分支" placement="top">
                 <el-button
-                  size="small"
                   @click="toggleNegate(index)"
                   :type="item.negate ? 'danger' : 'default'"
                   plain
                   class="text-xxs"
                 >NOT</el-button>
               </el-tooltip>
-              <el-button size="small" :icon="Delete" @click="removeCondition(index)" text type="danger" />
+              <el-button :icon="Delete" @click="removeCondition(index)" text type="danger" />
             </div>
           </div>
 
           <!-- 字段名 -->
-          <div class="mb-2">
-            <label class="text-xs text-(--el-text-color-secondary) block mb-1">变量字段名</label>
-            <el-input v-model="item.field" size="small" placeholder="例如: is_logged_in, status_code" @input="updateModel" />
+          <div class="condition-editor__field mb-2">
+            <el-text class="text-xs block mb-1" type="info">变量字段名</el-text>
+            <el-input v-model="item.field" class="w-full" placeholder="例如: is_logged_in, status_code" @input="updateModel" />
           </div>
 
           <!-- 条件类型 + 条件值 -->
-          <div class="flex gap-2 items-start">
+          <div class="condition-editor__value-row flex gap-2 items-start">
             <div class="flex-1">
-              <label class="text-xs text-(--el-text-color-secondary) block mb-1">判断类型</label>
+              <el-text class="text-xs block mb-1" type="info">判断类型</el-text>
               <el-select
                 :model-value="item.conditionValueType"
                 @update:model-value="onTypeChange(index, $event as ConditionValueType)"
-                size="small"
-                style="width: 100%"
+                class="w-full"
               >
                 <el-option label="布尔值 (True/False)" value="BOOLEAN" />
                 <el-option label="空值 (Null)" value="NULL" />
@@ -393,7 +394,7 @@ const previewText = computed(() => {
               </el-select>
             </div>
             <div class="flex-1">
-              <label class="text-xs text-(--el-text-color-secondary) block mb-1">期望值</label>
+              <el-text class="text-xs block mb-1" type="info">期望值</el-text>
               <el-switch
                 v-if="item.conditionValueType === 'BOOLEAN'"
                 v-model="(item.conditionValue as boolean)"
@@ -405,13 +406,11 @@ const previewText = computed(() => {
                 v-else-if="item.conditionValueType === 'NULL'"
                 model-value="null"
                 disabled
-                size="small"
-                style="width: 100%"
+                class="w-full"
               />
               <el-input
                 v-else
                 v-model="(item.conditionValue as string)"
-                size="small"
                 placeholder="期望的字符串值"
                 @input="updateModel"
               />
@@ -424,27 +423,27 @@ const previewText = computed(() => {
     <!-- 空状态 -->
     <div
       v-if="!hasConditions"
-      class="text-center py-6 text-sm text-(--el-text-color-placeholder) bg-(--el-fill-color-light) rounded border border-dashed border-border"
+      class="condition-editor__empty text-center py-6 rounded border border-dashed border-border"
     >
       <el-icon size="24" class="mb-1 opacity-30"><QuestionFilled /></el-icon>
-      <p>暂未设置条件</p>
-      <p class="text-xs mt-1">点击 "添加条件" 创建条件规则</p>
-      <div class="mt-3 p-2 rounded bg-(--el-color-warning-light-9) border border-(--el-color-warning-light-5) text-xs text-(--el-color-warning) text-left">
-        <p class="font-medium mb-0.5">后端默认行为：</p>
-        <p>未设置条件 → 默认走 <b>False 分支</b></p>
-        <p>分支无步骤 → <b>跳过执行</b>，视为成功</p>
-      </div>
+      <el-text class="block" type="info">暂未设置条件</el-text>
+      <el-text class="text-xs mt-1 block" type="info">点击 "添加条件" 创建条件规则</el-text>
+      <el-alert
+        class="condition-editor__hint mt-3 text-left"
+        type="info"
+        :effect="themeStore.themeEffectString"
+      >
+        <template #title>
+          <el-text class="font-medium">后端默认行为：</el-text>
+        </template>
+        <el-text class="block">未设置条件 → 默认走 <b>False 分支</b></el-text>
+        <el-text class="block">分支无步骤 → <b>跳过执行</b>，视为成功</el-text>
+      </el-alert>
     </div>
 
     <!-- 预览 -->
-    <div v-if="hasConditions" class="p-2 rounded bg-(--el-color-primary-light-9) border border-(--el-color-primary-light-7)">
-      <span class="text-xs font-mono text-(--el-color-primary) whitespace-pre-wrap">{{ previewText }}</span>
+    <div v-if="hasConditions" class="condition-editor__preview p-2 rounded bg-primary-light-9 border border-primary-light-7">
+      <el-text class="font-mono whitespace-pre-wrap" type="primary">{{ previewText }}</el-text>
     </div>
   </div>
 </template>
-
-<style scoped>
-.logic-connector {
-  width: 110px;
-}
-</style>

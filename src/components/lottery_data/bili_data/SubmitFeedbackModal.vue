@@ -12,6 +12,7 @@
       <el-alert
         title="反馈bug/提建议给服主，可以帮助我们改进系统，提供更好的体验！"
         type="info"
+        :effect="themeStore.themeEffectString"
         :closable="false"
         show-icon
         class="mb-4"
@@ -52,6 +53,9 @@ import { ref, reactive } from 'vue'
 import biliMessage from '@/utils/message'
 import { ChatLineRound, Check, RefreshLeft } from '@element-plus/icons-vue'
 import lotteryDataBaseApi from '@/api/lottery_data/bili/lottery_database_bili_api'
+import { useThemeStore } from '@/stores/theme'
+
+const themeStore = useThemeStore()
 
 const dialogVisible = ref(false)
 const loading = ref(false)

@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
 import { Connection, RefreshRight } from '@element-plus/icons-vue'
+import { useThemeStore } from '@/stores/theme'
+
+const themeStore = useThemeStore()
 
 // 定义 props
 interface Props {
@@ -231,6 +234,7 @@ onUnmounted(() => {
         <el-alert
           title="诊断建议"
           type="info"
+          :effect="themeStore.themeEffectString"
           :closable="false"
         >
           <template #default>

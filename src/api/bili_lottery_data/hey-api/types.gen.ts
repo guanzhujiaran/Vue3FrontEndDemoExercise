@@ -136,13 +136,19 @@ export type AllLotteryResp = {
     /**
      * Common Lottery
      *
-     * 一般抽奖
+     * 一般抽奖（分页后）
      */
     common_lottery: Array<CommonLotteryResp>;
     /**
+     * Common Lottery Total
+     *
+     * 一般抽奖总数（分页前），用于前端计算总页数
+     */
+    common_lottery_total?: number;
+    /**
      * Must Join Common Lottery
      *
-     * 必抽的一般抽奖
+     * 必抽的一般抽奖（来自当前页）
      */
     must_join_common_lottery: Array<CommonLotteryResp>;
     /**
@@ -444,7 +450,7 @@ export type CommonLotteryResp = {
     /**
      * Officiallotid
      */
-    officialLotId: string;
+    officialLotId?: string;
     /**
      * Isofficialaccount
      */
@@ -465,6 +471,12 @@ export type CommonLotteryResp = {
      * Hashtag
      */
     hashTag: string;
+    /**
+     * Isbiglot
+     *
+     * SVM 大奖判断结果: 1-大奖, 0-非大奖
+     */
+    isBigLot?: number;
     /**
      * Extra Fields
      */
@@ -1112,6 +1124,31 @@ export type CommonResponseModelListAddDynamicLotteryResp = {
 };
 
 /**
+ * CommonResponseModel[list[RpcMethodInfoResponse]]
+ */
+export type CommonResponseModelListRpcMethodInfoResponse = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    /**
+     * Data
+     */
+    data?: Array<RpcMethodInfoResponse> | null;
+    /**
+     * Extra Fields
+     */
+    readonly extra_fields: {
+        [key: string]: unknown;
+    } | null;
+    [key: string]: unknown;
+};
+
+/**
  * CommonResponseModel[str]
  */
 export type CommonResponseModelStr = {
@@ -1643,13 +1680,13 @@ export type LotteryAdvancedQueryParams = {
     /**
      * Page Num
      *
-     * 页码，最小值为 0
+     * 页码，从 1 开始，最小值为 1
      */
     page_num?: number;
     /**
      * Page Size
      *
-     * 每页数量，最小值为 0,最大为 100
+     * 每页数量，最小值为 1
      */
     page_size?: number;
     /**
@@ -1688,6 +1725,12 @@ export type LotteryAdvancedQueryParams = {
      * 抽奖状态: unfinished/finished/canceled
      */
     status?: string | null;
+    /**
+     * Is Grand Prize
+     *
+     * 是否大奖: True-是, False-否, None-不过滤
+     */
+    is_grand_prize?: boolean | null;
     /**
      * Keyword
      *
@@ -1761,13 +1804,13 @@ export type LotteryPaginationParams = {
     /**
      * Page Num
      *
-     * 页码，最小值为 0
+     * 页码，从 1 开始，最小值为 1
      */
     page_num?: number;
     /**
      * Page Size
      *
-     * 每页数量，最小值为 0,最大为 100
+     * 每页数量，最小值为 1
      */
     page_size?: number;
     [key: string]: unknown;
@@ -1782,13 +1825,13 @@ export type LotterySearchPaginationParams = {
     /**
      * Page Num
      *
-     * 页码，最小值为 0
+     * 页码，从 1 开始，最小值为 1
      */
     page_num?: number;
     /**
      * Page Size
      *
-     * 每页数量，最小值为 0,最大为 100
+     * 每页数量，最小值为 1
      */
     page_size?: number;
     /**
@@ -2390,6 +2433,38 @@ export type ResponsePaginationItemsTopicLotteryResp = {
 };
 
 /**
+ * RpcMethodInfoResponse
+ *
+ * RPC 业务方法响应（供前端展示）
+ */
+export type RpcMethodInfoResponse = {
+    /**
+     * Method Name
+     *
+     * 方法名（snake_case，用于生成 routing_key）
+     */
+    method_name: string;
+    /**
+     * Display Name
+     *
+     * 前端显示名称
+     */
+    display_name: string;
+    /**
+     * Description
+     *
+     * 方法用途说明
+     */
+    description?: string;
+    /**
+     * Routing Key
+     *
+     * routing_key（供前端调试/展示用）
+     */
+    routing_key: string;
+};
+
+/**
  * SamsClubApiStatus
  */
 export type SamsClubApiStatus = {
@@ -2885,13 +2960,19 @@ export type AllLotteryRespWritable = {
     /**
      * Common Lottery
      *
-     * 一般抽奖
+     * 一般抽奖（分页后）
      */
     common_lottery: Array<CommonLotteryRespWritable>;
     /**
+     * Common Lottery Total
+     *
+     * 一般抽奖总数（分页前），用于前端计算总页数
+     */
+    common_lottery_total?: number;
+    /**
      * Must Join Common Lottery
      *
-     * 必抽的一般抽奖
+     * 必抽的一般抽奖（来自当前页）
      */
     must_join_common_lottery: Array<CommonLotteryRespWritable>;
     /**
@@ -3079,7 +3160,7 @@ export type CommonLotteryRespWritable = {
     /**
      * Officiallotid
      */
-    officialLotId: string;
+    officialLotId?: string;
     /**
      * Isofficialaccount
      */
@@ -3100,6 +3181,12 @@ export type CommonLotteryRespWritable = {
      * Hashtag
      */
     hashTag: string;
+    /**
+     * Isbiglot
+     *
+     * SVM 大奖判断结果: 1-大奖, 0-非大奖
+     */
+    isBigLot?: number;
     [key: string]: unknown;
 };
 
@@ -3565,6 +3652,25 @@ export type CommonResponseModelListAddDynamicLotteryRespWritable = {
      * Data
      */
     data?: Array<AddDynamicLotteryRespWritable> | null;
+    [key: string]: unknown;
+};
+
+/**
+ * CommonResponseModel[list[RpcMethodInfoResponse]]
+ */
+export type CommonResponseModelListRpcMethodInfoResponseWritable = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    /**
+     * Data
+     */
+    data?: Array<RpcMethodInfoResponse> | null;
     [key: string]: unknown;
 };
 
@@ -4997,11 +5103,55 @@ export type GetTopicLotteryApiV1LotteryDatabaseBiliGetTopicLotteryPostResponse =
 export type GetAllLotteryApiV1LotteryDatabaseBiliGetAllLotteryPostData = {
     body?: never;
     path?: never;
-    query: {
+    query?: {
         /**
-         * Round Num
+         * Created At Preset
+         *
+         * 收录时间快捷筛选: 1d/3d/5d/7d/14d/30d，默认不筛选
          */
-        round_num: number;
+        created_at_preset?: TimePresetEnum | null;
+        /**
+         * Created At Start
+         *
+         * 收录起始时间（Unix 秒），preset 优先级高于此字段
+         */
+        created_at_start?: number | null;
+        /**
+         * Created At End
+         *
+         * 收录结束时间（Unix 秒）
+         */
+        created_at_end?: number | null;
+        /**
+         * Pub Time Preset
+         *
+         * 发布时间快捷筛选: 1d/3d/5d/7d/14d/30d，默认不筛选
+         */
+        pub_time_preset?: TimePresetEnum | null;
+        /**
+         * Pub Time Start
+         *
+         * 发布起始时间（Unix 秒），preset 优先级高于此字段
+         */
+        pub_time_start?: number | null;
+        /**
+         * Pub Time End
+         *
+         * 发布结束时间（Unix 秒）
+         */
+        pub_time_end?: number | null;
+        /**
+         * Page Num
+         *
+         * 页码，从 1 开始，最小值为 1
+         */
+        page_num?: number;
+        /**
+         * Page Size
+         *
+         * 每页数量，最大 1000，默认 1000，最小值为 1
+         */
+        page_size?: number;
     };
     url: '/api/v1/lottery_database/bili/GetAllLottery';
 };
@@ -5855,6 +6005,22 @@ export type TestMsgPubRabbitmqTestPublishPostResponses = {
 };
 
 export type TestMsgPubRabbitmqTestPublishPostResponse = TestMsgPubRabbitmqTestPublishPostResponses[keyof TestMsgPubRabbitmqTestPublishPostResponses];
+
+export type ListRpcMethodsApiV1RpcMethodsGetData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/rpc/methods';
+};
+
+export type ListRpcMethodsApiV1RpcMethodsGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: CommonResponseModelListRpcMethodInfoResponse;
+};
+
+export type ListRpcMethodsApiV1RpcMethodsGetResponse = ListRpcMethodsApiV1RpcMethodsGetResponses[keyof ListRpcMethodsApiV1RpcMethodsGetResponses];
 
 export type GenCaptchaApiV1CaptchaGenGetData = {
     body?: never;

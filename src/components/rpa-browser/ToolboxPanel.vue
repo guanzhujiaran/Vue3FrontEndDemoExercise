@@ -1,732 +1,539 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
-import { Search, Folder, Tools, Lock, Refresh, Box, Bell, Edit } from '@element-plus/icons-vue'
-import { ElInput, ElTabs, ElTabPane, ElEmpty, ElTreeV2, ElButton, ElPagination, ElMessage } from 'element-plus'
-import { listCustomActionsApiV1RpaBrowserControlCustomActionsListPost, listPluginsApiV1RpaBrowserControlPluginsListPost, listRegisteredActionsApiV1RpaBrowserControlActionsRegisteredPost, getCustomActionApiV1RpaBrowserControlCustomActionsGetPost } from '@/api/browser/hey-api'
+import { ref, computed, shallowRef, onMounted } from 'vue'
+import { Search, Tools, Lock, Refresh, Bell, Edit, Folder } from '@element-plus/icons-vue'
+import {
+  ElAutocomplete, ElEmpty, ElTreeV2, ElButton, ElText,
+  ElMessage, ElTooltip, ElSelect, ElOption, ElSegmented,
+} from 'element-plus'
+import {
+  listCustomActionsApiV1RpaBrowserControlCustomActionsListPost,
+  listRegisteredActionsApiV1RpaBrowserControlActionsRegisteredPost,
+  getCustomActionApiV1RpaBrowserControlCustomActionsGetPost,
+} from '@/api/browser/hey-api'
+import { client } from '@/api/browser/hey-api/client.gen'
 import type { FilterType, SortBy, SortOrder } from '@/api/browser/hey-api/types.gen'
 import { useUserNavStore } from '@/stores/user_nav'
 
-interface Props {
-  browserId: string
+// ── 常量 ─────────────────────────────────────────────
+enum ToolboxTab {
+  PRIVATE = 'tool-box-private-action',
+  PUBLIC = 'tool-box-public-action',
+  BASIC = 'tool-box-basic-action',
 }
+const MAX_VISIBLE_TAGS = 2
+const PER_PAGE = 10
 
-const props = defineProps<Props>()
+interface TabOption {
+  value: ToolboxTab
+  label: string
+  icon: typeof Lock
+}
+const tabList: TabOption[] = [
+  { value: ToolboxTab.PRIVATE, label: '私有', icon: Lock },
+  { value: ToolboxTab.PUBLIC, label: '公开', icon: Folder },
+  { value: ToolboxTab.BASIC, label: '基础操作', icon: Tools },
+]
 
-const emit = defineEmits<{
-  'edit-action': [actionDetail: Record<string, unknown>]
-}>()
+// ── Props & Emits ────────────────────────────────────
 
+interface Props { browserId: string }
+defineProps<Props>()
+const emit = defineEmits<{ 'edit-action': [actionDetail: Record<string, unknown>] }>()
 const userNavStore = useUserNavStore()
 
-const activeTab = ref('private')
+// ── 状态 ─────────────────────────────────────────────
+
+const activeTab = ref<string>(ToolboxTab.PRIVATE)
+const searchInput = ref('')
 const searchQuery = ref('')
+const selectedTag = ref('')
+const tagSelected = ref(true)
+interface TagOption { name: string; count: number }
+const tagOptions = ref<TagOption[]>([])
 const loading = ref(false)
+const loadingMore = ref(false)
+const loadedTabs = ref(new Set<string>())
 
-// 树展开状态
-const expandedKeys = ref<string[]>([])
+/** 当前列表数据（追加模式） */
+const actionList = shallowRef<unknown[]>([])
+const currentPage = ref(1)
+const totalCount = ref(0)
+const loadError = ref(false)
 
-// 私有数据
-const privateActions = ref<unknown[]>([])
-const privatePlugins = ref<unknown[]>([])
-const privateActionsPage = ref(1)
-const privatePluginsPage = ref(1)
-const privateActionsTotal = ref(0)
-const privatePluginsTotal = ref(0)
+const registeredActions = shallowRef<unknown[]>([])
 
-// 公开数据
-const publicActions = ref<unknown[]>([])
-const publicPlugins = ref<unknown[]>([])
-const publicActionsPage = ref(1)
-const publicPluginsPage = ref(1)
-const publicActionsTotal = ref(0)
-const publicPluginsTotal = ref(0)
+/** 标签缓存：切换 tab 时保存/恢复各 tab 的列表状态 */
+const tabCache = ref<Record<string, {
+  actionList: unknown[]
+  searchInput: string
+  searchQuery: string
+  selectedTag: string
+  tagSelected: boolean
+  currentPage: number
+  totalCount: number
+  loadError: boolean
+}>>({})
 
-// 基础操作数据
-const registeredActions = ref<unknown[]>([])
-const registeredActionsPage = ref(1)
-const registeredActionsTotal = ref(0)
+// 联想词节流
+let suggestLastTime = 0
+let suggestTimer: ReturnType<typeof setTimeout> | null = null
+const SUGGEST_THROTTLE_MS = 300
 
-const perPage = 20
+// ── 工具 ─────────────────────────────────────────────
 
 const actionTitleMap: Record<string, string> = {
-  click: '点击',
-  input: '输入',
-  navigation: '导航',
-  navigate: '页面导航',
-  new_page: '新建页面',
-  screenshot: '截图',
-  wait: '等待',
-  scroll: '滚动',
-  hover: '悬停',
-  evaluate: '执行JS',
-  select: '选择',
-  keyboard: '键盘',
-  mouse: '鼠标',
-  llm: 'LLM',
-  loop: '循环',
-  if_else: '条件',
-  composite: '组合',
-  custom: '自定义',
-  plugin: '插件'
+  click: '点击', input: '输入', navigation: '导航', navigate: '页面导航',
+  new_page: '新建页面', screenshot: '截图', wait: '等待', scroll: '滚动',
+  hover: '悬停', evaluate: '执行JS', select: '选择', keyboard: '键盘',
+  mouse: '鼠标', llm: 'LLM', loop: '循环', if_else: '条件',
+  composite: '组合', custom: '自定义',
 }
 
-const getActionLabel = (actionId: string, jsonSchema?: Record<string, unknown>) => {
-  return actionTitleMap[actionId] || jsonSchema?.title || actionId
-}
+const getActionLabel = (id: string, schema?: Record<string, unknown>) =>
+  actionTitleMap[id] || (schema?.title as string) || id
 
-const getTooltipContent = (data: Record<string, unknown>) => {
+/** 生成 action 详细信息的 tooltip 文本 */
+function getTooltipContent(data: Record<string, unknown>): string {
   const parts: string[] = []
-  const desc = data.description || (data.json_schema as Record<string, unknown>)?.description
-  if (desc) parts.push(String(desc))
-
-  const tags = data.tags as string[] | undefined
-  if (tags?.length) parts.push(`标签: ${tags.join(', ')}`)
-
-  if (data.steps_count != null) parts.push(`步骤数: ${data.steps_count}`)
-
-  if (data.is_public != null) parts.push(`可见性: ${data.is_public ? '公开' : '私有'}`)
-
-  if (data.action_id) parts.push(`ID: ${data.action_id}`)
-
-  return parts.join('<br/>') || '暂无描述'
+  if (data.description) parts.push(data.description as string)
+  const tags = (data.tags as string[]) || []
+  if (tags.length) parts.push(`标签: ${tags.join(', ')}`)
+  if (data.steps_count !== undefined) parts.push(`步骤数: ${data.steps_count}`)
+  if (data.is_public !== undefined) parts.push(`可见性: ${data.is_public ? '公开' : '私有'}`)
+  if (data.likes_count !== undefined) parts.push(`点赞: ${data.likes_count}`)
+  if (data.forks_count !== undefined) parts.push(`Fork: ${data.forks_count}`)
+  parts.push(`ID: ${data.action_id}`)
+  return parts.join('\n')
 }
 
-const getTooltipEffect = (data: Record<string, unknown>): 'dark' | 'light' => {
-  return data.is_public ? 'light' : 'dark'
+function getTagsInfo(data: Record<string, unknown>) {
+  const tags = (data.tags as string[]) || []
+  const visible = tags.slice(0, MAX_VISIBLE_TAGS)
+  const overflow = tags.slice(MAX_VISIBLE_TAGS)
+  return { visible, overflow, hasOverflow: overflow.length > 0 }
 }
 
-// 生成树节点
-const generateTreeData = (type: string) => {
-  let data: unknown[] = []
-  let actions: unknown[] = []
-  let plugins: unknown[] = []
+const hasMore = computed(() => actionList.value.length < totalCount.value)
+const isPrivateOrPublic = computed(() => activeTab.value === ToolboxTab.PRIVATE || activeTab.value === ToolboxTab.PUBLIC)
 
-  if (type === 'private') {
-    actions = privateActions.value
-    plugins = privatePlugins.value
-  } else if (type === 'public') {
-    actions = publicActions.value
-    plugins = publicPlugins.value
-  } else {
-    return registeredActions.value
-      .filter(action => action.action_id !== 'composite')
-      .map(action => ({
-      id: `action-${action.action_id}`,
-      label: action.name || getActionLabel(action.action_id, action.json_schema),
-      children: [],
-      type: 'action',
-      action_id: action.action_id,
-      action_type: action.action_id,
-      json_schema: action.json_schema,
-      name: action.name || action.json_schema?.title || action.action_id,
-      description: action.json_schema?.description
-    }))
-  }
+// ── API ──────────────────────────────────────────────
 
-  const actionNode = {
-    id: 'actions',
-    label: '自定义动作',
-    icon: Folder,
-    children: actions.map(action => ({
-      id: `action-${action.action_id}`,
-      label: action.name,
-      children: [],
-      type: 'action',
-      // 优先使用 action 本身的 action_id，然后是 action_type，最后才是自定义
-      action_id: action.action_id || action.action_type || `custom-${action.action_id}`,
-      action_type: action.action_type || action.action_id || 'custom',
-      json_schema: action.json_schema,
-      name: action.name,
-      description: action.description,
-      // 确保原始 action 的所有属性都能被访问
-      ...action
-    }))
-  }
-
-  const pluginNode = {
-    id: 'plugins',
-    label: '插件',
-    icon: Box,
-    children: plugins.map(plugin => ({
-      id: `plugin-${plugin.id}`,
-      label: plugin.name,
-      children: [],
-      type: 'plugin',
-      action_id: plugin.custom_action_id || `plugin-${plugin.id}`,
-      action_type: plugin.action_type || plugin.custom_action_id || 'plugin',
-      json_schema: plugin.json_schema,
-      name: plugin.name,
-      description: plugin.description,
-      ...plugin
-    }))
-  }
-
-  if (actions.length > 0) data.push(actionNode)
-  if (plugins.length > 0) data.push(pluginNode)
-
-  return data
-}
-
-// 每个 Tab 使用独立的 computed，避免共用 filteredTreeData 导致的串数据问题
-const privateTreeData = computed(() => applySearchFilter(generateTreeData('private')))
-const publicTreeData = computed(() => applySearchFilter(generateTreeData('public')))
-const basicTreeData = computed(() => applySearchFilter(generateTreeData('basic')))
-
-const applySearchFilter = (data: unknown[]) => {
-  const query = searchQuery.value.toLowerCase()
-  if (!query) return data
-
-  const filterNode = (nodes: unknown[]): unknown[] => {
-    return nodes
-      .map(node => {
-        const n = node as Record<string, unknown>
-        const hasMatch = String(n.label || '').toLowerCase().includes(query)
-        const children = n.children as unknown[] | undefined
-        const filteredChildren = children ? filterNode(children) : []
-        if (hasMatch || filteredChildren.length > 0) {
-          return { ...n, children: filteredChildren }
-        }
-        return null
-      })
-      .filter(Boolean)
-  }
-  return filterNode(data)
-}
-
-const loadPrivateActions = async (page: number = 1) => {
+/** 搜索标签（远程搜索，返回标签及关联操作数量） */
+async function searchTags(query: string) {
   try {
-    const response = await listCustomActionsApiV1RpaBrowserControlCustomActionsListPost({
+    const filterType = (activeTab.value === ToolboxTab.PRIVATE ? 'private' : 'public') as FilterType
+    const res = await client.post<{ 200: { code: number; data?: { name: string; count: number }[] | null; msg: string } }>({
+      url: '/api/v1/rpa/browser/control/custom-actions/tags/search',
+      body: { keyword: query || null, filter_type: filterType },
+      headers: { 'Content-Type': 'application/json', ...userNavStore.user_header },
+    })
+    if (res?.code === 0) {
+      tagOptions.value = res.data || []
+    }
+  } catch (e) { console.error('searchTags failed', e) }
+}
+
+/** 加载自定义操作（首页替换，后续追加） */
+async function fetchActions(page: number, append = false) {
+  try {
+    const filterType = (activeTab.value === ToolboxTab.PRIVATE ? 'private' : 'public') as FilterType
+    const res = await listCustomActionsApiV1RpaBrowserControlCustomActionsListPost({
       body: {
         page,
-        per_page: perPage,
-        filter_type: 'private' as FilterType,
+        per_page: PER_PAGE,
+        filter_type: filterType,
         sort_by: 'updated_at' as SortBy,
-        sort_order: 'desc' as SortOrder
+        sort_order: 'desc' as SortOrder,
+        name: searchQuery.value || undefined,
+        tag: selectedTag.value || undefined,
+        tag_exact: tagSelected.value,
       },
-      headers: {
-        'x-bili-mid': userNavStore.user_nav.uid,
-        'x-bili-level': String(userNavStore.user_nav.level_info.current_level)
-      }
+      headers: userNavStore.user_header,
     })
-
-    if (response?.code === 0 && response?.data) {
-      const data = response.data as { items?: unknown[]; total?: number }
-      privateActions.value = data.items || []
-      privateActionsTotal.value = data.total || 0
-      privateActionsPage.value = page
+    if (res?.code === 0 && res?.data) {
+      const d = res.data as { items?: unknown[]; total?: number }
+      const items = d.items || []
+      if (append) {
+        actionList.value = [...actionList.value, ...items]
+      } else {
+        actionList.value = items
+      }
+      totalCount.value = d.total || 0
+      currentPage.value = page
     }
-  } catch (error) {
-    console.error('Failed to load private actions')
-  }
+  } catch { console.error('fetchActions failed') }
 }
 
-const loadPrivatePlugins = async (page: number = 1) => {
+/** 加载更多（LoadingMoreContainer 回调） */
+async function loadMore() {
+  loadingMore.value = true
+  loadError.value = false
   try {
-    const response = await listPluginsApiV1RpaBrowserControlPluginsListPost({
-      body: {
-        page,
-        per_page: perPage,
-        filter_type: 'private' as FilterType
-      },
-      headers: {
-        'x-bili-mid': userNavStore.user_nav.uid,
-        'x-bili-level': String(userNavStore.user_nav.level_info.current_level)
-      }
-    })
-
-    if (response?.code === 0 && response?.data) {
-      const data = response.data as { items?: unknown[]; total?: number }
-      privatePlugins.value = data.items || []
-      privatePluginsTotal.value = data.total || 0
-      privatePluginsPage.value = page
-    }
-  } catch (error) {
-    console.error('Failed to load private plugins')
-  }
+    await fetchActions(currentPage.value + 1, true)
+  } catch { loadError.value = true }
+  finally { loadingMore.value = false }
 }
 
-const loadPublicActions = async (page: number = 1) => {
-  try {
-    const response = await listCustomActionsApiV1RpaBrowserControlCustomActionsListPost({
-      body: {
-        page,
-        per_page: perPage,
-        filter_type: 'public' as const,
-        sort_by: 'updated_at' as const,
-        sort_order: 'desc' as const
-      },
-      headers: {
-        'x-bili-mid': userNavStore.user_nav.uid,
-        'x-bili-level': String(userNavStore.user_nav.level_info.current_level)
-      }
-    })
-
-    if (response?.code === 0 && response?.data) {
-      const data = response.data as { items?: unknown[]; total?: number }
-      publicActions.value = data.items || []
-      publicActionsTotal.value = data.total || 0
-      publicActionsPage.value = page
-    }
-  } catch (error) {
-    console.error('Failed to load public actions')
-  }
-}
-
-const loadPublicPlugins = async (page: number = 1) => {
-  try {
-    const response = await listPluginsApiV1RpaBrowserControlPluginsListPost({
-      body: {
-        page,
-        per_page: perPage,
-        filter_type: 'public' as const
-      },
-      headers: {
-        'x-bili-mid': userNavStore.user_nav.uid,
-        'x-bili-level': String(userNavStore.user_nav.level_info.current_level)
-      }
-    })
-
-    if (response?.code === 0 && response?.data) {
-      const data = response.data as { items?: unknown[]; total?: number }
-      publicPlugins.value = data.items || []
-      publicPluginsTotal.value = data.total || 0
-      publicPluginsPage.value = page
-    }
-  } catch (error) {
-    console.error('Failed to load public plugins')
-  }
-}
-
-const loadRegisteredActions = async () => {
-  try {
-    const response = await listRegisteredActionsApiV1RpaBrowserControlActionsRegisteredPost({
-      headers: {
-        'x-bili-mid': userNavStore.user_nav.uid,
-        'x-bili-level': String(userNavStore.user_nav.level_info.current_level)
-      }
-    })
-
-    if (response?.code === 0 && response?.data) {
-      const data = response.data as unknown[]
-      registeredActions.value = data
-      registeredActionsTotal.value = data.length
-    }
-  } catch (error) {
-    console.error('Failed to load registered actions')
-  }
-}
-
-const loadPrivateData = async () => {
+/** 重置并重新加载第一页 */
+async function reloadActions() {
   loading.value = true
-  await Promise.all([
-    loadPrivateActions(),
-    loadPrivatePlugins()
-  ])
-  loading.value = false
-}
-
-const loadPublicData = async () => {
-  loading.value = true
-  await Promise.all([
-    loadPublicActions(),
-    loadPublicPlugins()
-  ])
-  loading.value = false
-}
-
-const loadBasicActions = async () => {
-  loading.value = true
-  await loadRegisteredActions()
-  loading.value = false
-}
-
-const handleDragStart = (event: DragEvent, nodeData: unknown) => {
-  if (event.dataTransfer && nodeData) {
-    console.log('拖拽开始，原始数据:', nodeData)
-    const actionData = { ...(nodeData as Record<string, unknown>) }
-    // 移除可能导致循环引用的字段
-    delete actionData.parent
-    delete actionData.children
-    delete actionData.expanded
-    delete actionData.checked
-    delete actionData.indeterminate
-    
-    console.log('拖拽数据:', actionData)
-    const jsonData = JSON.stringify(actionData)
-    event.dataTransfer.setData('text/plain', jsonData)
-    event.dataTransfer.setData('application/json', jsonData)
-    event.dataTransfer.effectAllowed = 'copyMove'
-  }
-}
-
-const handleNodeExpand = (node: { id: string }) => {
-  if (node.id && !expandedKeys.value.includes(node.id)) {
-    expandedKeys.value.push(node.id)
-  }
-}
-
-const handleNodeCollapse = (node: { id: string }) => {
-  const index = expandedKeys.value.indexOf(node.id)
-  if (index > -1) {
-    expandedKeys.value.splice(index, 1)
-  }
-}
-
-const handlePrivateActionsPageChange = (page: number) => {
-  loadPrivateActions(page)
-}
-
-const handlePrivatePluginsPageChange = (page: number) => {
-  loadPrivatePlugins(page)
-}
-
-const handlePublicActionsPageChange = (page: number) => {
-  loadPublicActions(page)
-}
-
-const handlePublicPluginsPageChange = (page: number) => {
-  loadPublicPlugins(page)
-}
-
-const handleRegisteredActionsPageChange = () => {
-  loadRegisteredActions()
-}
-
-const handleTabChange = () => {
-  expandedKeys.value = []
-  if (activeTab.value === 'private') {
-    loadPrivateData()
-  } else if (activeTab.value === 'public') {
-    loadPublicData()
-  } else {
-    loadBasicActions()
-  }
-}
-
-const handleRefresh = () => {
-  handleTabChange()
-}
-
-const elTreeV2Props = {
-  children: 'children',
-  label: 'label'
-}
-
-const treeHeight = computed(() => {
-  return Math.floor(55 * 16)
-})
-
-onMounted(() => {
-  loadAllData()
-})
-
-const loadAllData = async () => {
-  loading.value = true
-  await Promise.all([
-    loadPrivateActions(),
-    loadPrivatePlugins(),
-    loadPublicActions(),
-    loadPublicPlugins(),
-    loadRegisteredActions()
-  ])
-  loading.value = false
-}
-
-// ========== 编辑自定义操作（通过事件传递给父组件） ==========
-
-const handleEditCustomAction = async (nodeData: Record<string, unknown>) => {
-  const actionId = nodeData.action_id as string
-  if (!actionId) {
-    ElMessage.warning('无效的操作标识')
-    return
-  }
   try {
-    const response = await getCustomActionApiV1RpaBrowserControlCustomActionsGetPost({
-      body: { action_id: actionId },
-      headers: {
-        'x-bili-mid': userNavStore.user_nav.uid,
-        'x-bili-level': String(userNavStore.user_nav.level_info.current_level)
-      }
-    })
-    if (response?.code === 0 && response?.data) {
-      const detail = response.data as Record<string, unknown>
-      emit('edit-action', detail)
+    await fetchActions(1, false)
+  } finally { loading.value = false }
+}
+
+async function loadRegistered() {
+  const res = await listRegisteredActionsApiV1RpaBrowserControlActionsRegisteredPost({ headers: userNavStore.user_header })
+  if (res?.code === 0 && res?.data) {
+    registeredActions.value = ((res.data as unknown[]) || []).filter(
+      (a: Record<string, unknown>) => a.action_id !== 'composite',
+    )
+  }
+}
+
+onMounted(() => loadTab(activeTab.value))
+async function loadTab(tab: string) {
+  loading.value = true
+  try {
+    if (tab === ToolboxTab.PRIVATE || tab === ToolboxTab.PUBLIC) {
+      await fetchActions(1, false)
     } else {
-      ElMessage.error('获取操作详情失败')
+      await loadRegistered()
     }
-  } catch {
-    ElMessage.error('获取操作详情失败')
+    loadedTabs.value.add(tab)
+  } finally { loading.value = false }
+}
+
+/** 保存当前 tab 状态 */
+function saveTabState(tab: string) {
+  tabCache.value[tab] = {
+    actionList: actionList.value,
+    searchInput: searchInput.value,
+    searchQuery: searchQuery.value,
+    selectedTag: selectedTag.value,
+    tagSelected: tagSelected.value,
+    currentPage: currentPage.value,
+    totalCount: totalCount.value,
+    loadError: loadError.value,
   }
 }
+
+/** 恢复 tab 状态 */
+function restoreTabState(tab: string) {
+  const saved = tabCache.value[tab]
+  if (saved) {
+    actionList.value = saved.actionList
+    searchInput.value = saved.searchInput
+    searchQuery.value = saved.searchQuery
+    selectedTag.value = saved.selectedTag
+    tagSelected.value = saved.tagSelected
+    currentPage.value = saved.currentPage
+    totalCount.value = saved.totalCount
+    loadError.value = saved.loadError
+  } else {
+    actionList.value = []
+    searchInput.value = ''
+    searchQuery.value = ''
+    selectedTag.value = ''
+    tagSelected.value = true
+    currentPage.value = 1
+    totalCount.value = 0
+    loadError.value = false
+  }
+  loadingMore.value = false
+}
+
+/** 切换 tab（不重新加载已加载的 tab） */
+function switchTab(tab: string) {
+  if (tab === activeTab.value) return
+  if (suggestTimer) { clearTimeout(suggestTimer); suggestTimer = null }
+  saveTabState(activeTab.value)
+  restoreTabState(tab)
+  activeTab.value = tab
+  if (!loadedTabs.value.has(tab)) {
+    loadTab(tab)
+  }
+}
+
+function handleRefresh() {
+  loadedTabs.value.delete(activeTab.value)
+  delete tabCache.value[activeTab.value]
+  actionList.value = []
+  searchInput.value = ''
+  searchQuery.value = ''
+  selectedTag.value = ''
+  tagSelected.value = true
+  tagOptions.value = []
+  currentPage.value = 1
+  totalCount.value = 0
+  loadError.value = false
+  loadTab(activeTab.value)
+}
+
+/** 点击搜索按钮：将输入值应用到搜索查询并触发搜索 */
+function handleSearch() {
+  searchQuery.value = searchInput.value
+  if (isPrivateOrPublic.value) {
+    actionList.value = []
+    totalCount.value = 0
+    currentPage.value = 1
+    loadError.value = false
+    reloadActions()
+  }
+}
+
+/** 搜索操作名称（远程，用于私有/公开 tab 联想） */
+async function searchNamesApi(keyword: string): Promise<string[]> {
+  const filterType = (activeTab.value === ToolboxTab.PRIVATE ? 'private' : 'public') as FilterType
+  try {
+    const res = await client.post<{ 200: { code: number; data?: string[] | null; msg: string } }>({
+      url: '/api/v1/rpa/browser/control/custom-actions/names/search',
+      body: { keyword: keyword || null, filter_type: filterType },
+      headers: { 'Content-Type': 'application/json', ...userNavStore.user_header },
+    })
+    if (res?.code === 0) return res.data || []
+  } catch (e) { console.error('searchNames failed', e) }
+  return []
+}
+
+/** 从已加载的注册操作中本地过滤名称（基础操作 tab） */
+function searchNamesLocal(keyword: string): string[] {
+  const q = keyword.toLowerCase()
+  return (registeredActions.value as Record<string, unknown>[])
+    .map((a) => (a.name as string) || getActionLabel(a.action_id as string, a.json_schema as Record<string, unknown>))
+    .filter((n) => n.toLowerCase().includes(q))
+    .slice(0, 10)
+}
+
+/** 节流获取联想词（el-autocomplete 的 fetch-suggestions 回调） */
+function fetchSuggestions(queryString: string, cb: (items: { value: string }[]) => void) {
+  if (!queryString) { cb([]); return }
+  const now = Date.now()
+  const remaining = SUGGEST_THROTTLE_MS - (now - suggestLastTime)
+  const exec = async () => {
+    suggestLastTime = Date.now()
+    const names = isPrivateOrPublic.value
+      ? await searchNamesApi(queryString)
+      : searchNamesLocal(queryString)
+    cb(names.map((n) => ({ value: n })))
+  }
+  if (remaining <= 0) {
+    exec()
+  } else {
+    if (suggestTimer) clearTimeout(suggestTimer)
+    suggestTimer = setTimeout(exec, remaining)
+  }
+}
+
+// 标签变更：选中则为精确匹配，输入则为模糊匹配
+function onTagChange(value: string) {
+  tagSelected.value = value ? tagOptions.value.some((t) => t.name === value) : true
+  actionList.value = []
+  totalCount.value = 0
+  currentPage.value = 1
+  loadError.value = false
+  reloadActions()
+}
+
+// ── 基础操作树 ───────────────────────────────────────
+
+const filteredRegistered = computed<unknown[]>(() => {
+  const q = searchQuery.value.toLowerCase()
+  const items = registeredActions.value.map((a: Record<string, unknown>) => ({
+    id: `action-${a.action_id}`,
+    label: (a.name as string) || getActionLabel(a.action_id as string, a.json_schema as Record<string, unknown>),
+    children: [],
+    action_id: a.action_id,
+    action_type: a.action_id,
+    name: a.name || (a.json_schema as Record<string, unknown>)?.title || a.action_id,
+    description: (a.json_schema as Record<string, unknown>)?.description,
+    tags: a.tags || [],
+    json_schema: a.json_schema,
+  }))
+  if (!q) return items
+  return items.filter((i) => String(i.name || i.label || '').toLowerCase().includes(q))
+})
+
+// ── 拖拽 ─────────────────────────────────────────────
+
+function handleDragStart(event: DragEvent, nodeData: unknown) {
+  if (!event.dataTransfer || !nodeData) return
+  const data = { ...(nodeData as Record<string, unknown>) }
+  delete data.children; delete data.expanded
+  delete data.checked; delete data.indeterminate
+  const json = JSON.stringify(data)
+  event.dataTransfer.setData('text/plain', json)
+  event.dataTransfer.setData('application/json', json)
+  event.dataTransfer.effectAllowed = 'copyMove'
+}
+
+// ── 编辑 ─────────────────────────────────────────────
+
+async function handleEditCustomAction(nodeData: Record<string, unknown>) {
+  const id = nodeData.action_id as string
+  if (!id) { ElMessage.warning('无效的操作标识'); return }
+  try {
+    const res = await getCustomActionApiV1RpaBrowserControlCustomActionsGetPost({
+      body: { action_id: id }, headers: userNavStore.user_header,
+    })
+    if (res?.code === 0 && res?.data) emit('edit-action', res.data as Record<string, unknown>)
+    else ElMessage.error('获取操作详情失败')
+  } catch { ElMessage.error('获取操作详情失败') }
+}
+
+// ── 配置 ─────────────────────────────────────────────
+
+const treeProps = { children: 'children', label: 'label' }
+const treeHeight = computed(() => Math.floor(window.innerHeight * 0.45))
 </script>
 
 <template>
-  <div class="h-full flex flex-col bg-bg" v-loading="loading">
-    <!-- 搜索栏 -->
-    <div class="p-3 border-b border-border flex items-center gap-2">
-      <el-input 
-        v-model="searchQuery" 
-        placeholder="搜索插件/动作" 
-        :prefix-icon="Search" 
-        clearable
-        size="small"
-        class="flex-1"
-      />
-      <el-button size="small" :icon="Refresh" @click="handleRefresh" />
+  <div class="toolbox-root h-160 flex flex-col overflow-hidden">
+    <!-- 分段控制 + 搜索/刷新/筛选内容区 -->
+    <div class="p-3 border-b border-border space-y-2">
+      <el-segmented
+        :model-value="activeTab"
+        :options="tabList"
+        block
+        size="large"
+        @change="(val: string | number | boolean) => switchTab(val as string)"
+      >
+        <template #default="{ item }">
+          <div class="flex items-center gap-1">
+            <el-icon><component :is="item.icon" /></el-icon>
+            <span>{{ item.label }}</span>
+          </div>
+        </template>
+      </el-segmented>
+
+      <!-- 搜索、刷新、筛选内容区 -->
+      <div class="flex items-center gap-2">
+        <el-autocomplete
+          v-model="searchInput"
+          :fetch-suggestions="fetchSuggestions"
+          placeholder="搜索动作名称"
+          clearable
+          size="large"
+          class="flex-1 search-autocomplete"
+          @select="handleSearch"
+          @keyup.enter="handleSearch"
+          @clear="handleSearch"
+        />
+        <el-button size="large" type="primary" :icon="Search" class="search-btn" @click="handleSearch" />
+        <el-button size="large" :icon="Refresh" @click="handleRefresh" />
+      </div>
+      <div v-if="isPrivateOrPublic" class="flex items-center gap-2">
+        <span class="text-xs text-text-secondary shrink-0">标签：</span>
+        <el-select
+          v-model="selectedTag"
+          placeholder="输入或选择标签"
+          size="large"
+          clearable
+          filterable
+          remote
+          :remote-method="searchTags"
+          allow-create
+          default-first-option
+          class="flex-1 tag-filter-select"
+          @change="onTagChange"
+          @visible-change="(v: boolean) => v && tagOptions.length === 0 && searchTags('')"
+        >
+          <el-option v-for="t in tagOptions" :key="t.name" :label="t.name" :value="t.name">
+            <div class="flex items-center justify-between w-full">
+              <span>{{ t.name }}</span>
+              <span class="text-xs text-text-secondary ml-2">{{ t.count }}</span>
+            </div>
+          </el-option>
+        </el-select>
+      </div>
     </div>
 
-    <!-- 标签页 -->
-    <el-tabs v-model="activeTab" class="flex-1 overflow-hidden flex flex-col" @change="handleTabChange">
-      <!-- 私有标签 -->
-      <el-tab-pane label="私有" name="private">
-        <template #label>
-          <div class="flex items-center gap-1">
-            <el-icon><Lock /></el-icon>
-            <span>私有</span>
-          </div>
-        </template>
-
-        <div class="flex-1 overflow-auto p-3">
-          <el-tree-v2
-            v-if="privateTreeData.length > 0"
-            :data="privateTreeData"
-            :props="elTreeV2Props"
-            :height="treeHeight"
-            :expanded-keys="expandedKeys"
-            :expand-on-click-node="true"
-            @node-expand="handleNodeExpand"
-            @node-collapse="handleNodeCollapse"
-            class="tree-drag-drop"
-          >
-            <template #default="{ node, data }">
-              <div 
-                v-if="!node.children || node.children.length === 0"
-                class="flex items-center justify-between w-full gap-2"
-                :class="{ 'cursor-grab active:cursor-grabbing': true }"
-                :draggable="true"
-                @dragstart="handleDragStart($event, data)"
-                @mousedown.stop
-                @dragstart.stop
-              >
-                <span class="flex items-center gap-2 min-w-0">
-                  <component :is="data.type === 'plugin' ? Box : Bell" class="w-4 h-4 shrink-0" />
-                  <el-tooltip
-                    :content="getTooltipContent(data as Record<string, unknown>)"
-                    :effect="getTooltipEffect(data as Record<string, unknown>)"
-                    raw-content
-                    placement="right"
-                    :show-after="500"
-                    popper-class="toolbox-tooltip"
-                  >
-                    <span class="truncate">{{ node.label }}</span>
+    <!-- 私有/公开列表（共享模板，v-show 保留 DOM） -->
+    <LoadingMoreContainer
+    class="flex-1"
+      v-show="isPrivateOrPublic"
+      v-loading="loading"
+      v-model:is-more="hasMore"
+      v-model:is-loading="loadingMore"
+      v-model:is-error="loadError"
+      :handle-load="loadMore"
+    >
+      <template #content>
+        <div class="p-3">
+          <template v-if="actionList.length > 0">
+            <div
+              v-for="(item, idx) in actionList"
+              :key="(item as Record<string, unknown>).action_id as string"
+              class="flex items-center justify-between w-full gap-2 px-2 py-2 rounded cursor-grab active:cursor-grabbing hover:bg-[var(--el-fill-color-light)] transition-colors"
+              draggable="true"
+              @dragstart="handleDragStart($event, item)"
+              @mousedown.stop @dragstart.stop
+            >
+              <span class="flex items-center gap-2 min-w-0 flex-1">
+                <el-icon><Bell class="w-4 h-4 shrink-0" /></el-icon>
+                <el-tooltip
+                  :content="getTooltipContent(item as Record<string, unknown>)"
+                  placement="right" :show-after="400"
+                  popper-class="toolbox-tooltip whitespace-pre-line"
+                >
+                  <el-text class="flex-1 min-w-0" truncated>{{ (item as Record<string, unknown>).name as string || (item as Record<string, unknown>).label as string }}</el-text>
+                </el-tooltip>
+                <template v-if="getTagsInfo(item as Record<string, unknown>).visible.length > 0">
+                  <span
+                    v-for="tag in getTagsInfo(item as Record<string, unknown>).visible"
+                    :key="tag"
+                    class="text-xs px-1.5 py-px rounded bg-[var(--el-color-primary-light-9)] text-[var(--el-color-primary)] shrink-0"
+                  >{{ tag }}</span>
+                  <el-tooltip v-if="getTagsInfo(item as Record<string, unknown>).hasOverflow" :show-after="300" popper-class="toolbox-tooltip">
+                    <template #content>
+                      <div class="flex flex-wrap gap-1">
+                        <span v-for="tag in getTagsInfo(item as Record<string, unknown>).overflow" :key="tag">{{ tag }}</span>
+                      </div>
+                    </template>
+                    <span class="text-xs text-text-secondary shrink-0">+{{ getTagsInfo(item as Record<string, unknown>).overflow.length }}</span>
                   </el-tooltip>
-                </span>
-                <span class="flex items-center gap-1 shrink-0">
-                  <el-button
-                    v-if="data.type === 'action'"
-                    size="small"
-                    text
-                    :icon="Edit"
-                    class="p-0.5 h-auto"
-                    @click.stop="handleEditCustomAction(data as Record<string, unknown>)"
-                  />
-                  <span class="text-xs text-text-secondary">
-                    {{ data.type === 'plugin' ? '插件' : '动作' }}
-                  </span>
-                </span>
-              </div>
-              <div v-else class="flex items-center gap-2">
-                <component :is="node.icon || Folder" class="w-4 h-4" />
-                <span>{{ node.label }}</span>
-              </div>
-            </template>
-          </el-tree-v2>
+                </template>
+              </span>
+              <span class="flex items-center gap-1 shrink-0">
+                <el-button size="small" text :icon="Edit" class="!p-0.5 !h-auto"
+                  @click.stop="handleEditCustomAction(item as Record<string, unknown>)"
+                />
+              </span>
+            </div>
+          </template>
           <el-empty v-else description="暂无匹配内容" :image-size="60" />
         </div>
+      </template>
+    </LoadingMoreContainer>
 
-        <!-- 分页 -->
-        <div v-if="!searchQuery && (privateActionsTotal > 0 || privatePluginsTotal > 0)" class="p-3 border-t border-border bg-[var(--el-fill-color-lighter)]">
-          <div v-if="privateActionsTotal > 0" class="mb-2">
-            <span class="text-xs text-text-secondary">自定义动作</span>
-            <el-pagination
-              v-model:current-page="privateActionsPage"
-              :total="privateActionsTotal"
-              :page-size="perPage"
-              size="small"
-              layout="prev, pager, next"
-              @current-change="handlePrivateActionsPageChange"
-              class="float-right"
-            />
-          </div>
-          <div v-if="privatePluginsTotal > 0">
-            <span class="text-xs text-text-secondary">插件</span>
-            <el-pagination
-              v-model:current-page="privatePluginsPage"
-              :total="privatePluginsTotal"
-              :page-size="perPage"
-              size="small"
-              layout="prev, pager, next"
-              @current-change="handlePrivatePluginsPageChange"
-              class="float-right"
-            />
-          </div>
-        </div>
-      </el-tab-pane>
-
-      <!-- 公开标签 -->
-      <el-tab-pane label="公开" name="public">
-        <template #label>
-          <div class="flex items-center gap-1">
-            <el-icon><Folder /></el-icon>
-            <span>公开</span>
+    <!-- 基础操作树 -->
+    <div v-show="activeTab === ToolboxTab.BASIC" class="overflow-auto p-3" v-loading="loading">
+      <el-tree-v2
+        v-if="filteredRegistered.length > 0"
+        :data="filteredRegistered" :props="treeProps"
+        :height="treeHeight" class="tree-drag-drop"
+      >
+        <template #default="{ data }">
+          <div
+            class="flex items-center justify-between w-full gap-2 cursor-grab active:cursor-grabbing"
+            draggable="true"
+            @dragstart="handleDragStart($event, data)"
+          >
+            <span class="flex items-center gap-2 min-w-0 flex-1">
+              <el-icon><Tools class="w-4 h-4 shrink-0" /></el-icon>
+              <el-tooltip
+                :content="getTooltipContent(data as Record<string, unknown>)"
+                placement="right" :show-after="400"
+                popper-class="toolbox-tooltip whitespace-pre-line"
+              >
+                <el-text class="flex-1 min-w-0" truncated>{{ (data as Record<string, unknown>).name as string || (data as Record<string, unknown>).label as string }}</el-text>
+              </el-tooltip>
+            </span>
+            <span class="text-xs text-text-secondary shrink-0">预置动作</span>
           </div>
         </template>
-
-        <div class="flex-1 overflow-auto p-3">
-          <el-tree-v2
-            v-if="publicTreeData.length > 0"
-            :data="publicTreeData"
-            :props="elTreeV2Props"
-            :height="treeHeight"
-            :expanded-keys="expandedKeys"
-            :expand-on-click-node="true"
-            @node-expand="handleNodeExpand"
-            @node-collapse="handleNodeCollapse"
-            class="tree-drag-drop"
-          >
-            <template #default="{ node, data }">
-              <div 
-                v-if="!node.children || node.children.length === 0"
-                class="flex items-center justify-between w-full gap-2"
-                :class="{ 'cursor-grab active:cursor-grabbing': true }"
-                :draggable="true"
-                @dragstart="handleDragStart($event, data)"
-                @mousedown.stop
-                @dragstart.stop
-              >
-                <span class="flex items-center gap-2 min-w-0">
-                  <component :is="data.type === 'plugin' ? Box : Bell" class="w-4 h-4 shrink-0" />
-                  <el-tooltip
-                    :content="getTooltipContent(data as Record<string, unknown>)"
-                    :effect="getTooltipEffect(data as Record<string, unknown>)"
-                    raw-content
-                    placement="right"
-                    :show-after="500"
-                    popper-class="toolbox-tooltip"
-                  >
-                    <span class="truncate">{{ node.label }}</span>
-                  </el-tooltip>
-                </span>
-                <span class="flex items-center gap-1 shrink-0">
-                  <el-button
-                    v-if="data.type === 'action'"
-                    size="small"
-                    text
-                    :icon="Edit"
-                    class="!p-0.5 !h-auto"
-                    @click.stop="handleEditCustomAction(data as Record<string, unknown>)"
-                  />
-                  <span class="text-xs text-text-secondary">
-                    {{ data.type === 'plugin' ? '插件' : '动作' }}
-                  </span>
-                </span>
-              </div>
-              <div v-else class="flex items-center gap-2">
-                <component :is="node.icon || Folder" class="w-4 h-4" />
-                <span>{{ node.label }}</span>
-              </div>
-            </template>
-          </el-tree-v2>
-          <el-empty v-else description="暂无匹配内容" :image-size="60" />
-        </div>
-
-        <!-- 分页 -->
-        <div v-if="!searchQuery && (publicActionsTotal > 0 || publicPluginsTotal > 0)" class="p-3 border-t border-border bg-[var(--el-fill-color-lighter)]">
-          <div v-if="publicActionsTotal > 0" class="mb-2">
-            <span class="text-xs text-text-secondary">自定义动作</span>
-            <el-pagination
-              v-model:current-page="publicActionsPage"
-              :total="publicActionsTotal"
-              :page-size="perPage"
-              size="small"
-              layout="prev, pager, next"
-              @current-change="handlePublicActionsPageChange"
-              class="float-right"
-            />
-          </div>
-          <div v-if="publicPluginsTotal > 0">
-            <span class="text-xs text-text-secondary">插件</span>
-            <el-pagination
-              v-model:current-page="publicPluginsPage"
-              :total="publicPluginsTotal"
-              :page-size="perPage"
-              size="small"
-              layout="prev, pager, next"
-              @current-change="handlePublicPluginsPageChange"
-              class="float-right"
-            />
-          </div>
-        </div>
-      </el-tab-pane>
-
-      <!-- 基础操作标签 -->
-      <el-tab-pane label="基础操作" name="basic">
-        <template #label>
-          <div class="flex items-center gap-1">
-            <el-icon><Tools /></el-icon>
-            <span>基础操作</span>
-          </div>
-        </template>
-
-        <div class="flex-1 overflow-auto p-3">
-          <el-tree-v2
-            v-if="basicTreeData.length > 0"
-            :data="basicTreeData"
-            :props="elTreeV2Props"
-            :height="treeHeight"
-            class="tree-drag-drop"
-          >
-            <template #default="{ node, data }">
-              <div 
-                class="flex items-center justify-between w-full cursor-grab active:cursor-grabbing"
-                draggable="true"
-                @dragstart="handleDragStart($event, data)"
-                @mousedown.stop
-                @dragstart.stop
-              >
-                <span class="flex items-center gap-2">
-                  <el-icon><Tools class="w-4 h-4" /></el-icon>
-                  <el-tooltip
-                    :content="getTooltipContent(data as Record<string, unknown>)"
-                    :effect="getTooltipEffect(data as Record<string, unknown>)"
-                    raw-content
-                    placement="right"
-                    :show-after="500"
-                    popper-class="toolbox-tooltip"
-                  >
-                    <span>{{ node.label }}</span>
-                  </el-tooltip>
-                </span>
-                <span class="text-xs text-text-secondary">预置动作</span>
-              </div>
-            </template>
-          </el-tree-v2>
-          <el-empty v-else description="暂无匹配内容" :image-size="60" />
-        </div>
-
-        <!-- 分页 -->
-        <div v-if="!searchQuery && registeredActionsTotal > 0" class="p-3 border-t border-border bg-[var(--el-fill-color-lighter)]">
-          <el-pagination
-            v-model:current-page="registeredActionsPage"
-            :total="registeredActionsTotal"
-            :page-size="perPage"
-            size="small"
-            layout="prev, pager, next"
-            @current-change="handleRegisteredActionsPageChange"
-            class="float-right"
-          />
-        </div>
-      </el-tab-pane>
-    </el-tabs>
+      </el-tree-v2>
+      <el-empty v-else description="暂无匹配内容" :image-size="60" />
+    </div>
   </div>
 </template>

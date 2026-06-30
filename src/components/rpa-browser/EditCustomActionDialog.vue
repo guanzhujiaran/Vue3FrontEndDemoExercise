@@ -37,13 +37,6 @@ const isMinimized = ref(false)
 /** el-dialog 实际显示：外部打开且未最小化时才显示 */
 const dialogVisible = computed(() => props.modelValue && !isMinimized.value)
 
-function apiHeaders() {
-  return {
-    'x-bili-mid': userNavStore.user_nav.uid,
-    'x-bili-level': String(userNavStore.user_nav.level_info.current_level),
-  }
-}
-
 /** 将后端 steps 反序列化为前端可编辑的 DroppedItem[] */
 function convertStepsToItems(steps: Record<string, unknown>[]): DroppedItem[] {
   return steps.map((step, i) => {
@@ -63,18 +56,22 @@ function convertStepsToItems(steps: Record<string, unknown>[]): DroppedItem[] {
       loopBody = convertStepsToItems(sp.loopBranch as Record<string, unknown>[])
       delete sp.loopBranch
     }
+    // 提取后端返回的 action_detail（自定义操作的实时数据库信息）
+    const actionDetail = step.action_detail as Record<string, unknown> | undefined
     return {
       id: `edit-step-${i}-${Date.now()}`,
-      name: (step.name as string) || (step.action_id as string) || `步骤${i + 1}`,
+      name: (actionDetail?.name as string) || (step.name as string) || (step.action_id as string) || `步骤${i + 1}`,
       action_id: (step.action_id as string) || '',
       action_type: (step.action_type as string) || (step.action_id as string) || '',
-      description: (step.description as string) || '',
+      description: (actionDetail?.description as string) || (step.description as string) || '',
       type: 'action',
       formData: { ...sp },
       input_vars: (step.input_vars || {}) as Record<string, unknown>,
       output_vars: (step.output_vars || []) as string[],
       config_params: {},
       trueBranch, falseBranch, loopBody,
+      // 附加数据库实时信息，供 ActionCard 展示
+      action_detail: actionDetail,
     }
   })
 }
@@ -144,7 +141,7 @@ async function handleSave() {
         tags: editingTags.value,
         steps,
       },
-      headers: apiHeaders(),
+      headers: userNavStore.user_header,
     })
     if (response?.code === 0) {
       biliMessage.success('自定义操作更新成功')

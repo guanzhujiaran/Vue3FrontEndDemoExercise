@@ -5,6 +5,7 @@
         <el-alert
           title="注意：以下设置和数据均保存在本地浏览器中，清除浏览器缓存会导致设置丢失。"
           type="warning"
+          :effect="themeStore.themeEffectString"
           show-icon
           :closable="false"
           class="local-storage-notice"
@@ -80,6 +81,9 @@ import { ref } from 'vue'
 import { useBiliLotteryRecord } from '@/stores/bili_lottery_record.ts'
 import { Setting, Refresh, Grid, List } from '@element-plus/icons-vue'
 import SubmitFeedbackModal from './SubmitFeedbackModal.vue'
+import { useThemeStore } from '@/stores/theme'
+
+const themeStore = useThemeStore()
 
 defineProps<{
   refresh_data: () => void

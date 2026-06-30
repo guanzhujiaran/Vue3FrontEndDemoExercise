@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { ElMessageBox, ElMessage } from 'element-plus'
-import { Delete, Edit, PriceTag, Refresh, Search } from '@element-plus/icons-vue'
+import { Delete, Edit, PriceTag, Refresh, Search, Loading } from '@element-plus/icons-vue'
+import { useDebounceFn } from '@vueuse/core'
 import FlexContainer from '@/components/CommonCompo/Bili-Container-Compo/FlexContainer.vue'
 import BiliPageHeader from '@/components/CommonCompo/Bili-Container-Compo/BiliPageHeader.vue'
 import {
   listCustomActionsApiV1RpaBrowserControlCustomActionsListPost,
+  listCustomActionTagsApiV1RpaBrowserControlCustomActionsTagsPost,
   updateCustomActionApiV1RpaBrowserControlCustomActionsUpdatePost,
   deleteCustomActionApiV1RpaBrowserControlCustomActionsDeletePost,
 } from '@/api/browser/hey-api'
@@ -33,32 +35,14 @@ const userNavStore = useUserNavStore()
 const actionList = ref<ActionItem[]>([])
 const total = ref(0)
 const currentPage = ref(1)
-const pageSize = ref(12)
+const pageSize = ref(10)
 const loading = ref(false)
+const loadingMore = ref(false)
 const searchText = ref('')
 const filterTag = ref('')
+const allTags = ref<string[]>([])
 
-const allTags = computed(() => {
-  const tags = new Set<string>()
-  actionList.value.forEach(a => a.tags?.forEach(t => tags.add(t)))
-  return Array.from(tags)
-})
-
-const filteredList = computed(() => {
-  if (!searchText.value && !filterTag.value) return actionList.value
-  return actionList.value.filter(a => {
-    const matchName = !searchText.value || a.name.toLowerCase().includes(searchText.value.toLowerCase())
-    const matchTag = !filterTag.value || a.tags?.includes(filterTag.value)
-    return matchName && matchTag
-  })
-})
-
-function apiHeaders() {
-  return {
-    'x-bili-mid': userNavStore.user_nav.uid,
-    'x-bili-level': String(userNavStore.user_nav.level_info.current_level),
-  }
-}
+const hasMore = computed(() => actionList.value.length < total.value)
 
 const getTooltipContent = (item: ActionItem) => {
   const parts: string[] = []
@@ -76,8 +60,16 @@ const getTooltipEffect = (item: ActionItem): 'dark' | 'light' => {
   return item.is_public ? 'light' : 'dark'
 }
 
-const loadActions = async () => {
-  loading.value = true
+const loadActions = async (append = false) => {
+  if (append) {
+    if (loadingMore.value || !hasMore.value) return
+    loadingMore.value = true
+    currentPage.value++
+  } else {
+    loading.value = true
+    currentPage.value = 1
+  }
+
   const result = await businessHandler<{ items?: ActionItem[]; total?: number }>(
     listCustomActionsApiV1RpaBrowserControlCustomActionsListPost({
       body: {
@@ -86,20 +78,49 @@ const loadActions = async () => {
         filter_type: 'private' as FilterType,
         sort_by: 'updated_at' as SortBy,
         sort_order: 'desc' as SortOrder,
+        name: searchText.value || null,
+        tag: filterTag.value || null,
       },
-      headers: apiHeaders(),
+      headers: userNavStore.user_header,
     }) as any,
     { successMessage: '', errorMessage: '获取动作列表失败', showSuccessToast: false }
   )
   if (result.success && result.data) {
-    actionList.value = result.data.items || []
+    const items = result.data.items || []
+    if (append) {
+      actionList.value.push(...items)
+    } else {
+      actionList.value = items
+    }
     total.value = result.data.total || 0
+  } else if (append) {
+    currentPage.value--
   }
   loading.value = false
+  loadingMore.value = false
 }
 
-const handlePageChange = (page: number) => {
-  currentPage.value = page
+const loadMore = () => {
+  loadActions(true)
+}
+
+const loadTags = async () => {
+  const result = await businessHandler<string[]>(
+    listCustomActionTagsApiV1RpaBrowserControlCustomActionsTagsPost({
+      headers: userNavStore.user_header,
+    }) as any,
+    { successMessage: '', errorMessage: '获取标签列表失败', showSuccessToast: false }
+  )
+  if (result.success && result.data) {
+    allTags.value = result.data || []
+  }
+}
+
+const handleSearch = useDebounceFn(() => {
+  loadActions()
+}, 400)
+
+const handleTagFilter = () => {
   loadActions()
 }
 
@@ -122,7 +143,7 @@ const handleRename = async (item: ActionItem) => {
   const result = await businessHandler(
     updateCustomActionApiV1RpaBrowserControlCustomActionsUpdatePost({
       body: { action_id: item.action_id, name: newName },
-      headers: apiHeaders(),
+      headers: userNavStore.user_header,
     }) as any,
     { successMessage: '重命名成功', errorMessage: '重命名失败' }
   )
@@ -135,7 +156,7 @@ const handleTogglePublic = async (item: ActionItem) => {
   const result = await businessHandler(
     updateCustomActionApiV1RpaBrowserControlCustomActionsUpdatePost({
       body: { action_id: item.action_id, is_public: item.is_public },
-      headers: apiHeaders(),
+      headers: userNavStore.user_header,
     }) as any,
     {
       successMessage: item.is_public ? '已设为公开' : '已设为私有',
@@ -181,13 +202,14 @@ const handleSaveTags = async () => {
   const result = await businessHandler(
     updateCustomActionApiV1RpaBrowserControlCustomActionsUpdatePost({
       body: { action_id: tagEditingItem.value.action_id, tags: tagEditingItem.value.tags },
-      headers: apiHeaders(),
+      headers: userNavStore.user_header,
     }) as any,
     { successMessage: '标签保存成功', errorMessage: '标签保存失败' }
   )
   tagDialogLoading.value = false
   if (result.success) {
     tagDialogVisible.value = false
+    loadTags()
   }
 }
 
@@ -204,16 +226,26 @@ const handleDelete = async (item: ActionItem) => {
   const result = await businessHandler(
     deleteCustomActionApiV1RpaBrowserControlCustomActionsDeletePost({
       body: { action_id: item.action_id },
-      headers: apiHeaders(),
+      headers: userNavStore.user_header,
     }) as any,
     { successMessage: '删除成功', errorMessage: '删除失败' }
   )
   if (result.success) {
-    if (actionList.value.length === 1 && currentPage.value > 1) {
-      currentPage.value--
-    }
     loadActions()
   }
+}
+
+const handleScroll = (e: Event) => {
+  const target = e.target as HTMLElement
+  const { scrollTop, scrollHeight, clientHeight } = target
+  if (scrollHeight - scrollTop - clientHeight < 100 && hasMore.value && !loadingMore.value) {
+    loadMore()
+  }
+}
+
+const handleRefresh = () => {
+  loadActions()
+  loadTags()
 }
 
 const formatTime = (t: string | null) => {
@@ -223,6 +255,7 @@ const formatTime = (t: string | null) => {
 
 onMounted(() => {
   loadActions()
+  loadTags()
 })
 </script>
 
@@ -230,7 +263,7 @@ onMounted(() => {
   <FlexContainer>
     <BiliPageHeader title="动作管理" description="管理你的自定义动作" tag="私有动作">
       <template #extra>
-        <el-button :icon="Refresh" @click="loadActions">刷新</el-button>
+        <el-button :icon="Refresh" @click="handleRefresh">刷新</el-button>
       </template>
     </BiliPageHeader>
 
@@ -243,13 +276,16 @@ onMounted(() => {
           :prefix-icon="Search"
           clearable
           style="width: 240px"
+          @input="handleSearch"
+          @clear="handleSearch"
         />
         <el-select
-          v-if="allTags.length"
           v-model="filterTag"
           placeholder="按标签筛选"
           clearable
           style="width: 180px"
+          @change="handleTagFilter"
+          @clear="handleTagFilter"
         >
           <el-option v-for="t in allTags" :key="t" :label="t" :value="t" />
         </el-select>
@@ -265,85 +301,84 @@ onMounted(() => {
       </div>
 
       <!-- 空状态 -->
-      <div v-else-if="filteredList.length === 0" class="flex flex-col items-center justify-center py-20 text-gray-400">
+      <div v-else-if="actionList.length === 0" class="flex flex-col items-center justify-center py-20 text-gray-400">
         <el-empty description="暂无自定义动作" />
       </div>
 
-      <!-- 动作卡片列表 -->
-      <div v-else class="grid gap-4" style="grid-template-columns: repeat(auto-fill, minmax(340px, 1fr))">
-        <el-tooltip
-          v-for="item in filteredList"
-          :key="item.action_id"
-          :content="getTooltipContent(item)"
-          :effect="getTooltipEffect(item)"
-          raw-content
-          placement="top"
-          :show-after="500"
-          popper-class="toolbox-tooltip"
-        >
-        <div
-          class="rounded-xl p-5 border border-[var(--el-border-color-light)] hover:border-[var(--el-color-primary)] transition-colors flex flex-col gap-3"
-        >
-          <!-- 名称行 -->
-          <div class="flex items-start justify-between gap-2">
-            <div class="flex-1 min-w-0">
-              <h3 class="text-base font-semibold truncate" :title="item.name">{{ item.name }}</h3>
-              <p class="text-sm text-gray-400 mt-1 line-clamp-2" style="min-height: 2.5em">
-                {{ item.description || '暂无描述' }}
-              </p>
-            </div>
-            <el-tag size="small" :type="item.is_public ? 'success' : 'info'">
-              {{ item.is_public ? '公开' : '私有' }}
-            </el-tag>
-          </div>
-
-          <!-- 标签 -->
-          <div class="flex flex-wrap gap-1.5" style="min-height: 24px">
-            <el-tag
-              v-for="tag in item.tags"
-              :key="tag"
-              size="small"
-              effect="plain"
+      <!-- 动作卡片列表（滚动容器） -->
+      <div v-else class="overflow-auto" style="max-height: calc(100vh - 280px)" @scroll="handleScroll">
+        <div class="grid gap-4" style="grid-template-columns: repeat(auto-fill, minmax(340px, 1fr))">
+          <el-tooltip
+            v-for="item in actionList"
+            :key="item.action_id"
+            :content="getTooltipContent(item)"
+            :effect="getTooltipEffect(item)"
+            raw-content
+            placement="top"
+            :show-after="500"
+            popper-class="toolbox-tooltip"
+          >
+            <div
+              class="rounded-xl p-5 border border-[var(--el-border-color-light)] hover:border-[var(--el-color-primary)] transition-colors flex flex-col gap-3"
             >
-              {{ tag }}
-            </el-tag>
-            <span v-if="!item.tags?.length" class="text-xs text-gray-500">无标签</span>
-          </div>
+              <!-- 名称行 -->
+              <div class="flex items-start justify-between gap-2">
+                <div class="flex-1 min-w-0">
+                  <h3 class="text-base font-semibold truncate" :title="item.name">{{ item.name }}</h3>
+                  <p class="text-sm text-gray-400 mt-1 line-clamp-2" style="min-height: 2.5em">
+                    {{ item.description || '暂无描述' }}
+                  </p>
+                </div>
+                <el-tag size="small" :type="item.is_public ? 'success' : 'info'">
+                  {{ item.is_public ? '公开' : '私有' }}
+                </el-tag>
+              </div>
 
-          <!-- 元信息 -->
-          <div class="flex items-center gap-4 text-xs text-gray-400">
-            <span>步骤: {{ item.steps_count }}</span>
-            <span>更新: {{ formatTime(item.updated_at) }}</span>
-          </div>
+              <!-- 标签 -->
+              <div class="flex flex-wrap gap-1.5" style="min-height: 24px">
+                <el-tag
+                  v-for="tag in item.tags"
+                  :key="tag"
+                  size="small"
+                  effect="plain"
+                >
+                  {{ tag }}
+                </el-tag>
+                <span v-if="!item.tags?.length" class="text-xs text-gray-500">无标签</span>
+              </div>
 
-          <!-- 操作栏 -->
-          <div class="flex items-center gap-2 pt-2 border-t border-[var(--el-border-color-lighter)]">
-            <el-button size="small" :icon="Edit" @click="handleRename(item)">重命名</el-button>
-            <el-button size="small" :icon="PriceTag" @click="openTagDialog(item)">标签</el-button>
-            <el-switch
-              v-model="item.is_public"
-              size="small"
-              inline-prompt
-              active-text="公开"
-              inactive-text="私有"
-              @change="handleTogglePublic(item)"
-            />
-            <el-button size="small" type="danger" :icon="Delete" @click="handleDelete(item)">删除</el-button>
-          </div>
+              <!-- 元信息 -->
+              <div class="flex items-center gap-4 text-xs text-gray-400">
+                <span>步骤: {{ item.steps_count }}</span>
+                <span>更新: {{ formatTime(item.updated_at) }}</span>
+              </div>
+
+              <!-- 操作栏 -->
+              <div class="flex items-center gap-2 pt-2 border-t border-[var(--el-border-color-lighter)]">
+                <el-button size="small" :icon="Edit" @click="handleRename(item)">重命名</el-button>
+                <el-button size="small" :icon="PriceTag" @click="openTagDialog(item)">标签</el-button>
+                <el-switch
+                  v-model="item.is_public"
+                  size="small"
+                  inline-prompt
+                  active-text="公开"
+                  inactive-text="私有"
+                  @change="handleTogglePublic(item)"
+                />
+                <el-button size="small" type="danger" :icon="Delete" @click="handleDelete(item)">删除</el-button>
+              </div>
+            </div>
+          </el-tooltip>
         </div>
-        </el-tooltip>
-      </div>
 
-      <!-- 分页 -->
-      <div v-if="total > pageSize" class="flex justify-center mt-6">
-        <el-pagination
-          background
-          layout="prev, pager, next"
-          :total="total"
-          :page-size="pageSize"
-          :current-page="currentPage"
-          @current-change="handlePageChange"
-        />
+        <!-- 加载更多状态 -->
+        <div v-if="loadingMore" class="flex justify-center py-6">
+          <el-icon class="is-loading" :size="24"><Loading /></el-icon>
+          <span class="ml-2 text-sm text-gray-400">加载中...</span>
+        </div>
+        <div v-else-if="!hasMore && actionList.length > 0" class="flex justify-center py-6 text-sm text-gray-400">
+          没有更多了
+        </div>
       </div>
     </FlexContainer>
 
