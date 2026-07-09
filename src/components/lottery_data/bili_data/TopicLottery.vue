@@ -116,20 +116,26 @@ const viewMode = ref<'card' | 'table'>(ClickedBiliLotteryId.lottery_view_mode)
 const statValueStyle = { fontSize: '34px', fontWeight: '800' }
 
 const filterParams = ref<FilterParamMeta[]>([])
-const filterValues = ref<Record<string, any>>({
-  keyword: null,
-  start_ts: null,
-  end_ts: null,
-  created_at_preset: null,
-  pub_time_preset: null,
-})
+const filterValues = ref<Record<string, any>>({})
+
+/** 从 API 返回的 FilterParamMeta 中提取 default_value 构建初始 filterValues */
+function buildDefaultFilterValues(params: FilterParamMeta[]): Record<string, any> {
+  const defaults: Record<string, any> = {}
+  for (const param of params) {
+    defaults[param.param_name] = param.default_value ?? null
+  }
+  return defaults
+}
 
 async function loadFilterParams() {
   try {
     const resp = await lotteryDataBaseApi.getLotteryFilterParams()
     if (resp.code === 0 && resp.data) {
       const endpoint = resp.data.endpoints.find(e => e.endpoint_path === 'GetTopicLottery')
-      if (endpoint) filterParams.value = endpoint.params
+      if (endpoint) {
+        filterParams.value = endpoint.params
+        filterValues.value = buildDefaultFilterValues(endpoint.params)
+      }
     }
   } catch (e) { console.error('加载筛选参数失败:', e) }
 }

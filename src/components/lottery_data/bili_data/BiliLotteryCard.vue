@@ -1,7 +1,7 @@
 <template>
   <el-card
     class="lottery-card h-full min-w-80 overflow-hidden border-border bg-bg [--el-card-border-color:var(--color-border)] [--el-card-padding:var(--spacing-4)] sm:[--el-card-padding:var(--spacing-5)]"
-    :class="['lottery-type-' + normalizedData.type.toLowerCase()]"
+    :class="['lottery-type-' + normalizedData.type.toLowerCase(), { 'lottery-card-grand-prize': normalizedData.extraInfo?.is_grand_prize, '[--el-card-border-color:var(--color-warning)]': normalizedData.extraInfo?.is_grand_prize }]"
     shadow="hover"
     body-class="lottery-card-body"
   >
@@ -16,6 +16,27 @@
           >
             <BiliStatusIcon :icon="statusIcon" :popover_text="normalizedData.statusText" />
             <span>{{ normalizedData.statusText }}</span>
+          </span>
+          <!-- extra_info 附加信息标识 -->
+          <span
+            v-if="normalizedData.extraInfo?.is_grand_prize"
+            class="lottery-extra-badge lottery-extra-badge-animated inline-flex items-center gap-1 rounded-full border border-amber-400 bg-amber-50 px-3 py-1 text-xs font-medium text-amber-700"
+          >
+            大奖
+          </span>
+          <span
+            v-if="normalizedData.extraInfo?.need_comment"
+            class="lottery-extra-badge lottery-extra-badge-animated inline-flex items-center gap-1 rounded-full border border-blue-300 bg-blue-50 px-3 py-1 text-xs font-medium text-blue-600"
+          >
+            <el-icon :size="13"><ChatDotSquare /></el-icon>
+            需评论
+          </span>
+          <span
+            v-if="normalizedData.extraInfo?.need_repost"
+            class="lottery-extra-badge lottery-extra-badge-animated inline-flex items-center gap-1 rounded-full border border-green-300 bg-green-50 px-3 py-1 text-xs font-medium text-green-600"
+          >
+            <el-icon :size="13"><Share /></el-icon>
+            需转发
           </span>
           <span
             class="ml-auto inline-flex items-center rounded-full border border-border-light bg-bg-page px-3 py-1 text-xs font-medium text-text-secondary"
@@ -342,7 +363,7 @@ import { computed, ref, type PropType, type Ref } from 'vue'
 import type { TagProps } from 'element-plus'
 import { type GlobalVarsType, ScreenTypeEnum } from '@/models/global_var/global_var_model.ts'
 import { KeysEnum, useInject } from '@/models/base/provide_model.ts'
-import { Link } from '@element-plus/icons-vue'
+import { ChatDotSquare, Share, Link } from '@element-plus/icons-vue'
 
 import type {
   AnchorLotteryData,

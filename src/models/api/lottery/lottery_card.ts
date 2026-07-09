@@ -44,6 +44,8 @@ export interface BaseNormalizedLottery {
   officialLotType?: string | null
   /** 第三方抽奖专用：开奖时间原文（BERT 提取，如"6月24日"） */
   lotteryTimeText?: string | null
+  /** 第三方抽奖专用：附加信息（大奖/评论/转发） */
+  extraInfo?: { is_grand_prize: boolean; need_comment: boolean; need_repost: boolean } | null
 }
 
 export type NormalizedLottery = BaseNormalizedLottery
@@ -182,11 +184,9 @@ export interface RedPacketData {
 
 /** 第三方抽奖奖品信息（BERT 提取） */
 export interface OthersLotPrizeInfo {
-  dynId: number
   prize_names: string[]
   /** 开奖时间原文（如"6月24日"） */
   lottery_time?: string | null
-  dynId_str?: string
 }
 
 /** 第三方抽奖动态条目（GetOthersLotDynList 接口返回） */
@@ -210,6 +210,7 @@ export interface OthersLotDynItem {
   dynId_str?: string
   up_uid_str?: string | null
   prize_info?: OthersLotPrizeInfo | null
+  extra_info?: { is_grand_prize: boolean; need_comment: boolean; need_repost: boolean } | null
 }
 
 // Union type for the prop

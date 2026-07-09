@@ -743,22 +743,6 @@ export type InputVarDefinition = {
 export type LogicOperator = 'AND' | 'OR' | 'NOT';
 
 /**
- * MigrationRequest
- *
- * 迁移请求模型
- */
-export type MigrationRequest = {
-    /**
-     * Upgrade To
-     */
-    upgrade_to?: string;
-    /**
-     * Auto Upgrade
-     */
-    auto_upgrade?: boolean;
-};
-
-/**
  * NameSearchRequest
  *
  * 操作名称搜索请求（用于输入联想）
@@ -5819,99 +5803,6 @@ export type ResetPermissionsAdminApiPermissionsResetPostResponses = {
 };
 
 export type ResetPermissionsAdminApiPermissionsResetPostResponse = ResetPermissionsAdminApiPermissionsResetPostResponses[keyof ResetPermissionsAdminApiPermissionsResetPostResponses];
-
-export type GetMigrationStatusAdminApiAlembicStatusGetData = {
-    body?: never;
-    path?: never;
-    query?: never;
-    url: '/admin_api/alembic/status';
-};
-
-export type GetMigrationStatusAdminApiAlembicStatusGetResponses = {
-    /**
-     * Successful Response
-     */
-    200: unknown;
-};
-
-export type ExecuteMigrationAdminApiAlembicMigratePostData = {
-    body?: MigrationRequest;
-    path?: never;
-    query?: never;
-    url: '/admin_api/alembic/migrate';
-};
-
-export type ExecuteMigrationAdminApiAlembicMigratePostErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type ExecuteMigrationAdminApiAlembicMigratePostError = ExecuteMigrationAdminApiAlembicMigratePostErrors[keyof ExecuteMigrationAdminApiAlembicMigratePostErrors];
-
-export type ExecuteMigrationAdminApiAlembicMigratePostResponses = {
-    /**
-     * Successful Response
-     */
-    200: unknown;
-};
-
-export type UpgradeToHeadAdminApiAlembicUpgradePostData = {
-    body?: never;
-    path?: never;
-    query?: never;
-    url: '/admin_api/alembic/upgrade';
-};
-
-export type UpgradeToHeadAdminApiAlembicUpgradePostResponses = {
-    /**
-     * Successful Response
-     */
-    200: unknown;
-};
-
-export type DowngradeOneVersionAdminApiAlembicDowngradePostData = {
-    body?: never;
-    path?: never;
-    query?: never;
-    url: '/admin_api/alembic/downgrade';
-};
-
-export type DowngradeOneVersionAdminApiAlembicDowngradePostResponses = {
-    /**
-     * Successful Response
-     */
-    200: unknown;
-};
-
-export type GetMigrationHistoryAdminApiAlembicHistoryGetData = {
-    body?: never;
-    path?: never;
-    query?: {
-        /**
-         * Limit
-         */
-        limit?: number;
-    };
-    url: '/admin_api/alembic/history';
-};
-
-export type GetMigrationHistoryAdminApiAlembicHistoryGetErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type GetMigrationHistoryAdminApiAlembicHistoryGetError = GetMigrationHistoryAdminApiAlembicHistoryGetErrors[keyof GetMigrationHistoryAdminApiAlembicHistoryGetErrors];
-
-export type GetMigrationHistoryAdminApiAlembicHistoryGetResponses = {
-    /**
-     * Successful Response
-     */
-    200: unknown;
-};
 
 export type ListReportsAdminApiAdminApiReportsListPostData = {
     /**

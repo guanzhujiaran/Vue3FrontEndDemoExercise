@@ -117,17 +117,16 @@ const statValueStyle = { fontSize: '34px', fontWeight: '800' }
 
 // 筛选参数
 const filterParams = ref<FilterParamMeta[]>([])
-const filterValues = ref<Record<string, any>>({
-  status: 'unfinished',
-  sender_uid: null,
-  start_ts: null,
-  end_ts: null,
-  min_participants: null,
-  max_participants: null,
-  keyword: null,
-  created_at_preset: null,
-  pub_time_preset: null,
-})
+const filterValues = ref<Record<string, any>>({})
+
+/** 从 API 返回的 FilterParamMeta 中提取 default_value 构建初始 filterValues */
+function buildDefaultFilterValues(params: FilterParamMeta[]): Record<string, any> {
+  const defaults: Record<string, any> = {}
+  for (const param of params) {
+    defaults[param.param_name] = param.default_value ?? null
+  }
+  return defaults
+}
 
 async function loadFilterParams() {
   try {
@@ -135,12 +134,8 @@ async function loadFilterParams() {
     if (resp.code === 0 && resp.data) {
       const endpoint = resp.data.endpoints.find(e => e.endpoint_path === 'GetReserveLottery')
       if (endpoint) {
-        const sortBy = endpoint.params.find(p => p.param_name === 'sort_by')
-        // 调试：打印 sort_by 的枚举值数量
-        if (sortBy) {
-          console.log('[ReserveLottery] sort_by enum_values count:', sortBy.enum_values?.length, sortBy.enum_values)
-        }
         filterParams.value = endpoint.params
+        filterValues.value = buildDefaultFilterValues(endpoint.params)
       }
     }
   } catch (e) { console.error('加载筛选参数失败:', e) }

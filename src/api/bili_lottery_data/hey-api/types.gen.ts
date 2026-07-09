@@ -198,7 +198,7 @@ export type ArticleInfo = {
  *
  * 后台服务名称枚举
  */
-export type BackgroundServiceName = 'DYN_DETAIL_DATABASE_CLEANER' | 'GET_PROXY_METHODS_SCHEDULER' | 'SAMSCCLUB_SCHEDULER' | 'SAMSCCLUB_SPU_DETAIL_SCHEDULER' | 'GET_RESERVE_INFO' | 'GET_DYN' | 'GET_TOPIC' | 'REFRESH_BILI_LOTDATA_DATABASE' | 'LOTTERY_API_ROBOT_DYN_SCHEDULER' | 'LOTTERY_API_ROBOT_RESERVE_SCHEDULER' | 'GMFLV2_SCHEDULER' | 'DAILY_REPORT_SCHEDULER';
+export type BackgroundServiceName = 'DYN_DETAIL_DATABASE_CLEANER' | 'GET_PROXY_METHODS_SCHEDULER' | 'SAMSCCLUB_SCHEDULER' | 'SAMSCCLUB_SPU_DETAIL_SCHEDULER' | 'GET_RESERVE_INFO' | 'GET_DYN' | 'GET_TOPIC' | 'REFRESH_BILI_LOTDATA_DATABASE' | 'LOTTERY_API_ROBOT_DYN_SCHEDULER' | 'LOTTERY_API_ROBOT_RESERVE_SCHEDULER' | 'GMFLV2_SCHEDULER' | 'STUCK_CHECK_SCHEDULER';
 
 /**
  * BiliLotStatisticInfoResp
@@ -290,26 +290,6 @@ export type BiliUserInfoSimple = {
 };
 
 /**
- * Body_damo_semantic_damo_semantic_get
- */
-export type BodyDamoSemanticDamoSemanticGet = {
-    /**
-     * Data
-     */
-    data?: string | null;
-};
-
-/**
- * Body_damo_semantic_damo_semantic_post
- */
-export type BodyDamoSemanticDamoSemanticPost = {
-    /**
-     * Data
-     */
-    data?: string | null;
-};
-
-/**
  * BulkAddDynamicLotteryReq
  */
 export type BulkAddDynamicLotteryReq = {
@@ -317,6 +297,28 @@ export type BulkAddDynamicLotteryReq = {
      * Dynamic Id Or Urls
      */
     dynamic_id_or_urls: Array<string>;
+    [key: string]: unknown;
+};
+
+/**
+ * BulkAddOthersLotDynReq
+ */
+export type BulkAddOthersLotDynReq = {
+    /**
+     * Dynamic Id Or Urls
+     */
+    dynamic_id_or_urls: Array<string>;
+    [key: string]: unknown;
+};
+
+/**
+ * BulkAddTopicLotteryReq
+ */
+export type BulkAddTopicLotteryReq = {
+    /**
+     * Topic Ids
+     */
+    topic_ids: Array<number | string>;
     [key: string]: unknown;
 };
 
@@ -392,6 +394,10 @@ export type ChargeLotteryResp = {
      * Upower Level Str
      */
     upower_level_str: string;
+    /**
+     * 抽奖附加信息
+     */
+    extra_info?: LotExtraInfoResp | null;
     raw: LotdataResp;
     /**
      * Extra Fields
@@ -457,12 +463,10 @@ export type CommonLotteryResp = {
     isOfficialAccount: number;
     /**
      * Ismanualreply
+     *
+     * 是否需要人工评论
      */
-    isManualReply: string;
-    /**
-     * Isfollowed
-     */
-    isFollowed: number;
+    isManualReply?: boolean;
     /**
      * Islot
      */
@@ -487,31 +491,6 @@ export type CommonLotteryResp = {
      * Up Uid Str
      */
     readonly up_uid_str: string;
-    [key: string]: unknown;
-};
-
-/**
- * CommonResponseModel
- */
-export type CommonResponseModel = {
-    /**
-     * Code
-     */
-    code?: number;
-    /**
-     * Msg
-     */
-    msg?: string;
-    /**
-     * Data
-     */
-    data?: unknown | null;
-    /**
-     * Extra Fields
-     */
-    readonly extra_fields: {
-        [key: string]: unknown;
-    } | null;
     [key: string]: unknown;
 };
 
@@ -707,28 +686,6 @@ export type CommonResponseModelIpInfoResp = {
      */
     msg?: string;
     data?: IpInfoResp | null;
-    /**
-     * Extra Fields
-     */
-    readonly extra_fields: {
-        [key: string]: unknown;
-    } | null;
-    [key: string]: unknown;
-};
-
-/**
- * CommonResponseModel[LLMShowInfo]
- */
-export type CommonResponseModelLlmShowInfo = {
-    /**
-     * Code
-     */
-    code?: number;
-    /**
-     * Msg
-     */
-    msg?: string;
-    data?: LlmShowInfo | null;
     /**
      * Extra Fields
      */
@@ -1050,28 +1007,6 @@ export type CommonResponseModelUnionProxyStatusRespNoneType = {
 };
 
 /**
- * CommonResponseModel[Union[ReplyRes, NoneType]]
- */
-export type CommonResponseModelUnionReplyResNoneType = {
-    /**
-     * Code
-     */
-    code?: number;
-    /**
-     * Msg
-     */
-    msg?: string;
-    data?: ReplyRes | null;
-    /**
-     * Extra Fields
-     */
-    readonly extra_fields: {
-        [key: string]: unknown;
-    } | null;
-    [key: string]: unknown;
-};
-
-/**
  * CommonResponseModel[dict]
  */
 export type CommonResponseModelDict = {
@@ -1114,6 +1049,31 @@ export type CommonResponseModelListAddDynamicLotteryResp = {
      * Data
      */
     data?: Array<AddDynamicLotteryResp> | null;
+    /**
+     * Extra Fields
+     */
+    readonly extra_fields: {
+        [key: string]: unknown;
+    } | null;
+    [key: string]: unknown;
+};
+
+/**
+ * CommonResponseModel[list[AddTopicLotteryResp]]
+ */
+export type CommonResponseModelListAddTopicLotteryResp = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    /**
+     * Data
+     */
+    data?: Array<AddTopicLotteryResp> | null;
     /**
      * Extra Fields
      */
@@ -1411,31 +1371,6 @@ export type JobInfoModel = {
 };
 
 /**
- * LLMShowInfo
- */
-export type LlmShowInfo = {
-    /**
-     * Available Num
-     */
-    available_num: number;
-    /**
-     * Total Num
-     */
-    total_num: number;
-    /**
-     * Extra Fields
-     */
-    readonly extra_fields: {
-        [key: string]: unknown;
-    } | null;
-    /**
-     * Llm List
-     */
-    readonly llm_list: Array<OpenAiClientModel>;
-    [key: string]: unknown;
-};
-
-/**
  * LiveLotteryResp
  */
 export type LiveLotteryResp = {
@@ -1501,6 +1436,39 @@ export type LiveLotteryResp = {
      * Lot Id Str
      */
     readonly lot_id_str: string;
+    [key: string]: unknown;
+};
+
+/**
+ * LotExtraInfoResp
+ *
+ * 抽奖附加信息 — 对应数据库 t_lot_extra_info 表，方便后续扩展
+ */
+export type LotExtraInfoResp = {
+    /**
+     * Is Grand Prize
+     *
+     * 大奖标志: true-大奖, false-非大奖
+     */
+    is_grand_prize?: boolean;
+    /**
+     * Need Comment
+     *
+     * 是否需要评论
+     */
+    need_comment?: boolean;
+    /**
+     * Need Repost
+     *
+     * 是否需要转发
+     */
+    need_repost?: boolean;
+    /**
+     * Extra Fields
+     */
+    readonly extra_fields: {
+        [key: string]: unknown;
+    } | null;
     [key: string]: unknown;
 };
 
@@ -1882,6 +1850,10 @@ export type OfficialLotteryResp = {
      * Lottery Id
      */
     lottery_id: number;
+    /**
+     * 抽奖附加信息
+     */
+    extra_info?: LotExtraInfoResp | null;
     raw: LotdataResp;
     /**
      * Extra Fields
@@ -1893,39 +1865,6 @@ export type OfficialLotteryResp = {
      * Lottery Id Str
      */
     readonly lottery_id_str: string;
-    [key: string]: unknown;
-};
-
-/**
- * OpenAiClientModel
- */
-export type OpenAiClientModel = {
-    /**
-     * Openaiclient
-     */
-    OpenAiclient?: unknown | null;
-    /**
-     * Base Url
-     */
-    base_url?: string;
-    /**
-     * Usenum
-     */
-    useNum?: number;
-    /**
-     * Isavailable
-     */
-    isAvailable?: boolean;
-    /**
-     * Latestusedate
-     */
-    latestUseDate?: string;
-    /**
-     * Extra Fields
-     */
-    readonly extra_fields: {
-        [key: string]: unknown;
-    } | null;
     [key: string]: unknown;
 };
 
@@ -1978,12 +1917,10 @@ export type OthersLotDynItem = {
     isOfficialAccount: number | null;
     /**
      * Ismanualreply
+     *
+     * 是否需要人工评论
      */
-    isManualReply: string | null;
-    /**
-     * Isfollowed
-     */
-    isFollowed: number | null;
+    isManualReply?: boolean | null;
     /**
      * Islot
      */
@@ -1997,9 +1934,13 @@ export type OthersLotDynItem = {
      */
     created_at: string | null;
     /**
-     * ModelScope 提取的奖品信息，首次提取后缓存
+     * UIE 提取的奖品信息，首次提取后缓存
      */
     prize_info?: OthersLotPrizeInfo | null;
+    /**
+     * 抽奖附加信息
+     */
+    extra_info?: LotExtraInfoResp | null;
     /**
      * Extra Fields
      */
@@ -2034,13 +1975,9 @@ export type OthersLotDynSortOrderEnum = 'asc' | 'desc';
 /**
  * OthersLotPrizeInfo
  *
- * 第三方抽奖动态的提取信息（ModelScope 提取）
+ * 第三方抽奖动态的提取信息（UIE 提取）
  */
 export type OthersLotPrizeInfo = {
-    /**
-     * Dynid
-     */
-    dynId: number;
     /**
      * Prize Names
      *
@@ -2053,17 +1990,6 @@ export type OthersLotPrizeInfo = {
      * 提取到的开奖时间字符串
      */
     lottery_time?: string | null;
-    /**
-     * Extra Fields
-     */
-    readonly extra_fields: {
-        [key: string]: unknown;
-    } | null;
-    /**
-     * Dynid Str
-     */
-    readonly dynId_str: string;
-    [key: string]: unknown;
 };
 
 /**
@@ -2182,46 +2108,6 @@ export type RabbitMqTestMsgModel = {
      * D
      */
     d: Array<string>;
-    /**
-     * Extra Fields
-     */
-    readonly extra_fields: {
-        [key: string]: unknown;
-    } | null;
-    [key: string]: unknown;
-};
-
-/**
- * ReplyReq
- *
- * 请求内容
- */
-export type ReplyReq = {
-    /**
-     * Question
-     */
-    question: string;
-    /**
-     * Ts
-     */
-    ts: number;
-    [key: string]: unknown;
-};
-
-/**
- * ReplyRes
- *
- * ai回复内容
- */
-export type ReplyRes = {
-    /**
-     * Answer
-     */
-    answer: string;
-    /**
-     * Ts
-     */
-    ts: number;
     /**
      * Extra Fields
      */
@@ -2719,7 +2605,7 @@ export type TUpReserveRelationInfoResp = {
  *
  * 时间快捷筛选
  */
-export type TimePresetEnum = '1d' | '3d' | '5d' | '7d' | '14d' | '30d';
+export type TimePresetEnum = '1d' | '3d' | '5d' | '7d' | '14d' | '30d' | '60d' | '90d' | '180d' | '365d';
 
 /**
  * TopicLotteryResp
@@ -3112,6 +2998,10 @@ export type ChargeLotteryRespWritable = {
      * Upower Level Str
      */
     upower_level_str: string;
+    /**
+     * 抽奖附加信息
+     */
+    extra_info?: LotExtraInfoRespWritable | null;
     raw: LotdataRespWritable;
     [key: string]: unknown;
 };
@@ -3167,12 +3057,10 @@ export type CommonLotteryRespWritable = {
     isOfficialAccount: number;
     /**
      * Ismanualreply
+     *
+     * 是否需要人工评论
      */
-    isManualReply: string;
-    /**
-     * Isfollowed
-     */
-    isFollowed: number;
+    isManualReply?: boolean;
     /**
      * Islot
      */
@@ -3187,25 +3075,6 @@ export type CommonLotteryRespWritable = {
      * SVM 大奖判断结果: 1-大奖, 0-非大奖
      */
     isBigLot?: number;
-    [key: string]: unknown;
-};
-
-/**
- * CommonResponseModel
- */
-export type CommonResponseModelWritable = {
-    /**
-     * Code
-     */
-    code?: number;
-    /**
-     * Msg
-     */
-    msg?: string;
-    /**
-     * Data
-     */
-    data?: unknown | null;
     [key: string]: unknown;
 };
 
@@ -3353,22 +3222,6 @@ export type CommonResponseModelIpInfoRespWritable = {
      */
     msg?: string;
     data?: IpInfoRespWritable | null;
-    [key: string]: unknown;
-};
-
-/**
- * CommonResponseModel[LLMShowInfo]
- */
-export type CommonResponseModelLlmShowInfoWritable = {
-    /**
-     * Code
-     */
-    code?: number;
-    /**
-     * Msg
-     */
-    msg?: string;
-    data?: LlmShowInfoWritable | null;
     [key: string]: unknown;
 };
 
@@ -3600,22 +3453,6 @@ export type CommonResponseModelUnionProxyStatusRespNoneTypeWritable = {
 };
 
 /**
- * CommonResponseModel[Union[ReplyRes, NoneType]]
- */
-export type CommonResponseModelUnionReplyResNoneTypeWritable = {
-    /**
-     * Code
-     */
-    code?: number;
-    /**
-     * Msg
-     */
-    msg?: string;
-    data?: ReplyResWritable | null;
-    [key: string]: unknown;
-};
-
-/**
  * CommonResponseModel[dict]
  */
 export type CommonResponseModelDictWritable = {
@@ -3652,6 +3489,25 @@ export type CommonResponseModelListAddDynamicLotteryRespWritable = {
      * Data
      */
     data?: Array<AddDynamicLotteryRespWritable> | null;
+    [key: string]: unknown;
+};
+
+/**
+ * CommonResponseModel[list[AddTopicLotteryResp]]
+ */
+export type CommonResponseModelListAddTopicLotteryRespWritable = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    /**
+     * Data
+     */
+    data?: Array<AddTopicLotteryRespWritable> | null;
     [key: string]: unknown;
 };
 
@@ -3885,21 +3741,6 @@ export type JobInfoModelWritable = {
 };
 
 /**
- * LLMShowInfo
- */
-export type LlmShowInfoWritable = {
-    /**
-     * Available Num
-     */
-    available_num: number;
-    /**
-     * Total Num
-     */
-    total_num: number;
-    [key: string]: unknown;
-};
-
-/**
  * LiveLotteryResp
  */
 export type LiveLotteryRespWritable = {
@@ -3947,6 +3788,33 @@ export type LiveLotteryRespWritable = {
      * Require Type
      */
     require_type: number;
+    [key: string]: unknown;
+};
+
+/**
+ * LotExtraInfoResp
+ *
+ * 抽奖附加信息 — 对应数据库 t_lot_extra_info 表，方便后续扩展
+ */
+export type LotExtraInfoRespWritable = {
+    /**
+     * Is Grand Prize
+     *
+     * 大奖标志: true-大奖, false-非大奖
+     */
+    is_grand_prize?: boolean;
+    /**
+     * Need Comment
+     *
+     * 是否需要评论
+     */
+    need_comment?: boolean;
+    /**
+     * Need Repost
+     *
+     * 是否需要转发
+     */
+    need_repost?: boolean;
     [key: string]: unknown;
 };
 
@@ -4155,34 +4023,11 @@ export type OfficialLotteryRespWritable = {
      * Lottery Id
      */
     lottery_id: number;
+    /**
+     * 抽奖附加信息
+     */
+    extra_info?: LotExtraInfoRespWritable | null;
     raw: LotdataRespWritable;
-    [key: string]: unknown;
-};
-
-/**
- * OpenAiClientModel
- */
-export type OpenAiClientModelWritable = {
-    /**
-     * Openaiclient
-     */
-    OpenAiclient?: unknown | null;
-    /**
-     * Base Url
-     */
-    base_url?: string;
-    /**
-     * Usenum
-     */
-    useNum?: number;
-    /**
-     * Isavailable
-     */
-    isAvailable?: boolean;
-    /**
-     * Latestusedate
-     */
-    latestUseDate?: string;
     [key: string]: unknown;
 };
 
@@ -4235,12 +4080,10 @@ export type OthersLotDynItemWritable = {
     isOfficialAccount: number | null;
     /**
      * Ismanualreply
+     *
+     * 是否需要人工评论
      */
-    isManualReply: string | null;
-    /**
-     * Isfollowed
-     */
-    isFollowed: number | null;
+    isManualReply?: boolean | null;
     /**
      * Islot
      */
@@ -4254,34 +4097,13 @@ export type OthersLotDynItemWritable = {
      */
     created_at: string | null;
     /**
-     * ModelScope 提取的奖品信息，首次提取后缓存
+     * UIE 提取的奖品信息，首次提取后缓存
      */
-    prize_info?: OthersLotPrizeInfoWritable | null;
-    [key: string]: unknown;
-};
-
-/**
- * OthersLotPrizeInfo
- *
- * 第三方抽奖动态的提取信息（ModelScope 提取）
- */
-export type OthersLotPrizeInfoWritable = {
+    prize_info?: OthersLotPrizeInfo | null;
     /**
-     * Dynid
+     * 抽奖附加信息
      */
-    dynId: number;
-    /**
-     * Prize Names
-     *
-     * 提取到的奖品名称列表
-     */
-    prize_names?: Array<string>;
-    /**
-     * Lottery Time
-     *
-     * 提取到的开奖时间字符串
-     */
-    lottery_time?: string | null;
+    extra_info?: LotExtraInfoRespWritable | null;
     [key: string]: unknown;
 };
 
@@ -4381,23 +4203,6 @@ export type RabbitMqTestMsgModelWritable = {
      * D
      */
     d: Array<string>;
-    [key: string]: unknown;
-};
-
-/**
- * ReplyRes
- *
- * ai回复内容
- */
-export type ReplyResWritable = {
-    /**
-     * Answer
-     */
-    answer: string;
-    /**
-     * Ts
-     */
-    ts: number;
     [key: string]: unknown;
 };
 
@@ -4812,169 +4617,6 @@ export type ReserveInfoWritable = {
     [key: string]: unknown;
 };
 
-export type DamoSemanticDamoSemanticGetData = {
-    body?: BodyDamoSemanticDamoSemanticGet;
-    path?: never;
-    query?: {
-        /**
-         * Query
-         */
-        query?: string | null;
-    };
-    url: '/damo/semantic';
-};
-
-export type DamoSemanticDamoSemanticGetErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type DamoSemanticDamoSemanticGetError = DamoSemanticDamoSemanticGetErrors[keyof DamoSemanticDamoSemanticGetErrors];
-
-export type DamoSemanticDamoSemanticGetResponses = {
-    /**
-     * Response Damo Semantic Damo Semantic Get
-     *
-     * Successful Response
-     */
-    200: boolean;
-};
-
-export type DamoSemanticDamoSemanticGetResponse = DamoSemanticDamoSemanticGetResponses[keyof DamoSemanticDamoSemanticGetResponses];
-
-export type DamoSemanticDamoSemanticPostData = {
-    body?: BodyDamoSemanticDamoSemanticPost;
-    path?: never;
-    query?: {
-        /**
-         * Query
-         */
-        query?: string | null;
-    };
-    url: '/damo/semantic';
-};
-
-export type DamoSemanticDamoSemanticPostErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type DamoSemanticDamoSemanticPostError = DamoSemanticDamoSemanticPostErrors[keyof DamoSemanticDamoSemanticPostErrors];
-
-export type DamoSemanticDamoSemanticPostResponses = {
-    /**
-     * Response Damo Semantic Damo Semantic Post
-     *
-     * Successful Response
-     */
-    200: boolean;
-};
-
-export type DamoSemanticDamoSemanticPostResponse = DamoSemanticDamoSemanticPostResponses[keyof DamoSemanticDamoSemanticPostResponses];
-
-export type ReplySingleApiV1ChatGpt35ReplySinglePostData = {
-    body: ReplyReq;
-    path?: never;
-    query?: never;
-    url: '/api/v1/ChatGpt3_5/ReplySingle';
-};
-
-export type ReplySingleApiV1ChatGpt35ReplySinglePostErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type ReplySingleApiV1ChatGpt35ReplySinglePostError = ReplySingleApiV1ChatGpt35ReplySinglePostErrors[keyof ReplySingleApiV1ChatGpt35ReplySinglePostErrors];
-
-export type ReplySingleApiV1ChatGpt35ReplySinglePostResponses = {
-    /**
-     * Successful Response
-     */
-    200: CommonResponseModelUnionReplyResNoneType;
-};
-
-export type ReplySingleApiV1ChatGpt35ReplySinglePostResponse = ReplySingleApiV1ChatGpt35ReplySinglePostResponses[keyof ReplySingleApiV1ChatGpt35ReplySinglePostResponses];
-
-export type LlmStatusApiV1ChatGpt35LlmStatusGetData = {
-    body?: never;
-    path?: never;
-    query?: never;
-    url: '/api/v1/ChatGpt3_5/LLMStatus';
-};
-
-export type LlmStatusApiV1ChatGpt35LlmStatusGetResponses = {
-    /**
-     * Successful Response
-     */
-    200: CommonResponseModelLlmShowInfo;
-};
-
-export type LlmStatusApiV1ChatGpt35LlmStatusGetResponse = LlmStatusApiV1ChatGpt35LlmStatusGetResponses[keyof LlmStatusApiV1ChatGpt35LlmStatusGetResponses];
-
-export type ResetLlmStatusApiV1ChatGpt35ResetLlmStatusPostData = {
-    /**
-     * Base Url
-     */
-    body: string | null;
-    path?: never;
-    query?: never;
-    url: '/api/v1/ChatGpt3_5/ResetLLMStatus';
-};
-
-export type ResetLlmStatusApiV1ChatGpt35ResetLlmStatusPostErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type ResetLlmStatusApiV1ChatGpt35ResetLlmStatusPostError = ResetLlmStatusApiV1ChatGpt35ResetLlmStatusPostErrors[keyof ResetLlmStatusApiV1ChatGpt35ResetLlmStatusPostErrors];
-
-export type ResetLlmStatusApiV1ChatGpt35ResetLlmStatusPostResponses = {
-    /**
-     * Successful Response
-     */
-    200: CommonResponseModel;
-};
-
-export type ResetLlmStatusApiV1ChatGpt35ResetLlmStatusPostResponse = ResetLlmStatusApiV1ChatGpt35ResetLlmStatusPostResponses[keyof ResetLlmStatusApiV1ChatGpt35ResetLlmStatusPostResponses];
-
-export type HelloWorldApiV1ChatGpt35HelloWorldGetData = {
-    body?: never;
-    path?: never;
-    query: {
-        /**
-         * 模式，1为json，2为str，其他形式则报错
-         */
-        mode: number;
-    };
-    url: '/api/v1/ChatGpt3_5/helloWorld';
-};
-
-export type HelloWorldApiV1ChatGpt35HelloWorldGetErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type HelloWorldApiV1ChatGpt35HelloWorldGetError = HelloWorldApiV1ChatGpt35HelloWorldGetErrors[keyof HelloWorldApiV1ChatGpt35HelloWorldGetErrors];
-
-export type HelloWorldApiV1ChatGpt35HelloWorldGetResponses = {
-    /**
-     * Successful Response
-     */
-    200: CommonResponseModel;
-};
-
-export type HelloWorldApiV1ChatGpt35HelloWorldGetResponse = HelloWorldApiV1ChatGpt35HelloWorldGetResponses[keyof HelloWorldApiV1ChatGpt35HelloWorldGetResponses];
-
 export type GetReserveLotteryApiV1LotteryDatabaseBiliGetReserveLotteryPostData = {
     body: LotteryAdvancedQueryParams;
     path?: never;
@@ -5249,6 +4891,31 @@ export type AddTopicLotteryApiV1LotteryDatabaseBiliAddTopicLotteryPostResponses 
 
 export type AddTopicLotteryApiV1LotteryDatabaseBiliAddTopicLotteryPostResponse = AddTopicLotteryApiV1LotteryDatabaseBiliAddTopicLotteryPostResponses[keyof AddTopicLotteryApiV1LotteryDatabaseBiliAddTopicLotteryPostResponses];
 
+export type BulkAddTopicLotteryApiV1LotteryDatabaseBiliBulkAddTopicLotteryPostData = {
+    body: BulkAddTopicLotteryReq;
+    path?: never;
+    query?: never;
+    url: '/api/v1/lottery_database/bili/BulkAddTopicLottery';
+};
+
+export type BulkAddTopicLotteryApiV1LotteryDatabaseBiliBulkAddTopicLotteryPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type BulkAddTopicLotteryApiV1LotteryDatabaseBiliBulkAddTopicLotteryPostError = BulkAddTopicLotteryApiV1LotteryDatabaseBiliBulkAddTopicLotteryPostErrors[keyof BulkAddTopicLotteryApiV1LotteryDatabaseBiliBulkAddTopicLotteryPostErrors];
+
+export type BulkAddTopicLotteryApiV1LotteryDatabaseBiliBulkAddTopicLotteryPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: CommonResponseModelListAddTopicLotteryResp;
+};
+
+export type BulkAddTopicLotteryApiV1LotteryDatabaseBiliBulkAddTopicLotteryPostResponse = BulkAddTopicLotteryApiV1LotteryDatabaseBiliBulkAddTopicLotteryPostResponses[keyof BulkAddTopicLotteryApiV1LotteryDatabaseBiliBulkAddTopicLotteryPostResponses];
+
 export type AddOthersLotDynApiV1LotteryDatabaseBiliAddOthersLotDynPostData = {
     body: AddDynamicLotteryReq;
     path?: never;
@@ -5273,6 +4940,31 @@ export type AddOthersLotDynApiV1LotteryDatabaseBiliAddOthersLotDynPostResponses 
 };
 
 export type AddOthersLotDynApiV1LotteryDatabaseBiliAddOthersLotDynPostResponse = AddOthersLotDynApiV1LotteryDatabaseBiliAddOthersLotDynPostResponses[keyof AddOthersLotDynApiV1LotteryDatabaseBiliAddOthersLotDynPostResponses];
+
+export type BulkAddOthersLotDynApiV1LotteryDatabaseBiliBulkAddOthersLotDynPostData = {
+    body: BulkAddOthersLotDynReq;
+    path?: never;
+    query?: never;
+    url: '/api/v1/lottery_database/bili/BulkAddOthersLotDyn';
+};
+
+export type BulkAddOthersLotDynApiV1LotteryDatabaseBiliBulkAddOthersLotDynPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type BulkAddOthersLotDynApiV1LotteryDatabaseBiliBulkAddOthersLotDynPostError = BulkAddOthersLotDynApiV1LotteryDatabaseBiliBulkAddOthersLotDynPostErrors[keyof BulkAddOthersLotDynApiV1LotteryDatabaseBiliBulkAddOthersLotDynPostErrors];
+
+export type BulkAddOthersLotDynApiV1LotteryDatabaseBiliBulkAddOthersLotDynPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: CommonResponseModelListAddDynamicLotteryResp;
+};
+
+export type BulkAddOthersLotDynApiV1LotteryDatabaseBiliBulkAddOthersLotDynPostResponse = BulkAddOthersLotDynApiV1LotteryDatabaseBiliBulkAddOthersLotDynPostResponses[keyof BulkAddOthersLotDynApiV1LotteryDatabaseBiliBulkAddOthersLotDynPostResponses];
 
 export type SearchLotteryByKeywordApiV1LotteryDatabaseBiliSearchLotteryByKeywordPostData = {
     body: LotterySearchPaginationParams;
@@ -5463,11 +5155,11 @@ export type LotteryResultApiV1LotteryDatabaseBiliLotteryResultGetData = {
         /**
          * Offset
          */
-        offset?: number | null;
+        offset?: number;
         /**
          * Limit
          */
-        limit?: number | null;
+        limit?: number;
         date?: BiliLotStatisticRankDateTypeEnum;
     };
     url: '/api/v1/lottery_database/bili/lottery_result';

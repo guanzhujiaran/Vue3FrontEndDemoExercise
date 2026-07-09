@@ -133,17 +133,7 @@ const isLoggedIn = computed(() => !!biliUser.value.uid)
 
 // 筛选参数元数据
 const filterParams = ref<FilterParamMeta[]>([])
-const filterValues = ref<Record<string, any>>({
-  sort_by: 'created_at',
-  sort_order: 'desc',
-  is_lot: true,
-  created_at_preset: '30d',
-  pub_time_preset: '30d',
-  pub_time_start: null,
-  pub_time_end: null,
-  created_at_start: null,
-  created_at_end: null,
-})
+const filterValues = ref<Record<string, any>>({})
 
 // 排序标签
 const sortLabel = computed(() => {
@@ -165,6 +155,11 @@ async function loadFilterParams() {
       )
       if (endpoint) {
         filterParams.value = endpoint.params
+        const defaults: Record<string, any> = {}
+        for (const param of endpoint.params) {
+          defaults[param.param_name] = param.default_value ?? null
+        }
+        filterValues.value = defaults
       }
     }
   } catch (e) {

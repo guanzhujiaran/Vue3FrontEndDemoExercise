@@ -42,7 +42,40 @@
           支持：https://t.bilibili.com/xxxxx 或直接输入动态ID
         </div>
       </el-form-item>
+
+      <el-form-item label="批量提交" prop="batchUrls">
+        <el-input
+          v-model="form.batchUrls"
+          type="textarea"
+          :rows="4"
+          placeholder="批量提交请在此输入，每行一个链接或ID"
+          clearable
+        />
+        <div class="form-tip">每行一个链接，最多支持50个</div>
+      </el-form-item>
     </el-form>
+
+    <!-- 批量提交结果展示 -->
+    <el-collapse v-if="batchResults.length > 0" class="mt-4">
+      <el-collapse-item title="批量提交结果" name="results">
+        <el-table
+          :data="batchResults"
+          stripe
+          style="width: 100%"
+          max-height="200"
+        >
+          <el-table-column prop="dynamic_id" label="动态ID" width="180" />
+          <el-table-column prop="is_succ" label="状态" width="80">
+            <template #default="{ row }">
+              <el-tag :type="row.is_succ ? 'success' : 'danger'">
+                {{ row.is_succ ? '成功' : '失败' }}
+              </el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column prop="msg" label="消息" show-overflow-tooltip />
+        </el-table>
+      </el-collapse-item>
+    </el-collapse>
 
     <template #footer>
       <el-button @click="closeDialog">取消</el-button>
@@ -74,18 +107,20 @@ const themeStore = useThemeStore()
 const dialogVisible = ref(false)
 const loading = ref(false)
 const formRef = ref()
+const batchResults = ref<any[]>([])
 const clipboardReadPermission = usePermission('clipboard-read')
 
 const form = reactive({
-  dynamicUrl: ''
+  dynamicUrl: '',
+  batchUrls: ''
 })
 
 const rules = {
   dynamicUrl: [
     {
       validator: (_rule: any, _value: any, callback: any) => {
-        if (!form.dynamicUrl) {
-          callback(new Error('请输入动态链接'))
+        if (!form.dynamicUrl && !form.batchUrls) {
+          callback(new Error('请输入动态链接或批量提交内容'))
         } else {
           callback()
         }
@@ -120,26 +155,86 @@ const handlePaste = async () => {
   }
 }
 
+// 单个提交
+const handleSingleSubmit = async (url: string) => {
+  try {
+    const resp = await lotteryDataBaseApi.addOthersLotDyn(url.trim())
+    return resp
+  } catch (error) {
+    return {
+      code: -1,
+      msg: '提交失败',
+      data: undefined
+    }
+  }
+}
+
+// 批量提交
+const handleBatchSubmit = async () => {
+  const urls = form.batchUrls
+    .split('\n')
+    .map(u => u.trim())
+    .filter(u => u)
+    .slice(0, 50) // 限制最多50个
+
+  if (urls.length === 0) {
+    return
+  }
+
+  try {
+    const resp = await lotteryDataBaseApi.bulkAddOthersLotDyn(urls)
+
+    if (resp.code === 0 && resp.data) {
+      batchResults.value = resp.data.map(item => ({
+        dynamic_id: item.dynamic_id_or_url,
+        is_succ: item.is_succ,
+        msg: item.msg,
+        is_new: item.is_new
+      }))
+
+      const successCount = batchResults.value.filter(r => r.is_succ).length
+
+      if (successCount === urls.length) {
+        biliMessage.success(`批量提交成功 ${successCount}/${urls.length}`)
+        closeDialog()
+      } else {
+        biliMessage.info(`批量提交完成 成功 ${successCount}/${urls.length}`)
+      }
+    } else {
+      biliMessage.error(resp.msg || '批量提交失败')
+    }
+  } catch (error: any) {
+    biliMessage.error(error.message || '批量提交失败')
+  }
+}
+
 // 提交处理
 const handleSubmit = async () => {
-  if (!form.dynamicUrl) {
-    biliMessage.warning('请输入动态链接')
+  if (!form.dynamicUrl && !form.batchUrls) {
+    biliMessage.warning('请输入动态链接或批量提交内容')
     return
   }
 
   loading.value = true
+
   try {
-    await formRef.value?.validate()
-    const resp = await lotteryDataBaseApi.addOthersLotDyn(form.dynamicUrl.trim())
-    if (resp.code === 0 && resp.data) {
-      if (resp.data.is_succ) {
-        biliMessage.success(resp.data.msg || '提交成功')
-        closeDialog()
+    if (form.batchUrls) {
+      // 批量提交
+      await handleBatchSubmit()
+    } else if (form.dynamicUrl) {
+      // 单个提交
+      await formRef.value?.validate()
+      const resp = await handleSingleSubmit(form.dynamicUrl)
+      if (resp.code === 0 && resp.data) {
+        if (resp.data.is_succ) {
+          biliMessage.success(resp.data.msg || '提交成功')
+          closeDialog()
+        } else {
+          biliMessage.error(resp.data.msg || '提交失败')
+        }
       } else {
-        biliMessage.error(resp.data.msg || '提交失败')
+        biliMessage.error(resp.msg || '提交失败')
       }
-    } else {
-      biliMessage.error(resp.msg || '提交失败')
     }
   } catch (error: any) {
     biliMessage.error(error.message || '提交失败')
@@ -152,5 +247,7 @@ const handleSubmit = async () => {
 const handleReset = () => {
   formRef.value?.resetFields()
   form.dynamicUrl = ''
+  form.batchUrls = ''
+  batchResults.value = []
 }
 </script>

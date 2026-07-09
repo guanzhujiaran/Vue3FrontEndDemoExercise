@@ -428,10 +428,10 @@
   cursor: grabbing;
 }
 
-.button-stack :deep(.el-button + .el-button) {
+.button-stack .el-button + .el-button {
   margin-left: 0;
 }
 
-.tree-drag-drop :deep(.el-tree-node__content) {
+.tree-drag-drop .el-tree-node__content {
   padding: 4px 8px !important;
 }

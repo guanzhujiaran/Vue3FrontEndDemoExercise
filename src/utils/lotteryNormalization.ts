@@ -442,6 +442,7 @@ export const normalizeLotteryData = (data: AnyLotteryData): NormalizedLottery =>
     normalized.repostCount = dynData.repostCount
     normalized.dynContent = dynData.dynContent
     normalized.officialLotType = dynData.officialLotType
+    normalized.extraInfo = dynData.extra_info ?? null
 
     // 开奖时间（BERT 提取，如"6月24日"）：解析为时间戳，并保留原文用于展示
     const lotteryTimeText = dynData.prize_info?.lottery_time ?? null

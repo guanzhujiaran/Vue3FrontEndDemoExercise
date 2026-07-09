@@ -468,22 +468,18 @@ function handleNestedBranchAction(childIndex: number, nestedBranch: 'true' | 'fa
 
 /** 嵌套分支内卡片展开/收起 */
 function handleNestedToggleExpand(childIndex: number, nestedBranch: 'true' | 'false' | 'loop', subIndex: number) {
-  const pathParts: string[] = []
-  if (props.branchPath) {
-    for (const p of props.branchPath) {
-      pathParts.push(String(p.parentIndex), p.branch)
-    }
-  }
-  pathParts.push(String(props.parentIndex), props.branch, String(childIndex), nestedBranch, String(subIndex))
-  const key = pathParts.join('-') as unknown as number
-  if (props.expandedItems.has(key)) {
-    props.expandedItems.delete(key)
+  const item = props.items[childIndex]
+  if (!item) return
+  const targetArr = nestedBranch === 'true' ? item.trueBranch : nestedBranch === 'false' ? item.falseBranch : item.loopBody
+  const child = targetArr?.[subIndex]
+  if (!child) return
+
+  const id = child.id
+  if (props.expandedItems.has(id)) {
+    props.expandedItems.delete(id)
   } else {
-    props.expandedItems.add(key)
-    const item = props.items[childIndex]
-    const targetArr = nestedBranch === 'true' ? item?.trueBranch : nestedBranch === 'false' ? item?.falseBranch : item?.loopBody
-    const child = targetArr?.[subIndex]
-    if (child && !child.formData) child.formData = {}
+    props.expandedItems.add(id)
+    if (!child.formData) child.formData = {}
   }
 }
 </script>

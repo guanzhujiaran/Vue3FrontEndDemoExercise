@@ -587,4 +587,78 @@ elementDark放到theme后面是为了确保暗色状态下直接用elementDark�
   .toolbox-tooltip {
     z-index: 3100 !important;
   }
+
+  /* ==================== 抽奖卡片 extra_info 特效 ==================== */
+
+  /* 大奖卡片金色流光边框 */
+  @keyframes grand-prize-shimmer {
+    0% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+    100% {
+      background-position: 0% 50%;
+    }
+  }
+
+  @keyframes grand-prize-glow {
+    0%,
+    100% {
+      box-shadow:
+        0 0 8px rgba(234, 179, 8, 0.3),
+        0 0 20px rgba(234, 179, 8, 0.15),
+        inset 0 0 20px rgba(234, 179, 8, 0.04);
+    }
+    50% {
+      box-shadow:
+        0 0 16px rgba(234, 179, 8, 0.5),
+        0 0 40px rgba(234, 179, 8, 0.25),
+        inset 0 0 30px rgba(234, 179, 8, 0.08);
+    }
+  }
+
+  .lottery-card-grand-prize {
+    position: relative;
+    animation: grand-prize-glow 2.5s ease-in-out infinite;
+  }
+
+  .lottery-card-grand-prize::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-radius: inherit;
+    background: linear-gradient(
+      135deg,
+      #fbbf24,
+      #f59e0b,
+      #d97706,
+      #fbbf24,
+      #f59e0b,
+      #d97706,
+      #fbbf24
+    );
+    background-size: 300% 300%;
+    animation: grand-prize-shimmer 3s ease-in-out infinite;
+    z-index: -1;
+    opacity: 0.8;
+  }
+
+  /* badge 脉冲呼吸动画 */
+  @keyframes badge-pulse {
+    0%,
+    100% {
+      transform: scale(1);
+      opacity: 1;
+    }
+    50% {
+      transform: scale(1.05);
+      opacity: 0.85;
+    }
+  }
+
+  .lottery-extra-badge-animated {
+    animation: badge-pulse 2s ease-in-out infinite;
+  }
 }

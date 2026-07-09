@@ -147,7 +147,7 @@ const handleCardClick = (path: string | undefined, requiresLogin = false) => {
             <el-radio-button value="all">全部</el-radio-button>
             <el-radio-button value="lottery">抽奖数据</el-radio-button>
             <el-radio-button v-if="isLoggedIn" value="user-center">用户中心</el-radio-button>
-            <el-radio-button v-if="isLoggedIn" value="rpa-browser">RPA浏览器</el-radio-button>
+            <!-- RPA浏览器入口：生产编译临时隐藏 <el-radio-button v-if="isLoggedIn" value="rpa-browser">RPA浏览器</el-radio-button> -->
             <el-radio-button value="shopping">山姆会员商店</el-radio-button>
             <el-radio-button value="feedback">反馈区</el-radio-button>
           </el-radio-group>

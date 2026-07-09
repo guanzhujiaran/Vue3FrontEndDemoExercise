@@ -16,7 +16,9 @@ import {
   addDynamicLotteryApiV1LotteryDatabaseBiliAddDynamicLotteryPost,
   bulkAddDynamicLotteryApiV1LotteryDatabaseBiliBulkAddDynamicLotteryPost,
   addTopicLotteryApiV1LotteryDatabaseBiliAddTopicLotteryPost,
+  bulkAddTopicLotteryApiV1LotteryDatabaseBiliBulkAddTopicLotteryPost,
   addOthersLotDynApiV1LotteryDatabaseBiliAddOthersLotDynPost,
+  bulkAddOthersLotDynApiV1LotteryDatabaseBiliBulkAddOthersLotDynPost,
   searchLotteryByKeywordApiV1LotteryDatabaseBiliSearchLotteryByKeywordPost,
   submitFeedbackApiV1LotteryDatabaseBiliSubmitFeedbackPost,
   getOthersLotDynListApiV1LotteryDatabaseBiliGetOthersLotDynListPost,
@@ -29,11 +31,15 @@ import type {
   LotterySearchPaginationParams,
   AddDynamicLotteryReq,
   BulkAddDynamicLotteryReq,
+  BulkAddOthersLotDynReq,
   AddTopicLotteryReq,
+  BulkAddTopicLotteryReq,
   SubmitFeedbackReq,
   OthersLotDynSortEnum,
   OthersLotDynSortOrderEnum,
   TimePresetEnum,
+  LotExtraInfoResp,
+  OthersLotPrizeInfo,
 } from '@/api/bili_lottery_data/hey-api'
 import type { RootObject } from '@/models/api/base_model.ts'
 import type { LotDataView, ScrapyStatusResp } from '@/models/api/lottery/lotdata'
@@ -176,6 +182,8 @@ export interface OthersLotDynItem {
   created_at: string | null
   dynId_str?: string
   up_uid_str?: string | null
+  prize_info?: OthersLotPrizeInfo | null
+  extra_info?: LotExtraInfoResp | null
   extra_fields?: Record<string, any> | null
 }
 
@@ -314,9 +322,27 @@ class LotteryDataBaseApi {
     return res as any
   }
 
+  async bulkAddTopicLottery(
+    topic_ids: Array<string | number>
+  ): Promise<RootObject<AddTopicLotteryResp[]>> {
+    const res = await bulkAddTopicLotteryApiV1LotteryDatabaseBiliBulkAddTopicLotteryPost({
+      body: { topic_ids } as BulkAddTopicLotteryReq,
+    })
+    return res as any
+  }
+
   async addOthersLotDyn(dynamic_id_or_url: string): Promise<RootObject<AddDynamicLotteryResp>> {
     const res = await addOthersLotDynApiV1LotteryDatabaseBiliAddOthersLotDynPost({
       body: { dynamic_id_or_url } as AddDynamicLotteryReq,
+    })
+    return res as any
+  }
+
+  async bulkAddOthersLotDyn(
+    dynamic_id_or_urls: string[]
+  ): Promise<RootObject<AddDynamicLotteryResp[]>> {
+    const res = await bulkAddOthersLotDynApiV1LotteryDatabaseBiliBulkAddOthersLotDynPost({
+      body: { dynamic_id_or_urls } as BulkAddOthersLotDynReq,
     })
     return res as any
   }
