@@ -24,6 +24,7 @@ import {
   getOthersLotDynListApiV1LotteryDatabaseBiliGetOthersLotDynListPost,
   getLotteryFilterParamsApiV1LotteryDatabaseBiliGetLotteryFilterParamsGet,
   getAllLotScrapyStatusApiV1LotteryDatabaseBiliGetAllLotScrapyStatusGet,
+  getSingleScrapyStatusApiV1BackgroundServiceGetSingleScrapyStatusGet,
 } from '@/api/bili_lottery_data/hey-api'
 import type {
   LotteryAdvancedQueryParams,
@@ -40,9 +41,10 @@ import type {
   TimePresetEnum,
   LotExtraInfoResp,
   OthersLotPrizeInfo,
+  ScrapyTypeEnum,
 } from '@/api/bili_lottery_data/hey-api'
 import type { RootObject } from '@/models/api/base_model.ts'
-import type { LotDataView, ScrapyStatusResp } from '@/models/api/lottery/lotdata'
+import type { LotDataView, ScrapyStatusResp, ScrapyStatus, OfficialScrapyStatus } from '@/models/api/lottery/lotdata'
 
 // ==================== 响应类型定义（兼容旧接口） ====================
 
@@ -399,6 +401,16 @@ class LotteryDataBaseApi {
 
   async get_all_scrapy_status(): Promise<RootObject<ScrapyStatusResp>> {
     const res = await getAllLotScrapyStatusApiV1LotteryDatabaseBiliGetAllLotScrapyStatusGet()
+    return res as any
+  }
+
+  /** 查询单个爬虫状态（按 ScrapyTypeEnum 入参） */
+  async get_single_scrapy_status(
+    scrapy_name: ScrapyTypeEnum
+  ): Promise<RootObject<ScrapyStatus | OfficialScrapyStatus | null>> {
+    const res = await getSingleScrapyStatusApiV1BackgroundServiceGetSingleScrapyStatusGet({
+      query: { scrapy_name },
+    })
     return res as any
   }
 

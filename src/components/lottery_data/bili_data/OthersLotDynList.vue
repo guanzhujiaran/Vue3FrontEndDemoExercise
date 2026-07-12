@@ -34,6 +34,8 @@
           </div>
         </div>
 
+        <BiliScrapyStatusMini crawler-key="others" class="w-full" />
+
         <div class="search-section basis-full">
           <div class="rounded-lg border border-border-light bg-bg-page p-4">
             <div class="mb-3 flex flex-wrap items-center justify-between gap-3">
@@ -62,6 +64,7 @@
     <section
       class="bili-lottery-data-contents flex min-w-0 flex-1 rounded-lg border border-border-light bg-bg p-4 sm:p-5 lg:p-6"
     >
+
       <BiliPaginationDataView
         class="min-w-0"
         :data="lotDataProps.lot_data?.items ?? []"
@@ -113,6 +116,7 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted, type Ref } from 'vue'
 import { useLotteryData } from '@/utils/useLotteryData.ts'
+import BiliScrapyStatusMini from './BiliScrapyStatusMini.vue'
 import { useBiliLotteryRecord } from '@/stores/bili_lottery_record.ts'
 import lotteryDataBaseApi, { type FilterParamMeta } from '@/api/lottery_data/bili/lottery_database_bili_api'
 import { useInject, KeysEnum } from '@/models/base/provide_model.ts'

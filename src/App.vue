@@ -114,7 +114,7 @@ onUnmounted(() => {
     <el-config-provider :locale="zhCn">
       <UseScreenSafeArea class="use-screen-safe-area">
         <div class="app-wrapper">
-          <el-container v-if="isInit" id="i_cecream" class="min-h-screen">
+          <el-container v-if="isInit" id="i_cecream" class="min-h-dvh">
             <el-header>
               <HeaderBarView />
             </el-header>

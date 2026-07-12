@@ -50,12 +50,28 @@ export interface ScrapyStatus {
   start_time_str: string
   succ_count: number
   total_run_duration: number
+  health_status: 'normal' | 'stuck' | 'stopped' | string
+}
+
+// 官方/空间抽奖爬虫状态（字段结构不同于上方的动态/话题/预约爬虫）
+export interface OfficialScrapyStatus {
+  succ_count: number
+  start_ts: number
+  total_num: number
+  progress: number
+  is_running: boolean
+  update_ts: number
+  running_params: any[]
+  update_time: string
+  start_time: string
 }
 
 export interface ScrapyStatusResp {
   dyn_scrapy_status: ScrapyStatus
   topic_scrapy_status: ScrapyStatus
   reserve_scrapy_status: ScrapyStatus
+  official_scrapy_status: OfficialScrapyStatus
+  other_space_scrapy_status: OfficialScrapyStatus
 }
 //endregion
 

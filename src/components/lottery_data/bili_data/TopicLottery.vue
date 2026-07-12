@@ -23,6 +23,8 @@
           </div>
         </div>
 
+        <BiliScrapyStatusMini crawler-key="topic" class="w-full" />
+
         <div class="search-section basis-full">
           <div class="rounded-lg border border-border-light bg-bg-page p-4">
             <div class="mb-3 flex flex-wrap items-center justify-between gap-3">
@@ -51,6 +53,7 @@
     <section
       class="bili-lottery-data-contents flex min-w-0 flex-1 rounded-lg border border-border-light bg-bg p-4 sm:p-5 lg:p-6"
     >
+
       <BiliPaginationDataView
         class="min-w-0"
         :data="topic_lot_data_props.lot_data?.items ?? []"
@@ -102,6 +105,7 @@
 <script setup lang="ts">
 import { watch, onMounted, onUnmounted, ref } from 'vue'
 import { useLotteryData } from '@/utils/useLotteryData.ts'
+import BiliScrapyStatusMini from './BiliScrapyStatusMini.vue'
 import biliMessage from '@/utils/message'
 import SubmitTopicLotteryModal from './SubmitTopicLotteryModal.vue'
 import { useBiliLotteryRecord } from '@/stores/bili_lottery_record.ts'

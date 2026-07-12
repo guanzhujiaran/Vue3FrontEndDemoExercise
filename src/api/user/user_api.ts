@@ -19,10 +19,18 @@ class UserApi {
     }) as Promise<RootObject<LoginModel>>
   }
 
-  Nav(): Promise<RootObject<UserNavModel>> {
+  // 使用 fields 返回风格：即使后端返回 401 等错误状态码，也能拿到
+  // response（用于判断 HTTP 状态）和 error（响应体），避免 responseStyle: 'data'
+  // 在错误响应时直接返回 undefined 导致上层无法区分网络故障与未登录
+  Nav(): Promise<{
+    data?: RootObject<UserNavModel>
+    error?: any
+    response?: { status: number; [key: string]: any }
+  }> {
     return client.get({
       url: '/api/v1/user/nav',
-    }) as Promise<RootObject<UserNavModel>>
+      responseStyle: 'fields',
+    }) as any
   }
 
   Reg(user_name: String, pwd: String): Promise<RootObject<String>> {

@@ -93,6 +93,18 @@ export default defineConfig({
         ]
       },
     }),
+    heyApiPlugin({
+      config: {
+        input: 'http://localhost:10013/openapi.json',
+        output: 'src/api/notify/hey-api',
+        plugins: [
+          {
+            name: '@hey-api/client-ofetch',
+            runtimeConfigPath: '@/api/notify/runtime_config'
+          }
+        ]
+      },
+    }),
   ],
   resolve: {
     alias: {
@@ -107,7 +119,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'http://localhost:9923',
+        target: 'http://localhost:10007',
         changeOrigin: true,
         rewrite: (path) => path
       }

@@ -23,6 +23,8 @@
           </div>
         </div>
 
+        <BiliScrapyStatusMini crawler-key="official" class="w-full" />
+
         <div class="search-section basis-full">
           <div class="rounded-lg border border-border-light bg-bg-page p-4">
             <div class="mb-3 flex flex-wrap items-center justify-between gap-3">
@@ -102,6 +104,7 @@
 <script setup lang="ts">
 import { watch, onMounted, onUnmounted, ref } from 'vue'
 import { useLotteryData } from '@/utils/useLotteryData.ts'
+import BiliScrapyStatusMini from './BiliScrapyStatusMini.vue'
 import biliMessage from '@/utils/message'
 import SubmitDynamicLotteryModal from './SubmitDynamicLotteryModal.vue'
 import { useBiliLotteryRecord } from '@/stores/bili_lottery_record.ts'

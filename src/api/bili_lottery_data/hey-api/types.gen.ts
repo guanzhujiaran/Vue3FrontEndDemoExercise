@@ -109,6 +109,18 @@ export type AddTopicLotteryResp = {
  */
 export type AllLotScrapyStatusResp = {
     /**
+     * Official Scrapy Status
+     */
+    official_scrapy_status: unknown;
+    /**
+     * Reserve Scrapy Status
+     */
+    reserve_scrapy_status: unknown;
+    /**
+     * Other Space Scrapy Status
+     */
+    other_space_scrapy_status: unknown;
+    /**
      * Dyn Scrapy Status
      */
     dyn_scrapy_status: unknown;
@@ -116,10 +128,6 @@ export type AllLotScrapyStatusResp = {
      * Topic Scrapy Status
      */
     topic_scrapy_status: unknown;
-    /**
-     * Reserve Scrapy Status
-     */
-    reserve_scrapy_status: unknown;
     /**
      * Extra Fields
      */
@@ -953,28 +961,6 @@ export type CommonResponseModelUnionAnyNoneType = {
      * Data
      */
     data?: unknown | null;
-    /**
-     * Extra Fields
-     */
-    readonly extra_fields: {
-        [key: string]: unknown;
-    } | null;
-    [key: string]: unknown;
-};
-
-/**
- * CommonResponseModel[Union[ProgressStatusResp, NoneType]]
- */
-export type CommonResponseModelUnionProgressStatusRespNoneType = {
-    /**
-     * Code
-     */
-    code?: number;
-    /**
-     * Msg
-     */
-    msg?: string;
-    data?: ProgressStatusResp | null;
     /**
      * Extra Fields
      */
@@ -1993,59 +1979,6 @@ export type OthersLotPrizeInfo = {
 };
 
 /**
- * ProgressStatusResp
- */
-export type ProgressStatusResp = {
-    /**
-     * Succ Count
-     */
-    succ_count?: number;
-    /**
-     * Start Ts
-     */
-    start_ts?: number;
-    /**
-     * Total Num
-     */
-    total_num?: number;
-    /**
-     * Progress
-     *
-     * 当前进度
-     */
-    progress?: number | number;
-    /**
-     * Is Running
-     */
-    is_running?: boolean;
-    /**
-     * Update Ts
-     */
-    update_ts?: number;
-    /**
-     * Running Params
-     *
-     * 运行中的参数
-     */
-    running_params?: Array<unknown>;
-    /**
-     * Extra Fields
-     */
-    readonly extra_fields: {
-        [key: string]: unknown;
-    } | null;
-    /**
-     * Update Time
-     */
-    readonly update_time: string;
-    /**
-     * Start Time
-     */
-    readonly start_time: string;
-    [key: string]: unknown;
-};
-
-/**
  * ProxyStatusResp
  */
 export type ProxyStatusResp = {
@@ -2408,6 +2341,13 @@ export type SchedulerJobDetailModel = {
     job_info: JobInfoModel;
     execution_info?: ExecutionInfoModel | null;
 };
+
+/**
+ * ScrapyTypeEnum
+ *
+ * 可查询的爬虫类型枚举，对应 get_scrapy_status 的合法入参
+ */
+export type ScrapyTypeEnum = 'dyn' | 'topic' | 'reserve' | 'other_space' | 'other_dyn' | 'refresh_bili_official' | 'refresh_bili_reserve';
 
 /**
  * SortOrderEnum
@@ -2825,6 +2765,18 @@ export type AddTopicLotteryRespWritable = {
  */
 export type AllLotScrapyStatusRespWritable = {
     /**
+     * Official Scrapy Status
+     */
+    official_scrapy_status: unknown;
+    /**
+     * Reserve Scrapy Status
+     */
+    reserve_scrapy_status: unknown;
+    /**
+     * Other Space Scrapy Status
+     */
+    other_space_scrapy_status: unknown;
+    /**
      * Dyn Scrapy Status
      */
     dyn_scrapy_status: unknown;
@@ -2832,10 +2784,6 @@ export type AllLotScrapyStatusRespWritable = {
      * Topic Scrapy Status
      */
     topic_scrapy_status: unknown;
-    /**
-     * Reserve Scrapy Status
-     */
-    reserve_scrapy_status: unknown;
     [key: string]: unknown;
 };
 
@@ -3417,22 +3365,6 @@ export type CommonResponseModelUnionAnyNoneTypeWritable = {
      * Data
      */
     data?: unknown | null;
-    [key: string]: unknown;
-};
-
-/**
- * CommonResponseModel[Union[ProgressStatusResp, NoneType]]
- */
-export type CommonResponseModelUnionProgressStatusRespNoneTypeWritable = {
-    /**
-     * Code
-     */
-    code?: number;
-    /**
-     * Msg
-     */
-    msg?: string;
-    data?: ProgressStatusRespWritable | null;
     [key: string]: unknown;
 };
 
@@ -4104,45 +4036,6 @@ export type OthersLotDynItemWritable = {
      * 抽奖附加信息
      */
     extra_info?: LotExtraInfoRespWritable | null;
-    [key: string]: unknown;
-};
-
-/**
- * ProgressStatusResp
- */
-export type ProgressStatusRespWritable = {
-    /**
-     * Succ Count
-     */
-    succ_count?: number;
-    /**
-     * Start Ts
-     */
-    start_ts?: number;
-    /**
-     * Total Num
-     */
-    total_num?: number;
-    /**
-     * Progress
-     *
-     * 当前进度
-     */
-    progress?: number | number;
-    /**
-     * Is Running
-     */
-    is_running?: boolean;
-    /**
-     * Update Ts
-     */
-    update_ts?: number;
-    /**
-     * Running Params
-     *
-     * 运行中的参数
-     */
-    running_params?: Array<unknown>;
     [key: string]: unknown;
 };
 
@@ -5199,53 +5092,32 @@ export type GetIpApiV1IpInfoGetGetResponses = {
 
 export type GetIpApiV1IpInfoGetGetResponse = GetIpApiV1IpInfoGetGetResponses[keyof GetIpApiV1IpInfoGetGetResponses];
 
-export type GetDynamicScrapyStatusApiV1BackgroundServiceGetDynamicScrapyStatusGetData = {
+export type GetSingleScrapyStatusApiV1BackgroundServiceGetSingleScrapyStatusGetData = {
     body?: never;
     path?: never;
-    query?: never;
-    url: '/api/v1/background_service/GetDynamicScrapyStatus';
+    query: {
+        scrapy_name: ScrapyTypeEnum;
+    };
+    url: '/api/v1/background_service/GetSingleScrapyStatus';
 };
 
-export type GetDynamicScrapyStatusApiV1BackgroundServiceGetDynamicScrapyStatusGetResponses = {
+export type GetSingleScrapyStatusApiV1BackgroundServiceGetSingleScrapyStatusGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetSingleScrapyStatusApiV1BackgroundServiceGetSingleScrapyStatusGetError = GetSingleScrapyStatusApiV1BackgroundServiceGetSingleScrapyStatusGetErrors[keyof GetSingleScrapyStatusApiV1BackgroundServiceGetSingleScrapyStatusGetErrors];
+
+export type GetSingleScrapyStatusApiV1BackgroundServiceGetSingleScrapyStatusGetResponses = {
     /**
      * Successful Response
      */
     200: CommonResponseModelUnionAnyNoneType;
 };
 
-export type GetDynamicScrapyStatusApiV1BackgroundServiceGetDynamicScrapyStatusGetResponse = GetDynamicScrapyStatusApiV1BackgroundServiceGetDynamicScrapyStatusGetResponses[keyof GetDynamicScrapyStatusApiV1BackgroundServiceGetDynamicScrapyStatusGetResponses];
-
-export type GetTopicScrapyStatusApiV1BackgroundServiceGetTopicScrapyStatusGetData = {
-    body?: never;
-    path?: never;
-    query?: never;
-    url: '/api/v1/background_service/GetTopicScrapyStatus';
-};
-
-export type GetTopicScrapyStatusApiV1BackgroundServiceGetTopicScrapyStatusGetResponses = {
-    /**
-     * Successful Response
-     */
-    200: CommonResponseModelUnionAnyNoneType;
-};
-
-export type GetTopicScrapyStatusApiV1BackgroundServiceGetTopicScrapyStatusGetResponse = GetTopicScrapyStatusApiV1BackgroundServiceGetTopicScrapyStatusGetResponses[keyof GetTopicScrapyStatusApiV1BackgroundServiceGetTopicScrapyStatusGetResponses];
-
-export type GetReserveScrapyStatusApiV1BackgroundServiceGetReserveScrapyStatusGetData = {
-    body?: never;
-    path?: never;
-    query?: never;
-    url: '/api/v1/background_service/GetReserveScrapyStatus';
-};
-
-export type GetReserveScrapyStatusApiV1BackgroundServiceGetReserveScrapyStatusGetResponses = {
-    /**
-     * Successful Response
-     */
-    200: CommonResponseModelUnionAnyNoneType;
-};
-
-export type GetReserveScrapyStatusApiV1BackgroundServiceGetReserveScrapyStatusGetResponse = GetReserveScrapyStatusApiV1BackgroundServiceGetReserveScrapyStatusGetResponses[keyof GetReserveScrapyStatusApiV1BackgroundServiceGetReserveScrapyStatusGetResponses];
+export type GetSingleScrapyStatusApiV1BackgroundServiceGetSingleScrapyStatusGetResponse = GetSingleScrapyStatusApiV1BackgroundServiceGetSingleScrapyStatusGetResponses[keyof GetSingleScrapyStatusApiV1BackgroundServiceGetSingleScrapyStatusGetResponses];
 
 export type GetAllScrapyStatusApiV1BackgroundServiceGetAllLotScrapyStatusGetData = {
     body?: never;
@@ -5262,70 +5134,6 @@ export type GetAllScrapyStatusApiV1BackgroundServiceGetAllLotScrapyStatusGetResp
 };
 
 export type GetAllScrapyStatusApiV1BackgroundServiceGetAllLotScrapyStatusGetResponse = GetAllScrapyStatusApiV1BackgroundServiceGetAllLotScrapyStatusGetResponses[keyof GetAllScrapyStatusApiV1BackgroundServiceGetAllLotScrapyStatusGetResponses];
-
-export type GetOthersLotSpaceStatusApiV1BackgroundServiceGetOthersLotSpaceStatusGetData = {
-    body?: never;
-    path?: never;
-    query?: never;
-    url: '/api/v1/background_service/GetOthersLotSpaceStatus';
-};
-
-export type GetOthersLotSpaceStatusApiV1BackgroundServiceGetOthersLotSpaceStatusGetResponses = {
-    /**
-     * Successful Response
-     */
-    200: CommonResponseModelUnionProgressStatusRespNoneType;
-};
-
-export type GetOthersLotSpaceStatusApiV1BackgroundServiceGetOthersLotSpaceStatusGetResponse = GetOthersLotSpaceStatusApiV1BackgroundServiceGetOthersLotSpaceStatusGetResponses[keyof GetOthersLotSpaceStatusApiV1BackgroundServiceGetOthersLotSpaceStatusGetResponses];
-
-export type GetOthersLotDynStatusApiV1BackgroundServiceGetOthersLotDynStatusGetData = {
-    body?: never;
-    path?: never;
-    query?: never;
-    url: '/api/v1/background_service/GetOthersLotDynStatus';
-};
-
-export type GetOthersLotDynStatusApiV1BackgroundServiceGetOthersLotDynStatusGetResponses = {
-    /**
-     * Successful Response
-     */
-    200: CommonResponseModelUnionProgressStatusRespNoneType;
-};
-
-export type GetOthersLotDynStatusApiV1BackgroundServiceGetOthersLotDynStatusGetResponse = GetOthersLotDynStatusApiV1BackgroundServiceGetOthersLotDynStatusGetResponses[keyof GetOthersLotDynStatusApiV1BackgroundServiceGetOthersLotDynStatusGetResponses];
-
-export type GetRefreshBiliOfficialStatusApiV1BackgroundServiceGetRefreshBiliOfficialStatusGetData = {
-    body?: never;
-    path?: never;
-    query?: never;
-    url: '/api/v1/background_service/GetRefreshBiliOfficialStatus';
-};
-
-export type GetRefreshBiliOfficialStatusApiV1BackgroundServiceGetRefreshBiliOfficialStatusGetResponses = {
-    /**
-     * Successful Response
-     */
-    200: CommonResponseModelUnionProgressStatusRespNoneType;
-};
-
-export type GetRefreshBiliOfficialStatusApiV1BackgroundServiceGetRefreshBiliOfficialStatusGetResponse = GetRefreshBiliOfficialStatusApiV1BackgroundServiceGetRefreshBiliOfficialStatusGetResponses[keyof GetRefreshBiliOfficialStatusApiV1BackgroundServiceGetRefreshBiliOfficialStatusGetResponses];
-
-export type GetRefreshBiliReserveStatusApiV1BackgroundServiceGetRefreshBiliReserveStatusGetData = {
-    body?: never;
-    path?: never;
-    query?: never;
-    url: '/api/v1/background_service/GetRefreshBiliReserveStatus';
-};
-
-export type GetRefreshBiliReserveStatusApiV1BackgroundServiceGetRefreshBiliReserveStatusGetResponses = {
-    /**
-     * Successful Response
-     */
-    200: CommonResponseModelUnionProgressStatusRespNoneType;
-};
-
-export type GetRefreshBiliReserveStatusApiV1BackgroundServiceGetRefreshBiliReserveStatusGetResponse = GetRefreshBiliReserveStatusApiV1BackgroundServiceGetRefreshBiliReserveStatusGetResponses[keyof GetRefreshBiliReserveStatusApiV1BackgroundServiceGetRefreshBiliReserveStatusGetResponses];
 
 export type GetProxyStatusApiV1BackgroundServiceGetProxyStatusGetData = {
     body?: never;

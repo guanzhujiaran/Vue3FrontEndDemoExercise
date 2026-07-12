@@ -33,14 +33,65 @@ const keyToChineseMap: KeyToChineseMap = {
   dyn_scrapy_status: '动态爬虫',
   topic_scrapy_status: '话题爬虫',
   reserve_scrapy_status: '直播预约爬虫',
+  official_scrapy_status: '官方抽奖爬虫',
+  other_space_scrapy_status: '空间抽奖爬虫',
   end_params: '结束参数',
   end_success_params: '成功结束参数',
   init_params: '初始参数',
-  running_params_set: '运行中参数集'
+  running_params_set: '运行中参数集',
+  health_status: '健康状态'
+}
+
+// 爬虫健康状态展示映射
+const healthStatusMap: Record<string, { text: string; class: string }> = {
+  normal: {
+    text: '正常',
+    class: 'text-[var(--color-success)] bg-[var(--color-success-light-9)]'
+  },
+  stuck: {
+    text: '卡住',
+    class: 'text-[#e6a23c] bg-[#fdf6ec]'
+  },
+  stopped: {
+    text: '已停止',
+    class: 'text-[#c45656] bg-[#fef0f0]'
+  }
+}
+const getHealthStatusMeta = (status?: string) => {
+  return (
+    healthStatusMap[status ?? ''] ?? {
+      text: status || '未知',
+      class: 'text-text-secondary bg-bg-page'
+    }
+  )
 }
 
 const getKeyName = (key: string): undefined | string => {
   return keyToChineseMap[key]
+}
+
+// 官方/空间抽奖爬虫使用另一套字段结构（start_ts/total_num/progress/running_params 等）
+// 动态/话题/预约爬虫使用 ScrapyStatus 结构（start_time_str/processed_items_count/running_params_set 等）
+const isOfficialType = (s: any): boolean =>
+  !!(s && (s.start_ts !== undefined || s.total_num !== undefined))
+
+// 各类字段的统一取值（带兜底，避免两种结构字段缺失时报错）
+const statSucc = (s: any) => s?.succ_count ?? 0
+const statProcessed = (s: any) => s?.processed_items_count ?? s?.total_num ?? 0
+const statTotal = (s: any) => s?.total_num ?? 0
+const statNull = (s: any) => s?.null_count ?? 0
+const statSpeed = (s: any) => s?.crawling_speed ?? 0
+const statProgress = (s: any) => s?.progress ?? 0
+const startStr = (s: any) => s?.start_time_str ?? s?.start_time ?? '未启动'
+const updateStr = (s: any) => s?.last_update_time_str ?? s?.update_time ?? '未启动'
+const getParamsList = (s: any) => s?.running_params_set ?? s?.running_params ?? []
+
+// 根据结构返回需要展示的参数键：ScrapyStatus 型含初始/结束参数，官方型只有 running_params 列表
+const getParamKeys = (s: any): string[] => {
+  if (s && (s.running_params_set !== undefined || s.init_params !== undefined)) {
+    return ['init_params', 'end_params', 'end_success_params', 'running_params_set']
+  }
+  return ['running_params']
 }
 const { width: windowWidth } = useWindowSize()
 const data = ref<ScrapyStatusResp>({
@@ -58,7 +109,8 @@ const data = ref<ScrapyStatusResp>({
     start_time: 0,
     start_time_str: '',
     succ_count: 0,
-    total_run_duration: 0
+    total_run_duration: 0,
+    health_status: ''
   },
   topic_scrapy_status: {
     crawling_speed: 0,
@@ -74,7 +126,8 @@ const data = ref<ScrapyStatusResp>({
     start_time: 0,
     start_time_str: '',
     succ_count: 0,
-    total_run_duration: 0
+    total_run_duration: 0,
+    health_status: ''
   },
   reserve_scrapy_status: {
     crawling_speed: 0,
@@ -91,6 +144,28 @@ const data = ref<ScrapyStatusResp>({
     start_time_str: '',
     succ_count: 0,
     total_run_duration: 0
+  },
+  official_scrapy_status: {
+    succ_count: 0,
+    start_ts: 0,
+    total_num: 0,
+    progress: 0,
+    is_running: false,
+    update_ts: 0,
+    running_params: [],
+    update_time: '',
+    start_time: ''
+  },
+  other_space_scrapy_status: {
+    succ_count: 0,
+    start_ts: 0,
+    total_num: 0,
+    progress: 0,
+    is_running: false,
+    update_ts: 0,
+    running_params: [],
+    update_time: '',
+    start_time: ''
   }
 })
 
@@ -134,6 +209,7 @@ const formatValue = (key: string, value: any) => {
   if (key === 'total_run_duration') return formatters.duration(value)
   if (key === 'end_params' || key === 'end_success_params' || key === 'init_params')
     return formatters.params(value)
+  if (Array.isArray(value)) return formatters.paramsList(value)
   if (key === 'running_params_set') return formatters.paramsList(value)
   return formatters.default(value)
 }
@@ -218,7 +294,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="flex w-full min-h-screen bg-bg py-6 px-4 sm:px-6 lg:px-8">
+  <div class="flex w-full flex-0.98 bg-bg py-6 px-4 sm:px-6 lg:px-8">
     <div class="w-full max-w-6xl mx-auto" v-loading="is_loading" element-loading-text="加载中...">
       <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
         <h1 class="text-2xl font-bold text-text-primary flex items-center">
@@ -264,7 +340,7 @@ onBeforeUnmount(() => {
         </div>
         <div class="bg-bg rounded-lg border border-border-light p-4 flex flex-col">
           <div class="text-text-secondary text-sm mb-2">总处理数量</div>
-          <div class="text-2xl font-bold text-text-primary">{{ Object.entries(data).reduce((sum, [_, scrapy]) => sum + scrapy.processed_items_count, 0).toLocaleString() }}</div>
+          <div class="text-2xl font-bold text-text-primary">{{ Object.entries(data).reduce((sum, [_, scrapy]) => sum + statProcessed(scrapy), 0).toLocaleString() }}</div>
         </div>
       </div>
       
@@ -272,23 +348,32 @@ onBeforeUnmount(() => {
         <div 
           v-for="([category, scrapy_data], idx) in Object.entries(data).filter((el) => getKeyName(el[0]))" 
           :key="category"
-          class="rounded-lg overflow-hidden border border-border-light bg-bg transition-all duration-300 hover:shadow-lg hover:-translate-y-1"
+          class="rounded-lg overflow-hidden border border-border-light bg-bg transition-all duration-300 hover:shadow-lg hover:-translate-y-1 flex flex-col"
         >
           <div class="p-4 border-b border-border-light">
             <div class="flex justify-between items-center">
               <h3 class="text-xl font-semibold text-text-primary">{{ getKeyName(category) }}</h3>
-              <div 
-                class="flex items-center px-3 py-1 rounded-full text-sm font-medium"
-                :class="scrapy_data.is_running ? 'text-[var(--color-success)]' : 'text-[#c45656]'"
-              >
-                <el-icon v-if="scrapy_data.is_running" class="text-[var(--color-success)] w-4 h-4"><Check /></el-icon>
-                <el-icon v-else class="text-[#c45656] w-4 h-4"><Close /></el-icon>
-                <span class="ml-1">{{ scrapy_data.is_running ? '运行中' : '已停止' }}</span>
+              <div class="flex items-center gap-2">
+                <div
+                  class="flex items-center px-3 py-1 rounded-full text-sm font-medium"
+                  :class="scrapy_data.is_running ? 'text-[var(--color-success)]' : 'text-[#c45656]'"
+                >
+                  <el-icon v-if="scrapy_data.is_running" class="text-[var(--color-success)] w-4 h-4"><Check /></el-icon>
+                  <el-icon v-else class="text-[#c45656] w-4 h-4"><Close /></el-icon>
+                  <span class="ml-1">{{ scrapy_data.is_running ? '运行中' : '已停止' }}</span>
+                </div>
+                <div
+                  v-if="!isOfficialType(scrapy_data)"
+                  class="flex items-center px-3 py-1 rounded-full text-sm font-medium"
+                  :class="getHealthStatusMeta(scrapy_data.health_status).class"
+                >
+                  <span>{{ getHealthStatusMeta(scrapy_data.health_status).text }}</span>
+                </div>
               </div>
             </div>
           </div>
           
-          <div class="p-6">
+          <div class="p-6 flex-1">
             <div class="space-y-5">
               <!-- 运行状态 -->
               <div class="flex flex-col">
@@ -313,37 +398,49 @@ onBeforeUnmount(() => {
               <div class="grid grid-cols-2 gap-4">
                 <div class="bg-bg-page rounded-lg p-3 border border-border-light">
                   <div class="text-text-secondary text-xs mb-1">成功数量</div>
-                  <div class="text-lg font-bold text-text-primary">{{ scrapy_data.succ_count.toLocaleString() }}</div>
+                  <div class="text-lg font-bold text-text-primary">{{ statSucc(scrapy_data).toLocaleString() }}</div>
                 </div>
-                <div class="bg-bg-page rounded-lg p-3 border border-border-light">
-                  <div class="text-text-secondary text-xs mb-1">处理数量</div>
-                  <div class="text-lg font-bold text-text-primary">{{ scrapy_data.processed_items_count.toLocaleString() }}</div>
-                </div>
-                <div class="bg-bg-page rounded-lg p-3 border border-border-light">
-                  <div class="text-text-secondary text-xs mb-1">空值数量</div>
-                  <div class="text-lg font-bold text-text-primary">{{ scrapy_data.null_count.toLocaleString() }}</div>
-                </div>
-                <div class="bg-bg-page rounded-lg p-3 border border-border-light">
-                  <div class="text-text-secondary text-xs mb-1">爬取速度</div>
-                  <div class="text-lg font-bold text-text-primary">{{ scrapy_data.crawling_speed.toFixed(4) }}s/个</div>
-                </div>
+                <template v-if="isOfficialType(scrapy_data)">
+                  <div class="bg-bg-page rounded-lg p-3 border border-border-light">
+                    <div class="text-text-secondary text-xs mb-1">总数</div>
+                    <div class="text-lg font-bold text-text-primary">{{ statTotal(scrapy_data).toLocaleString() }}</div>
+                  </div>
+                  <div class="bg-bg-page rounded-lg p-3 border border-border-light">
+                    <div class="text-text-secondary text-xs mb-1">进度</div>
+                    <div class="text-lg font-bold text-text-primary">{{ statProgress(scrapy_data) }}%</div>
+                  </div>
+                </template>
+                <template v-else>
+                  <div class="bg-bg-page rounded-lg p-3 border border-border-light">
+                    <div class="text-text-secondary text-xs mb-1">处理数量</div>
+                    <div class="text-lg font-bold text-text-primary">{{ statProcessed(scrapy_data).toLocaleString() }}</div>
+                  </div>
+                  <div class="bg-bg-page rounded-lg p-3 border border-border-light">
+                    <div class="text-text-secondary text-xs mb-1">空值数量</div>
+                    <div class="text-lg font-bold text-text-primary">{{ statNull(scrapy_data).toLocaleString() }}</div>
+                  </div>
+                  <div class="bg-bg-page rounded-lg p-3 border border-border-light">
+                    <div class="text-text-secondary text-xs mb-1">爬取速度</div>
+                    <div class="text-lg font-bold text-text-primary">{{ statSpeed(scrapy_data).toFixed(4) }}s/个</div>
+                  </div>
+                </template>
               </div>
               
               <!-- 时间信息 -->
               <div class="space-y-2">
                 <div class="flex justify-between items-center">
                   <div class="font-medium text-text-regular">开始时间</div>
-                  <div class="text-text-primary">{{ formatValue('start_time_str', scrapy_data.start_time_str) }}</div>
+                  <div class="text-text-primary">{{ startStr(scrapy_data) }}</div>
                 </div>
                 <div class="flex justify-between items-center">
                   <div class="font-medium text-text-regular">最后更新</div>
-                  <div class="text-text-primary">{{ formatValue('last_update_time_str', scrapy_data.last_update_time_str) }}</div>
+                  <div class="text-text-primary">{{ updateStr(scrapy_data) }}</div>
                 </div>
               </div>
               
               <!-- 参数信息 -->
               <div class="space-y-2">
-                <div v-for="key in ['init_params', 'end_params', 'end_success_params']" :key="key" class="flex justify-between items-center">
+                <div v-for="key in getParamKeys(scrapy_data)" :key="key" class="flex justify-between items-center">
                   <div class="font-medium text-text-regular">{{ getKeyName(key) }}</div>
                   <el-popover placement="top" :width="300" trigger="hover">
                     <template #reference>
@@ -361,7 +458,8 @@ onBeforeUnmount(() => {
           <div class="p-4 border-t border-border-light bg-bg-page">
             <div class="flex items-center text-sm text-text-secondary">
               <Clock class="mr-2 w-4 h-4 text-text-placeholder" />
-              <span>持续运行：{{ formatValue('total_run_duration', scrapy_data.total_run_duration) }}</span>
+              <span v-if="!isOfficialType(scrapy_data)">持续运行：{{ formatValue('total_run_duration', scrapy_data.total_run_duration) }}</span>
+              <span v-else>更新时间：{{ updateStr(scrapy_data) }}</span>
             </div>
           </div>
         </div>

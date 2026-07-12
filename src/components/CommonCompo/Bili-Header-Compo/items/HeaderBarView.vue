@@ -91,7 +91,7 @@ provide('headerBarView', {
                class="flex-1 overflow-x-auto min-w-0 z-10 border-b-0! overflow-x-auto! overflow-y-hidden! whitespace-nowrap! flex-nowrap! bg-transparent!"
                :collapse="false" :ellipsis="false">
         <template v-for="(item, index) in navigationData" :key="item.path">
-          <MenuItem :item="item" />
+          <MenuItem :item="item" :is-top-level="true" />
         </template>
       </el-menu>
       <ul class="el-menu el-menu--horizontal flex items-center justify-center flex-shrink-0 px-2 sm:px-3 md:px-4 relative z-10 bg-transparent! border-b-0!">
