@@ -71,7 +71,7 @@ export default defineConfig({
     tailwindcss(),
     heyApiPlugin({
       config: {
-        input: 'http://localhost:8000/openapi.json', // sign up at app.heyapi.dev
+        input: 'http://localhost:28000/openapi.json', // sign up at app.heyapi.dev
         output: 'src/api/browser/hey-api',
         plugins: [
           {

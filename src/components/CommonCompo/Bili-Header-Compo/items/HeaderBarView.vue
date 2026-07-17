@@ -43,7 +43,7 @@ const navigationData = computed(() => {
   const allRoutes = processRoutesForHeader(routes, '', true)
   return filterByLogin(allRoutes)
 })
-const openGlobalLoginModal = inject(openGlobalLoginModalKey, () => {})
+const openGlobalLoginModal = inject(openGlobalLoginModalKey, () => { })
 // 处理需要登录但未登录的情况
 const handleProtectedRouteClick = (title: string) => {
   biliMessage.info(` ${title} 功能需要登录后才能使用`)
@@ -85,16 +85,18 @@ provide('headerBarView', {
 </script>
 
 <template>
-  <div id="bili-header" class="sticky top-0 z-50 border-b border-[var(--el-border-color-light)] bg-bg/90 backdrop-blur-md backdrop-saturate-150 shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
+  <div id="bili-header"
+    class="sticky top-0 z-50 border-b border-[var(--el-border-color-light)] bg-bg/90 backdrop-blur-md backdrop-saturate-150 shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
     <div class="flex items-center justify-between w-full px-2 md:px-0 lg:px-4 relative">
-      <el-menu :default-active="route.path" mode="horizontal" 
-               class="flex-1 overflow-x-auto min-w-0 z-10 border-b-0! overflow-x-auto! overflow-y-hidden! whitespace-nowrap! flex-nowrap! bg-transparent!"
-               :collapse="false" :ellipsis="false">
-        <template v-for="(item, index) in navigationData" :key="item.path">
-          <MenuItem :item="item" :is-top-level="true" />
-        </template>
-      </el-menu>
-      <ul class="el-menu el-menu--horizontal flex items-center justify-center flex-shrink-0 px-2 sm:px-3 md:px-4 relative z-10 bg-transparent! border-b-0!">
+      <el-scrollbar class="headerbar-scroller z-10">
+        <el-menu :default-active="route.path" mode="horizontal" class="flex w-fit" :collapse="false" :ellipsis="false">
+          <template v-for="(item, index) in navigationData" :key="item.path">
+            <MenuItem :item="item" :is-top-level="true" />
+          </template>
+        </el-menu>
+      </el-scrollbar>
+      <ul
+        class="el-menu el-menu--horizontal flex items-center justify-center flex-shrink-0 px-2 sm:px-3 md:px-4 relative z-10 bg-transparent! border-b-0!">
         <AvatarDropdown />
       </ul>
     </div>

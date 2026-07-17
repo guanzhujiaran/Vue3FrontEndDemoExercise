@@ -23,7 +23,6 @@ import {
   submitFeedbackApiV1LotteryDatabaseBiliSubmitFeedbackPost,
   getOthersLotDynListApiV1LotteryDatabaseBiliGetOthersLotDynListPost,
   getLotteryFilterParamsApiV1LotteryDatabaseBiliGetLotteryFilterParamsGet,
-  getAllLotScrapyStatusApiV1LotteryDatabaseBiliGetAllLotScrapyStatusGet,
   getSingleScrapyStatusApiV1BackgroundServiceGetSingleScrapyStatusGet,
 } from '@/api/bili_lottery_data/hey-api'
 import type {
@@ -399,9 +398,34 @@ class LotteryDataBaseApi {
 
   // ==================== 爬虫状态 ====================
 
+  // 爬虫类型 -> ScrapyStatusResp 字段名 的映射
+  // 后端新接口 background_service/GetSingleScrapyStatus 按类型逐个查询，此处循环组装成原先的全量结构
+  const SCRAPY_STATUS_KEY_MAP: Record<string, string> = {
+    dyn: 'dyn_scrapy_status',
+    topic: 'topic_scrapy_status',
+    reserve: 'reserve_scrapy_status',
+    refresh_bili_official: 'official_scrapy_status',
+    other_space: 'other_space_scrapy_status'
+  }
+
   async get_all_scrapy_status(): Promise<RootObject<ScrapyStatusResp>> {
-    const res = await getAllLotScrapyStatusApiV1LotteryDatabaseBiliGetAllLotScrapyStatusGet()
-    return res as any
+    const entries = await Promise.all(
+      Object.entries(SCRAPY_STATUS_KEY_MAP).map(async ([scrapyName, dataKey]) => {
+        try {
+          const res = await getSingleScrapyStatusApiV1BackgroundServiceGetSingleScrapyStatusGet({
+            query: { scrapy_name: scrapyName as ScrapyTypeEnum }
+          })
+          return [dataKey, (res as any)?.data ?? null] as const
+        } catch {
+          return [dataKey, null] as const
+        }
+      })
+    )
+    const data: Record<string, any> = {}
+    for (const [key, value] of entries) {
+      data[key] = value
+    }
+    return { code: 0, msg: 'ok', data: data as ScrapyStatusResp } as any
   }
 
   /** 查询单个爬虫状态（按 ScrapyTypeEnum 入参） */

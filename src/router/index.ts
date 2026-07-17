@@ -307,7 +307,6 @@ const routes: CustomRouteRecordRaw[] = [
     },
     children: user_center_routes
   },
-  /* === RPA浏览器路由：生产编译临时隐藏 START ===
   {
     path: '/app/rpa-browser',
     name: RouteName.RPA_BROWSER,
@@ -418,7 +417,6 @@ const routes: CustomRouteRecordRaw[] = [
       }
     ]
   },
-  === RPA浏览器路由：生产编译临时隐藏 END === */
 
   {
     // 404页面路由配置

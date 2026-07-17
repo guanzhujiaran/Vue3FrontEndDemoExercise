@@ -111,23 +111,23 @@ export type AllLotScrapyStatusResp = {
     /**
      * Official Scrapy Status
      */
-    official_scrapy_status: unknown;
+    official_scrapy_status: StatsPlugin | ProgressStatusResp | null;
     /**
      * Reserve Scrapy Status
      */
-    reserve_scrapy_status: unknown;
+    reserve_scrapy_status: StatsPlugin | ProgressStatusResp | null;
     /**
      * Other Space Scrapy Status
      */
-    other_space_scrapy_status: unknown;
+    other_space_scrapy_status: StatsPlugin | ProgressStatusResp | null;
     /**
      * Dyn Scrapy Status
      */
-    dyn_scrapy_status: unknown;
+    dyn_scrapy_status: StatsPlugin | ProgressStatusResp | null;
     /**
      * Topic Scrapy Status
      */
-    topic_scrapy_status: unknown;
+    topic_scrapy_status: StatsPlugin | ProgressStatusResp | null;
     /**
      * Extra Fields
      */
@@ -206,7 +206,7 @@ export type ArticleInfo = {
  *
  * 后台服务名称枚举
  */
-export type BackgroundServiceName = 'DYN_DETAIL_DATABASE_CLEANER' | 'GET_PROXY_METHODS_SCHEDULER' | 'SAMSCCLUB_SCHEDULER' | 'SAMSCCLUB_SPU_DETAIL_SCHEDULER' | 'GET_RESERVE_INFO' | 'GET_DYN' | 'GET_TOPIC' | 'REFRESH_BILI_LOTDATA_DATABASE' | 'LOTTERY_API_ROBOT_DYN_SCHEDULER' | 'LOTTERY_API_ROBOT_RESERVE_SCHEDULER' | 'GMFLV2_SCHEDULER' | 'STUCK_CHECK_SCHEDULER';
+export type BackgroundServiceName = 'DYN_DETAIL_DATABASE_CLEANER' | 'GET_PROXY_METHODS_SCHEDULER' | 'SAMSCCLUB_SCHEDULER' | 'SAMSCCLUB_SPU_DETAIL_SCHEDULER' | 'GET_RESERVE_INFO' | 'GET_DYN' | 'GET_TOPIC' | 'REFRESH_BILI_LOTDATA_DATABASE' | 'LOTTERY_API_ROBOT_DYN_SCHEDULER' | 'LOTTERY_API_ROBOT_RESERVE_SCHEDULER' | 'GMFLV2_SCHEDULER' | 'GET_OTHERS_LOT_DYN' | 'STUCK_CHECK_SCHEDULER';
 
 /**
  * BiliLotStatisticInfoResp
@@ -224,13 +224,6 @@ export type BiliLotStatisticInfoResp = {
      * Total
      */
     total: number;
-    /**
-     * Extra Fields
-     */
-    readonly extra_fields: {
-        [key: string]: unknown;
-    } | null;
-    [key: string]: unknown;
 };
 
 /**
@@ -288,13 +281,6 @@ export type BiliUserInfoSimple = {
      * Face
      */
     face: string;
-    /**
-     * Extra Fields
-     */
-    readonly extra_fields: {
-        [key: string]: unknown;
-    } | null;
-    [key: string]: unknown;
 };
 
 /**
@@ -515,13 +501,6 @@ export type CommonResponseModelAddDynamicLotteryResp = {
      */
     msg?: string;
     data?: AddDynamicLotteryResp | null;
-    /**
-     * Extra Fields
-     */
-    readonly extra_fields: {
-        [key: string]: unknown;
-    } | null;
-    [key: string]: unknown;
 };
 
 /**
@@ -537,13 +516,21 @@ export type CommonResponseModelAddTopicLotteryResp = {
      */
     msg?: string;
     data?: AddTopicLotteryResp | null;
+};
+
+/**
+ * CommonResponseModel[AllLotScrapyStatusResp]
+ */
+export type CommonResponseModelAllLotScrapyStatusResp = {
     /**
-     * Extra Fields
+     * Code
      */
-    readonly extra_fields: {
-        [key: string]: unknown;
-    } | null;
-    [key: string]: unknown;
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: AllLotScrapyStatusResp | null;
 };
 
 /**
@@ -559,13 +546,6 @@ export type CommonResponseModelAllLotteryResp = {
      */
     msg?: string;
     data?: AllLotteryResp | null;
-    /**
-     * Extra Fields
-     */
-    readonly extra_fields: {
-        [key: string]: unknown;
-    } | null;
-    [key: string]: unknown;
 };
 
 /**
@@ -584,13 +564,6 @@ export type CommonResponseModelAny = {
      * Data
      */
     data?: unknown;
-    /**
-     * Extra Fields
-     */
-    readonly extra_fields: {
-        [key: string]: unknown;
-    } | null;
-    [key: string]: unknown;
 };
 
 /**
@@ -606,13 +579,6 @@ export type CommonResponseModelBiliLotStatisticInfoResp = {
      */
     msg?: string;
     data?: BiliLotStatisticInfoResp | null;
-    /**
-     * Extra Fields
-     */
-    readonly extra_fields: {
-        [key: string]: unknown;
-    } | null;
-    [key: string]: unknown;
 };
 
 /**
@@ -628,13 +594,6 @@ export type CommonResponseModelBiliLotStatisticLotteryResultResp = {
      */
     msg?: string;
     data?: BiliLotStatisticLotteryResultResp | null;
-    /**
-     * Extra Fields
-     */
-    readonly extra_fields: {
-        [key: string]: unknown;
-    } | null;
-    [key: string]: unknown;
 };
 
 /**
@@ -650,13 +609,6 @@ export type CommonResponseModelCaptchaGenResp = {
      */
     msg?: string;
     data?: CaptchaGenResp | null;
-    /**
-     * Extra Fields
-     */
-    readonly extra_fields: {
-        [key: string]: unknown;
-    } | null;
-    [key: string]: unknown;
 };
 
 /**
@@ -672,13 +624,6 @@ export type CommonResponseModelGlobalSchedulerStatusModel = {
      */
     msg?: string;
     data?: GlobalSchedulerStatusModel | null;
-    /**
-     * Extra Fields
-     */
-    readonly extra_fields: {
-        [key: string]: unknown;
-    } | null;
-    [key: string]: unknown;
 };
 
 /**
@@ -694,13 +639,6 @@ export type CommonResponseModelIpInfoResp = {
      */
     msg?: string;
     data?: IpInfoResp | null;
-    /**
-     * Extra Fields
-     */
-    readonly extra_fields: {
-        [key: string]: unknown;
-    } | null;
-    [key: string]: unknown;
 };
 
 /**
@@ -716,13 +654,6 @@ export type CommonResponseModelLotteryArticleResp = {
      */
     msg?: string;
     data?: LotteryArticleResp | null;
-    /**
-     * Extra Fields
-     */
-    readonly extra_fields: {
-        [key: string]: unknown;
-    } | null;
-    [key: string]: unknown;
 };
 
 /**
@@ -738,13 +669,6 @@ export type CommonResponseModelLotteryFilterParamsResp = {
      */
     msg?: string;
     data?: LotteryFilterParamsResp | null;
-    /**
-     * Extra Fields
-     */
-    readonly extra_fields: {
-        [key: string]: unknown;
-    } | null;
-    [key: string]: unknown;
 };
 
 /**
@@ -760,13 +684,6 @@ export type CommonResponseModelResponsePaginationItemsChargeLotteryResp = {
      */
     msg?: string;
     data?: ResponsePaginationItemsChargeLotteryResp | null;
-    /**
-     * Extra Fields
-     */
-    readonly extra_fields: {
-        [key: string]: unknown;
-    } | null;
-    [key: string]: unknown;
 };
 
 /**
@@ -782,13 +699,6 @@ export type CommonResponseModelResponsePaginationItemsLiveLotteryResp = {
      */
     msg?: string;
     data?: ResponsePaginationItemsLiveLotteryResp | null;
-    /**
-     * Extra Fields
-     */
-    readonly extra_fields: {
-        [key: string]: unknown;
-    } | null;
-    [key: string]: unknown;
 };
 
 /**
@@ -804,13 +714,6 @@ export type CommonResponseModelResponsePaginationItemsLotdataResp = {
      */
     msg?: string;
     data?: ResponsePaginationItemsLotdataResp | null;
-    /**
-     * Extra Fields
-     */
-    readonly extra_fields: {
-        [key: string]: unknown;
-    } | null;
-    [key: string]: unknown;
 };
 
 /**
@@ -826,13 +729,6 @@ export type CommonResponseModelResponsePaginationItemsOfficialLotteryResp = {
      */
     msg?: string;
     data?: ResponsePaginationItemsOfficialLotteryResp | null;
-    /**
-     * Extra Fields
-     */
-    readonly extra_fields: {
-        [key: string]: unknown;
-    } | null;
-    [key: string]: unknown;
 };
 
 /**
@@ -848,13 +744,6 @@ export type CommonResponseModelResponsePaginationItemsOthersLotDynItem = {
      */
     msg?: string;
     data?: ResponsePaginationItemsOthersLotDynItem | null;
-    /**
-     * Extra Fields
-     */
-    readonly extra_fields: {
-        [key: string]: unknown;
-    } | null;
-    [key: string]: unknown;
 };
 
 /**
@@ -870,13 +759,6 @@ export type CommonResponseModelResponsePaginationItemsReserveInfoResp = {
      */
     msg?: string;
     data?: ResponsePaginationItemsReserveInfoResp | null;
-    /**
-     * Extra Fields
-     */
-    readonly extra_fields: {
-        [key: string]: unknown;
-    } | null;
-    [key: string]: unknown;
 };
 
 /**
@@ -892,13 +774,6 @@ export type CommonResponseModelResponsePaginationItemsTopicLotteryResp = {
      */
     msg?: string;
     data?: ResponsePaginationItemsTopicLotteryResp | null;
-    /**
-     * Extra Fields
-     */
-    readonly extra_fields: {
-        [key: string]: unknown;
-    } | null;
-    [key: string]: unknown;
 };
 
 /**
@@ -914,60 +789,6 @@ export type CommonResponseModelSamsClubApiStatus = {
      */
     msg?: string;
     data?: SamsClubApiStatus | null;
-    /**
-     * Extra Fields
-     */
-    readonly extra_fields: {
-        [key: string]: unknown;
-    } | null;
-    [key: string]: unknown;
-};
-
-/**
- * CommonResponseModel[Union[AllLotScrapyStatusResp, NoneType]]
- */
-export type CommonResponseModelUnionAllLotScrapyStatusRespNoneType = {
-    /**
-     * Code
-     */
-    code?: number;
-    /**
-     * Msg
-     */
-    msg?: string;
-    data?: AllLotScrapyStatusResp | null;
-    /**
-     * Extra Fields
-     */
-    readonly extra_fields: {
-        [key: string]: unknown;
-    } | null;
-    [key: string]: unknown;
-};
-
-/**
- * CommonResponseModel[Union[Any, NoneType]]
- */
-export type CommonResponseModelUnionAnyNoneType = {
-    /**
-     * Code
-     */
-    code?: number;
-    /**
-     * Msg
-     */
-    msg?: string;
-    /**
-     * Data
-     */
-    data?: unknown | null;
-    /**
-     * Extra Fields
-     */
-    readonly extra_fields: {
-        [key: string]: unknown;
-    } | null;
-    [key: string]: unknown;
 };
 
 /**
@@ -983,13 +804,24 @@ export type CommonResponseModelUnionProxyStatusRespNoneType = {
      */
     msg?: string;
     data?: ProxyStatusResp | null;
+};
+
+/**
+ * CommonResponseModel[Union[StatsPlugin, ProgressStatusResp, NoneType]]
+ */
+export type CommonResponseModelUnionStatsPluginProgressStatusRespNoneType = {
     /**
-     * Extra Fields
+     * Code
      */
-    readonly extra_fields: {
-        [key: string]: unknown;
-    } | null;
-    [key: string]: unknown;
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    /**
+     * Data
+     */
+    data?: StatsPlugin | ProgressStatusResp | null;
 };
 
 /**
@@ -1010,13 +842,6 @@ export type CommonResponseModelDict = {
     data?: {
         [key: string]: unknown;
     } | null;
-    /**
-     * Extra Fields
-     */
-    readonly extra_fields: {
-        [key: string]: unknown;
-    } | null;
-    [key: string]: unknown;
 };
 
 /**
@@ -1035,13 +860,6 @@ export type CommonResponseModelListAddDynamicLotteryResp = {
      * Data
      */
     data?: Array<AddDynamicLotteryResp> | null;
-    /**
-     * Extra Fields
-     */
-    readonly extra_fields: {
-        [key: string]: unknown;
-    } | null;
-    [key: string]: unknown;
 };
 
 /**
@@ -1060,13 +878,6 @@ export type CommonResponseModelListAddTopicLotteryResp = {
      * Data
      */
     data?: Array<AddTopicLotteryResp> | null;
-    /**
-     * Extra Fields
-     */
-    readonly extra_fields: {
-        [key: string]: unknown;
-    } | null;
-    [key: string]: unknown;
 };
 
 /**
@@ -1085,13 +896,6 @@ export type CommonResponseModelListRpcMethodInfoResponse = {
      * Data
      */
     data?: Array<RpcMethodInfoResponse> | null;
-    /**
-     * Extra Fields
-     */
-    readonly extra_fields: {
-        [key: string]: unknown;
-    } | null;
-    [key: string]: unknown;
 };
 
 /**
@@ -1110,6 +914,24 @@ export type CommonResponseModelStr = {
      * Data
      */
     data?: string | null;
+};
+
+/**
+ * CrawlerHealthStatus
+ *
+ * 爬虫健康状态枚举
+ */
+export type CrawlerHealthStatus = 'normal' | 'stuck' | 'stopped';
+
+/**
+ * CustomBaseModelHashable
+ *
+ * 可哈希的自定义基础模型
+ * Args:
+ * ABC (_type_): _description_
+ * CustomBaseModel (_type_): _description_
+ */
+export type CustomBaseModelHashable = {
     /**
      * Extra Fields
      */
@@ -1701,7 +1523,6 @@ export type LotteryAdvancedQueryParams = {
     sort_order?: SortOrderEnum | null;
     created_at_preset?: TimePresetEnum | null;
     pub_time_preset?: TimePresetEnum | null;
-    [key: string]: unknown;
 };
 
 /**
@@ -1767,7 +1588,6 @@ export type LotteryPaginationParams = {
      * 每页数量，最小值为 1
      */
     page_size?: number;
-    [key: string]: unknown;
 };
 
 /**
@@ -1794,7 +1614,6 @@ export type LotterySearchPaginationParams = {
      * 搜索关键词
      */
     keyword: string;
-    [key: string]: unknown;
 };
 
 /**
@@ -1979,6 +1798,59 @@ export type OthersLotPrizeInfo = {
 };
 
 /**
+ * ProgressStatusResp
+ */
+export type ProgressStatusResp = {
+    /**
+     * Succ Count
+     */
+    succ_count?: number;
+    /**
+     * Start Ts
+     */
+    start_ts?: number;
+    /**
+     * Total Num
+     */
+    total_num?: number;
+    /**
+     * Progress
+     *
+     * 当前进度
+     */
+    progress?: number | number;
+    /**
+     * Is Running
+     */
+    is_running?: boolean;
+    /**
+     * Update Ts
+     */
+    update_ts?: number;
+    /**
+     * Running Params
+     *
+     * 运行中的参数
+     */
+    running_params?: Array<unknown>;
+    /**
+     * Extra Fields
+     */
+    readonly extra_fields: {
+        [key: string]: unknown;
+    } | null;
+    /**
+     * Update Time
+     */
+    readonly update_time: string;
+    /**
+     * Start Time
+     */
+    readonly start_time: string;
+    [key: string]: unknown;
+};
+
+/**
  * ProxyStatusResp
  */
 export type ProxyStatusResp = {
@@ -2116,13 +1988,6 @@ export type ResponsePaginationItemsChargeLotteryResp = {
      * Total
      */
     total: number;
-    /**
-     * Extra Fields
-     */
-    readonly extra_fields: {
-        [key: string]: unknown;
-    } | null;
-    [key: string]: unknown;
 };
 
 /**
@@ -2137,13 +2002,6 @@ export type ResponsePaginationItemsLiveLotteryResp = {
      * Total
      */
     total: number;
-    /**
-     * Extra Fields
-     */
-    readonly extra_fields: {
-        [key: string]: unknown;
-    } | null;
-    [key: string]: unknown;
 };
 
 /**
@@ -2158,13 +2016,6 @@ export type ResponsePaginationItemsLotdataResp = {
      * Total
      */
     total: number;
-    /**
-     * Extra Fields
-     */
-    readonly extra_fields: {
-        [key: string]: unknown;
-    } | null;
-    [key: string]: unknown;
 };
 
 /**
@@ -2179,13 +2030,6 @@ export type ResponsePaginationItemsOfficialLotteryResp = {
      * Total
      */
     total: number;
-    /**
-     * Extra Fields
-     */
-    readonly extra_fields: {
-        [key: string]: unknown;
-    } | null;
-    [key: string]: unknown;
 };
 
 /**
@@ -2200,13 +2044,6 @@ export type ResponsePaginationItemsOthersLotDynItem = {
      * Total
      */
     total: number;
-    /**
-     * Extra Fields
-     */
-    readonly extra_fields: {
-        [key: string]: unknown;
-    } | null;
-    [key: string]: unknown;
 };
 
 /**
@@ -2221,13 +2058,6 @@ export type ResponsePaginationItemsReserveInfoResp = {
      * Total
      */
     total: number;
-    /**
-     * Extra Fields
-     */
-    readonly extra_fields: {
-        [key: string]: unknown;
-    } | null;
-    [key: string]: unknown;
 };
 
 /**
@@ -2242,13 +2072,6 @@ export type ResponsePaginationItemsTopicLotteryResp = {
      * Total
      */
     total: number;
-    /**
-     * Extra Fields
-     */
-    readonly extra_fields: {
-        [key: string]: unknown;
-    } | null;
-    [key: string]: unknown;
 };
 
 /**
@@ -2355,6 +2178,104 @@ export type ScrapyTypeEnum = 'dyn' | 'topic' | 'reserve' | 'other_space' | 'othe
  * 通用排序方向枚举
  */
 export type SortOrderEnum = 'asc' | 'desc';
+
+/**
+ * StatsPlugin
+ *
+ * 一个用于收集和提供爬虫运行统计信息的插件。
+ */
+export type StatsPlugin = {
+    /**
+     * 最开始的参数
+     */
+    readonly init_params: WorkerModel | null;
+    /**
+     * 最后的参数
+     */
+    readonly end_params: WorkerModel | null;
+    /**
+     * 最后成功处理的参数
+     */
+    readonly end_success_params: WorkerModel | null;
+    /**
+     * Is Running
+     *
+     * 爬虫是否正在运行
+     */
+    readonly is_running: boolean;
+    /**
+     * Last Update Time
+     *
+     * 最后一次任务完成的时间戳 (Unix timestamp)
+     */
+    readonly last_update_time: number;
+    /**
+     * Last Update Time Str
+     */
+    readonly last_update_time_str: string;
+    /**
+     * Processed Items Count
+     *
+     * 已处理的任务数量
+     */
+    readonly processed_items_count: number;
+    /**
+     * Start Time
+     *
+     * 爬虫的启动时间 (Unix timestamp)
+     */
+    readonly start_time: number;
+    /**
+     * Start Time Str
+     */
+    readonly start_time_str: string;
+    /**
+     * Total Run Duration
+     *
+     * 总运行时长 (秒)。
+     * 无论爬虫是否仍在运行，此属性都将返回从启动到当前时间点或结束的总时长。
+     */
+    readonly total_run_duration: number;
+    /**
+     * Crawling Speed
+     *
+     * 当前的爬取速度 (项/秒)。
+     * 此属性在每次访问时根据当前已处理项数量和总运行时长重新计算。
+     */
+    readonly crawling_speed: number;
+    /**
+     * Null Count
+     *
+     * 返回 null 数据的数量
+     */
+    readonly null_count: number;
+    /**
+     * Succ Count
+     *
+     * 成功处理的任务数量
+     */
+    readonly succ_count: number;
+    /**
+     * Running Params Set
+     */
+    readonly running_params_set: Array<WorkerModel>;
+    /**
+     * 爬虫健康状态。
+     *
+     * 判断逻辑：
+     * - 如果未运行 (is_running=False)，返回 STOPPED
+     * - 如果正在运行：
+     * - 如果有运行中的参数 (running_params_set 不为空)：
+     * - 检查所有运行中参数的 updated_at 时间
+     * - 如果任一参数的 updated_at 超过 1 天，返回 STUCK（爬虫卡住）
+     * - 如果没有运行中的参数 (running_params_set 为空)：
+     * - 检查最后更新时间 (last_update_time)
+     * - 如果最后更新时间超过 10 分钟未更新，返回 STUCK
+     * - 否则返回 NORMAL（正常运行）
+     */
+    readonly health_status: CrawlerHealthStatus;
+    [key: string]: unknown;
+};
 
 /**
  * SubmitFeedbackReq
@@ -2629,6 +2550,38 @@ export type WinnerInfo = {
      * Rank
      */
     rank: number;
+};
+
+/**
+ * WorkerModel
+ */
+export type WorkerModel = {
+    params?: CustomBaseModelHashable | null;
+    /**
+     * Seqid
+     *
+     * 任务序号（自增）从0开始
+     */
+    seqId: number;
+    fetchStatus?: WorkerStatus;
+    /**
+     * Created At
+     *
+     * 创建时间
+     */
+    created_at?: string;
+    /**
+     * Updated At
+     *
+     * 更新时间
+     */
+    updated_at?: string;
+    /**
+     * Retry Count
+     *
+     * 重试次数
+     */
+    retry_count?: number;
     /**
      * Extra Fields
      */
@@ -2637,6 +2590,11 @@ export type WinnerInfo = {
     } | null;
     [key: string]: unknown;
 };
+
+/**
+ * WorkerStatus
+ */
+export type WorkerStatus = 1 | 2 | 3 | 4 | 5;
 
 /**
  * lotteryArticleReq
@@ -2767,23 +2725,23 @@ export type AllLotScrapyStatusRespWritable = {
     /**
      * Official Scrapy Status
      */
-    official_scrapy_status: unknown;
+    official_scrapy_status: StatsPluginWritable | ProgressStatusRespWritable | null;
     /**
      * Reserve Scrapy Status
      */
-    reserve_scrapy_status: unknown;
+    reserve_scrapy_status: StatsPluginWritable | ProgressStatusRespWritable | null;
     /**
      * Other Space Scrapy Status
      */
-    other_space_scrapy_status: unknown;
+    other_space_scrapy_status: StatsPluginWritable | ProgressStatusRespWritable | null;
     /**
      * Dyn Scrapy Status
      */
-    dyn_scrapy_status: unknown;
+    dyn_scrapy_status: StatsPluginWritable | ProgressStatusRespWritable | null;
     /**
      * Topic Scrapy Status
      */
-    topic_scrapy_status: unknown;
+    topic_scrapy_status: StatsPluginWritable | ProgressStatusRespWritable | null;
     [key: string]: unknown;
 };
 
@@ -2840,29 +2798,10 @@ export type ArticleInfoWritable = {
 };
 
 /**
- * BiliLotStatisticInfoResp
- */
-export type BiliLotStatisticInfoRespWritable = {
-    /**
-     * Sync Ts
-     */
-    sync_ts: number;
-    /**
-     * Winners
-     */
-    winners: Array<WinnerInfoWritable>;
-    /**
-     * Total
-     */
-    total: number;
-    [key: string]: unknown;
-};
-
-/**
  * BiliLotStatisticLotteryResultResp
  */
 export type BiliLotStatisticLotteryResultRespWritable = {
-    user: BiliUserInfoSimpleWritable;
+    user: BiliUserInfoSimple;
     /**
      * Prize Result
      */
@@ -2873,25 +2812,6 @@ export type BiliLotStatisticLotteryResultRespWritable = {
      * Total
      */
     total: number;
-    [key: string]: unknown;
-};
-
-/**
- * BiliUserInfoSimple
- */
-export type BiliUserInfoSimpleWritable = {
-    /**
-     * Uid
-     */
-    uid: string;
-    /**
-     * Name
-     */
-    name: string;
-    /**
-     * Face
-     */
-    face: string;
     [key: string]: unknown;
 };
 
@@ -3039,7 +2959,6 @@ export type CommonResponseModelAddDynamicLotteryRespWritable = {
      */
     msg?: string;
     data?: AddDynamicLotteryRespWritable | null;
-    [key: string]: unknown;
 };
 
 /**
@@ -3055,7 +2974,21 @@ export type CommonResponseModelAddTopicLotteryRespWritable = {
      */
     msg?: string;
     data?: AddTopicLotteryRespWritable | null;
-    [key: string]: unknown;
+};
+
+/**
+ * CommonResponseModel[AllLotScrapyStatusResp]
+ */
+export type CommonResponseModelAllLotScrapyStatusRespWritable = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: AllLotScrapyStatusRespWritable | null;
 };
 
 /**
@@ -3071,42 +3004,6 @@ export type CommonResponseModelAllLotteryRespWritable = {
      */
     msg?: string;
     data?: AllLotteryRespWritable | null;
-    [key: string]: unknown;
-};
-
-/**
- * CommonResponseModel[Any]
- */
-export type CommonResponseModelAnyWritable = {
-    /**
-     * Code
-     */
-    code?: number;
-    /**
-     * Msg
-     */
-    msg?: string;
-    /**
-     * Data
-     */
-    data?: unknown;
-    [key: string]: unknown;
-};
-
-/**
- * CommonResponseModel[BiliLotStatisticInfoResp]
- */
-export type CommonResponseModelBiliLotStatisticInfoRespWritable = {
-    /**
-     * Code
-     */
-    code?: number;
-    /**
-     * Msg
-     */
-    msg?: string;
-    data?: BiliLotStatisticInfoRespWritable | null;
-    [key: string]: unknown;
 };
 
 /**
@@ -3122,7 +3019,6 @@ export type CommonResponseModelBiliLotStatisticLotteryResultRespWritable = {
      */
     msg?: string;
     data?: BiliLotStatisticLotteryResultRespWritable | null;
-    [key: string]: unknown;
 };
 
 /**
@@ -3138,7 +3034,6 @@ export type CommonResponseModelCaptchaGenRespWritable = {
      */
     msg?: string;
     data?: CaptchaGenRespWritable | null;
-    [key: string]: unknown;
 };
 
 /**
@@ -3154,7 +3049,6 @@ export type CommonResponseModelGlobalSchedulerStatusModelWritable = {
      */
     msg?: string;
     data?: GlobalSchedulerStatusModelWritable | null;
-    [key: string]: unknown;
 };
 
 /**
@@ -3170,7 +3064,6 @@ export type CommonResponseModelIpInfoRespWritable = {
      */
     msg?: string;
     data?: IpInfoRespWritable | null;
-    [key: string]: unknown;
 };
 
 /**
@@ -3186,7 +3079,6 @@ export type CommonResponseModelLotteryArticleRespWritable = {
      */
     msg?: string;
     data?: LotteryArticleRespWritable | null;
-    [key: string]: unknown;
 };
 
 /**
@@ -3202,7 +3094,6 @@ export type CommonResponseModelLotteryFilterParamsRespWritable = {
      */
     msg?: string;
     data?: LotteryFilterParamsRespWritable | null;
-    [key: string]: unknown;
 };
 
 /**
@@ -3218,7 +3109,6 @@ export type CommonResponseModelResponsePaginationItemsChargeLotteryRespWritable 
      */
     msg?: string;
     data?: ResponsePaginationItemsChargeLotteryRespWritable | null;
-    [key: string]: unknown;
 };
 
 /**
@@ -3234,7 +3124,6 @@ export type CommonResponseModelResponsePaginationItemsLiveLotteryRespWritable = 
      */
     msg?: string;
     data?: ResponsePaginationItemsLiveLotteryRespWritable | null;
-    [key: string]: unknown;
 };
 
 /**
@@ -3250,7 +3139,6 @@ export type CommonResponseModelResponsePaginationItemsLotdataRespWritable = {
      */
     msg?: string;
     data?: ResponsePaginationItemsLotdataRespWritable | null;
-    [key: string]: unknown;
 };
 
 /**
@@ -3266,7 +3154,6 @@ export type CommonResponseModelResponsePaginationItemsOfficialLotteryRespWritabl
      */
     msg?: string;
     data?: ResponsePaginationItemsOfficialLotteryRespWritable | null;
-    [key: string]: unknown;
 };
 
 /**
@@ -3282,7 +3169,6 @@ export type CommonResponseModelResponsePaginationItemsOthersLotDynItemWritable =
      */
     msg?: string;
     data?: ResponsePaginationItemsOthersLotDynItemWritable | null;
-    [key: string]: unknown;
 };
 
 /**
@@ -3298,7 +3184,6 @@ export type CommonResponseModelResponsePaginationItemsReserveInfoRespWritable = 
      */
     msg?: string;
     data?: ResponsePaginationItemsReserveInfoRespWritable | null;
-    [key: string]: unknown;
 };
 
 /**
@@ -3314,7 +3199,6 @@ export type CommonResponseModelResponsePaginationItemsTopicLotteryRespWritable =
      */
     msg?: string;
     data?: ResponsePaginationItemsTopicLotteryRespWritable | null;
-    [key: string]: unknown;
 };
 
 /**
@@ -3330,42 +3214,6 @@ export type CommonResponseModelSamsClubApiStatusWritable = {
      */
     msg?: string;
     data?: SamsClubApiStatusWritable | null;
-    [key: string]: unknown;
-};
-
-/**
- * CommonResponseModel[Union[AllLotScrapyStatusResp, NoneType]]
- */
-export type CommonResponseModelUnionAllLotScrapyStatusRespNoneTypeWritable = {
-    /**
-     * Code
-     */
-    code?: number;
-    /**
-     * Msg
-     */
-    msg?: string;
-    data?: AllLotScrapyStatusRespWritable | null;
-    [key: string]: unknown;
-};
-
-/**
- * CommonResponseModel[Union[Any, NoneType]]
- */
-export type CommonResponseModelUnionAnyNoneTypeWritable = {
-    /**
-     * Code
-     */
-    code?: number;
-    /**
-     * Msg
-     */
-    msg?: string;
-    /**
-     * Data
-     */
-    data?: unknown | null;
-    [key: string]: unknown;
 };
 
 /**
@@ -3381,13 +3229,12 @@ export type CommonResponseModelUnionProxyStatusRespNoneTypeWritable = {
      */
     msg?: string;
     data?: ProxyStatusRespWritable | null;
-    [key: string]: unknown;
 };
 
 /**
- * CommonResponseModel[dict]
+ * CommonResponseModel[Union[StatsPlugin, ProgressStatusResp, NoneType]]
  */
-export type CommonResponseModelDictWritable = {
+export type CommonResponseModelUnionStatsPluginProgressStatusRespNoneTypeWritable = {
     /**
      * Code
      */
@@ -3399,10 +3246,7 @@ export type CommonResponseModelDictWritable = {
     /**
      * Data
      */
-    data?: {
-        [key: string]: unknown;
-    } | null;
-    [key: string]: unknown;
+    data?: StatsPluginWritable | ProgressStatusRespWritable | null;
 };
 
 /**
@@ -3421,7 +3265,6 @@ export type CommonResponseModelListAddDynamicLotteryRespWritable = {
      * Data
      */
     data?: Array<AddDynamicLotteryRespWritable> | null;
-    [key: string]: unknown;
 };
 
 /**
@@ -3440,45 +3283,6 @@ export type CommonResponseModelListAddTopicLotteryRespWritable = {
      * Data
      */
     data?: Array<AddTopicLotteryRespWritable> | null;
-    [key: string]: unknown;
-};
-
-/**
- * CommonResponseModel[list[RpcMethodInfoResponse]]
- */
-export type CommonResponseModelListRpcMethodInfoResponseWritable = {
-    /**
-     * Code
-     */
-    code?: number;
-    /**
-     * Msg
-     */
-    msg?: string;
-    /**
-     * Data
-     */
-    data?: Array<RpcMethodInfoResponse> | null;
-    [key: string]: unknown;
-};
-
-/**
- * CommonResponseModel[str]
- */
-export type CommonResponseModelStrWritable = {
-    /**
-     * Code
-     */
-    code?: number;
-    /**
-     * Msg
-     */
-    msg?: string;
-    /**
-     * Data
-     */
-    data?: string | null;
-    [key: string]: unknown;
 };
 
 /**
@@ -4040,6 +3844,45 @@ export type OthersLotDynItemWritable = {
 };
 
 /**
+ * ProgressStatusResp
+ */
+export type ProgressStatusRespWritable = {
+    /**
+     * Succ Count
+     */
+    succ_count?: number;
+    /**
+     * Start Ts
+     */
+    start_ts?: number;
+    /**
+     * Total Num
+     */
+    total_num?: number;
+    /**
+     * Progress
+     *
+     * 当前进度
+     */
+    progress?: number | number;
+    /**
+     * Is Running
+     */
+    is_running?: boolean;
+    /**
+     * Update Ts
+     */
+    update_ts?: number;
+    /**
+     * Running Params
+     *
+     * 运行中的参数
+     */
+    running_params?: Array<unknown>;
+    [key: string]: unknown;
+};
+
+/**
  * ProxyStatusResp
  */
 export type ProxyStatusRespWritable = {
@@ -4155,7 +3998,6 @@ export type ResponsePaginationItemsChargeLotteryRespWritable = {
      * Total
      */
     total: number;
-    [key: string]: unknown;
 };
 
 /**
@@ -4170,7 +4012,6 @@ export type ResponsePaginationItemsLiveLotteryRespWritable = {
      * Total
      */
     total: number;
-    [key: string]: unknown;
 };
 
 /**
@@ -4185,7 +4026,6 @@ export type ResponsePaginationItemsLotdataRespWritable = {
      * Total
      */
     total: number;
-    [key: string]: unknown;
 };
 
 /**
@@ -4200,7 +4040,6 @@ export type ResponsePaginationItemsOfficialLotteryRespWritable = {
      * Total
      */
     total: number;
-    [key: string]: unknown;
 };
 
 /**
@@ -4215,7 +4054,6 @@ export type ResponsePaginationItemsOthersLotDynItemWritable = {
      * Total
      */
     total: number;
-    [key: string]: unknown;
 };
 
 /**
@@ -4230,7 +4068,6 @@ export type ResponsePaginationItemsReserveInfoRespWritable = {
      * Total
      */
     total: number;
-    [key: string]: unknown;
 };
 
 /**
@@ -4245,7 +4082,6 @@ export type ResponsePaginationItemsTopicLotteryRespWritable = {
      * Total
      */
     total: number;
-    [key: string]: unknown;
 };
 
 /**
@@ -4275,6 +4111,15 @@ export type SamsClubApiStatusWritable = {
 export type SchedulerJobDetailModelWritable = {
     job_info: JobInfoModelWritable;
     execution_info?: ExecutionInfoModelWritable | null;
+};
+
+/**
+ * StatsPlugin
+ *
+ * 一个用于收集和提供爬虫运行统计信息的插件。
+ */
+export type StatsPluginWritable = {
+    [key: string]: unknown;
 };
 
 /**
@@ -4464,18 +4309,35 @@ export type TopicLotteryRespWritable = {
 };
 
 /**
- * WinnerInfo
+ * WorkerModel
  */
-export type WinnerInfoWritable = {
-    user: BiliUserInfoSimpleWritable;
+export type WorkerModelWritable = {
+    params?: null;
     /**
-     * Count
+     * Seqid
+     *
+     * 任务序号（自增）从0开始
      */
-    count: number;
+    seqId: number;
+    fetchStatus?: WorkerStatus;
     /**
-     * Rank
+     * Created At
+     *
+     * 创建时间
      */
-    rank: number;
+    created_at?: string;
+    /**
+     * Updated At
+     *
+     * 更新时间
+     */
+    updated_at?: string;
+    /**
+     * Retry Count
+     *
+     * 重试次数
+     */
+    retry_count?: number;
     [key: string]: unknown;
 };
 
@@ -4909,6 +4771,60 @@ export type SubmitFeedbackApiV1LotteryDatabaseBiliSubmitFeedbackPostResponses = 
 
 export type SubmitFeedbackApiV1LotteryDatabaseBiliSubmitFeedbackPostResponse = SubmitFeedbackApiV1LotteryDatabaseBiliSubmitFeedbackPostResponses[keyof SubmitFeedbackApiV1LotteryDatabaseBiliSubmitFeedbackPostResponses];
 
+export type GetSingleScrapyStatusApiV1LotteryDatabaseBiliGetSingleScrapyStatusPostData = {
+    body?: never;
+    path?: never;
+    query: {
+        /**
+         * 爬虫类型
+         */
+        scrapy_name: ScrapyTypeEnum;
+    };
+    url: '/api/v1/lottery_database/bili/GetSingleScrapyStatus';
+};
+
+export type GetSingleScrapyStatusApiV1LotteryDatabaseBiliGetSingleScrapyStatusPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetSingleScrapyStatusApiV1LotteryDatabaseBiliGetSingleScrapyStatusPostError = GetSingleScrapyStatusApiV1LotteryDatabaseBiliGetSingleScrapyStatusPostErrors[keyof GetSingleScrapyStatusApiV1LotteryDatabaseBiliGetSingleScrapyStatusPostErrors];
+
+export type GetSingleScrapyStatusApiV1LotteryDatabaseBiliGetSingleScrapyStatusPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: CommonResponseModelUnionStatsPluginProgressStatusRespNoneType;
+};
+
+export type GetSingleScrapyStatusApiV1LotteryDatabaseBiliGetSingleScrapyStatusPostResponse = GetSingleScrapyStatusApiV1LotteryDatabaseBiliGetSingleScrapyStatusPostResponses[keyof GetSingleScrapyStatusApiV1LotteryDatabaseBiliGetSingleScrapyStatusPostResponses];
+
+/**
+ * GetSingleScrapyStatusApiV1BackgroundServiceGetSingleScrapyStatusGet
+ */
+export type GetSingleScrapyStatusApiV1BackgroundServiceGetSingleScrapyStatusGetData = {
+    body?: never;
+    path?: never;
+    query: {
+        /**
+         * 爬虫类型
+         */
+        scrapy_name: ScrapyTypeEnum;
+    };
+    url: '/api/v1/background_service/GetSingleScrapyStatus';
+};
+
+export type GetSingleScrapyStatusApiV1BackgroundServiceGetSingleScrapyStatusGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: CommonResponseModelUnionStatsPluginProgressStatusRespNoneType;
+};
+
+export type GetSingleScrapyStatusApiV1BackgroundServiceGetSingleScrapyStatusGetResponse = GetSingleScrapyStatusApiV1BackgroundServiceGetSingleScrapyStatusGetResponses[keyof GetSingleScrapyStatusApiV1BackgroundServiceGetSingleScrapyStatusGetResponses];
+
 export type GetAllLotScrapyStatusApiV1LotteryDatabaseBiliGetAllLotScrapyStatusGetData = {
     body?: never;
     path?: never;
@@ -4920,7 +4836,7 @@ export type GetAllLotScrapyStatusApiV1LotteryDatabaseBiliGetAllLotScrapyStatusGe
     /**
      * Successful Response
      */
-    200: CommonResponseModelUnionAllLotScrapyStatusRespNoneType;
+    200: CommonResponseModelAllLotScrapyStatusResp;
 };
 
 export type GetAllLotScrapyStatusApiV1LotteryDatabaseBiliGetAllLotScrapyStatusGetResponse = GetAllLotScrapyStatusApiV1LotteryDatabaseBiliGetAllLotScrapyStatusGetResponses[keyof GetAllLotScrapyStatusApiV1LotteryDatabaseBiliGetAllLotScrapyStatusGetResponses];
@@ -5007,11 +4923,11 @@ export type LotteryHofApiV1LotteryDatabaseBiliLotteryHofLotTypeGetData = {
         /**
          * Offset
          */
-        offset?: number | null;
+        offset?: number;
         /**
          * Limit
          */
-        limit?: number | null;
+        limit?: number;
         date?: BiliLotStatisticRankDateTypeEnum;
     };
     url: '/api/v1/lottery_database/bili/lottery_hof/{lot_type}';
@@ -5091,49 +5007,6 @@ export type GetIpApiV1IpInfoGetGetResponses = {
 };
 
 export type GetIpApiV1IpInfoGetGetResponse = GetIpApiV1IpInfoGetGetResponses[keyof GetIpApiV1IpInfoGetGetResponses];
-
-export type GetSingleScrapyStatusApiV1BackgroundServiceGetSingleScrapyStatusGetData = {
-    body?: never;
-    path?: never;
-    query: {
-        scrapy_name: ScrapyTypeEnum;
-    };
-    url: '/api/v1/background_service/GetSingleScrapyStatus';
-};
-
-export type GetSingleScrapyStatusApiV1BackgroundServiceGetSingleScrapyStatusGetErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type GetSingleScrapyStatusApiV1BackgroundServiceGetSingleScrapyStatusGetError = GetSingleScrapyStatusApiV1BackgroundServiceGetSingleScrapyStatusGetErrors[keyof GetSingleScrapyStatusApiV1BackgroundServiceGetSingleScrapyStatusGetErrors];
-
-export type GetSingleScrapyStatusApiV1BackgroundServiceGetSingleScrapyStatusGetResponses = {
-    /**
-     * Successful Response
-     */
-    200: CommonResponseModelUnionAnyNoneType;
-};
-
-export type GetSingleScrapyStatusApiV1BackgroundServiceGetSingleScrapyStatusGetResponse = GetSingleScrapyStatusApiV1BackgroundServiceGetSingleScrapyStatusGetResponses[keyof GetSingleScrapyStatusApiV1BackgroundServiceGetSingleScrapyStatusGetResponses];
-
-export type GetAllScrapyStatusApiV1BackgroundServiceGetAllLotScrapyStatusGetData = {
-    body?: never;
-    path?: never;
-    query?: never;
-    url: '/api/v1/background_service/GetAllLotScrapyStatus';
-};
-
-export type GetAllScrapyStatusApiV1BackgroundServiceGetAllLotScrapyStatusGetResponses = {
-    /**
-     * Successful Response
-     */
-    200: CommonResponseModelUnionAllLotScrapyStatusRespNoneType;
-};
-
-export type GetAllScrapyStatusApiV1BackgroundServiceGetAllLotScrapyStatusGetResponse = GetAllScrapyStatusApiV1BackgroundServiceGetAllLotScrapyStatusGetResponses[keyof GetAllScrapyStatusApiV1BackgroundServiceGetAllLotScrapyStatusGetResponses];
 
 export type GetProxyStatusApiV1BackgroundServiceGetProxyStatusGetData = {
     body?: never;
