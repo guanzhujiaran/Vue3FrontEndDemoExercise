@@ -323,6 +323,17 @@
             </template>
           </div>
         </section>
+
+        <!-- Discourse 嵌入式评论框
+          按 enableDiscourseComments 开关渲染
+          每张卡片对应一个唯一 embed_url，Discourse 自动按 URL 创建对应主题
+          支持回复/点赞/引用/Markdown，由 Casdoor SSO 完成用户身份统一 -->
+        <BiliDiscourseComments
+          v-if="enableDiscourseComments && normalizedData.id"
+          :lottery-id="String(normalizedData.id)"
+          :lottery-title="normalizedData.title"
+          class="lottery-card__discourse-comments"
+        />
       </div>
     </template>
 
@@ -380,6 +391,7 @@ import { getBiliUserSpaceUrl } from '@/utils/PageOpen/BiliJump.ts'
 import { isMobileDevice } from '@/utils/Browser/useDeviceDetect.ts'
 import { BiliCommTxt } from '@/assets/text/BiliCommTxt.ts'
 import { handleLotteryLinkClick, setLotteryParticipation, isLotteryParticipated } from '@/utils/lotteryParticipation'
+import BiliDiscourseComments from '@/components/communicate_list/BiliDiscourseComments.vue'
 
 const handleRecordLotteryId = (val: boolean | number | string) => {
   setLotteryParticipation(String(normalizedData.value.id), Boolean(val))
@@ -395,6 +407,16 @@ const props = defineProps({
   lotteryData: {
     type: Object as PropType<AnyLotteryData>,
     required: true
+  },
+  /**
+   * 是否在卡片底部挂载 Discourse 嵌入式评论框
+   * 默认关闭，避免影响卡片列表整体高度
+   * 在抽奖详情页/展开查看页等独立场景按需开启
+   * 承载"主要内容为空、仅评论/打分"的场景
+   */
+  enableDiscourseComments: {
+    type: Boolean,
+    default: false
   }
 })
 
