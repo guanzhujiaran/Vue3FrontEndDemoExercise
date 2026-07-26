@@ -119,11 +119,11 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'http://localhost:10007',
+        target: 'http://192.168.1.200:10007',
         changeOrigin: true,
         rewrite: (path) => path
       }
     },
-    host: '0.0.0.0'
+    host: '0.0.0.0',
   }
 })

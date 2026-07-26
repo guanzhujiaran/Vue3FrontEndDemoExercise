@@ -167,8 +167,11 @@ const load_func = async (
       return []
     }
 
-    syncTs.value = resp?.data?.sync_ts ?? 0
-    return resp.data.winners.map((el) => {
+    // 该接口直接返回 LotteryRankResp（含 sync_ts、winners），无 {code,msg,data} 外层包裹。
+    // 兼容两种结构：优先取 resp.data，否则取 resp 本身。
+    const payload = (resp as any).data ?? resp
+    syncTs.value = payload?.sync_ts ?? 0
+    return (payload?.winners ?? []).map((el) => {
       return {
         score: el.count,
         ...el

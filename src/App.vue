@@ -110,28 +110,25 @@ onUnmounted(() => {
     <!-- 背景图片 -->
     <img class="pointer-events-none fixed inset-0 z-[-9999] h-full w-full object-cover" :src="backgroundUrl"
       referrerpolicy="no-referrer" alt="Background Image" />
-
     <el-config-provider :locale="zhCn">
-      <UseScreenSafeArea class="use-screen-safe-area">
-        <div class="app-wrapper">
-          <el-container v-if="isInit" id="i_cecream" class="min-h-dvh">
-            <el-header>
-              <HeaderBarView />
-            </el-header>
-            <el-main class="flex! flex-col flex-1 p-0 mt-3 mx-6 text-text-primary">
-              <RouterView v-slot="{ Component, route }">
-                <transition name="slide-fade" mode="out-in">
-                  <keep-alive :max="30">
-                    <component :is="Component" />
-                  </keep-alive>
-                </transition>
-              </RouterView>
-            </el-main>
-          </el-container>
-          <SponsorNotification />
-          <GlobalLoadingMask />
-          <LoginModal ref="loginModalRef" />
-        </div>
+      <UseScreenSafeArea class="use-screen-safe-area min-h-dvh min-w-[1060px] mx-auto">
+        <el-container v-if="isInit" id="i_cecream">
+          <el-header>
+            <HeaderBarView />
+          </el-header>
+          <el-main class="flex! flex-col flex-1 p-0 mt-3 mx-6 text-text-primary">
+            <RouterView v-slot="{ Component, route }">
+              <transition name="slide-fade" mode="out-in">
+                <keep-alive :max="30">
+                  <component :is="Component" />
+                </keep-alive>
+              </transition>
+            </RouterView>
+          </el-main>
+        </el-container>
+        <SponsorNotification />
+        <GlobalLoadingMask />
+        <LoginModal ref="loginModalRef" />
       </UseScreenSafeArea>
     </el-config-provider>
   </template>

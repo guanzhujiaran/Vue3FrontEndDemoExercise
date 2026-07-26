@@ -1913,13 +1913,6 @@ export type RabbitMqTestMsgModel = {
      * D
      */
     d: Array<string>;
-    /**
-     * Extra Fields
-     */
-    readonly extra_fields: {
-        [key: string]: unknown;
-    } | null;
-    [key: string]: unknown;
 };
 
 /**
@@ -3918,31 +3911,6 @@ export type ProxyStatusRespWritable = {
 };
 
 /**
- * RabbitMQTestMsgModel
- */
-export type RabbitMqTestMsgModelWritable = {
-    /**
-     * A
-     */
-    a: number;
-    /**
-     * B
-     */
-    b: string;
-    /**
-     * C
-     */
-    c: {
-        [key: string]: unknown;
-    };
-    /**
-     * D
-     */
-    d: Array<string>;
-    [key: string]: unknown;
-};
-
-/**
  * ReserveInfoResp
  */
 export type ReserveInfoRespWritable = {
@@ -4801,30 +4769,6 @@ export type GetSingleScrapyStatusApiV1LotteryDatabaseBiliGetSingleScrapyStatusPo
 
 export type GetSingleScrapyStatusApiV1LotteryDatabaseBiliGetSingleScrapyStatusPostResponse = GetSingleScrapyStatusApiV1LotteryDatabaseBiliGetSingleScrapyStatusPostResponses[keyof GetSingleScrapyStatusApiV1LotteryDatabaseBiliGetSingleScrapyStatusPostResponses];
 
-/**
- * GetSingleScrapyStatusApiV1BackgroundServiceGetSingleScrapyStatusGet
- */
-export type GetSingleScrapyStatusApiV1BackgroundServiceGetSingleScrapyStatusGetData = {
-    body?: never;
-    path?: never;
-    query: {
-        /**
-         * 爬虫类型
-         */
-        scrapy_name: ScrapyTypeEnum;
-    };
-    url: '/api/v1/background_service/GetSingleScrapyStatus';
-};
-
-export type GetSingleScrapyStatusApiV1BackgroundServiceGetSingleScrapyStatusGetResponses = {
-    /**
-     * Successful Response
-     */
-    200: CommonResponseModelUnionStatsPluginProgressStatusRespNoneType;
-};
-
-export type GetSingleScrapyStatusApiV1BackgroundServiceGetSingleScrapyStatusGetResponse = GetSingleScrapyStatusApiV1BackgroundServiceGetSingleScrapyStatusGetResponses[keyof GetSingleScrapyStatusApiV1BackgroundServiceGetSingleScrapyStatusGetResponses];
-
 export type GetAllLotScrapyStatusApiV1LotteryDatabaseBiliGetAllLotScrapyStatusGetData = {
     body?: never;
     path?: never;
@@ -5197,6 +5141,20 @@ export type GcGcGetData = {
 };
 
 export type GcGcGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
+export type TestPushErrorTestPushErrorGetData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/test_push_error';
+};
+
+export type TestPushErrorTestPushErrorGetResponses = {
     /**
      * Successful Response
      */

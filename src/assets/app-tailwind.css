@@ -129,9 +129,6 @@ elementDark放到theme后面是为了确保暗色状态下直接用elementDark�
 }
 
 @layer components {
-  body {
-    min-width: 1060px;
-  }
   .el-switch__core .el-switch__inner-wrapper {
     @apply text-base;
   }

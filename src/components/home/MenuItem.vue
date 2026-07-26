@@ -5,12 +5,11 @@
     v-if="!item.children || item.children.length === 0"
     :index="item.path"
     @click="handleMenuItemClick"
-    @dblclick="handleMenuItemDblClick"
   >
     <span class="text-lg">{{ item.title }}</span>
   </el-menu-item>
-  <!-- 中间层子菜单：桌面端单击标题（含边框）跳转；移动端单击仅展开，需双击跳转 -->
-  <el-sub-menu v-else :index="item.path" @click="handleSubMenuClick" @dblclick="handleSubMenuDblClick">
+  <!-- 中间层子菜单：桌面端单击标题跳转；移动端单击展开，双击（两次快速点击）跳转 -->
+  <el-sub-menu v-else :index="item.path" @click="handleSubMenuClick">
     <template #title><span class="text-lg">{{ item.title }}</span></template>
     <template v-for="(child, idx) in item.children" :key="child.path">
       <MenuItem :item="child" :is-first="idx === 0" />
@@ -19,7 +18,7 @@
 </template>
 
 <script setup lang="ts">
-import { inject, type Ref, computed } from 'vue'
+import { inject, ref, type Ref, computed } from 'vue'
 import { ElMenuItem, ElSubMenu } from 'element-plus'
 import { useRouter } from 'vue-router'
 import { KeysEnum, useInject } from '@/models/base/provide_model.ts'
@@ -76,17 +75,9 @@ const navigate = async () => {
   }
 }
 
-// 最末端菜单单击跳转；移动端下若为子菜单首项或顶层叶子项，则单击不跳转（需双击）
+// 最末端菜单（无子菜单）：单击即跳转（桌面端、移动端一致），不再依赖不可靠的 dblclick
 const handleMenuItemClick = () => {
-  if (isMobile.value && (props.isFirst || props.isTopLevel)) return
   navigate()
-}
-
-// 最末端菜单双击跳转；仅移动端下子菜单首项或顶层叶子项生效
-const handleMenuItemDblClick = () => {
-  if (isMobile.value && (props.isFirst || props.isTopLevel)) {
-    navigate()
-  }
 }
 
 // 是否为子菜单标题区域的点击（排除展开后的弹层内容）
@@ -95,17 +86,26 @@ const isTitleClick = (e: Event) => {
   return !!target?.closest('.el-sub-menu__title')
 }
 
-// 子菜单单击：桌面端跳转（含边框）；移动端仅展开，不跳转
+// 记录子菜单标题上一次被点击的时间，用于移动端手动识别“双击”。
+// 不依赖浏览器 dblclick：移动端双击常被浏览器当作缩放手势而吞掉，导致跳转失效。
+const lastSubMenuTapTime = ref(0)
+const DOUBLE_TAP_THRESHOLD = 300
+
+// 子菜单标题点击：
+// - 桌面端：单击即跳转到该菜单自身路由（同时也由 Element Plus 展开/收起）
+// - 移动端：单击仅展开子菜单；快速再次单击（双击）则跳转到该菜单自身路由
 const handleSubMenuClick = (e: Event) => {
   if (!isTitleClick(e)) return
-  if (isMobile.value) return
-  navigate()
-}
-
-// 子菜单双击：移动端跳转；桌面端单击已处理，无需重复跳转
-const handleSubMenuDblClick = (e: Event) => {
-  if (!isTitleClick(e)) return
-  if (!isMobile.value) return
-  navigate()
+  if (!isMobile.value) {
+    navigate()
+    return
+  }
+  const now = Date.now()
+  if (now - lastSubMenuTapTime.value < DOUBLE_TAP_THRESHOLD) {
+    lastSubMenuTapTime.value = 0
+    navigate()
+  } else {
+    lastSubMenuTapTime.value = now
+  }
 }
 </script>

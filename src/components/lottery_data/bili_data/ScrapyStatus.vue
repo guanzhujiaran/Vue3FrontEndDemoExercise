@@ -328,15 +328,15 @@ onBeforeUnmount(() => {
       <div v-if="data" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <div class="bg-bg rounded-lg border border-border-light p-4 flex flex-col">
           <div class="text-text-secondary text-sm mb-2">总爬虫数量</div>
-          <div class="text-2xl font-bold text-text-primary">{{ Object.entries(data).filter((el) => getKeyName(el[0])).length }}</div>
+          <div class="text-2xl font-bold text-text-primary">{{ Object.entries(data).filter((el) => getKeyName(el[0]) && el[1]).length }}</div>
         </div>
         <div class="bg-bg rounded-lg border border-border-light p-4 flex flex-col">
           <div class="text-text-secondary text-sm mb-2">运行中爬虫</div>
-          <div class="text-2xl font-bold text-[#67c23a]">{{ Object.entries(data).filter((el) => getKeyName(el[0]) && el[1].is_running).length }}</div>
+          <div class="text-2xl font-bold text-[#67c23a]">{{ Object.entries(data).filter((el) => getKeyName(el[0]) && el[1]?.is_running).length }}</div>
         </div>
         <div class="bg-bg rounded-lg border border-border-light p-4 flex flex-col">
           <div class="text-text-secondary text-sm mb-2">总成功数量</div>
-          <div class="text-2xl font-bold text-text-primary">{{ Object.entries(data).reduce((sum, [_, scrapy]) => sum + scrapy.succ_count, 0).toLocaleString() }}</div>
+          <div class="text-2xl font-bold text-text-primary">{{ Object.entries(data).filter((el) => el[1]).reduce((sum, [_, scrapy]) => sum + statSucc(scrapy), 0).toLocaleString() }}</div>
         </div>
         <div class="bg-bg rounded-lg border border-border-light p-4 flex flex-col">
           <div class="text-text-secondary text-sm mb-2">总处理数量</div>
@@ -346,7 +346,7 @@ onBeforeUnmount(() => {
       
       <div v-if="data" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <div 
-          v-for="([category, scrapy_data], idx) in Object.entries(data).filter((el) => getKeyName(el[0]))" 
+          v-for="([category, scrapy_data], idx) in Object.entries(data).filter((el) => getKeyName(el[0]) && el[1])" 
           :key="category"
           class="rounded-lg overflow-hidden border border-border-light bg-bg transition-all duration-300 hover:shadow-lg hover:-translate-y-1 flex flex-col"
         >
