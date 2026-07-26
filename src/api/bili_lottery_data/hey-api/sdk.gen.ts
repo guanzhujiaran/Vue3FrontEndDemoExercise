@@ -277,14 +277,14 @@ export const getLotteryFilterParamsApiV1LotteryDatabaseBiliGetLotteryFilterParam
  *
  * 获取中奖数据的分析情况，返回[{uid:中奖数}...]
  */
-export const lotteryHofApiV1LotteryDatabaseBiliLotteryHofLotTypeGet = <ThrowOnError extends boolean = false>(options: Options<LotteryHofApiV1LotteryDatabaseBiliLotteryHofLotTypeGetData, ThrowOnError>): RequestResult<LotteryHofApiV1LotteryDatabaseBiliLotteryHofLotTypeGetResponses, LotteryHofApiV1LotteryDatabaseBiliLotteryHofLotTypeGetErrors, ThrowOnError> => (options.client ?? client).get<LotteryHofApiV1LotteryDatabaseBiliLotteryHofLotTypeGetResponses, LotteryHofApiV1LotteryDatabaseBiliLotteryHofLotTypeGetErrors, ThrowOnError>({ url: '/api/v1/lottery_database/bili/lottery_hof/{lot_type}', ...options });
+export const lotteryHofApiV1LotteryDatabaseBiliLotteryHofLotTypeGet = <ThrowOnError extends boolean = false>(options: Options<LotteryHofApiV1LotteryDatabaseBiliLotteryHofLotTypeGetData, ThrowOnError>): RequestResult<LotteryHofApiV1LotteryDatabaseBiliLotteryHofLotTypeGetResponses, LotteryHofApiV1LotteryDatabaseBiliLotteryHofLotTypeGetErrors, ThrowOnError> => (options.client ?? client).get<LotteryHofApiV1LotteryDatabaseBiliLotteryHofLotTypeGetResponses, LotteryHofApiV1LotteryDatabaseBiliLotteryHofLotTypeGetErrors, ThrowOnError>({ url: '/api/v1/lottery_database/bili/lottery_statistic/rank/lottery_hof/{lot_type}', ...options });
 
 /**
  * 获取uid中奖数据
  *
  * 根据uid获取某个b站用户的数据库中的中奖数据
  */
-export const lotteryResultApiV1LotteryDatabaseBiliLotteryResultGet = <ThrowOnError extends boolean = false>(options: Options<LotteryResultApiV1LotteryDatabaseBiliLotteryResultGetData, ThrowOnError>): RequestResult<LotteryResultApiV1LotteryDatabaseBiliLotteryResultGetResponses, LotteryResultApiV1LotteryDatabaseBiliLotteryResultGetErrors, ThrowOnError> => (options.client ?? client).get<LotteryResultApiV1LotteryDatabaseBiliLotteryResultGetResponses, LotteryResultApiV1LotteryDatabaseBiliLotteryResultGetErrors, ThrowOnError>({ url: '/api/v1/lottery_database/bili/lottery_result', ...options });
+export const lotteryResultApiV1LotteryDatabaseBiliLotteryResultGet = <ThrowOnError extends boolean = false>(options: Options<LotteryResultApiV1LotteryDatabaseBiliLotteryResultGetData, ThrowOnError>): RequestResult<LotteryResultApiV1LotteryDatabaseBiliLotteryResultGetResponses, LotteryResultApiV1LotteryDatabaseBiliLotteryResultGetErrors, ThrowOnError> => (options.client ?? client).get<LotteryResultApiV1LotteryDatabaseBiliLotteryResultGetResponses, LotteryResultApiV1LotteryDatabaseBiliLotteryResultGetErrors, ThrowOnError>({ url: '/api/v1/lottery_database/bili/lottery_statistic/rank/lottery_result', ...options });
 
 /**
  * 获取ipv6地址信息

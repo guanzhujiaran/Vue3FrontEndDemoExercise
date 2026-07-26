@@ -14,10 +14,12 @@ const handlePopup = () => {
   isPopup.value = !isPopup.value
 }
 const handlePartitionChange = (param: PartitionParamsInfo) => {
-  if (partition.value.activeValue !== param.paramValue) emit('handlePartitionChange')
-  partition.value.activeValue = param.paramValue
-  activeName.value = param.displayName
-  isPopup.value = false
+  if (partition.value.activeValue !== param.paramValue) {
+    partition.value = { ...partition.value, activeValue: param.paramValue }
+    activeName.value = param.displayName
+    isPopup.value = false
+    emit('handlePartitionChange')
+  }
 }
 const emit = defineEmits(['handlePartitionChange'])
 </script>

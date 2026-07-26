@@ -186,8 +186,13 @@ elementDark放到theme后面是为了确保暗色状态下直接用elementDark�
 
   /* 状态圆点脉冲动画 */
   @keyframes pulse-warn {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.4; }
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.4;
+    }
   }
   .animate-pulse-warn {
     animation: pulse-warn 1.5s ease-in-out infinite;

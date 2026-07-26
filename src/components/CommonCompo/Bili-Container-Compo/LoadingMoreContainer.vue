@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { type PropType, computed } from 'vue'
-import { useElementSize, useThrottleFn } from '@vueuse/core'
+import { type PropType } from 'vue'
+import { useThrottleFn } from '@vueuse/core'
 
 const props = defineProps({
   handleLoad: {
@@ -21,22 +21,23 @@ const isError = defineModel('isError', {
   required: true,
   type: Boolean
 })
-const scrollContainer = useTemplateRef<HTMLElement>('scrollContainer')
-const {  height } = useElementSize(scrollContainer)
 
 const handleLoad = useThrottleFn(() => {
   if (!isMore.value || isError.value) return
   props.handleLoad()
 }, 2e3)
-const wrapperHeight = computed(() => {
-  return height.value
-})
 </script>
 
 <template>
-  <div ref="scrollContainer" class="with-loading-more-container-wrapper mb-4 flex-1" v-loading="isLoading">
-    <el-scrollbar no-resize class="with-loading-more-container h-full" :height="wrapperHeight" noresize aria-orientation="vertical" @end-reached="handleLoad" :distance="10">
-      <div class="w-full flex-1">
+  <div class="with-loading-more-container-wrapper mb-4 flex min-h-0 flex-1" v-loading="isLoading">
+    <el-scrollbar
+      class="with-loading-more-container mx-auto max-w-6xl w-full"
+      noresize
+      aria-orientation="vertical"
+      @end-reached="handleLoad"
+      :distance="10"
+    >
+      <div class="w-full">
         <slot name="content"></slot>
       </div>
       <div class="loading-more-txt relative w-full text-center bg-transparent h-25" style="background-color: transparent">

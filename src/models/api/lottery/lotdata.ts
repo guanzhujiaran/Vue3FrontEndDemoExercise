@@ -87,7 +87,7 @@ export enum LotteryRankDateType {
   month = 'month',
   pre_month = 'pre_month',
   year = 'year',
-  pre_year = 'pre_yrea',
+  pre_year = 'pre_year',
   total = 'total'
 }
 

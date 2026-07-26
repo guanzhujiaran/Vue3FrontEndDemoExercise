@@ -212,41 +212,56 @@ const handleCardClick = (path: string | undefined, requiresLogin = false) => {
     <!-- 页脚 -->
     <footer class="mt-16 border-t border-border-lighter bg-fill-light/50">
       <div class="mx-auto max-w-6xl px-5 py-12">
-        <div class="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-3">
-          <div>
-            <el-text class="mb-4 block text-base font-semibold" tag="h3">关于我</el-text>
-            <el-text class="text-sm leading-7 text-text-regular">
-              BiliExplosion是一个帮助B站用户管理和分析抽奖数据的工具，提供多种功能帮助您更好地参与B站活动。
+        <div class="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-12">
+          <!-- 关于我：占据更宽区域，作为品牌信息区 -->
+          <div class="sm:col-span-2 lg:col-span-5">
+            <el-text class="mb-3 block text-lg font-bold tracking-tight" tag="h3">BiliExplosion</el-text>
+            <el-text class="block max-w-md text-sm leading-7 text-text-regular">
+              BiliExplosion 是一个帮助 B 站用户管理和分析抽奖数据的工具，提供多种功能帮助您更好地参与 B 站活动。
             </el-text>
           </div>
-          <div>
+          <!-- 快速链接 -->
+          <div class="lg:col-span-3">
             <el-text class="mb-4 block text-base font-semibold" tag="h3">快速链接</el-text>
-            <ul class="m-0 list-none space-y-2.5 p-0">
+            <ul class="m-0 list-none space-y-3 p-0">
               <li>
-                <el-link class="text-sm! no-underline" @click="router.push('/app/Feedback')">
+                <el-link class="text-sm! text-text-regular! no-underline transition-colors hover:text-primary!"
+                  @click="router.push('/app/Feedback')">
                   反馈建议
                 </el-link>
               </li>
               <li>
-                <el-link class="text-sm! no-underline" @click="router.push('/app/user-center')">
+                <el-link class="text-sm! text-text-regular! no-underline transition-colors hover:text-primary!"
+                  @click="router.push('/app/user-center')">
                   浏览器管理
                 </el-link>
               </li>
               <li>
-                <el-link class="text-sm! no-underline" @click="router.push('/app/lot-data/bili-data/official')">
+                <el-link class="text-sm! text-text-regular! no-underline transition-colors hover:text-primary!"
+                  @click="router.push('/app/lot-data/bili-data/official')">
                   抽奖数据
                 </el-link>
               </li>
             </ul>
           </div>
-          <div>
+          <!-- 联系我 -->
+          <div class="lg:col-span-4">
             <el-text class="mb-4 block text-base font-semibold" tag="h3">联系我</el-text>
-            <el-text class="block text-sm text-text-regular" tag="p">邮箱: guanzhujiaran2022@163.com</el-text>
-            <el-text class="mt-2 block text-sm text-text-secondary" tag="p">就我一个人写前后端，更新慢点见谅</el-text>
+            <div class="flex items-center gap-2 text-sm text-text-regular">
+              <el-icon :size="15" class="shrink-0 text-text-secondary">
+                <Message />
+              </el-icon>
+              <span class="break-all">guanzhujiaran2022@163.com</span>
+            </div>
+            <el-text class="mt-3 block text-sm leading-6 text-text-secondary" tag="p">
+              就我一个人写前后端，更新慢点见谅
+            </el-text>
           </div>
         </div>
-        <div class="mt-8 border-t border-border-lighter pt-8 text-center">
+        <div
+          class="mt-10 flex flex-col items-center justify-between gap-3 border-t border-border-lighter pt-6 sm:flex-row">
           <el-text class="text-xs text-text-secondary" tag="p">&copy; 2025 BiliExplosion. All rights reserved.</el-text>
+          <el-text class="text-xs text-text-secondary" tag="p">Made with ❤ by 星瞳</el-text>
         </div>
       </div>
     </footer>

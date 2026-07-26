@@ -20,7 +20,6 @@ import {
   addOthersLotDynApiV1LotteryDatabaseBiliAddOthersLotDynPost,
   bulkAddOthersLotDynApiV1LotteryDatabaseBiliBulkAddOthersLotDynPost,
   searchLotteryByKeywordApiV1LotteryDatabaseBiliSearchLotteryByKeywordPost,
-  submitFeedbackApiV1LotteryDatabaseBiliSubmitFeedbackPost,
   getOthersLotDynListApiV1LotteryDatabaseBiliGetOthersLotDynListPost,
   getLotteryFilterParamsApiV1LotteryDatabaseBiliGetLotteryFilterParamsGet,
   getSingleScrapyStatusApiV1LotteryDatabaseBiliGetSingleScrapyStatusPost,
@@ -35,7 +34,6 @@ import type {
   BulkAddOthersLotDynReq,
   AddTopicLotteryReq,
   BulkAddTopicLotteryReq,
-  SubmitFeedbackReq,
   OthersLotDynSortEnum,
   OthersLotDynSortOrderEnum,
   TimePresetEnum,
@@ -349,20 +347,13 @@ class LotteryDataBaseApi {
     return res as any
   }
 
-  // ==================== 搜索与反馈 ====================
+  // ==================== 搜索 ====================
 
   async searchLotteryByKeyword(
     params: LotterySearchPaginationParams
   ): Promise<RootObject<LotDataView<any>>> {
     const res = await searchLotteryByKeywordApiV1LotteryDatabaseBiliSearchLotteryByKeywordPost({
       body: params as any,
-    })
-    return res as any
-  }
-
-  async submitFeedback(message: string): Promise<RootObject<Record<string, any>>> {
-    const res = await submitFeedbackApiV1LotteryDatabaseBiliSubmitFeedbackPost({
-      body: { message } as SubmitFeedbackReq,
     })
     return res as any
   }

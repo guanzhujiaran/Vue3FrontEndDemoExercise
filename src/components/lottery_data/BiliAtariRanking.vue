@@ -139,7 +139,7 @@ const ranking_partitions = ref<RankingPartition[]>([
         displayName: '全部时间'
       }
     ],
-    activeValue: LotteryRankDateType.pre_month
+    activeValue: LotteryRankDateType.total
   }
 ])
 const isError = ref(false)

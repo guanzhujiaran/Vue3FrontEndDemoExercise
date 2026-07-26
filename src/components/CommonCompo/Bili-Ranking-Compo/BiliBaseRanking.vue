@@ -7,52 +7,54 @@
     v-model:is-error="isError"
   >
     <template #content>
-      <div class="text-center mb-6">
-        <div class="text-2xl font-bold bg-gradient-to-r from-primary to-info bg-clip-text text-transparent mb-4">排行榜</div>
-      </div>
-      <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4 p-4 bg-gray-900/50 rounded-lg border border-gray-800">
-        <div class="text-sm text-gray-400 flex items-center">
-          <el-icon class="mr-2 text-gray-500"><Timer /></el-icon>
-          <span class="mr-2">数据同步时间：</span>
-          <span class="text-gray-200 font-medium">{{ syncTimeText }}</span>
+      <div class="px-4 md:px-8 py-6 mx-auto max-w-6xl">
+        <div class="text-center mb-6">
+          <div class="text-2xl font-bold bg-gradient-to-r from-primary to-info bg-clip-text text-transparent mb-4">排行榜</div>
         </div>
-        <div class="flex flex-wrap gap-3">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4 p-4 bg-gray-900/50 rounded-lg border border-gray-800">
+          <div class="text-sm text-gray-400 flex items-center">
+            <el-icon class="mr-2 text-gray-500"><Timer /></el-icon>
+            <span class="mr-2">数据同步时间：</span>
+            <span class="text-gray-200 font-medium">{{ syncTimeText }}</span>
+          </div>
+          <div class="flex flex-wrap gap-3">
           <HallAreaContent
             v-if="props.ranking_partitions.length"
             v-for="partition in props.ranking_partitions"
-            :partition="partition"
+            v-model:partition="partition"
             @handlePartitionChange="handlePartitionChange"
           >
           </HallAreaContent>
+          </div>
         </div>
+        <el-divider></el-divider>
+        <div class="flex justify-center items-end gap-8 mb-8 min-h-[200px]">
+          <RankItem
+            v-for="(item, index) in topItems"
+            :key="index"
+            :score_prefix="props.score_prefix"
+            :score_suffix="props.score_suffix"
+            :item="item"
+            @score_click="handleScoreClick"
+          >
+          </RankItem>
+        </div>
+        <div class="rounded-md p-4">
+          <RankItemRow
+            v-for="(item, index) in rankItems"
+            :item="item"
+            :score_prefix="props.score_prefix"
+            :score_suffix="props.score_suffix"
+            :animation="{
+              duration: 200 * (((index + 3) % 10) + 1)
+            }"
+            :key="index"
+            @score_click="handleScoreClick"
+          />
+        </div>
+        <BiliEmpty v-if="!isError && !isLoading && topItems.length === 0 && rankItems.length === 0"></BiliEmpty>
+        <BiliError class="mt-6" v-if="isError" @click-retry="handleLoad"></BiliError>
       </div>
-      <el-divider></el-divider>
-      <div class="flex justify-center items-end gap-8 mb-8 min-h-[200px]">
-        <RankItem
-          v-for="(item, index) in topItems"
-          :key="index"
-          :score_prefix="props.score_prefix"
-          :score_suffix="props.score_suffix"
-          :item="item"
-          @score_click="handleScoreClick"
-        >
-        </RankItem>
-      </div>
-      <div class="rounded-md p-4">
-        <RankItemRow
-          v-for="(item, index) in rankItems"
-          :item="item"
-          :score_prefix="props.score_prefix"
-          :score_suffix="props.score_suffix"
-          :animation="{
-            duration: 200 * (((index + 3) % 10) + 1)
-          }"
-          :key="index"
-          @score_click="handleScoreClick"
-        />
-      </div>
-      <BiliEmpty v-if="!isError && !isLoading && topItems.length === 0 && rankItems.length === 0"></BiliEmpty>
-      <BiliError class="mt-6" v-if="isError" @click-retry="handleLoad"></BiliError>
     </template>
   </LoadingMoreContainer>
   <slot name="DetailDrawer" :ActivedUserLotteryResult="ActivedUserLotteryResult" :activedParams="activedParams"></slot>

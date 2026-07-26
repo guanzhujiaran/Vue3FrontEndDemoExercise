@@ -4874,7 +4874,7 @@ export type LotteryHofApiV1LotteryDatabaseBiliLotteryHofLotTypeGetData = {
         limit?: number;
         date?: BiliLotStatisticRankDateTypeEnum;
     };
-    url: '/api/v1/lottery_database/bili/lottery_hof/{lot_type}';
+    url: '/api/v1/lottery_database/bili/lottery_statistic/rank/lottery_hof/{lot_type}';
 };
 
 export type LotteryHofApiV1LotteryDatabaseBiliLotteryHofLotTypeGetErrors = {
@@ -4915,7 +4915,7 @@ export type LotteryResultApiV1LotteryDatabaseBiliLotteryResultGetData = {
         limit?: number;
         date?: BiliLotStatisticRankDateTypeEnum;
     };
-    url: '/api/v1/lottery_database/bili/lottery_result';
+    url: '/api/v1/lottery_database/bili/lottery_statistic/rank/lottery_result';
 };
 
 export type LotteryResultApiV1LotteryDatabaseBiliLotteryResultGetErrors = {

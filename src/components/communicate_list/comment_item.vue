@@ -260,20 +260,18 @@ const renderedContent = computed(() => {
               class="px-3 py-2 text-sm cursor-pointer hover:bg-bg-secondary transition-colors"
               @click="handle_top(reply_item)"
             >置顶</div>
-            <el-popconfirm
-              confirm-button-text="删除"
-              cancel-button-text="取消"
-              title="确定删除这条评论吗？"
-              @confirm="handle_delete(reply_item)"
-              placement="left"
-            >
-              <template #reference>
-                <div
-                  v-if="String(reply_item.member.mid) === String(user_nav.uid) || is_up"
-                  class="px-3 py-2 text-sm cursor-pointer hover:bg-bg-secondary transition-colors text-red-400"
-                >删除</div>
-              </template>
-            </el-popconfirm>
+              <el-popconfirm
+                v-if="String(reply_item.member.mid) === String(user_nav.uid) || is_up"
+                confirm-button-text="删除"
+                cancel-button-text="取消"
+                title="确定删除这条评论吗？"
+                @confirm="handle_delete(reply_item)"
+                placement="left"
+              >
+                <template #reference>
+                  <div class="px-3 py-2 text-sm cursor-pointer hover:bg-bg-secondary transition-colors text-red-400">删除</div>
+                </template>
+              </el-popconfirm>
             <div
               v-if="String(reply_item.member.mid) !== String(user_nav.uid)"
               class="px-3 py-2 text-sm cursor-pointer hover:bg-bg-secondary transition-colors"

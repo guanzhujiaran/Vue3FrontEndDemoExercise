@@ -111,9 +111,9 @@ onUnmounted(() => {
     <img class="pointer-events-none fixed inset-0 z-[-9999] h-full w-full object-cover" :src="backgroundUrl"
       referrerpolicy="no-referrer" alt="Background Image" />
     <el-config-provider :locale="zhCn">
-      <UseScreenSafeArea class="use-screen-safe-area min-h-dvh min-w-[1060px] mx-auto">
+      <UseScreenSafeArea class="use-screen-safe-area flex flex-col min-w-[690px]">
         <el-container v-if="isInit" id="i_cecream">
-          <el-header>
+          <el-header class="bili-header">
             <HeaderBarView />
           </el-header>
           <el-main class="flex! flex-col flex-1 p-0 mt-3 mx-6 text-text-primary">

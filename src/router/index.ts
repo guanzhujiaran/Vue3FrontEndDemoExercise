@@ -449,5 +449,19 @@ router.afterEach(() => {
   // 路由切换完成后隐藏加载遮罩
   emitter.emit('loading', { isLoading: false, loadingText: '' })
 })
+
+// 捕获导航过程中抛出的错误（如动态导入模块失败），避免未处理的 Promise 拒绝中断应用
+let dynamicImportReloadCount = 0
+router.onError((error) => {
+  // 开发时 Vite dev server 重启会导致旧的动态导入模块 URL 失效，
+  // 重新加载页面拉取最新的模块图即可恢复（最多自动刷新一次，防止死循环）
+  if (
+    /Failed to fetch dynamically imported module/i.test(error.message) &&
+    dynamicImportReloadCount < 1
+  ) {
+    dynamicImportReloadCount++
+    window.location.reload()
+  }
+})
 export default router
 export { routes, user_center_routes }
