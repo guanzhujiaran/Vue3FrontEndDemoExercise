@@ -11,13 +11,15 @@ import { UseScreenSafeArea } from '@vueuse/components'
 import { BiliImg } from '@/assets/img/BiliImg.ts'
 import HeaderBarView from '@/components/CommonCompo/Bili-Header-Compo/items/HeaderBarView.vue'
 import LoginModal from '@/components/login_page/compo/LoginModal.vue'
-import { openGlobalLoginModalKey } from '@/models/inject/inject_type.ts'
+import { openGlobalLoginModalKey, windowHeightKey } from '@/models/inject/inject_type.ts'
 import { KeysEnum, useInject } from '@/models/base/provide_model.ts'
 import type { UserNavModel } from '@/models/user/user_model.ts'
 import { isLogin } from '@/api/user/utils.ts'
 
 import type { Ref } from 'vue'
 import NetworkErrorView from '@/views/NetworkErrorView.vue'
+import { useDebounceFn, useResizeObserver } from '@vueuse/core'
+import FlexContainer from './components/CommonCompo/Bili-Container-Compo/FlexContainer.vue'
 useHead({
   title: '爆破哔哩哔哩弹幕视频网 - ( ゜- ゜)つロ 乾杯~ - bilibili',
   meta: [
@@ -45,7 +47,6 @@ const backgroundUrl = computed(() => {
 
 // 存储清理函数
 let themeCleanup = () => { }
-let autoScaleCleanup = () => { }
 
 // 全局打开登录模态框的方法
 const openGlobalLoginModal = () => {
@@ -85,19 +86,57 @@ onMounted(() => {
 
   // 设置系统主题监听
   themeCleanup = themeStore.setupSystemThemeListener()
-
-
+  getWindowHeight()
+  window.addEventListener("resize", getWindowHeight)
 })
+const screen_size = {
+  xxs: 690,
+  xs: 1060,
+  sm: 1140,
+  md: 1300,
+  lg: 1400,
+  xl: 1680,
+  xxl: 2060
+}
+const window_height = ref(window.innerHeight)
+provide(windowHeightKey, window_height)
 
+// 记录 el-scrollbar 的滚动位置，传给 ScrollButtons 控制按钮显隐
+const scrollTop = ref(0)
+const onScrollbarScroll = (payload: { scrollTop: number; scrollLeft: number }) => {
+  scrollTop.value = payload.scrollTop
+}
 
+// 参照媒体查询断点库：t=smaller(小于上限), n=between(介于区间), r=greater(大于等于下限)
+type ScreenKey = keyof typeof screen_size
+const smaller = (key: ScreenKey) =>
+  computed(() => outerWidth < screen_size[key])
+const between = (min: ScreenKey, max: ScreenKey) =>
+  computed(() => outerWidth >= screen_size[min] && outerWidth < screen_size[max])
+const greater = (key: ScreenKey) =>
+  computed(() => outerWidth >= screen_size[key])
+
+// 维持原有行为：smallest 用于 smallest-width，is_lg 用于 xs_sm-width
+const smallest = smaller('xxs')
+const is_lg = smaller('lg')
+// 其余断点按 smaller / between / greater 语义构建，与参考库一致
+const xs_sm = between('xs', 'sm')
+const is_xs = smaller('sm')
+const is_sm = between('sm', 'md')
+const is_md = between('md', 'lg')
+const is_xl = between('xl', 'xxl')
+const is_xxl = greater('xxl')
+const getWindowHeight = useDebounceFn(() => {
+  document.body.classList[smallest.value ? "add" : "remove"]("smallest-width"),
+    document.body.classList[is_lg.value ? "add" : "remove"]("xs_sm-width")
+  window_height.value = window.innerHeight
+}, 100)
 onUnmounted(() => {
   themeCleanup()
-  autoScaleCleanup() // 清理自动缩放相关的事件监听器
-
+  window.removeEventListener("resize", getWindowHeight)
   // 清理事件监听
   emitter.off('needLogin')
 })
-// 只有在需要重新加载元素的时候才启用route view的key参数
 </script>
 
 <template>
@@ -108,28 +147,37 @@ onUnmounted(() => {
   <!-- 主应用内容 -->
   <template v-else>
     <!-- 背景图片 -->
-    <img class="pointer-events-none fixed inset-0 z-[-9999] h-full w-full object-cover" :src="backgroundUrl"
+    <img class="bg-img pointer-events-none fixed inset-0 z-[-9999] h-full w-full object-cover" :src="backgroundUrl"
       referrerpolicy="no-referrer" alt="Background Image" />
     <el-config-provider :locale="zhCn">
-      <UseScreenSafeArea class="use-screen-safe-area flex flex-col min-w-[690px]">
-        <el-container v-if="isInit" id="i_cecream">
-          <el-header class="bili-header">
-            <HeaderBarView />
-          </el-header>
-          <el-main class="flex! flex-col flex-1 p-0 mt-3 mx-6 text-text-primary">
-            <RouterView v-slot="{ Component, route }">
-              <transition name="slide-fade" mode="out-in">
-                <keep-alive :max="30">
-                  <component :is="Component" />
-                </keep-alive>
-              </transition>
-            </RouterView>
-          </el-main>
-        </el-container>
-        <SponsorNotification />
-        <GlobalLoadingMask />
-        <LoginModal ref="loginModalRef" />
-      </UseScreenSafeArea>
+      <el-scrollbar class="smallest-width" view-class="min-h-full" v-model:height="window_height"
+        @scroll="onScrollbarScroll">
+        <UseScreenSafeArea class="use-screen-safe-area w-full min-h-full flex flex-col">
+          <el-container v-if="isInit" id="i_cecream">
+            <el-header class="bili-header">
+              <HeaderBarView />
+            </el-header>
+            <el-main
+              class="flex! flex-col flex-1 p-0 mt-3 mx-6 text-text-primary"
+              :style="{ overflow: 'visible' }"
+            >
+              <RouterView v-slot="{ Component, route }">
+                <transition name="slide-fade" mode="out-in">
+                  <keep-alive :max="30">
+                    <FlexContainer class="main-inner">
+                      <component :is="Component" />
+                    </FlexContainer>
+                  </keep-alive>
+                </transition>
+              </RouterView>
+            </el-main>
+          </el-container>
+          <SponsorNotification />
+          <GlobalLoadingMask />
+          <LoginModal ref="loginModalRef" />
+        </UseScreenSafeArea>
+        <ScrollButtons :scroll-top="scrollTop" :top-threshold="100" :bottom-threshold="100" />
+      </el-scrollbar>
     </el-config-provider>
   </template>
 </template>

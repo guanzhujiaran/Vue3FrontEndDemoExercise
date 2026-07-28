@@ -5,7 +5,7 @@ export const useBiliLotteryRecord = defineStore(
   () => {
     const max_record_lottery_num = ref(100)
     const auto_save_lottery = ref(true)
-    const lottery_view_mode = ref<'card' | 'table'>('card')
+    const lottery_view_mode = ref<'card' | 'table' | 'simple'>('card')
     const lottery_id_ls_ref = ref<string[]>([])
     const lottery_id_set = computed(() => new Set<string>(lottery_id_ls_ref.value))
     const enqueue = (item: string) => {

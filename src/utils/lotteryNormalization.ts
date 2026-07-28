@@ -212,12 +212,26 @@ export const normalizeLotteryData = (data: AnyLotteryData): NormalizedLottery =>
     actualData = data.raw as AnyLotteryData
   }
 
+  // extra_info 通常放在响应对象的顶层（如 OfficialLotteryResp / CommonLotteryResp），
+  // 而 raw 内部（LotdataResp）并没有该字段；第三方抽奖 OthersLotDynItem 没有 raw 字段，extra_info 直接在其上。
+  // 因此优先取顶层 extra_info，再回退到 actualData，确保所有卡片类型都能拿到附加信息。
+  const topExtraInfo =
+    'extra_info' in data && (data as Record<string, any>).extra_info
+      ? (data as Record<string, any>).extra_info
+      : null
+  const extraInfo =
+    topExtraInfo ??
+    ('extra_info' in actualData && (actualData as Record<string, any>).extra_info
+      ? (actualData as Record<string, any>).extra_info
+      : null)
+
   const nowSec = Date.now() / 1000
   const normalized: Partial<NormalizedLottery> = {
     originalData: data,
     prizes: [],
     requirements: [],
-    senderInfo: { uid: null }
+    senderInfo: { uid: null },
+    extraInfo: extraInfo as NormalizedLottery['extraInfo']
   }
 
   if (
@@ -442,17 +456,19 @@ export const normalizeLotteryData = (data: AnyLotteryData): NormalizedLottery =>
     normalized.repostCount = dynData.repostCount
     normalized.dynContent = dynData.dynContent
     normalized.officialLotType = dynData.officialLotType
-    normalized.extraInfo = dynData.extra_info ?? null
 
     // 开奖时间（BERT 提取，如"6月24日"）：解析为时间戳，并保留原文用于展示
-    const lotteryTimeText = dynData.prize_info?.lottery_time ?? null
+    // 优先从 extra_info 取（后端已合并），fallback 到旧的 prize_info
+    const lotteryTimeText = extraInfo?.lottery_time ?? dynData.prize_info?.lottery_time ?? null
     normalized.lotteryTimeText = lotteryTimeText
     const parsedEndTime = parseChineseDateToTs(lotteryTimeText, dynData.pubTime)
     normalized.endTime = parsedEndTime
 
     // 奖品信息（BERT 提取）—— 映射为统一的 LotteryPrize 结构
-    if (dynData.prize_info?.prize_names?.length) {
-      normalized.prizes = dynData.prize_info.prize_names.map(name => ({
+    // 优先从 extra_info 取（后端已合并），fallback 到旧的 prize_info
+    const prizeNames = extraInfo?.prize_names ?? dynData.prize_info?.prize_names
+    if (prizeNames?.length) {
+      normalized.prizes = prizeNames.map((name: string) => ({
         description: name,
         count: null,
         img: null

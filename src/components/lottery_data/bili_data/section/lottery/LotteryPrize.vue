@@ -55,8 +55,7 @@ const handleImageClick = (imageUrl: string) => {
       <div
         v-for="(prize, index) in prizes"
         :key="`${prize.description}-${index}`"
-        class="flex flex-col items-center gap-2"
-        :style="{ width: `${100 / prizes.length}%`, maxWidth: '150px' }"
+        class="flex flex-1 min-w-0 max-w-[150px] flex-col items-center gap-2"
       >
         <div class="flex items-center justify-center w-16 h-16 rounded-lg border border-border-light bg-bg cursor-pointer relative"
              @click="handleImageClick(prize.img)">

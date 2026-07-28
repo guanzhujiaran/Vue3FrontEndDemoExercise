@@ -6,7 +6,7 @@
       content="B站抽奖数据"
       @back="() => router.back()"
     />
-    <div class="flex flex-1 min-h-0">
+    <div class="flex flex-1">
       <router-view v-slot="{ Component }">
         <keep-alive>
           <component :is="Component" :key="use_router.currentRoute.value.name" />

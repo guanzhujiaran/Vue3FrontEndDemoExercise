@@ -1,13 +1,13 @@
 <template>
-  <div v-if="filterParams.length > 0" class="lottery-filter-bar">
-    <el-collapse v-model="activeNames" accordion class="filter-collapse">
+  <div v-if="filterParams.length > 0" class="lottery-filter-bar w-full">
+    <el-collapse v-model="activeNames" accordion class="filter-collapse border border-border-light rounded-lg bg-fill-light">
       <el-collapse-item name="filter">
         <template #title>
           <div class="flex w-full items-center justify-between pr-3">
             <span class="text-sm font-semibold text-text-primary">筛选条件</span>
             <el-button
               v-if="activeNames === 'filter'"
-              size="small"
+              size="default"
               text
               @click.stop="resetFilters"
             >
@@ -19,20 +19,20 @@
         <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           <template v-for="param in visibleParams" :key="param.param_name">
             <!-- 下拉选择（enum + widget=select） -->
-            <div v-if="param.widget === 'select' && param.enum_values" class="filter-item">
+            <div v-if="param.widget === 'select' && param.enum_values" class="filter-item min-w-0">
               <label class="mb-1 block text-xs font-medium text-text-secondary">
                 {{ param.display_name }}
                 <el-tooltip v-if="param.description" :content="param.description" placement="top">
                   <el-icon :size="12" class="ml-1 cursor-help text-text-placeholder"><QuestionFilled /></el-icon>
                 </el-tooltip>
-                <el-tag v-if="param.param_name === 'created_at_preset' || param.param_name === 'pub_time_preset'" type="warning" size="small" effect="plain" class="ml-1 align-middle" style="--el-tag-font-size: 10px; padding: 0 4px; height: 18px; line-height: 18px;">
+                <el-tag v-if="param.param_name === 'created_at_preset' || param.param_name === 'pub_time_preset'" type="warning" size="default" effect="plain" class="ml-1 align-middle">
                   优先级最高
                 </el-tag>
               </label>
               <el-select
                 :model-value="getFilterValue(param.param_name)"
                 :placeholder="param.placeholder || '请选择' + param.display_name"
-                size="small"
+                size="default"
                 clearable
                 class="w-full!"
                 @update:model-value="(val: any) => setFilterValue(param.param_name, val)"
@@ -47,19 +47,19 @@
             </div>
 
             <!-- 布尔开关（bool + widget=switch） -->
-            <div v-else-if="param.widget === 'switch'" class="filter-item">
+            <div v-else-if="param.widget === 'switch'" class="filter-item min-w-0">
               <label class="mb-1 block text-xs font-medium text-text-secondary">
                 {{ param.display_name }}
               </label>
               <el-switch
                 :model-value="getFilterValue(param.param_name)"
-                size="small"
+                size="default"
                 @update:model-value="(val: any) => setFilterValue(param.param_name, val)"
               />
             </div>
 
             <!-- 日期时间选择器（int + widget=datetime） -->
-            <div v-else-if="param.widget === 'datetime'" class="filter-item">
+            <div v-else-if="param.widget === 'datetime'" class="filter-item min-w-0">
               <label class="mb-1 block text-xs font-medium text-text-secondary">
                 {{ param.display_name }}
                 <el-tooltip v-if="param.description" :content="param.description" placement="top">
@@ -70,7 +70,7 @@
                 :model-value="tsToDate(getFilterValue(param.param_name))"
                 type="datetime"
                 :placeholder="param.placeholder || '选择日期时间'"
-                size="small"
+                size="default"
                 clearable
                 class="w-full!"
                 @update:model-value="(val: any) => setFilterValue(param.param_name, dateToTs(val))"
@@ -78,7 +78,7 @@
             </div>
 
             <!-- 数字输入（int + widget=number） -->
-            <div v-else-if="param.widget === 'number'" class="filter-item">
+            <div v-else-if="param.widget === 'number'" class="filter-item min-w-0">
               <label class="mb-1 block text-xs font-medium text-text-secondary">
                 {{ param.display_name }}
                 <el-tooltip v-if="param.description" :content="param.description" placement="top">
@@ -89,7 +89,7 @@
                 :model-value="getFilterValue(param.param_name)"
                 :placeholder="param.placeholder || '输入' + param.display_name"
                 :min="0"
-                size="small"
+                size="default"
                 controls-position="right"
                 class="w-full!"
                 @update:model-value="(val: any) => setFilterValue(param.param_name, val)"
@@ -97,7 +97,7 @@
             </div>
 
             <!-- 文本输入（str + widget=input，默认） -->
-            <div v-else class="filter-item">
+            <div v-else class="filter-item min-w-0">
               <label class="mb-1 block text-xs font-medium text-text-secondary">
                 {{ param.display_name }}
                 <el-tooltip v-if="param.description" :content="param.description" placement="top">
@@ -107,7 +107,7 @@
               <el-input
                 :model-value="getFilterValue(param.param_name)"
                 :placeholder="param.placeholder || '输入' + param.display_name"
-                size="small"
+                size="default"
                 clearable
                 class="w-full!"
                 @update:model-value="(val: any) => setFilterValue(param.param_name, val)"
@@ -117,7 +117,7 @@
         </div>
 
         <div class="mt-3 flex justify-end">
-          <el-button type="primary" size="small" @click="$emit('apply')">
+          <el-button type="primary" size="default" @click="$emit('apply')">
             <el-icon class="el-icon--left"><Search /></el-icon>
             应用筛选
           </el-button>
@@ -204,20 +204,7 @@ function resetFilters() {
 </script>
 
 <style scoped>
-.lottery-filter-bar {
-  width: 100%;
-}
-
-.filter-item {
-  min-width: 0;
-}
-
-.filter-collapse {
-  border: 1px solid var(--el-border-color-light);
-  border-radius: 8px;
-  background-color: var(--el-fill-color-light);
-}
-
+/* 仅保留 :deep 伪类嵌套规则（项目规范要求：简单样式一律用 Tailwind 类） */
 .filter-collapse :deep(.el-collapse-item__header) {
   padding: 0 12px;
   border-bottom: none;

@@ -46,15 +46,15 @@ const keyToChineseMap: KeyToChineseMap = {
 const healthStatusMap: Record<string, { text: string; class: string }> = {
   normal: {
     text: '正常',
-    class: 'text-[var(--color-success)] bg-[var(--color-success-light-9)]'
+    class: 'text-success bg-success-light-9'
   },
   stuck: {
     text: '卡住',
-    class: 'text-[#e6a23c] bg-[#fdf6ec]'
+    class: 'text-warning bg-warning-light-9'
   },
   stopped: {
     text: '已停止',
-    class: 'text-[#c45656] bg-[#fef0f0]'
+    class: 'text-danger bg-danger-light-9'
   }
 }
 const getHealthStatusMeta = (status?: string) => {
@@ -332,7 +332,7 @@ onBeforeUnmount(() => {
         </div>
         <div class="bg-bg rounded-lg border border-border-light p-4 flex flex-col">
           <div class="text-text-secondary text-sm mb-2">运行中爬虫</div>
-          <div class="text-2xl font-bold text-[#67c23a]">{{ Object.entries(data).filter((el) => getKeyName(el[0]) && el[1]?.is_running).length }}</div>
+          <div class="text-2xl font-bold text-success">{{ Object.entries(data).filter((el) => getKeyName(el[0]) && el[1]?.is_running).length }}</div>
         </div>
         <div class="bg-bg rounded-lg border border-border-light p-4 flex flex-col">
           <div class="text-text-secondary text-sm mb-2">总成功数量</div>
@@ -356,10 +356,10 @@ onBeforeUnmount(() => {
               <div class="flex items-center gap-2">
                 <div
                   class="flex items-center px-3 py-1 rounded-full text-sm font-medium"
-                  :class="scrapy_data.is_running ? 'text-[var(--color-success)]' : 'text-[#c45656]'"
+                  :class="scrapy_data.is_running ? 'text-success' : 'text-danger'"
                 >
-                  <el-icon v-if="scrapy_data.is_running" class="text-[var(--color-success)] w-4 h-4"><Check /></el-icon>
-                  <el-icon v-else class="text-[#c45656] w-4 h-4"><Close /></el-icon>
+                  <el-icon v-if="scrapy_data.is_running" class="text-success w-4 h-4"><Check /></el-icon>
+                  <el-icon v-else class="text-danger w-4 h-4"><Close /></el-icon>
                   <span class="ml-1">{{ scrapy_data.is_running ? '运行中' : '已停止' }}</span>
                 </div>
                 <div
@@ -385,10 +385,10 @@ onBeforeUnmount(() => {
                   <div class="w-full bg-border-light rounded-full h-2.5 mr-3">
                     <div 
                       class="h-2.5 rounded-full transition-all duration-500" 
-                      :class="scrapy_data.is_running ? 'bg-[#67c23a] w-full' : 'bg-[#f56c6c] w-1/4'"
+                      :class="scrapy_data.is_running ? 'bg-success w-full' : 'bg-danger w-1/4'"
                     ></div>
                   </div>
-                  <span :class="scrapy_data.is_running ? 'text-[#67c23a] font-medium' : 'text-[#f56c6c] font-medium'">
+                  <span :class="scrapy_data.is_running ? 'text-success font-medium' : 'text-danger font-medium'">
                     {{ scrapy_data.is_running ? '运行中' : '已停止' }}
                   </span>
                 </div>

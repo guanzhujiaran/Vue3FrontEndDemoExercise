@@ -86,12 +86,20 @@ const performSearch = async (keyword: string, page_num: number = 1) => {
 
 // 处理搜索事件
 const handleSearch = (query_string: string | number) => {
+  const keyword = String(query_string).trim()
+
+  // 空输入时仅提醒，不发请求
+  if (keyword === '') {
+    biliMessage.warning('请输入搜索关键词')
+    return
+  }
+
   isOpenDrawer.value = true
-  cur_query_str.value = String(query_string)
-  
+  cur_query_str.value = keyword
+
   // 重置页码并执行搜索
   currentPage.value = 1
-  performSearch(String(query_string), 1)
+  performSearch(keyword, 1)
 }
 
 // 处理分页变化
@@ -121,7 +129,7 @@ const handleCloseDrawer = () => {
 </script>
 
 <template>
-  <div class="lottery-data-search-box w-full mb-(--spacing-8) relative">
+  <div class="lottery-data-search-box w-full mb-8 relative">
     <BiliSearchBox
       @search="handleSearch"
       :placeholder="search_box_prop.placeholder"
@@ -129,7 +137,7 @@ const handleCloseDrawer = () => {
       :max-history-count="search_box_prop.maxHistoryCount"
     ></BiliSearchBox>
     <el-drawer
-      class="lottery-data-search-drawer !overflow-x-hidden"
+      class="lottery-data-search-drawer overflow-x-hidden!"
       :close-on-click-modal="true"
       v-model="isOpenDrawer"
       direction="btt"
@@ -138,9 +146,9 @@ const handleCloseDrawer = () => {
       :title="`\&quot;${cur_query_str}\&quot; 的搜索结果`"
       @close="handleCloseDrawer"
     >
-      <div class="p-(--spacing-12) min-h-[400px]">
+      <div class="p-12 min-h-100">
         <div v-if="loading" class="w-full">
-          <div class="grid gap-4" :style="{ gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))' }">
+          <div class="grid gap-4 grid-cols-[repeat(auto-fill,minmax(350px,1fr))]">
             <div v-for="i in 6" :key="i" class="rounded-xl bg-bg/50 backdrop-blur-sm p-5 border border-border-light/30">
               <el-skeleton :rows="4" animated></el-skeleton>
             </div>
@@ -149,7 +157,7 @@ const handleCloseDrawer = () => {
         <template v-else>
         <!-- 搜索结果统计 -->
         <div
-          class="flex flex-col items-start gap-2 py-[calc(var(--component-spacing)*2)] mb-[calc(var(--component-spacing)*2)] text-sm text-text-secondary border-b border-border-lighter sm:flex-row sm:items-center sm:justify-between"
+          class="flex flex-col items-start gap-2 py-4 mb-4 text-sm text-text-secondary border-b border-border-lighter sm:flex-row sm:items-center sm:justify-between"
           v-if="total > 0"
         >
           <span>找到 {{ total }} 条结果</span>
@@ -166,7 +174,7 @@ const handleCloseDrawer = () => {
         
         <!-- 分页控件 -->
         <div
-          class="flex justify-center overflow-x-auto py-[calc(var(--component-spacing)*4)] mt-[calc(var(--component-spacing)*2)] border-t border-border-lighter"
+          class="flex justify-center overflow-x-auto py-8 mt-4 border-t border-border-lighter"
           v-if="total > pageSize"
         >
           <el-pagination

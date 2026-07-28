@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { type PropType } from 'vue'
+import { type PropType, ref, computed, inject, onMounted, onBeforeUnmount } from 'vue'
 import { useThrottleFn } from '@vueuse/core'
-
+import { windowHeightKey } from '@/models/inject/inject_type.ts'
 const props = defineProps({
   handleLoad: {
     type: Function as PropType<() => void>,
     required: true,
-    default: () => {}
+    default: () => { }
   }
 })
 const isMore = defineModel('isMore', {
@@ -22,28 +22,54 @@ const isError = defineModel('isError', {
   type: Boolean
 })
 
+// 根容器注入的窗口高度，乘以系数作为滚动容器的高度上限
+const HEIGHT_RATIO = 0.7
+const windowHeight = inject(windowHeightKey, ref(window.innerHeight))
+const maxHeightPx = computed(() => `${Math.floor(windowHeight.value * HEIGHT_RATIO)}px`)
+
 const handleLoad = useThrottleFn(() => {
   if (!isMore.value || isError.value) return
   props.handleLoad()
 }, 2e3)
+
+const scrollbarRef = ref<{ wrapRef?: HTMLElement }>()
+function onScroll() {
+  const wrap = scrollbarRef.value?.wrapRef
+  if (!wrap) return
+  const { scrollTop, scrollHeight, clientHeight } = wrap
+  // 仅当内容真正可滚动（存在纵向滚动条）时才可能触发
+  if (scrollHeight - clientHeight <= 1) return
+  // 仅当滚动到接近底部时触发，顶部不会误触发
+  if (scrollTop + clientHeight >= scrollHeight - 10) {
+    handleLoad()
+  }
+}
+onMounted(() => {
+  scrollbarRef.value?.wrapRef?.addEventListener('scroll', onScroll)
+})
+onBeforeUnmount(() => {
+  scrollbarRef.value?.wrapRef?.removeEventListener('scroll', onScroll)
+})
 </script>
 
 <template>
   <div class="with-loading-more-container-wrapper mb-4 flex min-h-0 flex-1" v-loading="isLoading">
-    <el-scrollbar
-      class="with-loading-more-container mx-auto max-w-6xl w-full"
-      noresize
-      aria-orientation="vertical"
-      @end-reached="handleLoad"
-      :distance="10"
-    >
-      <div class="w-full">
-        <slot name="content"></slot>
-      </div>
-      <div class="loading-more-txt relative w-full text-center bg-transparent h-25" style="background-color: transparent">
+    <el-scrollbar ref="scrollbarRef" class="with-loading-more-container mx-auto max-w-6xl w-full" noresize
+      aria-orientation="vertical" :style="{ maxHeight: maxHeightPx }"
+      wrap-style="overflow-x: hidden;">
+      <slot name="content"></slot>
+      <div class="loading-more-txt relative w-full text-center bg-transparent py-2"
+        style="background-color: transparent">
         <span v-if="isMore" @click="handleLoad" class="cursor-pointer">查看更多</span>
         <span v-else-if="!isError" class="cursor-pointer">到底了喵~</span>
       </div>
     </el-scrollbar>
   </div>
 </template>
+
+<style scoped>
+/* 隐藏 Element Plus 滚动容器的横向滚动条 */
+.with-loading-more-container :deep(.el-scrollbar__bar.is-horizontal) {
+  display: none;
+}
+</style>

@@ -78,13 +78,13 @@ onMounted(() => {
           :class="
             status
               ? status.is_running
-                ? 'bg-[var(--color-success)]'
-                : 'bg-[#c45656]'
+                ? 'bg-success'
+                : 'bg-danger'
               : 'bg-text-placeholder'
           "
         ></span>
         <span class="text-sm font-medium text-text-primary">{{ mapping[crawlerKey].label }}</span>
-        <el-tag size="small" :type="status?.is_running ? 'success' : 'danger'" effect="light">
+        <el-tag size="default" :type="status?.is_running ? 'success' : 'danger'" effect="light">
           {{ status ? (status.is_running ? '运行中' : '已停止') : '未知' }}
         </el-tag>
       </div>
@@ -94,9 +94,9 @@ onMounted(() => {
           <span>成功 {{ succCount(status).toLocaleString() }}</span>
           <span v-if="isOfficialType(status)">进度 {{ (status as OfficialScrapyStatus).progress }}%</span>
         </template>
-        <span v-else-if="load_error" class="text-[#c45656]">状态获取失败</span>
+        <span v-else-if="load_error" class="text-danger">状态获取失败</span>
         <span v-else>加载中…</span>
-        <el-button text size="small" :loading="is_loading" @click="handle_get_scrapy_status">
+        <el-button text size="default" :loading="is_loading" @click="handle_get_scrapy_status">
           <el-icon><Refresh /></el-icon>
         </el-button>
       </div>

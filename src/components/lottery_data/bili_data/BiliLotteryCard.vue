@@ -1,10 +1,8 @@
 <template>
   <el-card
-    class="lottery-card h-full min-w-80 overflow-hidden border-border bg-bg [--el-card-border-color:var(--color-border)] [--el-card-padding:var(--spacing-4)] sm:[--el-card-padding:var(--spacing-5)]"
-    :class="['lottery-type-' + normalizedData.type.toLowerCase(), { 'lottery-card-grand-prize': normalizedData.extraInfo?.is_grand_prize, '[--el-card-border-color:var(--color-warning)]': normalizedData.extraInfo?.is_grand_prize }]"
-    shadow="hover"
-    body-class="lottery-card-body"
-  >
+    class="lottery-card rounded-xl"
+    :class="['lottery-type-' + normalizedData.type.toLowerCase(), cardBgClass, cardEdgeClass]"
+    shadow="hover" body-class="lottery-card-body">
     <template #header>
       <div class="flex flex-col gap-4">
         <div class="flex flex-wrap items-start gap-2">
@@ -12,101 +10,67 @@
             {{ normalizedData.displayType }}
           </el-tag>
           <span
-            class="inline-flex items-center gap-2 rounded-full border border-border-light bg-fill-lighter px-3 py-1 text-xs font-medium text-text-primary"
-          >
+            class="inline-flex items-center gap-2 bg-fill-lighter px-3 py-1 border border-border-light rounded-full font-medium text-text-primary text-xs">
             <BiliStatusIcon :icon="statusIcon" :popover_text="normalizedData.statusText" />
             <span>{{ normalizedData.statusText }}</span>
           </span>
           <!-- extra_info 附加信息标识 -->
-          <span
-            v-if="normalizedData.extraInfo?.is_grand_prize"
-            class="lottery-extra-badge lottery-extra-badge-animated inline-flex items-center gap-1 rounded-full border border-amber-400 bg-amber-50 px-3 py-1 text-xs font-medium text-amber-700"
-          >
+          <span v-if="normalizedData.extraInfo?.is_grand_prize"
+            class="inline-flex items-center gap-1 bg-amber-50 px-3 py-1 border border-amber-400 rounded-full font-medium text-amber-700 text-xs lottery-extra-badge lottery-extra-badge-animated">
             大奖
           </span>
-          <span
-            v-if="normalizedData.extraInfo?.need_comment"
-            class="lottery-extra-badge lottery-extra-badge-animated inline-flex items-center gap-1 rounded-full border border-blue-300 bg-blue-50 px-3 py-1 text-xs font-medium text-blue-600"
-          >
-            <el-icon :size="13"><ChatDotSquare /></el-icon>
+          <span v-if="normalizedData.extraInfo?.need_comment"
+            class="inline-flex items-center gap-1 bg-blue-50 px-3 py-1 border border-blue-300 rounded-full font-medium text-blue-600 text-xs lottery-extra-badge lottery-extra-badge-animated">
+            <el-icon :size="13">
+              <ChatDotSquare />
+            </el-icon>
             需评论
           </span>
-          <span
-            v-if="normalizedData.extraInfo?.need_repost"
-            class="lottery-extra-badge lottery-extra-badge-animated inline-flex items-center gap-1 rounded-full border border-green-300 bg-green-50 px-3 py-1 text-xs font-medium text-green-600"
-          >
-            <el-icon :size="13"><Share /></el-icon>
+          <span v-if="normalizedData.extraInfo?.need_repost"
+            class="inline-flex items-center gap-1 bg-green-50 px-3 py-1 border border-green-300 rounded-full font-medium text-green-600 text-xs lottery-extra-badge lottery-extra-badge-animated">
+            <el-icon :size="13">
+              <Share />
+            </el-icon>
             需转发
           </span>
           <span
-            class="ml-auto inline-flex items-center rounded-full border border-border-light bg-bg-page px-3 py-1 text-xs font-medium text-text-secondary"
-          >
+            class="inline-flex items-center bg-bg-page ml-auto px-3 py-1 border border-border-light rounded-full font-medium text-text-secondary text-xs">
             ID: {{ normalizedData.id }}
           </span>
         </div>
 
         <div class="space-y-2">
-          <h3
-            class="wrap-break-word text-base leading-relaxed font-semibold text-text-primary sm:text-lg"
-            :title="normalizedData.title"
-          >
+          <h3 class="font-semibold text-text-primary text-base sm:text-lg wrap-break-word leading-relaxed bg-bg rounded-sm px-2.5 py-1"
+            :title="normalizedData.title">
             {{ normalizedData.title }}
           </h3>
-          <p v-if="headerDescription" class="text-xs leading-relaxed text-text-secondary sm:text-sm">
+          <p v-if="headerDescription" class="text-text-secondary text-xs sm:text-sm leading-relaxed bg-bg rounded-sm px-2.5 py-1">
             {{ headerDescription }}
           </p>
         </div>
 
-        <div class="flex flex-col gap-3 rounded-lg border border-border-light bg-fill-lighter p-3">
-          <div class="flex items-center justify-between gap-2 flex-nowrap">
+        <div class="flex flex-col gap-3 bg-fill-lighter p-3 border border-border-light rounded-lg">
+          <div class="flex flex-nowrap justify-between items-center gap-2">
             <!-- 查看详情按钮 -->
-             
-            <el-link
-              v-if="sourceLink"
-              type="primary"
-              size="default"
-              :href="sourceLink"
-              target="_blank"
-              rel="noreferrer"
-              @click="handleLinkClick"
-              link
-              icon="link"
-              underline="never"
-              class="whitespace-nowrap"
-            >
-             查看源动态
+
+            <el-link v-if="sourceLink" type="primary" size="default" :href="sourceLink" target="_blank" rel="noreferrer"
+              @click="handleLinkClick" link icon="link" underline="never" class="whitespace-nowrap">
+              查看源动态
             </el-link>
             <el-button icon="link" v-else type="info" size="default" disabled class="whitespace-nowrap">
               暂无源动态
             </el-button>
-            <el-link
-              v-if="resultLink"
-              type="primary"
-              size="default"
-              :href="resultLink"
-              target="_blank"
-              rel="noreferrer"
-              @click="handleLinkClick"
-              link
-              icon="link"
-              underline="never"
-              class="whitespace-nowrap"
-            >
+            <el-link v-if="resultLink" type="primary" size="default" :href="resultLink" target="_blank" rel="noreferrer"
+              @click="handleLinkClick" link icon="link" underline="never" class="whitespace-nowrap">
               查看h5抽奖详情
             </el-link>
             <!-- 参加/不参加开关 -->
             <div class="flex items-center gap-2 whitespace-nowrap">
-              <span class="text-sm font-medium text-text-secondary whitespace-nowrap">
+              <span class="font-medium text-text-secondary text-sm whitespace-nowrap">
                 {{ hasClicked ? '已参加' : '未参加' }}
               </span>
-              <el-tooltip
-                :content="hasClicked ? '取消标记参加' : '标记为已参加'"
-                placement="top"
-              >
-                <el-switch
-                  :model-value="hasClicked"
-                  @change="handleRecordLotteryId"
-                />
+              <el-tooltip :content="hasClicked ? '取消标记参加' : '标记为已参加'" placement="top">
+                <el-switch :model-value="hasClicked" @change="handleRecordLotteryId" />
               </el-tooltip>
             </div>
           </div>
@@ -115,44 +79,36 @@
     </template>
 
     <template #default>
-      <div class="main-content-wrapper flex h-full flex-col gap-4">
-        <section class="rounded-lg border border-border-light bg-bg-page p-4">
+      <div class="flex flex-col gap-4 h-full main-content-wrapper">
+        <section class="bg-bg-page p-4 border border-border-light rounded-lg">
           <div class="space-y-3">
-            <p class="text-xs font-medium text-text-secondary">{{ countdownTitle }}</p>
+            <p class="font-medium text-text-secondary text-xs">{{ countdownTitle }}</p>
 
-            <div class="rounded-lg border border-border-light bg-bg px-4 py-3 sm:min-w-(--spacing-40)">
-              <el-countdown
-                v-if="normalizedData.endTime !== null && normalizedData.status === 'ONGOING'"
-                class="lottery__countdown text-sm font-semibold text-text-primary sm:text-base"
-                :value="normalizedData.endTime * 1e3"
-                format="DD 天 HH 时 mm 分 ss 秒"
-              />
-              <div v-else-if="normalizedData.endTime !== null" class="text-sm font-semibold text-text-primary sm:text-base">
+            <div class="rounded-lg border border-border-light bg-bg px-4 py-3 sm:min-w-40">
+              <el-countdown v-if="normalizedData.endTime !== null && normalizedData.status === 'ONGOING'"
+                class="font-semibold text-text-primary text-sm sm:text-base lottery__countdown"
+                :value="normalizedData.endTime * 1e3" format="DD 天 HH 时 mm 分 ss 秒" />
+              <div v-else-if="normalizedData.endTime !== null"
+                class="font-semibold text-text-primary text-sm sm:text-base">
                 {{ deadlineReachedText }}
               </div>
-              <div v-else class="text-sm font-medium text-text-placeholder">
+              <div v-else class="font-medium text-text-placeholder text-sm">
                 暂无开奖时间
               </div>
             </div>
           </div>
         </section>
 
-        <section class="grid gap-3 sm:grid-cols-2">
-          <div
-            v-for="item in summaryItems"
-            :key="item.label"
-            class="rounded-lg border border-border-light bg-fill-lighter p-4"
-          >
+        <section class="gap-0.5 sm:gap-1 lg:gap-2 grid grid-cols-2 lg:grid-cols-4">
+          <div v-for="item in summaryItems" :key="item.label"
+            class="bg-fill-lighter p-4 border border-border-light rounded-lg">
             <div class="flex items-center gap-1">
-              <span class="text-xs font-medium text-text-secondary">{{ item.label }}</span>
-              <el-popover
-                v-if="item.hint"
-                trigger="hover"
-                placement="top"
-                width="200"
-              >
+              <span class="font-medium text-text-secondary text-xs">{{ item.label }}</span>
+              <el-popover v-if="item.hint" trigger="hover" placement="top" width="200">
                 <template #reference>
-                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-text-secondary cursor-help">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                    class="text-text-secondary cursor-help">
                     <circle cx="12" cy="12" r="10"></circle>
                     <line x1="12" y1="16" x2="12" y2="12"></line>
                     <line x1="12" y1="8" x2="12.01" y2="8"></line>
@@ -162,51 +118,34 @@
               </el-popover>
             </div>
             <div>
-              <el-link
-                v-if="item.link"
-                :href="item.link"
-                target="_blank"
-                type="primary"
-                underline="never"
-                class="mt-2 w-fit text-left text-sm font-semibold leading-relaxed no-underline sm:text-base"
-                rel="noreferrer"
-                referrerpolicy="no-referrer"
-                @click="handleLinkClick"
-              >
+              <el-link v-if="item.link" :href="item.link" target="_blank" type="primary" underline="never"
+                class="mt-2 w-fit font-semibold text-sm sm:text-base text-left no-underline leading-relaxed"
+                rel="noreferrer" referrerpolicy="no-referrer" @click="handleLinkClick">
                 {{ item.value }}
               </el-link>
-              <div v-else class="mt-2 wrap-break-word text-sm font-semibold leading-relaxed text-text-primary sm:text-base">
+              <div v-else
+                class="mt-2 font-semibold text-text-primary text-sm sm:text-base wrap-break-word leading-relaxed">
                 {{ item.value }}
               </div>
             </div>
           </div>
         </section>
 
-        <section
-          v-if="normalizedData.type === 'THIRD_PARTY' && normalizedData.dynContent"
-          :class="['rounded-lg border border-border-light bg-fill-lighter p-4']"
-        >
-          <div class="mb-2 flex flex-wrap items-center justify-between gap-2">
-            <p class="text-sm font-semibold text-text-primary">动态内容</p>
-            <span class="rounded-full bg-bg px-3 py-1 text-xs font-medium text-text-secondary">
+        <section v-if="normalizedData.type === 'THIRD_PARTY' && normalizedData.dynContent"
+          :class="['rounded-lg border border-border-light bg-fill-lighter p-4']">
+          <div class="flex flex-wrap justify-between items-center gap-2 mb-2">
+            <p class="font-semibold text-text-primary text-sm">动态内容</p>
+            <span class="bg-bg px-3 py-1 rounded-full font-medium text-text-secondary text-xs">
               原文展示
             </span>
           </div>
-          <el-text
-            :line-clamp="dynContentExpanded ? undefined : 5"
-            size="large"
-            class="cursor-pointer select-text whitespace-pre-wrap break-words"
-            @click="dynContentExpanded = !dynContentExpanded"
-          >
+          <el-text :line-clamp="dynContentExpanded ? undefined : 5" size="large"
+            class="break-words whitespace-pre-wrap cursor-pointer select-text"
+            @click="dynContentExpanded = !dynContentExpanded">
             {{ normalizedData.dynContent }}
           </el-text>
           <div class="mt-1 text-right">
-            <el-link
-              type="primary"
-              underline="hover"
-              size="small"
-              @click="dynContentExpanded = !dynContentExpanded"
-            >
+            <el-link type="primary" underline="hover" size="default" @click="dynContentExpanded = !dynContentExpanded">
               {{ dynContentExpanded ? '收起' : '展开全部' }}
             </el-link>
           </div>
@@ -214,78 +153,62 @@
 
         <LotteryPrize
           v-if="normalizedData.prizes.length > 0 && normalizedData.type !== 'TOPIC' && normalizedData.type !== 'THIRD_PARTY'"
-          :class="{ 'mt-auto': normalizedData.requirements.length === 0 }"
-          :prizes="normalizedData.prizes"
-        />
+          :class="{ 'mt-auto': normalizedData.requirements.length === 0 }" :prizes="normalizedData.prizes" />
 
-        <section
-          v-if="normalizedData.type === 'THIRD_PARTY' && normalizedData.prizes.length > 0"
-          :class="['rounded-lg border border-border-light bg-fill-lighter p-4', { 'mt-auto': normalizedData.requirements.length === 0 }]"
-        >
-          <div class="flex flex-wrap items-start justify-between gap-3">
+        <section v-if="normalizedData.type === 'THIRD_PARTY' && normalizedData.prizes.length > 0"
+          :class="['rounded-lg border border-border-light bg-fill-lighter p-4', { 'mt-auto': normalizedData.requirements.length === 0 }]">
+          <div class="flex flex-wrap justify-between items-start gap-3">
             <div class="space-y-1">
-              <p class="text-sm font-semibold text-text-primary">奖品列表</p>
-              <p class="text-xs leading-relaxed text-text-secondary">
+              <p class="font-semibold text-text-primary text-sm">奖品列表</p>
+              <p class="text-text-secondary text-xs leading-relaxed">
                 自动提取的奖品名称，仅供参考。
               </p>
             </div>
-            <span class="rounded-full bg-bg px-3 py-1 text-xs font-medium text-text-secondary">
+            <span class="bg-bg px-3 py-1 rounded-full font-medium text-text-secondary text-xs">
               {{ normalizedData.prizes.length }} 项
             </span>
           </div>
-          <div class="mt-3 space-y-2">
-            <div
-              v-for="(prize, index) in normalizedData.prizes"
-              :key="`${prize.description}-${index}`"
-              class="rounded-lg border border-border-light bg-bg px-3 py-3 text-sm leading-relaxed text-text-primary"
-            >
+          <div class="space-y-2 mt-3">
+            <div v-for="(prize, index) in normalizedData.prizes" :key="`${prize.description}-${index}`"
+              class="bg-bg px-3 py-3 border border-border-light rounded-lg text-text-primary text-sm leading-relaxed">
               {{ prize.description }}
             </div>
           </div>
         </section>
 
-        <section
-          v-if="normalizedData.type === 'TOPIC' && normalizedData.prizes.length > 0"
-          class="rounded-lg border border-border-light bg-fill-lighter p-4"
-        >
-          <div class="flex flex-wrap items-start justify-between gap-3">
+        <section v-if="normalizedData.type === 'TOPIC' && normalizedData.prizes.length > 0"
+          class="bg-fill-lighter p-4 border border-border-light rounded-lg">
+          <div class="flex flex-wrap justify-between items-start gap-3">
             <div class="space-y-1">
-              <p class="text-sm font-semibold text-text-primary">奖品池</p>
-              <p class="text-xs leading-relaxed text-text-secondary">
+              <p class="font-semibold text-text-primary text-sm">奖品池</p>
+              <p class="text-text-secondary text-xs leading-relaxed">
                 话题活动通常会在活动页展示完整规则，这里先展示抓取到的摘要信息。
               </p>
             </div>
-            <span class="rounded-full bg-bg px-3 py-1 text-xs font-medium text-text-secondary">
+            <span class="bg-bg px-3 py-1 rounded-full font-medium text-text-secondary text-xs">
               {{ normalizedData.prizes.length }} 条
             </span>
           </div>
-          <div class="mt-3 space-y-2">
-            <div
-              v-for="(prize, index) in normalizedData.prizes"
-              :key="`${prize.description}-${index}`"
-              class="rounded-lg border border-border-light bg-bg px-3 py-3 text-sm leading-relaxed text-text-primary"
-            >
+          <div class="space-y-2 mt-3">
+            <div v-for="(prize, index) in normalizedData.prizes" :key="`${prize.description}-${index}`"
+              class="bg-bg px-3 py-3 border border-border-light rounded-lg text-text-primary text-sm leading-relaxed">
               {{ prize.description }}
             </div>
           </div>
         </section>
 
-        <section
-          v-if="normalizedData.requirements.length > 0"
-          class="mt-auto rounded-lg border border-border-light bg-fill-lighter p-4"
-        >
-          <div class="flex flex-wrap items-start justify-between gap-3">
+        <section v-if="normalizedData.requirements.length > 0"
+          class="bg-fill-lighter mt-auto p-4 border border-border-light rounded-lg">
+          <div class="flex flex-wrap justify-between items-start gap-3">
             <div class="space-y-1">
-              <p class="text-sm font-semibold text-text-primary">
+              <p class="font-semibold text-text-primary text-sm">
                 <span class="flex items-center gap-1">
                   参与条件
-                  <el-popover
-                    trigger="hover"
-                    placement="top"
-                    width="200"
-                  >
+                  <el-popover trigger="hover" placement="top" width="200">
                     <template #reference>
-                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-text-secondary cursor-help">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                        class="text-text-secondary cursor-help">
                         <circle cx="12" cy="12" r="10"></circle>
                         <line x1="12" y1="16" x2="12" y2="12"></line>
                         <line x1="12" y1="8" x2="12.01" y2="8"></line>
@@ -296,23 +219,14 @@
                 </span>
               </p>
             </div>
-            <span class="rounded-full bg-bg px-3 py-1 text-xs font-medium text-text-secondary">
+            <span class="bg-bg px-3 py-1 rounded-full font-medium text-text-secondary text-xs">
               {{ normalizedData.requirements.length }} 项
             </span>
           </div>
-          <div class="mt-3 flex flex-wrap gap-2">
+          <div class="flex flex-wrap gap-2 mt-3">
             <template v-for="(req, index) in normalizedData.requirements" :key="`${req.type}-${index}`">
-              <el-link
-                v-if="req.link"
-                :href="req.link"
-                target="_blank"
-                type="primary"
-                underline="never"
-                class="no-underline"
-                rel="noreferrer"
-                referrerpolicy="no-referrer"
-                @click="handleLinkClick"
-              >
+              <el-link v-if="req.link" :href="req.link" target="_blank" type="primary" underline="never"
+                class="no-underline" rel="noreferrer" referrerpolicy="no-referrer" @click="handleLinkClick">
                 <el-tag :type="getRequirementTagType(req.type)" size="default" effect="plain" round>
                   {{ req.text }}
                 </el-tag>
@@ -330,7 +244,7 @@
       <el-collapse v-model="activeCollapseNames" class="details-collapse">
         <el-collapse-item name="details">
           <template #title>
-            <div class="flex items-center gap-2 text-sm font-medium text-text-primary">
+            <div class="flex items-center gap-2 font-medium text-text-primary text-sm">
               <el-icon class="text-text-secondary">
                 <InfoFilled />
               </el-icon>
@@ -344,14 +258,13 @@
             <el-descriptions-item label="业务类型码" v-if="normalizedData.businessType !== null">
               {{ normalizedData.businessType }}
             </el-descriptions-item>
-            <el-descriptions-item
-              label="原始弹幕要求"
-              v-if="normalizedData.danmu !== null && normalizedData.danmu !== ''"
-            >
+            <el-descriptions-item label="原始弹幕要求" v-if="normalizedData.danmu !== null && normalizedData.danmu !== ''">
               {{ normalizedData.danmu }}
             </el-descriptions-item>
           </el-descriptions>
-          <pre class="raw-data-pre overflow-x-auto whitespace-pre-wrap break-all rounded-md bg-fill-lighter p-3 text-xs leading-relaxed text-text-secondary">{{ JSON.stringify(normalizedData.originalData, null, 2) }}</pre>
+          <pre
+            class="bg-fill-lighter p-3 rounded-md overflow-x-auto text-text-secondary text-xs break-all leading-relaxed whitespace-pre-wrap raw-data-pre">
+  {{ JSON.stringify(normalizedData.originalData, null, 2) }}</pre>
         </el-collapse-item>
       </el-collapse>
     </template>
@@ -508,6 +421,36 @@ const normalizedData = computed<NormalizedLottery>(() => {
   return normalizeLotteryData(props.lotteryData)
 })
 
+// 不同卡片使用 theme.css 中 --color-* 对应的 bg-* 工具类，按唯一 id 取色保证每张都不一样
+const cardBgPalette = [
+  'bg-primary-light-9',
+  'bg-success-light-9',
+  'bg-warning-light-9',
+  'bg-danger-light-9',
+  'bg-error-light-9',
+  'bg-info-light-9',
+  'bg-primary-light-8',
+  'bg-success-light-8',
+  'bg-warning-light-8',
+  'bg-danger-light-8',
+  'bg-error-light-8',
+  'bg-info-light-8'
+]
+const cardBgClass = computed(() => {
+  const id = Number(normalizedData.value.id) || 0
+  return cardBgPalette[id % cardBgPalette.length]
+})
+
+// 根据 extra_info 决定卡片边缘样式：大奖=金边(FGO 5星风格)，需评论=蓝边，需转发=绿边
+const cardEdgeClass = computed(() => {
+  const extra = normalizedData.value.extraInfo
+  if (!extra) return ''
+  if (extra.is_grand_prize) return 'lottery-card-grand-prize'
+  if (extra.need_comment) return 'lottery-card-edge-comment'
+  if (extra.need_repost) return 'lottery-card-edge-repost'
+  return ''
+})
+
 const sourceLink = computed(() => normalizedData.value.sourceLink || null)
 const resultLink = computed(() => normalizedData.value.resultLink || null)
 const senderProfileLink = computed(() =>
@@ -541,7 +484,7 @@ const countdownDescription = computed(() =>
     : '倒计时结束后即可前往详情页查看开奖情况。'
 )
 const deadlineReachedText = computed(() => {
-  if (normalizedData.value.status === 'CANCELLED' || normalizedData.value.status =="UNKNOWN") {
+  if (normalizedData.value.status === 'CANCELLED' || normalizedData.value.status == "UNKNOWN") {
     return '活动已取消'
   }
   return normalizedData.value.type === 'TOPIC' ? '活动已截止' : '已到开奖时间'

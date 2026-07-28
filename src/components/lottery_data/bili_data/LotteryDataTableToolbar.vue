@@ -27,6 +27,7 @@
             <el-radio-group v-model="form.lottery_view_mode">
               <el-radio-button value="card">卡片视图</el-radio-button>
               <el-radio-button value="table">表格视图</el-radio-button>
+              <el-radio-button value="simple">简略视图</el-radio-button>
             </el-radio-group>
           </el-form-item>
           <el-form-item class="button-group">
@@ -62,6 +63,13 @@
             @click="toggleViewMode('table')"
             title="表格视图"
           />
+          <el-button
+            round
+            :type="viewMode === 'simple' ? 'primary' : 'default'"
+            :icon="Menu"
+            @click="toggleViewMode('simple')"
+            title="简略视图"
+          />
         </el-button-group>
       </div>
       <div class="button-row flex flex-wrap items-center justify-center gap-3 sm:flex-none sm:justify-end">
@@ -79,7 +87,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useBiliLotteryRecord } from '@/stores/bili_lottery_record.ts'
-import { Setting, Refresh, Grid, List } from '@element-plus/icons-vue'
+import { Setting, Refresh, Grid, List, Menu } from '@element-plus/icons-vue'
 import SubmitFeedbackModal from './SubmitFeedbackModal.vue'
 import { useThemeStore } from '@/stores/theme'
 
@@ -88,11 +96,11 @@ const themeStore = useThemeStore()
 defineProps<{
   refresh_data: () => void
   showSubmitButton?: boolean
-  viewMode: 'card' | 'table'
+  viewMode: 'card' | 'table' | 'simple'
 }>()
 
 const emit = defineEmits<{
-  'update:viewMode': [mode: 'card' | 'table']
+  'update:viewMode': [mode: 'card' | 'table' | 'simple']
   'on-click-submit': []
 }>()
 
@@ -106,11 +114,11 @@ const form = ref({
 const onSubmit = () => {
   ClickedBiliLotteryId.max_record_lottery_num = form.value.max_record_lottery_num
   ClickedBiliLotteryId.auto_save_lottery = form.value.auto_save_lottery
-  ClickedBiliLotteryId.lottery_view_mode = form.value.lottery_view_mode as 'card' | 'table'
+  ClickedBiliLotteryId.lottery_view_mode = form.value.lottery_view_mode as 'card' | 'table' | 'simple'
   isOpenSetting.value = false
 }
 
-const toggleViewMode = (mode: 'card' | 'table') => {
+const toggleViewMode = (mode: 'card' | 'table' | 'simple') => {
   ClickedBiliLotteryId.lottery_view_mode = mode
   emit('update:viewMode', mode)
 }

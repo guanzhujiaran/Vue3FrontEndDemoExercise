@@ -197,49 +197,49 @@
   --color-primary-dark-2: var(--el-color-primary-dark-2);
 
   /* ==================== 成功色系 ==================== */
-  --color-success: oklch(0.723 0.219 149.579);
-  --color-success-light-3: oklch(0.821 0.177 149.579);
-  --color-success-light-5: oklch(0.877 0.136 149.579);
-  --color-success-light-7: oklch(0.932 0.095 149.579);
-  --color-success-light-8: oklch(0.962 0.058 149.579);
-  --color-success-light-9: oklch(0.981 0.027 149.579);
-  --color-success-dark-2: oklch(0.627 0.257 149.579);
+  --color-success: var(--el-color-success);
+  --color-success-light-3: var(--el-color-success-light-3);
+  --color-success-light-5: var(--el-color-success-light-5);
+  --color-success-light-7: var(--el-color-success-light-7);
+  --color-success-light-8: var(--el-color-success-light-8);
+  --color-success-light-9: var(--el-color-success-light-9);
+  --color-success-dark-2: var(--el-color-success-dark-2);
 
   /* ==================== 警告色系 ==================== */
-  --color-warning: oklch(0.769 0.188 70.08);
-  --color-warning-light-3: oklch(0.852 0.152 70.08);
-  --color-warning-light-5: oklch(0.905 0.117 70.08);
-  --color-warning-light-7: oklch(0.956 0.081 70.08);
-  --color-warning-light-8: oklch(0.977 0.049 70.08);
-  --color-warning-light-9: oklch(0.989 0.023 70.08);
-  --color-warning-dark-2: oklch(0.681 0.219 70.08);
+  --color-warning: var(--el-color-warning);
+  --color-warning-light-3: var(--el-color-warning-light-3);
+  --color-warning-light-5: var(--el-color-warning-light-5);
+  --color-warning-light-7: var(--el-color-warning-light-7);
+  --color-warning-light-8: var(--el-color-warning-light-8);
+  --color-warning-light-9: var(--el-color-warning-light-9);
+  --color-warning-dark-2: var(--el-color-warning-dark-2);
 
   /* ==================== 危险色系 ==================== */
-  --color-danger: oklch(0.645 0.246 16.439);
-  --color-danger-light-3: oklch(0.746 0.201 16.439);
-  --color-danger-light-5: oklch(0.808 0.156 16.439);
-  --color-danger-light-7: oklch(0.871 0.109 16.439);
-  --color-danger-light-8: oklch(0.907 0.066 16.439);
-  --color-danger-light-9: oklch(0.941 0.032 16.439);
-  --color-danger-dark-2: oklch(0.553 0.288 16.439);
+  --color-danger: var(--el-color-danger);
+  --color-danger-light-3: var(--el-color-danger-light-3);
+  --color-danger-light-5: var(--el-color-danger-light-5);
+  --color-danger-light-7: var(--el-color-danger-light-7);
+  --color-danger-light-8: var(--el-color-danger-light-8);
+  --color-danger-light-9: var(--el-color-danger-light-9);
+  --color-danger-dark-2: var(--el-color-danger-dark-2);
 
   /* ==================== 错误色系 ==================== */
-  --color-error: oklch(0.627 0.265 303.9);
-  --color-error-light-3: oklch(0.732 0.215 303.9);
-  --color-error-light-5: oklch(0.797 0.166 303.9);
-  --color-error-light-7: oklch(0.862 0.117 303.9);
-  --color-error-light-8: oklch(0.899 0.071 303.9);
-  --color-error-light-9: oklch(0.935 0.034 303.9);
-  --color-error-dark-2: oklch(0.539 0.308 303.9);
+  --color-error: var(--el-color-error);
+  --color-error-light-3: var(--el-color-error-light-3);
+  --color-error-light-5: var(--el-color-error-light-5);
+  --color-error-light-7: var(--el-color-error-light-7);
+  --color-error-light-8: var(--el-color-error-light-8);
+  --color-error-light-9: var(--el-color-error-light-9);
+  --color-error-dark-2: var(--el-color-error-dark-2);
 
   /* ==================== 信息色系 ==================== */
-  --color-info: oklch(0.551 0.071 256.219);
-  --color-info-light-3: oklch(0.652 0.058 256.219);
-  --color-info-light-5: oklch(0.721 0.045 256.219);
-  --color-info-light-7: oklch(0.791 0.031 256.219);
-  --color-info-light-8: oklch(0.832 0.019 256.219);
-  --color-info-light-9: oklch(0.872 0.009 256.219);
-  --color-info-dark-2: oklch(0.463 0.083 256.219);
+  --color-info: var(--el-color-info);
+  --color-info-light-3: var(--el-color-info-light-3);
+  --color-info-light-5: var(--el-color-info-light-5);
+  --color-info-light-7: var(--el-color-info-light-7);
+  --color-info-light-8: var(--el-color-info-light-8);
+  --color-info-light-9: var(--el-color-info-light-9);
+  --color-info-dark-2: var(--el-color-info-dark-2);
 
   /* ==================== 基础颜色 ==================== */
   --color-white: var(--el-color-white);

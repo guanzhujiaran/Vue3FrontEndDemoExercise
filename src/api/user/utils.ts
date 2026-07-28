@@ -39,10 +39,10 @@ export const isLogin: () => Promise<[boolean, string, UserNavModel | null, ApiEr
     }
 
     if (resp?.code !== 0) {
-      // 业务失败（code 既非 0 也非 -101）：本地 JWT 已失效，清空避免残留过期登录态
-      if (resp) {
-        JwtStore.delete_jwt_token()
-      }
+      // 业务失败（code 既非 0 也非 -101）：
+      // 注意 —— 网络异常（result.response 为空 / 进入 catch）不会走到这里，
+      // 且这里【不要】删除 JWT token，只有响应 JSON 明确为 -101 时才清登录态，
+      // 避免网络抖动/服务器偶发错误时把正常登录态误清掉。
       const serverMsg = resp?.msg ?? `请求失败 (${status})`
       // 服务器已响应但业务失败：按 HTTP 状态码提示，不弹网络诊断页
       if (status >= 500) {

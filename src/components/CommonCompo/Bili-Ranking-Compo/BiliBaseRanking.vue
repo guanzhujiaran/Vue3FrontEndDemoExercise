@@ -1,67 +1,54 @@
 <template>
-  <LoadingMoreContainer
-    class="w-full bg-gradient-to-br from-[rgba(30,30,60,0.8)] to-[rgba(15,15,30,0.9)] rounded-lg shadow-[0_8px_32px_rgba(0,0,0,0.3)] text-white"
-    :handle-load="handleLoad"
-    v-model:is-more="isMore"
-    v-model:is-loading="isLoading"
-    v-model:is-error="isError"
-  >
-    <template #content>
-      <div class="px-4 md:px-8 py-6 mx-auto max-w-6xl">
-        <div class="text-center mb-6">
-          <div class="text-2xl font-bold bg-gradient-to-r from-primary to-info bg-clip-text text-transparent mb-4">排行榜</div>
-        </div>
-        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4 p-4 bg-gray-900/50 rounded-lg border border-gray-800">
-          <div class="text-sm text-gray-400 flex items-center">
-            <el-icon class="mr-2 text-gray-500"><Timer /></el-icon>
-            <span class="mr-2">数据同步时间：</span>
-            <span class="text-gray-200 font-medium">{{ syncTimeText }}</span>
-          </div>
-          <div class="flex flex-wrap gap-3">
-          <HallAreaContent
-            v-if="props.ranking_partitions.length"
-            v-for="partition in props.ranking_partitions"
-            v-model:partition="partition"
-            @handlePartitionChange="handlePartitionChange"
-          >
-          </HallAreaContent>
-          </div>
-        </div>
-        <el-divider></el-divider>
-        <div class="flex justify-center items-end gap-8 mb-8 min-h-[200px]">
-          <RankItem
-            v-for="(item, index) in topItems"
-            :key="index"
-            :score_prefix="props.score_prefix"
-            :score_suffix="props.score_suffix"
-            :item="item"
-            @score_click="handleScoreClick"
-          >
-          </RankItem>
-        </div>
-        <div class="rounded-md p-4">
-          <RankItemRow
-            v-for="(item, index) in rankItems"
-            :item="item"
-            :score_prefix="props.score_prefix"
-            :score_suffix="props.score_suffix"
-            :animation="{
-              duration: 200 * (((index + 3) % 10) + 1)
-            }"
-            :key="index"
-            @score_click="handleScoreClick"
-          />
-        </div>
-        <BiliEmpty v-if="!isError && !isLoading && topItems.length === 0 && rankItems.length === 0"></BiliEmpty>
-        <BiliError class="mt-6" v-if="isError" @click-retry="handleLoad"></BiliError>
+  <FlexContainer class="bili-ranking-container w-full bg-gradient-to-br from-[rgba(30,30,60,0.8)] to-[rgba(15,15,30,0.9)] rounded-lg
+  shadow-[0_8px_32px_rgba(0,0,0,0.3)] text-white">
+    <div class="text-center mt-6">
+      <div class="text-2xl font-bold bg-gradient-to-r from-primary to-info bg-clip-text text-transparent mb-4">排行榜
       </div>
-    </template>
-  </LoadingMoreContainer>
-  <slot name="DetailDrawer" :ActivedUserLotteryResult="ActivedUserLotteryResult" :activedParams="activedParams"></slot>
+    </div>
+    <div
+      class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4 p-4 bg-gray-900/50 rounded-lg border border-gray-800">
+      <div class="text-primary flex items-center">
+        <el-icon class="mr-2 text-gray-500">
+          <Timer />
+        </el-icon>
+        <span class="mr-2">数据同步时间：</span>
+        <span class="text-secondary font-medium">{{ syncTimeText }}</span>
+      </div>
+      <div class="flex flex-wrap gap-3">
+        <HallAreaContent v-if="localPartitions.length" v-for="partition in localPartitions"
+          :key="partition.partitionValue" :partition="partition" @handlePartitionChange="handlePartitionChange">
+        </HallAreaContent>
+      </div>
+    </div>
+    <div class="flex justify-center items-end gap-8 mb-8 min-h-50">
+      <RankItem v-for="(item, index) in topItems" :key="index" :score_prefix="props.score_prefix"
+        :score_suffix="props.score_suffix" :item="item" @score_click="handleScoreClick">
+      </RankItem>
+    </div>
+    <LoadingMoreContainer :handle-load="handleLoad"
+      v-model:is-more="isMore" v-model:is-loading="isLoading" v-model:is-error="isError">
+      <template #content>
+        <div class="bili-ranking-content px-4 md:px-8 pt-6 mx-auto max-w-6xl">
+          <div class="rounded-lg p-2 md:p-4">
+            <RankItemRow v-for="(item, index) in rankItems" :item="item" :score_prefix="props.score_prefix"
+              :score_suffix="props.score_suffix" :animation="{
+                duration: 200 * (((index + 3) % 10) + 1)
+              }" :key="index" @score_click="handleScoreClick" />
+          </div>
+          <BiliEmpty v-if="!isError && !isLoading && topItems.length === 0 && rankItems.length === 0">
+          </BiliEmpty>
+          <BiliError class="mt-6" v-if="isError" @click-retry="handleLoad"></BiliError>
+        </div>
+      </template>
+    </LoadingMoreContainer>
+    <slot name="DetailDrawer" :ActivedUserLotteryResult="ActivedUserLotteryResult" :activedParams="activedParams">
+    </slot>
+
+  </FlexContainer>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, type PropType, ref } from 'vue'
+import { computed, onMounted, watch, type PropType, ref } from 'vue'
 import type { BaseRankItem, BaseSimpleUserInfo } from '@/models/compo/ranking/Ranking.ts'
 import RankItem from '@/components/CommonCompo/Bili-Ranking-Compo/items/RankItem.vue'
 import type { RankingPartition } from '@/models/api/lottery/lotdata.ts'
@@ -120,9 +107,20 @@ const cur_offset = ref(0)
 const rankItems = ref<BaseRankItem[]>([])
 const topItems = ref<BaseRankItem[]>([])
 const isMore = ref(true)
+
+// 本地维护的可变分区状态（从 props 初始化，子组件变更时更新）
+const localPartitions = ref<RankingPartition[]>([])
+watch(
+  () => props.ranking_partitions,
+  (val) => {
+    localPartitions.value = val.map((p) => ({ ...p }))
+  },
+  { immediate: true }
+)
+
 const activedParams = computed(() => {
   let filter_params: Record<string, string> = {}
-  props.ranking_partitions.map((el) => {
+  localPartitions.value.map((el) => {
     filter_params[el.partitionValue] = el.activeValue
   })
   return filter_params
@@ -133,7 +131,7 @@ const handleLoad = () => {
     .load_func(cur_offset.value, props.page_size, activedParams.value)
     .then((resp_rank_items) => {
       const isNewList = rankItems.value.length === 0 && topItems.value.length === 0
-      
+
       if (isNewList) {
         // 首次加载：分割前 3 名和后续数据
         topItems.value = resp_rank_items.slice(0, 3)
@@ -145,7 +143,7 @@ const handleLoad = () => {
         // 加载更多：直接追加到列表末尾
         rankItems.value = [...rankItems.value, ...resp_rank_items]
       }
-      
+
       isMore.value = resp_rank_items.length >= props.page_size
       cur_offset.value += resp_rank_items.length
       isError.value = false
@@ -159,7 +157,13 @@ const handleLoad = () => {
     })
 }
 
-const handlePartitionChange = () => {
+const handlePartitionChange = (updatedPartition: RankingPartition) => {
+  const index = localPartitions.value.findIndex(
+    (p) => p.partitionValue === updatedPartition.partitionValue
+  )
+  if (index !== -1) {
+    localPartitions.value[index] = updatedPartition
+  }
   cur_offset.value = 0
   rankItems.value.splice(0, rankItems.value.length)
   topItems.value.splice(0, topItems.value.length)

@@ -6,6 +6,22 @@
 @import './theme.css';
 @import 'tailwindcss';
 @custom-variant dark (&:where(.dark, .dark *));
+@layer base {
+  html,
+  body {
+    height: 100%;
+    overflow: hidden;
+    margin: 0;
+    padding: 0;
+  }
+
+  .smallest-width {
+    min-width: 690px;
+  }
+  .xs_sm-width {
+    min-width: initial;
+  }
+}
 /* 
 越后面声明的层级,优先级越高,也就是能够覆盖前面生命的样式
 目前需要改写样式直接写到components层就行了
@@ -129,6 +145,18 @@ elementDark放到theme后面是为了确保暗色状态下直接用elementDark�
 }
 
 @layer components {
+  .lottery-card {
+    @apply border-border overflow-hidden [--el-card-border-color:var(--color-border)] [--el-card-padding:var(--spacing-1)] sm:[--el-card-padding:var(--spacing-2)] lg:[--el-card-padding:var(--spacing-3)];
+  }
+  .bili-lottery-data-contents {
+    @apply grid min-h-140 gap-5 lg:gap-6;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 28rem), 1fr));
+  }
+
+  .bili-lottery-card-arr-container {
+    @apply grid gap-5 sm:gap-3 md:gap-4 lg:gap-6;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 28rem), 1fr));
+  }
   .el-switch__core .el-switch__inner-wrapper {
     @apply text-base;
   }
@@ -609,15 +637,15 @@ elementDark放到theme后面是为了确保暗色状态下直接用elementDark�
     0%,
     100% {
       box-shadow:
-        0 0 8px rgba(234, 179, 8, 0.3),
-        0 0 20px rgba(234, 179, 8, 0.15),
-        inset 0 0 20px rgba(234, 179, 8, 0.04);
+        0 0 10px rgba(202, 138, 4, 0.55),
+        0 0 26px rgba(202, 138, 4, 0.3),
+        inset 0 0 22px rgba(202, 138, 4, 0.1);
     }
     50% {
       box-shadow:
-        0 0 16px rgba(234, 179, 8, 0.5),
-        0 0 40px rgba(234, 179, 8, 0.25),
-        inset 0 0 30px rgba(234, 179, 8, 0.08);
+        0 0 20px rgba(202, 138, 4, 0.8),
+        0 0 50px rgba(202, 138, 4, 0.45),
+        inset 0 0 34px rgba(202, 138, 4, 0.18);
     }
   }
 
@@ -629,22 +657,36 @@ elementDark放到theme后面是为了确保暗色状态下直接用elementDark�
   .lottery-card-grand-prize::before {
     content: '';
     position: absolute;
-    inset: -2px;
+    inset: -4px;
     border-radius: inherit;
     background: linear-gradient(
       135deg,
-      #fbbf24,
+      #fde047,
       #f59e0b,
-      #d97706,
-      #fbbf24,
+      #b45309,
+      #fde047,
       #f59e0b,
-      #d97706,
-      #fbbf24
+      #b45309,
+      #fde047
     );
     background-size: 300% 300%;
     animation: grand-prize-shimmer 3s ease-in-out infinite;
     z-index: -1;
-    opacity: 0.8;
+    opacity: 1;
+  }
+
+  /* 需评论：蓝色边缘 */
+  .lottery-card-edge-comment {
+    border-width: 2px;
+    border-color: var(--el-color-primary);
+    box-shadow: 0 0 6px rgba(64, 158, 255, 0.35);
+  }
+
+  /* 需转发：绿色边缘 */
+  .lottery-card-edge-repost {
+    border-width: 2px;
+    border-color: var(--el-color-success);
+    box-shadow: 0 0 6px rgba(103, 194, 58, 0.35);
   }
 
   /* badge 脉冲呼吸动画 */
@@ -662,5 +704,13 @@ elementDark放到theme后面是为了确保暗色状态下直接用elementDark�
 
   .lottery-extra-badge-animated {
     animation: badge-pulse 2s ease-in-out infinite;
+  }
+
+  /* 简单卡片列表中的大奖金边 */
+  .simple-card-grand-prize {
+    border-color: #d4af37;
+    box-shadow:
+      0 0 8px rgba(212, 175, 55, 0.5),
+      0 0 2px rgba(212, 175, 55, 0.85);
   }
 }

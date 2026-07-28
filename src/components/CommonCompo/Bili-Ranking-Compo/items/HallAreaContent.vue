@@ -1,27 +1,34 @@
 <script setup lang="ts">
 import { ClickOutside as vClickOutside } from 'element-plus'
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import type { PartitionParamsInfo, RankingPartition } from '@/models/api/lottery/lotdata.ts'
 import { ArrowDown } from '@element-plus/icons-vue'
 
+const props = defineProps<{ partition: RankingPartition }>()
+const emit = defineEmits<{
+  handlePartitionChange: [partition: RankingPartition]
+}>()
+
 const isPopup = ref<boolean>(false)
-const partition = defineModel<RankingPartition>('partition', { required: true })
-const activeName = ref(
-  partition.value.params.find((el) => el.paramValue === partition.value.activeValue)?.displayName ??
-    '选择分区'
+const localActiveValue = ref(props.partition.activeValue)
+const activeName = computed(() =>
+  props.partition.params.find((el) => el.paramValue === localActiveValue.value)?.displayName ?? '选择分区'
 )
+
 const handlePopup = () => {
   isPopup.value = !isPopup.value
 }
+
 const handlePartitionChange = (param: PartitionParamsInfo) => {
-  if (partition.value.activeValue !== param.paramValue) {
-    partition.value = { ...partition.value, activeValue: param.paramValue }
-    activeName.value = param.displayName
+  if (localActiveValue.value !== param.paramValue) {
+    localActiveValue.value = param.paramValue
     isPopup.value = false
-    emit('handlePartitionChange')
+    emit('handlePartitionChange', {
+      ...props.partition,
+      activeValue: param.paramValue
+    })
   }
 }
-const emit = defineEmits(['handlePartitionChange'])
 </script>
 
 <template>
@@ -43,7 +50,7 @@ const emit = defineEmits(['handlePartitionChange'])
       <div
         v-for="param in partition.params"
         class="px-4 py-3 cursor-pointer text-sm text-gray-300 hover:bg-gray-800 hover:text-primary transition-colors duration-200"
-        :class="{ 'text-primary font-medium bg-primary/10 border-l-4 border-primary': partition.activeValue === param.paramValue }"
+        :class="{ 'text-primary font-medium bg-primary/10 border-l-4 border-primary': localActiveValue === param.paramValue }"
         @click="handlePartitionChange(param)"
       >
         <span>

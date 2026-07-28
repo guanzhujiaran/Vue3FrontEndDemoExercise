@@ -1,7 +1,7 @@
 <template>
   <FlexContainer class="bili-lottery-data-panel gap-6 pb-8">
     <section
-      class="overflow-hidden rounded-lg border border-border-light p-px [background:var(--color-gradient-bili-data)]"
+      class="overflow-hidden rounded-lg border border-border-light p-px bg-gradient-bili-data"
     >
       <div class="flex flex-col gap-6 rounded-lg bg-bg p-5 sm:p-6">
         <div class="flex flex-1 space-y-4">
@@ -51,7 +51,7 @@
     </section>
 
     <section
-      class="bili-lottery-data-contents flex min-w-0 flex-1 rounded-lg border border-border-light bg-bg p-4 sm:p-5 lg:p-6"
+      class="bili-lottery-data-contents"
     >
 
       <BiliPaginationDataView
@@ -92,9 +92,14 @@
             v-if="viewMode === 'card'"
             :data="reserve_lot_data_props.lot_data?.items ?? []"
           />
+          <BiliLotterySimpleList
+            v-else-if="viewMode === 'simple'"
+            :data="reserve_lot_data_props.lot_data?.items ?? []"
+          />
           <BiliOfficialLotteryTable
             v-else
             :data="reserve_lot_data_props.lot_data?.items ?? []"
+            storage-key="reserve-lottery-table:fixed-columns"
           />
         </template>
       </BiliPaginationDataView>
@@ -106,6 +111,7 @@
 import { watch, onMounted, onUnmounted, ref } from 'vue'
 import { useLotteryData } from '@/utils/useLotteryData.ts'
 import BiliScrapyStatusMini from './BiliScrapyStatusMini.vue'
+import BiliLotterySimpleList from './BiliLotterySimpleList.vue'
 import emitter from '@/utils/mitt.ts'
 import SubmitDynamicLotteryModal from './SubmitDynamicLotteryModal.vue'
 import { useBiliLotteryRecord } from '@/stores/bili_lottery_record.ts'
@@ -115,7 +121,7 @@ import LotteryFilterBar from './LotteryFilterBar.vue'
 const { page_size, lotteryDataProps: reserve_lot_data_props, getLotData: get_lot_data, extraFilters } = useLotteryData('GetReserveLottery')
 
 const ClickedBiliLotteryId = useBiliLotteryRecord()
-const viewMode = ref<'card' | 'table'>(ClickedBiliLotteryId.lottery_view_mode)
+const viewMode = ref<'card' | 'table' | 'simple'>(ClickedBiliLotteryId.lottery_view_mode)
 
 const statValueStyle = { fontSize: '34px', fontWeight: '800' }
 

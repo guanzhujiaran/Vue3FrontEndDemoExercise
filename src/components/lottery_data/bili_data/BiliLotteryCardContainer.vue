@@ -14,18 +14,20 @@ const lotteryDataArr = withDefaults(
   }
 )
 const parsedData = computed(() => {
-  return lotteryDataArr.data.map((el) => el?.raw ?? el)
+  // 注意：extra_info 等附加信息放在响应对象的顶层，而非 raw 内部。
+  // normalizeLotteryData 已自行处理 raw 解包，这里直接透传完整对象，
+  // 避免 el.raw 解包把顶层 extra_info 丢掉导致卡片无法显示外观特效。
+  return lotteryDataArr.data.map((el) => el)
 })
 </script>
 
 <template>
   
-  <div class="bili-lottery-card-arr-container grid grid-cols-[repeat(auto-fit,minmax(min(100%,28rem),1fr))] gap-5 lg:gap-6">
+  <div class="bili-lottery-card-arr-container">
     <div
-      class="bili-lottery-card-wrapper rounded-xl bg-fill-light p-1"
+      class="bili-lottery-card-wrapper p-0"
       v-for="(item, idx) in parsedData"
       :key="idx"
-      :style="{ '--card-index': idx }"
     >
       <BiliLotteryCard class="h-full" :lottery-data="item"></BiliLotteryCard>
     </div>

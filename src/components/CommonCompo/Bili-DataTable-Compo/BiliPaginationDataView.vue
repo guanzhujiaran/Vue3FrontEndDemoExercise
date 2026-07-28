@@ -3,24 +3,35 @@
     <slot name="toolbar">
     </slot>
     <FlexContainer class="min-w-0 gap-5">
-      <div v-if="loading" class="w-full">
+      <!-- 首屏（还没有任何数据）时才用骨架屏，避免切换分页时销毁表格 -->
+      <div v-if="loading && props.data.length === 0" class="w-full">
         <div class="grid gap-4" :style="{ gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))' }">
           <div v-for="i in 6" :key="i" class="rounded-xl bg-bg/50 backdrop-blur-sm p-5 border border-border-light/30">
             <el-skeleton :rows="4" animated></el-skeleton>
           </div>
         </div>
       </div>
-      <div v-else-if="props.data.length > 0" ref="contentStartRef" class="min-w-0 scroll-mt-(--spacing-20)">
+      <!-- 已有数据时保持表格/内容不被销毁，仅用 v-loading 遮罩加载，保留横向滚动位置 -->
+      <div
+        v-else-if="props.data.length > 0"
+        ref="contentStartRef"
+        class="relative min-w-0 min-h-30 scroll-mt-(--spacing-20)"
+        v-loading="loading"
+        element-loading-text="加载中..."
+      >
         <slot name="contents">
           <BiliLotteryCardContainer :data="props.data"></BiliLotteryCardContainer>
         </slot>
       </div>
-        <el-pagination v-if="!error && !loading && props.data.length > 0" class="pagination flex-wrap justify-center gap-y-2" size="large" background
-          :layout="paginationLayout" :total="props.total" v-model:current-page="current_page" :pager-count="5" />
-        <bili-empty v-if="props.data.length === 0 && !error && !loading" :txt="empty_msg"></bili-empty>
-        <bili-error v-if="error && !loading" @click-retry="handleRetry"></bili-error>
+      <!-- 分页控件在加载时仍保留，方便继续翻页 -->
+      <el-pagination
+        v-if="!error && props.data.length > 0"
+        class="pagination flex-wrap justify-center gap-y-2" size="large" background :layout="paginationLayout"
+        :total="props.total" v-model:current-page="current_page" :pager-count="5" />
+      <bili-empty class="bg-bg rounded-lg" v-if="props.data.length === 0 && !error && !loading"
+        :txt="empty_msg"></bili-empty>
+      <bili-error class="bg-bg rounded-lg" v-if="error && !loading" @click-retry="handleRetry"></bili-error>
     </FlexContainer>
-    <ScrollButtons :top-threshold="300" :bottom-threshold="100" />
   </FlexContainer>
 </template>
 

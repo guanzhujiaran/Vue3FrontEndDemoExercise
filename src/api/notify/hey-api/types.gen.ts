@@ -5,6 +5,30 @@ export type ClientOptions = {
 };
 
 /**
+ * FeedbackRequest
+ *
+ * 前端反馈请求体（POST /api/v1/message/push/feedback）。
+ *
+ * source 标注反馈来源页面 / 模块（如「首页」「抽奖数据页」），
+ * 用于后端拼接推送标题前缀，告诉站长这条反馈来自哪里；
+ * content 为反馈正文，contact 为可选联系方式。
+ */
+export type FeedbackRequest = {
+    /**
+     * Content
+     */
+    content: string;
+    /**
+     * Contact
+     */
+    contact?: string | null;
+    /**
+     * Source
+     */
+    source?: string | null;
+};
+
+/**
  * HTTPValidationError
  */
 export type HttpValidationError = {
@@ -12,59 +36,6 @@ export type HttpValidationError = {
      * Detail
      */
     detail?: Array<ValidationError>;
-};
-
-/**
- * MessageUser
- *
- * 推送发起方的用户信息。
- *
- * 由上游 FastapiApp / RPA-Browser 经 nodejs-pptr 代理通过 x-bili-* 请求头透传，
- * message-service 解析后写入推送内容（标题前缀），便于区分「是谁触发的推送」。
- * 字段与 RPA-Browser / nodejs-pptr ProxyEndPort 中 setUserHeaders 注入的
- * x-bili-* 头一一对应。
- */
-export type MessageUser = {
-    /**
-     * Mid
-     */
-    mid?: string | null;
-    /**
-     * User Name
-     */
-    user_name?: string | null;
-    /**
-     * Uname
-     */
-    uname?: string | null;
-    /**
-     * Level
-     */
-    level?: string | null;
-    /**
-     * Role
-     */
-    role?: string | null;
-    /**
-     * Sign
-     */
-    sign?: string | null;
-    /**
-     * Sex
-     */
-    sex?: string | null;
-    /**
-     * Email
-     */
-    email?: string | null;
-    /**
-     * Vip Status
-     */
-    vip_status?: string | null;
-    /**
-     * Vip Type
-     */
-    vip_type?: string | null;
 };
 
 /**
@@ -373,10 +344,11 @@ export type PushChannelConfig = {
 /**
  * PushMessage
  *
- * 通过消息队列投递的推送请求（消息系统的「推送」模块）。
+ * 「推送」模块的 HTTP 请求体（POST /api/v1/message/push）。
  *
- * 等价于各微服务原先「直接调用 PushMe / PushPlus 接口」的逻辑，
- * 现在统一改为投递到 message-service，由消费者异步分发。
+ * 由 FastapiApp / RPA-Browser / 前端（经 nodejs-pptr 转发）调用本接口时传入，
+ * 等价于各微服务原先「直接调用 PushMe / PushPlus 接口」的逻辑。api 层收到后会
+ * 转换为 PushMessagePayload 投递到 RabbitMQ，由消费者异步分发。
  */
 export type PushMessage = {
     /**
@@ -392,15 +364,12 @@ export type PushMessage = {
      */
     push_type?: string | null;
     config?: PushChannelConfig | null;
-    user?: MessageUser | null;
-    /**
-     * Requires Login
-     */
-    requires_login?: boolean;
 };
 
 /**
  * StandardResponse
+ *
+ * 所有 HTTP 接口的统一返回结构。
  */
 export type StandardResponse = {
     /**
@@ -419,6 +388,8 @@ export type StandardResponse = {
 
 /**
  * TestPushRequest
+ *
+ * 「推送」模块的测试推送请求。
  */
 export type TestPushRequest = {
     /**
@@ -439,10 +410,6 @@ export type TestPushRequest = {
     config?: {
         [key: string]: unknown;
     } | null;
-    /**
-     * Requires Login
-     */
-    requires_login?: boolean;
 };
 
 /**
@@ -545,3 +512,28 @@ export type TestPushApiV1MessagePushTestPostResponses = {
 };
 
 export type TestPushApiV1MessagePushTestPostResponse = TestPushApiV1MessagePushTestPostResponses[keyof TestPushApiV1MessagePushTestPostResponses];
+
+export type SubmitFeedbackApiV1MessagePushFeedbackPostData = {
+    body: FeedbackRequest;
+    path?: never;
+    query?: never;
+    url: '/api/v1/message/push/feedback';
+};
+
+export type SubmitFeedbackApiV1MessagePushFeedbackPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type SubmitFeedbackApiV1MessagePushFeedbackPostError = SubmitFeedbackApiV1MessagePushFeedbackPostErrors[keyof SubmitFeedbackApiV1MessagePushFeedbackPostErrors];
+
+export type SubmitFeedbackApiV1MessagePushFeedbackPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponse;
+};
+
+export type SubmitFeedbackApiV1MessagePushFeedbackPostResponse = SubmitFeedbackApiV1MessagePushFeedbackPostResponses[keyof SubmitFeedbackApiV1MessagePushFeedbackPostResponses];

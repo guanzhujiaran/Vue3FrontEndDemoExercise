@@ -44,8 +44,8 @@ export interface BaseNormalizedLottery {
   officialLotType?: string | null
   /** 第三方抽奖专用：开奖时间原文（BERT 提取，如"6月24日"） */
   lotteryTimeText?: string | null
-  /** 第三方抽奖专用：附加信息（大奖/评论/转发） */
-  extraInfo?: { is_grand_prize: boolean; need_comment: boolean; need_repost: boolean } | null
+  /** 附加信息：官方仅 is_lot/is_grand_prize/need_comment/need_repost，普通抽奖额外含 prize_names/lottery_time 等 */
+  extraInfo?: OthersLotExtraInfo | null
 }
 
 export type NormalizedLottery = BaseNormalizedLottery
@@ -182,10 +182,23 @@ export interface RedPacketData {
   danmu?: string | null
 } // Added danmu?
 
-/** 第三方抽奖奖品信息（BERT 提取） */
+/** 第三方抽奖附加信息 — 对应后端 CommonLotExtraInfoResp */
+export interface OthersLotExtraInfo {
+  is_lot: boolean | null
+  is_grand_prize: boolean | null
+  need_comment: boolean | null
+  need_repost: boolean | null
+  required_topic_text: string | null
+  prize_names: string[] | null
+  /** 开奖时间原文（如"6月24日"） */
+  lottery_time: string | null
+  lot_type: string | null
+  predicted_at: string | null
+}
+
+/** 第三方抽奖奖品信息（BERT 提取） — 已废弃，奖品与开奖时间已合并到 extra_info */
 export interface OthersLotPrizeInfo {
   prize_names: string[]
-  /** 开奖时间原文（如"6月24日"） */
   lottery_time?: string | null
 }
 
@@ -209,8 +222,9 @@ export interface OthersLotDynItem {
   created_at: string | null
   dynId_str?: string
   up_uid_str?: string | null
+  /** @deprecated 已合并到 extra_info，保留以兼容旧数据 */
   prize_info?: OthersLotPrizeInfo | null
-  extra_info?: { is_grand_prize: boolean; need_comment: boolean; need_repost: boolean } | null
+  extra_info?: OthersLotExtraInfo | null
 }
 
 // Union type for the prop

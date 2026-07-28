@@ -391,19 +391,77 @@ export type ChargeLotteryResp = {
     /**
      * 抽奖附加信息
      */
-    extra_info?: LotExtraInfoResp | null;
+    extra_info?: OfficialLotExtraInfoResp | null;
     raw: LotdataResp;
-    /**
-     * Extra Fields
-     */
-    readonly extra_fields: {
-        [key: string]: unknown;
-    } | null;
     /**
      * Lottery Id Str
      */
     readonly lottery_id_str: string;
-    [key: string]: unknown;
+};
+
+/**
+ * CommonLotExtraInfoResp
+ *
+ * 普通/第三方抽奖附加信息 — 对应数据库 t_lot_extra_info 表中 lot_type=common 的记录
+ *
+ * 普通抽奖的奖品信息由 LLM 从动态正文提取，因此额外包含 prize_names / lottery_time。
+ * 赋值需传入 LLM 提取的 prize_names / lottery_time，相较官方抽奖多这两个必填（可空）参数。
+ */
+export type CommonLotExtraInfoResp = {
+    /**
+     * Is Lot
+     *
+     * LLM 判断是否为抽奖: true-是, false-否, null-未抽取
+     */
+    is_lot?: boolean | null;
+    /**
+     * Is Grand Prize
+     *
+     * 大奖标志: true-大奖, false-非大奖, null-未判断
+     */
+    is_grand_prize?: boolean | null;
+    /**
+     * Need Comment
+     *
+     * 是否需要评论, null-未知
+     */
+    need_comment?: boolean | null;
+    /**
+     * Need Repost
+     *
+     * 是否需要转发, null-未知
+     */
+    need_repost?: boolean | null;
+    /**
+     * Required Topic Text
+     *
+     * 转发/评论所需携带的话题文本，如 #抽奖#
+     */
+    required_topic_text?: string | null;
+    /**
+     * Prize Names
+     *
+     * LLM 提取的奖品名称列表
+     */
+    prize_names?: Array<string> | null;
+    /**
+     * Lottery Time
+     *
+     * LLM 提取的开奖时间字符串
+     */
+    lottery_time?: string | null;
+    /**
+     * Lot Type
+     *
+     * 抽奖类型: common
+     */
+    lot_type?: string | null;
+    /**
+     * Predicted At
+     *
+     * LLM 判断时间
+     */
+    predicted_at?: string | null;
 };
 
 /**
@@ -456,36 +514,19 @@ export type CommonLotteryResp = {
      */
     isOfficialAccount: number;
     /**
-     * Ismanualreply
+     * Created At
      *
-     * 是否需要人工评论
+     * 数据库创建时间（对应 t_lotdyninfo.created_at）
      */
-    isManualReply?: boolean;
+    created_at?: string | null;
     /**
-     * Islot
+     * 抽奖附加信息（对应 t_lot_extra_info 表）
      */
-    isLot: number;
-    /**
-     * Hashtag
-     */
-    hashTag: string;
-    /**
-     * Isbiglot
-     *
-     * SVM 大奖判断结果: 1-大奖, 0-非大奖
-     */
-    isBigLot?: number;
-    /**
-     * Extra Fields
-     */
-    readonly extra_fields: {
-        [key: string]: unknown;
-    } | null;
+    extra_info?: CommonLotExtraInfoResp | null;
     /**
      * Up Uid Str
      */
     readonly up_uid_str: string;
-    [key: string]: unknown;
 };
 
 /**
@@ -822,26 +863,6 @@ export type CommonResponseModelUnionStatsPluginProgressStatusRespNoneType = {
      * Data
      */
     data?: StatsPlugin | ProgressStatusResp | null;
-};
-
-/**
- * CommonResponseModel[dict]
- */
-export type CommonResponseModelDict = {
-    /**
-     * Code
-     */
-    code?: number;
-    /**
-     * Msg
-     */
-    msg?: string;
-    /**
-     * Data
-     */
-    data?: {
-        [key: string]: unknown;
-    } | null;
 };
 
 /**
@@ -1248,39 +1269,6 @@ export type LiveLotteryResp = {
 };
 
 /**
- * LotExtraInfoResp
- *
- * 抽奖附加信息 — 对应数据库 t_lot_extra_info 表，方便后续扩展
- */
-export type LotExtraInfoResp = {
-    /**
-     * Is Grand Prize
-     *
-     * 大奖标志: true-大奖, false-非大奖
-     */
-    is_grand_prize?: boolean;
-    /**
-     * Need Comment
-     *
-     * 是否需要评论
-     */
-    need_comment?: boolean;
-    /**
-     * Need Repost
-     *
-     * 是否需要转发
-     */
-    need_repost?: boolean;
-    /**
-     * Extra Fields
-     */
-    readonly extra_fields: {
-        [key: string]: unknown;
-    } | null;
-    [key: string]: unknown;
-};
-
-/**
  * LotdataResp
  */
 export type LotdataResp = {
@@ -1617,6 +1605,41 @@ export type LotterySearchPaginationParams = {
 };
 
 /**
+ * OfficialLotExtraInfoResp
+ *
+ * 官方/预约/充电抽奖附加信息 — 严格对应 GrpcModule 数据库 t_lot_extra_info 表的列。
+ *
+ * 该表仅存储 LLM 大奖/抽奖/互动判断结果，不含奖品名、开奖时间、话题文本等字段。
+ * 奖品信息由主表 Lotdata 的 first_prize_cmt 等字段提供。
+ */
+export type OfficialLotExtraInfoResp = {
+    /**
+     * Is Lot
+     *
+     * LLM 判断是否为抽奖: true-是, false-否, null-未抽取
+     */
+    is_lot?: boolean | null;
+    /**
+     * Is Grand Prize
+     *
+     * 大奖标志: true-大奖, false-非大奖, null-未判断
+     */
+    is_grand_prize?: boolean | null;
+    /**
+     * Need Comment
+     *
+     * 是否需要评论, null-未知
+     */
+    need_comment?: boolean | null;
+    /**
+     * Need Repost
+     *
+     * 是否需要转发, null-未知
+     */
+    need_repost?: boolean | null;
+};
+
+/**
  * OfficialLotType
  *
  * 官方抽奖类型枚举
@@ -1658,25 +1681,21 @@ export type OfficialLotteryResp = {
     /**
      * 抽奖附加信息
      */
-    extra_info?: LotExtraInfoResp | null;
+    extra_info?: OfficialLotExtraInfoResp | null;
     raw: LotdataResp;
-    /**
-     * Extra Fields
-     */
-    readonly extra_fields: {
-        [key: string]: unknown;
-    } | null;
     /**
      * Lottery Id Str
      */
     readonly lottery_id_str: string;
-    [key: string]: unknown;
 };
 
 /**
  * OthersLotDynItem
  *
  * 第三方抽奖动态条目
+ *
+ * 奖品信息（prize_names / lottery_time）已并入 extra_info（t_lot_extra_info），
+ * 接口统一通过 extra_info 返回，不再使用独立的 prize_info 字段。
  */
 export type OthersLotDynItem = {
     /**
@@ -1721,37 +1740,17 @@ export type OthersLotDynItem = {
      */
     isOfficialAccount: number | null;
     /**
-     * Ismanualreply
-     *
-     * 是否需要人工评论
-     */
-    isManualReply?: boolean | null;
-    /**
-     * Islot
-     */
-    isLot: number | null;
-    /**
-     * Hashtag
-     */
-    hashTag: string | null;
-    /**
      * Created At
      */
     created_at: string | null;
     /**
-     * UIE 提取的奖品信息，首次提取后缓存
+     * Ismanualreply
      */
-    prize_info?: OthersLotPrizeInfo | null;
+    isManualReply?: boolean | null;
     /**
-     * 抽奖附加信息
+     * 抽奖附加信息（含奖品名/开奖时间，统一来自 t_lot_extra_info）
      */
-    extra_info?: LotExtraInfoResp | null;
-    /**
-     * Extra Fields
-     */
-    readonly extra_fields: {
-        [key: string]: unknown;
-    } | null;
+    extra_info?: CommonLotExtraInfoResp | null;
     /**
      * Dynid Str
      */
@@ -1760,7 +1759,6 @@ export type OthersLotDynItem = {
      * Up Uid Str
      */
     readonly up_uid_str: string | null;
-    [key: string]: unknown;
 };
 
 /**
@@ -1776,26 +1774,6 @@ export type OthersLotDynSortEnum = 'pubTime' | 'created_at';
  * 排序方向枚举
  */
 export type OthersLotDynSortOrderEnum = 'asc' | 'desc';
-
-/**
- * OthersLotPrizeInfo
- *
- * 第三方抽奖动态的提取信息（UIE 提取）
- */
-export type OthersLotPrizeInfo = {
-    /**
-     * Prize Names
-     *
-     * 提取到的奖品名称列表
-     */
-    prize_names?: Array<string>;
-    /**
-     * Lottery Time
-     *
-     * 提取到的开奖时间字符串
-     */
-    lottery_time?: string | null;
-};
 
 /**
  * ProgressStatusResp
@@ -2271,21 +2249,6 @@ export type StatsPlugin = {
 };
 
 /**
- * SubmitFeedbackReq
- *
- * 提交反馈请求模型
- */
-export type SubmitFeedbackReq = {
-    /**
-     * Message
-     *
-     * 反馈内容
-     */
-    message: string;
-    [key: string]: unknown;
-};
-
-/**
  * TUpReserveRelationInfoResp
  */
 export type TUpReserveRelationInfoResp = {
@@ -2493,13 +2456,6 @@ export type TopicLotteryResp = {
      * Lottery Sid
      */
     lottery_sid: string | null;
-    /**
-     * Extra Fields
-     */
-    readonly extra_fields: {
-        [key: string]: unknown;
-    } | null;
-    [key: string]: unknown;
 };
 
 /**
@@ -2862,9 +2818,8 @@ export type ChargeLotteryRespWritable = {
     /**
      * 抽奖附加信息
      */
-    extra_info?: LotExtraInfoRespWritable | null;
+    extra_info?: OfficialLotExtraInfoResp | null;
     raw: LotdataRespWritable;
-    [key: string]: unknown;
 };
 
 /**
@@ -2917,26 +2872,15 @@ export type CommonLotteryRespWritable = {
      */
     isOfficialAccount: number;
     /**
-     * Ismanualreply
+     * Created At
      *
-     * 是否需要人工评论
+     * 数据库创建时间（对应 t_lotdyninfo.created_at）
      */
-    isManualReply?: boolean;
+    created_at?: string | null;
     /**
-     * Islot
+     * 抽奖附加信息（对应 t_lot_extra_info 表）
      */
-    isLot: number;
-    /**
-     * Hashtag
-     */
-    hashTag: string;
-    /**
-     * Isbiglot
-     *
-     * SVM 大奖判断结果: 1-大奖, 0-非大奖
-     */
-    isBigLot?: number;
-    [key: string]: unknown;
+    extra_info?: CommonLotExtraInfoResp | null;
 };
 
 /**
@@ -3177,21 +3121,6 @@ export type CommonResponseModelResponsePaginationItemsReserveInfoRespWritable = 
      */
     msg?: string;
     data?: ResponsePaginationItemsReserveInfoRespWritable | null;
-};
-
-/**
- * CommonResponseModel[ResponsePaginationItems[TopicLotteryResp]]
- */
-export type CommonResponseModelResponsePaginationItemsTopicLotteryRespWritable = {
-    /**
-     * Code
-     */
-    code?: number;
-    /**
-     * Msg
-     */
-    msg?: string;
-    data?: ResponsePaginationItemsTopicLotteryRespWritable | null;
 };
 
 /**
@@ -3521,33 +3450,6 @@ export type LiveLotteryRespWritable = {
 };
 
 /**
- * LotExtraInfoResp
- *
- * 抽奖附加信息 — 对应数据库 t_lot_extra_info 表，方便后续扩展
- */
-export type LotExtraInfoRespWritable = {
-    /**
-     * Is Grand Prize
-     *
-     * 大奖标志: true-大奖, false-非大奖
-     */
-    is_grand_prize?: boolean;
-    /**
-     * Need Comment
-     *
-     * 是否需要评论
-     */
-    need_comment?: boolean;
-    /**
-     * Need Repost
-     *
-     * 是否需要转发
-     */
-    need_repost?: boolean;
-    [key: string]: unknown;
-};
-
-/**
  * LotdataResp
  */
 export type LotdataRespWritable = {
@@ -3755,15 +3657,17 @@ export type OfficialLotteryRespWritable = {
     /**
      * 抽奖附加信息
      */
-    extra_info?: LotExtraInfoRespWritable | null;
+    extra_info?: OfficialLotExtraInfoResp | null;
     raw: LotdataRespWritable;
-    [key: string]: unknown;
 };
 
 /**
  * OthersLotDynItem
  *
  * 第三方抽奖动态条目
+ *
+ * 奖品信息（prize_names / lottery_time）已并入 extra_info（t_lot_extra_info），
+ * 接口统一通过 extra_info 返回，不再使用独立的 prize_info 字段。
  */
 export type OthersLotDynItemWritable = {
     /**
@@ -3808,32 +3712,17 @@ export type OthersLotDynItemWritable = {
      */
     isOfficialAccount: number | null;
     /**
-     * Ismanualreply
-     *
-     * 是否需要人工评论
-     */
-    isManualReply?: boolean | null;
-    /**
-     * Islot
-     */
-    isLot: number | null;
-    /**
-     * Hashtag
-     */
-    hashTag: string | null;
-    /**
      * Created At
      */
     created_at: string | null;
     /**
-     * UIE 提取的奖品信息，首次提取后缓存
+     * Ismanualreply
      */
-    prize_info?: OthersLotPrizeInfo | null;
+    isManualReply?: boolean | null;
     /**
-     * 抽奖附加信息
+     * 抽奖附加信息（含奖品名/开奖时间，统一来自 t_lot_extra_info）
      */
-    extra_info?: LotExtraInfoRespWritable | null;
-    [key: string]: unknown;
+    extra_info?: CommonLotExtraInfoResp | null;
 };
 
 /**
@@ -4039,20 +3928,6 @@ export type ResponsePaginationItemsReserveInfoRespWritable = {
 };
 
 /**
- * ResponsePaginationItems[TopicLotteryResp]
- */
-export type ResponsePaginationItemsTopicLotteryRespWritable = {
-    /**
-     * Items
-     */
-    items: Array<TopicLotteryRespWritable>;
-    /**
-     * Total
-     */
-    total: number;
-};
-
-/**
  * SamsClubApiStatus
  */
 export type SamsClubApiStatusWritable = {
@@ -4238,41 +4113,6 @@ export type TUpReserveRelationInfoRespWritable = {
     new_field: string | {
         [key: string]: unknown;
     } | null;
-    [key: string]: unknown;
-};
-
-/**
- * TopicLotteryResp
- */
-export type TopicLotteryRespWritable = {
-    /**
-     * Jump Url
-     */
-    jump_url: string;
-    /**
-     * App Sche
-     */
-    app_sche: string;
-    /**
-     * Title
-     */
-    title: string;
-    /**
-     * End Date Str
-     */
-    end_date_str: string;
-    /**
-     * Lot Type Text
-     */
-    lot_type_text: string;
-    /**
-     * Lottery Pool Text
-     */
-    lottery_pool_text: string;
-    /**
-     * Lottery Sid
-     */
-    lottery_sid: string | null;
     [key: string]: unknown;
 };
 
@@ -4714,31 +4554,6 @@ export type SearchLotteryByKeywordApiV1LotteryDatabaseBiliSearchLotteryByKeyword
 
 export type SearchLotteryByKeywordApiV1LotteryDatabaseBiliSearchLotteryByKeywordPostResponse = SearchLotteryByKeywordApiV1LotteryDatabaseBiliSearchLotteryByKeywordPostResponses[keyof SearchLotteryByKeywordApiV1LotteryDatabaseBiliSearchLotteryByKeywordPostResponses];
 
-export type SubmitFeedbackApiV1LotteryDatabaseBiliSubmitFeedbackPostData = {
-    body: SubmitFeedbackReq;
-    path?: never;
-    query?: never;
-    url: '/api/v1/lottery_database/bili/SubmitFeedback';
-};
-
-export type SubmitFeedbackApiV1LotteryDatabaseBiliSubmitFeedbackPostErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type SubmitFeedbackApiV1LotteryDatabaseBiliSubmitFeedbackPostError = SubmitFeedbackApiV1LotteryDatabaseBiliSubmitFeedbackPostErrors[keyof SubmitFeedbackApiV1LotteryDatabaseBiliSubmitFeedbackPostErrors];
-
-export type SubmitFeedbackApiV1LotteryDatabaseBiliSubmitFeedbackPostResponses = {
-    /**
-     * Successful Response
-     */
-    200: CommonResponseModelDict;
-};
-
-export type SubmitFeedbackApiV1LotteryDatabaseBiliSubmitFeedbackPostResponse = SubmitFeedbackApiV1LotteryDatabaseBiliSubmitFeedbackPostResponses[keyof SubmitFeedbackApiV1LotteryDatabaseBiliSubmitFeedbackPostResponses];
-
 export type GetSingleScrapyStatusApiV1LotteryDatabaseBiliGetSingleScrapyStatusPostData = {
     body?: never;
     path?: never;
@@ -4874,7 +4689,7 @@ export type LotteryHofApiV1LotteryDatabaseBiliLotteryHofLotTypeGetData = {
         limit?: number;
         date?: BiliLotStatisticRankDateTypeEnum;
     };
-    url: '/api/v1/lottery_database/bili/lottery_statistic/rank/lottery_hof/{lot_type}';
+    url: '/api/v1/lottery_database/bili/lottery_hof/{lot_type}';
 };
 
 export type LotteryHofApiV1LotteryDatabaseBiliLotteryHofLotTypeGetErrors = {
@@ -4915,7 +4730,7 @@ export type LotteryResultApiV1LotteryDatabaseBiliLotteryResultGetData = {
         limit?: number;
         date?: BiliLotStatisticRankDateTypeEnum;
     };
-    url: '/api/v1/lottery_database/bili/lottery_statistic/rank/lottery_result';
+    url: '/api/v1/lottery_database/bili/lottery_result';
 };
 
 export type LotteryResultApiV1LotteryDatabaseBiliLotteryResultGetErrors = {

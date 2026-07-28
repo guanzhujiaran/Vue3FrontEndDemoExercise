@@ -9,6 +9,7 @@ import { KeysEnum, useInject } from '@/models/base/provide_model.ts'
 import type { UserNavModel } from '@/models/user/user_model.ts'
 import { routes } from '@/router'
 import router from '@/router'
+import SubmitFeedbackModal from '@/components/lottery_data/bili_data/SubmitFeedbackModal.vue'
 const jwtStore = useJwtStore()
 const activeTab = ref('all')
 const openGlobalLoginModal = inject(openGlobalLoginModalKey, () => { })
@@ -41,6 +42,9 @@ const visibleChildren = (children: any[]) => {
 }
 const biliUser = useInject(KeysEnum.BiliUser) as Ref<UserNavModel>
 const isLoggedIn = computed(() => !!biliUser.value.uid)
+
+// 首页“提交反馈”按钮弹窗
+const feedbackModalRef = ref<InstanceType<typeof SubmitFeedbackModal> | null>(null)
 // 处理登录按钮点击
 const handleLoginClick = () => {
   openGlobalLoginModal()
@@ -92,178 +96,187 @@ const handleCardClick = (path: string | undefined, requiresLogin = false) => {
 </script>
 
 <template>
-  <div>
-    <el-main class="p-0!">
-      <!-- 顶部横幅 - 增强视觉效果 -->
-      <section class="relative overflow-hidden px-5 py-20 text-center text-white md:py-28"
-        style="background: var(--color-gradient-hero-primary)">
-        <!-- 半透明遮罩层提升文字可读性 -->
-        <div class="absolute inset-0 bg-linear-to-b from-black/20 via-transparent to-black/30"></div>
-        <!-- 装饰性光晕 -->
-        <div class="pointer-events-none absolute -left-20 -top-20 h-80 w-80 rounded-full bg-white/10 blur-3xl"></div>
-        <div class="pointer-events-none absolute -bottom-20 -right-20 h-80 w-80 rounded-full bg-white/10 blur-3xl">
-        </div>
-
-        <div class="relative z-10 mx-auto max-w-3xl">
-          <el-text class="mb-3 block text-5xl font-bold tracking-tight drop-shadow-lg md:text-6xl"
-            tag="h1">BiliExplosion</el-text>
-          <el-text class="mb-8 block text-lg opacity-90 md:text-xl" tag="p">哔哩哔哩本社爆破</el-text>
-          <div class="flex flex-wrap justify-center gap-3">
-            <el-button type="primary" size="large" @click="handleLoginClick" v-if="!isLoggedIn" class="shadow-lg!">
-              <el-icon class="el-icon--left">
-                <User />
-              </el-icon>
-              立即登录
-            </el-button>
-            <el-button type="primary" size="large" @click="router.push('/app/lot-data/bili-data/official')" v-else
-              class="shadow-lg!">
-              <el-icon class="el-icon--left">
-                <DataAnalysis />
-              </el-icon>
-              查看抽奖数据
-            </el-button>
-            <el-button type="info" size="large" @click="router.push('/app/Feedback')" class="shadow-lg!">
-              <el-icon class="el-icon--left">
-                <ChatSquare />
-              </el-icon>
-              提交反馈
-            </el-button>
-          </div>
-        </div>
-      </section>
-
-      <div class="mt-8 flex justify-center gap-10" v-if="isLoggedIn"></div>
-    </el-main>
-
-    <!-- 功能导航区 -->
-    <section class="mx-5 py-10 lg:mx-10 sm:px-0 sm:mx-0">
-      <div class="mb-6 flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <el-text class="m-0 block text-2xl font-semibold tracking-tight" tag="h2">功能导航</el-text>
-          <el-text class="mt-1 block text-sm" tag="p">选择你需要的工具开始使用</el-text>
-        </div>
-        <div>
-          <el-radio-group v-model="activeTab" size="large">
-            <el-radio-button value="all">全部</el-radio-button>
-            <el-radio-button value="lottery">抽奖数据</el-radio-button>
-            <el-radio-button v-if="isLoggedIn" value="user-center">用户中心</el-radio-button>
-            <!-- RPA浏览器入口：生产编译临时隐藏 <el-radio-button v-if="isLoggedIn" value="rpa-browser">RPA浏览器</el-radio-button> -->
-            <el-radio-button value="shopping">山姆会员商店</el-radio-button>
-            <el-radio-button value="feedback">反馈区</el-radio-button>
-          </el-radio-group>
-        </div>
+  <section class="p-0!">
+    <!-- 顶部横幅 - 增强视觉效果 -->
+    <section class="relative overflow-hidden px-5 py-20 text-center text-white md:py-28"
+      style="background: var(--color-gradient-hero-primary)">
+      <!-- 半透明遮罩层提升文字可读性 -->
+      <div class="absolute inset-0 bg-linear-to-b from-black/20 via-transparent to-black/30"></div>
+      <!-- 装饰性光晕 -->
+      <div class="pointer-events-none absolute -left-20 -top-20 h-80 w-80 rounded-full bg-white/10 blur-3xl"></div>
+      <div class="pointer-events-none absolute -bottom-20 -right-20 h-80 w-80 rounded-full bg-white/10 blur-3xl">
       </div>
 
-      <!-- 模块列表：两列布局，卡片之间有间距 -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <!-- 每个模块作为独立卡片 -->
-        <div v-for="(module, index) in filteredModules" :key="index"
-          class="flex flex-col overflow-hidden rounded-xl border border-border shadow-sm hover:shadow-md transition-all duration-200">
-          <!-- 模块头部 -->
-          <div class="flex items-center gap-3 px-5 py-4 text-white" :style="{ background: module.color }">
-            <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/20 backdrop-blur-sm">
-              <el-icon :size="20" class="text-white">
-                <component :is="module.icon || CoffeeCup" />
-              </el-icon>
-            </div>
-            <el-text class="m-0 text-base font-semibold drop-shadow-sm" tag="h3">{{ module.title }}</el-text>
-          </div>
-          <!-- 模块内容 -->
-          <div class="flex min-h-3xl flex-1 flex-col p-5 bg-bg hover:bg-fill-light/90">
-            <p class="mb-4 text-sm leading-6 text-text-regular">
-              {{ module.description }}
-            </p>
-            <!-- 如果有子项，显示子项列表 -->
-            <div v-if="module.children && module.children.length"
-              class="flex flex-col divide-y divide-border overflow-hidden rounded-lg border border-border">
-              <div v-for="(child, childIndex) in visibleChildren(module.children)" :key="childIndex"
-                class="group flex cursor-pointer items-center p-3 transition-all duration-150 hover:bg-fill-light"
-                @click="handleCardClick(child.path, child.requiresLogin || module.requiresLogin)">
-                <div class="mr-3 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-white"
-                  :style="{ background: child.color }">
-                  <el-icon :size="15">
-                    <component :is="child.icon || CoffeeCup" />
-                  </el-icon>
-                </div>
-                <div class="min-w-0 flex-1">
-                  <el-text class="m-0 mb-0.5 block text-sm font-semibold" tag="h4">{{ child.title }}</el-text>
-                  <el-text class="m-0 block truncate text-xs text-text-secondary" tag="p">
-                    {{ child.description }}
-                  </el-text>
-                </div>
-                <el-icon
-                  class="shrink-0 text-text-secondary transition-transform duration-150 group-hover:translate-x-0.5">
-                  <el-icon-arrow-right />
-                </el-icon>
-              </div>
-            </div>
-
-            <!-- 如果没有子项，显示直接访问按钮 -->
-            <div v-else class="flex justify-center">
-              <el-button type="default" :plain="true" @click="handleCardClick(module.path, module.requiresLogin)">
-                立即访问
-              </el-button>
-            </div>
-          </div>
+      <div class="relative z-10 mx-auto max-w-3xl">
+        <el-text class="mb-3 block text-5xl font-bold tracking-tight drop-shadow-lg md:text-6xl"
+          tag="h1">BiliExplosion</el-text>
+        <el-text class="mb-8 block text-shadow-text-primary text-lg opacity-90 md:text-xl" tag="p">哔哩哔哩本社爆破</el-text>
+        <div class="flex flex-wrap justify-center gap-3">
+          <el-button type="primary" size="large" @click="handleLoginClick" v-if="!isLoggedIn" class="shadow-lg!">
+            <el-icon class="el-icon--left">
+              <User />
+            </el-icon>
+            立即登录
+          </el-button>
+          <el-button type="primary" size="large" @click="router.push('/app/lot-data/bili-data/official')" v-else
+            class="shadow-lg!">
+            <el-icon class="el-icon--left">
+              <DataAnalysis />
+            </el-icon>
+            查看抽奖数据
+          </el-button>
+          <el-button type="info" size="large" @click="feedbackModalRef?.openDialog()" class="shadow-lg!">
+            <el-icon class="el-icon--left">
+              <ChatSquare />
+            </el-icon>
+            提交反馈
+          </el-button>
         </div>
       </div>
     </section>
 
-    <!-- 页脚 -->
-    <footer class="mt-16 border-t border-border-lighter bg-fill-light/50">
-      <div class="mx-auto max-w-6xl px-5 py-12">
-        <div class="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-12">
-          <!-- 关于我：占据更宽区域，作为品牌信息区 -->
-          <div class="sm:col-span-2 lg:col-span-5">
-            <el-text class="mb-3 block text-lg font-bold tracking-tight" tag="h3">BiliExplosion</el-text>
-            <el-text class="block max-w-md text-sm leading-7 text-text-regular">
-              BiliExplosion 是一个帮助 B 站用户管理和分析抽奖数据的工具，提供多种功能帮助您更好地参与 B 站活动。
-            </el-text>
+    <div class="mt-8 flex justify-center gap-10" v-if="isLoggedIn"></div>
+  </section>
+
+  <!-- 首页“提交反馈”弹窗，由顶部按钮触发，不渲染内置按钮 -->
+  <SubmitFeedbackModal ref="feedbackModalRef" :show-trigger="false" source="首页" />
+
+  <!-- 功能导航区 -->
+  <section class="mx-5 py-10 lg:mx-10 sm:px-0 sm:mx-0">
+    <div class="mb-6 flex flex-wrap items-center justify-between gap-4">
+      <div>
+        <el-text class="m-0 block text-2xl font-semibold tracking-tight" tag="h2">功能导航</el-text>
+        <el-text class="mt-1 block text-sm" tag="p">选择你需要的工具开始使用</el-text>
+      </div>
+      <div>
+        <el-radio-group v-model="activeTab" size="large">
+          <el-radio-button value="all">全部</el-radio-button>
+          <el-radio-button value="lottery">抽奖数据</el-radio-button>
+          <el-radio-button v-if="isLoggedIn" value="user-center">用户中心</el-radio-button>
+          <!-- RPA浏览器入口：生产编译临时隐藏 <el-radio-button v-if="isLoggedIn" value="rpa-browser">RPA浏览器</el-radio-button> -->
+          <el-radio-button value="shopping">山姆会员商店</el-radio-button>
+          <el-radio-button value="feedback">反馈区</el-radio-button>
+        </el-radio-group>
+      </div>
+    </div>
+
+    <!-- 模块列表：两列布局，卡片之间有间距 -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <!-- 每个模块作为独立卡片 -->
+      <div v-for="(module, index) in filteredModules" :key="index"
+        class="flex flex-col overflow-hidden rounded-xl border border-border shadow-sm hover:shadow-md transition-all duration-200">
+        <!-- 模块头部 -->
+        <div class="flex items-center gap-3 px-5 py-4 text-white" :style="{ background: module.color }">
+          <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/20 backdrop-blur-sm">
+            <el-icon :size="20" class="text-white">
+              <component :is="module.icon || CoffeeCup" />
+            </el-icon>
           </div>
-          <!-- 快速链接 -->
-          <div class="lg:col-span-3">
-            <el-text class="mb-4 block text-base font-semibold" tag="h3">快速链接</el-text>
-            <ul class="m-0 list-none space-y-3 p-0">
-              <li>
-                <el-link class="text-sm! text-text-regular! no-underline transition-colors hover:text-primary!"
-                  @click="router.push('/app/Feedback')">
-                  反馈建议
-                </el-link>
-              </li>
-              <li>
-                <el-link class="text-sm! text-text-regular! no-underline transition-colors hover:text-primary!"
-                  @click="router.push('/app/user-center')">
-                  浏览器管理
-                </el-link>
-              </li>
-              <li>
-                <el-link class="text-sm! text-text-regular! no-underline transition-colors hover:text-primary!"
-                  @click="router.push('/app/lot-data/bili-data/official')">
-                  抽奖数据
-                </el-link>
-              </li>
-            </ul>
-          </div>
-          <!-- 联系我 -->
-          <div class="lg:col-span-4">
-            <el-text class="mb-4 block text-base font-semibold" tag="h3">联系我</el-text>
-            <div class="flex items-center gap-2 text-sm text-text-regular">
-              <el-icon :size="15" class="shrink-0 text-text-secondary">
-                <Message />
-              </el-icon>
-              <span class="break-all">guanzhujiaran2022@163.com</span>
-            </div>
-            <el-text class="mt-3 block text-sm leading-6 text-text-secondary" tag="p">
-              就我一个人写前后端，更新慢点见谅
-            </el-text>
-          </div>
+          <el-text class="m-0 text-base font-semibold drop-shadow-sm" tag="h3">{{ module.title }}</el-text>
         </div>
-        <div
-          class="mt-10 flex flex-col items-center justify-between gap-3 border-t border-border-lighter pt-6 sm:flex-row">
-          <el-text class="text-xs text-text-secondary" tag="p">&copy; 2025 BiliExplosion. All rights reserved.</el-text>
-          <el-text class="text-xs text-text-secondary" tag="p">Made with ❤ by 星瞳</el-text>
+        <!-- 模块内容 -->
+        <div class="flex min-h-3xl flex-1 flex-col p-5 bg-bg hover:bg-fill-light/90">
+          <p class="mb-4 text-sm leading-6 text-text-regular">
+            {{ module.description }}
+          </p>
+          <!-- 如果有子项，显示子项列表 -->
+          <div v-if="module.children && module.children.length"
+            class="flex flex-col divide-y divide-border overflow-hidden rounded-lg border border-border">
+            <div v-for="(child, childIndex) in visibleChildren(module.children)" :key="childIndex"
+              class="group flex cursor-pointer items-center p-3 transition-all duration-150 hover:bg-fill-light"
+              @click="handleCardClick(child.path, child.requiresLogin || module.requiresLogin)">
+              <div class="mr-3 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-white"
+                :style="{ background: child.color }">
+                <el-icon :size="15">
+                  <component :is="child.icon || CoffeeCup" />
+                </el-icon>
+              </div>
+              <div class="min-w-0 flex-1">
+                <el-text class="m-0 mb-0.5 block text-sm font-semibold" tag="h4">{{ child.title }}</el-text>
+                <el-text class="m-0 block truncate text-xs text-text-secondary" tag="p">
+                  {{ child.description }}
+                </el-text>
+              </div>
+              <el-icon
+                class="shrink-0 text-text-secondary transition-transform duration-150 group-hover:translate-x-0.5">
+                <el-icon-arrow-right />
+              </el-icon>
+            </div>
+          </div>
+
+          <!-- 如果没有子项，显示直接访问按钮 -->
+          <div v-else class="flex justify-center">
+            <el-button type="default" :plain="true" @click="handleCardClick(module.path, module.requiresLogin)">
+              立即访问
+            </el-button>
+          </div>
         </div>
       </div>
-    </footer>
-  </div>
+    </div>
+  </section>
+
+  <!-- 页脚 -->
+  <footer class="mt-16 border-t border-border-lighter bg-fill-light/50">
+    <div class="mx-auto max-w-6xl px-5 py-8">
+      <div class="grid grid-cols-2 gap-6 sm:gap-8 lg:grid-cols-12">
+        <!-- 关于我：品牌信息区，窄屏占满两列 -->
+        <div class="col-span-2 lg:col-span-5">
+          <div class="mb-3 flex items-center gap-2">
+            <div class="flex h-8 w-8 items-center justify-center rounded-lg text-white"
+              style="background: var(--color-gradient-hero-primary)">
+              <el-icon :size="18">
+                <CoffeeCup />
+              </el-icon>
+            </div>
+            <el-text class="m-0 block text-lg font-bold tracking-tight" tag="h3">BiliExplosion</el-text>
+          </div>
+          <el-text class="block text-sm leading-7 text-text-regular">
+            BiliExplosion 是一个帮助 B 站用户管理和分析抽奖数据的工具，提供多种功能帮助您更好地参与 B 站活动。
+          </el-text>
+        </div>
+        <!-- 快速链接 -->
+        <div class="lg:col-span-3">
+          <el-text class="mb-4 block text-base font-semibold" tag="h3">快速链接</el-text>
+          <ul class="m-0 flex list-none flex-wrap gap-x-6 gap-y-2 p-0">
+            <li>
+              <el-link class="text-sm! text-text-regular! no-underline transition-colors hover:text-primary!"
+                @click="router.push('/app/Feedback')">
+                反馈建议
+              </el-link>
+            </li>
+            <li>
+              <el-link class="text-sm! text-text-regular! no-underline transition-colors hover:text-primary!"
+                @click="router.push('/app/user-center')">
+                浏览器管理
+              </el-link>
+            </li>
+            <li>
+              <el-link class="text-sm! text-text-regular! no-underline transition-colors hover:text-primary!"
+                @click="router.push('/app/lot-data/bili-data/official')">
+                抽奖数据
+              </el-link>
+            </li>
+          </ul>
+        </div>
+        <!-- 联系我 -->
+        <div class="lg:col-span-4">
+          <el-text class="mb-4 block text-base font-semibold" tag="h3">联系我</el-text>
+          <div class="flex items-center gap-2 text-sm text-text-regular">
+            <el-icon :size="15" class="shrink-0 text-text-secondary">
+              <Message />
+            </el-icon>
+            <span class="break-all">guanzhujiaran2022@163.com</span>
+          </div>
+          <el-text class="mt-3 block text-sm leading-6 text-text-secondary" tag="p">
+            就我一个人写前后端，更新慢点见谅
+          </el-text>
+        </div>
+      </div>
+      <div
+        class="mt-10 flex flex-col items-center justify-between gap-3 border-t border-border-lighter pt-6 sm:flex-row">
+        <el-text class="text-xs text-text-secondary" tag="p">&copy; 2025 BiliExplosion. All rights reserved.</el-text>
+        <el-text class="text-xs text-text-secondary" tag="p">Made with ❤ by 星瞳</el-text>
+      </div>
+    </div>
+  </footer>
 </template>

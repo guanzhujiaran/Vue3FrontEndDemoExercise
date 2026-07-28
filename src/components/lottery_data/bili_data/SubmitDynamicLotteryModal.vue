@@ -61,14 +61,14 @@
           <el-table
             :data="batchResults"
             stripe
-            style="width: 100%"
+            class="w-full"
             max-height="200"
-            size="small"
+            size="default"
           >
             <el-table-column prop="dynamic_id" label="动态ID" width="180" />
             <el-table-column prop="is_succ" label="状态" width="80">
               <template #default="{ row }">
-                <el-tag :type="row.is_succ ? 'success' : 'danger'" size="small">
+                <el-tag :type="row.is_succ ? 'success' : 'danger'" size="default">
                   {{ row.is_succ ? '成功' : '失败' }}
                 </el-tag>
               </template>
