@@ -503,7 +503,7 @@ onUnmounted(() => {
 
 <template>
   <div
-    class="flex h-full flex-col overflow-hidden rounded-lg border border-border "
+    class="flex h-full flex-col overflow-hidden border border-border "
   >
     <div
       class="flex items-center gap-2 border-b border-border bg-[var(--el-fill-color-light)] px-4 py-2"

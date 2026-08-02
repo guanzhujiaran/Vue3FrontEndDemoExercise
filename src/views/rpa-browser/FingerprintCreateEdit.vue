@@ -158,7 +158,7 @@ onMounted(() => {
       </template>
     </BiliPageHeader>
 
-    <CenteredContainer class="pt-10 w-full">
+    <CenteredContainer class="pt-10 w-full fingerprint-cyber-content rounded-2xl p-4">
       <div v-if="loading && isEdit" class="w-full">
         <el-skeleton :rows="10" animated></el-skeleton>
       </div>

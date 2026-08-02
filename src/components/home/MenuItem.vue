@@ -18,11 +18,9 @@
 </template>
 
 <script setup lang="ts">
-import { inject, ref, type Ref, computed } from 'vue'
+import { ref, computed } from 'vue'
 import { ElMenuItem, ElSubMenu } from 'element-plus'
 import { useRouter } from 'vue-router'
-import { KeysEnum, useInject } from '@/models/base/provide_model.ts'
-import type { UserNavModel } from '@/models/user/user_model.ts'
 
 interface MenuItem {
   path: string
@@ -43,9 +41,6 @@ const props = withDefaults(defineProps<Props>(), {
   isFirst: false,
   isTopLevel: false
 })
-const bili_user = useInject(KeysEnum.BiliUser) as Ref<UserNavModel>
-// 获取父组件的处理方法
-const headerBarView: any = inject('headerBarView', null)
 const router = useRouter()
 
 // 移动端直接根据 UA 判断（不再依赖屏幕宽度），用于决定子菜单/顶层叶子项是否需双击跳转
@@ -55,15 +50,8 @@ const isMobile = computed(() => {
   return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile|Windows Phone/i.test(ua)
 })
 
-// 公共的登录校验 + 路由跳转逻辑
+// 公共的路由跳转逻辑（需要登录的页面会自行校验并展示未授权提示）
 const navigate = async () => {
-  // 如果路由需要登录但用户未登录，则不跳转，显示登录提示
-  if (props.item.requiresLogin && !bili_user.value?.uid) {
-    if (headerBarView && headerBarView.handleProtectedRouteClick) {
-      headerBarView.handleProtectedRouteClick(props.item.title)
-      return
-    }
-  }
   try {
     await router.push(props.item.path)
   } catch (error) {

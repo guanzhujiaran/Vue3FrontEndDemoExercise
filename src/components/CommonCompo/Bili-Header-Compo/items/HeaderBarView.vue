@@ -1,16 +1,12 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, computed, ref, provide, inject } from 'vue'
+import { onMounted, onUnmounted, computed, ref } from 'vue'
 import { type GlobalVarsType, ScreenTypeEnum } from '@/models/global_var/global_var_model.ts'
 import { useInject, KeysEnum } from '@/models/base/provide_model.ts'
 import { useRoute } from 'vue-router'
 import { routes } from '@/router'
-import biliMessage from '@/utils/message'
 import { processRoutesForHeader } from '@/utils/routeUtils.ts'
-import { openGlobalLoginModalKey } from '@/models/inject/inject_type.ts'
-import type { UserNavModel } from '@/models/user/user_model.ts'
 
 const globalVars = useInject(KeysEnum.GlobalVars) as Ref<GlobalVarsType>
-const biliUser = useInject(KeysEnum.BiliUser) as Ref<UserNavModel>
 
 const route = useRoute()
 let resizeTimer: number | null = null
@@ -25,31 +21,10 @@ const checkScreenSize = () => {
     globalVars.value.screen_size = ScreenTypeEnum.large // 大屏
   }
 }
-const isLoggedIn = computed(() => !!biliUser.value.uid)
-
-// 递归过滤掉未登录时不可见的路由项（requiresLogin 且未登录则隐藏）
-const filterByLogin = (items: any[]): any[] => {
-  return items
-    .filter((item) => isLoggedIn.value || !item.requiresLogin)
-    .map((item) => ({
-      ...item,
-      children: item.children ? filterByLogin(item.children) : undefined
-    }))
-    .filter((item) => !item.children || item.children.length > 0)
-}
-
-// 根据路由配置生成导航数据（未登录时隐藏需要登录的入口）
+// 根据路由配置生成导航数据（未登录时也展示全部入口，登录校验交由对应页面处理）
 const navigationData = computed(() => {
-  const allRoutes = processRoutesForHeader(routes, '', true)
-  return filterByLogin(allRoutes)
+  return processRoutesForHeader(routes, '', true)
 })
-const openGlobalLoginModal = inject(openGlobalLoginModalKey, () => { })
-// 处理需要登录但未登录的情况
-const handleProtectedRouteClick = (title: string) => {
-  biliMessage.info(` ${title} 功能需要登录后才能使用`)
-  // 不再自动打开登录modal
-  // openGlobalLoginModal()
-}
 
 // 防抖处理窗口大小变化
 const debouncedCheckScreenSize = () => {
@@ -76,11 +51,6 @@ onUnmounted(() => {
   if (resizeTimer) {
     window.clearTimeout(resizeTimer)
   }
-})
-
-// 提供方法给 MenuItem 组件使用
-provide('headerBarView', {
-  handleProtectedRouteClick
 })
 </script>
 

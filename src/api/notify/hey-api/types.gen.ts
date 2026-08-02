@@ -369,7 +369,7 @@ export type PushMessage = {
 /**
  * StandardResponse
  *
- * 所有 HTTP 接口的统一返回结构。
+ * 统一响应格式
  */
 export type StandardResponse = {
     /**
@@ -377,13 +377,13 @@ export type StandardResponse = {
      */
     code?: number;
     /**
-     * Data
-     */
-    data?: unknown | null;
-    /**
      * Msg
      */
     msg?: string;
+    /**
+     * Data
+     */
+    data?: unknown | null;
 };
 
 /**

@@ -279,4 +279,10 @@ const handleCardClick = (path: string | undefined, requiresLogin = false) => {
       </div>
     </div>
   </footer>
+
+  <!-- 不蒜子访问统计（全站 PV / UV） -->
+  <footer class="busuanzi-footer shrink-0 py-3 text-center text-sm text-text-secondary">
+    本站总访问量 <span id="busuanzi_site_pv" class="busuanzi-footer__pv">加载中...</span> 次 ·
+    本站总访客数 <span id="busuanzi_site_uv" class="busuanzi-footer__uv">加载中...</span> 人
+  </footer>
 </template>

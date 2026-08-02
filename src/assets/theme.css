@@ -435,3 +435,12 @@
 .tree-drag-drop .el-tree-node__content {
   padding: 4px 8px !important;
 }
+
+/* ==================== 安全区内边距（替代 UseScreenSafeArea 的 padding） ==================== */
+.safe-area-padding {
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-right: env(safe-area-inset-right, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  padding-left: env(safe-area-inset-left, 0px);
+  box-sizing: border-box;
+}

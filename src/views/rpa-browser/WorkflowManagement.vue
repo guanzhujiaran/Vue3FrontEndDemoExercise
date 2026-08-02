@@ -255,51 +255,31 @@ onMounted(() => {
   <FlexContainer>
     <BiliPageHeader title="工作流管理" description="创建、配置和管理工作流" tagText="工作流">
       <template #extra>
-        <el-button :icon="Refresh" @click="handleRefresh">刷新</el-button>
-        <el-button :icon="Plus" type="primary" @click="handleCreate">新建工作流</el-button>
+        <div>
+          <el-button :icon="Refresh" @click="handleRefresh">刷新</el-button>
+          <el-button :icon="Plus" type="primary" @click="handleCreate">新建工作流</el-button>
+        </div>
       </template>
     </BiliPageHeader>
 
-    <FlexContainer class="mt-4">
+    <FlexContainer class="mt-4 bg-bg rounded-2xl p-4">
       <!-- 搜索栏 -->
       <div class="workflow-toolbar flex items-center gap-3 mb-4 flex-wrap">
-        <el-input
-          v-model="searchText"
-          placeholder="搜索工作流名称"
-          :prefix-icon="Search"
-          clearable
-          style="width: 240px"
-          @input="handleSearch"
-          @clear="handleSearch"
-        />
-        <el-select
-          v-model="filterType"
-          placeholder="筛选类型"
-          style="width: 140px"
-          @change="handleFilterChange"
-        >
+        <el-input v-model="searchText" placeholder="搜索工作流名称" :prefix-icon="Search" clearable style="width: 240px"
+          @input="handleSearch" @clear="handleSearch" />
+        <el-select v-model="filterType" placeholder="筛选类型" style="width: 140px" @change="handleFilterChange">
           <el-option label="私有" value="private" />
           <el-option label="公开" value="public" />
           <el-option label="全部" value="all" />
         </el-select>
-        <el-select
-          v-model="sortBy"
-          placeholder="排序字段"
-          style="width: 140px"
-          @change="handleFilterChange"
-        >
+        <el-select v-model="sortBy" placeholder="排序字段" style="width: 140px" @change="handleFilterChange">
           <el-option label="更新时间" value="updated_at" />
           <el-option label="创建时间" value="created_at" />
           <el-option label="名称" value="name" />
           <el-option label="点赞数" value="likes_count" />
           <el-option label="Fork数" value="forks_count" />
         </el-select>
-        <el-select
-          v-model="sortOrder"
-          placeholder="排序方向"
-          style="width: 120px"
-          @change="handleFilterChange"
-        >
+        <el-select v-model="sortOrder" placeholder="排序方向" style="width: 120px" @change="handleFilterChange">
           <el-option label="降序" value="desc" />
           <el-option label="升序" value="asc" />
         </el-select>
@@ -324,19 +304,11 @@ onMounted(() => {
       <!-- 工作流卡片列表（滚动容器） -->
       <div v-else class="overflow-auto" style="max-height: calc(100vh - 280px)" @scroll="handleScroll">
         <div class="grid gap-4" style="grid-template-columns: repeat(auto-fill, minmax(340px, 1fr))">
-          <el-tooltip
-            v-for="item in workflowList"
-            :key="item.id"
-            :content="getTooltipContent(item)"
-            :effect="getTooltipEffect(item)"
-            raw-content
-            placement="top"
-            :show-after="500"
-            popper-class="toolbox-tooltip"
-          >
+          <el-tooltip v-for="item in workflowList" :key="item.id" :content="getTooltipContent(item)"
+            :effect="getTooltipEffect(item)" raw-content placement="top" :show-after="500"
+            popper-class="toolbox-tooltip">
             <div
-              class="workflow-card rounded-xl p-5 border border-[var(--el-border-color-light)] hover:border-[var(--el-color-primary)] transition-colors flex flex-col gap-3"
-            >
+              class="workflow-card rounded-xl p-5 border border-[var(--el-border-color-light)] hover:border-[var(--el-color-primary)] transition-colors flex flex-col gap-3">
               <!-- 名称行 -->
               <div class="flex items-start justify-between gap-2">
                 <div class="flex-1 min-w-0">
@@ -358,25 +330,15 @@ onMounted(() => {
               </div>
 
               <!-- 操作栏 -->
-              <div class="workflow-card__actions flex items-center gap-2 pt-2 border-t border-[var(--el-border-color-lighter)]">
-                <el-button size="small" :icon="Edit" :loading="editDialogLoading" @click="handleEdit(item)">编辑</el-button>
+              <div
+                class="workflow-card__actions flex items-center gap-2 pt-2 border-t border-[var(--el-border-color-lighter)]">
+                <el-button size="small" :icon="Edit" :loading="editDialogLoading"
+                  @click="handleEdit(item)">编辑</el-button>
                 <el-button size="small" :icon="CopyDocument" @click="handleDuplicate(item)">复制</el-button>
-                <el-switch
-                  v-model="item.is_public"
-                  size="small"
-                  inline-prompt
-                  active-text="公开"
-                  inactive-text="私有"
-                  @change="handleTogglePublic(item)"
-                />
-                <el-switch
-                  v-model="item.is_enabled"
-                  size="small"
-                  inline-prompt
-                  active-text="启用"
-                  inactive-text="禁用"
-                  @change="handleToggleEnabled(item)"
-                />
+                <el-switch v-model="item.is_public" size="small" inline-prompt active-text="公开" inactive-text="私有"
+                  @change="handleTogglePublic(item)" />
+                <el-switch v-model="item.is_enabled" size="small" inline-prompt active-text="启用" inactive-text="禁用"
+                  @change="handleToggleEnabled(item)" />
                 <el-button size="small" type="danger" :icon="Delete" @click="handleDelete(item)">删除</el-button>
               </div>
             </div>
@@ -385,7 +347,9 @@ onMounted(() => {
 
         <!-- 加载更多状态 -->
         <div v-if="loadingMore" class="flex justify-center py-6">
-          <el-icon class="is-loading" :size="24"><Loading /></el-icon>
+          <el-icon class="is-loading" :size="24">
+            <Loading />
+          </el-icon>
           <span class="ml-2 text-sm text-gray-400">加载中...</span>
         </div>
         <div v-else-if="!hasMore && workflowList.length > 0" class="flex justify-center py-6 text-sm text-gray-400">
@@ -395,10 +359,6 @@ onMounted(() => {
     </FlexContainer>
 
     <!-- 编辑对话框 -->
-    <WorkflowEditDialog
-      v-model="editDialogVisible"
-      :workflow-detail="editDialogDetail"
-      @saved="handleSaved"
-    />
+    <WorkflowEditDialog v-model="editDialogVisible" :workflow-detail="editDialogDetail" @saved="handleSaved" />
   </FlexContainer>
 </template>

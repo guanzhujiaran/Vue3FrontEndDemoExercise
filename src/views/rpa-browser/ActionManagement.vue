@@ -267,7 +267,7 @@ onMounted(() => {
       </template>
     </BiliPageHeader>
 
-    <FlexContainer class="mt-4">
+    <FlexContainer class="mt-4 bg-bg rounded-2xl p-4">
       <!-- 搜索栏 -->
       <div class="flex items-center gap-3 mb-4 flex-wrap">
         <el-input

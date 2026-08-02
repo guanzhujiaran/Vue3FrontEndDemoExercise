@@ -415,10 +415,13 @@ elementDark放到theme后面是为了确保暗色状态下直接用elementDark�
 
   /* fingerprint cyber theme */
   .fingerprint-cyber-container {
-    background: linear-gradient(135deg, #0a0a0f 0%, #1a1a2e 50%, #0f0f1a 100%);
     min-height: 100vh;
     position: relative;
     overflow: hidden;
+  }
+
+  .fingerprint-cyber-content {
+    background: linear-gradient(135deg, #0a0a0f 0%, #1a1a2e 50%, #0f0f1a 100%);
   }
 
   .cyber-grid-bg {
@@ -616,6 +619,19 @@ elementDark放到theme后面是为了确保暗色状态下直接用elementDark�
   /* 工具箱内 tooltip 需高于工具箱弹窗本身 */
   .toolbox-tooltip {
     z-index: 3100 !important;
+  }
+
+  /* 工具箱弹窗限制高度，避免超出视口导致外层滚动条 */
+  .toolbox-dialog {
+    max-height: 75vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .toolbox-dialog .el-dialog__body {
+    flex: 1;
+    overflow: hidden;
+    padding: 0;
   }
 
   /* ==================== 抽奖卡片 extra_info 特效 ==================== */

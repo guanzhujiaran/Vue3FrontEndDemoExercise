@@ -1,7 +1,11 @@
 import { client } from '@/api/bili_lottery_data/hey-api/client.gen'
 import type { LoginModel, UserNavModel } from '@/models/user/user_model'
 import type { RootObject } from '@/models/api/base_model.ts'
-import type { User_base_info_config_form } from '@/models/user/user_setting/user_base_info_config_model.ts'
+import type {
+  User_base_info_config_form,
+  Set_user_role_form,
+} from '@/models/user/user_setting/user_base_info_config_model.ts'
+import type { UserCasdoorInfoModel } from '@/models/user/casdoor/user_casdoor_info_model.ts'
 
 class UserApi {
   RefreshToken(): Promise<RootObject<LoginModel>> {
@@ -60,6 +64,22 @@ class UserApi {
   Logout(): Promise<RootObject<string>> {
     return client.post({
       url: '/api/v1/user/logout',
+      headers: { 'Content-Type': 'application/json' },
+    }) as Promise<RootObject<string>>
+  }
+
+  // 通过本系统 JWT 换取 Casdoor 中的账户信息（余额、积分等）
+  CasdoorInfo(): Promise<RootObject<UserCasdoorInfoModel>> {
+    return client.get({
+      url: '/api/v1/user/casdoor/info',
+    }) as Promise<RootObject<UserCasdoorInfoModel>>
+  }
+
+  // 设置用户角色（仅系统管理员 root 可调用，用于赋予/调整管理员权限等）
+  SetUserRole(form: Set_user_role_form): Promise<RootObject<string>> {
+    return client.post({
+      url: '/api/v1/user/role/set',
+      body: form,
       headers: { 'Content-Type': 'application/json' },
     }) as Promise<RootObject<string>>
   }

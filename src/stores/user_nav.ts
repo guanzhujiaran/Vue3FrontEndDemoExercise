@@ -24,8 +24,12 @@ export const useUserNavStore = defineStore(
       }
     })
     function save_user_nav(val: UserNavModel) {
+      // 后端已将角色信息统一放在 role_info 下，这里做一次兼容映射：
+      // 把 role_info.role 同步到顶层 role，避免旧代码（如 UserCenterView）读取失败
+      const role = val.role_info?.role ?? val.role ?? ''
       user_nav.value = {
         ...val,
+        role,
         level_info: {
           ...val.level_info,
           current_level: String(val.level_info.current_level)

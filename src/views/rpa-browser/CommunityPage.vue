@@ -342,7 +342,7 @@ onMounted(() => {
       </el-radio-group>
     </div>
 
-    <FlexContainer class="mt-4">
+    <FlexContainer class="mt-4 bg-bg rounded-2xl p-4">
       <div v-if="loading" class="w-full">
         <div class="grid gap-4" style="grid-template-columns: repeat(auto-fill, minmax(350px, 1fr))">
           <div v-for="i in 6" :key="i" class="rounded-xl  p-5 border border-[var(--el-border-color-light)]">

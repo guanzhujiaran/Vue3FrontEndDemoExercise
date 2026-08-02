@@ -414,6 +414,19 @@ const routes: CustomRouteRecordRaw[] = [
           showInHome: false,
           isHeaderShow: true
         }
+      },
+      {
+        path: 'action-logs',
+        name: RouteName.RPA_BROWSER_ACTION_LOG,
+        component: () => import('@/views/rpa-browser/ActionLogView.vue'),
+        meta: {
+          title: RouteName.RPA_BROWSER_ACTION_LOG,
+          icon: IconDataAnalysis,
+          description: '查看浏览器操作的执行日志',
+          order: 8,
+          showInHome: false,
+          isHeaderShow: true
+        }
       }
     ]
   },

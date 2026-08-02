@@ -60,6 +60,7 @@ export enum RouteName {
   RPA_BROWSER_COMMUNITY = '社区广场',
   RPA_BROWSER_ACTION_MANAGEMENT = '动作管理',
   RPA_BROWSER_WORKFLOW_MANAGEMENT = '工作流管理',
+  RPA_BROWSER_ACTION_LOG = '操作日志',
   // 用户中心子路由
   USER_GLOBAL_CONFIG = '用户全局设置',
   USER_INFO_CONFIG = '用户基本信息设置',

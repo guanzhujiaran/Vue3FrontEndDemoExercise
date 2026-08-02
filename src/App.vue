@@ -7,7 +7,6 @@ import { useUserPrefStore } from '@/stores/user_pref.ts'
 import { useHead } from '@vueuse/head'
 import emitter from '@/utils/mitt'
 import zhCn from 'element-plus/es/locale/lang/zh-cn'
-import { UseScreenSafeArea } from '@vueuse/components'
 import { BiliImg } from '@/assets/img/BiliImg.ts'
 import HeaderBarView from '@/components/CommonCompo/Bili-Header-Compo/items/HeaderBarView.vue'
 import LoginModal from '@/components/login_page/compo/LoginModal.vue'
@@ -88,6 +87,12 @@ onMounted(() => {
   themeCleanup = themeStore.setupSystemThemeListener()
   getWindowHeight()
   window.addEventListener("resize", getWindowHeight)
+
+  // 加载不蒜子（busuanzi）PV/UV 统计脚本
+  const busuanziScript = document.createElement('script')
+  busuanziScript.async = true
+  busuanziScript.src = '//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js'
+  document.head.appendChild(busuanziScript)
 })
 const screen_size = {
   xxs: 690,
@@ -150,15 +155,15 @@ onUnmounted(() => {
     <img class="bg-img pointer-events-none fixed inset-0 z-[-9999] h-full w-full object-cover" :src="backgroundUrl"
       referrerpolicy="no-referrer" alt="Background Image" />
     <el-config-provider :locale="zhCn">
-      <el-scrollbar class="smallest-width" view-class="min-h-full" v-model:height="window_height"
+      <el-scrollbar class="smallest-width" view-class="min-h-full flex flex-col" v-model:height="window_height"
         @scroll="onScrollbarScroll">
-        <UseScreenSafeArea class="use-screen-safe-area w-full min-h-full flex flex-col">
+        <div class="site-layout safe-area-padding w-full flex-1 flex flex-col">
           <el-container v-if="isInit" id="i_cecream">
             <el-header class="bili-header">
               <HeaderBarView />
             </el-header>
             <el-main
-              class="flex! flex-col flex-1 p-0 mt-3 mx-6 text-text-primary"
+              class="flex! flex-col flex-1 px-0 pb-4 pt-0 mt-3 mx-6 text-text-primary"
               :style="{ overflow: 'visible' }"
             >
               <RouterView v-slot="{ Component, route }">
@@ -175,7 +180,7 @@ onUnmounted(() => {
           <SponsorNotification />
           <GlobalLoadingMask />
           <LoginModal ref="loginModalRef" />
-        </UseScreenSafeArea>
+        </div>
         <ScrollButtons :scroll-top="scrollTop" :top-threshold="100" :bottom-threshold="100" />
       </el-scrollbar>
     </el-config-provider>

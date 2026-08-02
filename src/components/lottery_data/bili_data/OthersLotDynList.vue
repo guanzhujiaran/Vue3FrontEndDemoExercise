@@ -189,6 +189,8 @@ function applyFilters() {
 }
 
 onMounted(async () => {
+  // 未登录时仅展示未授权提示页，无需拉取筛选参数与列表数据
+  if (!isLoggedIn.value) return
   await loadFilterParams()
   // 初始化 extraFilters
   extraFilters.value = { ...filterValues.value }

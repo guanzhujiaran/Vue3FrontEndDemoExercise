@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { Delete, Edit, VideoPlay, Plus, Monitor, Clock, Search, SetUp } from '@element-plus/icons-vue'
+import { Delete, Edit, EditPen, VideoPlay, Plus, Monitor, Clock, Search, SetUp } from '@element-plus/icons-vue'
 import { ElMessageBox } from 'element-plus'
 import FlexContainer from '@/components/CommonCompo/Bili-Container-Compo/FlexContainer.vue'
 import CenteredContainer from '@/components/CommonCompo/Bili-Container-Compo/CenteredContainer.vue'
@@ -255,6 +255,13 @@ const handleCreateFingerprint = () => {
   })
 }
 
+const handleEdit = (browserId: string | number) => {
+  router.push({
+    name: 'RPA_BROWSER_EDIT',
+    params: { browserId: String(browserId) }
+  })
+}
+
 onMounted(() => {
   loadFingerprintList()
 })
@@ -275,7 +282,7 @@ onMounted(() => {
       </template>
     </BiliPageHeader>
 
-    <FlexContainer class="mt-4">
+    <FlexContainer class="mt-4 bg-bg rounded-2xl p-4">
       <div v-if="loading" class="w-full">
         <div class="grid gap-4" style="grid-template-columns: repeat(auto-fill, minmax(350px, 1fr))">
           <div v-for="i in 6" :key="i" class="rounded-xl  p-5 border border-[var(--el-border-color-light)]">
@@ -306,8 +313,16 @@ onMounted(() => {
                   <div class="flex items-center gap-2 mb-1">
                     <span class="text-cyan-400 text-xs font-mono tracking-wider">浏览器指纹</span>
                   </div>
-                  <h3 class="text-xl font-bold text-white group-hover:text-cyan-300 transition-colors">
-                    {{ item.custom_name || '未命名' }}
+                  <h3 class="text-xl font-bold text-white group-hover:text-cyan-300 transition-colors flex items-center gap-2">
+                    <span class="truncate">{{ item.custom_name || '未命名' }}</span>
+                    <el-button
+                      size="small"
+                      text
+                      class="rename-icon flex-shrink-0 text-gray-400 hover:text-cyan-300"
+                      :icon="EditPen"
+                      aria-label="重命名"
+                      @click.stop="handleRename(item.browser_id_str || item.browser_id, item.custom_name)"
+                    />
                   </h3>
                 </div>
                 <el-tag 
@@ -375,7 +390,7 @@ onMounted(() => {
                   size="small" 
                   class="bg-black/30 border border-gray-600 text-gray-300 hover:border-gray-400 hover:text-white transition-colors"
                   :icon="Edit" 
-                  @click="handleRename(item.browser_id_str || item.browser_id, item.custom_name)"
+                  @click="handleEdit(item.browser_id_str || item.browser_id)"
                 >
                   编辑
                 </el-button>

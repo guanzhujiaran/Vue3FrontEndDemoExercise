@@ -388,7 +388,7 @@ const treeHeight = computed(() => Math.floor(window.innerHeight * 0.45))
 </script>
 
 <template>
-  <div class="toolbox-root h-160 flex flex-col overflow-hidden">
+  <div class="toolbox-root h-full flex flex-col overflow-hidden">
     <!-- 分段控制 + 搜索/刷新/筛选内容区 -->
     <div class="p-3 border-b border-border space-y-2">
       <el-segmented

@@ -24,6 +24,10 @@ const isSmallScreen = computed(() => screenWidth.value <= 768)
 
 // 响应式侧边栏状态
 const responsiveSidebarCollapsed = computed(() => {
+  // 在「用户资料设置」页面强制展开侧边栏，不允许收缩
+  if (use_route.name === RouteName.USER_INFO_CONFIG) {
+    return false
+  }
   // 在小屏幕下，使用手动控制的状态
   // 在大屏幕下，如果手动收起，则使用收起状态
   return isSmallScreen.value ? isSidebarCollapsed.value : isSidebarCollapsed.value
@@ -129,7 +133,7 @@ const scrollbarHeight = computed(() => {
           <div class="sidebar-content h-full">
             <el-menu
               :defaultActive="menuDefaultActive"
-              class="sidebar-menu h-full border-r border-[var(--el-border-color-light)]"
+              class="sidebar-menu h-full border-r border-[var(--el-border-color-light)] text-lg"
               :collapse="responsiveSidebarCollapsed"
             >
               <div class="sidebar-toggle-wrapper flex p-2">
@@ -159,16 +163,17 @@ const scrollbarHeight = computed(() => {
                 v-for="(child, index) in user_center_routes"
                 :key="index"
                 @click="handleMenuClick(child)"
-                class="menu-item-wrapper cursor-pointer overflow-hidden transition-all duration-300 ease-in-out"
+                class="menu-item-wrapper cursor-pointer overflow-hidden mb-3 transition-all duration-300 ease-in-out"
               >
                 <el-menu-item
                   :index="child.name"
                   :title="child.meta.description || child.meta.title"
+                  class="py-3"
                 >
                   <el-icon v-if="child.meta.icon">
                     <component :is="child.meta.icon" />
                   </el-icon>
-                  <el-text class="transition-all duration-300" tag="span">{{ child.meta.title }}</el-text>
+                  <el-text class="transition-all duration-300 text-lg" tag="span">{{ child.meta.title }}</el-text>
                 </el-menu-item>
               </div>
             </el-menu>

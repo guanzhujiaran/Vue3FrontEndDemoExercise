@@ -50,6 +50,45 @@
       </div>
     </div>
 
+    <div v-if="isCurrentRoot" class="config-section admin-grant-section flex flex-col gap-3">
+      <h3 class="admin-grant-section__title text-lg font-medium text-text-primary">赋予用户管理员权限</h3>
+      <el-text class="admin-grant-section__tip text-sm text-text-secondary" tag="p">
+        仅系统管理员可操作。请填写目标用户 UID 并选择要授予的角色，root 为最高管理员权限。
+      </el-text>
+      <div class="admin-grant-section__form flex flex-col gap-3">
+        <div class="config-item flex flex-col gap-1">
+          <label class="text-sm text-text-regular">目标用户 UID</label>
+          <el-input
+            v-model="grantTargetUid"
+            class="admin-grant-section__uid"
+            placeholder="请输入目标用户的 UID"
+            clearable
+          />
+        </div>
+        <div class="config-item flex flex-col gap-1">
+          <label class="text-sm text-text-regular">授予角色</label>
+          <el-select v-model="grantRole" class="admin-grant-section__role" placeholder="请选择角色">
+            <el-option
+              v-for="item in grantableRoles"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value"
+            />
+          </el-select>
+        </div>
+        <div class="admin-grant-section__actions flex gap-2">
+          <el-button
+            type="danger"
+            class="admin-grant-section__submit"
+            :loading="granting"
+            @click="submitGrantRole"
+          >
+            确认设置角色
+          </el-button>
+        </div>
+      </div>
+    </div>
+
     <div class="config-actions flex gap-2">
       <el-button type="primary" @click="saveSettings" :loading="saving">保存设置</el-button>
       <el-button @click="loadUserInfo">重新加载</el-button>
@@ -58,11 +97,56 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed, type Ref } from 'vue'
 import biliMessage from '@/utils/message'
 import userApi from '@/api/user/user_api.ts'
 import type { User_base_info_config_form } from '@/models/user/user_setting/user_base_info_config_model.ts'
 import { businessHandler } from '@/utils/businessHandler'
+import { useInject } from '@/models/base/provide_model.ts'
+import { KeysEnum } from '@/models/base/provide_model.ts'
+import { isRootRole, ROLE_DESCRIPTIONS, type UserRole } from '@/models/user/user_model'
+
+// 当前登录用户信息（含 role）
+const currentUser = useInject(KeysEnum.BiliUser) as Ref<{ role?: string; uid?: string; user_name?: string }>
+const currentRole = computed(() => currentUser.value?.role ?? 'level0')
+const isCurrentRoot = computed(() => isRootRole(currentRole.value))
+
+// 管理员角色授予面板状态
+const grantTargetUid = ref<string>('')
+const grantRole = ref<UserRole>('root')
+const granting = ref(false)
+// 可授予的角色选项（管理员可赋予 root，也可降级为某个等级角色）
+const grantableRoles = computed(() =>
+  (Object.keys(ROLE_DESCRIPTIONS) as UserRole[]).map((role) => ({
+    value: role,
+    label: `${ROLE_DESCRIPTIONS[role].name}（${role}）`,
+  }))
+)
+
+const submitGrantRole = () => {
+  const targetUid = grantTargetUid.value.trim()
+  if (!targetUid) {
+    biliMessage.error('请输入目标用户 UID')
+    return
+  }
+  if (String(targetUid) === String(currentUser.value?.uid)) {
+    biliMessage.error('不能修改自己的角色')
+    return
+  }
+  granting.value = true
+  businessHandler(
+    userApi.SetUserRole({ target_uid: targetUid, role: grantRole.value }),
+    {
+      successMessage: '角色设置成功',
+      errorMessage: '设置失败',
+      showSuccessToast: true,
+      showErrorToast: true,
+      autoHandleError: true,
+    }
+  ).finally(() => {
+    granting.value = false
+  })
+}
 
 // 设置项
 const userName = ref('')

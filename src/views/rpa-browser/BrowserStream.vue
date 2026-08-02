@@ -430,7 +430,7 @@ onMounted(() => {
       tag="浏览器"
     >
       <template #extra>
-        <div class="flex items-center gap-4">
+        <div class="flex flex-wrap items-center gap-4">
           <div class="flex items-center gap-2">
             <span >浏览器:</span>
             <el-tag :type="isConnected ? 'success' : isConnecting ? 'warning' : 'info'">
@@ -465,7 +465,7 @@ onMounted(() => {
       </template>
     </BiliPageHeader>
 
-    <div v-if="isLoadingInfo" class="flex-1 flex items-center justify-center">
+    <div v-if="isLoadingInfo" class="flex-1 flex items-center justify-center bg-bg rounded-2xl p-4">
       <div class="text-center">
         <el-icon class="animate-spin" size="40" style="color: var(--el-color-primary)">
           <VideoPause />
@@ -474,7 +474,7 @@ onMounted(() => {
       </div>
     </div>
 
-    <div v-else class="flex-1 flex flex-col overflow-hidden">
+    <div v-else class="flex-1 flex flex-col min-h-[70vh] overflow-hidden bg-bg rounded-2xl p-4">
       <div class="flex items-center justify-between px-4 py-2 border-t border-border bg-[var(--el-fill-color-light)]">
         <div class="flex items-center gap-4">
           <div class="flex items-center gap-2">
@@ -502,7 +502,7 @@ onMounted(() => {
         </div>
       </div>
 
-      <el-splitter v-model="splitterSize" class="stream-splitter h-[80vh]">
+      <el-splitter v-model="splitterSize" class="stream-splitter flex-1">
         <el-splitter-panel class="live-box-container" collapsible size="40%" min="30%">
           <LiveBox :browser-id="browserId" :is-streaming="isStreaming" @toggle-stream="handleToggleStream" @webrtc-status-change="handleWebrtcStatusChange"/>
         </el-splitter-panel>
@@ -554,6 +554,7 @@ onMounted(() => {
       :draggable="true"
       :close-on-click-modal="false"
       :destroy-on-close="false"
+      :append-to-body="true"
       modal-class="toolbox-overlay"
       class="toolbox-dialog"
     >
