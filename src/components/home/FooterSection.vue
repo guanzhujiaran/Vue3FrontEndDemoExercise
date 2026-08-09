@@ -10,9 +10,9 @@
       <div class="footer-section">
         <h3>快速链接</h3>
         <ul>
-          <li><router-link to="/app/Feedback">反馈建议</router-link></li>
           <li><router-link to="/app/user-center">浏览器管理</router-link></li>
           <li><router-link to="/app/lot-data/bili-data/official">抽奖数据</router-link></li>
+          <li><router-link to="/app/admin">管理后台</router-link></li>
         </ul>
       </div>
       <div class="footer-section">

@@ -4,6 +4,7 @@
       <h3 class="text-lg font-medium text-text-primary">个人信息</h3>
       <div class="config-item flex flex-col gap-1">
         <label class="text-sm text-text-regular">昵称</label>
+        <span class="user-base-info-config__nickname-hint text-xs text-text-secondary">注：修改一次昵称并不需要消耗6个硬币</span>
         <el-input
           v-model="userName"
           placeholder="请输入用户名（2-24个字符）"
@@ -105,9 +106,11 @@ import { businessHandler } from '@/utils/businessHandler'
 import { useInject } from '@/models/base/provide_model.ts'
 import { KeysEnum } from '@/models/base/provide_model.ts'
 import { isRootRole, ROLE_DESCRIPTIONS, type UserRole } from '@/models/user/user_model'
+import { useUserNavStore } from '@/stores/user_nav'
 
-// 当前登录用户信息（含 role）
+// 当前登录用户信息（含 role），这是全局共享的响应式变量（Pinia user_nav store）
 const currentUser = useInject(KeysEnum.BiliUser) as Ref<{ role?: string; uid?: string; user_name?: string }>
+const userNavStore = useUserNavStore()
 const currentRole = computed(() => currentUser.value?.role ?? 'level0')
 const isCurrentRoot = computed(() => isRootRole(currentRole.value))
 
@@ -134,18 +137,12 @@ const submitGrantRole = () => {
     return
   }
   granting.value = true
-  businessHandler(
-    userApi.SetUserRole({ target_uid: targetUid, role: grantRole.value }),
-    {
-      successMessage: '角色设置成功',
-      errorMessage: '设置失败',
-      showSuccessToast: true,
-      showErrorToast: true,
-      autoHandleError: true,
-    }
-  ).finally(() => {
-    granting.value = false
-  })
+  // userApi.SetUserRole 内部已用 businessHandler 包装并自动弹错误/成功提示
+  userApi
+    .SetUserRole({ target_uid: targetUid, role: grantRole.value })
+    .finally(() => {
+      granting.value = false
+    })
 }
 
 // 设置项
@@ -194,47 +191,47 @@ const saveSettings = async () => {
     sex: sex.value,
     birthday: birthday.value || ''
   }
-  
-  businessHandler(
-    userApi.UpdateUserInfo(userInfo),
-    {
-      successMessage: '用户信息已更新',
-      errorMessage: '保存失败',
-      showSuccessToast: true,
-      showErrorToast: true,
-      autoHandleError: true
-    }
-  ).finally(() => {
-    saving.value = false
-  })
+
+  // userApi.UpdateUserInfo 内部已用 businessHandler 包装并自动弹错误/成功提示
+  userApi
+    .UpdateUserInfo(userInfo)
+    .finally(() => {
+      saving.value = false
+    })
+    .then((result) => {
+      // 保存成功后，将最新昵称写回全局响应式变量（Pinia user_nav store），
+      // 这样导航栏 / 用户中心等所有依赖 BiliUser 的地方会同步响应式更新
+      if (result.success && currentUser.value) {
+        userNavStore.save_user_nav({
+          ...currentUser.value,
+          user_name: userName.value
+        } as typeof currentUser.value)
+      }
+    })
 }
 
 // 加载用户信息
 const loadUserInfo = () => {
-  businessHandler(
-    userApi.UserInfo(),
-    {
-      successMessage: '',
-      errorMessage: '加载用户信息失败',
-      showSuccessToast: false,
-      showErrorToast: true,
-      autoHandleError: true
-    },
-    [
-      (result) => {
-        if (result.success && result.data) {
-          console.log((new Date(result.data.birthday)).toISOString())
-          userName.value = result.data.uname
-          userSign.value = result.data.usersign
-          sex.value = result.data.sex
-          // 将 UTC 日期转换为本地时区日期
-          const localDate = new Date(result.data.birthday)
-          birthday.value = `${localDate.getFullYear()}/${String(localDate.getMonth() + 1).padStart(2, '0')}/${String(localDate.getDate()).padStart(2, '0')}`
-          userid.value = result.data.userid
-        }
+  // userApi.UserInfo 内部已用 businessHandler 包装并自动弹错误提示
+  userApi.UserInfo().then((result) => {
+    if (result.success && result.data) {
+      console.log((new Date(result.data.birthday)).toISOString())
+      userName.value = result.data.uname
+      userSign.value = result.data.usersign
+      sex.value = result.data.sex
+      // 将 UTC 日期转换为本地时区日期
+      const localDate = new Date(result.data.birthday)
+      birthday.value = `${localDate.getFullYear()}/${String(localDate.getMonth() + 1).padStart(2, '0')}/${String(localDate.getDate()).padStart(2, '0')}`
+      userid.value = result.data.userid
+      // 同步写回全局响应式变量，保证全局昵称与服务器一致
+      if (currentUser.value) {
+        userNavStore.save_user_nav({
+          ...currentUser.value,
+          user_name: result.data.uname
+        } as typeof currentUser.value)
       }
-    ]
-  )
+    }
+  })
 }
 
 // 组件挂载时加载用户信息

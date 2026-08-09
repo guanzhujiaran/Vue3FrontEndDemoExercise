@@ -21,12 +21,6 @@
           </el-icon>
           查看抽奖数据
         </el-button>
-        <el-button type="info" size="large" @click="router.push('/app/Feedback')">
-          <el-icon class="el-icon--left">
-            <ChatLineRound />
-          </el-icon>
-          提交反馈
-        </el-button>
       </div>
     </div>
     <div class="mt-10 flex gap-12 md:flex-row md:justify-center" v-if="isLoggedIn"></div>

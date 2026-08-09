@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useJwtStore } from '@/stores/jwt_token'
 import biliMessage from '@/utils/message'
 import { useUserNavStore } from '@/stores/user_nav'
 
 const route = useRoute()
+const router = useRouter()
 const jwtStore = useJwtStore()
 const userNavStore = useUserNavStore()
 
@@ -22,25 +23,15 @@ const processCallback = () => {
   try {
     jwtStore.save_jwt_token(decodeURIComponent(token))
 
-    const userInfo = {
-      uid: decodeURIComponent(uid),
-      user_name: decodeURIComponent(user_name),
-      role: '0',
-      face: '',
-      email: '',
-      level_info: {
-        current_exp: '0',
-        current_level: '0',
-        current_min: '0',
-        next_exp: '0'
-      }
-    }
-    userNavStore.save_user_nav(userInfo)
+    // 不在此处写 user_nav store，留给 App.vue 的 isLogin() 从服务端获取完整数据
+    // 避免先用不完整数据覆盖 store，导致 UserCenterDefaultPanel 误认为已有数据而跳过 nav 请求
 
     biliMessage.success('登录成功，正在跳转...')
 
     setTimeout(() => {
-      window.location.href = '/'
+      // 用 router.push 替代 window.location.href 硬刷新，
+      // 避免整个 Vue 应用重新初始化导致重复 isLogin() 调用
+      router.push('/')
     }, 500)
   } catch (error) {
     console.error('登录处理失败:', error)

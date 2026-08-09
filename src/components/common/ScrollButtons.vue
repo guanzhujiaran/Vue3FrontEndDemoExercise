@@ -16,7 +16,7 @@ const props = defineProps({
     default: 100
   },
   // 外部传入的滚动位置（来自 el-scrollbar 的 @scroll 事件）。
-  // 传 -1 表示未提供，由组件自行监听滚动（兼容整页滚动 / FeedbackView 等场景）。
+  // 传 -1 表示未提供，由组件自行监听滚动（兼容整页滚动等场景）。
   scrollTop: {
     type: Number,
     default: -1

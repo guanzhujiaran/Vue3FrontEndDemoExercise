@@ -8,7 +8,7 @@ export const useUserNavStore = defineStore(
     const user_nav = ref<UserNavModel>({
       uid: '',
       user_name: '',
-      face: '',
+      face: null,
       email: '',
       level_info: {
         current_exp: '0',
@@ -20,7 +20,8 @@ export const useUserNavStore = defineStore(
     const user_header = computed(()=>{
       return {
         'x-bili-mid': user_nav.value.uid || '',
-        'x-bili-level': String(user_nav.value.level_info.current_level) || ''
+        'x-bili-level': String(user_nav.value.level_info.current_level) || '',
+        'x-bili-role': user_nav.value.role || ''
       }
     })
     function save_user_nav(val: UserNavModel) {
@@ -41,7 +42,7 @@ export const useUserNavStore = defineStore(
       user_nav.value = {
         uid: '',
         user_name: '',
-        face: '',
+        face: null,
         email: '',
         level_info: {
           current_exp: '0',

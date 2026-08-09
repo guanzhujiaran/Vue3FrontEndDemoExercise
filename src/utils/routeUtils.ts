@@ -28,14 +28,20 @@ export const processRoutePath = (parentPath: string, routePath: string): string 
 export const processRoutesForHeader = (
   routes: RouteRecordRaw[],
   parentPath = '',
-  showAll = true
+  showAll = true,
+  isAdmin = false,
 ): any[] => {
   const processedRoutes = routes
     .filter((r) => {
       // 过滤条件：
       // 1. 必须有 meta 且 isHeaderShow 为 true
       const meta = r.meta as CustomRouteMeta
-      return meta?.isHeaderShow
+      if (!meta?.isHeaderShow) return false
+      // 2. 需要管理员权限的路由仅对管理员/root 展示（前端显隐，后端仍强制校验）
+      if ((meta as CustomRouteMeta).requiresAdmin && !isAdmin) return false
+      // 2.1 管理员专属入口（adminOnly）同样仅在管理端身份下展示
+      if ((meta as CustomRouteMeta).adminOnly && !isAdmin) return false
+      return true
     })
     .map((r) => {
       const meta = r.meta as CustomRouteMeta
@@ -46,8 +52,11 @@ export const processRoutesForHeader = (
         path: fullPath,
         title: meta?.title || '',
         requiresLogin: meta?.requiresLogin || false,
+        requiresAdmin: (meta as CustomRouteMeta).requiresAdmin || false,
         order: meta?.order || 0,
-        children: r.children ? processRoutesForHeader(r.children, fullPath, showAll) : undefined
+        children: r.children
+          ? processRoutesForHeader(r.children, fullPath, showAll, isAdmin)
+          : undefined
       }
     })
 

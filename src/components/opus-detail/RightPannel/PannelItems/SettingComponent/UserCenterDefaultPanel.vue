@@ -3,6 +3,7 @@ import { onMounted, ref, computed, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import userApi from '@/api/user/user_api.ts'
 import { useUserNavStore } from '@/stores/user_nav'
+import { BiliImg } from '@/assets/img/BiliImg.ts'
 import type { User_base_info_config_form } from '@/models/user/user_setting/user_base_info_config_model.ts'
 import type { CasdoorUserModel } from '@/models/user/casdoor/casdoor_user_model.ts'
 
@@ -154,7 +155,7 @@ onMounted(() => {
           <el-avatar
             class="user-center-profile-card__avatar"
             :size="64"
-            :src="casdoor?.avatar || navInfo?.face"
+            :src="casdoor?.avatar || navInfo?.face || BiliImg.face.noface"
           >
             {{ profile?.uname || userNavRef.value?.user_name || 'U' }}
           </el-avatar>

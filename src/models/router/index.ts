@@ -30,6 +30,10 @@ interface CustomRouteMeta {
   showInHome?: boolean
   /** 是否在头部显示 */
   isHeaderShow?: boolean
+  /** 是否需要 RPA 管理员/root 权限（仅管理员可见可访问） */
+  requiresAdmin?: boolean
+  /** 管理员专属入口：仅在管理端身份（RPA 管理员/root 或 消息管理端 root）可见 */
+  adminOnly?: boolean
   /** 自定义标签 */
   tags?: string[]
 }
@@ -49,7 +53,6 @@ export enum RouteName {
   HOME = '首页',
 
   // 应用模块
-  FEEDBACK = '反馈区',
   USER_CENTER = '浏览器管理',
   LOTTERY_DATA = '抽奖数据',
   SAMSCLUB = '山姆会员店数据',
@@ -61,6 +64,18 @@ export enum RouteName {
   RPA_BROWSER_ACTION_MANAGEMENT = '动作管理',
   RPA_BROWSER_WORKFLOW_MANAGEMENT = '工作流管理',
   RPA_BROWSER_ACTION_LOG = '操作日志',
+  RPA_BROWSER_ADMIN = 'RPA管理后台',
+  // 管理后台（独立模块，不与服务类界面混放）
+  ADMIN = '管理后台',
+  ADMIN_RPA = 'RPA管理后台',
+  ADMIN_MESSAGE_NOTIFY = '通知管理',
+  ADMIN_MESSAGE_DM = '私信审核',
+  ADMIN_MESSAGE_COMMENT = '评论审核',
+  ADMIN_MESSAGE_PERMISSION = '管理端权限',
+  // 消息中心管理端
+  MESSAGE_DM_ADMIN = '私信审核',
+  MESSAGE_COMMENT_ADMIN = '评论审核',
+  MESSAGE_DM_CHAT = '私信聊天',
   // 用户中心子路由
   USER_GLOBAL_CONFIG = '用户全局设置',
   USER_INFO_CONFIG = '用户基本信息设置',
@@ -77,6 +92,7 @@ export enum RouteName {
   CHARGE_LOTTERY = '充电抽奖',
   TOPIC_LOTTERY = '话题抽奖',
   OTHERS_LOT_DYN_LIST = '第三方抽奖动态',
+  LOTTERY_CARD_DETAIL = '抽奖卡片详情',
 
   // 404 页面
   NOT_FOUND = 'NotFound',

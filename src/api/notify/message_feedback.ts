@@ -4,13 +4,9 @@
 // 不再手动拼 URL 发送请求。反馈只发到站长自己的推送设置，
 // 通过 source 字段告知站长这条反馈来自哪个页面 / 模块。
 import { submitFeedbackApiV1MessagePushFeedbackPost } from '@/api/notify/hey-api'
+import type { FeedbackRequest } from '@/api/notify/hey-api'
 
-/** 反馈请求体（与 be-message-service 的 FeedbackRequest 对应） */
-export interface FeedbackRequest {
-  content: string
-  contact?: string | null
-  source?: string | null
-}
+export type { FeedbackRequest }
 
 /** 与后端 StandardResponse 同构的统一响应 */
 export interface StandardFeedbackResponse {

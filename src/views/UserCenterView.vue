@@ -194,7 +194,7 @@ const scrollbarHeight = computed(() => {
             <div class="content-body transition-all duration-300 p-1! sm:p-2!" style="background-color: var(--el-bg-color); min-height: 100%;">
               <RouterView v-slot="{ Component, route }">
                 <div v-if="Component">
-                  <transition name="slide-fade" mode="out-in">
+                  <transition name="slide-fade">
                     <keep-alive>
                       <component :is="Component" :key="route.path" />
                     </keep-alive>
@@ -209,6 +209,6 @@ const scrollbarHeight = computed(() => {
         </el-main>
       </div>
     </el-container>
-    <BiliErrorRouteTo v-else :props="BiliErrorRouteToTxt.unauthorized" />
+    <BiliErrorRouteTo v-else :detail="BiliErrorRouteToTxt.not_logged_in" />
   </FlexContainer>
 </template>

@@ -38,6 +38,7 @@ export const AXIOS_REQ_AUTH_INJECTION = (config: any = AXIOS_CONFIG) => {
   if (userInfo && userInfo.uid) {
     config.headers['x-bili-mid'] = userInfo.uid
     config.headers['x-bili-level'] = userInfo.level_info?.current_level || '0'
+    config.headers['x-bili-role'] = userInfo.role || 'normal'
   }
 
   return config

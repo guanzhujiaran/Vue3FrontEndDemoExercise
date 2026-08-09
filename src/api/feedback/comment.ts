@@ -1,4 +1,4 @@
-import { client } from '@/api/bili_lottery_data/hey-api/client.gen'
+import { client } from '@/api/notify/hey-api/client.gen'
 import type { RootObject } from '@/models/api/base_model.ts'
 import type {
   ReplyItem,

@@ -3,13 +3,13 @@ import { ref, computed, inject } from 'vue'
 import { useJwtStore } from '@/stores/jwt_token'
 import biliMessage, { ElMessageBox } from '@/utils/message'
 import { CoffeeCup } from '@element-plus/icons-vue'
+import SubmitFeedbackModal from '@/components/lottery_data/bili_data/SubmitFeedbackModal.vue'
 import { processRoutesForHome } from '@/utils/routeUtils'
 import { openGlobalLoginModalKey } from '@/models/inject/inject_type.ts'
 import { KeysEnum, useInject } from '@/models/base/provide_model.ts'
 import type { UserNavModel } from '@/models/user/user_model.ts'
 import { routes } from '@/router'
 import router from '@/router'
-import SubmitFeedbackModal from '@/components/lottery_data/bili_data/SubmitFeedbackModal.vue'
 const jwtStore = useJwtStore()
 const activeTab = ref('all')
 const openGlobalLoginModal = inject(openGlobalLoginModalKey, () => { })
@@ -43,8 +43,10 @@ const visibleChildren = (children: any[]) => {
 const biliUser = useInject(KeysEnum.BiliUser) as Ref<UserNavModel>
 const isLoggedIn = computed(() => !!biliUser.value.uid)
 
-// 首页“提交反馈”按钮弹窗
+// 首页"提交反馈"按钮弹窗
 const feedbackModalRef = ref<InstanceType<typeof SubmitFeedbackModal> | null>(null)
+
+
 // 处理登录按钮点击
 const handleLoginClick = () => {
   openGlobalLoginModal()
@@ -63,7 +65,7 @@ const handleLogoutClick = () => {
         uid: '',
         user_name: '',
         role: '',
-        face: '',
+        face: null,
         email: '',
         level_info: {
           current_exp: '',
@@ -138,9 +140,6 @@ const handleCardClick = (path: string | undefined, requiresLogin = false) => {
     <div class="mt-8 flex justify-center gap-10" v-if="isLoggedIn"></div>
   </section>
 
-  <!-- 首页“提交反馈”弹窗，由顶部按钮触发，不渲染内置按钮 -->
-  <SubmitFeedbackModal ref="feedbackModalRef" :show-trigger="false" source="首页" />
-
   <!-- 功能导航区 -->
   <section class="mx-5 py-10 lg:mx-10 sm:px-0 sm:mx-0">
     <div class="mb-6 flex flex-wrap items-center justify-between gap-4">
@@ -155,7 +154,6 @@ const handleCardClick = (path: string | undefined, requiresLogin = false) => {
           <el-radio-button v-if="isLoggedIn" value="user-center">用户中心</el-radio-button>
           <!-- RPA浏览器入口：生产编译临时隐藏 <el-radio-button v-if="isLoggedIn" value="rpa-browser">RPA浏览器</el-radio-button> -->
           <el-radio-button value="shopping">山姆会员商店</el-radio-button>
-          <el-radio-button value="feedback">反馈区</el-radio-button>
         </el-radio-group>
       </div>
     </div>
@@ -240,12 +238,6 @@ const handleCardClick = (path: string | undefined, requiresLogin = false) => {
           <ul class="m-0 flex list-none flex-wrap gap-x-6 gap-y-2 p-0">
             <li>
               <el-link class="text-sm! text-text-regular! no-underline transition-colors hover:text-primary!"
-                @click="router.push('/app/Feedback')">
-                反馈建议
-              </el-link>
-            </li>
-            <li>
-              <el-link class="text-sm! text-text-regular! no-underline transition-colors hover:text-primary!"
                 @click="router.push('/app/user-center')">
                 浏览器管理
               </el-link>
@@ -285,4 +277,7 @@ const handleCardClick = (path: string | undefined, requiresLogin = false) => {
     本站总访问量 <span id="busuanzi_site_pv" class="busuanzi-footer__pv">加载中...</span> 次 ·
     本站总访客数 <span id="busuanzi_site_uv" class="busuanzi-footer__uv">加载中...</span> 人
   </footer>
+
+  <!-- 首页"提交反馈"弹窗，由顶部按钮触发，不渲染内置按钮 -->
+  <SubmitFeedbackModal ref="feedbackModalRef" :show-trigger="false" source="首页" />
 </template>

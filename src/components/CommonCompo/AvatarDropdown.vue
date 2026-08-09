@@ -9,7 +9,8 @@ import type { UserNavModel } from '@/models/user/user_model.ts'
 import { useRouter } from 'vue-router'
 import { RouteName } from '@/models/router'
 import type { ElDropdown } from 'element-plus'
-import { MagicStick, User, Delete, ScaleToOriginal, Moon, Sunny, Monitor, SwitchButton } from '@element-plus/icons-vue'
+import { MagicStick, User, Delete, ScaleToOriginal, Moon, Sunny, Monitor, SwitchButton, ChatDotRound } from '@element-plus/icons-vue'
+import { useMessageUnreadStore } from '@/stores/message_unread'
 import biliMessage from '@/utils/message'
 import userApi from '@/api/user/user_api'
 import { useUserNavStore } from '@/stores/user_nav'
@@ -25,7 +26,8 @@ const userPrefStore = useUserPrefStore()
 const hueThemeStore = useHueThemeStore()
 const userNavStore = useUserNavStore()
 const jwtStore = useJwtStore()
-
+const messageUnreadStore = useMessageUnreadStore()
+const totalUnread = computed(() => messageUnreadStore.totalUnread())
 
 // 计算当前经验进度百分比
 const expProgress = computed(() => {
@@ -111,6 +113,11 @@ const handlePopoverVisibleChange = (visible: boolean, type: 'theme' | 'size' | '
 // 处理个人中心点击
 const handleUserCenterClick = () => {
   router.push({ name: RouteName.USER_CENTER })
+}
+
+// 处理消息中心点击
+const handleMessageCenterClick = () => {
+  router.push({ name: 'MESSAGE_HOME' })
 }
 
 // 处理退出登录
@@ -249,6 +256,19 @@ const handleDropDownVisibleChange = (visible: boolean) => {
               <template #text>个人中心</template>
             </HeaderAvatarDropdownItem>
             <el-icon-arrow-right class="ml-auto h-4 w-4 text-xs text-text-secondary transition-colors duration-300 group-hover:text-[var(--el-text-color-primary)]" />
+          </div>
+        </el-dropdown-item>
+        <el-dropdown-item :icon="ChatDotRound" @click="handleMessageCenterClick" class="dropdown-item text-sm rounded-xl my-3 group">
+          <div class="flex items-center justify-between w-full">
+            <HeaderAvatarDropdownItem>
+              <template #text>
+                <div class="flex items-center gap-2">
+                  <span>我的消息</span>
+                  <el-badge v-if="totalUnread > 0" :value="totalUnread > 99 ? '99+' : totalUnread" type="danger" />
+                </div>
+              </template>
+            </HeaderAvatarDropdownItem>
+            <el-icon-arrow-right class="ml-auto h-4 w-4 text-xs text-text-secondary transition-colors duration-300 group-hover:text-(--el-text-color-primary)" />
           </div>
         </el-dropdown-item>
         </template>

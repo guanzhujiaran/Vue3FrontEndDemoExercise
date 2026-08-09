@@ -7,9 +7,14 @@ import biliMessage from '@/utils/message'
 import { useDebounceFn } from '@vueuse/core'
 import { BiliImg } from '@/assets/img/BiliImg.ts'
 import { useUserNavStore } from '@/stores/user_nav.ts'
+import { isOwnCommentInAudit, auditStateMeta } from '@/utils/commentAudit.ts'
 
 const { user_nav } = useUserNavStore()
 const reply_item = defineModel<ReplyItem>('reply_item', { required: true })
+// 作者本人发布的、处于审核相关状态（审核中 / 未通过）的评论需打标记
+const own_audit_meta = computed(() =>
+  isOwnCommentInAudit(reply_item.value) ? auditStateMeta(reply_item.value.state) : null,
+)
 const { up_mid, methods } = defineProps<{
   up_mid: string | number
   methods: {
@@ -172,7 +177,19 @@ const renderedContent = computed(() => {
       <!-- 用户信息行 -->
       <div class="flex items-center gap-2 mb-1 flex-wrap">
         <span class="text-sm font-medium text-text-primary">{{ reply_item.member.uname }}</span>
-        
+
+        <!-- 作者本人发布的、处于审核中 / 未通过审核的评论标记 -->
+        <el-tag
+          v-if="own_audit_meta"
+          class="comment-item__audit-badge"
+          :class="own_audit_meta.badgeClass"
+          size="small"
+          effect="light"
+          round
+        >
+          {{ own_audit_meta.label }}
+        </el-tag>
+
         <!-- 等级图标 -->
         <img
           v-if="reply_item.member.level_info?.current_level"

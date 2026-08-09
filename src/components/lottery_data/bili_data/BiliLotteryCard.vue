@@ -64,6 +64,10 @@
               @click="handleLinkClick" link icon="link" underline="never" class="whitespace-nowrap">
               查看h5抽奖详情
             </el-link>
+            <el-button type="primary" size="default" :icon="ChatDotRound" class="lottery-card__comment-entry whitespace-nowrap"
+              @click="goToLotteryDetail">
+              评论区
+            </el-button>
             <!-- 参加/不参加开关 -->
             <div class="flex items-center gap-2 whitespace-nowrap">
               <span class="font-medium text-text-secondary text-sm whitespace-nowrap">
@@ -276,7 +280,9 @@ import { computed, ref, type PropType, type Ref } from 'vue'
 import type { TagProps } from 'element-plus'
 import { type GlobalVarsType, ScreenTypeEnum } from '@/models/global_var/global_var_model.ts'
 import { KeysEnum, useInject } from '@/models/base/provide_model.ts'
-import { ChatDotSquare, Share, Link } from '@element-plus/icons-vue'
+import { ChatDotRound, ChatDotSquare, Share, Link } from '@element-plus/icons-vue'
+import router from '@/router'
+import { useLotteryDetailStore, LOTTERY_COMMENT_TYPE } from '@/stores/lottery_detail.ts'
 
 import type {
   AnchorLotteryData,
@@ -300,6 +306,20 @@ const handleRecordLotteryId = (val: boolean | number | string) => {
 
 const handleLinkClick = () => {
   handleLotteryLinkClick(String(normalizedData.value.id))
+}
+
+const lotteryDetailStore = useLotteryDetailStore()
+
+/** 携带完整卡片数据跳转抽奖卡片详情页，详情页底部会加载该抽奖的评论区 */
+const goToLotteryDetail = () => {
+  lotteryDetailStore.setDetail(props.lotteryData)
+  router.push({
+    path: '/app/lot-data/card-detail',
+    query: {
+      id: String(normalizedData.value.id),
+      type: normalizedData.value.type
+    }
+  })
 }
 
 const is_mobile = isMobileDevice()

@@ -2,7 +2,6 @@ import { useJwtStore } from '@/stores/jwt_token'
 import userApi from './user_api'
 import type { UserNavModel } from '@/models/user/user_model.ts'
 import { useUserNavStore } from '@/stores/user_nav.ts'
-import user_api from './user_api'
 import type { ApiError } from '@/api/base_axios/error_handler.ts'
 import type { RootObject } from '@/models/api/base_model.ts'
 import biliMessage from '@/utils/message'
@@ -55,11 +54,10 @@ export const isLogin: () => Promise<[boolean, string, UserNavModel | null, ApiEr
     
     user_nav_store.save_user_nav(resp.data)
     
-    if (JwtStore.jwt && JwtStore.is_need_jwt_refresh()) {
-      user_api.RefreshToken().then((_resp) => {
-        if (_resp.code) return
-        JwtStore.save_jwt_token(_resp.data.jwt_token)
-      })
+    // 如果 pptr 网关在 nav 响应中注入了新 JWT token（JWT 非当天签发时自动续期），
+    // 直接保存，不再调用单独的 refresh_token 接口
+    if (resp.data?.jwt_token) {
+      JwtStore.save_jwt_token(resp.data.jwt_token)
     }
     
     return [true, resp.msg, resp.data, null]

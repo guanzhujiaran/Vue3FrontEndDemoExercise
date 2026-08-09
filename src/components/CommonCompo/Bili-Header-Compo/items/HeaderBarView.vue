@@ -1,12 +1,16 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, computed, ref } from 'vue'
+import { onMounted, onUnmounted, computed, ref, watch } from 'vue'
 import { type GlobalVarsType, ScreenTypeEnum } from '@/models/global_var/global_var_model.ts'
 import { useInject, KeysEnum } from '@/models/base/provide_model.ts'
 import { useRoute } from 'vue-router'
 import { routes } from '@/router'
 import { processRoutesForHeader } from '@/utils/routeUtils.ts'
+import { useRpaAdminStore } from '@/stores/rpa_admin.ts'
+import { useMessageAdminStore } from '@/stores/message_admin.ts'
 
 const globalVars = useInject(KeysEnum.GlobalVars) as Ref<GlobalVarsType>
+const rpaAdminStore = useRpaAdminStore()
+const messageAdminStore = useMessageAdminStore()
 
 const route = useRoute()
 let resizeTimer: number | null = null
@@ -22,8 +26,19 @@ const checkScreenSize = () => {
   }
 }
 // 根据路由配置生成导航数据（未登录时也展示全部入口，登录校验交由对应页面处理）
+// 管理员专属入口仅在当前用户为管理员/root 时展示（后端仍强制校验，防越权）
+// 管理端入口严格按权限显隐：未登录或非管理员一律不展示，与管理后台访问守卫一致
+// 管理端入口：RPA 管理员 或 消息管理端 root 均可见
+const isAdminForNav = computed(
+  () =>
+    rpaAdminStore.status.is_admin ||
+    rpaAdminStore.status.is_root ||
+    messageAdminStore.status.is_root,
+)
 const navigationData = computed(() => {
-  return processRoutesForHeader(routes, '', true)
+  // /app/admin 已通过 meta.isHeaderShow + meta.adminOnly 接入 processRoutesForHeader，
+  // 与管理端身份联动显隐，无需手动追加导航项
+  return processRoutesForHeader(routes, '', true, isAdminForNav.value)
 })
 
 // 防抖处理窗口大小变化
@@ -42,8 +57,24 @@ onMounted(() => {
   window.addEventListener('resize', debouncedCheckScreenSize)
   // 初始化检查一次屏幕尺寸
   checkScreenSize()
-  // 检查登录状态
+  // 拉取 RPA 管理员角色状态（用于管理员专属导航显隐）
+  rpaAdminStore.fetchStatus()
+  // 拉取消息管理端身份（消息端 root 同样可见「管理后台」入口）
+  messageAdminStore.fetchStatus()
 })
+
+// 路由切换且尚未拉取过状态时，补拉管理员状态
+watch(
+  () => route.path,
+  () => {
+    if (!rpaAdminStore.loaded) {
+      rpaAdminStore.fetchStatus()
+    }
+    if (!messageAdminStore.loaded) {
+      messageAdminStore.fetchStatus()
+    }
+  }
+)
 
 // 组件销毁时移除监听器
 onUnmounted(() => {

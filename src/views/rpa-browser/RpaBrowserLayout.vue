@@ -1,6 +1,6 @@
 <template>
   <!-- 未登录时显示未授权提示页，倒计时自动返回首页 -->
-  <BiliErrorRouteTo v-if="!isLoggedIn" :props="BiliErrorRouteToTxt.rpa_browser_login_required" />
+  <BiliErrorRouteTo v-if="!isLoggedIn" :detail="BiliErrorRouteToTxt.rpa_browser_login_required" />
   <router-view v-else v-slot="{ Component }">
     <transition
       enter-active-class="transition-opacity duration-300 ease-in-out"

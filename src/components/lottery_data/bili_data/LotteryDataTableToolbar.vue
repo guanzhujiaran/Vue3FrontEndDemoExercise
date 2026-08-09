@@ -88,8 +88,8 @@
 import { ref } from 'vue'
 import { useBiliLotteryRecord } from '@/stores/bili_lottery_record.ts'
 import { Setting, Refresh, Grid, List, Menu } from '@element-plus/icons-vue'
-import SubmitFeedbackModal from './SubmitFeedbackModal.vue'
 import { useThemeStore } from '@/stores/theme'
+import SubmitFeedbackModal from './SubmitFeedbackModal.vue'
 
 const themeStore = useThemeStore()
 

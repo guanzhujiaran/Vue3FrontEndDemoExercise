@@ -12,7 +12,6 @@ import {
   User as IconUser,
   DataAnalysis as IconDataAnalysis,
   ChatLineRound as IconChat,
-  ChatDotRound as IconChatDotRound,
   ShoppingCart as IconShoppingCart,
   Promotion as IconPromotion,
   Lightning as IconLightning,
@@ -27,6 +26,8 @@ import {
   Connection as IconConnection
 } from '@element-plus/icons-vue'
 import emitter from '@/utils/mitt.ts'
+import { useRpaAdminStore } from '@/stores/rpa_admin.ts'
+import { useMessageAdminStore } from '@/stores/message_admin.ts'
 import { type CustomRouteRecordRaw, RouteName } from '@/models/router/index.ts'
 const user_center_routes = [
   {
@@ -85,23 +86,6 @@ const routes: CustomRouteRecordRaw[] = [
     }
   },
   {
-    path: '/app/feedback',
-    name: RouteName.FEEDBACK,
-    component: () => import('@/views/FeedbackView.vue'),
-    meta: {
-      id: 'feedback',
-      title: '反馈区',
-      icon: IconChat,
-      description: '提交问题反馈和建议',
-      color: 'var(--color-gradient-hero-cool)',
-      requiresLogin: false,
-      showInHome: true,
-      order: 114514,
-      isHeaderShow: true
-    }
-  },
-
-  {
     path: '/app/lot-data',
     name: RouteName.LOTTERY_DATA,
     component: () => import('@/views/LotteryView.vue'),
@@ -159,6 +143,18 @@ const routes: CustomRouteRecordRaw[] = [
           color: 'var(--color-gradient-hero-elegant)',
           showInHome: true,
           order: 2,
+          isHeaderShow: true
+        }
+      },
+      {
+        path: 'card-detail',
+        name: RouteName.LOTTERY_CARD_DETAIL,
+        component: () => import('@/views/LotteryCardDetailView.vue'),
+        meta: {
+          title: RouteName.LOTTERY_CARD_DETAIL,
+          icon: IconChat,
+          description: '抽奖卡片详情与评论区',
+          showInHome: false,
           isHeaderShow: true
         }
       },
@@ -225,7 +221,7 @@ const routes: CustomRouteRecordRaw[] = [
             component: () => import('@/components/lottery_data/bili_data/TopicLottery.vue'),
             meta: {
               title: '话题抽奖',
-              icon: IconChatDotRound,
+              icon: IconChat,
               description: 'B站话题活动抽奖数据',
               color: 'var(--color-gradient-lottery-item)',
               showInHome: true,
@@ -427,10 +423,144 @@ const routes: CustomRouteRecordRaw[] = [
           showInHome: false,
           isHeaderShow: true
         }
-      }
+      },
     ]
   },
 
+  {
+    path: '/app/message',
+    name: 'MESSAGE',
+    component: () => import('@/views/message/MessageLayout.vue'),
+    redirect: { name: 'MESSAGE_HOME' },
+    meta: {
+      id: 'message',
+      title: '消息中心',
+      description: '系统通知、事件提醒与私信的统一消息中心',
+      requiresLogin: true,
+      // 入口不放在主页/顶部导航，统一收敛到头像下拉菜单（Bilibili 风格）
+      showInHome: false,
+      isHeaderShow: false
+    },
+    children: [
+      {
+        path: '',
+        name: 'MESSAGE_HOME',
+        component: () => import('@/views/message/DmSessionListView.vue'),
+        meta: { title: '我的消息' }
+      },
+      {
+        path: 'replies',
+        name: 'MESSAGE_REPLIES',
+        component: () => import('@/views/message/ReplyListView.vue'),
+        meta: { title: '回复我的' }
+      },
+      {
+        path: 'ats',
+        name: 'MESSAGE_ATS',
+        component: () => import('@/views/message/AtListView.vue'),
+        meta: { title: '@我的' }
+      },
+      {
+        path: 'likes',
+        name: 'MESSAGE_LIKES',
+        component: () => import('@/views/message/LikeListView.vue'),
+        meta: { title: '收到的赞' }
+      },
+      {
+        path: 'notify',
+        name: 'MESSAGE_NOTIFY',
+        component: () => import('@/views/message/NotifyListView.vue'),
+        meta: { title: '系统通知' }
+      },
+      {
+        path: 'settings',
+        name: 'MESSAGE_SETTINGS',
+        component: () => import('@/views/message/MessageSettingsView.vue'),
+        meta: { title: '消息设置' }
+      },
+      {
+        path: 'chat/:talkerMid',
+        name: 'MESSAGE_DM_CHAT',
+        component: () => import('@/views/message/DmListView.vue'),
+        meta: { title: '私信聊天', hidden: true }
+      }
+    ]
+  },
+  {
+    path: '/app/admin',
+    name: 'ADMIN',
+    component: () => import('@/views/admin/AdminLayout.vue'),
+    redirect: { name: 'ADMIN_OVERVIEW' },
+    meta: {
+      id: 'admin',
+      title: '管理后台',
+      icon: IconSetting,
+      description: 'RPA 与消息中心的管理员功能集中管理',
+      requiresLogin: true,
+      showInHome: false,
+      isHeaderShow: true,
+      adminOnly: true,
+      order: 6
+    },
+    children: [
+      {
+        path: '',
+        name: 'ADMIN_OVERVIEW',
+        component: () => import('@/views/admin/AdminOverview.vue'),
+        meta: { title: '管理后台', hidden: true }
+      },
+      {
+        path: 'rpa',
+        name: 'ADMIN_RPA',
+        component: () => import('@/views/rpa-browser/AdminManagement.vue'),
+        meta: {
+          title: 'RPA 管理后台',
+          requiresAdmin: true,
+          hidden: true
+        }
+      },
+      {
+        path: 'message-notify',
+        name: 'ADMIN_MESSAGE_NOTIFY',
+        component: () => import('@/views/message/NotifyAdminView.vue'),
+        meta: {
+          title: '通知管理',
+          requiresAdmin: true,
+          hidden: true
+        }
+      },
+      {
+        path: 'message-dm',
+        name: 'ADMIN_MESSAGE_DM',
+        component: () => import('@/views/message/DmAdminView.vue'),
+        meta: {
+          title: '私信审核',
+          requiresAdmin: true,
+          hidden: true
+        }
+      },
+      {
+        path: 'message-comment',
+        name: 'ADMIN_MESSAGE_COMMENT',
+        component: () => import('@/views/message/CommentAdminView.vue'),
+        meta: {
+          title: '评论审核',
+          requiresAdmin: true,
+          hidden: true
+        }
+      },
+      {
+        path: 'message-permission',
+        name: 'ADMIN_MESSAGE_PERMISSION',
+        component: () => import('@/views/message/MessageAdminPermission.vue'),
+        meta: {
+          title: '管理端权限',
+          requiresMessageRoot: true,
+          hidden: true
+        }
+      }
+    ]
+  },
   {
     // 404页面路由配置
     path: '/:pathMatch(.*)*',
@@ -443,8 +573,33 @@ const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes
 })
-// 路由守卫 - 全局加载遮罩
-router.beforeEach((to, from) => {
+// 路由守卫 - 全局加载遮罩 + 管理员权限校验
+router.beforeEach(async (to, from) => {
+  // 管理员专属页面（管理后台入口及其子页面）：未登录或非管理员时，
+  // 不展示入口也不提示，直接假装页面不存在（前端仅做拦截，后端仍会强制校验）
+  if (to.meta?.adminOnly || to.meta?.requiresAdmin) {
+    const adminStore = useRpaAdminStore()
+    if (!adminStore.loaded) {
+      await adminStore.fetchStatus()
+    }
+    if (!adminStore.status.is_admin && !adminStore.status.is_root) {
+      // 复用 404 页面：展示「页面不存在」提示并在 10 秒后自动返回首页
+      return { name: RouteName.NOT_FOUND }
+    }
+  }
+
+  // 消息管理端 root 专属页面（权限授予 / 撤销）
+  if (to.meta?.requiresMessageRoot) {
+    const messageAdminStore = useMessageAdminStore()
+    if (!messageAdminStore.loaded) {
+      await messageAdminStore.fetchStatus()
+    }
+    if (!messageAdminStore.status.is_root) {
+      // 非 root 身份：同样伪装为页面不存在
+      return { name: RouteName.NOT_FOUND }
+    }
+  }
+
   if (!from.name) return true
 
   // 同一父路由下的子路由切换（如控制台面板内 tab 切换），不显示 loading

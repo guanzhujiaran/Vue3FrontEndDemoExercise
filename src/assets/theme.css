@@ -393,6 +393,21 @@
     var(--el-color-primary-light-3) 0%,
     var(--el-color-info-light-3) 100%
   );
+
+  /* ==================== 消息中心（Bilibili 风格暗色主题） ==================== */
+  --color-msg-sidebar: #1a1c2e;
+  --color-msg-sidebar-active: #232540;
+  --color-msg-sidebar-hover: #2a2d4d;
+  --color-msg-text: #9499b0;
+  --color-msg-text-active: #ffffff;
+  --color-msg-main: #11121a;
+  --color-msg-card: #1e2033;
+  --color-msg-card-hover: #252842;
+  --color-msg-border: #2a2d4d;
+  --color-msg-divider: #2a2d4d;
+  --color-msg-muted: #61667a;
+  --color-msg-pink: #ff6699;
+  --color-msg-link: #00aeec;
 }
 
 /* ==================== RPA Browser Stream 动画 ==================== */

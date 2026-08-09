@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { RouterView } from 'vue-router'
+import { RouterView, useRouter } from 'vue-router'
 import SponsorNotification from '@/components/sponsor/sponsor-notification.vue'
 import { onMounted, onUnmounted, provide, ref, computed } from 'vue'
 import { useThemeStore } from '@/stores/theme'
@@ -38,6 +38,7 @@ const isInit = ref(false)
 const themeStore = useThemeStore()
 const userPrefStore = useUserPrefStore()
 const loginModalRef = ref<InstanceType<typeof LoginModal> | null>(null)
+const router = useRouter()
 
 // 计算背景图片URL
 const backgroundUrl = computed(() => {
@@ -73,8 +74,12 @@ const checkLoginStatus = () => {
     user_nav ? (biliUser.value = user_nav) : null
   })
 }
+// 标记是否已完成首次登录状态检查，避免 App 挂载时 + Casdoor 回调后重复调用
+let hasCheckedLogin = false
+
 onMounted(() => {
   checkLoginStatus()
+  hasCheckedLogin = true
   isInit.value = true
 
   // 初始化主题
@@ -93,6 +98,13 @@ onMounted(() => {
   busuanziScript.async = true
   busuanziScript.src = '//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js'
   document.head.appendChild(busuanziScript)
+})
+
+// 监听路由变化：当从 Casdoor 回调页跳回首页时，重新检查登录状态获取完整用户信息
+router.afterEach((to, from) => {
+  if (from.name === 'CASDOOR_CALLBACK' && to.name !== 'CASDOOR_CALLBACK' && hasCheckedLogin) {
+    checkLoginStatus()
+  }
 })
 const screen_size = {
   xxs: 690,

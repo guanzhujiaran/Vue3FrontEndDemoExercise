@@ -8,6 +8,7 @@ import FlexContainer from '@/components/CommonCompo/Bili-Container-Compo/FlexCon
 import BiliPageHeader from '@/components/CommonCompo/Bili-Container-Compo/BiliPageHeader.vue'
 import { useUserNavStore } from '@/stores/user_nav'
 import { businessHandler } from '@/utils/businessHandler'
+import { ElMessageBox } from 'element-plus'
 import { client } from '@/api/browser/hey-api/client.gen'
 
 // ── 类型 ────────────────────────────────────────────────
@@ -241,6 +242,19 @@ const handleBatchDelete = async () => {
 }
 
 const handleClearAll = async () => {
+  try {
+    await ElMessageBox.confirm(
+      '此操作将清空当前筛选条件下的全部操作日志，且不可恢复。确定要继续吗？',
+      '清空全部日志',
+      {
+        confirmButtonText: '确定清空',
+        cancelButtonText: '取消',
+        type: 'warning',
+      },
+    )
+  } catch {
+    return
+  }
   const result = await businessHandler<{ deleted: number }>(
     client.post({
       url: `${apiBase}/action-logs/clear`,

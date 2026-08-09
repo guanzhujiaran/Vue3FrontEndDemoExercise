@@ -2,7 +2,7 @@
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { HealthHealthGetData, HealthHealthGetErrors, HealthHealthGetResponses, PushMessageApiV1MessagePushPushPostData, PushMessageApiV1MessagePushPushPostErrors, PushMessageApiV1MessagePushPushPostResponses, SubmitFeedbackApiV1MessagePushFeedbackPostData, SubmitFeedbackApiV1MessagePushFeedbackPostErrors, SubmitFeedbackApiV1MessagePushFeedbackPostResponses, TestPushApiV1MessagePushTestPostData, TestPushApiV1MessagePushTestPostErrors, TestPushApiV1MessagePushTestPostResponses } from './types.gen';
+import type { AckSessionApiV1MessageDmAckPostData, AckSessionApiV1MessageDmAckPostErrors, AckSessionApiV1MessageDmAckPostResponses, AddCommentApiV1CommentAddPostData, AddCommentApiV1CommentAddPostErrors, AddCommentApiV1CommentAddPostResponses, AdminIpApiV1CommentAdminIpRpidGetData, AdminIpApiV1CommentAdminIpRpidGetErrors, AdminIpApiV1CommentAdminIpRpidGetResponses, AdminListNotifyApiV1MessageNotifyAdminListGetData, AdminListNotifyApiV1MessageNotifyAdminListGetErrors, AdminListNotifyApiV1MessageNotifyAdminListGetResponses, AdminStatsApiV1CommentAdminStatsGetData, AdminStatsApiV1CommentAdminStatsGetErrors, AdminStatsApiV1CommentAdminStatsGetResponses, AdminStatsApiV1MessageDmAdminStatsGetData, AdminStatsApiV1MessageDmAdminStatsGetErrors, AdminStatsApiV1MessageDmAdminStatsGetResponses, AggregateEventApiV1MessageEventAggregateGetData, AggregateEventApiV1MessageEventAggregateGetErrors, AggregateEventApiV1MessageEventAggregateGetResponses, AtSearchApiV1CommentAtSearchGetData, AtSearchApiV1CommentAtSearchGetErrors, AtSearchApiV1CommentAtSearchGetResponses, AuditCommentApiV1CommentAdminAuditPostData, AuditCommentApiV1CommentAdminAuditPostErrors, AuditCommentApiV1CommentAdminAuditPostResponses, AuditDmApiV1MessageDmAdminAuditPostData, AuditDmApiV1MessageDmAdminAuditPostErrors, AuditDmApiV1MessageDmAdminAuditPostResponses, AuditQueueApiV1CommentAdminAuditGetData, AuditQueueApiV1CommentAdminAuditGetErrors, AuditQueueApiV1CommentAdminAuditGetResponses, AuditQueueApiV1MessageDmAdminAuditGetData, AuditQueueApiV1MessageDmAdminAuditGetErrors, AuditQueueApiV1MessageDmAdminAuditGetResponses, BanStatusData, BanStatusErrors, BanStatusResponses, BanUsersData, BanUsersErrors, BanUsersResponses, BatchUserInfoApiV1MessageAdminUserBatchGetData, BatchUserInfoApiV1MessageAdminUserBatchGetErrors, BatchUserInfoApiV1MessageAdminUserBatchGetResponses, BulkAuditCommentApiV1CommentAdminAuditBatchPostData, BulkAuditCommentApiV1CommentAdminAuditBatchPostErrors, BulkAuditCommentApiV1CommentAdminAuditBatchPostResponses, BulkAuditDmApiV1MessageDmAdminAuditBatchPostData, BulkAuditDmApiV1MessageDmAdminAuditBatchPostErrors, BulkAuditDmApiV1MessageDmAdminAuditBatchPostResponses, CasdoorCallbackApiV1UserCasdoorCallbackGetData, CasdoorCallbackApiV1UserCasdoorCallbackGetErrors, CasdoorCallbackApiV1UserCasdoorCallbackGetResponses, CommentActionApiV1CommentActionPostData, CommentActionApiV1CommentActionPostErrors, CommentActionApiV1CommentActionPostResponses, CommentCountApiV1CommentCountGetData, CommentCountApiV1CommentCountGetErrors, CommentCountApiV1CommentCountGetResponses, CommentDetailApiV1CommentDetailRpidGetData, CommentDetailApiV1CommentDetailRpidGetErrors, CommentDetailApiV1CommentDetailRpidGetResponses, CommentSourceApiV1CommentAdminSourceRpidGetData, CommentSourceApiV1CommentAdminSourceRpidGetErrors, CommentSourceApiV1CommentAdminSourceRpidGetResponses, CommentTopApiV1CommentTopPostData, CommentTopApiV1CommentTopPostErrors, CommentTopApiV1CommentTopPostResponses, CreateNotifyApiV1MessageNotifyAdminCreatePostData, CreateNotifyApiV1MessageNotifyAdminCreatePostErrors, CreateNotifyApiV1MessageNotifyAdminCreatePostResponses, DeleteCommentApiV1CommentDelPostData, DeleteCommentApiV1CommentDelPostErrors, DeleteCommentApiV1CommentDelPostResponses, DeleteEventApiV1MessageEventDeletePostData, DeleteEventApiV1MessageEventDeletePostErrors, DeleteEventApiV1MessageEventDeletePostResponses, DeleteMessagesApiV1MessageDmDeletePostData, DeleteMessagesApiV1MessageDmDeletePostErrors, DeleteMessagesApiV1MessageDmDeletePostResponses, DeleteNotifyApiV1MessageNotifyDeletePostData, DeleteNotifyApiV1MessageNotifyDeletePostErrors, DeleteNotifyApiV1MessageNotifyDeletePostResponses, DeleteSessionApiV1MessageDmSessionDeletePostData, DeleteSessionApiV1MessageDmSessionDeletePostErrors, DeleteSessionApiV1MessageDmSessionDeletePostResponses, GetActivityApiV1MessageSettingActivityGetData, GetActivityApiV1MessageSettingActivityGetErrors, GetActivityApiV1MessageSettingActivityGetResponses, GetCasdoorUserInfoApiV1UserCasdoorInfoGetData, GetCasdoorUserInfoApiV1UserCasdoorInfoGetErrors, GetCasdoorUserInfoApiV1UserCasdoorInfoGetResponses, GetSettingApiV1MessageSettingGetData, GetSettingApiV1MessageSettingGetErrors, GetSettingApiV1MessageSettingGetResponses, GetUserInfoApiV1UserUserInfoGetData, GetUserInfoApiV1UserUserInfoGetErrors, GetUserInfoApiV1UserUserInfoGetResponses, GetUserNavApiV1UserNavGetData, GetUserNavApiV1UserNavGetErrors, GetUserNavApiV1UserNavGetResponses, GrantAdminApiV1MessageAdminGrantPostData, GrantAdminApiV1MessageAdminGrantPostErrors, GrantAdminApiV1MessageAdminGrantPostResponses, HealthHealthGetData, HealthHealthGetErrors, HealthHealthGetResponses, HeartbeatApiV1MessageMsgFeedHeartbeatPostData, HeartbeatApiV1MessageMsgFeedHeartbeatPostErrors, HeartbeatApiV1MessageMsgFeedHeartbeatPostResponses, IdentifyUserApiV1UserIdentifyGetData, IdentifyUserApiV1UserIdentifyGetErrors, IdentifyUserApiV1UserIdentifyGetResponses, ListAdminsApiV1MessageAdminListGetData, ListAdminsApiV1MessageAdminListGetErrors, ListAdminsApiV1MessageAdminListGetResponses, ListBansData, ListBansErrors, ListBansResponses, ListEventApiV1MessageEventListGetData, ListEventApiV1MessageEventListGetErrors, ListEventApiV1MessageEventListGetResponses, ListMainApiV1CommentMainGetData, ListMainApiV1CommentMainGetErrors, ListMainApiV1CommentMainGetResponses, ListMessagesApiV1MessageDmMessagesGetData, ListMessagesApiV1MessageDmMessagesGetErrors, ListMessagesApiV1MessageDmMessagesGetResponses, ListNotifyApiV1MessageNotifyListGetData, ListNotifyApiV1MessageNotifyListGetErrors, ListNotifyApiV1MessageNotifyListGetResponses, ListSessionsApiV1MessageDmSessionsGetData, ListSessionsApiV1MessageDmSessionsGetErrors, ListSessionsApiV1MessageDmSessionsGetResponses, LogoutApiV1UserLogoutPostData, LogoutApiV1UserLogoutPostErrors, LogoutApiV1UserLogoutPostResponses, MyStatusApiV1MessageAdminMeGetData, MyStatusApiV1MessageAdminMeGetErrors, MyStatusApiV1MessageAdminMeGetResponses, PullNotifyApiV1MessageNotifyPullGetData, PullNotifyApiV1MessageNotifyPullGetErrors, PullNotifyApiV1MessageNotifyPullGetResponses, PushMessageApiV1MessagePushPushPostData, PushMessageApiV1MessagePushPushPostErrors, PushMessageApiV1MessagePushPushPostResponses, ReadEventApiV1MessageEventReadPostData, ReadEventApiV1MessageEventReadPostErrors, ReadEventApiV1MessageEventReadPostResponses, ReadNotifyApiV1MessageNotifyReadPostData, ReadNotifyApiV1MessageNotifyReadPostErrors, ReadNotifyApiV1MessageNotifyReadPostResponses, RecallMessageApiV1MessageDmRecallPostData, RecallMessageApiV1MessageDmRecallPostErrors, RecallMessageApiV1MessageDmRecallPostResponses, RefreshTokenApiV1UserRefreshTokenPostData, RefreshTokenApiV1UserRefreshTokenPostErrors, RefreshTokenApiV1UserRefreshTokenPostResponses, ReplyListApiV1CommentReplyGetData, ReplyListApiV1CommentReplyGetErrors, ReplyListApiV1CommentReplyGetResponses, ReportEventApiV1MessageEventReportPostData, ReportEventApiV1MessageEventReportPostErrors, ReportEventApiV1MessageEventReportPostResponses, RevokeAdminApiV1MessageAdminRevokePostData, RevokeAdminApiV1MessageAdminRevokePostErrors, RevokeAdminApiV1MessageAdminRevokePostResponses, RevokeNotifyApiV1MessageNotifyAdminRevokeNotifyIdPostData, RevokeNotifyApiV1MessageNotifyAdminRevokeNotifyIdPostErrors, RevokeNotifyApiV1MessageNotifyAdminRevokeNotifyIdPostResponses, SearchUsersApiV1MessageAdminUserSearchGetData, SearchUsersApiV1MessageAdminUserSearchGetErrors, SearchUsersApiV1MessageAdminUserSearchGetResponses, SearchUsersApiV1UserSearchGetData, SearchUsersApiV1UserSearchGetErrors, SearchUsersApiV1UserSearchGetResponses, SendDmApiV1MessageDmSendPostData, SendDmApiV1MessageDmSendPostErrors, SendDmApiV1MessageDmSendPostResponses, SessionContextApiV1MessageDmAdminSessionGetData, SessionContextApiV1MessageDmAdminSessionGetErrors, SessionContextApiV1MessageDmAdminSessionGetResponses, SetUserRoleApiV1UserRoleSetPostData, SetUserRoleApiV1UserRoleSetPostErrors, SetUserRoleApiV1UserRoleSetPostResponses, SubmitFeedbackApiV1MessagePushFeedbackPostData, SubmitFeedbackApiV1MessagePushFeedbackPostErrors, SubmitFeedbackApiV1MessagePushFeedbackPostResponses, SystemNotifyBiliApiV1MessageNotifySystemGetData, SystemNotifyBiliApiV1MessageNotifySystemGetErrors, SystemNotifyBiliApiV1MessageNotifySystemGetResponses, TestPushApiV1MessagePushTestPostData, TestPushApiV1MessagePushTestPostErrors, TestPushApiV1MessagePushTestPostResponses, UnbanUsersData, UnbanUsersErrors, UnbanUsersResponses, UnreadDmApiV1MessageDmUnreadGetData, UnreadDmApiV1MessageDmUnreadGetErrors, UnreadDmApiV1MessageDmUnreadGetResponses, UnreadEventApiV1MessageEventUnreadGetData, UnreadEventApiV1MessageEventUnreadGetErrors, UnreadEventApiV1MessageEventUnreadGetResponses, UnreadNotifyApiV1MessageNotifyUnreadGetData, UnreadNotifyApiV1MessageNotifyUnreadGetErrors, UnreadNotifyApiV1MessageNotifyUnreadGetResponses, UnreadSummaryApiV1MessageMsgFeedUnreadGetData, UnreadSummaryApiV1MessageMsgFeedUnreadGetErrors, UnreadSummaryApiV1MessageMsgFeedUnreadGetResponses, UpdateNotifyApiV1MessageNotifyAdminUpdateNotifyIdPostData, UpdateNotifyApiV1MessageNotifyAdminUpdateNotifyIdPostErrors, UpdateNotifyApiV1MessageNotifyAdminUpdateNotifyIdPostResponses, UpdateSettingApiV1MessageSettingUpdatePostData, UpdateSettingApiV1MessageSettingUpdatePostErrors, UpdateSettingApiV1MessageSettingUpdatePostResponses, UpdateUserInfoApiV1UserUserInfoUpdatePostData, UpdateUserInfoApiV1UserUserInfoUpdatePostErrors, UpdateUserInfoApiV1UserUserInfoUpdatePostResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -26,7 +26,688 @@ export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends 
 export const healthHealthGet = <ThrowOnError extends boolean = false>(options?: Options<HealthHealthGetData, ThrowOnError>): RequestResult<HealthHealthGetResponses, HealthHealthGetErrors, ThrowOnError> => (options?.client ?? client).get<HealthHealthGetResponses, HealthHealthGetErrors, ThrowOnError>({ url: '/health', ...options });
 
 /**
- * Push Message
+ * 全站未读数汇总
+ *
+ * 一次返回消息中心所有模块的未读数（前端顶部红点）。
+ */
+export const unreadSummaryApiV1MessageMsgFeedUnreadGet = <ThrowOnError extends boolean = false>(options?: Options<UnreadSummaryApiV1MessageMsgFeedUnreadGetData, ThrowOnError>): RequestResult<UnreadSummaryApiV1MessageMsgFeedUnreadGetResponses, UnreadSummaryApiV1MessageMsgFeedUnreadGetErrors, ThrowOnError> => (options?.client ?? client).get<UnreadSummaryApiV1MessageMsgFeedUnreadGetResponses, UnreadSummaryApiV1MessageMsgFeedUnreadGetErrors, ThrowOnError>({ url: '/api/v1/message/msg_feed/unread', ...options });
+
+/**
+ * 上报活跃心跳
+ *
+ * 前端在消息中心保持轮询时调用，把用户标记为活跃。
+ *
+ * 活跃用户的提醒走实时推送；停止心跳超过 `active_user_window_seconds`
+ * 后自动降级为「非活跃」，后续提醒由定时任务聚合成一条批量推送。
+ */
+export const heartbeatApiV1MessageMsgFeedHeartbeatPost = <ThrowOnError extends boolean = false>(options?: Options<HeartbeatApiV1MessageMsgFeedHeartbeatPostData, ThrowOnError>): RequestResult<HeartbeatApiV1MessageMsgFeedHeartbeatPostResponses, HeartbeatApiV1MessageMsgFeedHeartbeatPostErrors, ThrowOnError> => (options?.client ?? client).post<HeartbeatApiV1MessageMsgFeedHeartbeatPostResponses, HeartbeatApiV1MessageMsgFeedHeartbeatPostErrors, ThrowOnError>({ url: '/api/v1/message/msg_feed/heartbeat', ...options });
+
+/**
+ * 发表评论
+ *
+ * 发表一条评论（一级或楼中楼）。
+ *
+ * 通过 x-bili-* 头识别登录用户；作者展示信息（昵称等）由列表接口按需从 pptr
+ * Postgres 只读取回，本服务不再冗余用户快照。客户端真实 IP 从网关注入的头里提取，
+ * 仅存原始地址。
+ */
+export const addCommentApiV1CommentAddPost = <ThrowOnError extends boolean = false>(options: Options<AddCommentApiV1CommentAddPostData, ThrowOnError>): RequestResult<AddCommentApiV1CommentAddPostResponses, AddCommentApiV1CommentAddPostErrors, ThrowOnError> => (options.client ?? client).post<AddCommentApiV1CommentAddPostResponses, AddCommentApiV1CommentAddPostErrors, ThrowOnError>({
+    url: '/api/v1/comment/add',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * 删除评论
+ *
+ * 删除评论（软删）。
+ *
+ * 权限：评论作者本人 / 内容作者（UP 主）/ 管理员。其余角色返回无权提示。
+ */
+export const deleteCommentApiV1CommentDelPost = <ThrowOnError extends boolean = false>(options: Options<DeleteCommentApiV1CommentDelPostData, ThrowOnError>): RequestResult<DeleteCommentApiV1CommentDelPostResponses, DeleteCommentApiV1CommentDelPostErrors, ThrowOnError> => (options.client ?? client).post<DeleteCommentApiV1CommentDelPostResponses, DeleteCommentApiV1CommentDelPostErrors, ThrowOnError>({
+    url: '/api/v1/comment/del',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * 一级评论列表
+ *
+ * 一级评论列表（含置顶评论）。
+ *
+ * 置顶评论不参与分页，始终单独返回并置于列表顶部；总数读评论区冗余计数，
+ * 不在本接口做 COUNT(*)。SQL 次数恒定（主列表 + 置顶 + 4 次批量回捞）。
+ */
+export const listMainApiV1CommentMainGet = <ThrowOnError extends boolean = false>(options: Options<ListMainApiV1CommentMainGetData, ThrowOnError>): RequestResult<ListMainApiV1CommentMainGetResponses, ListMainApiV1CommentMainGetErrors, ThrowOnError> => (options.client ?? client).get<ListMainApiV1CommentMainGetResponses, ListMainApiV1CommentMainGetErrors, ThrowOnError>({ url: '/api/v1/comment/main', ...options });
+
+/**
+ * 评论详情
+ *
+ * 单条评论详情。已删除 / 已下架的评论返回 404。
+ */
+export const commentDetailApiV1CommentDetailRpidGet = <ThrowOnError extends boolean = false>(options: Options<CommentDetailApiV1CommentDetailRpidGetData, ThrowOnError>): RequestResult<CommentDetailApiV1CommentDetailRpidGetResponses, CommentDetailApiV1CommentDetailRpidGetErrors, ThrowOnError> => (options.client ?? client).get<CommentDetailApiV1CommentDetailRpidGetResponses, CommentDetailApiV1CommentDetailRpidGetErrors, ThrowOnError>({ url: '/api/v1/comment/detail/{rpid}', ...options });
+
+/**
+ * 评论区计数
+ *
+ * 评论区计数（root_count / all_count）。
+ *
+ * 评论区尚未开区时返回全 0（不报错），前端可据此直接展示「还没有评论」。
+ */
+export const commentCountApiV1CommentCountGet = <ThrowOnError extends boolean = false>(options: Options<CommentCountApiV1CommentCountGetData, ThrowOnError>): RequestResult<CommentCountApiV1CommentCountGetResponses, CommentCountApiV1CommentCountGetErrors, ThrowOnError> => (options.client ?? client).get<CommentCountApiV1CommentCountGetResponses, CommentCountApiV1CommentCountGetErrors, ThrowOnError>({ url: '/api/v1/comment/count', ...options });
+
+/**
+ * 楼中楼展开
+ *
+ * 楼中楼（子评论）分页展开，用于「共 N 条回复」的加载更多。
+ *
+ * `total` 读根评论冗余 `rcount`，不 `COUNT(*)`；按 rpid 顺序即发布顺序。
+ */
+export const replyListApiV1CommentReplyGet = <ThrowOnError extends boolean = false>(options: Options<ReplyListApiV1CommentReplyGetData, ThrowOnError>): RequestResult<ReplyListApiV1CommentReplyGetResponses, ReplyListApiV1CommentReplyGetErrors, ThrowOnError> => (options.client ?? client).get<ReplyListApiV1CommentReplyGetResponses, ReplyListApiV1CommentReplyGetErrors, ThrowOnError>({ url: '/api/v1/comment/reply', ...options });
+
+/**
+ * 点赞/点踩/取消
+ *
+ * 对一条评论点赞 / 点踩 / 取消（NONE）。
+ *
+ * 幂等：重复点赞不会重复计数；赞 → 踩 → 取消的状态翻转在同一事务内修正计数。
+ * 被点赞会通过事件服务弱依赖地通知评论作者。
+ */
+export const commentActionApiV1CommentActionPost = <ThrowOnError extends boolean = false>(options: Options<CommentActionApiV1CommentActionPostData, ThrowOnError>): RequestResult<CommentActionApiV1CommentActionPostResponses, CommentActionApiV1CommentActionPostErrors, ThrowOnError> => (options.client ?? client).post<CommentActionApiV1CommentActionPostResponses, CommentActionApiV1CommentActionPostErrors, ThrowOnError>({
+    url: '/api/v1/comment/action',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * @用户搜索
+ *
+ * @ 面板昵称搜索：直连 pptr Postgres 按昵称 / 注册名前缀匹配（Phase 3.1）。
+ *
+ * 走前缀匹配 `keyword%`，对索引友好，不会退化成 `%keyword%` 全表扫描。
+ */
+export const atSearchApiV1CommentAtSearchGet = <ThrowOnError extends boolean = false>(options: Options<AtSearchApiV1CommentAtSearchGetData, ThrowOnError>): RequestResult<AtSearchApiV1CommentAtSearchGetResponses, AtSearchApiV1CommentAtSearchGetErrors, ThrowOnError> => (options.client ?? client).get<AtSearchApiV1CommentAtSearchGetResponses, AtSearchApiV1CommentAtSearchGetErrors, ThrowOnError>({ url: '/api/v1/comment/at/search', ...options });
+
+/**
+ * 置顶/取消置顶
+ *
+ * 置顶 / 取消置顶一条根评论。
+ *
+ * 权限：内容作者（评论区 up_mid）或管理员；全区唯一一条置顶，互斥覆盖。
+ */
+export const commentTopApiV1CommentTopPost = <ThrowOnError extends boolean = false>(options: Options<CommentTopApiV1CommentTopPostData, ThrowOnError>): RequestResult<CommentTopApiV1CommentTopPostResponses, CommentTopApiV1CommentTopPostErrors, ThrowOnError> => (options.client ?? client).post<CommentTopApiV1CommentTopPostResponses, CommentTopApiV1CommentTopPostErrors, ThrowOnError>({
+    url: '/api/v1/comment/top',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * 审核队列
+ *
+ * 审核队列。
+ *
+ * 可见范围按身份分层：
+ *
+ * - **root**：可查看全部状态的评论（默认全部，可用 `state` 收窄）；
+ * - **被单独授权的管理员**：只允许查看 `auditing`（待审核），
+ * 显式请求其他状态直接 403；评论正文（内容明文）对审核队列开放可见，
+ * 但明文 IP 仍仅 root 可见。
+ */
+export const auditQueueApiV1CommentAdminAuditGet = <ThrowOnError extends boolean = false>(options?: Options<AuditQueueApiV1CommentAdminAuditGetData, ThrowOnError>): RequestResult<AuditQueueApiV1CommentAdminAuditGetResponses, AuditQueueApiV1CommentAdminAuditGetErrors, ThrowOnError> => (options?.client ?? client).get<AuditQueueApiV1CommentAdminAuditGetResponses, AuditQueueApiV1CommentAdminAuditGetErrors, ThrowOnError>({ url: '/api/v1/comment/admin/audit', ...options });
+
+/**
+ * 人工审核
+ *
+ * 对一条评论执行审核操作（通过 / 驳回 / 下架 / 恢复）。
+ *
+ * 仅 root 管理员可设置过审/没过审（含将已 normal 的评论重新审核），其余管理员无此权限。
+ */
+export const auditCommentApiV1CommentAdminAuditPost = <ThrowOnError extends boolean = false>(options: Options<AuditCommentApiV1CommentAdminAuditPostData, ThrowOnError>): RequestResult<AuditCommentApiV1CommentAdminAuditPostResponses, AuditCommentApiV1CommentAdminAuditPostErrors, ThrowOnError> => (options.client ?? client).post<AuditCommentApiV1CommentAdminAuditPostResponses, AuditCommentApiV1CommentAdminAuditPostErrors, ThrowOnError>({
+    url: '/api/v1/comment/admin/audit',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * 批量人工审核
+ *
+ * 对一批评论执行同一审核操作（通过 / 驳回 / 下架 / 恢复）。
+ *
+ * 仅 root 管理员可操作。内部逐条复用单条审核逻辑（含通知投递）。
+ */
+export const bulkAuditCommentApiV1CommentAdminAuditBatchPost = <ThrowOnError extends boolean = false>(options: Options<BulkAuditCommentApiV1CommentAdminAuditBatchPostData, ThrowOnError>): RequestResult<BulkAuditCommentApiV1CommentAdminAuditBatchPostResponses, BulkAuditCommentApiV1CommentAdminAuditBatchPostErrors, ThrowOnError> => (options.client ?? client).post<BulkAuditCommentApiV1CommentAdminAuditBatchPostResponses, BulkAuditCommentApiV1CommentAdminAuditBatchPostErrors, ThrowOnError>({
+    url: '/api/v1/comment/admin/audit/batch',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * 评论内容来源
+ *
+ * 按 rpid 返回该评论的内容来源（评论区归属、UP 主、可跳转地址）。
+ *
+ * 管理端「内容来源」链接点击时按需拉取；不含评论正文，任意管理员可见。
+ */
+export const commentSourceApiV1CommentAdminSourceRpidGet = <ThrowOnError extends boolean = false>(options: Options<CommentSourceApiV1CommentAdminSourceRpidGetData, ThrowOnError>): RequestResult<CommentSourceApiV1CommentAdminSourceRpidGetResponses, CommentSourceApiV1CommentAdminSourceRpidGetErrors, ThrowOnError> => (options.client ?? client).get<CommentSourceApiV1CommentAdminSourceRpidGetResponses, CommentSourceApiV1CommentAdminSourceRpidGetErrors, ThrowOnError>({ url: '/api/v1/comment/admin/source/{rpid}', ...options });
+
+/**
+ * 查看原始IP（管理端）
+ *
+ * 查看一条评论的原始 IPv4 / IPv6（D3：仅管理端可见明文，root 专属）。
+ */
+export const adminIpApiV1CommentAdminIpRpidGet = <ThrowOnError extends boolean = false>(options: Options<AdminIpApiV1CommentAdminIpRpidGetData, ThrowOnError>): RequestResult<AdminIpApiV1CommentAdminIpRpidGetResponses, AdminIpApiV1CommentAdminIpRpidGetErrors, ThrowOnError> => (options.client ?? client).get<AdminIpApiV1CommentAdminIpRpidGetResponses, AdminIpApiV1CommentAdminIpRpidGetErrors, ThrowOnError>({ url: '/api/v1/comment/admin/ip/{rpid}', ...options });
+
+/**
+ * 评论统计
+ *
+ * 评论区全局统计（管理端低频查询，管理员可见）。
+ */
+export const adminStatsApiV1CommentAdminStatsGet = <ThrowOnError extends boolean = false>(options?: Options<AdminStatsApiV1CommentAdminStatsGetData, ThrowOnError>): RequestResult<AdminStatsApiV1CommentAdminStatsGetResponses, AdminStatsApiV1CommentAdminStatsGetErrors, ThrowOnError> => (options?.client ?? client).get<AdminStatsApiV1CommentAdminStatsGetResponses, AdminStatsApiV1CommentAdminStatsGetErrors, ThrowOnError>({ url: '/api/v1/comment/admin/stats', ...options });
+
+/**
+ * 定时拉取增量通知
+ *
+ * 拉取本用户可见的增量通知。
+ *
+ * 只返回 `id > cursor` 的通知，拉取后服务端会推进游标，
+ * 因此**重复调用不会拿到重复数据**（即使客户端丢了本地游标）。
+ * 每次拉取同时记一次用户活跃，用于后续推送策略分流。
+ */
+export const pullNotifyApiV1MessageNotifyPullGet = <ThrowOnError extends boolean = false>(options?: Options<PullNotifyApiV1MessageNotifyPullGetData, ThrowOnError>): RequestResult<PullNotifyApiV1MessageNotifyPullGetResponses, PullNotifyApiV1MessageNotifyPullGetErrors, ThrowOnError> => (options?.client ?? client).get<PullNotifyApiV1MessageNotifyPullGetResponses, PullNotifyApiV1MessageNotifyPullGetErrors, ThrowOnError>({ url: '/api/v1/message/notify/pull', ...options });
+
+/**
+ * 分页查看历史通知
+ *
+ * 分页查看历史通知（不推进拉取游标）。
+ */
+export const listNotifyApiV1MessageNotifyListGet = <ThrowOnError extends boolean = false>(options?: Options<ListNotifyApiV1MessageNotifyListGetData, ThrowOnError>): RequestResult<ListNotifyApiV1MessageNotifyListGetResponses, ListNotifyApiV1MessageNotifyListGetErrors, ThrowOnError> => (options?.client ?? client).get<ListNotifyApiV1MessageNotifyListGetResponses, ListNotifyApiV1MessageNotifyListGetErrors, ThrowOnError>({ url: '/api/v1/message/notify/list', ...options });
+
+/**
+ * 系统通知未读数
+ */
+export const unreadNotifyApiV1MessageNotifyUnreadGet = <ThrowOnError extends boolean = false>(options?: Options<UnreadNotifyApiV1MessageNotifyUnreadGetData, ThrowOnError>): RequestResult<UnreadNotifyApiV1MessageNotifyUnreadGetResponses, UnreadNotifyApiV1MessageNotifyUnreadGetErrors, ThrowOnError> => (options?.client ?? client).get<UnreadNotifyApiV1MessageNotifyUnreadGetResponses, UnreadNotifyApiV1MessageNotifyUnreadGetErrors, ThrowOnError>({ url: '/api/v1/message/notify/unread', ...options });
+
+/**
+ * 系统通知列表（模仿 B 站 feedsystem/system_notify/get）
+ *
+ * 模仿 B 站 `/x/v2/feedsystem/system_notify/get` 接口。
+ *
+ * 返回结构与 B 站保持一致：`code/msg/message/ttl` 外壳 + `data.system_notify_list`。
+ * 列表项字段（`cursor` 纳秒时间戳、`content` 为 `{"web": "..."}` 的 JSON 字符串、
+ * `type` 固定为 4、`is_send` 映射 `dispatched` 等）均与 B 站对齐。
+ * 评论审核驳回等系统通知会以同样形态出现在该列表中。
+ */
+export const systemNotifyBiliApiV1MessageNotifySystemGet = <ThrowOnError extends boolean = false>(options?: Options<SystemNotifyBiliApiV1MessageNotifySystemGetData, ThrowOnError>): RequestResult<SystemNotifyBiliApiV1MessageNotifySystemGetResponses, SystemNotifyBiliApiV1MessageNotifySystemGetErrors, ThrowOnError> => (options?.client ?? client).get<SystemNotifyBiliApiV1MessageNotifySystemGetResponses, SystemNotifyBiliApiV1MessageNotifySystemGetErrors, ThrowOnError>({ url: '/api/v1/message/notify/system', ...options });
+
+/**
+ * 标记通知已读
+ *
+ * 标记已读：传 notify_ids 精确标记，不传则全部已读。写入幂等。
+ */
+export const readNotifyApiV1MessageNotifyReadPost = <ThrowOnError extends boolean = false>(options: Options<ReadNotifyApiV1MessageNotifyReadPostData, ThrowOnError>): RequestResult<ReadNotifyApiV1MessageNotifyReadPostResponses, ReadNotifyApiV1MessageNotifyReadPostErrors, ThrowOnError> => (options.client ?? client).post<ReadNotifyApiV1MessageNotifyReadPostResponses, ReadNotifyApiV1MessageNotifyReadPostErrors, ThrowOnError>({
+    url: '/api/v1/message/notify/read',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * 删除通知（仅管理员，逐用户软删）
+ *
+ * 仅管理员可调用。
+ *
+ * 普通用户不允许删除系统通知（系统通知面向全体、内容一致，用户只能标记已读）；
+ * 删除需由管理员在管理界面操作。此处保留接口用于管理员按需清除指定用户的
+ * 通知可见性（仅该用户不可见，不影响通知本体与其他用户）。
+ */
+export const deleteNotifyApiV1MessageNotifyDeletePost = <ThrowOnError extends boolean = false>(options: Options<DeleteNotifyApiV1MessageNotifyDeletePostData, ThrowOnError>): RequestResult<DeleteNotifyApiV1MessageNotifyDeletePostResponses, DeleteNotifyApiV1MessageNotifyDeletePostErrors, ThrowOnError> => (options.client ?? client).post<DeleteNotifyApiV1MessageNotifyDeletePostResponses, DeleteNotifyApiV1MessageNotifyDeletePostErrors, ThrowOnError>({
+    url: '/api/v1/message/notify/delete',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * 发布系统通知（管理员）
+ *
+ * 发布一条系统通知。
+ *
+ * `publish_now=False` 存为草稿；`publish_at` 为未来时间即定时发布，
+ * 到点后由后台任务自动投递推送（活跃用户实时推、非活跃用户批量推）。
+ */
+export const createNotifyApiV1MessageNotifyAdminCreatePost = <ThrowOnError extends boolean = false>(options: Options<CreateNotifyApiV1MessageNotifyAdminCreatePostData, ThrowOnError>): RequestResult<CreateNotifyApiV1MessageNotifyAdminCreatePostResponses, CreateNotifyApiV1MessageNotifyAdminCreatePostErrors, ThrowOnError> => (options.client ?? client).post<CreateNotifyApiV1MessageNotifyAdminCreatePostResponses, CreateNotifyApiV1MessageNotifyAdminCreatePostErrors, ThrowOnError>({
+    url: '/api/v1/message/notify/admin/create',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * 修改系统通知（管理员）
+ */
+export const updateNotifyApiV1MessageNotifyAdminUpdateNotifyIdPost = <ThrowOnError extends boolean = false>(options: Options<UpdateNotifyApiV1MessageNotifyAdminUpdateNotifyIdPostData, ThrowOnError>): RequestResult<UpdateNotifyApiV1MessageNotifyAdminUpdateNotifyIdPostResponses, UpdateNotifyApiV1MessageNotifyAdminUpdateNotifyIdPostErrors, ThrowOnError> => (options.client ?? client).post<UpdateNotifyApiV1MessageNotifyAdminUpdateNotifyIdPostResponses, UpdateNotifyApiV1MessageNotifyAdminUpdateNotifyIdPostErrors, ThrowOnError>({
+    url: '/api/v1/message/notify/admin/update/{notify_id}',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * 撤回系统通知（管理员）
+ */
+export const revokeNotifyApiV1MessageNotifyAdminRevokeNotifyIdPost = <ThrowOnError extends boolean = false>(options: Options<RevokeNotifyApiV1MessageNotifyAdminRevokeNotifyIdPostData, ThrowOnError>): RequestResult<RevokeNotifyApiV1MessageNotifyAdminRevokeNotifyIdPostResponses, RevokeNotifyApiV1MessageNotifyAdminRevokeNotifyIdPostErrors, ThrowOnError> => (options.client ?? client).post<RevokeNotifyApiV1MessageNotifyAdminRevokeNotifyIdPostResponses, RevokeNotifyApiV1MessageNotifyAdminRevokeNotifyIdPostErrors, ThrowOnError>({ url: '/api/v1/message/notify/admin/revoke/{notify_id}', ...options });
+
+/**
+ * 通知列表（管理员）
+ */
+export const adminListNotifyApiV1MessageNotifyAdminListGet = <ThrowOnError extends boolean = false>(options?: Options<AdminListNotifyApiV1MessageNotifyAdminListGetData, ThrowOnError>): RequestResult<AdminListNotifyApiV1MessageNotifyAdminListGetResponses, AdminListNotifyApiV1MessageNotifyAdminListGetErrors, ThrowOnError> => (options?.client ?? client).get<AdminListNotifyApiV1MessageNotifyAdminListGetResponses, AdminListNotifyApiV1MessageNotifyAdminListGetErrors, ThrowOnError>({ url: '/api/v1/message/notify/admin/list', ...options });
+
+/**
+ * 上报互动事件
+ *
+ * 上报一条点赞 / 回复 / @事件。
+ *
+ * 内部依次经过：消息设置闸门 → 自赞过滤 → `dedup_key` 幂等 → 落库。
+ * 事件提醒是站内信，落库即送达（接收方经 /list / msg_feed 轮询读取），
+ * 不再做任何第三方渠道推送或实时 / 批量分流。重复上报只会返回
+ * `duplicated=True`，不会产生第二条提醒。
+ *
+ * 本接口面向内部服务调用（不要求登录态），mid 由请求体显式指定。
+ */
+export const reportEventApiV1MessageEventReportPost = <ThrowOnError extends boolean = false>(options: Options<ReportEventApiV1MessageEventReportPostData, ThrowOnError>): RequestResult<ReportEventApiV1MessageEventReportPostResponses, ReportEventApiV1MessageEventReportPostErrors, ThrowOnError> => (options.client ?? client).post<ReportEventApiV1MessageEventReportPostResponses, ReportEventApiV1MessageEventReportPostErrors, ThrowOnError>({
+    url: '/api/v1/message/event/report',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * 聚合展示互动提醒
+ *
+ * 按来源实体聚合的提醒卡片列表（消息中心首页）。
+ */
+export const aggregateEventApiV1MessageEventAggregateGet = <ThrowOnError extends boolean = false>(options?: Options<AggregateEventApiV1MessageEventAggregateGetData, ThrowOnError>): RequestResult<AggregateEventApiV1MessageEventAggregateGetResponses, AggregateEventApiV1MessageEventAggregateGetErrors, ThrowOnError> => (options?.client ?? client).get<AggregateEventApiV1MessageEventAggregateGetResponses, AggregateEventApiV1MessageEventAggregateGetErrors, ThrowOnError>({ url: '/api/v1/message/event/aggregate', ...options });
+
+/**
+ * 互动提醒明细列表
+ *
+ * 查看某个聚合分组下的事件明细（传 source_type + source_id 即可）。
+ */
+export const listEventApiV1MessageEventListGet = <ThrowOnError extends boolean = false>(options?: Options<ListEventApiV1MessageEventListGetData, ThrowOnError>): RequestResult<ListEventApiV1MessageEventListGetResponses, ListEventApiV1MessageEventListGetErrors, ThrowOnError> => (options?.client ?? client).get<ListEventApiV1MessageEventListGetResponses, ListEventApiV1MessageEventListGetErrors, ThrowOnError>({ url: '/api/v1/message/event/list', ...options });
+
+/**
+ * 标记互动提醒已读
+ *
+ * 标记已读：
+ *
+ * - 传 `event_ids` → 精确已读；
+ * - 传 `event_type` → 该类型一键已读；
+ * - 再加 `source_type + source_id` → 只清掉某一张聚合卡片。
+ */
+export const readEventApiV1MessageEventReadPost = <ThrowOnError extends boolean = false>(options: Options<ReadEventApiV1MessageEventReadPostData, ThrowOnError>): RequestResult<ReadEventApiV1MessageEventReadPostResponses, ReadEventApiV1MessageEventReadPostErrors, ThrowOnError> => (options.client ?? client).post<ReadEventApiV1MessageEventReadPostResponses, ReadEventApiV1MessageEventReadPostErrors, ThrowOnError>({
+    url: '/api/v1/message/event/read',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * 删除互动提醒
+ */
+export const deleteEventApiV1MessageEventDeletePost = <ThrowOnError extends boolean = false>(options: Options<DeleteEventApiV1MessageEventDeletePostData, ThrowOnError>): RequestResult<DeleteEventApiV1MessageEventDeletePostResponses, DeleteEventApiV1MessageEventDeletePostErrors, ThrowOnError> => (options.client ?? client).post<DeleteEventApiV1MessageEventDeletePostResponses, DeleteEventApiV1MessageEventDeletePostErrors, ThrowOnError>({
+    url: '/api/v1/message/event/delete',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * 各类型互动未读数
+ *
+ * 一次查询返回 like / reply / at 的未读数，供前端渲染红点。
+ */
+export const unreadEventApiV1MessageEventUnreadGet = <ThrowOnError extends boolean = false>(options?: Options<UnreadEventApiV1MessageEventUnreadGetData, ThrowOnError>): RequestResult<UnreadEventApiV1MessageEventUnreadGetResponses, UnreadEventApiV1MessageEventUnreadGetErrors, ThrowOnError> => (options?.client ?? client).get<UnreadEventApiV1MessageEventUnreadGetResponses, UnreadEventApiV1MessageEventUnreadGetErrors, ThrowOnError>({ url: '/api/v1/message/event/unread', ...options });
+
+/**
+ * 发送私信
+ *
+ * 发送一条私信。
+ *
+ * 同步部分只写「双方索引行 + 双方会话行」，正文投递到 MQ 由消费者写入
+ * msgkey 路由到的月度分库分表——发送接口的 RT 不受正文长度与建表 DDL 影响。
+ * 响应里的 `content_async=False` 表示 MQ 不可用，已降级为同步落库。
+ *
+ * 若对方关闭了陌生人私信，返回 `filtered=True`：消息只保留在发送方视角。
+ */
+export const sendDmApiV1MessageDmSendPost = <ThrowOnError extends boolean = false>(options: Options<SendDmApiV1MessageDmSendPostData, ThrowOnError>): RequestResult<SendDmApiV1MessageDmSendPostResponses, SendDmApiV1MessageDmSendPostErrors, ThrowOnError> => (options.client ?? client).post<SendDmApiV1MessageDmSendPostResponses, SendDmApiV1MessageDmSendPostErrors, ThrowOnError>({
+    url: '/api/v1/message/dm/send',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * 会话列表
+ */
+export const listSessionsApiV1MessageDmSessionsGet = <ThrowOnError extends boolean = false>(options?: Options<ListSessionsApiV1MessageDmSessionsGetData, ThrowOnError>): RequestResult<ListSessionsApiV1MessageDmSessionsGetResponses, ListSessionsApiV1MessageDmSessionsGetErrors, ThrowOnError> => (options?.client ?? client).get<ListSessionsApiV1MessageDmSessionsGetResponses, ListSessionsApiV1MessageDmSessionsGetErrors, ThrowOnError>({ url: '/api/v1/message/dm/sessions', ...options });
+
+/**
+ * 删除会话
+ */
+export const deleteSessionApiV1MessageDmSessionDeletePost = <ThrowOnError extends boolean = false>(options: Options<DeleteSessionApiV1MessageDmSessionDeletePostData, ThrowOnError>): RequestResult<DeleteSessionApiV1MessageDmSessionDeletePostResponses, DeleteSessionApiV1MessageDmSessionDeletePostErrors, ThrowOnError> => (options.client ?? client).post<DeleteSessionApiV1MessageDmSessionDeletePostResponses, DeleteSessionApiV1MessageDmSessionDeletePostErrors, ThrowOnError>({
+    url: '/api/v1/message/dm/session/delete',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * 拉取聊天记录
+ *
+ * 按 msgkey 游标倒序翻页拉取聊天记录。
+ *
+ * 正文按 msgkey 批量回捞分片；若异步落库尚未完成，
+ * 会回落到索引行冗余的摘要（`content_ready=False`），保证会话流始终可读。
+ */
+export const listMessagesApiV1MessageDmMessagesGet = <ThrowOnError extends boolean = false>(options: Options<ListMessagesApiV1MessageDmMessagesGetData, ThrowOnError>): RequestResult<ListMessagesApiV1MessageDmMessagesGetResponses, ListMessagesApiV1MessageDmMessagesGetErrors, ThrowOnError> => (options.client ?? client).get<ListMessagesApiV1MessageDmMessagesGetResponses, ListMessagesApiV1MessageDmMessagesGetErrors, ThrowOnError>({ url: '/api/v1/message/dm/messages', ...options });
+
+/**
+ * 删除私信消息
+ *
+ * 删除消息：只影响自己视角，对方仍能看到。
+ */
+export const deleteMessagesApiV1MessageDmDeletePost = <ThrowOnError extends boolean = false>(options: Options<DeleteMessagesApiV1MessageDmDeletePostData, ThrowOnError>): RequestResult<DeleteMessagesApiV1MessageDmDeletePostResponses, DeleteMessagesApiV1MessageDmDeletePostErrors, ThrowOnError> => (options.client ?? client).post<DeleteMessagesApiV1MessageDmDeletePostResponses, DeleteMessagesApiV1MessageDmDeletePostErrors, ThrowOnError>({
+    url: '/api/v1/message/dm/delete',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * 撤回私信消息
+ *
+ * 撤回消息：双方均不可见，并物理清除分片中的正文。
+ *
+ * 仅发送者本人可撤回，且必须在配置的时间窗口内
+ * （时间判定直接取 msgkey 内嵌的时间戳，无需回查数据库）。
+ */
+export const recallMessageApiV1MessageDmRecallPost = <ThrowOnError extends boolean = false>(options: Options<RecallMessageApiV1MessageDmRecallPostData, ThrowOnError>): RequestResult<RecallMessageApiV1MessageDmRecallPostResponses, RecallMessageApiV1MessageDmRecallPostErrors, ThrowOnError> => (options.client ?? client).post<RecallMessageApiV1MessageDmRecallPostResponses, RecallMessageApiV1MessageDmRecallPostErrors, ThrowOnError>({
+    url: '/api/v1/message/dm/recall',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * 标记会话已读
+ */
+export const ackSessionApiV1MessageDmAckPost = <ThrowOnError extends boolean = false>(options: Options<AckSessionApiV1MessageDmAckPostData, ThrowOnError>): RequestResult<AckSessionApiV1MessageDmAckPostResponses, AckSessionApiV1MessageDmAckPostErrors, ThrowOnError> => (options.client ?? client).post<AckSessionApiV1MessageDmAckPostResponses, AckSessionApiV1MessageDmAckPostErrors, ThrowOnError>({
+    url: '/api/v1/message/dm/ack',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * 私信未读总数
+ */
+export const unreadDmApiV1MessageDmUnreadGet = <ThrowOnError extends boolean = false>(options?: Options<UnreadDmApiV1MessageDmUnreadGetData, ThrowOnError>): RequestResult<UnreadDmApiV1MessageDmUnreadGetResponses, UnreadDmApiV1MessageDmUnreadGetErrors, ThrowOnError> => (options?.client ?? client).get<UnreadDmApiV1MessageDmUnreadGetResponses, UnreadDmApiV1MessageDmUnreadGetErrors, ThrowOnError>({ url: '/api/v1/message/dm/unread', ...options });
+
+/**
+ * 私信审核队列
+ *
+ * 审核队列。
+ *
+ * 可见范围按身份分层：
+ *
+ * - **root**：可查看全部状态的私信（默认全部，可用 `state` 收窄）；
+ * - **被单独授权的管理员**：只允许查看 `auditing`（待审核），
+ * 显式请求其他状态直接 403；私信正文（内容明文）对审核队列开放可见。
+ */
+export const auditQueueApiV1MessageDmAdminAuditGet = <ThrowOnError extends boolean = false>(options?: Options<AuditQueueApiV1MessageDmAdminAuditGetData, ThrowOnError>): RequestResult<AuditQueueApiV1MessageDmAdminAuditGetResponses, AuditQueueApiV1MessageDmAdminAuditGetErrors, ThrowOnError> => (options?.client ?? client).get<AuditQueueApiV1MessageDmAdminAuditGetResponses, AuditQueueApiV1MessageDmAdminAuditGetErrors, ThrowOnError>({ url: '/api/v1/message/dm/admin/audit', ...options });
+
+/**
+ * 私信人工审核
+ *
+ * 对一条私信执行审核操作（通过 / 驳回 / 下架 / 恢复）。
+ *
+ * 仅 root 管理员可设置过审/没过审，其余管理员无此权限。
+ */
+export const auditDmApiV1MessageDmAdminAuditPost = <ThrowOnError extends boolean = false>(options: Options<AuditDmApiV1MessageDmAdminAuditPostData, ThrowOnError>): RequestResult<AuditDmApiV1MessageDmAdminAuditPostResponses, AuditDmApiV1MessageDmAdminAuditPostErrors, ThrowOnError> => (options.client ?? client).post<AuditDmApiV1MessageDmAdminAuditPostResponses, AuditDmApiV1MessageDmAdminAuditPostErrors, ThrowOnError>({
+    url: '/api/v1/message/dm/admin/audit',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * 批量私信人工审核
+ *
+ * 对一批私信执行同一审核操作（通过 / 驳回 / 下架 / 恢复）。
+ *
+ * 仅 root 管理员可操作。内部逐条复用单条审核逻辑（含通知投递）。
+ */
+export const bulkAuditDmApiV1MessageDmAdminAuditBatchPost = <ThrowOnError extends boolean = false>(options: Options<BulkAuditDmApiV1MessageDmAdminAuditBatchPostData, ThrowOnError>): RequestResult<BulkAuditDmApiV1MessageDmAdminAuditBatchPostResponses, BulkAuditDmApiV1MessageDmAdminAuditBatchPostErrors, ThrowOnError> => (options.client ?? client).post<BulkAuditDmApiV1MessageDmAdminAuditBatchPostResponses, BulkAuditDmApiV1MessageDmAdminAuditBatchPostErrors, ThrowOnError>({
+    url: '/api/v1/message/dm/admin/audit/batch',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * 私信会话上下文（内容来源）
+ *
+ * 按 session_key（或 msgkey 反查）拉取该会话的消息上下文。
+ *
+ * 审核队列里的一条私信是孤立的，没有上下文无法判断语境；管理端点击
+ * 「内容来源」即调用本接口查看整段会话（内容明文对审核队列开放可见）。
+ */
+export const sessionContextApiV1MessageDmAdminSessionGet = <ThrowOnError extends boolean = false>(options?: Options<SessionContextApiV1MessageDmAdminSessionGetData, ThrowOnError>): RequestResult<SessionContextApiV1MessageDmAdminSessionGetResponses, SessionContextApiV1MessageDmAdminSessionGetErrors, ThrowOnError> => (options?.client ?? client).get<SessionContextApiV1MessageDmAdminSessionGetResponses, SessionContextApiV1MessageDmAdminSessionGetErrors, ThrowOnError>({ url: '/api/v1/message/dm/admin/session', ...options });
+
+/**
+ * 私信统计
+ *
+ * 私信全局统计（管理端低频查询，管理员可见）。
+ */
+export const adminStatsApiV1MessageDmAdminStatsGet = <ThrowOnError extends boolean = false>(options?: Options<AdminStatsApiV1MessageDmAdminStatsGetData, ThrowOnError>): RequestResult<AdminStatsApiV1MessageDmAdminStatsGetResponses, AdminStatsApiV1MessageDmAdminStatsGetErrors, ThrowOnError> => (options?.client ?? client).get<AdminStatsApiV1MessageDmAdminStatsGetResponses, AdminStatsApiV1MessageDmAdminStatsGetErrors, ThrowOnError>({ url: '/api/v1/message/dm/admin/stats', ...options });
+
+/**
+ * 授予消息管理端权限（仅 root）
+ *
+ * 授予 / 更新某用户的消息管理端权限。
+ *
+ * 仅 root 可调用；root 专属权限（查看内容明文 / 设置过审没过审）会被自动剔除，
+ * 不会落入 `msg_admin` 表。
+ */
+export const grantAdminApiV1MessageAdminGrantPost = <ThrowOnError extends boolean = false>(options: Options<GrantAdminApiV1MessageAdminGrantPostData, ThrowOnError>): RequestResult<GrantAdminApiV1MessageAdminGrantPostResponses, GrantAdminApiV1MessageAdminGrantPostErrors, ThrowOnError> => (options.client ?? client).post<GrantAdminApiV1MessageAdminGrantPostResponses, GrantAdminApiV1MessageAdminGrantPostErrors, ThrowOnError>({
+    url: '/api/v1/message/admin/grant',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * 撤销消息管理端权限（仅 root）
+ *
+ * 撤销某用户的消息管理端权限（仅 root）。
+ */
+export const revokeAdminApiV1MessageAdminRevokePost = <ThrowOnError extends boolean = false>(options: Options<RevokeAdminApiV1MessageAdminRevokePostData, ThrowOnError>): RequestResult<RevokeAdminApiV1MessageAdminRevokePostResponses, RevokeAdminApiV1MessageAdminRevokePostErrors, ThrowOnError> => (options.client ?? client).post<RevokeAdminApiV1MessageAdminRevokePostResponses, RevokeAdminApiV1MessageAdminRevokePostErrors, ThrowOnError>({
+    url: '/api/v1/message/admin/revoke',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * 消息管理端管理员列表（仅 root）
+ *
+ * 分页列出全部消息管理端管理员（仅 root）。
+ */
+export const listAdminsApiV1MessageAdminListGet = <ThrowOnError extends boolean = false>(options?: Options<ListAdminsApiV1MessageAdminListGetData, ThrowOnError>): RequestResult<ListAdminsApiV1MessageAdminListGetResponses, ListAdminsApiV1MessageAdminListGetErrors, ThrowOnError> => (options?.client ?? client).get<ListAdminsApiV1MessageAdminListGetResponses, ListAdminsApiV1MessageAdminListGetErrors, ThrowOnError>({ url: '/api/v1/message/admin/list', ...options });
+
+/**
+ * 当前用户的管理端权限状态
+ *
+ * 返回当前登录用户是否为消息管理端管理员及其权限（前端据此控制可见性）。
+ */
+export const myStatusApiV1MessageAdminMeGet = <ThrowOnError extends boolean = false>(options?: Options<MyStatusApiV1MessageAdminMeGetData, ThrowOnError>): RequestResult<MyStatusApiV1MessageAdminMeGetResponses, MyStatusApiV1MessageAdminMeGetErrors, ThrowOnError> => (options?.client ?? client).get<MyStatusApiV1MessageAdminMeGetResponses, MyStatusApiV1MessageAdminMeGetErrors, ThrowOnError>({ url: '/api/v1/message/admin/me', ...options });
+
+/**
+ * 封禁用户（按服务）
+ *
+ * 批量封禁用户（审核联动）。
+ *
+ * 按服务维度（comment / dm）封禁，给出理由与封禁时长
+ * （temporary + duration_days 限时 / permanent 永久）。
+ * 按服务逐项鉴权：请求含 comment 需 comment:ban、含 dm 需 dm:ban。
+ */
+export const banUsers = <ThrowOnError extends boolean = false>(options: Options<BanUsersData, ThrowOnError>): RequestResult<BanUsersResponses, BanUsersErrors, ThrowOnError> => (options.client ?? client).post<BanUsersResponses, BanUsersErrors, ThrowOnError>({
+    url: '/api/v1/message/admin/ban',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * 解封用户（按服务）
+ *
+ * 批量解封用户（审核联动）。
+ *
+ * 不传 `ban_services` 时解封该用户全部服务（需拥有 comment:ban 与 dm:ban 全部权限）；
+ * 传则仅解除指定服务，并逐项校验对应权限。
+ */
+export const unbanUsers = <ThrowOnError extends boolean = false>(options: Options<UnbanUsersData, ThrowOnError>): RequestResult<UnbanUsersResponses, UnbanUsersErrors, ThrowOnError> => (options.client ?? client).post<UnbanUsersResponses, UnbanUsersErrors, ThrowOnError>({
+    url: '/api/v1/message/admin/unban',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * 封禁记录列表
+ *
+ * 分页查看封禁记录（root 或拥有 `user:ban-view` 权限的管理员）。
+ */
+export const listBans = <ThrowOnError extends boolean = false>(options?: Options<ListBansData, ThrowOnError>): RequestResult<ListBansResponses, ListBansErrors, ThrowOnError> => (options?.client ?? client).get<ListBansResponses, ListBansErrors, ThrowOnError>({ url: '/api/v1/message/admin/ban/list', ...options });
+
+/**
+ * 查询用户封禁状态
+ *
+ * 查询某用户在各服务的封禁状态（实时计算到期）。
+ */
+export const banStatus = <ThrowOnError extends boolean = false>(options: Options<BanStatusData, ThrowOnError>): RequestResult<BanStatusResponses, BanStatusErrors, ThrowOnError> => (options.client ?? client).get<BanStatusResponses, BanStatusErrors, ThrowOnError>({ url: '/api/v1/message/admin/ban/status', ...options });
+
+/**
+ * 获取消息设置
+ *
+ * 获取当前用户的消息设置，首次访问时按「全部开启」自动初始化。
+ */
+export const getSettingApiV1MessageSettingGet = <ThrowOnError extends boolean = false>(options?: Options<GetSettingApiV1MessageSettingGetData, ThrowOnError>): RequestResult<GetSettingApiV1MessageSettingGetResponses, GetSettingApiV1MessageSettingGetErrors, ThrowOnError> => (options?.client ?? client).get<GetSettingApiV1MessageSettingGetResponses, GetSettingApiV1MessageSettingGetErrors, ThrowOnError>({ url: '/api/v1/message/setting', ...options });
+
+/**
+ * 更新消息设置
+ *
+ * 部分更新：只写入本次显式传入的字段，未传字段保持原值。
+ *
+ * 关闭某类开关后，对应提醒会在**上报阶段就被短路**，不会落库也不会推送。
+ */
+export const updateSettingApiV1MessageSettingUpdatePost = <ThrowOnError extends boolean = false>(options: Options<UpdateSettingApiV1MessageSettingUpdatePostData, ThrowOnError>): RequestResult<UpdateSettingApiV1MessageSettingUpdatePostResponses, UpdateSettingApiV1MessageSettingUpdatePostErrors, ThrowOnError> => (options.client ?? client).post<UpdateSettingApiV1MessageSettingUpdatePostResponses, UpdateSettingApiV1MessageSettingUpdatePostErrors, ThrowOnError>({
+    url: '/api/v1/message/setting/update',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * 查看自身活跃度快照
+ *
+ * 活跃度快照：`is_active=True` 的用户走实时推送，否则进批量聚合推送。
+ */
+export const getActivityApiV1MessageSettingActivityGet = <ThrowOnError extends boolean = false>(options?: Options<GetActivityApiV1MessageSettingActivityGetData, ThrowOnError>): RequestResult<GetActivityApiV1MessageSettingActivityGetResponses, GetActivityApiV1MessageSettingActivityGetErrors, ThrowOnError> => (options?.client ?? client).get<GetActivityApiV1MessageSettingActivityGetResponses, GetActivityApiV1MessageSettingActivityGetErrors, ThrowOnError>({ url: '/api/v1/message/setting/activity', ...options });
+
+/**
+ * 批量查询用户信息（按 mid）
+ *
+ * 按 mid 批量回查用户展示信息（昵称 / 头像 / 等级 / 大会员 / 性别 / 签名）。
+ *
+ * 用于审核列表里把作者 `mid` 渲染成具体用户名，并支持悬浮查看详情。
+ * 数据从 pptr Postgres 只读取回；mid 不存在（或已软删）不会报错，仅不出现在返回中。
+ */
+export const batchUserInfoApiV1MessageAdminUserBatchGet = <ThrowOnError extends boolean = false>(options?: Options<BatchUserInfoApiV1MessageAdminUserBatchGetData, ThrowOnError>): RequestResult<BatchUserInfoApiV1MessageAdminUserBatchGetResponses, BatchUserInfoApiV1MessageAdminUserBatchGetErrors, ThrowOnError> => (options?.client ?? client).get<BatchUserInfoApiV1MessageAdminUserBatchGetResponses, BatchUserInfoApiV1MessageAdminUserBatchGetErrors, ThrowOnError>({ url: '/api/v1/message/admin/user/batch', ...options });
+
+/**
+ * 管理端用户搜索（按昵称 / 注册名 / mid / 邮箱）
+ *
+ * 按关键字搜索 pptr 用户（管理端，仅系统管理员 root 可调用）。
+ *
+ * 请求参数（`keyword` / `offset` / `limit`）与响应模型 `PptrUserSearchResult`
+ * 均来自 `bili_common.models`，统一管理。
+ *
+ * 返回 `StandardResponse`（`code=0` 表示成功，与系统其余接口一致），其 `data`
+ * 为 `PptrUserSearchResult`：`items` 为当前页命中列表，`total` 为满足条件的总命中数
+ * （用于分页器展示）。分页采用 `offset + limit`，滚动加载时累加 `offset` 即可拉取下一批。
+ * 精确 mid 命中优先于模糊匹配。
+ */
+export const searchUsersApiV1MessageAdminUserSearchGet = <ThrowOnError extends boolean = false>(options?: Options<SearchUsersApiV1MessageAdminUserSearchGetData, ThrowOnError>): RequestResult<SearchUsersApiV1MessageAdminUserSearchGetResponses, SearchUsersApiV1MessageAdminUserSearchGetErrors, ThrowOnError> => (options?.client ?? client).get<SearchUsersApiV1MessageAdminUserSearchGetResponses, SearchUsersApiV1MessageAdminUserSearchGetErrors, ThrowOnError>({ url: '/api/v1/message/admin/user/search', ...options });
+
+/**
+ * 投递推送到队列
  *
  * 投递一条推送请求到 RabbitMQ，由 message-service 消费者异步分发。
  *
@@ -47,7 +728,7 @@ export const pushMessageApiV1MessagePushPushPost = <ThrowOnError extends boolean
 });
 
 /**
- * Test Push
+ * 立即发送测试推送
  *
  * 立即发送一条测试推送（不经过队列），便于前端 / 用户验证渠道配置。
  */
@@ -61,7 +742,7 @@ export const testPushApiV1MessagePushTestPost = <ThrowOnError extends boolean = 
 });
 
 /**
- * Submit Feedback
+ * 提交用户反馈
  *
  * 前端提交反馈，仅推送到站长自己的推送设置（全局 message_config）。
  *
@@ -79,3 +760,130 @@ export const submitFeedbackApiV1MessagePushFeedbackPost = <ThrowOnError extends 
         ...options.headers
     }
 });
+
+/**
+ * 从 JWT 解析用户身份（供网关中间件调用，不依赖 x-bili-mid）
+ *
+ * 从 Authorization Bearer JWT 或 x-bili-jwt 头解析用户身份。
+ *
+ * 供 be-gateway 的 userInfoPreFetchMiddleware 调用：
+ * be-gateway 不再自行解析 JWT，改为调用本端点获取用户身份后注入 x-bili-* 头。
+ *
+ * 本端点不依赖 x-bili-mid（避免循环依赖），直接从 JWT 载荷提取 uid 等字段。
+ * JWT 验签由 jwt_service.decode_token 完成（HS256 + 共享密钥）。
+ */
+export const identifyUserApiV1UserIdentifyGet = <ThrowOnError extends boolean = false>(options?: Options<IdentifyUserApiV1UserIdentifyGetData, ThrowOnError>): RequestResult<IdentifyUserApiV1UserIdentifyGetResponses, IdentifyUserApiV1UserIdentifyGetErrors, ThrowOnError> => (options?.client ?? client).get<IdentifyUserApiV1UserIdentifyGetResponses, IdentifyUserApiV1UserIdentifyGetErrors, ThrowOnError>({ url: '/api/v1/user/identify', ...options });
+
+/**
+ * 获取当前登录用户的导航信息（含等级 / 角色 / 头像）
+ *
+ * 返回当前登录用户的导航栏展示信息。
+ *
+ * 含每日首次登录加经验（幂等）、等级计算、邮件脱敏；
+ * 与 pptr 旧 `get_user_nav_with_level` 行为一致；加经验失败不影响导航返回。
+ *
+ * 同时检查 `x-bili-jwt` 头中的 JWT 是否需要续期（非当天签发的 token 需要刷新），
+ * 若需要则签发新 token 并刷新 Casdoor token，将新 token 注入 `jwt_token` 字段。
+ */
+export const getUserNavApiV1UserNavGet = <ThrowOnError extends boolean = false>(options?: Options<GetUserNavApiV1UserNavGetData, ThrowOnError>): RequestResult<GetUserNavApiV1UserNavGetResponses, GetUserNavApiV1UserNavGetErrors, ThrowOnError> => (options?.client ?? client).get<GetUserNavApiV1UserNavGetResponses, GetUserNavApiV1UserNavGetErrors, ThrowOnError>({ url: '/api/v1/user/nav', ...options });
+
+/**
+ * 获取当前登录用户的个人资料（昵称 / 注册名 / 签名 / 性别 / 生日）
+ *
+ * 返回当前登录用户的个人资料，供「用户基本信息设置」页面回填表单。
+ *
+ * 数据来自 pptr Postgres 的 TUserInfo / TUserDetail，与前端
+ * `User_base_info_config_form` 字段对齐：
+ * - uname     <- TUserDetail.uname（可改昵称）
+ * - userid    <- TUserInfo.user_name（注册名，前端展示为「用户名」）
+ * - usersign  <- TUserDetail.sign（个性签名）
+ * - sex       <- TUserDetail.sex
+ * - birthday  <- TUserDetail.birthday（ISO 字符串）
+ * - mid       <- TUserInfo.uid
+ * - email     <- TUserDetail.email
+ * - avatar    <- TUserDetail.avatar
+ */
+export const getUserInfoApiV1UserUserInfoGet = <ThrowOnError extends boolean = false>(options?: Options<GetUserInfoApiV1UserUserInfoGetData, ThrowOnError>): RequestResult<GetUserInfoApiV1UserUserInfoGetResponses, GetUserInfoApiV1UserUserInfoGetErrors, ThrowOnError> => (options?.client ?? client).get<GetUserInfoApiV1UserUserInfoGetResponses, GetUserInfoApiV1UserUserInfoGetErrors, ThrowOnError>({ url: '/api/v1/user/user_info', ...options });
+
+/**
+ * 更新当前登录用户的个人资料
+ *
+ * 更新昵称 / 签名 / 性别 / 生日。
+ *
+ * 只能修改本人资料：`uid` 固定取自鉴权身份（`x-bili-mid`），不接受入参覆盖。
+ * TUserNameRecord 表已移除，不再记录昵称历史。
+ */
+export const updateUserInfoApiV1UserUserInfoUpdatePost = <ThrowOnError extends boolean = false>(options: Options<UpdateUserInfoApiV1UserUserInfoUpdatePostData, ThrowOnError>): RequestResult<UpdateUserInfoApiV1UserUserInfoUpdatePostResponses, UpdateUserInfoApiV1UserUserInfoUpdatePostErrors, ThrowOnError> => (options.client ?? client).post<UpdateUserInfoApiV1UserUserInfoUpdatePostResponses, UpdateUserInfoApiV1UserUserInfoUpdatePostErrors, ThrowOnError>({
+    url: '/api/v1/user/user_info/update',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * 设置用户角色（仅系统管理员 root 可操作）
+ *
+ * 把目标用户的角色调整为指定值。
+ *
+ * 约束（与 pptr 旧实现一致）：
+ * - 仅 root 可调用；
+ * - 不允许修改自己的角色（防止管理员误把自己降级导致系统无管理员）；
+ * - be-message 服务层额外保护：root 角色不会被降级覆盖。
+ */
+export const setUserRoleApiV1UserRoleSetPost = <ThrowOnError extends boolean = false>(options: Options<SetUserRoleApiV1UserRoleSetPostData, ThrowOnError>): RequestResult<SetUserRoleApiV1UserRoleSetPostResponses, SetUserRoleApiV1UserRoleSetPostErrors, ThrowOnError> => (options.client ?? client).post<SetUserRoleApiV1UserRoleSetPostResponses, SetUserRoleApiV1UserRoleSetPostErrors, ThrowOnError>({
+    url: '/api/v1/user/role/set',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * 按昵称 / 注册名 / mid / 邮箱搜索用户（仅 root）
+ *
+ * 搜索用户，供「授予管理端权限」等场景先行查找目标用户。
+ *
+ * 仅 root 可调用。分页采用 `offset + limit`，`has_more` 指示是否还有下一页。
+ */
+export const searchUsersApiV1UserSearchGet = <ThrowOnError extends boolean = false>(options?: Options<SearchUsersApiV1UserSearchGetData, ThrowOnError>): RequestResult<SearchUsersApiV1UserSearchGetResponses, SearchUsersApiV1UserSearchGetErrors, ThrowOnError> => (options?.client ?? client).get<SearchUsersApiV1UserSearchGetResponses, SearchUsersApiV1UserSearchGetErrors, ThrowOnError>({ url: '/api/v1/user/search', ...options });
+
+/**
+ * 刷新当前登录用户的 JWT 令牌
+ *
+ * 刷新当前登录用户的 JWT 令牌，同时同步刷新 Casdoor OAuth token。
+ *
+ * 与 pptr 旧 `refresh_token` 行为一致：从用户数据库读取最新信息
+ * （含 level / role），签发新 token 并刷新 Casdoor token。
+ */
+export const refreshTokenApiV1UserRefreshTokenPost = <ThrowOnError extends boolean = false>(options?: Options<RefreshTokenApiV1UserRefreshTokenPostData, ThrowOnError>): RequestResult<RefreshTokenApiV1UserRefreshTokenPostResponses, RefreshTokenApiV1UserRefreshTokenPostErrors, ThrowOnError> => (options?.client ?? client).post<RefreshTokenApiV1UserRefreshTokenPostResponses, RefreshTokenApiV1UserRefreshTokenPostErrors, ThrowOnError>({ url: '/api/v1/user/refresh_token', ...options });
+
+/**
+ * 获取当前登录用户在 Casdoor 的完整信息（如积分 score、余额等）
+ *
+ * 获取当前登录用户在 Casdoor 侧的完整信息。
+ *
+ * 仅允许查询本人。自动从 pptr Postgres TUserInfo.pwd 取回 Casdoor access_token，
+ * 以「用户调用」模式查询；若库中无 token 则回退为「service 调用」模式。
+ */
+export const getCasdoorUserInfoApiV1UserCasdoorInfoGet = <ThrowOnError extends boolean = false>(options?: Options<GetCasdoorUserInfoApiV1UserCasdoorInfoGetData, ThrowOnError>): RequestResult<GetCasdoorUserInfoApiV1UserCasdoorInfoGetResponses, GetCasdoorUserInfoApiV1UserCasdoorInfoGetErrors, ThrowOnError> => (options?.client ?? client).get<GetCasdoorUserInfoApiV1UserCasdoorInfoGetResponses, GetCasdoorUserInfoApiV1UserCasdoorInfoGetErrors, ThrowOnError>({ url: '/api/v1/user/casdoor/info', ...options });
+
+/**
+ * 用户退出登录
+ *
+ * 用户退出登录。
+ *
+ * 注意：本服务不维护 JWT 黑名单（签发的 token 有效期内仍可被使用）。
+ * 前端应在收到成功响应后删除本地存储的 JWT token。
+ * 如果需更强的安全性，后续可引入 DB 黑名单或 Redis 机制。
+ */
+export const logoutApiV1UserLogoutPost = <ThrowOnError extends boolean = false>(options?: Options<LogoutApiV1UserLogoutPostData, ThrowOnError>): RequestResult<LogoutApiV1UserLogoutPostResponses, LogoutApiV1UserLogoutPostErrors, ThrowOnError> => (options?.client ?? client).post<LogoutApiV1UserLogoutPostResponses, LogoutApiV1UserLogoutPostErrors, ThrowOnError>({ url: '/api/v1/user/logout', ...options });
+
+/**
+ * Casdoor OAuth2 登录回调
+ *
+ * Casdoor 登录成功后重定向到本端点，携带授权码 code。本端点处理：exchange code → 获取/创建用户 → 签发 JWT → 重定向到前端。前端回调地址：FRONTEND_URL/app/casdoor-callback?token=xxx&uid=xxx&user_name=xxx
+ */
+export const casdoorCallbackApiV1UserCasdoorCallbackGet = <ThrowOnError extends boolean = false>(options?: Options<CasdoorCallbackApiV1UserCasdoorCallbackGetData, ThrowOnError>): RequestResult<CasdoorCallbackApiV1UserCasdoorCallbackGetResponses, CasdoorCallbackApiV1UserCasdoorCallbackGetErrors, ThrowOnError> => (options?.client ?? client).get<CasdoorCallbackApiV1UserCasdoorCallbackGetResponses, CasdoorCallbackApiV1UserCasdoorCallbackGetErrors, ThrowOnError>({ url: '/api/v1/user/casdoor/callback', ...options });

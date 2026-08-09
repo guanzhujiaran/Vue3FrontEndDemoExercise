@@ -16,9 +16,11 @@ export interface UserNavModel {
   level?: string
   role?: string
   role_info?: UserRoleInfo
-  face: string
+  face: string | null
   email: string
   level_info: UserLevelInfo
+  /** 当 JWT 需续期时，pptr 网关会在 nav 响应中注入新 token */
+  jwt_token?: string
 }
 
 export interface UserInfo {

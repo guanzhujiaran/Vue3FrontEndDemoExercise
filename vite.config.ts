@@ -71,7 +71,7 @@ export default defineConfig({
     tailwindcss(),
     heyApiPlugin({
       config: {
-        input: 'http://localhost:10012/openapi.json', // sign up at app.heyapi.dev
+        input: 'http://localhost:28000/openapi.json', // sign up at app.heyapi.dev
         output: 'src/api/browser/hey-api',
         plugins: [
           {
@@ -95,12 +95,12 @@ export default defineConfig({
     }),
     heyApiPlugin({
       config: {
-        input: 'http://localhost:10013/openapi.json',
+        input: 'http://localhost:18739/openapi.json',
         output: 'src/api/notify/hey-api',
         plugins: [
           {
             name: '@hey-api/client-ofetch',
-            runtimeConfigPath: '@/api/notify/runtime_config'
+            runtimeConfigPath: '@/api/notify/runtime_config',
           }
         ]
       },
