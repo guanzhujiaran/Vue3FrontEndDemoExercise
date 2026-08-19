@@ -7,6 +7,10 @@ import type { AnyLotteryData, NormalizedLottery } from '@/models/api/lottery/lot
 import { gotoBiliUserSpace } from '@/utils/PageOpen/BiliJump';
 import { handleLotteryLinkClick, setLotteryParticipation, isLotteryParticipated } from '@/utils/lotteryParticipation'
 import { normalizeLotteryData, formatTimestamp } from '@/utils/lotteryNormalization'
+import LotteryActionsDropdown from '@/components/lottery_data/bili_data/LotteryActionsDropdown.vue'
+import MomentPublishForm from '@/components/moment/MomentPublishForm.vue'
+import MomentFavoriteDialog from '@/components/moment/MomentFavoriteDialog.vue'
+import { useLotteryInteractions } from '@/utils/useLotteryInteractions'
 
 const props = withDefaults(
   defineProps<{
@@ -28,6 +32,30 @@ const getRowParticipated = (row: NormalizedLottery) => isLotteryParticipated(Str
 const getRowDetailUrl = (row: NormalizedLottery) => row.sourceLink || row.resultLink || ''
 const handleParticipateSwitch = (row: NormalizedLottery, val: boolean | number | string) => {
   setLotteryParticipation(String(row.id), Boolean(val))
+}
+
+// 抽奖互动（点赞）：批量拉取本页全部行互动状态
+const { statusOf, like, loadAll, loading: interactionLoading } = useLotteryInteractions(
+  () => tableData.value.map((r) => String(r.id)).filter(Boolean)
+)
+
+// 收藏到收藏夹：弹出收藏夹选择弹窗（多夹），选择/新建收藏夹后收藏
+const favDialogVisible = ref(false)
+const favRow = ref<NormalizedLottery | null>(null)
+function openFavoriteDialog(row: NormalizedLottery) {
+  favRow.value = row
+  favDialogVisible.value = true
+}
+async function handleFavChanged() {
+  await loadAll()
+}
+
+// 转发到动态：弹窗显示当前选中行的抽奖信息
+const forwardVisible = ref(false)
+const forwardingRow = ref<NormalizedLottery | null>(null)
+function openForwardDialog(row: NormalizedLottery) {
+  forwardingRow.value = row
+  forwardVisible.value = true
 }
 
 const imageViewerVisible = ref(false)
@@ -193,6 +221,16 @@ const prizeIndexOf = (columnKey: PropertyKey | undefined) =>
                     class="mt-1"
                   />
                 </el-tooltip>
+
+                <!-- 点赞 / 收藏 / 转发到动态（三个点下拉框） -->
+                <LotteryActionsDropdown
+                  :lottery-id="String(rowData.id)"
+                  :status="statusOf(String(rowData.id))"
+                  :loading="interactionLoading"
+                  @like="like(String(rowData.id))"
+                  @favorite="openFavoriteDialog(rowData)"
+                  @forward="openForwardDialog(rowData)"
+                />
               </div>
             </template>
 
@@ -211,6 +249,25 @@ const prizeIndexOf = (columnKey: PropertyKey | undefined) =>
       </template>
     </el-auto-resizer>
     <el-image-viewer v-if="imageViewerVisible" :url-list="[currentImage]" @close="imageViewerVisible = false" referrerpolicy="no-referrer" />
+
+    <!-- 转发抽奖到动态：复用统一动态编辑器（attach 资源模式） -->
+    <MomentPublishForm
+      v-model:visible="forwardVisible"
+      :attach-resource="{
+        bizType: 'lottery',
+        bizId: forwardingRow ? String(forwardingRow.id) : '',
+        name: forwardingRow?.title || undefined,
+      }"
+    />
+
+    <!-- 收藏到收藏夹：选择/新建收藏夹 -->
+    <MomentFavoriteDialog
+      v-model="favDialogVisible"
+      :dyn-id="favRow ? String(favRow.id) : ''"
+      biz-type="lottery"
+      :biz-id="favRow ? String(favRow.id) : ''"
+      @changed="handleFavChanged"
+    />
   </div>
 </template>
 

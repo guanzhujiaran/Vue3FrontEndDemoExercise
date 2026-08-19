@@ -2,7 +2,7 @@
   <el-dialog
     v-model="visible"
     class="audit-reason-dialog max-w-[920px]"
-    :title="`${actionLabel}（共 ${items.length} 条）`"
+    :title="t('message.auditTitle', { action: actionLabelI18n, n: items.length })"
     width="90%"
     top="5vh"
     append-to-body
@@ -11,7 +11,7 @@
   >
     <div class="audit-reason-dialog__body flex flex-col gap-3">
       <div class="text-sm text-msg-muted">
-        以下为本次{{ targetText }}审核对象，请逐条填写{{ actionLabel }}原因（该原因会通知给对应作者）
+        {{ t('message.auditIntro', { target: targetTextI18n, action: actionLabelI18n }) }}
       </div>
 
       <div class="audit-reason-dialog__table h-[60vh] min-h-75">
@@ -30,14 +30,14 @@
     </div>
 
     <template #footer>
-      <el-button size="default" @click="visible = false">取消</el-button>
+      <el-button size="default" @click="visible = false">{{ t('common.cancel') }}</el-button>
       <el-button
         type="danger"
         size="default"
         :disabled="!involvedMids.length"
         @click="emit('ban', involvedMids)"
       >
-        封禁涉及用户（{{ involvedMids.length }}）
+        {{ t('message.auditBanInvolved', { n: involvedMids.length }) }}
       </el-button>
       <el-button
         type="primary"
@@ -45,7 +45,7 @@
         :disabled="!allFilled"
         @click="confirm"
       >
-        确定{{ actionLabel }}
+        {{ t('message.auditConfirm', { action: actionLabelI18n }) }}
       </el-button>
     </template>
   </el-dialog>
@@ -53,10 +53,13 @@
 
 <script setup lang="ts">
 import { computed, h, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { ElAutocomplete, ElButton, ElPopover, ElTag } from 'element-plus'
 import UserCard from '@/components/message/UserCard.vue'
 import { useAuditReasons } from '@/composables/useAuditReasons'
 import type { CommentUserBrief } from '@/api/notify/hey-api'
+
+const { t } = useI18n()
 
 export interface AuditReasonItem {
   /** 唯一标识：评论 rpid / 私信 msgkey */
@@ -92,6 +95,18 @@ const visible = computed({
   set: (v) => emit('update:modelValue', v)
 })
 
+// 父组件传入的中文 actionLabel / targetText 映射到当前语言
+const actionLabelMap: Record<string, string> = {
+  驳回: t('message.auditReject'),
+  下架: t('message.auditTakeDown')
+}
+const targetTextMap: Record<string, string> = {
+  评论: t('message.auditComment'),
+  私信: t('message.auditDm')
+}
+const actionLabelI18n = computed(() => actionLabelMap[props.actionLabel] ?? props.actionLabel)
+const targetTextI18n = computed(() => (props.targetText ? (targetTextMap[props.targetText] ?? props.targetText) : ''))
+
 // 每条对应的原因：{ [id]: string }
 const reasons = ref<Record<string, string>>({})
 
@@ -123,7 +138,7 @@ function renderReasonCell(rowData: AuditReasonItem) {
       'onUpdate:modelValue': (v: string) => {
         reasons.value = { ...reasons.value, [rowData.id]: v }
       },
-      placeholder: '选择或输入原因',
+      placeholder: t('message.auditReasonPlaceholder'),
       triggerOnFocus: true,
       clearable: true,
       fetchSuggestions,
@@ -144,7 +159,7 @@ function renderReasonCell(rowData: AuditReasonItem) {
                 removeReason(item.value)
               }
             },
-            () => '删除'
+            () => t('message.auditDelete')
           )
         ])
     }
@@ -172,7 +187,7 @@ function renderUserCell(rowData: AuditReasonItem) {
 const columns = computed(() => [
   {
     key: 'preview',
-    title: '内容',
+    title: t('message.auditColContent'),
     width: 420,
     cellRenderer: ({ rowData }: { rowData: AuditReasonItem }) =>
       h(
@@ -180,19 +195,19 @@ const columns = computed(() => [
         { class: 'flex flex-col gap-1 px-2 py-2' },
         [
           h('span', { class: 'text-xs text-msg-muted' }, rowData.id),
-          h('span', { class: 'line-clamp-2 text-sm text-msg-text' }, rowData.preview || '[图片/系统消息]')
+          h('span', { class: 'line-clamp-2 text-sm text-msg-text' }, rowData.preview || t('message.auditImageMsg'))
         ]
       )
   },
   {
     key: 'user',
-    title: '用户',
+    title: t('message.auditColUser'),
     width: 160,
     cellRenderer: ({ rowData }: { rowData: AuditReasonItem }) => renderUserCell(rowData)
   },
   {
     key: 'reason',
-    title: '审核原因',
+    title: t('message.auditColReason'),
     width: 240,
     cellRenderer: ({ rowData }: { rowData: AuditReasonItem }) => renderReasonCell(rowData)
   }

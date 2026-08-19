@@ -9,6 +9,7 @@
 // src/axios.js
 import { useJwtStore } from '@/stores/jwt_token'
 import { useUserNavStore } from '@/stores/user_nav'
+import { useLocaleStore } from '@/stores/locale'
 import axios, { type AxiosInstance, type CreateAxiosDefaults } from 'axios'
 import { apiErrorHandler } from './error_handler'
 import { AXIOS_CONFIG } from '@/utils/Const/axionsConstans'
@@ -40,6 +41,10 @@ export const AXIOS_REQ_AUTH_INJECTION = (config: any = AXIOS_CONFIG) => {
     config.headers['x-bili-level'] = userInfo.level_info?.current_level || '0'
     config.headers['x-bili-role'] = userInfo.role || 'normal'
   }
+
+  // 注入当前语言，供后端 fastapi-i18n 按 Accept-Language 返回对应语言文案
+  const LocaleStore = useLocaleStore()
+  config.headers['Accept-Language'] = LocaleStore.acceptLanguage
 
   return config
 }

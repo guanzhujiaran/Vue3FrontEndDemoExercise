@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { ElTimeline, ElTimelineItem, ElCard } from 'element-plus'
+
+const { t } = useI18n()
 
 interface ChangelogEntry {
   version: string
@@ -98,8 +101,8 @@ onMounted(() => {
 <template>
   <div class="p-5 mx-auto">
     <div class="text-center mb-8">
-      <el-text class="text-[2rem] mb-2.5" tag="h1">更新日志</el-text>
-      <el-text class="text-text-secondary" tag="p">查看项目的更新历史和功能变更</el-text>
+      <el-text class="text-[2rem] mb-2.5" tag="h1">{{ t('changelog.title') }}</el-text>
+      <el-text class="text-text-secondary" tag="p">{{ t('changelog.subtitle') }}</el-text>
     </div>
     
     <div class="bg-[var(--el-bg-color-page)] rounded-lg p-5">
@@ -113,21 +116,21 @@ onMounted(() => {
           <el-card>
             <el-text class="text-lg font-medium text-[var(--el-text-color-primary)] mb-4" tag="h3">版本 {{ entry.version }}</el-text>
             <div v-if="entry.changes.added && entry.changes.added.length > 0" class="my-4">
-              <el-text class="mt-4 mb-2.5 text-[var(--el-text-color-primary)] font-medium" tag="h4">新增功能</el-text>
+              <el-text class="mt-4 mb-2.5 text-[var(--el-text-color-primary)] font-medium" tag="h4">{{ t('changelog.added') }}</el-text>
               <ul class="pl-5">
                 <li v-for="(item, i) in entry.changes.added" :key="i" class="mb-1.5 leading-relaxed text-text-regular">{{ item }}</li>
               </ul>
             </div>
             
             <div v-if="entry.changes.improved && entry.changes.improved.length > 0" class="my-4">
-              <el-text class="mt-4 mb-2.5 text-[var(--el-text-color-primary)] font-medium" tag="h4">功能优化</el-text>
+              <el-text class="mt-4 mb-2.5 text-[var(--el-text-color-primary)] font-medium" tag="h4">{{ t('changelog.improved') }}</el-text>
               <ul class="pl-5">
                 <li v-for="(item, i) in entry.changes.improved" :key="i" class="mb-1.5 leading-relaxed text-text-regular">{{ item }}</li>
               </ul>
             </div>
             
             <div v-if="entry.changes.fixed && entry.changes.fixed.length > 0" class="my-4">
-              <el-text class="mt-4 mb-2.5 text-[var(--el-text-color-primary)] font-medium" tag="h4">问题修复</el-text>
+              <el-text class="mt-4 mb-2.5 text-[var(--el-text-color-primary)] font-medium" tag="h4">{{ t('changelog.fixed') }}</el-text>
               <ul class="pl-5">
                 <li v-for="(item, i) in entry.changes.fixed" :key="i" class="mb-1.5 leading-relaxed text-text-regular">{{ item }}</li>
               </ul>

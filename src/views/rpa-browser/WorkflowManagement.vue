@@ -16,6 +16,7 @@ import {
 import type { FilterType, SortBy, SortOrder } from '@/api/browser/hey-api/types.gen'
 import { useUserNavStore } from '@/stores/user_nav'
 import { businessHandler } from '@/utils/businessHandler'
+import ResourceInteractionBar from '@/components/interaction/ResourceInteractionBar.vue'
 
 interface WorkflowItem {
   id: number
@@ -327,6 +328,11 @@ onMounted(() => {
                 <span>点赞: {{ item.likes_count }}</span>
                 <span>Fork: {{ item.forks_count }}</span>
                 <span>更新: {{ formatTime(item.updated_at) }}</span>
+              </div>
+
+              <!-- 收藏/点赞（2.17.0：工作流走 be-message 通用互动） -->
+              <div class="flex items-center pt-1">
+                <ResourceInteractionBar biz-type="rpa_workflow" :biz-id="item.workflow_id" />
               </div>
 
               <!-- 操作栏 -->

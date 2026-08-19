@@ -19,6 +19,11 @@ export type {
   PptrUserRoleInfo,
   PptrUserSearchItem,
   PptrUserSearchResult,
+  PptrUserInfoUpdateResult,
+  UserActLogItem,
+  UserActLogListResp,
+  UserExpRecordItem,
+  UserExpRecordListResp,
 } from '@/api/notify/hey-api'
 
 /**
@@ -117,9 +122,9 @@ class UserApi {
 
   UpdateUserInfo(
     user_base_info_config_form: Omit<User_base_info_config_form, 'userid'>,
-  ): Promise<BusinessHandlerResult<string>> {
-    return businessHandler<string>(
-      adapt<string>(
+  ): Promise<BusinessHandlerResult<PptrUserInfoUpdateResult>> {
+    return businessHandler<PptrUserInfoUpdateResult>(
+      adapt<PptrUserInfoUpdateResult>(
         client.post({
           url: '/api/v1/user/user_info/update',
           body: user_base_info_config_form,
@@ -172,10 +177,10 @@ class UserApi {
     )
   }
 
-  // 按用户名 / 昵称 / mid 查找用户（仅系统管理员 root 可调用），返回结构对齐 nav
-  Search(keyword: string, limit = 10): Promise<BusinessHandlerResult<PptrUserSearchItem[]>> {
-    return businessHandler<PptrUserSearchItem[]>(
-      adapt<PptrUserSearchItem[]>(
+  // 按用户名 / 昵称 / mid 查找用户（需登录），返回 { items, has_more } 结构
+  Search(keyword: string, limit = 10): Promise<BusinessHandlerResult<PptrUserSearchResult>> {
+    return businessHandler<PptrUserSearchResult>(
+      adapt<PptrUserSearchResult>(
         client.get({
           url: '/api/v1/user/search',
           query: { keyword, limit },
@@ -203,6 +208,42 @@ class UserApi {
         '管理端用户搜索失败'
       ),
       { showSuccessToast: false, errorMessage: '管理端用户搜索失败' }
+    )
+  }
+
+  // 用户中心「我的记录」：最近 7 天登录记录（TUserActInfoLog，仅本人）
+  ActLog(
+    offset = 0,
+    limit = 10,
+    days = 7,
+  ): Promise<BusinessHandlerResult<UserActLogListResp>> {
+    return businessHandler<UserActLogListResp>(
+      adapt<UserActLogListResp>(
+        client.get({
+          url: '/api/v1/user/act-log',
+          query: { offset, limit, days },
+        }),
+        '获取登录记录失败'
+      ),
+      { showSuccessToast: false, errorMessage: '获取登录记录失败' }
+    )
+  }
+
+  // 用户中心「我的记录」：最近 7 天经验记录（TUserExpRecord，仅本人）
+  ExpRecord(
+    offset = 0,
+    limit = 10,
+    days = 7,
+  ): Promise<BusinessHandlerResult<UserExpRecordListResp>> {
+    return businessHandler<UserExpRecordListResp>(
+      adapt<UserExpRecordListResp>(
+        client.get({
+          url: '/api/v1/user/exp-record',
+          query: { offset, limit, days },
+        }),
+        '获取经验记录失败'
+      ),
+      { showSuccessToast: false, errorMessage: '获取经验记录失败' }
     )
   }
 }

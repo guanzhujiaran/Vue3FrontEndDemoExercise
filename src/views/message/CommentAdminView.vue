@@ -1,61 +1,61 @@
 <template>
   <div class="comment-admin flex flex-col gap-4">
     <div class="comment-admin__header flex items-center justify-between">
-      <h2 class="text-lg font-bold text-msg-text-active">评论审核（管理员）</h2>
-      <el-button size="default" @click="load">刷新</el-button>
+      <h2 class="text-lg font-bold text-msg-text-active">{{ t('message.commentAuditTitle') }}</h2>
+      <el-button size="default" @click="load">{{ t('message.refresh') }}</el-button>
     </div>
 
     <div class="comment-admin__stats grid grid-cols-2 gap-3 md:grid-cols-4">
       <div class="comment-admin__stat-card rounded-lg bg-msg-card p-4">
-        <div class="text-sm text-msg-muted">评论总数</div>
+        <div class="text-sm text-msg-muted">{{ t('message.statTotalComments') }}</div>
         <div class="text-xl font-bold text-msg-link">{{ stats.total_comments }}</div>
       </div>
       <div class="comment-admin__stat-card rounded-lg bg-msg-card p-4">
-        <div class="text-sm text-msg-muted">今日新增</div>
+        <div class="text-sm text-msg-muted">{{ t('message.statTodayNew') }}</div>
         <div class="text-xl font-bold text-msg-text-active">{{ stats.today_new }}</div>
       </div>
       <div class="comment-admin__stat-card rounded-lg bg-msg-card p-4">
-        <div class="text-sm text-msg-muted">评论区数</div>
+        <div class="text-sm text-msg-muted">{{ t('message.statTotalSubjects') }}</div>
         <div class="text-xl font-bold text-msg-text-active">{{ stats.total_subjects }}</div>
       </div>
       <div class="comment-admin__stat-card rounded-lg bg-msg-card p-4">
-        <div class="text-sm text-msg-muted">根评论数</div>
+        <div class="text-sm text-msg-muted">{{ t('message.statTotalRoot') }}</div>
         <div class="text-xl font-bold text-msg-text-active">{{ stats.total_root }}</div>
       </div>
     </div>
 
     <div v-if="canViewAllStates" class="comment-admin__filter flex items-center gap-3">
-      <span class="text-sm text-msg-muted">状态筛选</span>
+      <span class="text-sm text-msg-muted">{{ t('message.statusFilter') }}</span>
       <el-select
         v-model="stateFilter"
         multiple
         clearable
         collapse-tags
         size="default"
-        placeholder="全部状态"
+        :placeholder="t('message.filterAllStatus')"
         class="comment-admin__filter-select w-72"
         @change="onFilterChange"
       >
-        <el-option label="待审核" value="auditing" />
-        <el-option label="正常" value="normal" />
-        <el-option label="已驳回" value="rejected" />
-        <el-option label="已下架" value="hidden" />
+        <el-option :label="t('message.stateAuditing')" value="auditing" />
+        <el-option :label="t('message.stateNormal')" value="normal" />
+        <el-option :label="t('message.stateRejected')" value="rejected" />
+        <el-option :label="t('message.stateHidden')" value="hidden" />
       </el-select>
     </div>
 
     <div
       v-loading="auditPending"
-      element-loading-text="批量审核中"
+      :element-loading-text="t('message.bulkAuditing')"
       class="comment-admin__bulk-toolbar flex flex-wrap items-center gap-3 rounded-lg bg-msg-card p-3"
     >
-      <span class="text-sm text-msg-muted">已选 {{ selectedRows.length }} 条</span>
+      <span class="text-sm text-msg-muted">{{ t('message.selectedCount', { n: selectedRows.length }) }}</span>
       <el-button
         type="success"
         size="default"
         :disabled="!selectedRows.length"
         @click="batchAuditDebounced('pass')"
       >
-        通过
+        {{ t('message.batchPass') }}
       </el-button>
       <el-button
         type="warning"
@@ -63,7 +63,7 @@
         :disabled="!selectedRows.length"
         @click="batchAuditDebounced('reject')"
       >
-        驳回
+        {{ t('message.batchReject') }}
       </el-button>
       <el-button
         type="danger"
@@ -71,14 +71,14 @@
         :disabled="!selectedRows.length"
         @click="batchAuditDebounced('hidden')"
       >
-        下架
+        {{ t('message.batchTakeDown') }}
       </el-button>
       <el-button
         size="default"
         :disabled="!selectedRows.length"
         @click="batchAuditDebounced('restore')"
       >
-        恢复
+        {{ t('message.batchRestore') }}
       </el-button>
       <template v-if="canBan">
         <el-divider direction="vertical" />
@@ -88,20 +88,20 @@
           :disabled="!selectedMids.length || !canBan"
           @click="banDialogVisible = true"
         >
-          封禁用户
+          {{ t('message.banUser') }}
         </el-button>
         <el-button
           size="default"
           :disabled="!selectedMids.length || !canBan"
           @click="unbanSelected"
         >
-          解封用户
+          {{ t('message.unbanUser') }}
         </el-button>
       </template>
     </div>
 
     <LoadingWrap :loading="loading" :rows="6">
-      <EmptyState v-if="items.length === 0" text="暂无待审评论" />
+      <EmptyState v-if="items.length === 0" :text="t('message.emptyAuditComment')" />
       <div v-else class="comment-admin__table w-full h-[calc(100vh-320px)] min-h-105">
         <el-auto-resizer>
           <template #default="{ height, width }">
@@ -163,7 +163,7 @@
                 <!-- 平台/设备 -->
                 <template v-else-if="column.key === 'plat_device'">
                   <span v-if="rowData.plat || rowData.device" class="text-sm text-msg-muted">
-                    {{ rowData.plat || '未知平台'
+                    {{ rowData.plat || t('message.unknownPlatform')
                     }}<template v-if="rowData.device"> · {{ rowData.device }}</template>
                   </span>
                   <span v-else class="text-sm text-msg-muted">—</span>
@@ -187,7 +187,7 @@
 
               <template #empty>
                 <div class="flex h-full items-center justify-center">
-                  <el-empty description="暂无数据" :image-size="80" />
+                  <el-empty :description="t('message.emptyData')" :image-size="80" />
                 </div>
               </template>
             </el-table-v2>
@@ -234,7 +234,10 @@
 import { computed, onMounted, reactive, ref } from 'vue'
 import type { Column } from 'element-plus'
 import { useDebounceFn } from '@vueuse/core'
+import { useI18n } from 'vue-i18n'
 import biliMessage from '@/utils/message'
+
+const { t } = useI18n()
 import {
   adminStatsApiV1CommentAdminStatsGet,
   auditQueueApiV1CommentAdminAuditGet,
@@ -321,24 +324,24 @@ const selectedMids = computed(() =>
 // el-table-v2 列定义（含自定义选择列）；内容列 flexGrow 自适应填充剩余宽度
 const commentColumns: Column<CommentAuditRow>[] = [
   { key: 'selection', title: '', width: 50 },
-  { key: 'author', title: '作者', width: 160 },
-  { key: 'message', title: '内容', width: 240, minWidth: 240, flexGrow: 1 },
-  { key: 'source', title: '内容来源', width: 180 },
-  { key: 'state', title: '状态', width: 100 },
-  { key: 'type', title: '类型', width: 90, dataKey: 'type' },
-  { key: 'plat_device', title: '平台/设备', width: 160 },
-  { key: 'like', title: '点赞', width: 80 },
-  { key: 'ctime', title: '时间', width: 180 },
-  { key: 'rpid', title: 'rpid', width: 150, dataKey: 'rpid' },
-  { key: 'oid', title: 'oid', width: 130, dataKey: 'oid' }
+  { key: 'author', title: t('message.colAuthor'), width: 160 },
+  { key: 'message', title: t('message.colMessage'), width: 240, minWidth: 240, flexGrow: 1 },
+  { key: 'source', title: t('message.colSource'), width: 180 },
+  { key: 'state', title: t('message.colStatus'), width: 100 },
+  { key: 'type', title: t('message.colType'), width: 90, dataKey: 'type' },
+  { key: 'plat_device', title: t('message.colPlatDevice'), width: 160 },
+  { key: 'like', title: t('message.colLike'), width: 80 },
+  { key: 'ctime', title: t('message.colTime'), width: 180 },
+  { key: 'rpid', title: t('message.colRpid'), width: 150, dataKey: 'rpid' },
+  { key: 'oid', title: t('message.colOid'), width: 130, dataKey: 'oid' }
 ]
 
 async function unbanSelected() {
   if (!selectedMids.value.length) return
   try {
     await ElMessageBox.confirm(
-      `确认解封选中的 ${selectedMids.value.length} 名用户？`,
-      '解封用户',
+      t('message.unbanConfirm', { n: selectedMids.value.length }),
+      t('message.unbanConfirmTitle'),
       { type: 'warning' }
     )
   } catch {
@@ -348,10 +351,10 @@ async function unbanSelected() {
   try {
     const res = await unbanUsers({ body: { mids: selectedMids.value } })
     if (res && res.code === 0) {
-      biliMessage.success('已解封选中用户')
+      biliMessage.success(t('message.unbanSuccess'))
       await load()
     } else if (res) {
-      biliMessage.error(res.msg || '解封失败')
+      biliMessage.error(res.msg || t('message.unbanFailed'))
     }
   } finally {
     userActionPending.value = false
@@ -397,6 +400,7 @@ function onFilterChange() {
 }
 
 // 驳回 / 下架属于处罚性操作，必须填原因：原因会写进给作者的系统通知
+// 注意：此处传入 AuditReasonDialog 的 actionLabel 需为中文 key（组件内再做 i18n 映射）
 const OP_REASON_LABEL: Partial<Record<string, string>> = {
   reject: '驳回',
   hidden: '下架'
@@ -464,9 +468,9 @@ async function doAudit(
         if (target) target.audit_state = newState
       }
     })
-    biliMessage.success(`已${OP_REASON_LABEL[op] ? OP_REASON_LABEL[op] : '处理'} ${rows.length} 条`)
+    biliMessage.success(t('message.processedCount', { n: rows.length }))
   } catch {
-    biliMessage.error('审核失败，请重试')
+    biliMessage.error(t('message.auditFailed'))
   } finally {
     auditPending.value = false
   }
@@ -492,11 +496,11 @@ function stateTag(s: string): 'success' | 'warning' | 'danger' | 'info' {
 }
 
 function stateText(s: string): string {
-  if (s === 'normal') return '正常'
-  if (s === 'auditing') return '待审核'
-  if (s === 'rejected') return '已驳回'
-  if (s === 'hidden') return '已下架'
-  return '已删除'
+  if (s === 'normal') return t('message.stateNormal')
+  if (s === 'auditing') return t('message.stateAuditing')
+  if (s === 'rejected') return t('message.stateRejected')
+  if (s === 'hidden') return t('message.stateHidden')
+  return t('message.stateDeleted')
 }
 
 onMounted(async () => {

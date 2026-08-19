@@ -32,17 +32,18 @@ export interface MessagePermissionMeta {
  * 消息管理端权限元数据，与 bili_common.deps.permissions.UserPermission 保持一致。
  * grantable=false 的权限为 root 专属，不可授予他人（后端会自动剔除）。
  */
+// label / desc 使用 i18n key（模板中以 t() 渲染），确保多语言支持
 export const MESSAGE_ADMIN_PERMISSIONS: MessagePermissionMeta[] = [
-  { value: 'comment:view-queue', label: '评论审核队列', desc: '查看评论审核队列（不含内容明文）', grantable: true },
-  { value: 'dm:view-queue', label: '私信审核队列', desc: '查看私信审核队列（不含内容明文）', grantable: true },
-  { value: 'user:ban', label: '封禁 / 解封用户', desc: '对违规用户执行封禁或解封操作', grantable: true },
-  { value: 'comment:ban', label: '评论封禁/解封', desc: '封禁 / 解封用户在评论服务', grantable: true },
-  { value: 'dm:ban', label: '私信封禁/解封', desc: '封禁 / 解封用户在私信服务', grantable: true },
-  { value: 'user:ban-view', label: '查看封禁记录', desc: '查看历史封禁 / 解封操作记录（跨服务）', grantable: true },
-  { value: 'comment:view-content', label: '查看评论明文', desc: '查看评论内容明文（root 专属，不可授予）', grantable: false },
-  { value: 'comment:audit', label: '评论过审判定', desc: '设置评论过审 / 没过审（root 专属，不可授予）', grantable: false },
-  { value: 'dm:view-content', label: '查看私信明文', desc: '查看私信内容明文（root 专属，不可授予）', grantable: false },
-  { value: 'dm:audit', label: '私信过审判定', desc: '设置私信过审 / 没过审（root 专属，不可授予）', grantable: false }
+  { value: 'comment:view-queue', label: 'message.permCommentViewQueue', desc: 'message.permCommentViewQueueDesc', grantable: true },
+  { value: 'dm:view-queue', label: 'message.permDmViewQueue', desc: 'message.permDmViewQueueDesc', grantable: true },
+  { value: 'user:ban', label: 'message.permUserBan', desc: 'message.permUserBanDesc', grantable: true },
+  { value: 'comment:ban', label: 'message.permCommentBan', desc: 'message.permCommentBanDesc', grantable: true },
+  { value: 'dm:ban', label: 'message.permDmBan', desc: 'message.permDmBanDesc', grantable: true },
+  { value: 'user:ban-view', label: 'message.permUserBanView', desc: 'message.permUserBanViewDesc', grantable: true },
+  { value: 'comment:view-content', label: 'message.permCommentViewContent', desc: 'message.permCommentViewContentDesc', grantable: false },
+  { value: 'comment:audit', label: 'message.permCommentAudit', desc: 'message.permCommentAuditDesc', grantable: false },
+  { value: 'dm:view-content', label: 'message.permDmViewContent', desc: 'message.permDmViewContentDesc', grantable: false },
+  { value: 'dm:audit', label: 'message.permDmAudit', desc: 'message.permDmAuditDesc', grantable: false }
 ]
 
 const PERMISSION_MAP = new Map(MESSAGE_ADMIN_PERMISSIONS.map((p) => [p.value, p]))
@@ -60,20 +61,20 @@ export const GRANTABLE_PERMISSIONS = MESSAGE_ADMIN_PERMISSIONS.filter((p) => p.g
 
 export type { PptrUserSearchItem, PptrUserLevelInfo, PptrUserVipInfo, PptrUserRoleInfo }
 
-/** 大会员类型文案（vip_type：1 月度 / 2 年度 / 3 十年 / 4 百年） */
+/** 大会员类型文案 i18n key（vip_type：1 月度 / 2 年度 / 3 十年 / 4 百年） */
 const VIP_TYPE_LABEL: Record<number, string> = {
-  1: '月度大会员',
-  2: '年度大会员',
-  3: '十年大会员',
-  4: '百年大会员'
+  1: 'message.vipMonthly',
+  2: 'message.vipYearly',
+  3: 'message.vipTenYear',
+  4: 'message.vipHundredYear'
 }
 
 /**
- * 返回大会员标签文案；非大会员（vip_status !== 1）返回空字符串。
+ * 返回大会员标签 i18n key；非大会员（vip_status !== 1）返回空字符串。
  */
 export function vipLabel(vip?: PptrUserVipInfo | null): string {
   if (!vip || vip.vip_status !== 1) return ''
-  return VIP_TYPE_LABEL[vip.vip_type] ?? '大会员'
+  return VIP_TYPE_LABEL[vip.vip_type] ?? 'message.vipGeneric'
 }
 
 /** 大会员到期时间（本地日期字符串）；无有效到期时间返回空字符串 */

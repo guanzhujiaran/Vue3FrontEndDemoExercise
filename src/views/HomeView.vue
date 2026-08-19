@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, inject } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useJwtStore } from '@/stores/jwt_token'
 import biliMessage, { ElMessageBox } from '@/utils/message'
 import { CoffeeCup } from '@element-plus/icons-vue'
@@ -10,6 +11,7 @@ import { KeysEnum, useInject } from '@/models/base/provide_model.ts'
 import type { UserNavModel } from '@/models/user/user_model.ts'
 import { routes } from '@/router'
 import router from '@/router'
+const { t } = useI18n()
 const jwtStore = useJwtStore()
 const activeTab = ref('all')
 const openGlobalLoginModal = inject(openGlobalLoginModalKey, () => { })
@@ -54,9 +56,9 @@ const handleLoginClick = () => {
 
 // 处理登出按钮点击
 const handleLogoutClick = () => {
-  ElMessageBox.confirm('确定要退出登录吗?', '提示', {
-    confirmButtonText: '确定',
-    cancelButtonText: '取消',
+  ElMessageBox.confirm(t('home.logoutConfirm'), t('home.logoutTitle'), {
+    confirmButtonText: t('common.confirm'),
+    cancelButtonText: t('common.cancel'),
     type: 'warning'
   })
     .then(() => {
@@ -74,7 +76,7 @@ const handleLogoutClick = () => {
           next_exp: ''
         }
       }
-      biliMessage.success('已成功退出登录')
+      biliMessage.success(t('home.logoutSuccess'))
     })
     .catch(() => { })
 }
@@ -82,9 +84,9 @@ const handleLogoutClick = () => {
 // 处理卡片点击
 const handleCardClick = (path: string | undefined, requiresLogin = false) => {
   if (!isLoggedIn.value && requiresLogin) {
-    ElMessageBox.confirm('该功能需要登录才能使用，是否立即登录?', '提示', {
-      confirmButtonText: '立即登录',
-      cancelButtonText: '取消',
+    ElMessageBox.confirm(t('home.loginNeeded'), t('home.loginNeededTitle'), {
+      confirmButtonText: t('home.loginNow'),
+      cancelButtonText: t('common.cancel'),
       type: 'info'
     })
       .then(() => {
@@ -98,7 +100,7 @@ const handleCardClick = (path: string | undefined, requiresLogin = false) => {
 </script>
 
 <template>
-  <section class="p-0!">
+  <div class="home-view">
     <!-- 顶部横幅 - 增强视觉效果 -->
     <section class="relative overflow-hidden px-5 py-20 text-center text-white md:py-28"
       style="background: var(--color-gradient-hero-primary)">
@@ -112,48 +114,47 @@ const handleCardClick = (path: string | undefined, requiresLogin = false) => {
       <div class="relative z-10 mx-auto max-w-3xl">
         <el-text class="mb-3 block text-5xl font-bold tracking-tight drop-shadow-lg md:text-6xl"
           tag="h1">BiliExplosion</el-text>
-        <el-text class="mb-8 block text-shadow-text-primary text-lg opacity-90 md:text-xl" tag="p">哔哩哔哩本社爆破</el-text>
+        <el-text class="mb-8 block text-shadow-text-primary text-lg opacity-90 md:text-xl" tag="p">{{ t('home.slogan') }}</el-text>
         <div class="flex flex-wrap justify-center gap-3">
           <el-button type="primary" size="large" @click="handleLoginClick" v-if="!isLoggedIn" class="shadow-lg!">
             <el-icon class="el-icon--left">
               <User />
             </el-icon>
-            立即登录
+            {{ t('home.loginNow') }}
           </el-button>
           <el-button type="primary" size="large" @click="router.push('/app/lot-data/bili-data/official')" v-else
             class="shadow-lg!">
             <el-icon class="el-icon--left">
               <DataAnalysis />
             </el-icon>
-            查看抽奖数据
+            {{ t('home.viewLottery') }}
           </el-button>
           <el-button type="info" size="large" @click="feedbackModalRef?.openDialog()" class="shadow-lg!">
             <el-icon class="el-icon--left">
               <ChatSquare />
             </el-icon>
-            提交反馈
+            {{ t('home.submitFeedback') }}
           </el-button>
         </div>
       </div>
     </section>
 
     <div class="mt-8 flex justify-center gap-10" v-if="isLoggedIn"></div>
-  </section>
 
-  <!-- 功能导航区 -->
-  <section class="mx-5 py-10 lg:mx-10 sm:px-0 sm:mx-0">
+    <!-- 功能导航区 -->
+    <section class="mx-5 py-10 lg:mx-10 sm:px-0 sm:mx-0">
     <div class="mb-6 flex flex-wrap items-center justify-between gap-4">
       <div>
-        <el-text class="m-0 block text-2xl font-semibold tracking-tight" tag="h2">功能导航</el-text>
-        <el-text class="mt-1 block text-sm" tag="p">选择你需要的工具开始使用</el-text>
+        <el-text class="m-0 block text-2xl font-semibold tracking-tight" tag="h2">{{ t('home.navTitle') }}</el-text>
+        <el-text class="mt-1 block text-sm" tag="p">{{ t('home.navDesc') }}</el-text>
       </div>
       <div>
         <el-radio-group v-model="activeTab" size="large">
-          <el-radio-button value="all">全部</el-radio-button>
-          <el-radio-button value="lottery">抽奖数据</el-radio-button>
-          <el-radio-button v-if="isLoggedIn" value="user-center">用户中心</el-radio-button>
+          <el-radio-button value="all">{{ t('home.tabAll') }}</el-radio-button>
+          <el-radio-button value="lottery">{{ t('home.tabLottery') }}</el-radio-button>
+          <el-radio-button v-if="isLoggedIn" value="user-center">{{ t('home.tabUserCenter') }}</el-radio-button>
           <!-- RPA浏览器入口：生产编译临时隐藏 <el-radio-button v-if="isLoggedIn" value="rpa-browser">RPA浏览器</el-radio-button> -->
-          <el-radio-button value="shopping">山姆会员商店</el-radio-button>
+          <el-radio-button value="shopping">{{ t('home.tabShopping') }}</el-radio-button>
         </el-radio-group>
       </div>
     </div>
@@ -205,7 +206,7 @@ const handleCardClick = (path: string | undefined, requiresLogin = false) => {
           <!-- 如果没有子项，显示直接访问按钮 -->
           <div v-else class="flex justify-center">
             <el-button type="default" :plain="true" @click="handleCardClick(module.path, module.requiresLogin)">
-              立即访问
+              {{ t('home.visitNow') }}
             </el-button>
           </div>
         </div>
@@ -229,30 +230,30 @@ const handleCardClick = (path: string | undefined, requiresLogin = false) => {
             <el-text class="m-0 block text-lg font-bold tracking-tight" tag="h3">BiliExplosion</el-text>
           </div>
           <el-text class="block text-sm leading-7 text-text-regular">
-            BiliExplosion 是一个帮助 B 站用户管理和分析抽奖数据的工具，提供多种功能帮助您更好地参与 B 站活动。
+            {{ t('home.aboutDesc') }}
           </el-text>
         </div>
         <!-- 快速链接 -->
         <div class="lg:col-span-3">
-          <el-text class="mb-4 block text-base font-semibold" tag="h3">快速链接</el-text>
+          <el-text class="mb-4 block text-base font-semibold" tag="h3">{{ t('home.quickLinks') }}</el-text>
           <ul class="m-0 flex list-none flex-wrap gap-x-6 gap-y-2 p-0">
             <li>
               <el-link class="text-sm! text-text-regular! no-underline transition-colors hover:text-primary!"
                 @click="router.push('/app/user-center')">
-                浏览器管理
+                {{ t('home.linkBrowserMgmt') }}
               </el-link>
             </li>
             <li>
               <el-link class="text-sm! text-text-regular! no-underline transition-colors hover:text-primary!"
                 @click="router.push('/app/lot-data/bili-data/official')">
-                抽奖数据
+                {{ t('home.linkLottery') }}
               </el-link>
             </li>
           </ul>
         </div>
         <!-- 联系我 -->
         <div class="lg:col-span-4">
-          <el-text class="mb-4 block text-base font-semibold" tag="h3">联系我</el-text>
+          <el-text class="mb-4 block text-base font-semibold" tag="h3">{{ t('home.contactMe') }}</el-text>
           <div class="flex items-center gap-2 text-sm text-text-regular">
             <el-icon :size="15" class="shrink-0 text-text-secondary">
               <Message />
@@ -260,7 +261,7 @@ const handleCardClick = (path: string | undefined, requiresLogin = false) => {
             <span class="break-all">guanzhujiaran2022@163.com</span>
           </div>
           <el-text class="mt-3 block text-sm leading-6 text-text-secondary" tag="p">
-            就我一个人写前后端，更新慢点见谅
+            {{ t('home.contactNote') }}
           </el-text>
         </div>
       </div>
@@ -274,10 +275,11 @@ const handleCardClick = (path: string | undefined, requiresLogin = false) => {
 
   <!-- 不蒜子访问统计（全站 PV / UV） -->
   <footer class="busuanzi-footer shrink-0 py-3 text-center text-sm text-text-secondary">
-    本站总访问量 <span id="busuanzi_site_pv" class="busuanzi-footer__pv">加载中...</span> 次 ·
-    本站总访客数 <span id="busuanzi_site_uv" class="busuanzi-footer__uv">加载中...</span> 人
+    {{ t('home.busuanziPv') }} <span id="busuanzi_site_pv" class="busuanzi-footer__pv">{{ t('network.detecting') }}</span> {{ t('home.busuanziTimes') }} ·
+    {{ t('home.busuanziUv') }} <span id="busuanzi_site_uv" class="busuanzi-footer__uv">{{ t('network.detecting') }}</span> {{ t('home.busuanziPeople') }}
   </footer>
 
   <!-- 首页"提交反馈"弹窗，由顶部按钮触发，不渲染内置按钮 -->
   <SubmitFeedbackModal ref="feedbackModalRef" :show-trigger="false" source="首页" />
+  </div>
 </template>

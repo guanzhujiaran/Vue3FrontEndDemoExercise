@@ -10,23 +10,32 @@ const DEFAULT_STATUS: AdminStatusResponse = {
   mid: 0
 }
 
+/** in-flight 去重：列表场景多个组件同时触发 fetchStatus 时只发一次请求 */
+let fetchPromise: Promise<void> | null = null
+
 export const useRpaAdminStore = defineStore('rpa-admin', () => {
   const status = ref<AdminStatusResponse>({ ...DEFAULT_STATUS })
   const loaded = ref(false)
 
   const fetchStatus = async () => {
-    try {
-      const res = await roleMeApiAdminRpaRoleMePost({})
-      if (res && res.code === 0 && res.data) {
-        status.value = res.data
-      } else {
+    if (loaded.value) return
+    if (fetchPromise) return fetchPromise
+    fetchPromise = (async () => {
+      try {
+        const res = await roleMeApiAdminRpaRoleMePost({})
+        if (res && res.code === 0 && res.data) {
+          status.value = res.data
+        } else {
+          status.value = { ...DEFAULT_STATUS }
+        }
+      } catch {
         status.value = { ...DEFAULT_STATUS }
+      } finally {
+        loaded.value = true
+        fetchPromise = null
       }
-    } catch {
-      status.value = { ...DEFAULT_STATUS }
-    } finally {
-      loaded.value = true
-    }
+    })()
+    return fetchPromise
   }
 
   const reset = () => {

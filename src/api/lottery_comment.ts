@@ -4,6 +4,7 @@ import {
   addCommentApiV1CommentAddPost,
   commentActionApiV1CommentActionPost,
   deleteCommentApiV1CommentDelPost,
+  atSearchApiV1CommentAtSearchGet,
 } from '@/api/notify/hey-api'
 import type {
   CommentUserBrief,
@@ -13,6 +14,7 @@ import type {
   CommentAddResp,
   CommentActionResp,
   CommentTypeEnum,
+  CommentStateEnum,
 } from '@/api/notify/hey-api'
 import type { RootObject } from '@/models/api/base_model.ts'
 import type { InjectionKey } from 'vue'
@@ -40,13 +42,23 @@ export const COMMENT_TYPE = {
 export type CommentType = CommentTypeEnum
 
 // 以下类型直接从 SDK re-export，单一数据源，消除重复定义
-export type { CommentUserBrief, CommentItem, CommentListResp, CommentSubListResp, CommentAddResp, CommentActionResp }
+export type {
+  CommentUserBrief,
+  CommentItem,
+  CommentListResp,
+  CommentSubListResp,
+  CommentAddResp,
+  CommentActionResp,
+  // 评论状态枚举（normal / auditing / rejected / hidden / deleted），
+  // 前端判断审核中评论（item.state === 'auditing'）时以此类型为准
+  CommentStateEnum
+}
 
 /** 评论区交互回调（由 LotteryCommentSection 通过 provide 下发给子组件） */
 export interface CommentHandlers {
   like: (payload: { rpid: string; nextAction: 0 | 1 | 2 }) => void
   del: (rpid: string) => void
-  reply: (payload: { root: string; parent: string; message: string }) => void
+  reply: (payload: { root: string; parent: string; message: string; atNameToMid?: Record<string, number> }) => void
   /** 楼中楼展开：返回某一页的子回复与总数 */
   expandReplies: (item: CommentItem, page: number) => Promise<{ items: CommentItem[]; total: number }>
 }
@@ -99,15 +111,32 @@ const commentApi = {
     )
   },
 
+  /** @ 提及用户搜索：按昵称 / 注册名前缀匹配（登录即可），返回简单用户结构 */
+  searchAt(keyword: string, limit = 10): Promise<RootObject<CommentUserBrief[]>> {
+    return atSearchApiV1CommentAtSearchGet({
+      query: { keyword, limit }
+    }).then(
+      (r) => (r ?? { code: -1, msg: '@用户搜索失败', data: [] }) as unknown as RootObject<CommentUserBrief[]>
+    )
+  },
+
   add(
     oid: string | number,
     type: CommentType,
     root: string | number,
     parent: string | number,
-    message: string
+    message: string,
+    atNameToMid?: Record<string, number>
   ): Promise<RootObject<CommentAddResp>> {
     return addCommentApiV1CommentAddPost({
-      body: { oid: String(oid), type, root: String(root), parent: String(parent), message }
+      body: {
+        oid: String(oid),
+        type,
+        root: String(root),
+        parent: String(parent),
+        message,
+        ...(atNameToMid && Object.keys(atNameToMid).length ? { at_name_to_mid: atNameToMid } : {})
+      }
     }).then(
       (r) => (r ?? { code: -1, msg: '评论发送失败', data: {} }) as unknown as RootObject<CommentAddResp>
     )

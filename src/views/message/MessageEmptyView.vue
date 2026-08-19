@@ -11,9 +11,11 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { Message } from '@element-plus/icons-vue'
 
+const { t } = useI18n()
 const route = useRoute()
-const title = computed(() => String(route.meta?.title ?? '我的消息'))
-const subtitle = computed(() => String(route.meta?.subtitle ?? '快找小伙伴聊天吧 (´･ω･`)ﾉ'))
+const title = computed(() => String(route.meta?.title ?? t('message.titleFallback')))
+const subtitle = computed(() => String(route.meta?.subtitle ?? t('message.emptySubtitle')))
 </script>

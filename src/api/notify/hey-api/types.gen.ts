@@ -113,6 +113,178 @@ export type AuditSourceInfo = {
 };
 
 /**
+ * AvatarAuditApproveReq
+ *
+ * 审核通过请求。
+ */
+export type AvatarAuditApproveReq = {
+    /**
+     * Pk
+     *
+     * 审核记录主键
+     */
+    pk: number;
+    /**
+     * Remark
+     *
+     * 审核备注（选填）
+     */
+    remark?: string | null;
+};
+
+/**
+ * AvatarAuditItem
+ *
+ * 管理端待审核队列中的单条头像申请（含作者昵称 / 头像，来自 pptr 回查）。
+ */
+export type AvatarAuditItem = {
+    /**
+     * Pk
+     *
+     * 审核记录主键
+     */
+    pk: number;
+    /**
+     * Mid
+     *
+     * 申请用户 UID
+     */
+    mid: number;
+    /**
+     * Authorname
+     *
+     * 申请者昵称（pptr 回查）
+     */
+    authorName?: string | null;
+    /**
+     * Oldavatar
+     *
+     * 旧头像 URL
+     */
+    oldAvatar?: string | null;
+    /**
+     * Newavatar
+     *
+     * 申请的新头像 URL
+     */
+    newAvatar: string;
+    /**
+     * Auditstatus
+     *
+     * 审核状态：pending/approved/rejected
+     */
+    auditStatus: string;
+    /**
+     * Createdat
+     *
+     * 提交时间（ISO）
+     */
+    createdAt?: string | null;
+};
+
+/**
+ * AvatarAuditListResp
+ *
+ * 管理端待审核列表响应。
+ */
+export type AvatarAuditListResp = {
+    /**
+     * Items
+     */
+    items?: Array<AvatarAuditItem>;
+    /**
+     * Total
+     *
+     * 符合条件的总数
+     */
+    total?: number;
+    /**
+     * Page Num
+     */
+    page_num?: number;
+    /**
+     * Page Size
+     */
+    page_size?: number;
+};
+
+/**
+ * AvatarAuditMineResp
+ *
+ * 用户侧「我的头像审核状态」响应（无记录时接口返回 data=null）。
+ */
+export type AvatarAuditMineResp = {
+    /**
+     * Pk
+     *
+     * 审核记录主键
+     */
+    pk: number;
+    /**
+     * Newavatar
+     *
+     * 申请的新头像 URL
+     */
+    newAvatar: string;
+    /**
+     * Oldavatar
+     *
+     * 旧头像 URL
+     */
+    oldAvatar?: string | null;
+    /**
+     * Auditstatus
+     *
+     * 审核状态：pending/approved/rejected
+     */
+    auditStatus: string;
+    /**
+     * Auditreason
+     *
+     * 驳回原因（rejected 时有值）
+     */
+    auditReason?: string | null;
+    /**
+     * Createdat
+     *
+     * 提交时间（ISO）
+     */
+    createdAt?: string | null;
+    /**
+     * Auditedat
+     *
+     * 审核时间（ISO）
+     */
+    auditedAt?: string | null;
+};
+
+/**
+ * AvatarAuditRejectReq
+ *
+ * 审核驳回请求。
+ */
+export type AvatarAuditRejectReq = {
+    /**
+     * Pk
+     *
+     * 审核记录主键
+     */
+    pk: number;
+    /**
+     * Reason
+     *
+     * 驳回原因
+     */
+    reason: string;
+    /**
+     * Remark
+     *
+     * 审核备注（选填）
+     */
+    remark?: string | null;
+};
+
+/**
  * BanCreateReq
  *
  * 批量封禁请求（审核联动）。
@@ -324,6 +496,20 @@ export type BiliSystemNotifyResp = {
 };
 
 /**
+ * BlockReq
+ *
+ * 拉黑 / 解除拉黑 请求。
+ */
+export type BlockReq = {
+    /**
+     * Target Mid
+     *
+     * 被拉黑的用户 mid
+     */
+    target_mid: number;
+};
+
+/**
  * CommentActionEnum
  *
  * 评论互动动作（点赞 / 点踩）。
@@ -401,7 +587,7 @@ export type CommentAddReq = {
     /**
      * Message
      *
-     * 正文；@ 用 @{mid} 占位符表达
+     * 正文；@ 以 @昵称 文本表达（对齐 B 站），服务端会按 at_name_to_mid 转为 @{mid} 占位符存储
      */
     message: string;
     /**
@@ -416,6 +602,14 @@ export type CommentAddReq = {
      * 被@用户的mid列表
      */
     at_mids?: Array<number>;
+    /**
+     * At Name To Mid
+     *
+     * 被@用户：昵称 → mid 映射
+     */
+    at_name_to_mid?: {
+        [key: string]: number;
+    };
     /**
      * Emote Meta
      *
@@ -735,7 +929,7 @@ export type CommentItem = {
     /**
      * Message
      *
-     * 正文，@ 以 @{mid} 占位符形式返回
+     * 正文，@ 已渲染为 @昵称 文本（对齐 B 站 content.message）
      */
     message?: string;
     /**
@@ -747,9 +941,35 @@ export type CommentItem = {
     /**
      * At Users
      *
-     * 被@用户，供前端把占位符渲染成链接
+     * 被@用户信息数组（对齐 B 站 content.members）
      */
     at_users?: Array<CommentUserBrief>;
+    /**
+     * At Name To Mid
+     *
+     * 被@用户：昵称 → mid 映射
+     */
+    at_name_to_mid?: {
+        [key: string]: number;
+    };
+    /**
+     * At Name To Mid Str
+     *
+     * 被@用户：昵称 → mid 字符串映射
+     */
+    at_name_to_mid_str?: {
+        [key: string]: string;
+    };
+    /**
+     * Topics Meta
+     *
+     * 正文里的 #话题# → 话题跳转 uri
+     */
+    topics_meta?: {
+        [key: string]: {
+            [key: string]: unknown;
+        };
+    };
     /**
      * Emote Meta
      *
@@ -797,6 +1017,14 @@ export type CommentItem = {
      * Ip V6 Masked
      */
     ip_v6_masked?: string | null;
+    /**
+     * Ip Location
+     */
+    ip_location?: string | null;
+    /**
+     * Ip Isp
+     */
+    ip_isp?: string | null;
     /**
      * Plat
      *
@@ -870,6 +1098,12 @@ export type CommentListResp = {
      * focus_rpid 所属的根评论 rpid。当 focus 目标是楼中楼时，根评论会被提到列表顶部，前端据此展开楼中楼并滚动到 focus_rpid。
      */
     focus_root?: string | null;
+    /**
+     * Viewer Is Anonymous
+     *
+     * 当前请求是否为匿名访问（viewer_mid 缺失）。匿名时服务端已强制限制 page_size=10，前端应渲染登录引导蒙层。
+     */
+    viewer_is_anonymous?: boolean;
 };
 
 /**
@@ -884,6 +1118,56 @@ export type CommentOperationResp = {
      * Message
      */
     message?: string;
+};
+
+/**
+ * CommentReportReq
+ *
+ * 举报评论。
+ */
+export type CommentReportReq = {
+    /**
+     * Rpid
+     *
+     * 被举报评论id（字符串）
+     */
+    rpid: string;
+    /**
+     * 举报原因类型（复用 MomentReportReasonEnum）
+     */
+    reasonType: MomentReportReasonEnum;
+    /**
+     * Reasondesc
+     *
+     * 补充描述（选填）
+     */
+    reasonDesc?: string | null;
+};
+
+/**
+ * CommentReportResp
+ *
+ * 举报评论响应。
+ */
+export type CommentReportResp = {
+    /**
+     * Rpid
+     *
+     * 被举报评论id（字符串）
+     */
+    rpid: string;
+    /**
+     * Reported
+     *
+     * 本次是否新增举报（True=首次，False=当日/重复已报）
+     */
+    reported?: boolean;
+    /**
+     * Switched To Auditing
+     *
+     * 本次举报后是否已触发转审核（state→auditing）
+     */
+    switched_to_auditing?: boolean;
 };
 
 /**
@@ -1847,79 +2131,118 @@ export type EventAggregateResp = {
 };
 
 /**
- * EventItem
+ * EventListResp
  *
- * 明细列表中的一条事件。
+ * 互动提醒列表（对齐 B 站 x/msgfeed* 聚合结构）。
+ *
+ * - `latest`：最新若干条（含 cursor.last_view_at 语义，此处 cursor 复用为时间游标）；
+ * - `total`：完整分页列表，`cursor` 用于下一页翻页（id 游标 + time 时间游标）。
  */
-export type EventItem = {
-    /**
-     * Id
-     */
-    id: number;
-    event_type: EventTypeEnum;
-    source_type: SourceTypeEnum;
-    /**
-     * Source Id
-     */
-    source_id: string;
-    /**
-     * Source Title
-     */
-    source_title?: string | null;
-    /**
-     * Source Cover
-     */
-    source_cover?: string | null;
-    /**
-     * Actor Mid
-     */
-    actor_mid: number;
-    /**
-     * Actor Name
-     */
-    actor_name?: string | null;
-    /**
-     * Actor Avatar
-     */
-    actor_avatar?: string | null;
-    /**
-     * Content
-     */
-    content?: string | null;
-    /**
-     * Jump Url
-     */
-    jump_url?: string | null;
-    /**
-     * Is Read
-     */
-    is_read?: boolean;
-    /**
-     * Created At
-     */
-    created_at: string;
+export type EventListResp = {
+    latest?: EventMsgfeedSection;
+    total?: EventMsgfeedSection;
 };
 
 /**
- * EventListResp
+ * EventMsgfeedContent
+ *
+ * 聚合条目中的内容实体（对齐 B 站 msgfeed 的 item）。
  */
-export type EventListResp = {
+export type EventMsgfeedContent = {
+    /**
+     * Item Id
+     */
+    item_id?: number;
+    /**
+     * Type
+     */
+    type?: string;
+    /**
+     * Business
+     */
+    business?: string;
+    /**
+     * Title
+     */
+    title?: string | null;
+    /**
+     * Desc
+     */
+    desc?: string | null;
+    /**
+     * Image
+     */
+    image?: string | null;
+    /**
+     * Uri
+     */
+    uri?: string | null;
+    /**
+     * Ctime
+     */
+    ctime?: number;
+};
+
+/**
+ * EventMsgfeedCursor
+ *
+ * 分页游标（对齐 B 站 msgfeed total.cursor）。
+ */
+export type EventMsgfeedCursor = {
+    /**
+     * Is End
+     */
+    is_end?: boolean;
+    /**
+     * Id
+     */
+    id?: number | null;
+    /**
+     * Time
+     */
+    time?: string | null;
+};
+
+/**
+ * EventMsgfeedItem
+ *
+ * 按内容聚合的一条记录（对齐 B 站 msgfeed total.items[]）。
+ */
+export type EventMsgfeedItem = {
+    /**
+     * Id
+     */
+    id?: number;
+    /**
+     * Users
+     */
+    users?: Array<EventUserBrief>;
+    item?: EventMsgfeedContent;
+    /**
+     * Counts
+     */
+    counts?: number;
+    /**
+     * Like Time
+     */
+    like_time?: string | null;
+    /**
+     * Notice State
+     */
+    notice_state?: number;
+};
+
+/**
+ * EventMsgfeedSection
+ *
+ * latest / total 共用的区块结构。
+ */
+export type EventMsgfeedSection = {
+    cursor?: EventMsgfeedCursor | null;
     /**
      * Items
      */
-    items?: Array<EventItem>;
-    /**
-     * Total
-     */
-    total?: number;
-    /**
-     * Page Num
-     */
-    page_num?: number;
-    /**
-     * Page Size
-     */
-    page_size?: number;
+    items?: Array<EventMsgfeedItem>;
 };
 
 /**
@@ -2057,9 +2380,9 @@ export type EventReportResp = {
 /**
  * EventTypeEnum
  *
- * 用户行为事件类型（点赞 / 回复 / @提及）。
+ * 用户行为事件类型（点赞 / 回复 / @提及 / 审核驳回）。
  */
-export type EventTypeEnum = 'like' | 'reply' | 'at';
+export type EventTypeEnum = 'like' | 'reply' | 'at' | 'audit_reject';
 
 /**
  * EventUnreadResp
@@ -2094,6 +2417,398 @@ export type EventUnreadResp = {
 };
 
 /**
+ * EventUserBrief
+ *
+ * 聚合条目中的一位触发者（对齐 B 站 msgfeed 的 users[]）。
+ *
+ * 后端单条最多返回 4 个触发者（按触发时间倒序去重），多余的不返回；
+ * 前端按 B 站样式展示（左侧最多 2 个头像堆叠 + 等N人文案）。
+ */
+export type EventUserBrief = {
+    /**
+     * Mid
+     */
+    mid: number;
+    /**
+     * Nickname
+     */
+    nickname?: string | null;
+    /**
+     * Avatar
+     */
+    avatar?: string | null;
+    /**
+     * Fans
+     */
+    fans?: number;
+};
+
+/**
+ * FavoriteAddReq
+ *
+ * 收藏资源到收藏夹（2.17.0 泛化支持多业务资源）。
+ *
+ * `bizType` 默认 `dynamic`，此时 `bizId` 等价 `dynId`（二者任传其一）；
+ * `bizType≠dynamic` 时 `bizId` 必填、`dynId` 忽略。
+ */
+export type FavoriteAddReq = {
+    /**
+     * Biztype
+     *
+     * 资源类型：dynamic/lottery/rpa_action/rpa_workflow/rpa_browser（对外文字，DB 存 int）
+     */
+    bizType?: string;
+    /**
+     * Bizid
+     *
+     * 资源id（字符串；动态时=动态id）
+     */
+    bizId?: string | null;
+    /**
+     * Dynid
+     *
+     * [兼容]动态id（字符串，雪花ID；等价 bizId=bizType=dynamic）
+     */
+    dynId?: string | null;
+    /**
+     * Folderid
+     *
+     * 收藏夹id（字符串，雪花ID；缺省/空则收藏到默认收藏夹）
+     */
+    folderId?: string | null;
+};
+
+/**
+ * FavoriteAddResp
+ *
+ * 收藏响应（2.17.0 泛化）。
+ */
+export type FavoriteAddResp = {
+    /**
+     * Biztype
+     *
+     * 资源类型
+     */
+    bizType?: string;
+    /**
+     * Bizid
+     *
+     * 资源id（字符串）
+     */
+    bizId: string;
+    /**
+     * Dynid
+     *
+     * [兼容]动态id（动态资源时返回）
+     */
+    dynId?: string | null;
+    /**
+     * Folderid
+     *
+     * 收藏夹id（字符串）
+     */
+    folderId: string;
+    /**
+     * Favorited
+     *
+     * 本次是否新增收藏（False=已在同夹收藏过）
+     */
+    favorited?: boolean;
+    /**
+     * Favoritecount
+     *
+     * 该资源最新收藏数（用户去重）
+     */
+    favoriteCount?: number;
+};
+
+/**
+ * FavoriteDynFoldersResp
+ *
+ * 某资源被当前用户收藏在哪些收藏夹（2.17.0 泛化）。
+ */
+export type FavoriteDynFoldersResp = {
+    /**
+     * Biztype
+     *
+     * 资源类型
+     */
+    bizType?: string;
+    /**
+     * Bizid
+     *
+     * 资源id（字符串）
+     */
+    bizId: string;
+    /**
+     * Dynid
+     *
+     * [兼容]动态id（动态资源时返回）
+     */
+    dynId?: string | null;
+    /**
+     * Folderids
+     *
+     * 已收藏该资源的收藏夹id列表
+     */
+    folderIds?: Array<string>;
+};
+
+/**
+ * FavoriteFolderCreateReq
+ *
+ * 创建收藏夹。
+ */
+export type FavoriteFolderCreateReq = {
+    /**
+     * Name
+     *
+     * 收藏夹名称
+     */
+    name: string;
+    /**
+     * Description
+     *
+     * 收藏夹描述（选填）
+     */
+    description?: string | null;
+    /**
+     * Coverurl
+     *
+     * 封面图片链接（仅存URL，不转存图片）
+     */
+    coverUrl?: string | null;
+};
+
+/**
+ * FavoriteFolderDeleteReq
+ *
+ * 删除收藏夹。
+ */
+export type FavoriteFolderDeleteReq = {
+    /**
+     * Folderid
+     *
+     * 收藏夹id（字符串，雪花ID）
+     */
+    folderId: string;
+};
+
+/**
+ * FavoriteFolderResp
+ *
+ * 收藏夹信息。
+ */
+export type FavoriteFolderResp = {
+    /**
+     * Folderid
+     *
+     * 收藏夹id（字符串）
+     */
+    folderId: string;
+    /**
+     * Name
+     *
+     * 收藏夹名称
+     */
+    name: string;
+    /**
+     * Description
+     *
+     * 收藏夹描述
+     */
+    description?: string | null;
+    /**
+     * Coverurl
+     *
+     * 封面图片链接
+     */
+    coverUrl?: string | null;
+    /**
+     * Isdefault
+     *
+     * 是否默认收藏夹
+     */
+    isDefault?: boolean;
+    /**
+     * Favoritecount
+     *
+     * 该夹收藏的动态数
+     */
+    favoriteCount?: number;
+};
+
+/**
+ * FavoriteFolderUpdateReq
+ *
+ * 更新收藏夹（名称/描述/封面，至少一项）。
+ */
+export type FavoriteFolderUpdateReq = {
+    /**
+     * Folderid
+     *
+     * 收藏夹id（字符串，雪花ID）
+     */
+    folderId: string;
+    /**
+     * Name
+     *
+     * 收藏夹名称
+     */
+    name?: string | null;
+    /**
+     * Description
+     *
+     * 收藏夹描述（传空字符串清除）
+     */
+    description?: string | null;
+    /**
+     * Coverurl
+     *
+     * 封面图片链接（传空字符串清除）
+     */
+    coverUrl?: string | null;
+};
+
+/**
+ * FavoriteItemListResp
+ *
+ * 某收藏夹下资源明细（2.17.0 新增）。
+ */
+export type FavoriteItemListResp = {
+    /**
+     * Folderid
+     *
+     * 收藏夹id（字符串）
+     */
+    folderId: string;
+    /**
+     * Total
+     *
+     * 该夹收藏总数
+     */
+    total?: number;
+    /**
+     * Items
+     *
+     * 当前页资源明细
+     */
+    items?: Array<FavoriteListItem>;
+};
+
+/**
+ * FavoriteListItem
+ *
+ * 某收藏夹下的一条资源（2.17.0 新增）。
+ */
+export type FavoriteListItem = {
+    /**
+     * Biztype
+     *
+     * 资源类型
+     */
+    bizType: string;
+    /**
+     * Bizid
+     *
+     * 资源id（字符串）
+     */
+    bizId: string;
+};
+
+/**
+ * FavoriteListResp
+ *
+ * 某收藏夹下资源列表（2.17.0 泛化：bizType+bizId 对）。
+ */
+export type FavoriteListResp = {
+    /**
+     * Folderid
+     *
+     * 收藏夹id（字符串）
+     */
+    folderId: string;
+    /**
+     * Total
+     *
+     * 该夹收藏总数
+     */
+    total?: number;
+    /**
+     * Dynids
+     *
+     * [兼容]当前页动态id列表（仅 bizType=dynamic 时有值）
+     */
+    dynIds?: Array<string>;
+    /**
+     * Items
+     *
+     * 当前页资源明细（bizType+bizId 对）
+     */
+    items?: Array<FavoriteListItem>;
+};
+
+/**
+ * FavoriteRemoveReq
+ *
+ * 从收藏夹取消收藏（2.17.0 泛化）。
+ */
+export type FavoriteRemoveReq = {
+    /**
+     * Biztype
+     *
+     * 资源类型（对外文字，DB 存 int）
+     */
+    bizType?: string;
+    /**
+     * Bizid
+     *
+     * 资源id（字符串）
+     */
+    bizId?: string | null;
+    /**
+     * Dynid
+     *
+     * [兼容]动态id（字符串，雪花ID）
+     */
+    dynId?: string | null;
+    /**
+     * Folderid
+     *
+     * 收藏夹id（字符串，雪花ID）
+     */
+    folderId: string;
+};
+
+/**
+ * FavoriteSettingReq
+ *
+ * 设置主页是否显示收藏。
+ */
+export type FavoriteSettingReq = {
+    /**
+     * Showfavorites
+     *
+     * 主页是否显示收藏tab：True=显示,False=隐藏
+     */
+    showFavorites?: boolean;
+};
+
+/**
+ * FavoriteSettingResp
+ *
+ * 主页收藏可见性。
+ */
+export type FavoriteSettingResp = {
+    /**
+     * Showfavorites
+     *
+     * 主页是否显示收藏tab
+     */
+    showFavorites?: boolean;
+};
+
+/**
  * FeedbackRequest
  *
  * 前端反馈请求体（POST /api/v1/message/push/feedback）。
@@ -2116,6 +2831,210 @@ export type FeedbackRequest = {
      */
     source?: string | null;
 };
+
+/**
+ * FollowCountResp
+ *
+ * 关注 / 粉丝计数。
+ */
+export type FollowCountResp = {
+    /**
+     * Mid
+     */
+    mid: number;
+    /**
+     * Following Count
+     *
+     * 关注数
+     */
+    following_count?: number;
+    /**
+     * Follower Count
+     *
+     * 粉丝数
+     */
+    follower_count?: number;
+    /**
+     * Mutual Count
+     *
+     * 互相关注数
+     */
+    mutual_count?: number;
+};
+
+/**
+ * FollowListItem
+ *
+ * 关注 / 粉丝列表单条记录。
+ */
+export type FollowListItem = {
+    /**
+     * Mid
+     *
+     * 对方用户 mid
+     */
+    mid: number;
+    /**
+     * Created At
+     *
+     * 关系建立时间
+     */
+    created_at: string;
+    /**
+     * Mutual
+     *
+     * 是否互相关注
+     */
+    mutual?: boolean;
+};
+
+/**
+ * FollowListResp
+ *
+ * 关注 / 粉丝列表分页响应。
+ *
+ * `items` 仅含 `mid` 与关系建立时间，用户展示信息由前端按 mid 批量回查
+ * pptr 主数据，不在本服务冗余。
+ */
+export type FollowListResp = {
+    /**
+     * Items
+     */
+    items?: Array<FollowListItem>;
+    /**
+     * Total
+     */
+    total?: number;
+    /**
+     * Page Num
+     */
+    page_num?: number;
+    /**
+     * Page Size
+     */
+    page_size?: number;
+};
+
+/**
+ * FollowOpResp
+ *
+ * 关注 / 取关 / 拉黑 / 解除拉黑 等写操作的统一回执。
+ */
+export type FollowOpResp = {
+    /**
+     * Mid
+     *
+     * 操作发起者 mid
+     */
+    mid: number;
+    /**
+     * Target Mid
+     *
+     * 目标用户 mid
+     */
+    target_mid: number;
+    /**
+     * 操作完成后的当前关系：following 关注 / blocked 拉黑 / None 已无关系
+     */
+    status?: FollowStatusEnum | null;
+    /**
+     * Followed
+     *
+     * 操作后是否处于关注状态
+     */
+    followed?: boolean;
+    /**
+     * Blocked
+     *
+     * 操作后是否处于拉黑状态
+     */
+    blocked?: boolean;
+};
+
+/**
+ * FollowRelationResp
+ *
+ * 我与某人的关系查询回执。
+ *
+ * 方向说明：
+ * - `following`：我是否关注了对方；
+ * - `followed_by`：对方是否关注了我；
+ * - `mutual`：是否互相关注（双方都关注对方）；
+ * - `i_blocked`：我是否拉黑了对方；
+ * - `blocked_by`：对方是否拉黑了我。
+ */
+export type FollowRelationResp = {
+    /**
+     * Mid
+     *
+     * 发起查询的用户 mid
+     */
+    mid: number;
+    /**
+     * Target Mid
+     *
+     * 被查询的目标 mid
+     */
+    target_mid: number;
+    /**
+     * Following
+     *
+     * 我是否关注了对方
+     */
+    following?: boolean;
+    /**
+     * Followed By
+     *
+     * 对方是否关注了我
+     */
+    followed_by?: boolean;
+    /**
+     * Mutual
+     *
+     * 是否互相关注
+     */
+    mutual?: boolean;
+    /**
+     * I Blocked
+     *
+     * 我是否拉黑了对方
+     */
+    i_blocked?: boolean;
+    /**
+     * Blocked By
+     *
+     * 对方是否拉黑了我
+     */
+    blocked_by?: boolean;
+};
+
+/**
+ * FollowReq
+ *
+ * 关注 / 取关 请求。
+ */
+export type FollowReq = {
+    /**
+     * Target Mid
+     *
+     * 被关注的用户 mid
+     */
+    target_mid: number;
+};
+
+/**
+ * FollowStatusEnum
+ *
+ * 用户间关系状态（关注 / 拉黑），按方向独立记录。
+ *
+ * - `following`：mid 主动关注 target_mid；
+ * - `blocked` ：mid 拉黑 target_mid，target_mid 不能关注 / 私信 mid。
+ *
+ * 一条记录只代表「mid → target_mid」单一方向的关系，互相关注需要
+ * 两条 `following` 记录（双向各一）。`uq(mid, target_mid)` 保证
+ * 同一方向只有一条生效记录。
+ */
+export type FollowStatusEnum = 'following' | 'blocked';
 
 /**
  * GrantAdminReq
@@ -2145,6 +3064,80 @@ export type HttpValidationError = {
      * Detail
      */
     detail?: Array<ValidationError>;
+};
+
+/**
+ * InteractionStatusItem
+ *
+ * 某资源当前用户交互态（收藏 + 点赞 + 计数）。
+ */
+export type InteractionStatusItem = {
+    /**
+     * Biztype
+     *
+     * 资源类型
+     */
+    bizType: string;
+    /**
+     * Bizid
+     *
+     * 资源 id（字符串）
+     */
+    bizId: string;
+    /**
+     * Islike
+     *
+     * 当前用户是否已赞
+     */
+    isLike?: boolean;
+    /**
+     * Isfavorite
+     *
+     * 当前用户是否已收藏
+     */
+    isFavorite?: boolean;
+    /**
+     * Likecount
+     *
+     * 点赞数
+     */
+    likeCount?: number;
+    /**
+     * Favoritecount
+     *
+     * 收藏数
+     */
+    favoriteCount?: number;
+    /**
+     * Commentcount
+     *
+     * 评论数（dynamic 时=动态统计；非动态资源无评论，恒为 0）
+     */
+    commentCount?: number;
+    /**
+     * Repostcount
+     *
+     * 转发数（dynamic 时=动态统计；非动态资源无转发，恒为 0）
+     */
+    repostCount?: number;
+    /**
+     * 资源详情（非动态资源经 RPC 获取，弱依赖可空；2.18.0）
+     */
+    detail?: ResourceDetail | null;
+};
+
+/**
+ * InteractionStatusResp
+ *
+ * 批量交互态查询响应。
+ */
+export type InteractionStatusResp = {
+    /**
+     * Items
+     *
+     * 各资源交互态
+     */
+    items?: Array<InteractionStatusItem>;
 };
 
 /**
@@ -2249,6 +3242,1996 @@ export type MessageSettingUpdateReq = {
      * 免打扰结束小时
      */
     dnd_end_hour?: number | null;
+};
+
+/**
+ * MomentAtListResp
+ *
+ * @用户推荐列表（按分组：关注 / 粉丝）。
+ */
+export type MomentAtListResp = {
+    /**
+     * Following
+     *
+     * 我关注的人
+     */
+    following?: Array<MomentAtUserItem>;
+    /**
+     * Followers
+     *
+     * 我的粉丝
+     */
+    followers?: Array<MomentAtUserItem>;
+};
+
+/**
+ * MomentAtSearchResp
+ *
+ * @用户搜索结果。
+ */
+export type MomentAtSearchResp = {
+    /**
+     * Items
+     */
+    items?: Array<MomentAtUserItem>;
+    /**
+     * Hasmore
+     */
+    hasMore?: boolean;
+};
+
+/**
+ * MomentAtUserItem
+ *
+ * @用户推荐 / 搜索结果项（基础展示信息，来自 pptr）。
+ */
+export type MomentAtUserItem = {
+    /**
+     * Mid
+     *
+     * 用户 UID
+     */
+    mid: number;
+    /**
+     * Uname
+     *
+     * 昵称
+     */
+    uname?: string | null;
+    /**
+     * Face
+     *
+     * 头像
+     */
+    face?: string | null;
+    /**
+     * Remark
+     *
+     * 备注 / 关系标签（如「互关」）
+     */
+    remark?: string | null;
+};
+
+/**
+ * MomentAttachRef
+ *
+ * 附加卡资源引用（2.21.0，对标 B 站 `CreateCommonAttachCard { type, biz_id }`）。
+ *
+ * 只保存 `bizType` + `bizId`（不冗余存 name/cover/jumpUrl 快照），
+ * Feed/详情装配时按 `bizType` 经 RPC 实时获取资源详情。
+ */
+export type MomentAttachRef = {
+    /**
+     * Biztype
+     *
+     * 资源类型：lottery/rpa_action/rpa_workflow/rpa_browser/dynamic
+     */
+    bizType: string;
+    /**
+     * Bizid
+     *
+     * 资源 ID（字符串，避免 19 位雪花 ID 精度丢失）
+     */
+    bizId: string;
+};
+
+/**
+ * MomentAuditActionReq
+ *
+ * 审核通过请求。
+ */
+export type MomentAuditActionReq = {
+    /**
+     * Dynid
+     *
+     * 动态 ID（int）
+     */
+    dynId: number;
+    /**
+     * Remark
+     *
+     * 审核备注（选填）
+     */
+    remark?: string | null;
+};
+
+/**
+ * MomentAuditDetailResp
+ *
+ * 单条动态审核详情（含全部状态 + 历史流转）。
+ */
+export type MomentAuditDetailResp = {
+    /**
+     * 动态当前快照
+     */
+    item?: MomentAuditItem | null;
+    /**
+     * Logs
+     *
+     * 审核流转历史
+     */
+    logs?: Array<MomentAuditLogItem>;
+};
+
+/**
+ * MomentAuditItem
+ *
+ * 管理员审核队列中的单条动态（含作者昵称 / 头像，来自 pptr 回查）。
+ */
+export type MomentAuditItem = {
+    /**
+     * Dynid
+     *
+     * 动态 ID（int）
+     */
+    dynId: number;
+    /**
+     * Dynidstr
+     *
+     * 动态 ID（字符串，避免精度丢失）
+     */
+    dynIdStr: string;
+    /**
+     * Mid
+     *
+     * 发布者 UID
+     */
+    mid: number;
+    /**
+     * Authorname
+     *
+     * 发布者昵称（pptr 回查）
+     */
+    authorName?: string | null;
+    /**
+     * Authorface
+     *
+     * 发布者头像（pptr 回查）
+     */
+    authorFace?: string | null;
+    /**
+     * Dyntype
+     *
+     * 动态类型字符串：WORD/FORWARD
+     */
+    dynType: string;
+    /**
+     * Contenttext
+     *
+     * 纯文本正文预览
+     */
+    contentText?: string | null;
+    /**
+     * Pubtime
+     *
+     * 发布时间（ISO，normal 才有）
+     */
+    pubTime?: string | null;
+    /**
+     * Createdtime
+     *
+     * 创建时间（ISO）
+     */
+    createdTime?: string | null;
+    /**
+     * Auditstatus
+     *
+     * 审核状态字符串
+     */
+    auditStatus: string;
+    /**
+     * Istop
+     *
+     * 是否置顶：0=否,1=是
+     */
+    isTop?: number;
+    /**
+     * Topicid
+     *
+     * 关联话题 ID
+     */
+    topicId?: number | null;
+};
+
+/**
+ * MomentAuditListResp
+ *
+ * 管理员待审核列表响应。
+ */
+export type MomentAuditListResp = {
+    /**
+     * Items
+     */
+    items?: Array<MomentAuditItem>;
+    /**
+     * Total
+     *
+     * 符合条件的总数
+     */
+    total?: number;
+    /**
+     * Page Num
+     */
+    page_num?: number;
+    /**
+     * Page Size
+     */
+    page_size?: number;
+};
+
+/**
+ * MomentAuditLogItem
+ *
+ * 单条审核流转记录（管理后台流水）。
+ */
+export type MomentAuditLogItem = {
+    /**
+     * Pk
+     *
+     * 记录主键
+     */
+    pk: number;
+    /**
+     * Dynid
+     *
+     * 被审核动态 ID
+     */
+    dynId: number;
+    /**
+     * Operatormid
+     *
+     * 操作人 MID
+     */
+    operatorMid: number;
+    /**
+     * Operatorrole
+     *
+     * 操作人角色：author/admin
+     */
+    operatorRole: string;
+    /**
+     * Fromstatus
+     *
+     * 流转前状态
+     */
+    fromStatus?: string | null;
+    /**
+     * Tostatus
+     *
+     * 流转后状态
+     */
+    toStatus: string;
+    /**
+     * Actiontype
+     *
+     * 操作类型：create/edit/approve/reject/resubmit/delete
+     */
+    actionType: string;
+    /**
+     * Rejectreason
+     *
+     * 驳回原因（仅 reject）
+     */
+    rejectReason?: string | null;
+    /**
+     * Remark
+     *
+     * 其他备注
+     */
+    remark?: string | null;
+    /**
+     * Createdtime
+     *
+     * 操作时间（ISO）
+     */
+    createdTime?: string | null;
+};
+
+/**
+ * MomentAuditLogListResp
+ *
+ * 审核记录流水响应。
+ */
+export type MomentAuditLogListResp = {
+    /**
+     * Items
+     */
+    items?: Array<MomentAuditLogItem>;
+    /**
+     * Total
+     */
+    total?: number;
+    /**
+     * Page Num
+     */
+    page_num?: number;
+    /**
+     * Page Size
+     */
+    page_size?: number;
+};
+
+/**
+ * MomentAuditRejectReq
+ *
+ * 审核驳回请求。
+ */
+export type MomentAuditRejectReq = {
+    /**
+     * Dynid
+     *
+     * 动态 ID（int）
+     */
+    dynId: number;
+    /**
+     * Rejectreason
+     *
+     * 驳回原因
+     */
+    rejectReason: string;
+    /**
+     * Remark
+     *
+     * 审核备注（选填）
+     */
+    remark?: string | null;
+};
+
+/**
+ * MomentContentNode
+ *
+ * 动态正文中的一个富文本节点。
+ *
+ * 节点类型：WORDS / AT / TOPIC / LINK / RESOURCE（2.17.0 新增）。
+ * `RESOURCE` 用于引用任意业务资源（抽奖卡片 / RPA 操作等），字段：
+ * `bizType` 资源类型、`bizId` 资源 id、`name` 展示名、`cover` 封面、`jumpUrl` 落地页。
+ */
+export type MomentContentNode = {
+    /**
+     * Type
+     *
+     * 节点类型：WORDS / AT / TOPIC / LINK / RESOURCE
+     */
+    type: string;
+    /**
+     * Text
+     *
+     * 节点文本
+     */
+    text?: string;
+    /**
+     * Biztype
+     *
+     * 资源类型（RESOURCE 节点：lottery/rpa_action/rpa_workflow/rpa_browser/dynamic）
+     */
+    bizType?: string | null;
+    /**
+     * Bizid
+     *
+     * 业务 ID：AT→被@用户mid，TOPIC→话题id，RESOURCE→资源id
+     */
+    bizId?: string | null;
+    /**
+     * Name
+     *
+     * 展示名：AT→昵称，TOPIC→话题名，RESOURCE→资源标题
+     */
+    name?: string | null;
+    /**
+     * Cover
+     *
+     * 封面图链接（RESOURCE 节点）
+     */
+    cover?: string | null;
+    /**
+     * Jumpurl
+     *
+     * 跳转链接（LINK / RESOURCE 节点）
+     */
+    jumpUrl?: string | null;
+    /**
+     * Picmeta
+     *
+     * 图片元信息（LINK 且 renderAsImage=true 时）
+     */
+    picMeta?: {
+        [key: string]: unknown;
+    } | null;
+};
+
+/**
+ * MomentCreateCheckReq
+ *
+ * 发布页预校验请求。
+ */
+export type MomentCreateCheckReq = {
+    /**
+     * Scene
+     *
+     * 动态场景：WORD / FORWARD
+     */
+    scene: string;
+};
+
+/**
+ * MomentCreateCheckResp
+ *
+ * 发布页预校验响应。
+ */
+export type MomentCreateCheckResp = {
+    /**
+     * Setting
+     *
+     * 发布设置（MVP 留空扩展）
+     */
+    setting?: {
+        [key: string]: unknown;
+    };
+    /**
+     * Permission
+     *
+     * 权限信息（MVP 留空扩展）
+     */
+    permission?: {
+        [key: string]: unknown;
+    };
+    /**
+     * Allowedscenes
+     *
+     * 允许的动态场景
+     */
+    allowedScenes?: Array<string>;
+};
+
+/**
+ * MomentCreateOption
+ *
+ * 发布选项。
+ */
+export type MomentCreateOption = {
+    /**
+     * Closecomment
+     *
+     * 是否关闭评论：0=否,1=是
+     */
+    closeComment?: number;
+};
+
+/**
+ * MomentCreateReq
+ *
+ * 创建动态请求。
+ *
+ * scene 限定 MVP 支持的两种：WORD（纯文字）/ FORWARD（转发）。
+ */
+export type MomentCreateReq = {
+    /**
+     * Scene
+     *
+     * 动态场景：WORD / FORWARD
+     */
+    scene: string;
+    /**
+     * Content
+     *
+     * 富文本正文节点列表
+     */
+    content: Array<MomentContentNode>;
+    /**
+     * 附加卡资源引用（2.21.0，只存 bizType+bizId）
+     */
+    attach?: MomentAttachRef | null;
+    /**
+     * 转发源（FORWARD 必填）
+     */
+    repostSrc?: MomentRepostSrc | null;
+    /**
+     * Topics
+     *
+     * 多话题（2.22.0）：最多 5 个，去重，仅可关联已过审话题
+     */
+    topics?: Array<MomentTopicRef> | null;
+    /**
+     * [兼容]单话题引用（2.22.0 起与 topics 合并去重）
+     */
+    topic?: MomentTopicRef | null;
+    /**
+     * LBS 位置
+     */
+    lbs?: MomentLbsRef | null;
+    /**
+     * 发布选项
+     */
+    option?: MomentCreateOption | null;
+};
+
+/**
+ * MomentCreateResp
+ *
+ * 创建动态响应。
+ */
+export type MomentCreateResp = {
+    /**
+     * Dynid
+     *
+     * 动态 ID（int）
+     */
+    dynId: number;
+    /**
+     * Dynidstr
+     *
+     * 动态 ID（字符串，避免精度丢失）
+     */
+    dynIdStr: string;
+    /**
+     * Auditstatus
+     *
+     * 审核状态字符串：auditing/normal/rejected/hidden
+     */
+    auditStatus: string;
+    /**
+     * Dyntype
+     *
+     * 动态类型字符串：WORD/FORWARD
+     */
+    dynType: string;
+};
+
+/**
+ * MomentDetailResp
+ *
+ * 动态详情响应（单条完整卡片）。
+ */
+export type MomentDetailResp = {
+    /**
+     * Dynid
+     *
+     * 动态 ID（int）
+     */
+    dynId: number;
+    /**
+     * Dynidstr
+     *
+     * 动态 ID（字符串，避免精度丢失）
+     */
+    dynIdStr: string;
+    /**
+     * Dyntype
+     *
+     * 动态类型字符串：WORD/FORWARD
+     */
+    dynType: string;
+    /**
+     * Mid
+     *
+     * 发布者 UID
+     */
+    mid: number;
+    /**
+     * Auditstatus
+     *
+     * 审核状态字符串
+     */
+    auditStatus: string;
+    /**
+     * Istop
+     *
+     * 是否置顶：0=否,1=是
+     */
+    isTop?: number;
+    /**
+     * Pubtime
+     *
+     * 发布时间（ISO，仅 normal 有值）
+     */
+    pubTime?: string | null;
+    /**
+     * Createdtime
+     *
+     * 创建时间（ISO，用于 auditing/rejected 展示）
+     */
+    createdTime?: string | null;
+    /**
+     * Auditrejectreason
+     *
+     * 驳回原因（rejected 状态）
+     */
+    auditRejectReason?: string | null;
+    /**
+     * Iplocation
+     *
+     * IP 属地（如「浙江 杭州」，服务端 GeoIP 解析）
+     */
+    ipLocation?: string | null;
+    /**
+     * Ipisp
+     *
+     * IP 运营商 ISP
+     */
+    ipIsp?: string | null;
+    /**
+     * Modules
+     *
+     * 渲染模块列表
+     */
+    modules?: Array<MomentModule>;
+    /**
+     * Stat
+     *
+     * 统计快照（likeCount/commentCount/repostCount/viewCount）
+     */
+    stat?: {
+        [key: string]: unknown;
+    };
+};
+
+/**
+ * MomentDetailsReq
+ *
+ * 批量动态详情请求。
+ */
+export type MomentDetailsReq = {
+    /**
+     * Dynamicids
+     *
+     * 动态 ID 列表（限 20 条）
+     */
+    dynamicIds: Array<number>;
+};
+
+/**
+ * MomentEditReq
+ *
+ * 编辑动态请求（rejected / auditing 编辑后自动回 auditing）。
+ */
+export type MomentEditReq = {
+    /**
+     * Dynid
+     *
+     * 动态 ID（int）
+     */
+    dynId: number;
+    /**
+     * Scene
+     *
+     * 动态场景：WORD / FORWARD
+     */
+    scene: string;
+    /**
+     * Content
+     *
+     * 富文本正文节点列表
+     */
+    content: Array<MomentContentNode>;
+    /**
+     * 附加卡资源引用（2.21.0）
+     */
+    attach?: MomentAttachRef | null;
+    /**
+     * Topics
+     *
+     * 多话题（2.22.0）：最多 5 个，去重，仅可关联已过审话题
+     */
+    topics?: Array<MomentTopicRef> | null;
+    /**
+     * [兼容]单话题引用（2.22.0 起与 topics 合并去重）
+     */
+    topic?: MomentTopicRef | null;
+    /**
+     * 发布选项
+     */
+    option?: MomentCreateOption | null;
+};
+
+/**
+ * MomentEditResp
+ *
+ * 编辑动态响应。
+ */
+export type MomentEditResp = {
+    /**
+     * Dynid
+     *
+     * 动态 ID（int）
+     */
+    dynId: number;
+    /**
+     * Dynidstr
+     *
+     * 动态 ID（字符串，避免精度丢失）
+     */
+    dynIdStr: string;
+    /**
+     * Auditstatus
+     *
+     * 审核状态字符串：auditing/normal/rejected/hidden
+     */
+    auditStatus: string;
+    /**
+     * Dyntype
+     *
+     * 动态类型字符串：WORD/FORWARD
+     */
+    dynType: string;
+};
+
+/**
+ * MomentFeedItem
+ *
+ * Feed 流 / 详情中的单条动态卡片。
+ */
+export type MomentFeedItem = {
+    /**
+     * Dynid
+     *
+     * 动态 ID（int）
+     */
+    dynId: number;
+    /**
+     * Dynidstr
+     *
+     * 动态 ID（字符串，避免精度丢失）
+     */
+    dynIdStr: string;
+    /**
+     * Dyntype
+     *
+     * 动态类型字符串：WORD/FORWARD
+     */
+    dynType: string;
+    /**
+     * Mid
+     *
+     * 发布者 UID
+     */
+    mid: number;
+    /**
+     * Auditstatus
+     *
+     * 审核状态字符串
+     */
+    auditStatus: string;
+    /**
+     * Istop
+     *
+     * 是否置顶：0=否,1=是
+     */
+    isTop?: number;
+    /**
+     * Pubtime
+     *
+     * 发布时间（ISO，仅 normal 有值）
+     */
+    pubTime?: string | null;
+    /**
+     * Createdtime
+     *
+     * 创建时间（ISO，用于 auditing/rejected 展示）
+     */
+    createdTime?: string | null;
+    /**
+     * Auditrejectreason
+     *
+     * 驳回原因（rejected 状态）
+     */
+    auditRejectReason?: string | null;
+    /**
+     * Iplocation
+     *
+     * IP 属地（如「浙江 杭州」，服务端 GeoIP 解析）
+     */
+    ipLocation?: string | null;
+    /**
+     * Ipisp
+     *
+     * IP 运营商 ISP
+     */
+    ipIsp?: string | null;
+    /**
+     * Modules
+     *
+     * 渲染模块列表
+     */
+    modules?: Array<MomentModule>;
+    /**
+     * Stat
+     *
+     * 统计快照（likeCount/commentCount/repostCount/viewCount）
+     */
+    stat?: {
+        [key: string]: unknown;
+    };
+};
+
+/**
+ * MomentFeedResp
+ *
+ * Feed 流响应（含游标分页字段）。
+ */
+export type MomentFeedResp = {
+    /**
+     * Items
+     */
+    items?: Array<MomentFeedItem>;
+    /**
+     * Hasmore
+     *
+     * 是否还有下一页
+     */
+    hasMore?: boolean;
+    /**
+     * Updatebaseline
+     *
+     * 刷新基线（最新一条 dynId）
+     */
+    updateBaseline?: number | null;
+    /**
+     * Historyoffset
+     *
+     * 历史偏移（最旧一条 dynId）
+     */
+    historyOffset?: number | null;
+    /**
+     * Updatenum
+     *
+     * 相对基线的新增条数
+     */
+    updateNum?: number;
+};
+
+/**
+ * MomentForwardItem
+ *
+ * 单条转发记录（被转发过来的动态简要）。
+ */
+export type MomentForwardItem = {
+    /**
+     * Dynid
+     *
+     * 转发动态 ID
+     */
+    dynId: number;
+    /**
+     * Mid
+     *
+     * 转发者 mid
+     */
+    mid: number;
+    /**
+     * Uname
+     *
+     * 转发者昵称
+     */
+    uname?: string | null;
+    /**
+     * Face
+     *
+     * 转发者头像
+     */
+    face?: string | null;
+    /**
+     * Pubtime
+     *
+     * 发布时间（ISO8601）
+     */
+    pubTime?: string | null;
+    /**
+     * Text
+     *
+     * 转发时的 desc 模块正文（去除富文本）
+     */
+    text?: string | null;
+};
+
+/**
+ * MomentForwardListResp
+ *
+ * 转发列表响应。
+ */
+export type MomentForwardListResp = {
+    /**
+     * Items
+     *
+     * 转发列表
+     */
+    items?: Array<MomentForwardItem>;
+    /**
+     * Total
+     *
+     * 转发总数
+     */
+    total?: number;
+    /**
+     * Page Num
+     *
+     * 当前页
+     */
+    page_num?: number;
+    /**
+     * Page Size
+     *
+     * 每页条数
+     */
+    page_size?: number;
+};
+
+/**
+ * MomentLbsRef
+ *
+ * LBS 位置引用。
+ */
+export type MomentLbsRef = {
+    /**
+     * Poi
+     *
+     * POI 名称
+     */
+    poi?: string | null;
+    /**
+     * Lat
+     *
+     * 纬度
+     */
+    lat?: number | null;
+    /**
+     * Lng
+     *
+     * 经度
+     */
+    lng?: number | null;
+};
+
+/**
+ * MomentLikerItem
+ *
+ * 单条点赞记录（用户简要 + 点赞时间）。
+ */
+export type MomentLikerItem = {
+    /**
+     * Mid
+     *
+     * 点赞用户 mid
+     */
+    mid: number;
+    /**
+     * Uname
+     *
+     * 昵称（取不到则为 None）
+     */
+    uname?: string | null;
+    /**
+     * Face
+     *
+     * 头像 URL
+     */
+    face?: string | null;
+    /**
+     * Like Time
+     *
+     * 点赞时间（ISO8601；服务端从 TMomentLike.created_at 取）
+     */
+    like_time?: string | null;
+};
+
+/**
+ * MomentLikerListResp
+ *
+ * 点赞明细列表响应。
+ */
+export type MomentLikerListResp = {
+    /**
+     * Items
+     *
+     * 点赞用户列表
+     */
+    items?: Array<MomentLikerItem>;
+    /**
+     * Total
+     *
+     * 点赞总数（TMomentStat.likeCount）
+     */
+    total?: number;
+    /**
+     * Page Num
+     *
+     * 当前页
+     */
+    page_num?: number;
+    /**
+     * Page Size
+     *
+     * 每页条数
+     */
+    page_size?: number;
+};
+
+/**
+ * MomentModule
+ *
+ * 动态详情 / Feed 卡片中的一个渲染模块（对齐 B站 DynModuleType）。
+ */
+export type MomentModule = {
+    /**
+     * Moduletype
+     *
+     * 模块类型：author/desc/dynamic/forward/extend/additional/stat/interaction
+     */
+    moduleType: string;
+    /**
+     * Mid
+     *
+     * 发布者 UID
+     */
+    mid?: number | null;
+    /**
+     * Uname
+     *
+     * 发布者昵称
+     */
+    uname?: string | null;
+    /**
+     * Face
+     *
+     * 发布者头像
+     */
+    face?: string | null;
+    /**
+     * Ptimelabeltext
+     *
+     * 发布时间文案（如 10分钟前）
+     */
+    ptimeLabelText?: string | null;
+    /**
+     * Relation
+     *
+     * 与当前用户关系：following/stranger
+     */
+    relation?: string | null;
+    /**
+     * Text
+     *
+     * 纯文本正文
+     */
+    text?: string | null;
+    /**
+     * Nodes
+     *
+     * 富文本节点列表
+     */
+    nodes?: Array<MomentContentNode> | null;
+    /**
+     * Dtype
+     *
+     * 正文卡类型：word/forward
+     */
+    dtype?: string | null;
+    /**
+     * Srcdynid
+     *
+     * 转发源动态 ID
+     */
+    srcDynId?: number | null;
+    /**
+     * 转发源动态完整卡片（嵌套渲染原动态，含作者/正文/统计）
+     */
+    srcMoment?: MomentFeedItem | null;
+    /**
+     * Topicid
+     *
+     * 主话题 ID（= topics[0]，兼容存量单话题客户端）
+     */
+    topicId?: number | null;
+    /**
+     * Topicname
+     *
+     * 主话题名称
+     */
+    topicName?: string | null;
+    /**
+     * Topics
+     *
+     * 多话题（2.22.0）：动态关联的全部话题 [{topicId, topicName}]，按关联顺序
+     */
+    topics?: Array<MomentTopicRef> | null;
+    /**
+     * Biztype
+     *
+     * 附加卡资源类型（lottery/rpa_*dynamic）
+     */
+    bizType?: string | null;
+    /**
+     * Bizid
+     *
+     * 附加卡资源 ID（字符串）
+     */
+    bizId?: string | null;
+    /**
+     * Name
+     *
+     * 附加卡标题（RPC 实时获取）
+     */
+    name?: string | null;
+    /**
+     * Cover
+     *
+     * 附加卡封面（RPC 实时获取）
+     */
+    cover?: string | null;
+    /**
+     * Jumpurl
+     *
+     * 附加卡跳转链接（RPC 实时获取）
+     */
+    jumpUrl?: string | null;
+    /**
+     * Likecount
+     *
+     * 点赞数
+     */
+    likeCount?: number | null;
+    /**
+     * Commentcount
+     *
+     * 评论数
+     */
+    commentCount?: number | null;
+    /**
+     * Repostcount
+     *
+     * 转发数
+     */
+    repostCount?: number | null;
+    /**
+     * Viewcount
+     *
+     * 浏览数
+     */
+    viewCount?: number | null;
+    /**
+     * Islike
+     *
+     * 当前用户是否已赞
+     */
+    isLike?: boolean | null;
+};
+
+/**
+ * MomentPoiItem
+ *
+ * POI 地点项（本地模式：来自已发 Moment 的 lbsPoi 去重）。
+ */
+export type MomentPoiItem = {
+    /**
+     * Poi
+     *
+     * POI 名称
+     */
+    poi: string;
+    /**
+     * Lat
+     *
+     * 纬度
+     */
+    lat?: number | null;
+    /**
+     * Lng
+     *
+     * 经度
+     */
+    lng?: number | null;
+    /**
+     * Dyncount
+     *
+     * 使用该 POI 的 Moment 数
+     */
+    dynCount?: number;
+};
+
+/**
+ * MomentPoiResp
+ *
+ * POI 附近 / 关键词搜索响应（MVP 本地模式，未接外部地图 API）。
+ */
+export type MomentPoiResp = {
+    /**
+     * Items
+     */
+    items?: Array<MomentPoiItem>;
+    /**
+     * Hasmore
+     */
+    hasMore?: boolean;
+};
+
+/**
+ * MomentRemoveReq
+ *
+ * 删除动态请求（软删）。
+ */
+export type MomentRemoveReq = {
+    /**
+     * Dynid
+     *
+     * 动态 ID（int）
+     */
+    dynId: number;
+};
+
+/**
+ * MomentRemoveResp
+ *
+ * 删除动态响应。
+ */
+export type MomentRemoveResp = {
+    /**
+     * Dynid
+     *
+     * 动态 ID（int）
+     */
+    dynId: number;
+    /**
+     * Dynidstr
+     *
+     * 动态 ID（字符串）
+     */
+    dynIdStr: string;
+    /**
+     * Success
+     */
+    success?: boolean;
+};
+
+/**
+ * MomentReportReasonEnum
+ *
+ * Moment 举报原因类型。
+ */
+export type MomentReportReasonEnum = 1 | 2 | 3 | 4 | 5 | 6;
+
+/**
+ * MomentReportReq
+ *
+ * 举报动态请求。
+ */
+export type MomentReportReq = {
+    /**
+     * Dynid
+     *
+     * 被举报动态 ID（int）
+     */
+    dynId: number;
+    /**
+     * Reasontype
+     *
+     * 举报原因类型（MomentReportReasonEnum 值）
+     */
+    reasonType: number;
+    /**
+     * Reasondesc
+     *
+     * 补充描述（选填）
+     */
+    reasonDesc?: string | null;
+};
+
+/**
+ * MomentReportResp
+ *
+ * 举报响应。
+ */
+export type MomentReportResp = {
+    /**
+     * Dynid
+     *
+     * 被举报动态 ID（int）
+     */
+    dynId: number;
+    /**
+     * Dynidstr
+     *
+     * 动态 ID（字符串）
+     */
+    dynIdStr: string;
+    /**
+     * Success
+     */
+    success?: boolean;
+};
+
+/**
+ * MomentRepostReq
+ *
+ * 转发动态请求（FORWARD）。
+ */
+export type MomentRepostReq = {
+    /**
+     * Srcdynid
+     *
+     * 源动态 ID（int）
+     */
+    srcDynId: number;
+    /**
+     * Content
+     *
+     * 转发语节点列表（可为空）
+     */
+    content?: Array<MomentContentNode> | null;
+};
+
+/**
+ * MomentRepostResp
+ *
+ * 转发动态响应。
+ */
+export type MomentRepostResp = {
+    /**
+     * Dynid
+     *
+     * 动态 ID（int）
+     */
+    dynId: number;
+    /**
+     * Dynidstr
+     *
+     * 动态 ID（字符串，避免精度丢失）
+     */
+    dynIdStr: string;
+    /**
+     * Auditstatus
+     *
+     * 审核状态字符串：auditing/normal/rejected/hidden
+     */
+    auditStatus: string;
+    /**
+     * Dyntype
+     *
+     * 动态类型字符串：WORD/FORWARD
+     */
+    dynType: string;
+};
+
+/**
+ * MomentRepostSrc
+ *
+ * 转发源引用。
+ */
+export type MomentRepostSrc = {
+    /**
+     * Dynid
+     *
+     * 转发源动态 ID（int）
+     */
+    dynId: number;
+};
+
+/**
+ * MomentThumbReq
+ *
+ * 点赞 / 取消点赞请求（2.17.0 泛化支持多业务资源）。
+ *
+ * `bizType` 默认 `dynamic`，此时 `bizId` 等价 `dynId`（二者任传其一）；
+ * `bizType≠dynamic` 时 `bizId` 必填、`dynId` 忽略。
+ */
+export type MomentThumbReq = {
+    /**
+     * Biztype
+     *
+     * 资源类型：dynamic/lottery/rpa_action/rpa_workflow/rpa_browser（对外文字，DB 存 int）
+     */
+    bizType?: string;
+    /**
+     * Bizid
+     *
+     * 资源 ID（int；动态时=动态 ID）
+     */
+    bizId?: number | null;
+    /**
+     * Dynid
+     *
+     * [兼容]动态 ID（int）
+     */
+    dynId?: number | null;
+    /**
+     * Up
+     *
+     * 1=点赞, 2=取消点赞
+     */
+    up?: number;
+};
+
+/**
+ * MomentThumbResp
+ *
+ * 点赞响应（2.17.0 泛化）。
+ */
+export type MomentThumbResp = {
+    /**
+     * Biztype
+     *
+     * 资源类型
+     */
+    bizType?: string;
+    /**
+     * Bizid
+     *
+     * 资源 ID（int）
+     */
+    bizId: number;
+    /**
+     * Bizidstr
+     *
+     * 资源 ID（字符串，避免精度丢失）
+     */
+    bizIdStr: string;
+    /**
+     * Dynid
+     *
+     * [兼容]动态 ID（动态资源时返回）
+     */
+    dynId?: number | null;
+    /**
+     * Dynidstr
+     *
+     * [兼容]动态 ID（字符串）
+     */
+    dynIdStr?: string | null;
+    /**
+     * Islike
+     *
+     * 操作后当前用户是否已赞
+     */
+    isLike?: boolean;
+    /**
+     * Likecount
+     *
+     * 操作后点赞数
+     */
+    likeCount?: number;
+};
+
+/**
+ * MomentTopReq
+ *
+ * 空间置顶 / 取消置顶请求。
+ */
+export type MomentTopReq = {
+    /**
+     * Dynid
+     *
+     * 动态 ID（int）
+     */
+    dynId: number;
+};
+
+/**
+ * MomentTopResp
+ *
+ * 置顶 / 取消置顶响应。
+ */
+export type MomentTopResp = {
+    /**
+     * Dynid
+     *
+     * 动态 ID（int）
+     */
+    dynId: number;
+    /**
+     * Dynidstr
+     *
+     * 动态 ID（字符串）
+     */
+    dynIdStr: string;
+    /**
+     * Istop
+     *
+     * 是否置顶：0=否,1=是
+     */
+    isTop: number;
+};
+
+/**
+ * MomentTopicAuditApproveReq
+ *
+ * 话题审核通过请求。
+ */
+export type MomentTopicAuditApproveReq = {
+    /**
+     * Topicid
+     *
+     * 话题 ID
+     */
+    topicId: number;
+    /**
+     * Remark
+     *
+     * 审核备注（选填）
+     */
+    remark?: string | null;
+};
+
+/**
+ * MomentTopicAuditItem
+ *
+ * 管理端话题审核队列中的单条话题（含创建者昵称/头像，pptr 回查）。
+ */
+export type MomentTopicAuditItem = {
+    /**
+     * Topicid
+     *
+     * 话题 ID
+     */
+    topicId: number;
+    /**
+     * Creatormid
+     *
+     * 创建者 UID
+     */
+    creatorMid: number;
+    /**
+     * Creatorname
+     *
+     * 创建者昵称（pptr 回查）
+     */
+    creatorName?: string | null;
+    /**
+     * Creatorface
+     *
+     * 创建者头像（pptr 回查）
+     */
+    creatorFace?: string | null;
+    /**
+     * Topicname
+     *
+     * 话题名称
+     */
+    topicName: string;
+    /**
+     * Topiccover
+     *
+     * 话题封面图
+     */
+    topicCover?: string | null;
+    /**
+     * Topicdesc
+     *
+     * 话题描述
+     */
+    topicDesc?: string | null;
+    /**
+     * Createdat
+     *
+     * 创建时间（ISO）
+     */
+    createdAt?: string | null;
+};
+
+/**
+ * MomentTopicAuditListResp
+ *
+ * 管理端话题待审核列表响应。
+ */
+export type MomentTopicAuditListResp = {
+    /**
+     * Items
+     */
+    items?: Array<MomentTopicAuditItem>;
+    /**
+     * Total
+     *
+     * 符合条件的总数
+     */
+    total?: number;
+    /**
+     * Page Num
+     */
+    page_num?: number;
+    /**
+     * Page Size
+     */
+    page_size?: number;
+};
+
+/**
+ * MomentTopicAuditRejectReq
+ *
+ * 话题审核驳回请求。
+ */
+export type MomentTopicAuditRejectReq = {
+    /**
+     * Topicid
+     *
+     * 话题 ID
+     */
+    topicId: number;
+    /**
+     * Rejectreason
+     *
+     * 驳回原因
+     */
+    rejectReason: string;
+    /**
+     * Remark
+     *
+     * 审核备注（选填）
+     */
+    remark?: string | null;
+};
+
+/**
+ * MomentTopicCreateReq
+ *
+ * 创建话题请求（当前登录用户）。
+ */
+export type MomentTopicCreateReq = {
+    /**
+     * Topicname
+     *
+     * 话题名称（1-30 字，全局唯一）
+     */
+    topicName: string;
+    /**
+     * Topiccover
+     *
+     * 话题封面图（http/https URL）
+     */
+    topicCover?: string | null;
+    /**
+     * Topicdesc
+     *
+     * 话题描述（≤200 字）
+     */
+    topicDesc?: string | null;
+};
+
+/**
+ * MomentTopicCreateResp
+ *
+ * 创建话题响应（创建即进入审核，auditStatus='auditing'）。
+ */
+export type MomentTopicCreateResp = {
+    /**
+     * Topicid
+     *
+     * 话题 ID
+     */
+    topicId: number;
+    /**
+     * Topicname
+     *
+     * 话题名称
+     */
+    topicName: string;
+    /**
+     * Auditstatus
+     *
+     * 审核状态（auditing）
+     */
+    auditStatus: string;
+};
+
+/**
+ * MomentTopicDetailItem
+ *
+ * 话题详情（对齐 B 站 `top_details` 结构）。
+ *
+ * - ``topic_item``：话题主体信息（浏览/讨论/收藏/动态/点赞数等）；
+ * - ``topic_creator``：话题创建者简要信息（uid/face/name）；
+ * - ``has_create_jurisdiction``：当前用户是否有创建/管理该话题的权限。
+ */
+export type MomentTopicDetailItem = {
+    /**
+     * Topic Item
+     *
+     * 话题主体信息：id/name/view/discuss/fav/dynamics/like/share/jump_url/back_color/share_pic/description/ctime
+     */
+    topic_item?: {
+        [key: string]: unknown;
+    };
+    /**
+     * Topic Creator
+     *
+     * 话题创建者：uid/face/name
+     */
+    topic_creator?: {
+        [key: string]: unknown;
+    };
+    /**
+     * Operation Content
+     *
+     * 运营位（暂为空）
+     */
+    operation_content?: {
+        [key: string]: unknown;
+    };
+    /**
+     * Has Create Jurisdiction
+     *
+     * 当前用户是否有创建/管理权限
+     */
+    has_create_jurisdiction?: boolean;
+    /**
+     * Close Pub Layer Entry
+     *
+     * 是否关闭发布入口
+     */
+    close_pub_layer_entry?: boolean;
+};
+
+/**
+ * MomentTopicDetailResp
+ *
+ * 话题详情响应（对齐 B 站 `data.top_details`）。
+ */
+export type MomentTopicDetailResp = {
+    top_details?: MomentTopicDetailItem;
+    /**
+     * Functional Card
+     */
+    functional_card?: {
+        [key: string]: unknown;
+    };
+    /**
+     * Click Area Card
+     */
+    click_area_card?: {
+        [key: string]: unknown;
+    };
+};
+
+/**
+ * MomentTopicFeedResp
+ *
+ * 话题下动态 Feed 响应（复用综合页游标结构）。
+ */
+export type MomentTopicFeedResp = {
+    /**
+     * Topicid
+     *
+     * 话题 ID
+     */
+    topicId: number;
+    /**
+     * Topicname
+     *
+     * 话题名称
+     */
+    topicName: string;
+    /**
+     * Items
+     */
+    items?: Array<MomentFeedItem>;
+    /**
+     * Hasmore
+     */
+    hasMore?: boolean;
+    /**
+     * Historyoffset
+     */
+    historyOffset?: number | null;
+    /**
+     * Updatebaseline
+     */
+    updateBaseline?: number | null;
+    /**
+     * Updatenum
+     */
+    updateNum?: number;
+};
+
+/**
+ * MomentTopicInfo
+ *
+ * 话题广场单条话题信息。
+ */
+export type MomentTopicInfo = {
+    /**
+     * Topicid
+     *
+     * 话题 ID（int）
+     */
+    topicId: number;
+    /**
+     * Topicname
+     *
+     * 话题名称
+     */
+    topicName: string;
+    /**
+     * Topiccover
+     *
+     * 话题封面图
+     */
+    topicCover?: string | null;
+    /**
+     * Topicdesc
+     *
+     * 话题描述
+     */
+    topicDesc?: string | null;
+    /**
+     * Jumpurl
+     *
+     * 话题跳转 H5
+     */
+    jumpUrl?: string | null;
+    /**
+     * Dyncount
+     *
+     * 话题下动态数（仅 normal 且未软删）
+     */
+    dynCount?: number;
+    /**
+     * Viewcount
+     *
+     * 话题浏览量
+     */
+    viewCount?: number;
+    /**
+     * Ishot
+     *
+     * 是否热门话题
+     */
+    isHot?: number;
+};
+
+/**
+ * MomentTopicMineItem
+ *
+ * 「我创建的话题」单条（含审核状态与驳回原因）。
+ */
+export type MomentTopicMineItem = {
+    /**
+     * Topicid
+     *
+     * 话题 ID
+     */
+    topicId: number;
+    /**
+     * Topicname
+     *
+     * 话题名称
+     */
+    topicName: string;
+    /**
+     * Topiccover
+     *
+     * 话题封面图
+     */
+    topicCover?: string | null;
+    /**
+     * Topicdesc
+     *
+     * 话题描述
+     */
+    topicDesc?: string | null;
+    /**
+     * Auditstatus
+     *
+     * 审核状态：auditing/normal/rejected
+     */
+    auditStatus: string;
+    /**
+     * Auditrejectreason
+     *
+     * 驳回原因（rejected 时有值）
+     */
+    auditRejectReason?: string | null;
+    /**
+     * Pubtime
+     *
+     * 审核通过时间（ISO）
+     */
+    pubTime?: string | null;
+    /**
+     * Createdat
+     *
+     * 创建时间（ISO）
+     */
+    createdAt?: string | null;
+};
+
+/**
+ * MomentTopicMineResp
+ *
+ * 「我创建的话题」列表响应。
+ */
+export type MomentTopicMineResp = {
+    /**
+     * Items
+     */
+    items?: Array<MomentTopicMineItem>;
+    /**
+     * Hasmore
+     */
+    hasMore?: boolean;
+};
+
+/**
+ * MomentTopicRef
+ *
+ * 话题引用。
+ */
+export type MomentTopicRef = {
+    /**
+     * Topicid
+     *
+     * 话题 ID（int）
+     */
+    topicId: number;
+    /**
+     * Topicname
+     *
+     * 话题名称
+     */
+    topicName?: string | null;
+};
+
+/**
+ * MomentTopicSquareResp
+ *
+ * 话题广场列表响应。
+ */
+export type MomentTopicSquareResp = {
+    /**
+     * Items
+     *
+     * 话题列表
+     */
+    items?: Array<MomentTopicInfo>;
+    /**
+     * Hasmore
+     *
+     * 是否还有下一页
+     */
+    hasMore?: boolean;
+};
+
+/**
+ * MomentUpStatResp
+ *
+ * 空间统计响应（对标 B 站 `/x/space/upstat`）。
+ *
+ * 统计某用户对外可见动态的总数与获赞总数。
+ */
+export type MomentUpStatResp = {
+    /**
+     * Mid
+     *
+     * 用户 UID
+     */
+    mid: number;
+    /**
+     * Dynamic Count
+     *
+     * 对外可见动态总数
+     */
+    dynamic_count?: number;
+    /**
+     * Like Count
+     *
+     * 这些动态被点赞的总数
+     */
+    like_count?: number;
 };
 
 /**
@@ -2579,16 +5562,17 @@ export type NotifyUpdateReq = {
  *
  * `POST /api/v1/user/user_info/update` 的请求体。
  *
- * 校验规则对齐 pptr 旧 express-validator：昵称 2~24 字、签名 ≤70 字、
+ * 各字段均为可选（只传要修改的字段），空串表示该字段不修改。
+ * 校验规则对齐 pptr 旧 express-validator：昵称 2~24 字（有值时）、签名 ≤70 字、
  * 性别限定枚举；生日为 ISO 日期字符串。
  */
 export type PptrUserInfoUpdateParams = {
     /**
      * Uname
      *
-     * 昵称（2-24 个字）
+     * 昵称（空串=不修改；非空时 2-24 字，接口层校验最短 2 字）
      */
-    uname: string;
+    uname?: string;
     /**
      * Usersign
      *
@@ -2607,6 +5591,12 @@ export type PptrUserInfoUpdateParams = {
      * 生日（ISO 日期字符串）
      */
     birthday?: string;
+    /**
+     * Avatar
+     *
+     * 头像图片 URL（http/https，2.16.0 新增；后端下载校验：1s 内下载完成且 ≤1MB；空串表示不修改）
+     */
+    avatar?: string;
 };
 
 /**
@@ -2633,6 +5623,12 @@ export type PptrUserInfoUpdateResult = {
      * 昵称发生变更并已写入昵称历史表 TUserNameRecord
      */
     uname_recorded?: boolean;
+    /**
+     * Avatar Status
+     *
+     * 头像字段处理结果：'pending'（已提交审核，未即时生效）/ 'none'（本次未修改头像）
+     */
+    avatar_status?: string | null;
 };
 
 /**
@@ -2674,7 +5670,7 @@ export type PptrUserLevelInfo = {
     /**
      * Next Exp
      *
-     * 下一等级所需经验
+     * 距下一级还需经验（下一级门槛经验 - 当前累积经验），满级为 0
      */
     next_exp?: number;
     /**
@@ -3259,6 +6255,202 @@ export type PushMessage = {
 };
 
 /**
+ * ReportCreateReq
+ *
+ * 统一举报请求（评论 / 动态 / 用户空间 / RPA 资源）。
+ */
+export type ReportCreateReq = {
+    /**
+     * Biztype
+     *
+     * 举报来源类型：dynamic/comment/user（ReportBizTypeEnum 值）
+     */
+    bizType: string;
+    /**
+     * Bizid
+     *
+     * 被举报对象 id：dynamic→dynId，comment→rpid，user→mid
+     */
+    bizId: number;
+    /**
+     * Reasontype
+     *
+     * 统一举报原因（ReportReasonEnum 值）
+     */
+    reasonType: number;
+    /**
+     * Reasondesc
+     *
+     * 补充描述（选填）
+     */
+    reasonDesc?: string | null;
+    /**
+     * Pics
+     *
+     * 证据图片 URL 列表（http(s)，最多 3 张）
+     */
+    pics?: Array<string> | null;
+};
+
+/**
+ * ReportItem
+ *
+ * 统一举报记录展示项。
+ */
+export type ReportItem = {
+    /**
+     * Pk
+     */
+    pk: number;
+    /**
+     * Biztype
+     */
+    bizType: string;
+    /**
+     * Bizid
+     */
+    bizId: number;
+    /**
+     * Accusedmid
+     */
+    accusedMid: number;
+    /**
+     * Reportmid
+     */
+    reportMid: number;
+    /**
+     * Reasontype
+     */
+    reasonType: number;
+    /**
+     * Reasondesc
+     */
+    reasonDesc?: string | null;
+    /**
+     * Pics
+     */
+    pics?: Array<string> | null;
+    /**
+     * Auditstatus
+     */
+    auditStatus: string;
+    /**
+     * Auditremark
+     */
+    auditRemark?: string | null;
+    /**
+     * Auditadminmid
+     */
+    auditAdminMid?: number | null;
+    /**
+     * Createdat
+     */
+    createdAt?: string | null;
+};
+
+/**
+ * ReportListResp
+ *
+ * 统一举报管理端列表响应。
+ */
+export type ReportListResp = {
+    /**
+     * Items
+     */
+    items: Array<ReportItem>;
+    /**
+     * Total
+     */
+    total: number;
+    /**
+     * Page
+     */
+    page: number;
+    /**
+     * Pagesize
+     */
+    pageSize: number;
+};
+
+/**
+ * ReportReviewReq
+ *
+ * 统一举报管理端审核请求。
+ */
+export type ReportReviewReq = {
+    /**
+     * Reportpk
+     *
+     * 举报记录主键
+     */
+    reportPk: number;
+    /**
+     * Decision
+     *
+     * 处置动作：resolve（属实已处理）/ reject（驳回）
+     */
+    decision: string;
+    /**
+     * Remark
+     *
+     * 审核备注
+     */
+    remark?: string | null;
+};
+
+/**
+ * ResourceDetail
+ *
+ * RPA 资源详情（供前端按 bizType 渲染跳转）。
+ */
+export type ResourceDetail = {
+    /**
+     * Biztype
+     *
+     * 资源类型
+     */
+    bizType: string;
+    /**
+     * Bizid
+     *
+     * 资源 id
+     */
+    bizId: number;
+    /**
+     * Name
+     *
+     * 资源名称
+     */
+    name?: string;
+    /**
+     * Cover
+     *
+     * 封面图链接（可选）
+     */
+    cover?: string | null;
+    /**
+     * Authormid
+     *
+     * 作者 mid（字符串，避免精度丢失）
+     */
+    authorMid?: string | null;
+    /**
+     * Jumpurl
+     *
+     * 落地页跳转地址（可选）
+     */
+    jumpUrl?: string | null;
+    /**
+     * Extra
+     *
+     * 按类型的扩展字段（可选）
+     */
+    extra?: {
+        [key: string]: unknown;
+    } | null;
+};
+
+/**
  * RevokeAdminReq
  */
 export type RevokeAdminReq = {
@@ -3276,6 +6468,141 @@ export type RevokeAdminReq = {
  * 事件来源实体类型，与 source_id 共同构成聚合分组键。
  */
 export type SourceTypeEnum = 'video' | 'dynamic' | 'article' | 'comment' | 'lottery' | 'other';
+
+/**
+ * SpaceInfoResp
+ *
+ * 用户空间完整资料（对标 B 站 `/x/space/wbi/acc/info` 的 data）。
+ */
+export type SpaceInfoResp = {
+    /**
+     * Mid
+     */
+    mid: number;
+    /**
+     * Name
+     */
+    name?: string;
+    /**
+     * Sex
+     */
+    sex?: string;
+    /**
+     * Face
+     */
+    face?: string | null;
+    /**
+     * Sign
+     */
+    sign?: string;
+    /**
+     * Level
+     */
+    level?: number;
+    /**
+     * Rank
+     */
+    rank?: number;
+    /**
+     * Jointime
+     */
+    jointime?: number;
+    /**
+     * Moral
+     */
+    moral?: number;
+    /**
+     * Silence
+     */
+    silence?: number;
+    /**
+     * Coins
+     */
+    coins?: number;
+    /**
+     * Birthday
+     */
+    birthday?: string;
+    official?: SpaceOfficial;
+    vip?: SpaceVipWrap;
+    /**
+     * Pendant
+     */
+    pendant?: null;
+    /**
+     * Nameplate
+     */
+    nameplate?: null;
+    /**
+     * Top Photo
+     */
+    top_photo?: string | null;
+    /**
+     * Is Followed
+     */
+    is_followed?: boolean;
+    /**
+     * Is Self
+     */
+    is_self?: boolean;
+};
+
+/**
+ * SpaceOfficial
+ *
+ * 官方认证信息（pptr 无数据源，固定返回空结构）。
+ */
+export type SpaceOfficial = {
+    /**
+     * Role
+     */
+    role?: number;
+    /**
+     * Title
+     */
+    title?: string;
+    /**
+     * Desc
+     */
+    desc?: string;
+    /**
+     * Type
+     */
+    type?: number;
+};
+
+/**
+ * SpaceVipLabel
+ *
+ * 大会员角标文案（pptr 无数据源，固定为空）。
+ */
+export type SpaceVipLabel = {
+    /**
+     * Text
+     */
+    text?: string;
+};
+
+/**
+ * SpaceVipWrap
+ *
+ * 大会员完整信息（对标 B 站 acc/info 的 vip 结构）。
+ */
+export type SpaceVipWrap = {
+    /**
+     * Type
+     */
+    type?: number;
+    /**
+     * Status
+     */
+    status?: number;
+    /**
+     * Due Date
+     */
+    due_date?: number;
+    label?: SpaceVipLabel;
+};
 
 /**
  * StandardResponse
@@ -3325,6 +6652,21 @@ export type StandardResponseAdminStatusResponse = {
      */
     msg?: string;
     data?: AdminStatusResponse | null;
+};
+
+/**
+ * StandardResponse[AvatarAuditListResp]
+ */
+export type StandardResponseAvatarAuditListResp = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: AvatarAuditListResp | null;
 };
 
 /**
@@ -3490,6 +6832,21 @@ export type StandardResponseCommentOperationResp = {
      */
     msg?: string;
     data?: CommentOperationResp | null;
+};
+
+/**
+ * StandardResponse[CommentReportResp]
+ */
+export type StandardResponseCommentReportResp = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: CommentReportResp | null;
 };
 
 /**
@@ -3763,6 +7120,171 @@ export type StandardResponseEventUnreadResp = {
 };
 
 /**
+ * StandardResponse[FavoriteAddResp]
+ */
+export type StandardResponseFavoriteAddResp = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: FavoriteAddResp | null;
+};
+
+/**
+ * StandardResponse[FavoriteDynFoldersResp]
+ */
+export type StandardResponseFavoriteDynFoldersResp = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: FavoriteDynFoldersResp | null;
+};
+
+/**
+ * StandardResponse[FavoriteFolderResp]
+ */
+export type StandardResponseFavoriteFolderResp = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: FavoriteFolderResp | null;
+};
+
+/**
+ * StandardResponse[FavoriteItemListResp]
+ */
+export type StandardResponseFavoriteItemListResp = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: FavoriteItemListResp | null;
+};
+
+/**
+ * StandardResponse[FavoriteListResp]
+ */
+export type StandardResponseFavoriteListResp = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: FavoriteListResp | null;
+};
+
+/**
+ * StandardResponse[FavoriteSettingResp]
+ */
+export type StandardResponseFavoriteSettingResp = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: FavoriteSettingResp | null;
+};
+
+/**
+ * StandardResponse[FollowCountResp]
+ */
+export type StandardResponseFollowCountResp = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: FollowCountResp | null;
+};
+
+/**
+ * StandardResponse[FollowListResp]
+ */
+export type StandardResponseFollowListResp = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: FollowListResp | null;
+};
+
+/**
+ * StandardResponse[FollowOpResp]
+ */
+export type StandardResponseFollowOpResp = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: FollowOpResp | null;
+};
+
+/**
+ * StandardResponse[FollowRelationResp]
+ */
+export type StandardResponseFollowRelationResp = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: FollowRelationResp | null;
+};
+
+/**
+ * StandardResponse[InteractionStatusResp]
+ */
+export type StandardResponseInteractionStatusResp = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: InteractionStatusResp | null;
+};
+
+/**
  * StandardResponse[MessageSettingResp]
  */
 export type StandardResponseMessageSettingResp = {
@@ -3775,6 +7297,381 @@ export type StandardResponseMessageSettingResp = {
      */
     msg?: string;
     data?: MessageSettingResp | null;
+};
+
+/**
+ * StandardResponse[MomentAtListResp]
+ */
+export type StandardResponseMomentAtListResp = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: MomentAtListResp | null;
+};
+
+/**
+ * StandardResponse[MomentAtSearchResp]
+ */
+export type StandardResponseMomentAtSearchResp = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: MomentAtSearchResp | null;
+};
+
+/**
+ * StandardResponse[MomentAuditDetailResp]
+ */
+export type StandardResponseMomentAuditDetailResp = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: MomentAuditDetailResp | null;
+};
+
+/**
+ * StandardResponse[MomentAuditListResp]
+ */
+export type StandardResponseMomentAuditListResp = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: MomentAuditListResp | null;
+};
+
+/**
+ * StandardResponse[MomentAuditLogListResp]
+ */
+export type StandardResponseMomentAuditLogListResp = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: MomentAuditLogListResp | null;
+};
+
+/**
+ * StandardResponse[MomentCreateCheckResp]
+ */
+export type StandardResponseMomentCreateCheckResp = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: MomentCreateCheckResp | null;
+};
+
+/**
+ * StandardResponse[MomentCreateResp]
+ */
+export type StandardResponseMomentCreateResp = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: MomentCreateResp | null;
+};
+
+/**
+ * StandardResponse[MomentDetailResp]
+ */
+export type StandardResponseMomentDetailResp = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: MomentDetailResp | null;
+};
+
+/**
+ * StandardResponse[MomentEditResp]
+ */
+export type StandardResponseMomentEditResp = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: MomentEditResp | null;
+};
+
+/**
+ * StandardResponse[MomentFeedResp]
+ */
+export type StandardResponseMomentFeedResp = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: MomentFeedResp | null;
+};
+
+/**
+ * StandardResponse[MomentForwardListResp]
+ */
+export type StandardResponseMomentForwardListResp = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: MomentForwardListResp | null;
+};
+
+/**
+ * StandardResponse[MomentLikerListResp]
+ */
+export type StandardResponseMomentLikerListResp = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: MomentLikerListResp | null;
+};
+
+/**
+ * StandardResponse[MomentPoiResp]
+ */
+export type StandardResponseMomentPoiResp = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: MomentPoiResp | null;
+};
+
+/**
+ * StandardResponse[MomentRemoveResp]
+ */
+export type StandardResponseMomentRemoveResp = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: MomentRemoveResp | null;
+};
+
+/**
+ * StandardResponse[MomentReportResp]
+ */
+export type StandardResponseMomentReportResp = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: MomentReportResp | null;
+};
+
+/**
+ * StandardResponse[MomentRepostResp]
+ */
+export type StandardResponseMomentRepostResp = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: MomentRepostResp | null;
+};
+
+/**
+ * StandardResponse[MomentThumbResp]
+ */
+export type StandardResponseMomentThumbResp = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: MomentThumbResp | null;
+};
+
+/**
+ * StandardResponse[MomentTopResp]
+ */
+export type StandardResponseMomentTopResp = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: MomentTopResp | null;
+};
+
+/**
+ * StandardResponse[MomentTopicAuditListResp]
+ */
+export type StandardResponseMomentTopicAuditListResp = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: MomentTopicAuditListResp | null;
+};
+
+/**
+ * StandardResponse[MomentTopicCreateResp]
+ */
+export type StandardResponseMomentTopicCreateResp = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: MomentTopicCreateResp | null;
+};
+
+/**
+ * StandardResponse[MomentTopicDetailResp]
+ */
+export type StandardResponseMomentTopicDetailResp = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: MomentTopicDetailResp | null;
+};
+
+/**
+ * StandardResponse[MomentTopicFeedResp]
+ */
+export type StandardResponseMomentTopicFeedResp = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: MomentTopicFeedResp | null;
+};
+
+/**
+ * StandardResponse[MomentTopicMineResp]
+ */
+export type StandardResponseMomentTopicMineResp = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: MomentTopicMineResp | null;
+};
+
+/**
+ * StandardResponse[MomentTopicSquareResp]
+ */
+export type StandardResponseMomentTopicSquareResp = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: MomentTopicSquareResp | null;
+};
+
+/**
+ * StandardResponse[MomentUpStatResp]
+ */
+export type StandardResponseMomentUpStatResp = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: MomentUpStatResp | null;
 };
 
 /**
@@ -3913,6 +7810,99 @@ export type StandardResponsePptrUserSearchResult = {
 };
 
 /**
+ * StandardResponse[ReportListResp]
+ */
+export type StandardResponseReportListResp = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: ReportListResp | null;
+};
+
+/**
+ * StandardResponse[SpaceInfoResp]
+ */
+export type StandardResponseSpaceInfoResp = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: SpaceInfoResp | null;
+};
+
+/**
+ * StandardResponse[Union[AvatarAuditMineResp, NoneType]]
+ */
+export type StandardResponseUnionAvatarAuditMineRespNoneType = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: AvatarAuditMineResp | null;
+};
+
+/**
+ * StandardResponse[Union[FavoriteListResp, NoneType]]
+ */
+export type StandardResponseUnionFavoriteListRespNoneType = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: FavoriteListResp | null;
+};
+
+/**
+ * StandardResponse[Union[list[FavoriteFolderResp], NoneType]]
+ */
+export type StandardResponseUnionListFavoriteFolderRespNoneType = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    /**
+     * Data
+     */
+    data?: Array<FavoriteFolderResp> | null;
+};
+
+/**
+ * StandardResponse[UserActLogListResp]
+ */
+export type StandardResponseUserActLogListResp = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: UserActLogListResp | null;
+};
+
+/**
  * StandardResponse[UserActivityResp]
  */
 export type StandardResponseUserActivityResp = {
@@ -3925,6 +7915,21 @@ export type StandardResponseUserActivityResp = {
      */
     msg?: string;
     data?: UserActivityResp | null;
+};
+
+/**
+ * StandardResponse[UserExpRecordListResp]
+ */
+export type StandardResponseUserExpRecordListResp = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: UserExpRecordListResp | null;
 };
 
 /**
@@ -4029,6 +8034,42 @@ export type StandardResponseListCommentUserBrief = {
      * Data
      */
     data?: Array<CommentUserBrief> | null;
+};
+
+/**
+ * StandardResponse[list[FavoriteFolderResp]]
+ */
+export type StandardResponseListFavoriteFolderResp = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    /**
+     * Data
+     */
+    data?: Array<FavoriteFolderResp> | null;
+};
+
+/**
+ * StandardResponse[list[MomentDetailResp]]
+ */
+export type StandardResponseListMomentDetailResp = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    /**
+     * Data
+     */
+    data?: Array<MomentDetailResp> | null;
 };
 
 /**
@@ -4184,6 +8225,62 @@ export type UnbanReq = {
 };
 
 /**
+ * UserActLogItem
+ *
+ * 单条登录 / 行为记录（TUserActInfoLog）。
+ */
+export type UserActLogItem = {
+    /**
+     * Time
+     *
+     * 行为发生时间（timezone-aware）
+     */
+    time: string;
+    /**
+     * Ip
+     *
+     * 客户端 IP（脱敏后，IPv4→a.b.*.*，IPv6→a:b:*）
+     */
+    ip?: string;
+    /**
+     * Location
+     *
+     * 地理位置（地区 + 运营商，如：中国 上海 移动）
+     */
+    location?: string;
+    /**
+     * Ua
+     *
+     * 客户端 User-Agent
+     */
+    ua?: string;
+    /**
+     * Act Info
+     *
+     * 行为类型：login_succ / reg
+     */
+    act_info?: string;
+};
+
+/**
+ * UserActLogListResp
+ *
+ * 登录记录列表（最近 7 天）。
+ */
+export type UserActLogListResp = {
+    /**
+     * Items
+     */
+    items?: Array<UserActLogItem>;
+    /**
+     * Has More
+     *
+     * 是否还有下一页
+     */
+    has_more?: boolean;
+};
+
+/**
  * UserActivityResp
  *
  * 用户活跃度快照（当前是否在线，用于前端轮询节奏）。
@@ -4207,6 +8304,62 @@ export type UserActivityResp = {
      * 当前是否处于活跃窗口内
      */
     is_active?: boolean;
+};
+
+/**
+ * UserExpRecordItem
+ *
+ * 单条经验变动记录（TUserExpRecord）。
+ */
+export type UserExpRecordItem = {
+    /**
+     * Time
+     *
+     * 经验增加时间（timezone-aware）
+     */
+    time: string;
+    /**
+     * Action Type
+     *
+     * 行为类型 int（对应 ExpActionType：1=daily_login）
+     */
+    action_type: number;
+    /**
+     * Action Name
+     *
+     * 行为类型名称（daily_login 等）
+     */
+    action_name?: string;
+    /**
+     * Exp
+     *
+     * 本次增加的经验值
+     */
+    exp?: number;
+    /**
+     * Ref Date
+     *
+     * 行为引用日期 YYYY-MM-DD
+     */
+    ref_date?: string;
+};
+
+/**
+ * UserExpRecordListResp
+ *
+ * 经验记录列表（最近 7 天）。
+ */
+export type UserExpRecordListResp = {
+    /**
+     * Items
+     */
+    items?: Array<UserExpRecordItem>;
+    /**
+     * Has More
+     *
+     * 是否还有下一页
+     */
+    has_more?: boolean;
 };
 
 /**
@@ -4859,6 +9012,81 @@ export type CommentActionApiV1CommentActionPostResponses = {
 
 export type CommentActionApiV1CommentActionPostResponse = CommentActionApiV1CommentActionPostResponses[keyof CommentActionApiV1CommentActionPostResponses];
 
+export type ReportCommentApiV1CommentReportPostData = {
+    body: CommentReportReq;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Jwt
+         */
+        'x-bili-jwt'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string | null;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string | null;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string | null;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string | null;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string | null;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string | null;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string | null;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/comment/report';
+};
+
+export type ReportCommentApiV1CommentReportPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ReportCommentApiV1CommentReportPostError = ReportCommentApiV1CommentReportPostErrors[keyof ReportCommentApiV1CommentReportPostErrors];
+
+export type ReportCommentApiV1CommentReportPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseCommentReportResp;
+};
+
+export type ReportCommentApiV1CommentReportPostResponse = ReportCommentApiV1CommentReportPostResponses[keyof ReportCommentApiV1CommentReportPostResponses];
+
 export type AtSearchApiV1CommentAtSearchGetData = {
     body?: never;
     headers?: {
@@ -5496,6 +9724,3716 @@ export type AdminStatsApiV1CommentAdminStatsGetResponses = {
 };
 
 export type AdminStatsApiV1CommentAdminStatsGetResponse = AdminStatsApiV1CommentAdminStatsGetResponses[keyof AdminStatsApiV1CommentAdminStatsGetResponses];
+
+export type CreateDynamicApiV1MomentCreatePostData = {
+    body: MomentCreateReq;
+    headers?: {
+        /**
+         * User-Agent
+         */
+        'user-agent'?: string | null;
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Jwt
+         */
+        'x-bili-jwt'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string | null;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string | null;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string | null;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string | null;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string | null;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string | null;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string | null;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/moment/create';
+};
+
+export type CreateDynamicApiV1MomentCreatePostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type CreateDynamicApiV1MomentCreatePostError = CreateDynamicApiV1MomentCreatePostErrors[keyof CreateDynamicApiV1MomentCreatePostErrors];
+
+export type CreateDynamicApiV1MomentCreatePostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseMomentCreateResp;
+};
+
+export type CreateDynamicApiV1MomentCreatePostResponse = CreateDynamicApiV1MomentCreatePostResponses[keyof CreateDynamicApiV1MomentCreatePostResponses];
+
+export type EditDynamicApiV1MomentEditPostData = {
+    body: MomentEditReq;
+    headers?: {
+        /**
+         * User-Agent
+         */
+        'user-agent'?: string | null;
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Jwt
+         */
+        'x-bili-jwt'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string | null;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string | null;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string | null;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string | null;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string | null;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string | null;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string | null;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/moment/edit';
+};
+
+export type EditDynamicApiV1MomentEditPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type EditDynamicApiV1MomentEditPostError = EditDynamicApiV1MomentEditPostErrors[keyof EditDynamicApiV1MomentEditPostErrors];
+
+export type EditDynamicApiV1MomentEditPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseMomentEditResp;
+};
+
+export type EditDynamicApiV1MomentEditPostResponse = EditDynamicApiV1MomentEditPostResponses[keyof EditDynamicApiV1MomentEditPostResponses];
+
+export type RemoveDynamicApiV1MomentRemovePostData = {
+    body: MomentRemoveReq;
+    headers?: {
+        /**
+         * User-Agent
+         */
+        'user-agent'?: string | null;
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Jwt
+         */
+        'x-bili-jwt'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string | null;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string | null;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string | null;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string | null;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string | null;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string | null;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string | null;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/moment/remove';
+};
+
+export type RemoveDynamicApiV1MomentRemovePostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type RemoveDynamicApiV1MomentRemovePostError = RemoveDynamicApiV1MomentRemovePostErrors[keyof RemoveDynamicApiV1MomentRemovePostErrors];
+
+export type RemoveDynamicApiV1MomentRemovePostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseMomentRemoveResp;
+};
+
+export type RemoveDynamicApiV1MomentRemovePostResponse = RemoveDynamicApiV1MomentRemovePostResponses[keyof RemoveDynamicApiV1MomentRemovePostResponses];
+
+export type AdminRemoveDynamicApiV1MomentAdminRemovePostData = {
+    body: MomentRemoveReq;
+    headers?: {
+        /**
+         * User-Agent
+         */
+        'user-agent'?: string | null;
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Jwt
+         */
+        'x-bili-jwt'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string | null;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string | null;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string | null;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string | null;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string | null;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string | null;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string | null;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/moment/admin/remove';
+};
+
+export type AdminRemoveDynamicApiV1MomentAdminRemovePostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type AdminRemoveDynamicApiV1MomentAdminRemovePostError = AdminRemoveDynamicApiV1MomentAdminRemovePostErrors[keyof AdminRemoveDynamicApiV1MomentAdminRemovePostErrors];
+
+export type AdminRemoveDynamicApiV1MomentAdminRemovePostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseMomentRemoveResp;
+};
+
+export type AdminRemoveDynamicApiV1MomentAdminRemovePostResponse = AdminRemoveDynamicApiV1MomentAdminRemovePostResponses[keyof AdminRemoveDynamicApiV1MomentAdminRemovePostResponses];
+
+export type RepostDynamicApiV1MomentRepostPostData = {
+    body: MomentRepostReq;
+    headers?: {
+        /**
+         * User-Agent
+         */
+        'user-agent'?: string | null;
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Jwt
+         */
+        'x-bili-jwt'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string | null;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string | null;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string | null;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string | null;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string | null;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string | null;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string | null;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/moment/repost';
+};
+
+export type RepostDynamicApiV1MomentRepostPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type RepostDynamicApiV1MomentRepostPostError = RepostDynamicApiV1MomentRepostPostErrors[keyof RepostDynamicApiV1MomentRepostPostErrors];
+
+export type RepostDynamicApiV1MomentRepostPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseMomentRepostResp;
+};
+
+export type RepostDynamicApiV1MomentRepostPostResponse = RepostDynamicApiV1MomentRepostPostResponses[keyof RepostDynamicApiV1MomentRepostPostResponses];
+
+export type TopDynamicApiV1MomentSpaceTopPostData = {
+    body: MomentTopReq;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Jwt
+         */
+        'x-bili-jwt'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string | null;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string | null;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string | null;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string | null;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string | null;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string | null;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string | null;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/moment/space/top';
+};
+
+export type TopDynamicApiV1MomentSpaceTopPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type TopDynamicApiV1MomentSpaceTopPostError = TopDynamicApiV1MomentSpaceTopPostErrors[keyof TopDynamicApiV1MomentSpaceTopPostErrors];
+
+export type TopDynamicApiV1MomentSpaceTopPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseMomentTopResp;
+};
+
+export type TopDynamicApiV1MomentSpaceTopPostResponse = TopDynamicApiV1MomentSpaceTopPostResponses[keyof TopDynamicApiV1MomentSpaceTopPostResponses];
+
+export type UntopDynamicApiV1MomentSpaceUntopPostData = {
+    body: MomentTopReq;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Jwt
+         */
+        'x-bili-jwt'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string | null;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string | null;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string | null;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string | null;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string | null;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string | null;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string | null;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/moment/space/untop';
+};
+
+export type UntopDynamicApiV1MomentSpaceUntopPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type UntopDynamicApiV1MomentSpaceUntopPostError = UntopDynamicApiV1MomentSpaceUntopPostErrors[keyof UntopDynamicApiV1MomentSpaceUntopPostErrors];
+
+export type UntopDynamicApiV1MomentSpaceUntopPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseMomentTopResp;
+};
+
+export type UntopDynamicApiV1MomentSpaceUntopPostResponse = UntopDynamicApiV1MomentSpaceUntopPostResponses[keyof UntopDynamicApiV1MomentSpaceUntopPostResponses];
+
+export type CreateCheckApiV1MomentCreateCheckPostData = {
+    body: MomentCreateCheckReq;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Jwt
+         */
+        'x-bili-jwt'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string | null;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string | null;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string | null;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string | null;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string | null;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string | null;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string | null;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/moment/create/check';
+};
+
+export type CreateCheckApiV1MomentCreateCheckPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type CreateCheckApiV1MomentCreateCheckPostError = CreateCheckApiV1MomentCreateCheckPostErrors[keyof CreateCheckApiV1MomentCreateCheckPostErrors];
+
+export type CreateCheckApiV1MomentCreateCheckPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseMomentCreateCheckResp;
+};
+
+export type CreateCheckApiV1MomentCreateCheckPostResponse = CreateCheckApiV1MomentCreateCheckPostResponses[keyof CreateCheckApiV1MomentCreateCheckPostResponses];
+
+export type ThumbApiV1MomentThumbPostData = {
+    body: MomentThumbReq;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Jwt
+         */
+        'x-bili-jwt'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string | null;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string | null;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string | null;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string | null;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string | null;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string | null;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string | null;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/moment/thumb';
+};
+
+export type ThumbApiV1MomentThumbPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ThumbApiV1MomentThumbPostError = ThumbApiV1MomentThumbPostErrors[keyof ThumbApiV1MomentThumbPostErrors];
+
+export type ThumbApiV1MomentThumbPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseMomentThumbResp;
+};
+
+export type ThumbApiV1MomentThumbPostResponse = ThumbApiV1MomentThumbPostResponses[keyof ThumbApiV1MomentThumbPostResponses];
+
+export type InteractionStatusApiV1MomentInteractionStatusGetData = {
+    body?: never;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Jwt
+         */
+        'x-bili-jwt'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string | null;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string | null;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string | null;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string | null;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string | null;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string | null;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string | null;
+    };
+    path?: never;
+    query: {
+        /**
+         * Biztype
+         *
+         * 资源类型（文字：dynamic/lottery/...）
+         */
+        bizType: string;
+        /**
+         * Bizids
+         *
+         * 资源 id 列表（逗号分隔，限 50 个）
+         */
+        bizIds: string;
+    };
+    url: '/api/v1/moment/interaction/status';
+};
+
+export type InteractionStatusApiV1MomentInteractionStatusGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type InteractionStatusApiV1MomentInteractionStatusGetError = InteractionStatusApiV1MomentInteractionStatusGetErrors[keyof InteractionStatusApiV1MomentInteractionStatusGetErrors];
+
+export type InteractionStatusApiV1MomentInteractionStatusGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseInteractionStatusResp;
+};
+
+export type InteractionStatusApiV1MomentInteractionStatusGetResponse = InteractionStatusApiV1MomentInteractionStatusGetResponses[keyof InteractionStatusApiV1MomentInteractionStatusGetResponses];
+
+export type ReportApiV1MomentReportPostData = {
+    body: MomentReportReq;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Jwt
+         */
+        'x-bili-jwt'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string | null;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string | null;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string | null;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string | null;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string | null;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string | null;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string | null;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/moment/report';
+};
+
+export type ReportApiV1MomentReportPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ReportApiV1MomentReportPostError = ReportApiV1MomentReportPostErrors[keyof ReportApiV1MomentReportPostErrors];
+
+export type ReportApiV1MomentReportPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseMomentReportResp;
+};
+
+export type ReportApiV1MomentReportPostResponse = ReportApiV1MomentReportPostResponses[keyof ReportApiV1MomentReportPostResponses];
+
+export type TopicSquareApiV1MomentTopicSquareGetData = {
+    body?: never;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Jwt
+         */
+        'x-bili-jwt'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string | null;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string | null;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string | null;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string | null;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string | null;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string | null;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string | null;
+    };
+    path?: never;
+    query?: {
+        /**
+         * Page
+         */
+        page?: number;
+        /**
+         * Page Size
+         */
+        page_size?: number;
+    };
+    url: '/api/v1/moment/topic/square';
+};
+
+export type TopicSquareApiV1MomentTopicSquareGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type TopicSquareApiV1MomentTopicSquareGetError = TopicSquareApiV1MomentTopicSquareGetErrors[keyof TopicSquareApiV1MomentTopicSquareGetErrors];
+
+export type TopicSquareApiV1MomentTopicSquareGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseMomentTopicSquareResp;
+};
+
+export type TopicSquareApiV1MomentTopicSquareGetResponse = TopicSquareApiV1MomentTopicSquareGetResponses[keyof TopicSquareApiV1MomentTopicSquareGetResponses];
+
+export type TopicHotSearchApiV1MomentTopicHotSearchGetData = {
+    body?: never;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Jwt
+         */
+        'x-bili-jwt'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string | null;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string | null;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string | null;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string | null;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string | null;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string | null;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string | null;
+    };
+    path?: never;
+    query?: {
+        /**
+         * Page
+         */
+        page?: number;
+        /**
+         * Page Size
+         */
+        page_size?: number;
+    };
+    url: '/api/v1/moment/topic/hot-search';
+};
+
+export type TopicHotSearchApiV1MomentTopicHotSearchGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type TopicHotSearchApiV1MomentTopicHotSearchGetError = TopicHotSearchApiV1MomentTopicHotSearchGetErrors[keyof TopicHotSearchApiV1MomentTopicHotSearchGetErrors];
+
+export type TopicHotSearchApiV1MomentTopicHotSearchGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseMomentTopicSquareResp;
+};
+
+export type TopicHotSearchApiV1MomentTopicHotSearchGetResponse = TopicHotSearchApiV1MomentTopicHotSearchGetResponses[keyof TopicHotSearchApiV1MomentTopicHotSearchGetResponses];
+
+export type TopicDetailApiV1MomentTopicDetailTopicIdGetData = {
+    body?: never;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Jwt
+         */
+        'x-bili-jwt'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string | null;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string | null;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string | null;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string | null;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string | null;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string | null;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string | null;
+    };
+    path: {
+        /**
+         * Topicid
+         */
+        topicId: number;
+    };
+    query?: never;
+    url: '/api/v1/moment/topic/detail/{topicId}';
+};
+
+export type TopicDetailApiV1MomentTopicDetailTopicIdGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type TopicDetailApiV1MomentTopicDetailTopicIdGetError = TopicDetailApiV1MomentTopicDetailTopicIdGetErrors[keyof TopicDetailApiV1MomentTopicDetailTopicIdGetErrors];
+
+export type TopicDetailApiV1MomentTopicDetailTopicIdGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseMomentTopicDetailResp;
+};
+
+export type TopicDetailApiV1MomentTopicDetailTopicIdGetResponse = TopicDetailApiV1MomentTopicDetailTopicIdGetResponses[keyof TopicDetailApiV1MomentTopicDetailTopicIdGetResponses];
+
+export type TopicFeedApiV1MomentTopicFeedTopicIdGetData = {
+    body?: never;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Jwt
+         */
+        'x-bili-jwt'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string | null;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string | null;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string | null;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string | null;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string | null;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string | null;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string | null;
+    };
+    path: {
+        /**
+         * Topicid
+         */
+        topicId: number;
+    };
+    query?: {
+        /**
+         * Sort
+         *
+         * 排序：hot=热门（互动数倒序）/ time=最新（发布时间倒序）
+         */
+        sort?: string;
+        /**
+         * History Offset
+         */
+        history_offset?: number | null;
+        /**
+         * Page
+         */
+        page?: number;
+        /**
+         * Page Size
+         */
+        page_size?: number;
+    };
+    url: '/api/v1/moment/topic/feed/{topicId}';
+};
+
+export type TopicFeedApiV1MomentTopicFeedTopicIdGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type TopicFeedApiV1MomentTopicFeedTopicIdGetError = TopicFeedApiV1MomentTopicFeedTopicIdGetErrors[keyof TopicFeedApiV1MomentTopicFeedTopicIdGetErrors];
+
+export type TopicFeedApiV1MomentTopicFeedTopicIdGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseMomentTopicFeedResp;
+};
+
+export type TopicFeedApiV1MomentTopicFeedTopicIdGetResponse = TopicFeedApiV1MomentTopicFeedTopicIdGetResponses[keyof TopicFeedApiV1MomentTopicFeedTopicIdGetResponses];
+
+export type TopicCreateApiV1MomentTopicCreatePostData = {
+    body: MomentTopicCreateReq;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Jwt
+         */
+        'x-bili-jwt'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string | null;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string | null;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string | null;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string | null;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string | null;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string | null;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string | null;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/moment/topic/create';
+};
+
+export type TopicCreateApiV1MomentTopicCreatePostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type TopicCreateApiV1MomentTopicCreatePostError = TopicCreateApiV1MomentTopicCreatePostErrors[keyof TopicCreateApiV1MomentTopicCreatePostErrors];
+
+export type TopicCreateApiV1MomentTopicCreatePostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseMomentTopicCreateResp;
+};
+
+export type TopicCreateApiV1MomentTopicCreatePostResponse = TopicCreateApiV1MomentTopicCreatePostResponses[keyof TopicCreateApiV1MomentTopicCreatePostResponses];
+
+export type TopicMineApiV1MomentTopicMineGetData = {
+    body?: never;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Jwt
+         */
+        'x-bili-jwt'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string | null;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string | null;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string | null;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string | null;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string | null;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string | null;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string | null;
+    };
+    path?: never;
+    query?: {
+        /**
+         * Page
+         */
+        page?: number;
+        /**
+         * Page Size
+         */
+        page_size?: number;
+    };
+    url: '/api/v1/moment/topic/mine';
+};
+
+export type TopicMineApiV1MomentTopicMineGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type TopicMineApiV1MomentTopicMineGetError = TopicMineApiV1MomentTopicMineGetErrors[keyof TopicMineApiV1MomentTopicMineGetErrors];
+
+export type TopicMineApiV1MomentTopicMineGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseMomentTopicMineResp;
+};
+
+export type TopicMineApiV1MomentTopicMineGetResponse = TopicMineApiV1MomentTopicMineGetResponses[keyof TopicMineApiV1MomentTopicMineGetResponses];
+
+export type AtListApiV1MomentAtListGetData = {
+    body?: never;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Jwt
+         */
+        'x-bili-jwt'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string | null;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string | null;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string | null;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string | null;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string | null;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string | null;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string | null;
+    };
+    path?: never;
+    query?: {
+        /**
+         * Page Size
+         */
+        page_size?: number;
+    };
+    url: '/api/v1/moment/at/list';
+};
+
+export type AtListApiV1MomentAtListGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type AtListApiV1MomentAtListGetError = AtListApiV1MomentAtListGetErrors[keyof AtListApiV1MomentAtListGetErrors];
+
+export type AtListApiV1MomentAtListGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseMomentAtListResp;
+};
+
+export type AtListApiV1MomentAtListGetResponse = AtListApiV1MomentAtListGetResponses[keyof AtListApiV1MomentAtListGetResponses];
+
+export type AtSearchApiV1MomentAtSearchGetData = {
+    body?: never;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Jwt
+         */
+        'x-bili-jwt'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string | null;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string | null;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string | null;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string | null;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string | null;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string | null;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string | null;
+    };
+    path?: never;
+    query?: {
+        /**
+         * Keyword
+         */
+        keyword?: string;
+        /**
+         * Page Size
+         */
+        page_size?: number;
+    };
+    url: '/api/v1/moment/at/search';
+};
+
+export type AtSearchApiV1MomentAtSearchGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type AtSearchApiV1MomentAtSearchGetError = AtSearchApiV1MomentAtSearchGetErrors[keyof AtSearchApiV1MomentAtSearchGetErrors];
+
+export type AtSearchApiV1MomentAtSearchGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseMomentAtSearchResp;
+};
+
+export type AtSearchApiV1MomentAtSearchGetResponse = AtSearchApiV1MomentAtSearchGetResponses[keyof AtSearchApiV1MomentAtSearchGetResponses];
+
+export type PoiNearbyApiV1MomentPoiNearbyGetData = {
+    body?: never;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Jwt
+         */
+        'x-bili-jwt'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string | null;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string | null;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string | null;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string | null;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string | null;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string | null;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string | null;
+    };
+    path?: never;
+    query?: {
+        /**
+         * Lat
+         */
+        lat?: number | null;
+        /**
+         * Lng
+         */
+        lng?: number | null;
+        /**
+         * Page
+         */
+        page?: number;
+        /**
+         * Page Size
+         */
+        page_size?: number;
+    };
+    url: '/api/v1/moment/poi/nearby';
+};
+
+export type PoiNearbyApiV1MomentPoiNearbyGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type PoiNearbyApiV1MomentPoiNearbyGetError = PoiNearbyApiV1MomentPoiNearbyGetErrors[keyof PoiNearbyApiV1MomentPoiNearbyGetErrors];
+
+export type PoiNearbyApiV1MomentPoiNearbyGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseMomentPoiResp;
+};
+
+export type PoiNearbyApiV1MomentPoiNearbyGetResponse = PoiNearbyApiV1MomentPoiNearbyGetResponses[keyof PoiNearbyApiV1MomentPoiNearbyGetResponses];
+
+export type PoiSearchApiV1MomentPoiSearchGetData = {
+    body?: never;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Jwt
+         */
+        'x-bili-jwt'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string | null;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string | null;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string | null;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string | null;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string | null;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string | null;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string | null;
+    };
+    path?: never;
+    query?: {
+        /**
+         * Keyword
+         */
+        keyword?: string;
+        /**
+         * Lat
+         */
+        lat?: number | null;
+        /**
+         * Lng
+         */
+        lng?: number | null;
+        /**
+         * Page
+         */
+        page?: number;
+        /**
+         * Page Size
+         */
+        page_size?: number;
+    };
+    url: '/api/v1/moment/poi/search';
+};
+
+export type PoiSearchApiV1MomentPoiSearchGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type PoiSearchApiV1MomentPoiSearchGetError = PoiSearchApiV1MomentPoiSearchGetErrors[keyof PoiSearchApiV1MomentPoiSearchGetErrors];
+
+export type PoiSearchApiV1MomentPoiSearchGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseMomentPoiResp;
+};
+
+export type PoiSearchApiV1MomentPoiSearchGetResponse = PoiSearchApiV1MomentPoiSearchGetResponses[keyof PoiSearchApiV1MomentPoiSearchGetResponses];
+
+export type GetUpstatApiV1MomentUpstatGetData = {
+    body?: never;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+    };
+    path?: never;
+    query: {
+        /**
+         * Vmid
+         *
+         * 目标用户 mid（对标 B 站 vmid 参数）
+         */
+        vmid: number;
+    };
+    url: '/api/v1/moment/upstat';
+};
+
+export type GetUpstatApiV1MomentUpstatGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetUpstatApiV1MomentUpstatGetError = GetUpstatApiV1MomentUpstatGetErrors[keyof GetUpstatApiV1MomentUpstatGetErrors];
+
+export type GetUpstatApiV1MomentUpstatGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseMomentUpStatResp;
+};
+
+export type GetUpstatApiV1MomentUpstatGetResponse = GetUpstatApiV1MomentUpstatGetResponses[keyof GetUpstatApiV1MomentUpstatGetResponses];
+
+export type FeedAllApiV1MomentFeedAllGetData = {
+    body?: never;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+    };
+    path?: never;
+    query?: {
+        /**
+         * Page
+         */
+        page?: number;
+        /**
+         * Page Size
+         */
+        page_size?: number;
+        /**
+         * Update Baseline
+         */
+        update_baseline?: number | null;
+        /**
+         * History Offset
+         */
+        history_offset?: number | null;
+        /**
+         * Refresh Type
+         *
+         * 1=刷新,2=翻页
+         */
+        refresh_type?: number;
+    };
+    url: '/api/v1/moment/feed/all';
+};
+
+export type FeedAllApiV1MomentFeedAllGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type FeedAllApiV1MomentFeedAllGetError = FeedAllApiV1MomentFeedAllGetErrors[keyof FeedAllApiV1MomentFeedAllGetErrors];
+
+export type FeedAllApiV1MomentFeedAllGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseMomentFeedResp;
+};
+
+export type FeedAllApiV1MomentFeedAllGetResponse = FeedAllApiV1MomentFeedAllGetResponses[keyof FeedAllApiV1MomentFeedAllGetResponses];
+
+export type FeedFollowingApiV1MomentFeedFollowingGetData = {
+    body?: never;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Jwt
+         */
+        'x-bili-jwt'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string | null;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string | null;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string | null;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string | null;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string | null;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string | null;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string | null;
+    };
+    path?: never;
+    query?: {
+        /**
+         * Page
+         */
+        page?: number;
+        /**
+         * Page Size
+         */
+        page_size?: number;
+        /**
+         * History Offset
+         */
+        history_offset?: number | null;
+    };
+    url: '/api/v1/moment/feed/following';
+};
+
+export type FeedFollowingApiV1MomentFeedFollowingGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type FeedFollowingApiV1MomentFeedFollowingGetError = FeedFollowingApiV1MomentFeedFollowingGetErrors[keyof FeedFollowingApiV1MomentFeedFollowingGetErrors];
+
+export type FeedFollowingApiV1MomentFeedFollowingGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseMomentFeedResp;
+};
+
+export type FeedFollowingApiV1MomentFeedFollowingGetResponse = FeedFollowingApiV1MomentFeedFollowingGetResponses[keyof FeedFollowingApiV1MomentFeedFollowingGetResponses];
+
+export type FeedSpaceApiV1MomentFeedSpaceMidGetData = {
+    body?: never;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+    };
+    path: {
+        /**
+         * Mid
+         */
+        mid: number;
+    };
+    query?: {
+        /**
+         * Page
+         */
+        page?: number;
+        /**
+         * Page Size
+         */
+        page_size?: number;
+        /**
+         * History Offset
+         */
+        history_offset?: number | null;
+    };
+    url: '/api/v1/moment/feed/space/{mid}';
+};
+
+export type FeedSpaceApiV1MomentFeedSpaceMidGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type FeedSpaceApiV1MomentFeedSpaceMidGetError = FeedSpaceApiV1MomentFeedSpaceMidGetErrors[keyof FeedSpaceApiV1MomentFeedSpaceMidGetErrors];
+
+export type FeedSpaceApiV1MomentFeedSpaceMidGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseMomentFeedResp;
+};
+
+export type FeedSpaceApiV1MomentFeedSpaceMidGetResponse = FeedSpaceApiV1MomentFeedSpaceMidGetResponses[keyof FeedSpaceApiV1MomentFeedSpaceMidGetResponses];
+
+export type DetailApiV1MomentDetailMomentIdGetData = {
+    body?: never;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+    };
+    path: {
+        /**
+         * Moment Id
+         */
+        moment_id: number;
+    };
+    query?: never;
+    url: '/api/v1/moment/detail/{moment_id}';
+};
+
+export type DetailApiV1MomentDetailMomentIdGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type DetailApiV1MomentDetailMomentIdGetError = DetailApiV1MomentDetailMomentIdGetErrors[keyof DetailApiV1MomentDetailMomentIdGetErrors];
+
+export type DetailApiV1MomentDetailMomentIdGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseMomentDetailResp;
+};
+
+export type DetailApiV1MomentDetailMomentIdGetResponse = DetailApiV1MomentDetailMomentIdGetResponses[keyof DetailApiV1MomentDetailMomentIdGetResponses];
+
+export type DetailsBatchApiV1MomentDetailsPostData = {
+    body: MomentDetailsReq;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/moment/details';
+};
+
+export type DetailsBatchApiV1MomentDetailsPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type DetailsBatchApiV1MomentDetailsPostError = DetailsBatchApiV1MomentDetailsPostErrors[keyof DetailsBatchApiV1MomentDetailsPostErrors];
+
+export type DetailsBatchApiV1MomentDetailsPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseListMomentDetailResp;
+};
+
+export type DetailsBatchApiV1MomentDetailsPostResponse = DetailsBatchApiV1MomentDetailsPostResponses[keyof DetailsBatchApiV1MomentDetailsPostResponses];
+
+export type GetMomentLikersApiV1MomentMomentIdLikersGetData = {
+    body?: never;
+    path: {
+        /**
+         * Moment Id
+         */
+        moment_id: number;
+    };
+    query?: {
+        /**
+         * Page Num
+         */
+        page_num?: number;
+        /**
+         * Page Size
+         */
+        page_size?: number;
+    };
+    url: '/api/v1/moment/{moment_id}/likers';
+};
+
+export type GetMomentLikersApiV1MomentMomentIdLikersGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetMomentLikersApiV1MomentMomentIdLikersGetError = GetMomentLikersApiV1MomentMomentIdLikersGetErrors[keyof GetMomentLikersApiV1MomentMomentIdLikersGetErrors];
+
+export type GetMomentLikersApiV1MomentMomentIdLikersGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseMomentLikerListResp;
+};
+
+export type GetMomentLikersApiV1MomentMomentIdLikersGetResponse = GetMomentLikersApiV1MomentMomentIdLikersGetResponses[keyof GetMomentLikersApiV1MomentMomentIdLikersGetResponses];
+
+export type GetMomentForwardsApiV1MomentMomentIdForwardsGetData = {
+    body?: never;
+    path: {
+        /**
+         * Moment Id
+         */
+        moment_id: number;
+    };
+    query?: {
+        /**
+         * Page Num
+         */
+        page_num?: number;
+        /**
+         * Page Size
+         */
+        page_size?: number;
+    };
+    url: '/api/v1/moment/{moment_id}/forwards';
+};
+
+export type GetMomentForwardsApiV1MomentMomentIdForwardsGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetMomentForwardsApiV1MomentMomentIdForwardsGetError = GetMomentForwardsApiV1MomentMomentIdForwardsGetErrors[keyof GetMomentForwardsApiV1MomentMomentIdForwardsGetErrors];
+
+export type GetMomentForwardsApiV1MomentMomentIdForwardsGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseMomentForwardListResp;
+};
+
+export type GetMomentForwardsApiV1MomentMomentIdForwardsGetResponse = GetMomentForwardsApiV1MomentMomentIdForwardsGetResponses[keyof GetMomentForwardsApiV1MomentMomentIdForwardsGetResponses];
+
+export type AuditListApiV1MomentAuditListGetData = {
+    body?: never;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Jwt
+         */
+        'x-bili-jwt'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string | null;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string | null;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string | null;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string | null;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string | null;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string | null;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string | null;
+    };
+    path?: never;
+    query?: {
+        /**
+         * Page Num
+         */
+        page_num?: number;
+        /**
+         * Page Size
+         */
+        page_size?: number;
+    };
+    url: '/api/v1/moment/audit/list';
+};
+
+export type AuditListApiV1MomentAuditListGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type AuditListApiV1MomentAuditListGetError = AuditListApiV1MomentAuditListGetErrors[keyof AuditListApiV1MomentAuditListGetErrors];
+
+export type AuditListApiV1MomentAuditListGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseMomentAuditListResp;
+};
+
+export type AuditListApiV1MomentAuditListGetResponse = AuditListApiV1MomentAuditListGetResponses[keyof AuditListApiV1MomentAuditListGetResponses];
+
+export type AuditHistoryApiV1MomentAuditListHistoryGetData = {
+    body?: never;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Jwt
+         */
+        'x-bili-jwt'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string | null;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string | null;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string | null;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string | null;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string | null;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string | null;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string | null;
+    };
+    path?: never;
+    query?: {
+        /**
+         * Dynid
+         *
+         * 按动态 ID 过滤
+         */
+        dynId?: number | null;
+        /**
+         * Operatormid
+         *
+         * 按操作员 MID 过滤
+         */
+        operatorMid?: number | null;
+        /**
+         * Fromdate
+         *
+         * 起始时间 YYYY-MM-DD HH:MM:SS
+         */
+        fromDate?: string | null;
+        /**
+         * Todate
+         *
+         * 结束时间 YYYY-MM-DD HH:MM:SS
+         */
+        toDate?: string | null;
+        /**
+         * Page Num
+         */
+        page_num?: number;
+        /**
+         * Page Size
+         */
+        page_size?: number;
+    };
+    url: '/api/v1/moment/audit/list/history';
+};
+
+export type AuditHistoryApiV1MomentAuditListHistoryGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type AuditHistoryApiV1MomentAuditListHistoryGetError = AuditHistoryApiV1MomentAuditListHistoryGetErrors[keyof AuditHistoryApiV1MomentAuditListHistoryGetErrors];
+
+export type AuditHistoryApiV1MomentAuditListHistoryGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseMomentAuditLogListResp;
+};
+
+export type AuditHistoryApiV1MomentAuditListHistoryGetResponse = AuditHistoryApiV1MomentAuditListHistoryGetResponses[keyof AuditHistoryApiV1MomentAuditListHistoryGetResponses];
+
+export type AuditApproveApiV1MomentAuditApprovePostData = {
+    body: MomentAuditActionReq;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Jwt
+         */
+        'x-bili-jwt'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string | null;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string | null;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string | null;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string | null;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string | null;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string | null;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string | null;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/moment/audit/approve';
+};
+
+export type AuditApproveApiV1MomentAuditApprovePostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type AuditApproveApiV1MomentAuditApprovePostError = AuditApproveApiV1MomentAuditApprovePostErrors[keyof AuditApproveApiV1MomentAuditApprovePostErrors];
+
+export type AuditApproveApiV1MomentAuditApprovePostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseMomentAuditDetailResp;
+};
+
+export type AuditApproveApiV1MomentAuditApprovePostResponse = AuditApproveApiV1MomentAuditApprovePostResponses[keyof AuditApproveApiV1MomentAuditApprovePostResponses];
+
+export type AuditRejectApiV1MomentAuditRejectPostData = {
+    body: MomentAuditRejectReq;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Jwt
+         */
+        'x-bili-jwt'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string | null;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string | null;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string | null;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string | null;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string | null;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string | null;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string | null;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/moment/audit/reject';
+};
+
+export type AuditRejectApiV1MomentAuditRejectPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type AuditRejectApiV1MomentAuditRejectPostError = AuditRejectApiV1MomentAuditRejectPostErrors[keyof AuditRejectApiV1MomentAuditRejectPostErrors];
+
+export type AuditRejectApiV1MomentAuditRejectPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseMomentAuditDetailResp;
+};
+
+export type AuditRejectApiV1MomentAuditRejectPostResponse = AuditRejectApiV1MomentAuditRejectPostResponses[keyof AuditRejectApiV1MomentAuditRejectPostResponses];
+
+export type AuditDetailApiV1MomentAuditDynIdGetData = {
+    body?: never;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Jwt
+         */
+        'x-bili-jwt'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string | null;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string | null;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string | null;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string | null;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string | null;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string | null;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string | null;
+    };
+    path: {
+        /**
+         * Dynid
+         */
+        dynId: number;
+    };
+    query?: never;
+    url: '/api/v1/moment/audit/{dynId}';
+};
+
+export type AuditDetailApiV1MomentAuditDynIdGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type AuditDetailApiV1MomentAuditDynIdGetError = AuditDetailApiV1MomentAuditDynIdGetErrors[keyof AuditDetailApiV1MomentAuditDynIdGetErrors];
+
+export type AuditDetailApiV1MomentAuditDynIdGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseMomentAuditDetailResp;
+};
+
+export type AuditDetailApiV1MomentAuditDynIdGetResponse = AuditDetailApiV1MomentAuditDynIdGetResponses[keyof AuditDetailApiV1MomentAuditDynIdGetResponses];
+
+export type TopicAuditListApiV1MomentTopicAuditListGetData = {
+    body?: never;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Jwt
+         */
+        'x-bili-jwt'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string | null;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string | null;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string | null;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string | null;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string | null;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string | null;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string | null;
+    };
+    path?: never;
+    query?: {
+        /**
+         * Page Num
+         */
+        page_num?: number;
+        /**
+         * Page Size
+         */
+        page_size?: number;
+    };
+    url: '/api/v1/moment/topic/audit/list';
+};
+
+export type TopicAuditListApiV1MomentTopicAuditListGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type TopicAuditListApiV1MomentTopicAuditListGetError = TopicAuditListApiV1MomentTopicAuditListGetErrors[keyof TopicAuditListApiV1MomentTopicAuditListGetErrors];
+
+export type TopicAuditListApiV1MomentTopicAuditListGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseMomentTopicAuditListResp;
+};
+
+export type TopicAuditListApiV1MomentTopicAuditListGetResponse = TopicAuditListApiV1MomentTopicAuditListGetResponses[keyof TopicAuditListApiV1MomentTopicAuditListGetResponses];
+
+export type TopicAuditApproveApiV1MomentTopicAuditApprovePostData = {
+    body: MomentTopicAuditApproveReq;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Jwt
+         */
+        'x-bili-jwt'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string | null;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string | null;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string | null;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string | null;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string | null;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string | null;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string | null;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/moment/topic/audit/approve';
+};
+
+export type TopicAuditApproveApiV1MomentTopicAuditApprovePostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type TopicAuditApproveApiV1MomentTopicAuditApprovePostError = TopicAuditApproveApiV1MomentTopicAuditApprovePostErrors[keyof TopicAuditApproveApiV1MomentTopicAuditApprovePostErrors];
+
+export type TopicAuditApproveApiV1MomentTopicAuditApprovePostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseMomentTopicAuditListResp;
+};
+
+export type TopicAuditApproveApiV1MomentTopicAuditApprovePostResponse = TopicAuditApproveApiV1MomentTopicAuditApprovePostResponses[keyof TopicAuditApproveApiV1MomentTopicAuditApprovePostResponses];
+
+export type TopicAuditRejectApiV1MomentTopicAuditRejectPostData = {
+    body: MomentTopicAuditRejectReq;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Jwt
+         */
+        'x-bili-jwt'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string | null;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string | null;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string | null;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string | null;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string | null;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string | null;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string | null;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/moment/topic/audit/reject';
+};
+
+export type TopicAuditRejectApiV1MomentTopicAuditRejectPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type TopicAuditRejectApiV1MomentTopicAuditRejectPostError = TopicAuditRejectApiV1MomentTopicAuditRejectPostErrors[keyof TopicAuditRejectApiV1MomentTopicAuditRejectPostErrors];
+
+export type TopicAuditRejectApiV1MomentTopicAuditRejectPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseMomentTopicAuditListResp;
+};
+
+export type TopicAuditRejectApiV1MomentTopicAuditRejectPostResponse = TopicAuditRejectApiV1MomentTopicAuditRejectPostResponses[keyof TopicAuditRejectApiV1MomentTopicAuditRejectPostResponses];
+
+export type CreateFolderApiV1FavoriteFolderCreatePostData = {
+    body: FavoriteFolderCreateReq;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Jwt
+         */
+        'x-bili-jwt'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string | null;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string | null;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string | null;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string | null;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string | null;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string | null;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string | null;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/favorite/folder/create';
+};
+
+export type CreateFolderApiV1FavoriteFolderCreatePostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type CreateFolderApiV1FavoriteFolderCreatePostError = CreateFolderApiV1FavoriteFolderCreatePostErrors[keyof CreateFolderApiV1FavoriteFolderCreatePostErrors];
+
+export type CreateFolderApiV1FavoriteFolderCreatePostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseFavoriteFolderResp;
+};
+
+export type CreateFolderApiV1FavoriteFolderCreatePostResponse = CreateFolderApiV1FavoriteFolderCreatePostResponses[keyof CreateFolderApiV1FavoriteFolderCreatePostResponses];
+
+export type UpdateFolderApiV1FavoriteFolderUpdatePostData = {
+    body: FavoriteFolderUpdateReq;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Jwt
+         */
+        'x-bili-jwt'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string | null;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string | null;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string | null;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string | null;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string | null;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string | null;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string | null;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/favorite/folder/update';
+};
+
+export type UpdateFolderApiV1FavoriteFolderUpdatePostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type UpdateFolderApiV1FavoriteFolderUpdatePostError = UpdateFolderApiV1FavoriteFolderUpdatePostErrors[keyof UpdateFolderApiV1FavoriteFolderUpdatePostErrors];
+
+export type UpdateFolderApiV1FavoriteFolderUpdatePostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponse;
+};
+
+export type UpdateFolderApiV1FavoriteFolderUpdatePostResponse = UpdateFolderApiV1FavoriteFolderUpdatePostResponses[keyof UpdateFolderApiV1FavoriteFolderUpdatePostResponses];
+
+export type DeleteFolderApiV1FavoriteFolderDeletePostData = {
+    body: FavoriteFolderDeleteReq;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Jwt
+         */
+        'x-bili-jwt'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string | null;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string | null;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string | null;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string | null;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string | null;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string | null;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string | null;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/favorite/folder/delete';
+};
+
+export type DeleteFolderApiV1FavoriteFolderDeletePostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type DeleteFolderApiV1FavoriteFolderDeletePostError = DeleteFolderApiV1FavoriteFolderDeletePostErrors[keyof DeleteFolderApiV1FavoriteFolderDeletePostErrors];
+
+export type DeleteFolderApiV1FavoriteFolderDeletePostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponse;
+};
+
+export type DeleteFolderApiV1FavoriteFolderDeletePostResponse = DeleteFolderApiV1FavoriteFolderDeletePostResponses[keyof DeleteFolderApiV1FavoriteFolderDeletePostResponses];
+
+export type ListFoldersApiV1FavoriteFolderListGetData = {
+    body?: never;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Jwt
+         */
+        'x-bili-jwt'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string | null;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string | null;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string | null;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string | null;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string | null;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string | null;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string | null;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/favorite/folder/list';
+};
+
+export type ListFoldersApiV1FavoriteFolderListGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ListFoldersApiV1FavoriteFolderListGetError = ListFoldersApiV1FavoriteFolderListGetErrors[keyof ListFoldersApiV1FavoriteFolderListGetErrors];
+
+export type ListFoldersApiV1FavoriteFolderListGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseListFavoriteFolderResp;
+};
+
+export type ListFoldersApiV1FavoriteFolderListGetResponse = ListFoldersApiV1FavoriteFolderListGetResponses[keyof ListFoldersApiV1FavoriteFolderListGetResponses];
+
+export type AddFavoriteApiV1FavoriteAddPostData = {
+    body: FavoriteAddReq;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Jwt
+         */
+        'x-bili-jwt'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string | null;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string | null;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string | null;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string | null;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string | null;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string | null;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string | null;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/favorite/add';
+};
+
+export type AddFavoriteApiV1FavoriteAddPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type AddFavoriteApiV1FavoriteAddPostError = AddFavoriteApiV1FavoriteAddPostErrors[keyof AddFavoriteApiV1FavoriteAddPostErrors];
+
+export type AddFavoriteApiV1FavoriteAddPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseFavoriteAddResp;
+};
+
+export type AddFavoriteApiV1FavoriteAddPostResponse = AddFavoriteApiV1FavoriteAddPostResponses[keyof AddFavoriteApiV1FavoriteAddPostResponses];
+
+export type RemoveFavoriteApiV1FavoriteRemovePostData = {
+    body: FavoriteRemoveReq;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Jwt
+         */
+        'x-bili-jwt'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string | null;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string | null;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string | null;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string | null;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string | null;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string | null;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string | null;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/favorite/remove';
+};
+
+export type RemoveFavoriteApiV1FavoriteRemovePostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type RemoveFavoriteApiV1FavoriteRemovePostError = RemoveFavoriteApiV1FavoriteRemovePostErrors[keyof RemoveFavoriteApiV1FavoriteRemovePostErrors];
+
+export type RemoveFavoriteApiV1FavoriteRemovePostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseFavoriteAddResp;
+};
+
+export type RemoveFavoriteApiV1FavoriteRemovePostResponse = RemoveFavoriteApiV1FavoriteRemovePostResponses[keyof RemoveFavoriteApiV1FavoriteRemovePostResponses];
+
+export type ListFavoritesApiV1FavoriteListGetData = {
+    body?: never;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Jwt
+         */
+        'x-bili-jwt'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string | null;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string | null;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string | null;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string | null;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string | null;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string | null;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string | null;
+    };
+    path?: never;
+    query: {
+        /**
+         * Folderid
+         *
+         * 收藏夹id（字符串）
+         */
+        folderId: string;
+        /**
+         * Biztype
+         *
+         * 资源类型过滤（缺省返回全部；文字：dynamic/lottery/...）
+         */
+        bizType?: string | null;
+        /**
+         * Page
+         */
+        page?: number;
+        /**
+         * Pagesize
+         */
+        pageSize?: number;
+    };
+    url: '/api/v1/favorite/list';
+};
+
+export type ListFavoritesApiV1FavoriteListGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ListFavoritesApiV1FavoriteListGetError = ListFavoritesApiV1FavoriteListGetErrors[keyof ListFavoritesApiV1FavoriteListGetErrors];
+
+export type ListFavoritesApiV1FavoriteListGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseFavoriteListResp;
+};
+
+export type ListFavoritesApiV1FavoriteListGetResponse = ListFavoritesApiV1FavoriteListGetResponses[keyof ListFavoritesApiV1FavoriteListGetResponses];
+
+export type ListFavoriteItemsApiV1FavoriteItemsGetData = {
+    body?: never;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Jwt
+         */
+        'x-bili-jwt'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string | null;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string | null;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string | null;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string | null;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string | null;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string | null;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string | null;
+    };
+    path?: never;
+    query: {
+        /**
+         * Folderid
+         *
+         * 收藏夹id（字符串）
+         */
+        folderId: string;
+        /**
+         * Biztype
+         *
+         * 资源类型过滤（缺省返回全部；文字：dynamic/lottery/...）
+         */
+        bizType?: string | null;
+        /**
+         * Page
+         */
+        page?: number;
+        /**
+         * Pagesize
+         */
+        pageSize?: number;
+    };
+    url: '/api/v1/favorite/items';
+};
+
+export type ListFavoriteItemsApiV1FavoriteItemsGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ListFavoriteItemsApiV1FavoriteItemsGetError = ListFavoriteItemsApiV1FavoriteItemsGetErrors[keyof ListFavoriteItemsApiV1FavoriteItemsGetErrors];
+
+export type ListFavoriteItemsApiV1FavoriteItemsGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseFavoriteItemListResp;
+};
+
+export type ListFavoriteItemsApiV1FavoriteItemsGetResponse = ListFavoriteItemsApiV1FavoriteItemsGetResponses[keyof ListFavoriteItemsApiV1FavoriteItemsGetResponses];
+
+export type DynFoldersApiV1FavoriteDynFoldersGetData = {
+    body?: never;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Jwt
+         */
+        'x-bili-jwt'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string | null;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string | null;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string | null;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string | null;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string | null;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string | null;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string | null;
+    };
+    path?: never;
+    query?: {
+        /**
+         * Bizid
+         *
+         * 资源id（字符串）
+         */
+        bizId?: string | null;
+        /**
+         * Biztype
+         *
+         * 资源类型（文字：dynamic/lottery/...）
+         */
+        bizType?: string;
+        /**
+         * Dynid
+         *
+         * [兼容]动态id（字符串）
+         */
+        dynId?: string | null;
+    };
+    url: '/api/v1/favorite/dyn/folders';
+};
+
+export type DynFoldersApiV1FavoriteDynFoldersGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type DynFoldersApiV1FavoriteDynFoldersGetError = DynFoldersApiV1FavoriteDynFoldersGetErrors[keyof DynFoldersApiV1FavoriteDynFoldersGetErrors];
+
+export type DynFoldersApiV1FavoriteDynFoldersGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseFavoriteDynFoldersResp;
+};
+
+export type DynFoldersApiV1FavoriteDynFoldersGetResponse = DynFoldersApiV1FavoriteDynFoldersGetResponses[keyof DynFoldersApiV1FavoriteDynFoldersGetResponses];
+
+export type GetSettingApiV1FavoriteSettingGetData = {
+    body?: never;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Jwt
+         */
+        'x-bili-jwt'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string | null;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string | null;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string | null;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string | null;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string | null;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string | null;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string | null;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/favorite/setting';
+};
+
+export type GetSettingApiV1FavoriteSettingGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetSettingApiV1FavoriteSettingGetError = GetSettingApiV1FavoriteSettingGetErrors[keyof GetSettingApiV1FavoriteSettingGetErrors];
+
+export type GetSettingApiV1FavoriteSettingGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseFavoriteSettingResp;
+};
+
+export type GetSettingApiV1FavoriteSettingGetResponse = GetSettingApiV1FavoriteSettingGetResponses[keyof GetSettingApiV1FavoriteSettingGetResponses];
+
+export type SetSettingApiV1FavoriteSettingPostData = {
+    body: FavoriteSettingReq;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Jwt
+         */
+        'x-bili-jwt'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string | null;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string | null;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string | null;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string | null;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string | null;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string | null;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string | null;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/favorite/setting';
+};
+
+export type SetSettingApiV1FavoriteSettingPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type SetSettingApiV1FavoriteSettingPostError = SetSettingApiV1FavoriteSettingPostErrors[keyof SetSettingApiV1FavoriteSettingPostErrors];
+
+export type SetSettingApiV1FavoriteSettingPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseFavoriteSettingResp;
+};
+
+export type SetSettingApiV1FavoriteSettingPostResponse = SetSettingApiV1FavoriteSettingPostResponses[keyof SetSettingApiV1FavoriteSettingPostResponses];
+
+export type PublicFoldersApiV1FavoriteUserFoldersGetData = {
+    body?: never;
+    path?: never;
+    query: {
+        /**
+         * Mid
+         *
+         * 目标用户mid
+         */
+        mid: number;
+    };
+    url: '/api/v1/favorite/user/folders';
+};
+
+export type PublicFoldersApiV1FavoriteUserFoldersGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type PublicFoldersApiV1FavoriteUserFoldersGetError = PublicFoldersApiV1FavoriteUserFoldersGetErrors[keyof PublicFoldersApiV1FavoriteUserFoldersGetErrors];
+
+export type PublicFoldersApiV1FavoriteUserFoldersGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseUnionListFavoriteFolderRespNoneType;
+};
+
+export type PublicFoldersApiV1FavoriteUserFoldersGetResponse = PublicFoldersApiV1FavoriteUserFoldersGetResponses[keyof PublicFoldersApiV1FavoriteUserFoldersGetResponses];
+
+export type PublicDynamicsApiV1FavoriteUserDynamicsGetData = {
+    body?: never;
+    path?: never;
+    query: {
+        /**
+         * Mid
+         *
+         * 目标用户mid
+         */
+        mid: number;
+        /**
+         * Folderid
+         *
+         * 收藏夹id（字符串）
+         */
+        folderId: string;
+        /**
+         * Page
+         */
+        page?: number;
+        /**
+         * Pagesize
+         */
+        pageSize?: number;
+    };
+    url: '/api/v1/favorite/user/dynamics';
+};
+
+export type PublicDynamicsApiV1FavoriteUserDynamicsGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type PublicDynamicsApiV1FavoriteUserDynamicsGetError = PublicDynamicsApiV1FavoriteUserDynamicsGetErrors[keyof PublicDynamicsApiV1FavoriteUserDynamicsGetErrors];
+
+export type PublicDynamicsApiV1FavoriteUserDynamicsGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseUnionFavoriteListRespNoneType;
+};
+
+export type PublicDynamicsApiV1FavoriteUserDynamicsGetResponse = PublicDynamicsApiV1FavoriteUserDynamicsGetResponses[keyof PublicDynamicsApiV1FavoriteUserDynamicsGetResponses];
 
 export type PullNotifyApiV1MessageNotifyPullGetData = {
     body?: never;
@@ -6485,17 +14423,11 @@ export type ListEventApiV1MessageEventListGetData = {
          */
         event_type?: EventTypeEnum | null;
         /**
-         * Source Type
+         * Cursor Id
+         *
+         * 上一页末条 id，用于翻页
          */
-        source_type?: SourceTypeEnum | null;
-        /**
-         * Source Id
-         */
-        source_id?: string | null;
-        /**
-         * Page Num
-         */
-        page_num?: number;
+        cursor_id?: number | null;
         /**
          * Page Size
          */
@@ -8413,6 +16345,669 @@ export type BanStatusResponses = {
 
 export type BanStatusResponse = BanStatusResponses[keyof BanStatusResponses];
 
+export type FollowUserApiV1MessageFollowDoPostData = {
+    body: FollowReq;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Jwt
+         */
+        'x-bili-jwt'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string | null;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string | null;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string | null;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string | null;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string | null;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string | null;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string | null;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/message/follow/do';
+};
+
+export type FollowUserApiV1MessageFollowDoPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type FollowUserApiV1MessageFollowDoPostError = FollowUserApiV1MessageFollowDoPostErrors[keyof FollowUserApiV1MessageFollowDoPostErrors];
+
+export type FollowUserApiV1MessageFollowDoPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseFollowOpResp;
+};
+
+export type FollowUserApiV1MessageFollowDoPostResponse = FollowUserApiV1MessageFollowDoPostResponses[keyof FollowUserApiV1MessageFollowDoPostResponses];
+
+export type UnfollowUserApiV1MessageFollowUndoPostData = {
+    body: FollowReq;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Jwt
+         */
+        'x-bili-jwt'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string | null;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string | null;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string | null;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string | null;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string | null;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string | null;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string | null;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/message/follow/undo';
+};
+
+export type UnfollowUserApiV1MessageFollowUndoPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type UnfollowUserApiV1MessageFollowUndoPostError = UnfollowUserApiV1MessageFollowUndoPostErrors[keyof UnfollowUserApiV1MessageFollowUndoPostErrors];
+
+export type UnfollowUserApiV1MessageFollowUndoPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseFollowOpResp;
+};
+
+export type UnfollowUserApiV1MessageFollowUndoPostResponse = UnfollowUserApiV1MessageFollowUndoPostResponses[keyof UnfollowUserApiV1MessageFollowUndoPostResponses];
+
+export type BlockUserApiV1MessageFollowBlockPostData = {
+    body: BlockReq;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Jwt
+         */
+        'x-bili-jwt'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string | null;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string | null;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string | null;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string | null;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string | null;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string | null;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string | null;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/message/follow/block';
+};
+
+export type BlockUserApiV1MessageFollowBlockPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type BlockUserApiV1MessageFollowBlockPostError = BlockUserApiV1MessageFollowBlockPostErrors[keyof BlockUserApiV1MessageFollowBlockPostErrors];
+
+export type BlockUserApiV1MessageFollowBlockPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseFollowOpResp;
+};
+
+export type BlockUserApiV1MessageFollowBlockPostResponse = BlockUserApiV1MessageFollowBlockPostResponses[keyof BlockUserApiV1MessageFollowBlockPostResponses];
+
+export type UnblockUserApiV1MessageFollowUnblockPostData = {
+    body: BlockReq;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Jwt
+         */
+        'x-bili-jwt'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string | null;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string | null;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string | null;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string | null;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string | null;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string | null;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string | null;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/message/follow/unblock';
+};
+
+export type UnblockUserApiV1MessageFollowUnblockPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type UnblockUserApiV1MessageFollowUnblockPostError = UnblockUserApiV1MessageFollowUnblockPostErrors[keyof UnblockUserApiV1MessageFollowUnblockPostErrors];
+
+export type UnblockUserApiV1MessageFollowUnblockPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseFollowOpResp;
+};
+
+export type UnblockUserApiV1MessageFollowUnblockPostResponse = UnblockUserApiV1MessageFollowUnblockPostResponses[keyof UnblockUserApiV1MessageFollowUnblockPostResponses];
+
+export type GetRelationApiV1MessageFollowRelationGetData = {
+    body?: never;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Jwt
+         */
+        'x-bili-jwt'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string | null;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string | null;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string | null;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string | null;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string | null;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string | null;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string | null;
+    };
+    path?: never;
+    query: {
+        /**
+         * Target Mid
+         *
+         * 目标用户 mid
+         */
+        target_mid: number;
+    };
+    url: '/api/v1/message/follow/relation';
+};
+
+export type GetRelationApiV1MessageFollowRelationGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetRelationApiV1MessageFollowRelationGetError = GetRelationApiV1MessageFollowRelationGetErrors[keyof GetRelationApiV1MessageFollowRelationGetErrors];
+
+export type GetRelationApiV1MessageFollowRelationGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseFollowRelationResp;
+};
+
+export type GetRelationApiV1MessageFollowRelationGetResponse = GetRelationApiV1MessageFollowRelationGetResponses[keyof GetRelationApiV1MessageFollowRelationGetResponses];
+
+export type GetCountsApiV1MessageFollowCountGetData = {
+    body?: never;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Jwt
+         */
+        'x-bili-jwt'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string | null;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string | null;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string | null;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string | null;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string | null;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string | null;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string | null;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/message/follow/count';
+};
+
+export type GetCountsApiV1MessageFollowCountGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetCountsApiV1MessageFollowCountGetError = GetCountsApiV1MessageFollowCountGetErrors[keyof GetCountsApiV1MessageFollowCountGetErrors];
+
+export type GetCountsApiV1MessageFollowCountGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseFollowCountResp;
+};
+
+export type GetCountsApiV1MessageFollowCountGetResponse = GetCountsApiV1MessageFollowCountGetResponses[keyof GetCountsApiV1MessageFollowCountGetResponses];
+
+export type GetStatApiV1MessageFollowStatGetData = {
+    body?: never;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+    };
+    path?: never;
+    query: {
+        /**
+         * Vmid
+         *
+         * 目标用户 mid（对标 B 站 vmid 参数）
+         */
+        vmid: number;
+    };
+    url: '/api/v1/message/follow/stat';
+};
+
+export type GetStatApiV1MessageFollowStatGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetStatApiV1MessageFollowStatGetError = GetStatApiV1MessageFollowStatGetErrors[keyof GetStatApiV1MessageFollowStatGetErrors];
+
+export type GetStatApiV1MessageFollowStatGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseFollowCountResp;
+};
+
+export type GetStatApiV1MessageFollowStatGetResponse = GetStatApiV1MessageFollowStatGetResponses[keyof GetStatApiV1MessageFollowStatGetResponses];
+
+export type ListFollowingApiV1MessageFollowFollowingListGetData = {
+    body?: never;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Jwt
+         */
+        'x-bili-jwt'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string | null;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string | null;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string | null;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string | null;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string | null;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string | null;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string | null;
+    };
+    path?: never;
+    query?: {
+        /**
+         * Page Num
+         */
+        page_num?: number;
+        /**
+         * Page Size
+         */
+        page_size?: number;
+    };
+    url: '/api/v1/message/follow/following/list';
+};
+
+export type ListFollowingApiV1MessageFollowFollowingListGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ListFollowingApiV1MessageFollowFollowingListGetError = ListFollowingApiV1MessageFollowFollowingListGetErrors[keyof ListFollowingApiV1MessageFollowFollowingListGetErrors];
+
+export type ListFollowingApiV1MessageFollowFollowingListGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseFollowListResp;
+};
+
+export type ListFollowingApiV1MessageFollowFollowingListGetResponse = ListFollowingApiV1MessageFollowFollowingListGetResponses[keyof ListFollowingApiV1MessageFollowFollowingListGetResponses];
+
+export type ListFollowersApiV1MessageFollowFollowersListGetData = {
+    body?: never;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Jwt
+         */
+        'x-bili-jwt'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string | null;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string | null;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string | null;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string | null;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string | null;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string | null;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string | null;
+    };
+    path?: never;
+    query?: {
+        /**
+         * Page Num
+         */
+        page_num?: number;
+        /**
+         * Page Size
+         */
+        page_size?: number;
+    };
+    url: '/api/v1/message/follow/followers/list';
+};
+
+export type ListFollowersApiV1MessageFollowFollowersListGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ListFollowersApiV1MessageFollowFollowersListGetError = ListFollowersApiV1MessageFollowFollowersListGetErrors[keyof ListFollowersApiV1MessageFollowFollowersListGetErrors];
+
+export type ListFollowersApiV1MessageFollowFollowersListGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseFollowListResp;
+};
+
+export type ListFollowersApiV1MessageFollowFollowersListGetResponse = ListFollowersApiV1MessageFollowFollowersListGetResponses[keyof ListFollowersApiV1MessageFollowFollowersListGetResponses];
+
 export type GetSettingApiV1MessageSettingGetData = {
     body?: never;
     headers?: {
@@ -9039,6 +17634,252 @@ export type SubmitFeedbackApiV1MessagePushFeedbackPostResponses = {
 
 export type SubmitFeedbackApiV1MessagePushFeedbackPostResponse = SubmitFeedbackApiV1MessagePushFeedbackPostResponses[keyof SubmitFeedbackApiV1MessagePushFeedbackPostResponses];
 
+export type CreateReportApiV1ReportPostData = {
+    body: ReportCreateReq;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Jwt
+         */
+        'x-bili-jwt'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string | null;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string | null;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string | null;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string | null;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string | null;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string | null;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string | null;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/report';
+};
+
+export type CreateReportApiV1ReportPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type CreateReportApiV1ReportPostError = CreateReportApiV1ReportPostErrors[keyof CreateReportApiV1ReportPostErrors];
+
+export type CreateReportApiV1ReportPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponse;
+};
+
+export type CreateReportApiV1ReportPostResponse = CreateReportApiV1ReportPostResponses[keyof CreateReportApiV1ReportPostResponses];
+
+export type ListReportsApiV1ReportAdminListGetData = {
+    body?: never;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Jwt
+         */
+        'x-bili-jwt'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string | null;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string | null;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string | null;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string | null;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string | null;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string | null;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string | null;
+    };
+    path?: never;
+    query?: {
+        /**
+         * Biz Type
+         *
+         * 按来源过滤：dynamic/comment/user
+         */
+        biz_type?: string | null;
+        /**
+         * Status
+         *
+         * 按状态过滤：pending/resolved/rejected
+         */
+        status?: string | null;
+        /**
+         * Page
+         */
+        page?: number;
+        /**
+         * Page Size
+         */
+        page_size?: number;
+    };
+    url: '/api/v1/report/admin/list';
+};
+
+export type ListReportsApiV1ReportAdminListGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ListReportsApiV1ReportAdminListGetError = ListReportsApiV1ReportAdminListGetErrors[keyof ListReportsApiV1ReportAdminListGetErrors];
+
+export type ListReportsApiV1ReportAdminListGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseReportListResp;
+};
+
+export type ListReportsApiV1ReportAdminListGetResponse = ListReportsApiV1ReportAdminListGetResponses[keyof ListReportsApiV1ReportAdminListGetResponses];
+
+export type ReviewApiV1ReportAdminReviewPostData = {
+    body: ReportReviewReq;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Jwt
+         */
+        'x-bili-jwt'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string | null;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string | null;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string | null;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string | null;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string | null;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string | null;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string | null;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/report/admin/review';
+};
+
+export type ReviewApiV1ReportAdminReviewPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ReviewApiV1ReportAdminReviewPostError = ReviewApiV1ReportAdminReviewPostErrors[keyof ReviewApiV1ReportAdminReviewPostErrors];
+
+export type ReviewApiV1ReportAdminReviewPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponse;
+};
+
+export type ReviewApiV1ReportAdminReviewPostResponse = ReviewApiV1ReportAdminReviewPostResponses[keyof ReviewApiV1ReportAdminReviewPostResponses];
+
 export type IdentifyUserApiV1UserIdentifyGetData = {
     body?: never;
     headers?: {
@@ -9468,6 +18309,389 @@ export type SearchUsersApiV1UserSearchGetResponses = {
 
 export type SearchUsersApiV1UserSearchGetResponse = SearchUsersApiV1UserSearchGetResponses[keyof SearchUsersApiV1UserSearchGetResponses];
 
+export type GetUserActLogApiV1UserActLogGetData = {
+    body?: never;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Jwt
+         */
+        'x-bili-jwt'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string | null;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string | null;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string | null;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string | null;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string | null;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string | null;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string | null;
+    };
+    path?: never;
+    query?: {
+        /**
+         * Offset
+         *
+         * 分页偏移量（游标），从 0 开始
+         */
+        offset?: number;
+        /**
+         * Limit
+         *
+         * 单页条数，默认 10，最大 100
+         */
+        limit?: number;
+        /**
+         * Days
+         *
+         * 时间窗口天数，最多 7（仅展示最近一周）
+         */
+        days?: number;
+    };
+    url: '/api/v1/user/act-log';
+};
+
+export type GetUserActLogApiV1UserActLogGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetUserActLogApiV1UserActLogGetError = GetUserActLogApiV1UserActLogGetErrors[keyof GetUserActLogApiV1UserActLogGetErrors];
+
+export type GetUserActLogApiV1UserActLogGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseUserActLogListResp;
+};
+
+export type GetUserActLogApiV1UserActLogGetResponse = GetUserActLogApiV1UserActLogGetResponses[keyof GetUserActLogApiV1UserActLogGetResponses];
+
+export type GetUserExpRecordApiV1UserExpRecordGetData = {
+    body?: never;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Jwt
+         */
+        'x-bili-jwt'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string | null;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string | null;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string | null;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string | null;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string | null;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string | null;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string | null;
+    };
+    path?: never;
+    query?: {
+        /**
+         * Offset
+         *
+         * 分页偏移量（游标），从 0 开始
+         */
+        offset?: number;
+        /**
+         * Limit
+         *
+         * 单页条数，默认 10，最大 100
+         */
+        limit?: number;
+        /**
+         * Days
+         *
+         * 时间窗口天数，最多 7（仅展示最近一周）
+         */
+        days?: number;
+    };
+    url: '/api/v1/user/exp-record';
+};
+
+export type GetUserExpRecordApiV1UserExpRecordGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetUserExpRecordApiV1UserExpRecordGetError = GetUserExpRecordApiV1UserExpRecordGetErrors[keyof GetUserExpRecordApiV1UserExpRecordGetErrors];
+
+export type GetUserExpRecordApiV1UserExpRecordGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseUserExpRecordListResp;
+};
+
+export type GetUserExpRecordApiV1UserExpRecordGetResponse = GetUserExpRecordApiV1UserExpRecordGetResponses[keyof GetUserExpRecordApiV1UserExpRecordGetResponses];
+
+export type GetSpaceInfoApiV1UserSpaceInfoGetData = {
+    body?: never;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+    };
+    path?: never;
+    query: {
+        /**
+         * Mid
+         *
+         * 目标用户 mid（对标 B 站 acc/info 的 mid 参数）
+         */
+        mid: number;
+    };
+    url: '/api/v1/user/space/info';
+};
+
+export type GetSpaceInfoApiV1UserSpaceInfoGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetSpaceInfoApiV1UserSpaceInfoGetError = GetSpaceInfoApiV1UserSpaceInfoGetErrors[keyof GetSpaceInfoApiV1UserSpaceInfoGetErrors];
+
+export type GetSpaceInfoApiV1UserSpaceInfoGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseSpaceInfoResp;
+};
+
+export type GetSpaceInfoApiV1UserSpaceInfoGetResponse = GetSpaceInfoApiV1UserSpaceInfoGetResponses[keyof GetSpaceInfoApiV1UserSpaceInfoGetResponses];
+
+export type DeactivateSelfApiV1UserDeactivatePostData = {
+    body?: never;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Jwt
+         */
+        'x-bili-jwt'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string | null;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string | null;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string | null;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string | null;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string | null;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string | null;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string | null;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/user/deactivate';
+};
+
+export type DeactivateSelfApiV1UserDeactivatePostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type DeactivateSelfApiV1UserDeactivatePostError = DeactivateSelfApiV1UserDeactivatePostErrors[keyof DeactivateSelfApiV1UserDeactivatePostErrors];
+
+export type DeactivateSelfApiV1UserDeactivatePostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponse;
+};
+
+export type DeactivateSelfApiV1UserDeactivatePostResponse = DeactivateSelfApiV1UserDeactivatePostResponses[keyof DeactivateSelfApiV1UserDeactivatePostResponses];
+
+export type DeactivateUserApiV1UserAdminDeactivatePostData = {
+    body?: never;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Jwt
+         */
+        'x-bili-jwt'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string | null;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string | null;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string | null;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string | null;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string | null;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string | null;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string | null;
+    };
+    path?: never;
+    query: {
+        /**
+         * Target Mid
+         *
+         * 目标用户 mid
+         */
+        target_mid: number;
+    };
+    url: '/api/v1/user/admin/deactivate';
+};
+
+export type DeactivateUserApiV1UserAdminDeactivatePostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type DeactivateUserApiV1UserAdminDeactivatePostError = DeactivateUserApiV1UserAdminDeactivatePostErrors[keyof DeactivateUserApiV1UserAdminDeactivatePostErrors];
+
+export type DeactivateUserApiV1UserAdminDeactivatePostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponse;
+};
+
+export type DeactivateUserApiV1UserAdminDeactivatePostResponse = DeactivateUserApiV1UserAdminDeactivatePostResponses[keyof DeactivateUserApiV1UserAdminDeactivatePostResponses];
+
 export type RefreshTokenApiV1UserRefreshTokenPostData = {
     body?: never;
     headers?: {
@@ -9723,6 +18947,399 @@ export type CasdoorCallbackApiV1UserCasdoorCallbackGetErrors = {
 export type CasdoorCallbackApiV1UserCasdoorCallbackGetError = CasdoorCallbackApiV1UserCasdoorCallbackGetErrors[keyof CasdoorCallbackApiV1UserCasdoorCallbackGetErrors];
 
 export type CasdoorCallbackApiV1UserCasdoorCallbackGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
+export type AvatarAuditMineApiV1UserAvatarAuditMineGetData = {
+    body?: never;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Jwt
+         */
+        'x-bili-jwt'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string | null;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string | null;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string | null;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string | null;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string | null;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string | null;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string | null;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/user/avatar/audit/mine';
+};
+
+export type AvatarAuditMineApiV1UserAvatarAuditMineGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type AvatarAuditMineApiV1UserAvatarAuditMineGetError = AvatarAuditMineApiV1UserAvatarAuditMineGetErrors[keyof AvatarAuditMineApiV1UserAvatarAuditMineGetErrors];
+
+export type AvatarAuditMineApiV1UserAvatarAuditMineGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseUnionAvatarAuditMineRespNoneType;
+};
+
+export type AvatarAuditMineApiV1UserAvatarAuditMineGetResponse = AvatarAuditMineApiV1UserAvatarAuditMineGetResponses[keyof AvatarAuditMineApiV1UserAvatarAuditMineGetResponses];
+
+export type AvatarAuditListApiV1UserAvatarAuditListGetData = {
+    body?: never;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Jwt
+         */
+        'x-bili-jwt'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string | null;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string | null;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string | null;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string | null;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string | null;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string | null;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string | null;
+    };
+    path?: never;
+    query?: {
+        /**
+         * Page Num
+         */
+        page_num?: number;
+        /**
+         * Page Size
+         */
+        page_size?: number;
+    };
+    url: '/api/v1/user/avatar/audit/list';
+};
+
+export type AvatarAuditListApiV1UserAvatarAuditListGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type AvatarAuditListApiV1UserAvatarAuditListGetError = AvatarAuditListApiV1UserAvatarAuditListGetErrors[keyof AvatarAuditListApiV1UserAvatarAuditListGetErrors];
+
+export type AvatarAuditListApiV1UserAvatarAuditListGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseAvatarAuditListResp;
+};
+
+export type AvatarAuditListApiV1UserAvatarAuditListGetResponse = AvatarAuditListApiV1UserAvatarAuditListGetResponses[keyof AvatarAuditListApiV1UserAvatarAuditListGetResponses];
+
+export type AvatarAuditApproveApiV1UserAvatarAuditApprovePostData = {
+    body: AvatarAuditApproveReq;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Jwt
+         */
+        'x-bili-jwt'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string | null;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string | null;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string | null;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string | null;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string | null;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string | null;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string | null;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/user/avatar/audit/approve';
+};
+
+export type AvatarAuditApproveApiV1UserAvatarAuditApprovePostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type AvatarAuditApproveApiV1UserAvatarAuditApprovePostError = AvatarAuditApproveApiV1UserAvatarAuditApprovePostErrors[keyof AvatarAuditApproveApiV1UserAvatarAuditApprovePostErrors];
+
+export type AvatarAuditApproveApiV1UserAvatarAuditApprovePostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseAvatarAuditListResp;
+};
+
+export type AvatarAuditApproveApiV1UserAvatarAuditApprovePostResponse = AvatarAuditApproveApiV1UserAvatarAuditApprovePostResponses[keyof AvatarAuditApproveApiV1UserAvatarAuditApprovePostResponses];
+
+export type AvatarAuditRejectApiV1UserAvatarAuditRejectPostData = {
+    body: AvatarAuditRejectReq;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Jwt
+         */
+        'x-bili-jwt'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string | null;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string | null;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string | null;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string | null;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string | null;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string | null;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string | null;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/user/avatar/audit/reject';
+};
+
+export type AvatarAuditRejectApiV1UserAvatarAuditRejectPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type AvatarAuditRejectApiV1UserAvatarAuditRejectPostError = AvatarAuditRejectApiV1UserAvatarAuditRejectPostErrors[keyof AvatarAuditRejectApiV1UserAvatarAuditRejectPostErrors];
+
+export type AvatarAuditRejectApiV1UserAvatarAuditRejectPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseAvatarAuditListResp;
+};
+
+export type AvatarAuditRejectApiV1UserAvatarAuditRejectPostResponse = AvatarAuditRejectApiV1UserAvatarAuditRejectPostResponses[keyof AvatarAuditRejectApiV1UserAvatarAuditRejectPostResponses];
+
+export type ServeAsyncapiSchemaAsyncapiGetData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Sidebar
+         */
+        sidebar?: boolean;
+        /**
+         * Info
+         */
+        info?: boolean;
+        /**
+         * Servers
+         */
+        servers?: boolean;
+        /**
+         * Operations
+         */
+        operations?: boolean;
+        /**
+         * Messages
+         */
+        messages?: boolean;
+        /**
+         * Schemas
+         */
+        schemas?: boolean;
+        /**
+         * Errors
+         */
+        errors?: boolean;
+        /**
+         * Expandmessageexamples
+         */
+        expandMessageExamples?: boolean;
+    };
+    url: '/asyncapi';
+};
+
+export type ServeAsyncapiSchemaAsyncapiGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ServeAsyncapiSchemaAsyncapiGetError = ServeAsyncapiSchemaAsyncapiGetErrors[keyof ServeAsyncapiSchemaAsyncapiGetErrors];
+
+export type ServeAsyncapiSchemaAsyncapiGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
+export type DownloadAppJsonSchemaAsyncapiJsonGetData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/asyncapi.json';
+};
+
+export type DownloadAppJsonSchemaAsyncapiJsonGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
+export type DownloadAppYamlSchemaAsyncapiYamlGetData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/asyncapi.yaml';
+};
+
+export type DownloadAppYamlSchemaAsyncapiYamlGetResponses = {
     /**
      * Successful Response
      */

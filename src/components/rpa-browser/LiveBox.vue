@@ -15,6 +15,9 @@ import {
 } from '@/api/browser/hey-api'
 import { useUserNavStore } from '@/stores/user_nav'
 import biliMessage from '@/utils/message'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 interface Props {
   browserId: string
@@ -73,7 +76,7 @@ const fetchPagesList = async (): Promise<PageInfo | null> => {
     } else {
       const errorCode = response?.code
       if (errorCode !== 404) {
-        biliMessage.error(response?.msg || '获取页面信息失败')
+        biliMessage.error(response?.msg || t('rpa.getPageInfoFailed'))
       }
       return null
     }
@@ -92,9 +95,9 @@ const closeWebRtcStream = async () => {
     })
 
     if (response?.code === 0) {
-      biliMessage.success('关闭 WebRTC 流成功')
+      biliMessage.success(t('rpa.closeWebrtcSuccess'))
     } else {
-      biliMessage.error(response?.msg || '关闭 WebRTC 流失败')
+      biliMessage.error(response?.msg || t('rpa.closeWebrtcFailed'))
     }
   } catch (error) {
     console.error('Failed to close WebRTC stream:', error)
@@ -278,9 +281,9 @@ const handleStartStream = async () => {
   isStartingStream.value = true
 
   try {
-    await ElMessageBox.confirm('启动直播后将开始监控当前页面，是否继续？', '启动直播确认', {
-      confirmButtonText: '启动',
-      cancelButtonText: '取消',
+    await ElMessageBox.confirm(t('rpa.startStreamConfirm'), t('rpa.startStreamTitle'), {
+      confirmButtonText: t('rpa.startStream'),
+      cancelButtonText: t('common.cancel'),
       type: 'warning'
     })
     isStreaming.value = true
@@ -318,7 +321,7 @@ const handleStopStream = async () => {
 
 const handleAddPage = async () => {
   if (!userNavStore.user_nav.uid) {
-    biliMessage.warning('请先登录')
+    biliMessage.warning(t('rpa.pleaseLogin'))
     return
   }
 
@@ -330,25 +333,25 @@ const handleAddPage = async () => {
     })
 
     if (response?.code === 0) {
-      biliMessage.success('新建页面成功')
+      biliMessage.success(t('rpa.newPageSuccess'))
       await loadPagesList()
     } else {
-      biliMessage.error(response?.msg || '新建页面失败')
+      biliMessage.error(response?.msg || t('rpa.newPageFailed'))
     }
   } catch (error) {
     console.error('Failed to open page:', error)
-    biliMessage.error('网络异常，请稍后重试')
+    biliMessage.error(t('rpa.networkError'))
   }
 }
 
 const handleClosePage = async (index: number) => {
   if (pageTabs.value.length <= 1) {
-    biliMessage.warning('至少保留一个页面')
+    biliMessage.warning(t('rpa.atLeastOnePage'))
     return
   }
 
   if (!userNavStore.user_nav.uid) {
-    biliMessage.warning('请先登录')
+    biliMessage.warning(t('rpa.pleaseLogin'))
     return
   }
 
@@ -360,14 +363,14 @@ const handleClosePage = async (index: number) => {
     })
 
     if (response?.code === 0) {
-      biliMessage.success('关闭页面成功')
+      biliMessage.success(t('rpa.closePageSuccess'))
       await loadPagesList()
     } else {
-      biliMessage.error(response?.msg || '关闭页面失败')
+      biliMessage.error(response?.msg || t('rpa.closePageFailed'))
     }
   } catch (error) {
     console.error('Failed to close page:', error)
-    biliMessage.error('网络异常，请稍后重试')
+    biliMessage.error(t('rpa.networkError'))
   }
 }
 
@@ -375,7 +378,7 @@ const handleSwitchPage = async (index: number) => {
   if (currentPageIndex.value === index) return
 
   if (!userNavStore.user_nav.uid) {
-    biliMessage.warning('请先登录')
+    biliMessage.warning(t('rpa.pleaseLogin'))
     return
   }
 
@@ -400,11 +403,11 @@ const handleSwitchPage = async (index: number) => {
         }, 500)
       }
     } else {
-      biliMessage.error(response?.msg || '切换页面失败')
+      biliMessage.error(response?.msg || t('rpa.switchPageFailed'))
     }
   } catch (error) {
     console.error('Failed to switch page:', error)
-    biliMessage.error('网络异常，请稍后重试')
+    biliMessage.error(t('rpa.networkError'))
   }
 }
 
@@ -547,7 +550,7 @@ onUnmounted(() => {
           @click="handleAddPage"
           :loading="isLoadingPages"
           :disabled="!isSessionConnected"
-          >新建页面</el-button
+          >{{ t('rpa.addPage') }}</el-button
         >
         <el-button
           v-if="!isStreaming"
@@ -558,10 +561,10 @@ onUnmounted(() => {
           :disabled="!isSessionConnected || isStartingStream"
           :loading="isStartingStream"
         >
-          启动直播
+          {{ t('rpa.startLive') }}
         </el-button>
         <el-button v-else size="large" type="danger" :icon="VideoPause" @click="handleStopStream">
-          停止直播
+          {{ t('rpa.stopLive') }}
         </el-button>
       </div>
     </div>
@@ -578,17 +581,17 @@ onUnmounted(() => {
           <div class="flex items-center gap-4 text-sm text-white">
             <span class="flex items-center gap-1">
               <span class="h-2 w-2 animate-pulse rounded-full bg-red-500"></span>
-              直播中
+              {{ t('rpa.streaming') }}
             </span>
-            <span>连接数: {{ activeStreamsCount }}</span>
-            <span>↑ {{ uploadSpeed }}/s</span>
-            <span>↓ {{ downloadSpeed }}/s</span>
+            <span>{{ t('rpa.connections') }}: {{ activeStreamsCount }}</span>
+            <span>{{ t('rpa.uploadSpeed', { speed: uploadSpeed }) }}</span>
+            <span>{{ t('rpa.downloadSpeed', { speed: downloadSpeed }) }}</span>
           </div>
         </div>
       </div>
 
       <div v-if="!isStreaming" class="absolute inset-0 flex items-center justify-center opacity-70">
-        <el-empty description="点击上方启动直播开始监控" />
+        <el-empty :description="t('rpa.clickToStart')" />
       </div>
       <div
         v-else-if="webrtcStatus === 'connecting'"
@@ -598,7 +601,7 @@ onUnmounted(() => {
           <el-icon class="animate-spin">
             <VideoPlay />
           </el-icon>
-          <div class="mt-4">正在连接...</div>
+          <div class="mt-4">{{ t('rpa.connecting') }}</div>
         </div>
       </div>
       <div
@@ -609,7 +612,7 @@ onUnmounted(() => {
           <el-icon>
             <VideoPause />
           </el-icon>
-          <div class="mt-4">直播已停止</div>
+          <div class="mt-4">{{ t('rpa.streamStopped') }}</div>
         </div>
       </div>
     </div>

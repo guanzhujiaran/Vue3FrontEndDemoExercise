@@ -42,6 +42,10 @@ export interface ReplyItem {
       sign: string
       uname: string
     }[]
+    /** IP 属地（服务端 GeoIP 解析，如「浙江 杭州」） */
+    ip_location?: string | null
+    /** IP 运营商 ISP */
+    ip_isp?: string | null
   }
   at_name_to_mid: { [key: string]: string | number }
   count: number //二级评论条数

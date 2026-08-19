@@ -6,13 +6,12 @@
  * @FilePath: \Vue3FrontEndDemoExercise\src\models\inject\inject_type.ts
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
  */
-import type { InjectionKey, Ref } from 'vue'
+import type { InjectionKey } from 'vue'
 
 export interface openGlobalLoginModal {
   (): void
 }
 
 const openGlobalLoginModalKey: InjectionKey<openGlobalLoginModal> = Symbol('openGlobalLoginModal')
-const windowHeightKey: InjectionKey<Ref<number>> = Symbol('windowHeight')
 
-export { openGlobalLoginModalKey, windowHeightKey }
+export { openGlobalLoginModalKey }

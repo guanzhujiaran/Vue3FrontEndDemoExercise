@@ -1,42 +1,49 @@
 <template>
   <el-card
+    v-bind="attrs"
     class="lottery-card rounded-xl"
     :class="['lottery-type-' + normalizedData.type.toLowerCase(), cardBgClass, cardEdgeClass]"
     shadow="hover" body-class="lottery-card-body">
     <template #header>
       <div class="flex flex-col gap-4">
         <div class="flex flex-wrap items-start gap-2">
-          <el-tag size="default" :type="typeInfo.tagType" effect="plain" round class="w-fit">
-            {{ normalizedData.displayType }}
-          </el-tag>
-          <span
-            class="inline-flex items-center gap-2 bg-fill-lighter px-3 py-1 border border-border-light rounded-full font-medium text-text-primary text-xs">
-            <BiliStatusIcon :icon="statusIcon" :popover_text="normalizedData.statusText" />
-            <span>{{ normalizedData.statusText }}</span>
-          </span>
-          <!-- extra_info 附加信息标识 -->
-          <span v-if="normalizedData.extraInfo?.is_grand_prize"
-            class="inline-flex items-center gap-1 bg-amber-50 px-3 py-1 border border-amber-400 rounded-full font-medium text-amber-700 text-xs lottery-extra-badge lottery-extra-badge-animated">
-            大奖
-          </span>
-          <span v-if="normalizedData.extraInfo?.need_comment"
-            class="inline-flex items-center gap-1 bg-blue-50 px-3 py-1 border border-blue-300 rounded-full font-medium text-blue-600 text-xs lottery-extra-badge lottery-extra-badge-animated">
-            <el-icon :size="13">
-              <ChatDotSquare />
-            </el-icon>
-            需评论
-          </span>
-          <span v-if="normalizedData.extraInfo?.need_repost"
-            class="inline-flex items-center gap-1 bg-green-50 px-3 py-1 border border-green-300 rounded-full font-medium text-green-600 text-xs lottery-extra-badge lottery-extra-badge-animated">
-            <el-icon :size="13">
-              <Share />
-            </el-icon>
-            需转发
-          </span>
-          <span
-            class="inline-flex items-center bg-bg-page ml-auto px-3 py-1 border border-border-light rounded-full font-medium text-text-secondary text-xs">
-            ID: {{ normalizedData.id }}
-          </span>
+          <!-- 左侧 badges 组：占满剩余空间、可换行、可缩（内容多时换行不被挤出） -->
+          <div class="flex flex-1 min-w-0 flex-wrap items-start gap-2">
+            <el-tag size="default" :type="typeInfo.tagType" effect="plain" round class="w-fit">
+              {{ normalizedData.displayType }}
+            </el-tag>
+            <span
+              class="inline-flex items-center gap-2 bg-fill-lighter px-3 py-1 border border-border-light rounded-full font-medium text-text-primary text-xs">
+              <BiliStatusIcon :icon="statusIcon" :popover_text="normalizedData.statusText" />
+              <span>{{ normalizedData.statusText }}</span>
+            </span>
+            <!-- extra_info 附加信息标识 -->
+            <span v-if="normalizedData.extraInfo?.is_grand_prize"
+              class="inline-flex items-center gap-1 bg-amber-50 px-3 py-1 border border-amber-400 rounded-full font-medium text-amber-700 text-xs lottery-extra-badge lottery-extra-badge-animated">
+              大奖
+            </span>
+            <span v-if="normalizedData.extraInfo?.need_comment"
+              class="inline-flex items-center gap-1 bg-blue-50 px-3 py-1 border border-blue-300 rounded-full font-medium text-blue-600 text-xs lottery-extra-badge lottery-extra-badge-animated">
+              <el-icon :size="13">
+                <ChatDotSquare />
+              </el-icon>
+              需评论
+            </span>
+            <span v-if="normalizedData.extraInfo?.need_repost"
+              class="inline-flex items-center gap-1 bg-green-50 px-3 py-1 border border-green-300 rounded-full font-medium text-green-600 text-xs lottery-extra-badge lottery-extra-badge-animated">
+              <el-icon :size="13">
+                <Share />
+              </el-icon>
+              需转发
+            </span>
+          </div>
+          <!-- 右侧固定组：ID，不缩小不被换行挤出 -->
+          <div class="flex shrink-0 items-center gap-1">
+            <span
+              class="inline-flex items-center bg-bg-page px-3 py-1 border border-border-light rounded-full font-medium text-text-secondary text-xs">
+              ID: {{ normalizedData.id }}
+            </span>
+          </div>
         </div>
 
         <div class="space-y-2">
@@ -64,10 +71,6 @@
               @click="handleLinkClick" link icon="link" underline="never" class="whitespace-nowrap">
               查看h5抽奖详情
             </el-link>
-            <el-button type="primary" size="default" :icon="ChatDotRound" class="lottery-card__comment-entry whitespace-nowrap"
-              @click="goToLotteryDetail">
-              评论区
-            </el-button>
             <!-- 参加/不参加开关 -->
             <div class="flex items-center gap-2 whitespace-nowrap">
               <span class="font-medium text-text-secondary text-sm whitespace-nowrap">
@@ -245,6 +248,74 @@
     </template>
 
     <template #footer>
+      <!-- 互动栏：参考 B 站动态页脚（icon + 数字 / 无数量时显示中文）。数量走 props.status 接口统一展示 -->
+      <div class="lottery-card__interaction-bar flex items-center justify-around gap-3 bg-fill-lighter mb-3 py-3 border-border-light border-t px-3">
+        <!-- 评论 -->
+        <button
+          class="lottery-card__action-comment inline-flex items-center gap-1.5 text-text-secondary hover:text-text-primary text-sm cursor-pointer transition-colors"
+          type="button"
+          @click="handleComment">
+          <component :is="ChatDotRound" class="w-4 h-4 shrink-0" />
+          <template v-if="commentCount > 0">
+            <span class="font-medium">{{ commentCount }}</span>
+          </template>
+          <template v-else>
+            <span>评论</span>
+          </template>
+        </button>
+        <!-- 点赞 -->
+        <button
+          class="lottery-card__action-like inline-flex items-center gap-1.5 text-text-secondary hover:text-text-primary text-sm cursor-pointer transition-colors"
+          type="button"
+          @click="handleLike">
+          <component :is="likeActive ? LikeActiveIcon : LikeIcon" class="w-4 h-4 shrink-0" :class="likeActive ? 'text-primary' : ''" />
+          <template v-if="likeCount > 0">
+            <span :class="likeActive ? 'font-medium text-primary' : 'font-medium'">{{ likeCount }}</span>
+          </template>
+          <template v-else>
+            <span>点赞</span>
+          </template>
+        </button>
+        <!-- 收藏 -->
+        <button
+          class="lottery-card__action-favorite inline-flex items-center gap-1.5 text-text-secondary hover:text-text-primary text-sm cursor-pointer transition-colors"
+          type="button"
+          @click="handleFavorite">
+          <component :is="FavoriteIcon" class="w-4 h-4 shrink-0" :class="favActive ? 'text-warning' : ''" />
+          <template v-if="favCount > 0">
+            <span :class="favActive ? 'font-medium text-warning' : 'font-medium'">{{ favCount }}</span>
+          </template>
+          <template v-else>
+            <span>收藏</span>
+          </template>
+        </button>
+        <!-- 转发 -->
+        <button
+          class="lottery-card__action-forward inline-flex items-center gap-1.5 text-text-secondary hover:text-text-primary text-sm cursor-pointer transition-colors"
+          type="button"
+          @click="handleForward">
+          <component :is="ForwardIcon" class="w-4 h-4 shrink-0" />
+          <template v-if="forwardCount > 0">
+            <span class="font-medium">{{ forwardCount }}</span>
+          </template>
+          <template v-else>
+            <span>转发</span>
+          </template>
+        </button>
+      </div>
+
+      <!-- 评论区（卡片内就地展开，首次点击懒加载；对标 B 站动态信息流） -->
+      <div
+        v-if="commentsVisible"
+        class="lottery-card__comments mt-3 border-t border-border-light pt-3"
+        @click.stop>
+        <LotteryCommentSection
+          :oid="lotteryId"
+          :type="LOTTERY_COMMENT_TYPE"
+          @count-change="handleCommentCountChange"
+        />
+      </div>
+
       <el-collapse v-model="activeCollapseNames" class="details-collapse">
         <el-collapse-item name="details">
           <template #title>
@@ -273,16 +344,47 @@
       </el-collapse>
     </template>
   </el-card>
+
+  <!-- 转发抽奖到动态：复用统一动态编辑器（attach 资源模式） -->
+  <MomentPublishForm
+    v-model:visible="forwardVisible"
+    :attach-resource="{
+      bizType: 'lottery',
+      bizId: lotteryId,
+      name: normalizedData.title || undefined,
+    }"
+  />
+
+  <!-- 收藏到收藏夹：选择/新建收藏夹 -->
+  <MomentFavoriteDialog
+    v-model="favDialogVisible"
+    :dyn-id="lotteryId"
+    biz-type="lottery"
+    :biz-id="lotteryId"
+    @changed="handleFavChanged"
+  />
 </template>
 
 <script setup lang="ts">
-import { computed, ref, type PropType, type Ref } from 'vue'
+import { computed, ref, useAttrs, type PropType, type Ref } from 'vue'
 import type { TagProps } from 'element-plus'
+
+defineOptions({
+  // 模板存在多个根节点（el-card + MomentPublishForm），关闭自动继承，
+  // 由下方 useAttrs 将外部属性（如 class）手动绑定到主容器 el-card 上
+  inheritAttrs: false
+})
+
+const attrs = useAttrs()
 import { type GlobalVarsType, ScreenTypeEnum } from '@/models/global_var/global_var_model.ts'
 import { KeysEnum, useInject } from '@/models/base/provide_model.ts'
 import { ChatDotRound, ChatDotSquare, Share, Link } from '@element-plus/icons-vue'
-import router from '@/router'
-import { useLotteryDetailStore, LOTTERY_COMMENT_TYPE } from '@/stores/lottery_detail.ts'
+import LikeIcon from '@/assets/svgs/like.svg?component'
+import LikeActiveIcon from '@/assets/svgs/like_active.svg?component'
+import FavoriteIcon from '@/assets/svgs/dynamic/detail/side_toolbar/favorite.svg?component'
+import ForwardIcon from '@/assets/svgs/dynamic/detail/side_toolbar/forward.svg?component'
+
+import { LOTTERY_COMMENT_TYPE } from '@/stores/lottery_detail.ts'
 
 import type {
   AnchorLotteryData,
@@ -294,11 +396,16 @@ import type {
   ReservationLotteryData,
   TopicEventData
 } from '@/models/api/lottery/lottery_card.ts'
-import { normalizeLotteryData, formatTimestamp } from '@/utils/lotteryNormalization.ts'
+import { normalizeLotteryData } from '@/utils/lotteryNormalization.ts'
 import { getBiliUserSpaceUrl } from '@/utils/PageOpen/BiliJump.ts'
 import { isMobileDevice } from '@/utils/Browser/useDeviceDetect.ts'
 import { BiliCommTxt } from '@/assets/text/BiliCommTxt.ts'
 import { handleLotteryLinkClick, setLotteryParticipation, isLotteryParticipated } from '@/utils/lotteryParticipation'
+import { thumbMoment, fetchInteractionStatus } from '@/api/notify/moment-api'
+import type { InteractionStatusItemView as InteractionStatusItem } from '@/api/notify/moment-api'
+import MomentPublishForm from '@/components/moment/MomentPublishForm.vue'
+import MomentFavoriteDialog from '@/components/moment/MomentFavoriteDialog.vue'
+import LotteryCommentSection from '@/components/lottery_data/LotteryCommentSection.vue'
 
 const handleRecordLotteryId = (val: boolean | number | string) => {
   setLotteryParticipation(String(normalizedData.value.id), Boolean(val))
@@ -308,28 +415,93 @@ const handleLinkClick = () => {
   handleLotteryLinkClick(String(normalizedData.value.id))
 }
 
-const lotteryDetailStore = useLotteryDetailStore()
+const is_mobile = isMobileDevice()
 
-/** 携带完整卡片数据跳转抽奖卡片详情页，详情页底部会加载该抽奖的评论区 */
-const goToLotteryDetail = () => {
-  lotteryDetailStore.setDetail(props.lotteryData)
-  router.push({
-    path: '/app/lot-data/card-detail',
-    query: {
-      id: String(normalizedData.value.id),
-      type: normalizedData.value.type
-    }
+// ============ 点赞 / 收藏 / 转发到动态（2.20.0）============
+const lotteryId = computed(() => String(normalizedData.value.id))
+const interactLoading = ref(false)
+// 互动状态由容器层批量拉取后经 status prop 下发，卡片只读派生（单向数据流）
+const likeActive = computed(() => Boolean(props.status?.isLike))
+const likeCount = computed(() => Number(props.status?.likeCount ?? 0))
+const favActive = computed(() => Boolean(props.status?.isFavorite))
+const favCount = computed(() => Number(props.status?.favoriteCount ?? 0))
+/** 评论数 / 转发数：来自 props.status 统一接口（dynamic 才有真实计数，lottery 等非动态资源恒为 0） */
+const commentCount = computed(() => Number((props.status as InteractionStatusItem | undefined)?.commentCount ?? 0))
+const forwardCount = computed(() => Number((props.status as InteractionStatusItem | undefined)?.repostCount ?? 0))
+
+/** 点赞 / 取消点赞 */
+async function handleLike() {
+  if (interactLoading.value) return
+  interactLoading.value = true
+  const nextActive = !likeActive.value
+  const res = await thumbMoment(lotteryId.value, nextActive ? 1 : 2, {
+    bizType: 'lottery' as any,
+    bizId: lotteryId.value,
   })
+  interactLoading.value = false
+  if (res) {
+    emit('update-status', {
+      bizId: lotteryId.value,
+      status: {
+        isLike: nextActive,
+        likeCount: Math.max(0, likeCount.value + (nextActive ? 1 : -1)),
+      },
+    })
+  }
 }
 
-const is_mobile = isMobileDevice()
+/** 评论：卡片内就地展开评论区（对标 B 站动态信息流，首次点击懒加载） */
+const commentsVisible = ref(false)
+function handleComment() {
+  commentsVisible.value = !commentsVisible.value
+}
+
+/** 内联评论区总数变化：浅合并上报容器层（保留其它互动字段） */
+function handleCommentCountChange(count: number) {
+  emit('update-status', { bizId: lotteryId.value, status: { commentCount: count } })
+}
+
+/** 收藏：弹出收藏夹选择弹窗（多夹），选择/新建收藏夹后收藏 */
+const favDialogVisible = ref(false)
+function handleFavorite() {
+  favDialogVisible.value = true
+}
+
+/** 收藏夹变更后重新拉取最新互动状态并上报容器层 */
+async function handleFavChanged() {
+  try {
+    const res = await fetchInteractionStatus('lottery' as any, [lotteryId.value])
+    const item = res?.items?.[0]
+    if (item?.bizId) {
+      emit('update-status', { bizId: item.bizId, status: item })
+    }
+  } catch {
+    // 静默：刷新失败不影响浏览
+  }
+}
+
+/** 转发到动态：弹窗由 MomentPublishForm（attach 资源模式）处理 */
+const forwardVisible = ref(false)
+
+function handleForward() {
+  forwardVisible.value = true
+}
 
 const props = defineProps({
   lotteryData: {
     type: Object as PropType<AnyLotteryData>,
     required: true
+  },
+  /** 互动状态（bizType=lottery，由容器层批量拉取后下发；卡片不再各自查询） */
+  status: {
+    type: Object as PropType<InteractionStatusItem | undefined>,
+    default: undefined
   }
 })
+
+const emit = defineEmits<{
+  (e: 'update-status', payload: { bizId: string; status: Partial<InteractionStatusItem> }): void
+}>()
 
 const activeCollapseNames = ref<string[]>([])
 const dynContentExpanded = ref(false)

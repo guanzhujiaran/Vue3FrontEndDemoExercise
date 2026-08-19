@@ -49,7 +49,6 @@ import type {
   UserActivityResp,
   EventTypeEnum,
   SourceTypeEnum,
-  EventItem,
   EventListResp,
   EventReadResp,
   DmSessionItem,
@@ -69,6 +68,9 @@ export type { NotifyTargetTypeEnum as NotifyTargetType } from '@/api/notify/hey-
 export type { NotifyCreateReq as CreateNotifyPayload } from '@/api/notify/hey-api'
 export type { NotifyUpdateReq as UpdateNotifyPayload } from '@/api/notify/hey-api'
 export type { MessageSettingUpdateReq as MessageSettingPartial } from '@/api/notify/hey-api'
+export type { EventMsgfeedItem as EventFeedItem } from '@/api/notify/hey-api'
+export type { EventMsgfeedSection as EventFeedSection } from '@/api/notify/hey-api'
+export type { EventUserBrief as EventFeedUser } from '@/api/notify/hey-api'
 
 // 内部使用的小类型别名（枚举字面量联合）
 export type NotifyLevel = NotifyLevelEnum
@@ -219,7 +221,8 @@ export async function sendHeartbeat(): Promise<UserActivity | null> {
 // ---------------------------------------------------------------------------
 export async function fetchEventList(params: {
   event_type: EventType
-  page?: number
+  /** 翻页游标：上一页 total.cursor.id */
+  cursor_id?: number | null
   size?: number
   only_unread?: boolean
 }): Promise<EventListResp> {
@@ -229,12 +232,12 @@ export async function fetchEventList(params: {
         headers: authHeaders(),
         query: {
           event_type: params.event_type,
-          page_num: params.page ?? 1,
+          cursor_id: params.cursor_id ?? null,
           page_size: params.size ?? 20,
           only_unread: params.only_unread
         }
       }),
-    { items: [], total: 0, page_num: 1, page_size: params.size ?? 20 }
+    { latest: { items: [] }, total: { cursor: { is_end: true, id: null, time: null }, items: [] } }
   )
 }
 

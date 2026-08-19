@@ -1,56 +1,56 @@
 <template>
   <div class="notify-admin">
     <div class="notify-admin__toolbar mb-4 flex items-center justify-between">
-      <h2 class="text-lg font-bold text-msg-text-active">通知管理（管理员）</h2>
+      <h2 class="text-lg font-bold text-msg-text-active">{{ t('message.notifyAdminTitle') }}</h2>
       <el-button
         type="primary"
         size="default"
         class="notify-admin__create"
         @click="openCreate"
       >
-        发布通知
+        {{ t('message.publishNotify') }}
       </el-button>
     </div>
 
     <LoadingWrap :loading="loading" :rows="6">
-      <EmptyState v-if="items.length === 0" text="暂无通知记录" />
+      <EmptyState v-if="items.length === 0" :text="t('message.noNotifyRecord')" />
       <el-table v-else :data="items" class="notify-admin__table" border stripe>
-        <el-table-column prop="id" label="ID" width="80" />
-        <el-table-column prop="title" label="标题" min-width="180" show-overflow-tooltip />
-        <el-table-column label="级别" width="100">
+        <el-table-column prop="id" :label="t('message.colId')" width="80" />
+        <el-table-column prop="title" :label="t('message.colTitle')" min-width="180" show-overflow-tooltip />
+        <el-table-column :label="t('message.colLevel')" width="100">
           <template #default="{ row }">
             <el-tag :type="levelTag(row.level)" size="default" effect="light">
               {{ levelText(row.level) }}
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="状态" width="110">
+        <el-table-column :label="t('message.colStatus')" width="110">
           <template #default="{ row }">
             <el-tag :type="statusTag(row.status)" size="default" effect="plain">
               {{ statusText(row.status) }}
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="目标" width="140">
+        <el-table-column :label="t('message.colTarget')" width="140">
           <template #default="{ row }">
             <span class="text-sm text-msg-muted">{{ targetText(row) }}</span>
           </template>
         </el-table-column>
-        <el-table-column label="发布时间" width="170">
+        <el-table-column :label="t('message.colPublishTime')" width="170">
           <template #default="{ row }">
             <TimeText :time="row.publish_at" />
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="200" fixed="right">
+        <el-table-column :label="t('message.colAction')" width="200" fixed="right">
           <template #default="{ row }">
-            <el-button size="default" @click="openEdit(row)">编辑</el-button>
+            <el-button size="default" @click="openEdit(row)">{{ t('message.editNotify') }}</el-button>
             <el-button
               v-if="row.status !== 'revoked'"
               size="default"
               type="warning"
               @click="revoke(row)"
             >
-              删除
+              {{ t('message.deleteNotify') }}
             </el-button>
           </template>
         </el-table-column>
@@ -68,57 +68,57 @@
 
     <el-dialog
       v-model="dialogVisible"
-      :title="editingId ? '编辑通知' : '发布通知'"
+      :title="editingId ? t('message.notifyDialogEdit') : t('message.notifyDialogCreate')"
       width="560px"
       class="notify-admin__dialog"
     >
       <el-form :model="form" label-width="90px" class="notify-admin__form">
-        <el-form-item label="标题" required>
-          <el-input v-model="form.title" size="default" placeholder="通知标题" />
+        <el-form-item :label="t('message.notifyFormTitle')" required>
+          <el-input v-model="form.title" size="default" :placeholder="t('message.notifyFormTitle')" />
         </el-form-item>
-        <el-form-item label="正文" required>
+        <el-form-item :label="t('message.notifyFormContent')" required>
           <el-input
             v-model="form.content"
             type="textarea"
             :rows="4"
             size="default"
-            placeholder="通知正文"
+            :placeholder="t('message.notifyFormContent')"
           />
         </el-form-item>
-        <el-form-item label="级别">
+        <el-form-item :label="t('message.notifyFormLevel')">
           <el-select v-model="form.level" size="default" class="w-full">
-            <el-option label="普通" value="normal" />
-            <el-option label="重要" value="important" />
-            <el-option label="紧急" value="urgent" />
+            <el-option :label="t('message.notifyLevelNormal')" value="normal" />
+            <el-option :label="t('message.notifyLevelImportant')" value="important" />
+            <el-option :label="t('message.notifyLevelUrgent')" value="urgent" />
           </el-select>
         </el-form-item>
-        <el-form-item label="目标类型">
+        <el-form-item :label="t('message.notifyFormTargetType')">
           <el-select v-model="form.target_type" size="default" class="w-full">
-            <el-option label="全部用户" value="all" />
-            <el-option label="按角色" value="role" />
-            <el-option label="按等级" value="level" />
-            <el-option label="按 VIP" value="vip" />
-            <el-option label="自定义 mid" value="custom" />
+            <el-option :label="t('message.notifyTargetAll')" value="all" />
+            <el-option :label="t('message.notifyTargetRole')" value="role" />
+            <el-option :label="t('message.notifyTargetLevel')" value="level" />
+            <el-option :label="t('message.notifyTargetVip')" value="vip" />
+            <el-option :label="t('message.notifyTargetCustom')" value="custom" />
           </el-select>
         </el-form-item>
-        <el-form-item label="目标值">
+        <el-form-item :label="t('message.notifyFormTargetValue')">
           <el-input
             v-model="form.target_value"
             size="default"
-            placeholder="role 填角色名；level 填最低等级；custom 填逗号分隔 mid"
+            :placeholder="t('message.notifyTargetValuePlaceholder')"
           />
         </el-form-item>
-        <el-form-item label="跳转链接">
-          <el-input v-model="form.jump_url" size="default" placeholder="可选" />
+        <el-form-item :label="t('message.notifyFormJumpUrl')">
+          <el-input v-model="form.jump_url" size="default" :placeholder="t('message.notifyJumpPlaceholder')" />
         </el-form-item>
-        <el-form-item label="立即发布">
+        <el-form-item :label="t('message.notifyFormPublishNow')">
           <el-switch v-model="form.publish_now" size="default" />
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button size="default" @click="dialogVisible = false">取消</el-button>
+        <el-button size="default" @click="dialogVisible = false">{{ t('message.off') }}</el-button>
         <el-button type="primary" size="default" :loading="submitting" @click="submit">
-          确定
+          {{ t('message.on') }}
         </el-button>
       </template>
     </el-dialog>
@@ -127,7 +127,10 @@
 
 <script setup lang="ts">
 import { onMounted, reactive, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import biliMessage from '@/utils/message'
+
+const { t } = useI18n()
 import {
   fetchAdminNotifyList,
   createNotify,
@@ -207,7 +210,7 @@ function openEdit(row: NotifyAdminItem) {
 
 async function submit() {
   if (!form.title.trim() || !form.content.trim()) {
-    biliMessage.warning('标题与正文必填')
+    biliMessage.warning(t('message.notifyTitleRequired'))
     return
   }
   submitting.value = true
@@ -237,7 +240,7 @@ async function submit() {
   }
   submitting.value = false
   if (res) {
-    biliMessage.success(editingId.value != null ? '已更新' : '已发布')
+    biliMessage.success(editingId.value != null ? t('message.notifyUpdated') : t('message.notifyPublished'))
     dialogVisible.value = false
     await load()
   }
@@ -246,7 +249,7 @@ async function submit() {
 async function revoke(row: NotifyAdminItem) {
   const ok = await revokeNotify(row.id)
   if (ok) {
-    biliMessage.success('已撤回')
+    biliMessage.success(t('message.notifyRevoked'))
     await load()
   }
 }
@@ -257,7 +260,9 @@ function levelTag(level: NotifyLevel): 'info' | 'warning' | 'danger' {
   return 'info'
 }
 function levelText(level: NotifyLevel): string {
-  return level === 'urgent' ? '紧急' : level === 'important' ? '重要' : '普通'
+  if (level === 'urgent') return t('message.notifyLevelUrgent')
+  if (level === 'important') return t('message.notifyLevelImportant')
+  return t('message.notifyLevelNormal')
 }
 function statusTag(status: NotifyStatus): 'info' | 'success' | 'danger' {
   if (status === 'published') return 'success'
@@ -265,15 +270,17 @@ function statusTag(status: NotifyStatus): 'info' | 'success' | 'danger' {
   return 'info'
 }
 function statusText(status: NotifyStatus): string {
-  return status === 'published' ? '已发布' : status === 'revoked' ? '已撤回' : '草稿'
+  if (status === 'published') return t('message.notifyPublished')
+  if (status === 'revoked') return t('message.notifyRevoked')
+  return t('message.notifyFormDraft')
 }
 function targetText(row: NotifyAdminItem): string {
   const map: Record<NotifyTargetType, string> = {
-    all: '全部',
-    role: '角色',
-    level: '等级',
-    vip: 'VIP',
-    custom: '自定义'
+    all: t('message.notifyTargetAll'),
+    role: t('message.notifyTargetRole'),
+    level: t('message.notifyTargetLevel'),
+    vip: t('message.notifyTargetVip'),
+    custom: t('message.notifyTargetCustom')
   }
   const prefix = map[row.target_type] ?? row.target_type
   return row.target_value ? `${prefix}:${row.target_value}` : prefix

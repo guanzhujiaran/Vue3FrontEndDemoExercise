@@ -1,6 +1,6 @@
 <template>
   <div class="message-pagination-bar flex items-center justify-between py-4">
-    <span class="message-pagination-bar__total text-sm text-msg-muted">共 {{ total }} 条</span>
+    <span class="message-pagination-bar__total text-sm text-msg-muted">{{ t('message.totalItems', { total }) }}</span>
     <el-pagination
       layout="prev, pager, next, sizes"
       :total="total"
@@ -15,9 +15,11 @@
 </template>
 
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n'
 withDefaults(
   defineProps<{ total: number; pageSize: number; currentPage: number; pageSizes?: number[] }>(),
   { pageSizes: () => [10, 20, 50, 100] }
 )
 defineEmits<{ 'update:currentPage': [number]; 'update:pageSize': [number] }>()
+const { t } = useI18n()
 </script>

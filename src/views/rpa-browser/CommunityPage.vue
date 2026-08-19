@@ -1,13 +1,14 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { Star, Warning, Goods } from '@element-plus/icons-vue'
+import { Warning, Goods } from '@element-plus/icons-vue'
 import { ElMessageBox } from 'element-plus'
 import BiliPageHeader from '@/components/CommonCompo/Bili-Container-Compo/BiliPageHeader.vue'
 import FlexContainer from '@/components/CommonCompo/Bili-Container-Compo/FlexContainer.vue'
 import CenteredContainer from '@/components/CommonCompo/Bili-Container-Compo/CenteredContainer.vue'
-import { listCommunityActionsApiV1RpaBrowserControlCommunityActionsListPost, listCommunityPluginsApiV1RpaBrowserControlCommunityPluginsListPost, listCommunityWorkflowsApiV1RpaBrowserControlCommunityWorkflowsListPost, likeActionApiV1RpaBrowserControlCommunityActionActionIdLikePost, likePluginApiV1RpaBrowserControlCommunityPluginPluginIdLikePost, likeWorkflowApiV1RpaBrowserControlCommunityWorkflowWorkflowIdLikePost, forkCustomActionApiV1RpaBrowserControlCustomActionsForkPost, forkPluginApiV1RpaBrowserControlPluginsForkPost, forkWorkflowApiV1RpaBrowserControlWorkflowsForkPost } from '@/api/browser/hey-api'
+import { listCommunityActionsApiV1RpaBrowserControlCommunityActionsListPost, listCommunityPluginsApiV1RpaBrowserControlCommunityPluginsListPost, listCommunityWorkflowsApiV1RpaBrowserControlCommunityWorkflowsListPost, forkCustomActionApiV1RpaBrowserControlCustomActionsForkPost, forkPluginApiV1RpaBrowserControlPluginsForkPost, forkWorkflowApiV1RpaBrowserControlWorkflowsForkPost } from '@/api/browser/hey-api'
 import { useUserNavStore } from '@/stores/user_nav'
 import biliMessage from '@/utils/message'
+import ResourceInteractionBar from '@/components/interaction/ResourceInteractionBar.vue'
 import type { FilterType, SortBy, SortOrder } from '@/api/browser/hey-api/types.gen'
 
 type TabType = 'actions' | 'plugins' | 'workflows'
@@ -134,69 +135,6 @@ const loadData = async () => {
     case 'workflows':
       await loadWorkflowsList()
       break
-  }
-}
-
-const handleLikeAction = async (actionId: number) => {
-  try {
-    const response = await likeActionApiV1RpaBrowserControlCommunityActionActionIdLikePost({
-      path: { action_id: actionId },
-      headers: {
-        'x-bili-mid': userNavStore.user_nav.uid,
-        'x-bili-level': userNavStore.user_nav.level_info.current_level
-      }
-    })
-
-    if (response?.code === 0) {
-      biliMessage.success('点赞成功')
-      loadData()
-    } else {
-      biliMessage.error(response?.msg || '点赞失败')
-    }
-  } catch (error) {
-    biliMessage.error('点赞失败')
-  }
-}
-
-const handleLikePlugin = async (pluginId: number) => {
-  try {
-    const response = await likePluginApiV1RpaBrowserControlCommunityPluginPluginIdLikePost({
-      path: { plugin_id: pluginId },
-      headers: {
-        'x-bili-mid': userNavStore.user_nav.uid,
-        'x-bili-level': userNavStore.user_nav.level_info.current_level
-      }
-    })
-
-    if (response?.code === 0) {
-      biliMessage.success('点赞成功')
-      loadData()
-    } else {
-      biliMessage.error(response?.msg || '点赞失败')
-    }
-  } catch (error) {
-    biliMessage.error('点赞失败')
-  }
-}
-
-const handleLikeWorkflow = async (workflowId: number) => {
-  try {
-    const response = await likeWorkflowApiV1RpaBrowserControlCommunityWorkflowWorkflowIdLikePost({
-      path: { workflow_id: workflowId },
-      headers: {
-        'x-bili-mid': userNavStore.user_nav.uid,
-        'x-bili-level': userNavStore.user_nav.level_info.current_level
-      }
-    })
-
-    if (response?.code === 0) {
-      biliMessage.success('点赞成功')
-      loadData()
-    } else {
-      biliMessage.error(response?.msg || '点赞失败')
-    }
-  } catch (error) {
-    biliMessage.error('点赞失败')
   }
 }
 
@@ -366,10 +304,7 @@ onMounted(() => {
               </el-text>
 
               <div class="flex items-center gap-4 text-sm text-text-secondary">
-                <div class="flex items-center gap-1">
-                  <el-icon><Star /></el-icon>
-                  <span>{{ item.likes_count || 0 }}</span>
-                </div>
+                <ResourceInteractionBar biz-type="rpa_action" :biz-id="String(item.id)" />
                 <div class="flex items-center gap-1">
                   <el-icon><ForkSpoon /></el-icon>
                   <span>{{ item.forks_count || 0 }}</span>
@@ -380,7 +315,6 @@ onMounted(() => {
 
               <div class="flex items-center gap-2 mt-2">
                 <el-button size="small" type="primary" @click="handleForkAction(item.id)">Fork</el-button>
-                <el-button size="small" @click="handleLikeAction(item.id)">点赞</el-button>
                 <el-button size="small" type="warning" @click="handleReport(item, 'action')">举报</el-button>
               </div>
             </div>
@@ -403,10 +337,7 @@ onMounted(() => {
               </el-text>
 
               <div class="flex items-center gap-4 text-sm text-text-secondary">
-                <div class="flex items-center gap-1">
-                  <el-icon><Star /></el-icon>
-                  <span>{{ item.likes_count || 0 }}</span>
-                </div>
+                <ResourceInteractionBar biz-type="rpa_plugin" :biz-id="String(item.id)" />
                 <div class="flex items-center gap-1">
                   <el-icon><Goods /></el-icon>
                   <span>{{ item.forks_count || 0 }}</span>
@@ -417,7 +348,6 @@ onMounted(() => {
 
               <div class="flex items-center gap-2 mt-2">
                 <el-button size="small" type="primary" @click="handleForkPlugin(item.id)">Fork</el-button>
-                <el-button size="small" @click="handleLikePlugin(item.id)">点赞</el-button>
                 <el-button size="small" type="warning" @click="handleReport(item, 'plugin')">举报</el-button>
               </div>
             </div>
@@ -440,10 +370,7 @@ onMounted(() => {
               </el-text>
 
               <div class="flex items-center gap-4 text-sm text-text-secondary">
-                <div class="flex items-center gap-1">
-                  <el-icon><Star /></el-icon>
-                  <span>{{ item.likes_count || 0 }}</span>
-                </div>
+                <ResourceInteractionBar biz-type="rpa_workflow" :biz-id="String(item.id)" />
                 <div class="flex items-center gap-1">
                   <el-icon><Goods /></el-icon>
                   <span>{{ item.forks_count || 0 }}</span>
@@ -454,7 +381,6 @@ onMounted(() => {
 
               <div class="flex items-center gap-2 mt-2">
                 <el-button size="small" type="primary" @click="handleForkWorkflow(item.id)">Fork</el-button>
-                <el-button size="small" @click="handleLikeWorkflow(item.id)">点赞</el-button>
                 <el-button size="small" type="warning" @click="handleReport(item, 'workflow')">举报</el-button>
               </div>
             </div>

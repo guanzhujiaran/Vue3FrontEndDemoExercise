@@ -24,6 +24,7 @@ type BiliErrorRouteToType = {
   not_logged_in: BiliErrorDetailType
   others_lot_dyn_login_required: BiliErrorDetailType
   rpa_browser_login_required: BiliErrorDetailType
+  message_login_required: BiliErrorDetailType
   unknown: BiliErrorDetailType
   network_error: BiliErrorDetailType
 }
@@ -67,6 +68,15 @@ export const BiliErrorRouteToTxt: BiliErrorRouteToType = {
     error_img_src: BiliImg.error.un_authorized,
     error_msg: '未授权访问',
     error_description: '抱歉，您需要登录后才能访问RPA浏览器页面',
+    btn_text: '返回首页',
+    route_link: {
+      name: RouteName.HOME
+    }
+  },
+  message_login_required: {
+    error_img_src: BiliImg.error.un_authorized,
+    error_msg: '未授权访问',
+    error_description: '抱歉，您需要登录后才能访问消息中心页面',
     btn_text: '返回首页',
     route_link: {
       name: RouteName.HOME

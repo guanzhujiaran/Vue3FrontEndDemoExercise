@@ -1,7 +1,7 @@
 <template>
   <div class="dm-list h-full flex flex-col">
     <LoadingWrap :loading="loading" class="dm-list__content flex-1 min-h-0 overflow-y-auto">
-      <EmptyState v-if="items.length === 0" text="还没有私信，快找小伙伴聊天吧" />
+      <EmptyState v-if="items.length === 0" :text="t('message.emptyDm')" />
       <ul v-else class="dm-list__items space-y-3">
         <li
           v-for="session in items"
@@ -12,8 +12,9 @@
           <div class="dm-list__avatar-wrap relative shrink-0">
             <img
               class="dm-list__avatar h-12 w-12 rounded-full object-cover"
-              :src="session.talker_avatar || '/assets/noface.png'"
+              :src="session.talker_avatar || BiliImg.face.noface"
               alt="avatar"
+              referrerpolicy="no-referrer"
             />
             <span
               v-if="session.unread_count > 0"
@@ -48,11 +49,18 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { fetchDmSessions, type DmSessionItem } from '@/api/notify/message-api'
+import { BiliImg } from '@/assets/img/BiliImg.ts'
 import LoadingWrap from '@/components/message/LoadingWrap.vue'
 import EmptyState from '@/components/message/EmptyState.vue'
 import PaginationBar from '@/components/message/PaginationBar.vue'
 import TimeText from '@/components/message/TimeText.vue'
+
+// 供 MessageLayout 的 <keep-alive> 缓存本页（切走再切回时保留会话列表与滚动位置）
+defineOptions({ name: 'DmSessionListView' })
+
+const { t } = useI18n()
 
 // 未读数由父层（MessageLayout）经 msg_feed/unread 统一拉取一次后通过 v-model 下发
 const dmUnread = defineModel<number>('dmUnread', { default: 0 })

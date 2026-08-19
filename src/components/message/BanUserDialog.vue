@@ -2,7 +2,7 @@
   <el-dialog
     v-model="visible"
     class="ban-user-dialog max-w-[520px]"
-    title="封禁用户"
+    :title="t('message.banTitle')"
     width="90%"
     append-to-body
     :close-on-click-modal="false"
@@ -10,14 +10,14 @@
   >
     <div class="ban-user-dialog__body flex flex-col gap-4">
       <div class="ban-user-dialog__mids rounded-lg bg-msg-card p-3">
-        <div class="text-sm text-msg-muted">封禁用户（mid）</div>
+        <div class="text-sm text-msg-muted">{{ t('message.banMidsLabel') }}</div>
         <div class="mt-1 break-all text-sm text-msg-text-active">
-          {{ mids.join('、') || '未选择' }}
+          {{ mids.join('、') || t('message.banNoSelect') }}
         </div>
       </div>
 
       <div class="ban-user-dialog__field">
-        <div class="mb-1 text-sm text-msg-muted">封禁服务</div>
+        <div class="mb-1 text-sm text-msg-muted">{{ t('message.banServiceLabel') }}</div>
         <el-select
           v-model="form.ban_services"
           class="ban-user-dialog__services w-full"
@@ -25,7 +25,7 @@
           collapse-tags
           size="default"
           :disabled="!availableServices.length"
-          placeholder="选择要禁用的服务"
+          :placeholder="t('message.banServicePlaceholder')"
         >
           <el-option
             v-for="svc in availableServices"
@@ -37,15 +37,15 @@
       </div>
 
       <div class="ban-user-dialog__field">
-        <div class="mb-1 text-sm text-msg-muted">封禁时长</div>
+        <div class="mb-1 text-sm text-msg-muted">{{ t('message.banDurationLabel') }}</div>
         <el-radio-group v-model="form.duration_type" class="ban-user-dialog__duration">
-          <el-radio value="temporary">限时</el-radio>
-          <el-radio value="permanent">永久</el-radio>
+          <el-radio value="temporary">{{ t('message.banTemporary') }}</el-radio>
+          <el-radio value="permanent">{{ t('message.banPermanent') }}</el-radio>
         </el-radio-group>
       </div>
 
       <div v-if="form.duration_type === 'temporary'" class="ban-user-dialog__field">
-        <div class="mb-1 text-sm text-msg-muted">封禁天数</div>
+        <div class="mb-1 text-sm text-msg-muted">{{ t('message.banDaysLabel') }}</div>
         <el-input-number
           v-model="form.duration_days"
           class="ban-user-dialog__days"
@@ -57,7 +57,7 @@
       </div>
 
       <div class="ban-user-dialog__field">
-        <div class="mb-1 text-sm text-msg-muted">封禁理由</div>
+        <div class="mb-1 text-sm text-msg-muted">{{ t('message.banReasonLabel') }}</div>
         <el-input
           v-model="form.reason"
           class="ban-user-dialog__reason"
@@ -65,13 +65,13 @@
           :rows="3"
           maxlength="512"
           show-word-limit
-          placeholder="请填写封禁理由（必填）"
+          :placeholder="t('message.banReasonPlaceholder')"
         />
       </div>
     </div>
 
     <template #footer>
-      <el-button size="default" @click="visible = false">取消</el-button>
+      <el-button size="default" @click="visible = false">{{ t('common.cancel') }}</el-button>
       <el-button
         type="danger"
         size="default"
@@ -79,7 +79,7 @@
         :disabled="!canSubmit"
         @click="submit"
       >
-        确认封禁
+        {{ t('message.banConfirm') }}
       </el-button>
     </template>
   </el-dialog>
@@ -87,9 +87,12 @@
 
 <script setup lang="ts">
 import { computed, reactive, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import biliMessage from '@/utils/message'
 import { banUsers } from '@/api/notify/hey-api'
 import { useMessageAdminStore } from '@/stores/message_admin'
+
+const { t } = useI18n()
 
 const props = defineProps<{
   modelValue: boolean
@@ -109,10 +112,10 @@ const availableServices = computed<{ label: string; value: string }[]>(() => {
   const isRoot = adminStore.status.is_root
   const list: { label: string; value: string }[] = []
   if (isRoot || perms.includes('comment:ban')) {
-    list.push({ label: '评论', value: 'comment' })
+    list.push({ label: t('message.banServiceComment'), value: 'comment' })
   }
   if (isRoot || perms.includes('dm:ban')) {
-    list.push({ label: '私信', value: 'dm' })
+    list.push({ label: t('message.banServiceDm'), value: 'dm' })
   }
   return list
 })
@@ -171,11 +174,11 @@ async function submit() {
       }
     })
     if (res && res.code === 0) {
-      biliMessage.success(`已封禁 ${props.mids.length} 名用户`)
+      biliMessage.success(t('message.banSuccess', { count: props.mids.length }))
       emit('success')
       visible.value = false
     } else if (res) {
-      biliMessage.error(res.msg || '封禁失败')
+      biliMessage.error(res.msg || t('message.banFailed'))
     }
   } finally {
     submitting.value = false

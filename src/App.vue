@@ -6,11 +6,11 @@ import { useThemeStore } from '@/stores/theme'
 import { useUserPrefStore } from '@/stores/user_pref.ts'
 import { useHead } from '@vueuse/head'
 import emitter from '@/utils/mitt'
-import zhCn from 'element-plus/es/locale/lang/zh-cn'
+import { useLocaleStore } from '@/stores/locale'
 import { BiliImg } from '@/assets/img/BiliImg.ts'
 import HeaderBarView from '@/components/CommonCompo/Bili-Header-Compo/items/HeaderBarView.vue'
 import LoginModal from '@/components/login_page/compo/LoginModal.vue'
-import { openGlobalLoginModalKey, windowHeightKey } from '@/models/inject/inject_type.ts'
+import { openGlobalLoginModalKey } from '@/models/inject/inject_type.ts'
 import { KeysEnum, useInject } from '@/models/base/provide_model.ts'
 import type { UserNavModel } from '@/models/user/user_model.ts'
 import { isLogin } from '@/api/user/utils.ts'
@@ -18,7 +18,6 @@ import { isLogin } from '@/api/user/utils.ts'
 import type { Ref } from 'vue'
 import NetworkErrorView from '@/views/NetworkErrorView.vue'
 import { useDebounceFn, useResizeObserver } from '@vueuse/core'
-import FlexContainer from './components/CommonCompo/Bili-Container-Compo/FlexContainer.vue'
 useHead({
   title: '爆破哔哩哔哩弹幕视频网 - ( ゜- ゜)つロ 乾杯~ - bilibili',
   meta: [
@@ -78,7 +77,13 @@ const checkLoginStatus = () => {
 let hasCheckedLogin = false
 
 onMounted(() => {
-  checkLoginStatus()
+  // 访问 Casdoor 回调页时，跳过首次登录检查：此时 URL 里的 token 还没被
+  // CasdoorCallbackView 处理保存，提前发 nav 会拿到 -101 并误删已存 token，
+  // 待回调页保存 token 并跳回首页后，由 router.afterEach 再触发一次检查。
+  const isCasdoorCallback = router.currentRoute.value.name === 'CASDOOR_CALLBACK'
+  if (!isCasdoorCallback) {
+    checkLoginStatus()
+  }
   hasCheckedLogin = true
   isInit.value = true
 
@@ -116,7 +121,6 @@ const screen_size = {
   xxl: 2060
 }
 const window_height = ref(window.innerHeight)
-provide(windowHeightKey, window_height)
 
 // 记录 el-scrollbar 的滚动位置，传给 ScrollButtons 控制按钮显隐
 const scrollTop = ref(0)
@@ -154,6 +158,10 @@ onUnmounted(() => {
   // 清理事件监听
   emitter.off('needLogin')
 })
+
+// 国际化：语言切换同步 Element Plus locale
+const localeStore = useLocaleStore()
+localeStore.init()
 </script>
 
 <template>
@@ -166,7 +174,7 @@ onUnmounted(() => {
     <!-- 背景图片 -->
     <img class="bg-img pointer-events-none fixed inset-0 z-[-9999] h-full w-full object-cover" :src="backgroundUrl"
       referrerpolicy="no-referrer" alt="Background Image" />
-    <el-config-provider :locale="zhCn">
+    <el-config-provider :locale="localeStore.elLocale">
       <el-scrollbar class="smallest-width" view-class="min-h-full flex flex-col" v-model:height="window_height"
         @scroll="onScrollbarScroll">
         <div class="site-layout safe-area-padding w-full flex-1 flex flex-col">
@@ -180,10 +188,15 @@ onUnmounted(() => {
             >
               <RouterView v-slot="{ Component, route }">
                 <transition name="slide-fade" mode="out-in">
-                  <keep-alive :max="30">
-                    <FlexContainer class="main-inner">
-                      <component :is="Component" />
-                    </FlexContainer>
+                  <keep-alive
+                    :max="30"
+                    :exclude="['MomentDetailView']"
+                  >
+                    <component
+                      :is="Component"
+                      :key="route.matched[0]?.path || route.path"
+                      class="main-inner flex flex-col flex-1 box-border rounded"
+                    />
                   </keep-alive>
                 </transition>
               </RouterView>

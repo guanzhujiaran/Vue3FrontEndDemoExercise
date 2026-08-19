@@ -1,13 +1,16 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { ArrowLeft } from '@element-plus/icons-vue'
 import BiliPageHeader from '@/components/CommonCompo/Bili-Container-Compo/BiliPageHeader.vue'
 import BiliLotteryCard from '@/components/lottery_data/bili_data/BiliLotteryCard.vue'
 import LotteryCommentSection from '@/components/lottery_data/LotteryCommentSection.vue'
+import ResourceInteractionBar from '@/components/interaction/ResourceInteractionBar.vue'
 import { useLotteryDetailStore, LOTTERY_COMMENT_TYPE } from '@/stores/lottery_detail.ts'
 import { normalizeLotteryData } from '@/utils/lotteryNormalization.ts'
 
+const { t } = useI18n()
 const route = useRoute()
 const router = useRouter()
 const lotteryDetailStore = useLotteryDetailStore()
@@ -27,25 +30,29 @@ const bodyKey = computed(() => lotteryId.value || 'empty')
 <template>
   <FlexContainer class="bg-bg p-4">
     <BiliPageHeader
-      title="抽奖卡片详情"
-      description="查看抽奖卡片详情，并在底部参与评论区讨论"
+      :title="t('lottery.cardDetailTitle')"
+      :description="t('lottery.cardDetailDesc')"
     />
 
     <div class="lottery-card-detail__back mb-4">
-      <el-button :icon="ArrowLeft" size="default" @click="() => router.back()">返回</el-button>
+      <el-button :icon="ArrowLeft" size="default" @click="() => router.back()">{{ t('common.back') }}</el-button>
     </div>
 
     <div :key="bodyKey" class="lottery-card-detail__body">
       <div v-if="detailData" class="lottery-card-detail__card mb-6">
         <BiliLotteryCard :lottery-data="detailData" />
+        <!-- 收藏 / 点赞（2.17.0：抽奖卡片走 be-message 通用互动） -->
+        <div v-if="lotteryId" class="lottery-card-detail__interaction mt-3 flex justify-start">
+          <ResourceInteractionBar biz-type="lottery" :biz-id="lotteryId" />
+        </div>
       </div>
       <el-alert
         v-else
         class="lottery-card-detail__empty mb-6"
-        :title="lotteryId ? '未获取到卡片详情' : '缺少抽奖 ID'"
+        :title="lotteryId ? t('lottery.noCardDetail') : t('lottery.missingLotteryId')"
         :description="lotteryId
-          ? '请通过抽奖列表中的「评论区」按钮进入本页面以查看完整卡片，评论区仍可正常浏览。'
-          : '请通过抽奖列表中的「评论区」按钮进入本页面。'"
+          ? t('lottery.enterViaCommentBtn')
+          : t('lottery.enterViaCommentBtnShort')"
         type="info"
         :closable="false"
         show-icon

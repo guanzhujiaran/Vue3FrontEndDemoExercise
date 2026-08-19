@@ -42,7 +42,7 @@
 <script setup lang="ts">
 import { computed, type Component } from 'vue'
 import { useRoute } from 'vue-router'
-import { Setting, Bell, ChatDotRound, Comment, Key } from '@element-plus/icons-vue'
+import { Setting, Bell, ChatDotRound, Comment, Key, Checked, Avatar, Collection } from '@element-plus/icons-vue'
 import { useRpaAdminStore } from '@/stores/rpa_admin'
 import { useMessageAdminStore } from '@/stores/message_admin'
 
@@ -88,6 +88,19 @@ const navGroups = computed<NavGroup[]>(() => {
   }
   if (messageItems.length) {
     groups.push({ title: '消息管理端', items: messageItems })
+  }
+  if (isRpaAdmin.value) {
+    groups.push({
+      title: '动态管理端',
+      items: [
+        { name: 'ADMIN_MOMENT_AUDIT', title: '动态审核', icon: Checked },
+        { name: 'ADMIN_MOMENT_TOPIC_AUDIT', title: '话题审核', icon: Collection }
+      ]
+    })
+    groups.push({
+      title: '用户管理端',
+      items: [{ name: 'ADMIN_USER_AVATAR_AUDIT', title: '头像审核', icon: Avatar }]
+    })
   }
   return groups
 })

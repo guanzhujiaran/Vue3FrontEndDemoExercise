@@ -74,6 +74,35 @@
           >
             抽奖详情
           </el-link>
+          <!-- 点赞 / 收藏 / 转发到动态 → 三个点下拉框（hover/click/右键） -->
+          <el-dropdown
+            class="lottery-simple-card__more-actions ml-auto"
+            :trigger="['click', 'hover', 'contextmenu']"
+            placement="bottom-end"
+          >
+            <span class="lottery-simple-card__more-trigger inline-flex items-center justify-center w-7 h-7 rounded-full cursor-pointer text-text-primary hover:opacity-80 transition-opacity">
+              <component :is="MoreIcon" class="w-4 h-4" />
+            </span>
+            <template #dropdown>
+              <el-dropdown-menu>
+                <el-dropdown-item @click="handleLike(item)">
+                  <span class="inline-flex items-center gap-1">
+                    点赞
+                    <span :class="statusOf(item).isLike ? 'text-danger font-semibold' : ''">{{ statusOf(item).likeCount ?? 0 }}</span>
+                  </span>
+                </el-dropdown-item>
+                <el-dropdown-item @click="handleFavorite(item)">
+                  <span class="inline-flex items-center gap-1">
+                    收藏
+                    <span :class="statusOf(item).isFavorite ? 'text-warning font-semibold' : ''">{{ statusOf(item).favoriteCount ?? 0 }}</span>
+                  </span>
+                </el-dropdown-item>
+                <el-dropdown-item :disabled="interactLoading" @click="handleForward(item)">
+                  转发到动态
+                </el-dropdown-item>
+              </el-dropdown-menu>
+            </template>
+          </el-dropdown>
         </div>
       </div>
     </div>
@@ -88,15 +117,39 @@
     >
       <BiliLotteryCard v-if="selectedRaw" :lottery-data="selectedRaw" />
     </el-dialog>
+
+    <!-- 转发抽奖到动态：复用统一动态编辑器（attach 资源模式） -->
+    <MomentPublishForm
+      v-model:visible="forwardVisible"
+      :attach-resource="{
+        bizType: 'lottery',
+        bizId: forwardingItem ? String(forwardingItem.normalized.id) : '',
+        name: forwardingItem?.normalized.title || undefined,
+      }"
+    />
+
+    <!-- 收藏到收藏夹：选择/新建收藏夹 -->
+    <MomentFavoriteDialog
+      v-model="favDialogVisible"
+      :dyn-id="favItem ? String(favItem.normalized.id) : ''"
+      biz-type="lottery"
+      :biz-id="favItem ? String(favItem.normalized.id) : ''"
+      @changed="handleFavChanged"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, reactive, onMounted } from 'vue'
 import BiliLotteryCard from '@/components/lottery_data/bili_data/BiliLotteryCard.vue'
 import BiliStatusIcon from '@/components/CommonCompo/Bili-Status-Compo/BiliStatusIcon.vue'
 import { normalizeLotteryData } from '@/utils/lotteryNormalization.ts'
 import { handleLotteryLinkClick, isLotteryParticipated } from '@/utils/lotteryParticipation'
+import MoreIcon from '@/assets/svgs/more.svg?component'
+import MomentPublishForm from '@/components/moment/MomentPublishForm.vue'
+import MomentFavoriteDialog from '@/components/moment/MomentFavoriteDialog.vue'
+import { fetchInteractionStatus, thumbMoment } from '@/api/notify/moment-api'
+import type { InteractionStatusItem } from '@/api/notify/moment-api'
 
 interface SimpleListItem {
   raw: any
@@ -134,5 +187,61 @@ const openDetail = (item: SimpleListItem) => {
 
 const handleLinkClick = (normalized: SimpleListItem['normalized']) => {
   handleLotteryLinkClick(String(normalized.id))
+}
+
+// ============ 点赞 / 收藏 / 转发到动态（2.20.0，批量拉取互动状态）============
+const statusMap = reactive<Record<string, InteractionStatusItem>>({})
+const interactLoading = ref(false)
+
+async function loadAllStatus() {
+  const ids = parsedData.value.map((i) => String(i.normalized.id)).filter(Boolean)
+  if (!ids.length) return
+  try {
+    const res = await fetchInteractionStatus('lottery' as any, ids)
+    for (const item of res?.items ?? []) {
+      if (item?.bizId) statusMap[item.bizId] = item
+    }
+  } catch {
+    // 弱依赖：失败不阻断展示
+  }
+}
+onMounted(loadAllStatus)
+
+function statusOf(item: SimpleListItem): InteractionStatusItem {
+  return statusMap[String(item.normalized.id)] ?? { bizId: String(item.normalized.id), bizType: 'lottery' } as InteractionStatusItem
+}
+
+async function handleLike(item: SimpleListItem) {
+  if (interactLoading.value) return
+  interactLoading.value = true
+  const id = String(item.normalized.id)
+  const st = statusOf(item)
+  const next = !Boolean(st.isLike)
+  const res = await thumbMoment(id, next ? 1 : 2, { bizType: 'lottery' as any, bizId: id })
+  interactLoading.value = false
+  if (res) {
+    statusMap[id] = { ...st, isLike: next, likeCount: Math.max(0, Number(st.likeCount ?? 0) + (next ? 1 : -1)) }
+  }
+}
+
+/** 收藏到收藏夹：弹出收藏夹选择弹窗（多夹），选择/新建收藏夹后收藏 */
+const favDialogVisible = ref(false)
+const favItem = ref<SimpleListItem | null>(null)
+function handleFavorite(item: SimpleListItem) {
+  favItem.value = item
+  favDialogVisible.value = true
+}
+
+/** 收藏夹变更后重新拉取最新互动状态 */
+async function handleFavChanged() {
+  await loadAllStatus()
+}
+
+// 转发到动态：弹窗由 MomentPublishForm（attach 资源模式）处理
+const forwardVisible = ref(false)
+const forwardingItem = ref<SimpleListItem | null>(null)
+function handleForward(item: SimpleListItem) {
+  forwardingItem.value = item
+  forwardVisible.value = true
 }
 </script>

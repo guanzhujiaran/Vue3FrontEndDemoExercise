@@ -16,12 +16,18 @@ import { fetchUnreadSummary, sendHeartbeat } from '@/api/notify/message-api'
  * `onTick` 允许调用方注入统一的未读刷新逻辑（如上层经 v-model 下发给子组件），
  * 默认仍直接调用 msg_feed/unread 刷新 store，保证未传参时行为不变。
  */
-export function useHeartbeat(intervalMs = 60_000, onTick?: () => Promise<void> | void) {
+export function useHeartbeat(
+  intervalMs = 60_000,
+  onTick?: () => Promise<void> | void,
+  enabled?: () => boolean
+) {
   const store = useMessageUnreadStore()
   let timer: ReturnType<typeof setInterval> | undefined
   let running = false
 
   async function tick() {
+    // 未登录等禁用场景下跳过本轮心跳与未读请求，避免未授权请求风暴
+    if (enabled && !enabled()) return
     await sendHeartbeat()
     if (onTick) {
       await onTick()

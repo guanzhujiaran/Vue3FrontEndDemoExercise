@@ -1,12 +1,16 @@
 <template>
   <div class="user-card w-80 max-w-full rounded-lg bg-msg-card p-4 shadow-lg">
     <div class="user-card__header flex gap-3">
-      <div class="user-card__avatar-wrap h-16 w-16 shrink-0 overflow-hidden rounded-full border border-msg-border">
+      <div
+        class="user-card__avatar-wrap h-16 w-16 shrink-0 overflow-hidden rounded-full border border-msg-border cursor-pointer hover:opacity-90 transition-opacity"
+        @click.stop="goUserSpace"
+      >
         <img
           v-if="card?.avatar"
           :src="card.avatar"
           class="user-card__avatar h-full w-full object-cover"
           alt="avatar"
+          referrerpolicy="no-referrer"
         />
         <div v-else class="user-card__avatar-placeholder flex h-full w-full items-center justify-center bg-msg-muted">
           <el-icon class="text-msg-card" size="24"><UserFilled /></el-icon>
@@ -15,7 +19,10 @@
 
       <div class="user-card__info flex flex-1 flex-col justify-center gap-1 overflow-hidden">
         <div class="user-card__name-row flex items-center gap-2">
-          <span class="truncate text-base font-bold text-msg-text-active">
+          <span
+            class="user-card__name truncate text-base font-bold text-msg-text-active cursor-pointer hover:text-msg-link transition-colors"
+            @click.stop="goUserSpace"
+          >
             {{ card?.uname || card?.mid || '-' }}
           </span>
           <el-icon v-if="sexIcon" :class="sexClass" size="14">
@@ -31,16 +38,16 @@
             v-if="isVip"
             class="user-card__vip rounded px-1 text-xs font-bold text-black bg-warning"
           >
-            大会员
+            {{ t('message.ucVip') }}
           </span>
         </div>
 
         <div class="user-card__stats flex items-center gap-2 text-sm text-msg-muted">
-          <span>{{ followingText }} 关注</span>
+          <span>{{ followingText }} {{ t('message.ucFollowing') }}</span>
           <span class="text-msg-divider">|</span>
-          <span>{{ followerText }} 粉丝</span>
+          <span>{{ followerText }} {{ t('message.ucFollower') }}</span>
           <span class="text-msg-divider">|</span>
-          <span>{{ likeText }} 获赞</span>
+          <span>{{ likeText }} {{ t('message.ucLiked') }}</span>
         </div>
 
         <div v-if="roleText" class="user-card__role text-xs text-msg-link">
@@ -53,6 +60,26 @@
       </div>
     </div>
 
+    <!-- 操作按钮：关注/取关 + 发消息（对齐 B 站：本人也显示关注按钮，点击由后端返回"不能关注自己"） -->
+    <div v-if="showActions" class="user-card__actions mt-3 flex gap-2">
+      <el-button
+        class="user-card__follow-btn flex-1"
+        :type="isFollowing ? 'default' : 'primary'"
+        size="large"
+        :loading="actionLoading"
+        @click.stop="handleFollow"
+      >
+        {{ isFollowing ? t('message.ucFollowed') : t('message.ucFollow') }}
+      </el-button>
+      <el-button
+        class="user-card__message-btn flex-1"
+        size="large"
+        @click.stop="handleMessage"
+      >
+        {{ t('message.ucSendMessage') }}
+      </el-button>
+    </div>
+
     <div v-if="extraLines.length" class="user-card__extra mt-2 flex flex-col gap-1 border-t border-msg-divider pt-2 text-xs text-msg-muted">
       <div v-for="(line, i) in extraLines" :key="i" class="user-card__extra-line">
         {{ line }}
@@ -62,8 +89,12 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref, watch } from 'vue'
+import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { Female, Male, UserFilled } from '@element-plus/icons-vue'
+
+const { t } = useI18n()
 
 export interface UserCardData {
   mid?: number | null
@@ -86,6 +117,8 @@ export interface UserCardData {
   exp?: number | null
   role?: string | null
   email?: string | null
+  /** 我是否已关注对方（来自 /follow/relation 或卡片初始化） */
+  is_following?: boolean
 }
 
 const props = withDefaults(
@@ -97,6 +130,24 @@ const props = withDefaults(
     card: null,
     showActions: true
   }
+)
+
+const emit = defineEmits<{
+  follow: [mid: number]
+  unfollow: [mid: number]
+  message: [mid: number]
+}>()
+
+const actionLoading = ref(false)
+
+/** 是否已关注（外部传入 is_following，或随操作本地切换） */
+const isFollowing = ref(false)
+watch(
+  () => props.card?.is_following,
+  (v) => {
+    if (v !== undefined) isFollowing.value = !!v
+  },
+  { immediate: true }
 )
 
 const sexIcon = computed(() => {
@@ -120,19 +171,19 @@ const isVip = computed(() => {
 const roleText = computed(() => {
   const r = props.card?.role
   if (!r) return ''
-  if (r === 'root') return '系统管理员'
-  if (r.startsWith('level')) return `普通用户 (Lv${r.slice(5)})`
+  if (r === 'root') return t('message.ucAdmin')
+  if (r.startsWith('level')) return `${t('message.ucNormalUser')} (Lv${r.slice(5)})`
   return r
 })
 
 const extraLines = computed<string[]>(() => {
   const lines: string[] = []
-  if (props.card?.exp != null) lines.push(`经验值：${props.card.exp}`)
+  if (props.card?.exp != null) lines.push(`${t('message.ucExp')}${props.card.exp}`)
   if (isVip.value && props.card?.vip_due_date) {
     const d = new Date(props.card.vip_due_date)
-    if (!isNaN(d.getTime())) lines.push(`大会员到期：${d.toLocaleDateString()}`)
+    if (!isNaN(d.getTime())) lines.push(`${t('message.ucVipExpire')}${d.toLocaleDateString()}`)
   }
-  if (props.card?.email) lines.push(`邮箱：${props.card.email}`)
+  if (props.card?.email) lines.push(`${t('message.ucEmail')}${props.card.email}`)
   return lines
 })
 
@@ -146,4 +197,36 @@ function formatCount(n?: number | null): string {
 const followingText = computed(() => formatCount(props.card?.following_count))
 const followerText = computed(() => formatCount(props.card?.follower_count))
 const likeText = computed(() => formatCount(props.card?.like_count))
+
+async function handleFollow() {
+  const mid = props.card?.mid
+  if (!mid) return
+  // 仅触发事件并展示 loading；关注状态切换由父组件（MomentCard）在接口成功后
+  // 通过更新 card.is_following 驱动，失败（如"不能关注自己"）则不切换
+  actionLoading.value = true
+  try {
+    if (isFollowing.value) {
+      emit('unfollow', mid)
+    } else {
+      emit('follow', mid)
+    }
+  } finally {
+    actionLoading.value = false
+  }
+}
+
+function handleMessage() {
+  const mid = props.card?.mid
+  if (!mid) return
+  emit('message', mid)
+}
+
+const router = useRouter()
+
+/** 点击大头像 / 昵称跳转用户空间页 */
+function goUserSpace() {
+  const mid = props.card?.mid
+  if (!mid) return
+  router.push({ name: 'MOMENT_USER_SPACE', params: { mid: String(mid) } })
+}
 </script>

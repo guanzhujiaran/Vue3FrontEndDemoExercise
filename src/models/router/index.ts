@@ -79,6 +79,7 @@ export enum RouteName {
   // 用户中心子路由
   USER_GLOBAL_CONFIG = '用户全局设置',
   USER_INFO_CONFIG = '用户基本信息设置',
+  USER_CENTER_RECORDS = '我的记录',
 
   USER_CENTER_DASHBOARD = '用户中心仪表盘',
   // 抽奖数据子路由
@@ -93,6 +94,14 @@ export enum RouteName {
   TOPIC_LOTTERY = '话题抽奖',
   OTHERS_LOT_DYN_LIST = '第三方抽奖动态',
   LOTTERY_CARD_DETAIL = '抽奖卡片详情',
+
+  // 动态模块
+  MOMENT = '动态',
+  ADMIN_MOMENT_AUDIT = '动态审核',
+  // 话题创建审核（管理端）
+  ADMIN_MOMENT_TOPIC_AUDIT = '话题审核',
+  // 头像更换审核（管理端）
+  ADMIN_USER_AVATAR_AUDIT = '头像审核',
 
   // 404 页面
   NOT_FOUND = 'NotFound',

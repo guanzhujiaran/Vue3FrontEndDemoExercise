@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, type Ref } from 'vue'
+import { onMounted, ref, computed, type Ref } from 'vue'
 import { type ThemeMode, useThemeStore } from '@/stores/theme.ts'
 import { useUserPrefStore, type SizeTheme } from '@/stores/user_pref.ts'
 import { useHueThemeStore } from '@/stores/hue_theme.ts'
@@ -13,10 +13,13 @@ import { MagicStick, User, Delete, ScaleToOriginal, Moon, Sunny, Monitor, Switch
 import { useMessageUnreadStore } from '@/stores/message_unread'
 import biliMessage from '@/utils/message'
 import userApi from '@/api/user/user_api'
+import { fetchUnreadSummary } from '@/api/notify/message-api'
 import { useUserNavStore } from '@/stores/user_nav'
 import { useJwtStore } from '@/stores/jwt_token'
 import UserAvatarBox from '@/components/CommonCompo/Bili-User-Compo/UserAvatarBox.vue'
 import LevelIcon from '@/components/CommonCompo/LevelIcon.vue'
+import { useLocaleStore } from '@/stores/locale'
+import { SUPPORTED_LOCALES, type SupportedLocale } from '@/i18n'
 
 const router = useRouter()
 const isLoggedIn = computed<boolean>(() => !!user_nav_model.value.uid)
@@ -28,6 +31,14 @@ const userNavStore = useUserNavStore()
 const jwtStore = useJwtStore()
 const messageUnreadStore = useMessageUnreadStore()
 const totalUnread = computed(() => messageUnreadStore.totalUnread())
+
+// 挂载时拉取跨模块未读汇总（msg_feed/unread），刷新「我的消息」未读徽标；
+// 未登录时跳过，避免未授权请求
+onMounted(async () => {
+  if (!isLoggedIn.value) return
+  const s = await fetchUnreadSummary()
+  if (s) messageUnreadStore.applySummary(s)
+})
 
 // 计算当前经验进度百分比
 const expProgress = computed(() => {
@@ -98,14 +109,16 @@ const sizeThemes: { value: SizeTheme; label: string }[] = [
 const themeVisible = ref(false)
 const sizeThemeVisible = ref(false)
 const hueThemeVisible = ref(false)
+const langVisible = ref(false)
 
 // 当任意一个 popover 显示时，隐藏其他 popover
-const handlePopoverVisibleChange = (visible: boolean, type: 'theme' | 'size' | 'hue') => {
+const handlePopoverVisibleChange = (visible: boolean, type: 'theme' | 'size' | 'hue' | 'lang') => {
   if (visible) {
     // 关闭其他 popover
     if (type !== 'theme') themeVisible.value = false
     if (type !== 'size') sizeThemeVisible.value = false
     if (type !== 'hue') hueThemeVisible.value = false
+    if (type !== 'lang') langVisible.value = false
   }
   handleKeepDropdownOpen()
 }
@@ -113,6 +126,11 @@ const handlePopoverVisibleChange = (visible: boolean, type: 'theme' | 'size' | '
 // 处理个人中心点击
 const handleUserCenterClick = () => {
   router.push({ name: RouteName.USER_CENTER })
+}
+
+// 处理下拉框大头像点击：跳转到自己的用户空间
+const handleMySpaceClick = () => {
+  router.push({ name: 'MOMENT_MY_SPACE' })
 }
 
 // 处理消息中心点击
@@ -199,6 +217,28 @@ const handleRestoreHueTheme = () => {
   handleKeepDropdownOpen()
 }
 
+// 语言选项（与 SUPPORTED_LOCALES 对齐：zh-CN / en / zh-TW / ja / ko）
+const localeOptions: { value: SupportedLocale; label: string }[] = [
+  { value: 'zh-CN', label: '简体中文' },
+  { value: 'en', label: 'English' },
+  { value: 'zh-TW', label: '繁體中文' },
+  { value: 'ja', label: '日本語' },
+  { value: 'ko', label: '한국어' }
+]
+
+const localeStore = useLocaleStore()
+const currentLangLabel = computed(() => localeOptions.find((o) => o.value === localeStore.locale)?.label ?? '简体中文')
+
+const handleLangVisibleChange = (visible: boolean) => {
+  langVisible.value = visible
+  handleKeepDropdownOpen()
+}
+
+const handleSetLocale = (locale: SupportedLocale) => {
+  localeStore.setLocale(locale)
+  handleKeepDropdownOpen()
+}
+
 const handleKeepDropdownOpen = () => {
   // 保持下拉菜单打开
   headerAvatarDropdown.value?.popperRef?.onOpen()
@@ -229,7 +269,12 @@ const handleDropDownVisibleChange = (visible: boolean) => {
           <!-- 用户信息展示区域 -->
           <div class="user-info-section py-6 px-6 flex flex-col items-center border-b border-[var(--el-border-color-light)]">
             <div class="user-info-content flex justify-center">
-              <UserAvatarBox :src="user_face_src" size="large" :level-info="user_nav_model?.level_info" :show-exp-bar="false"/>
+              <div
+                class="user-info-content__avatar cursor-pointer"
+                @click.stop="handleMySpaceClick"
+              >
+                <UserAvatarBox :src="user_face_src" size="large" :level-info="user_nav_model?.level_info" :show-exp-bar="false"/>
+              </div>
             </div>
             <div class="user-info-text mt-4 flex flex-col items-center gap-3 w-full">
               <div class="user-name text-base font-medium text-[var(--el-text-color-primary)] mb-2">{{ user_nav_model?.user_name }}</div>
@@ -363,6 +408,32 @@ const handleDropDownVisibleChange = (visible: boolean) => {
                 @click="handleSetSizeTheme(theme.value)" class="flex items-center justify-between group">
                 <span>{{ theme.label }}</span>
                 <el-icon-arrow-right v-if="userPrefStore.sizeTheme !== theme.value" class="ml-auto h-4 w-4 text-xs text-text-secondary transition-colors duration-300 group-hover:text-[var(--el-text-color-primary)] activated:!text-[var(--el-color-primary)]" />
+              </el-dropdown-item>
+            </template>
+          </el-popover>
+        </el-dropdown-item>
+
+        <!-- 语言设置 -->
+        <el-dropdown-item @click="handleLangVisibleChange(true)" @hover="handleLangVisibleChange(true)"
+          divided class="dropdown-item text-sm rounded-xl my-3 group">
+          <el-popover width="230" popper-class="header-avatar-dropdown-popover" @show="handlePopoverVisibleChange(true, 'lang')"
+            @hide="handlePopoverVisibleChange(false, 'lang')" v-model:visible="langVisible" placement="left"
+            trigger="hover">
+            <template #reference>
+              <div class="flex items-center w-full justify-between">
+                <span class="flex items-center gap-1.5">
+                  <svg viewBox="0 0 1024 1024" width="1em" height="1em" class="text-[var(--el-text-color-primary)]"><path fill="currentColor" d="M512 64C264.6 64 64 264.6 64 512s200.6 448 448 448 448-200.6 448-448S759.4 64 512 64zm0 820c-205.4 0-372-166.6-372-372S306.6 140 512 140s372 166.6 372 372-166.6 372-372 372zm74.5-450.4c-25.6-9.6-44.8-22.4-57.6-38.4-12.8-16-19.2-35.2-19.2-57.6 0-25.6 6.4-46.4 19.2-62.4 12.8-16 33.6-27.2 60.8-35.2l44.8 83.2c-16 6.4-28.8 14.4-38.4 24-9.6 9.6-14.4 22.4-14.4 38.4 0 14.4 6.4 25.6 19.2 33.6 12.8 8 35.2 14.4 67.2 19.2l-25.6 60.8zM376 460.8c6.4-38.4 19.2-73.6 38.4-105.6 22.4-35.2 51.2-62.4 86.4-81.6l-44.8-83.2c-57.6 25.6-102.4 64-134.4 115.2-32 51.2-48 110.4-48 176s16 124.8 48 176c32 51.2 76.8 89.6 134.4 115.2l44.8-83.2c-35.2-19.2-64-46.4-86.4-81.6-19.2-32-32-70.4-38.4-110.4H512v-76.8H376z"/></svg>
+                  语言：{{ currentLangLabel }}
+                </span>
+                <el-icon-arrow-right class="ml-auto h-4 w-4 text-xs text-text-secondary transition-colors duration-300 group-hover:text-[var(--el-text-color-primary)]" />
+              </div>
+            </template>
+            <template #default>
+              <el-dropdown-item v-for="opt in localeOptions" :key="opt.value"
+                :class="{ activated: localeStore.locale === opt.value }"
+                @click="handleSetLocale(opt.value)" class="flex items-center justify-between group">
+                <span>{{ opt.label }}</span>
+                <el-icon-arrow-right v-if="localeStore.locale !== opt.value" class="ml-auto h-4 w-4 text-xs text-text-secondary transition-colors duration-300 group-hover:text-[var(--el-text-color-primary)] activated:!text-[var(--el-color-primary)]" />
               </el-dropdown-item>
             </template>
           </el-popover>

@@ -2,7 +2,7 @@
   <div class="notify-list h-full flex flex-col">
     <div class="notify-list__toolbar mb-4 flex items-center justify-between">
       <h2 class="notify-list__title flex items-center gap-2 text-base font-bold text-msg-text-active">
-        系统通知
+        {{ t('message.notifyTitle') }}
         <el-badge
           v-if="notifyUnread > 0"
           :value="notifyUnread"
@@ -12,7 +12,7 @@
       </h2>
       <div class="notify-list__actions flex items-center gap-3">
         <el-checkbox v-model="onlyUnread" size="default" class="notify-list__unread-check text-msg-text-active" @change="onFilterChange">
-          仅看未读
+          {{ t('message.onlyUnread') }}
         </el-checkbox>
         <el-button
           v-if="unreadCount > 0"
@@ -21,16 +21,16 @@
           class="notify-list__read-all"
           @click="markAllRead"
         >
-          全部已读
+          {{ t('message.markAllRead') }}
         </el-button>
         <el-button size="default" class="notify-list__refresh" @click="load">
-          刷新
+          {{ t('message.refresh') }}
         </el-button>
       </div>
     </div>
 
     <LoadingWrap :loading="loading" class="notify-list__content flex-1 min-h-0 overflow-y-auto">
-      <EmptyState v-if="displayItems.length === 0" text="暂无通知" />
+      <EmptyState v-if="displayItems.length === 0" :text="t('message.noNotify')" />
       <ul v-else class="notify-list__items space-y-3">
         <li
           v-for="item in displayItems"
@@ -71,7 +71,7 @@
               class="notify-list__read-btn"
               @click="markItemRead(item.id)"
             >
-              标记已读
+              {{ t('message.markRead') }}
             </el-button>
             <el-button
               v-if="item.jump_url && !hasInlineLink(item.content)"
@@ -80,7 +80,7 @@
               class="notify-list__jump-btn"
               @click="openJump(item)"
             >
-              查看原文
+              {{ t('message.viewOriginal') }}
             </el-button>
           </div>
         </li>
@@ -101,6 +101,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import biliMessage from '@/utils/message'
 import {
   fetchNotifyList,
@@ -108,10 +109,15 @@ import {
   type NotifyItem,
   type NotifyLevel
 } from '@/api/notify/message-api'
+
+const { t } = useI18n()
 import LoadingWrap from '@/components/message/LoadingWrap.vue'
 import EmptyState from '@/components/message/EmptyState.vue'
 import PaginationBar from '@/components/message/PaginationBar.vue'
 import TimeText from '@/components/message/TimeText.vue'
+
+// 供 MessageLayout 的 <keep-alive> 缓存本页（切走再切回时保留列表与滚动位置）
+defineOptions({ name: 'NotifyListView' })
 
 // 未读数由父层（MessageLayout）经 msg_feed/unread 统一拉取一次后通过 v-model 下发
 const notifyUnread = defineModel<number>('notifyUnread', { default: 0 })
@@ -151,22 +157,21 @@ function onPageChange(p: number) {
 }
 
 async function markItemRead(id: number) {
-  const ok = await markNotifyRead([id])
-  if (!ok) return
+  const resp = await markNotifyRead([id])
+  if (!resp || (resp.affected ?? 0) <= 0) return
   const item = items.value.find((i) => i.id === id)
   if (item) item.is_read = true
   emit('refreshUnread')
-  biliMessage.success('已标记为已读')
+  biliMessage.success(t('message.markedRead'))
 }
 
 async function markAllRead() {
-  const ids = items.value.filter((i) => !i.is_read).map((i) => i.id)
-  if (ids.length === 0) return
-  const ok = await markNotifyRead(ids)
-  if (!ok) return
+  // 全部已读：不传 ids，由后端标记当前用户全部可见通知为已读（支持跨页）
+  const resp = await markNotifyRead()
+  if (!resp || (resp.affected ?? 0) <= 0) return
   items.value.forEach((i) => (i.is_read = true))
   emit('refreshUnread')
-  biliMessage.success('全部已读')
+  biliMessage.success(t('message.markAllRead'))
 }
 
 /** 点「查看原文」：站内路径走路由，外链（B 站动态 / 专栏）新开标签页。 */
@@ -226,9 +231,9 @@ function levelTagType(level: NotifyLevel) {
 }
 
 function levelText(level: NotifyLevel) {
-  if (level === 'urgent') return '紧急'
-  if (level === 'important') return '重要'
-  return '普通'
+  if (level === 'urgent') return t('message.levelUrgent')
+  if (level === 'important') return t('message.levelImportant')
+  return t('message.levelNormal')
 }
 
 onMounted(load)

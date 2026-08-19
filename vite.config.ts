@@ -18,9 +18,9 @@ export default defineConfig({
   plugins: [
     vue(),
     svgLoader({
-      svgoConfig: {
-        multipass: true
-      },
+      // svgo 3.x 的 convertPathData 在优化含相对 q 曲线的 B 站 SVG 时会崩溃
+      // （reflectPoint 读取 undefined），禁用 svgo 优化，仅做组件化转换
+      svgo: false,
       defaultImport: 'url'
     }),
     Sitemap({
@@ -117,6 +117,9 @@ export default defineConfig({
     }
   },
   server: {
+    host: '0.0.0.0',
+    // 允许通过 nginx 反代访问的域名（Vite 8 默认只放行 localhost，反代 Host 头需显式放行）
+    allowedHosts: ['serena.dynv6.net'],
     proxy: {
       '/api': {
         target: 'http://localhost:9923',
@@ -124,6 +127,5 @@ export default defineConfig({
         rewrite: (path) => path
       }
     },
-    host: '0.0.0.0',
   }
 })

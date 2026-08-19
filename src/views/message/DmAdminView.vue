@@ -1,64 +1,64 @@
 <template>
   <div class="dm-admin flex flex-col gap-4">
     <div class="dm-admin__header flex items-center justify-between">
-      <h2 class="text-lg font-bold text-msg-text-active">私信审核（管理员）</h2>
-      <el-button size="default" @click="load">刷新</el-button>
+      <h2 class="text-lg font-bold text-msg-text-active">{{ t('message.dmAuditTitle') }}</h2>
+      <el-button size="default" @click="load">{{ t('message.refresh') }}</el-button>
     </div>
 
     <div class="dm-admin__stats grid grid-cols-2 gap-3 md:grid-cols-5">
       <div class="dm-admin__stat-card rounded-lg bg-msg-card p-4">
-        <div class="text-sm text-msg-muted">私信总数</div>
+        <div class="text-sm text-msg-muted">{{ t('message.statTotalDm') }}</div>
         <div class="text-xl font-bold text-msg-link">{{ stats.total_dm }}</div>
       </div>
       <div class="dm-admin__stat-card rounded-lg bg-msg-card p-4">
-        <div class="text-sm text-msg-muted">今日新增</div>
+        <div class="text-sm text-msg-muted">{{ t('message.statTodayNew') }}</div>
         <div class="text-xl font-bold text-msg-text-active">{{ stats.today_new }}</div>
       </div>
       <div class="dm-admin__stat-card rounded-lg bg-msg-card p-4">
-        <div class="text-sm text-msg-muted">待审核</div>
+        <div class="text-sm text-msg-muted">{{ t('message.statAuditing') }}</div>
         <div class="text-xl font-bold text-msg-link">{{ stats.auditing }}</div>
       </div>
       <div class="dm-admin__stat-card rounded-lg bg-msg-card p-4">
-        <div class="text-sm text-msg-muted">已驳回</div>
+        <div class="text-sm text-msg-muted">{{ t('message.statRejected') }}</div>
         <div class="text-xl font-bold text-msg-pink">{{ stats.rejected }}</div>
       </div>
       <div class="dm-admin__stat-card rounded-lg bg-msg-card p-4">
-        <div class="text-sm text-msg-muted">已下架</div>
+        <div class="text-sm text-msg-muted">{{ t('message.statHidden') }}</div>
         <div class="text-xl font-bold text-msg-muted">{{ stats.hidden }}</div>
       </div>
     </div>
 
     <div v-if="canViewAllStates" class="dm-admin__filter flex items-center gap-3">
-      <span class="text-sm text-msg-muted">状态筛选</span>
+      <span class="text-sm text-msg-muted">{{ t('message.statusFilter') }}</span>
       <el-select
         v-model="stateFilter"
         multiple
         clearable
         collapse-tags
         size="default"
-        placeholder="全部状态"
+        :placeholder="t('message.filterAllStatus')"
         class="dm-admin__filter-select w-72"
         @change="onFilterChange"
       >
-        <el-option label="待审核" value="auditing" />
-        <el-option label="已驳回" value="rejected" />
-        <el-option label="已下架" value="hidden" />
+        <el-option :label="t('message.stateAuditing')" value="auditing" />
+        <el-option :label="t('message.stateRejected')" value="rejected" />
+        <el-option :label="t('message.stateHidden')" value="hidden" />
       </el-select>
     </div>
 
     <div
       v-loading="auditPending"
-      element-loading-text="批量审核中"
+      :element-loading-text="t('message.bulkAuditing')"
       class="dm-admin__bulk-toolbar flex flex-wrap items-center gap-3 rounded-lg bg-msg-card p-3"
     >
-      <span class="text-sm text-msg-muted">已选 {{ selectedRows.length }} 条</span>
+      <span class="text-sm text-msg-muted">{{ t('message.selectedCount', { n: selectedRows.length }) }}</span>
       <el-button
         type="success"
         size="default"
         :disabled="!selectedRows.length"
         @click="batchAuditDebounced('pass')"
       >
-        通过
+        {{ t('message.batchPass') }}
       </el-button>
       <el-button
         type="warning"
@@ -66,7 +66,7 @@
         :disabled="!selectedRows.length"
         @click="batchAuditDebounced('reject')"
       >
-        驳回
+        {{ t('message.batchReject') }}
       </el-button>
       <el-button
         type="danger"
@@ -74,14 +74,14 @@
         :disabled="!selectedRows.length"
         @click="batchAuditDebounced('hidden')"
       >
-        下架
+        {{ t('message.batchTakeDown') }}
       </el-button>
       <el-button
         size="default"
         :disabled="!selectedRows.length"
         @click="batchAuditDebounced('restore')"
       >
-        恢复
+        {{ t('message.batchRestore') }}
       </el-button>
       <template v-if="canBan">
         <el-divider direction="vertical" />
@@ -91,20 +91,20 @@
           :disabled="!selectedMids.length || !canBan"
           @click="banDialogVisible = true"
         >
-          封禁用户
+          {{ t('message.banUser') }}
         </el-button>
         <el-button
           size="default"
           :disabled="!selectedMids.length || !canBan"
           @click="unbanSelected"
         >
-          解封用户
+          {{ t('message.unbanUser') }}
         </el-button>
       </template>
     </div>
 
     <LoadingWrap :loading="loading" :rows="6">
-      <EmptyState v-if="items.length === 0" text="暂无待审私信" />
+      <EmptyState v-if="items.length === 0" :text="t('message.emptyAuditDm')" />
       <el-table
         v-else
         :data="items"
@@ -115,17 +115,17 @@
         @selection-change="onSelectionChange"
       >
         <el-table-column type="selection" width="50" />
-        <el-table-column label="发送方" width="160">
+        <el-table-column :label="t('message.colSender')" width="160">
           <template #default="{ row }">
             <UserBriefCell :mid="row.sender_mid" :brief="row.sender" />
           </template>
         </el-table-column>
-        <el-table-column label="内容" min-width="220" show-overflow-tooltip>
+        <el-table-column :label="t('message.colMessage')" min-width="220" show-overflow-tooltip>
           <template #default="{ row }">
-            <span class="text-sm text-msg-text">{{ row.message || '[图片/系统消息]' }}</span>
+            <span class="text-sm text-msg-text">{{ row.message || t('message.auditImageMsg') }}</span>
           </template>
         </el-table-column>
-        <el-table-column label="内容来源" width="160" show-overflow-tooltip>
+        <el-table-column :label="t('message.colSource')" width="160" show-overflow-tooltip>
           <template #default="{ row }">
             <AuditSourceLink
               :source="row.source"
@@ -134,29 +134,29 @@
             />
           </template>
         </el-table-column>
-        <el-table-column label="状态" width="100">
+        <el-table-column :label="t('message.colStatus')" width="100">
           <template #default="{ row }">
             <el-tag :type="stateTag(row.audit_state)" size="default" effect="light">
               {{ stateText(row.audit_state) }}
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="类型" width="90">
+        <el-table-column :label="t('message.colType')" width="90">
           <template #default="{ row }">
             <el-tag size="default" effect="plain">{{ msgTypeText(row.msg_type) }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="接收方" width="110">
+        <el-table-column :label="t('message.colReceiver')" width="110">
           <template #default="{ row }">
             <span class="text-sm text-msg-text-active">{{ row.talker_mid }}</span>
           </template>
         </el-table-column>
-        <el-table-column label="时间" width="180">
+        <el-table-column :label="t('message.colTime')" width="180">
           <template #default="{ row }">
             <TimeText :time="row.created_at" />
           </template>
         </el-table-column>
-        <el-table-column prop="msgkey" label="msgkey" width="150" />
+        <el-table-column prop="msgkey" :label="t('message.colMsgkey')" width="150" />
       </el-table>
 
       <PaginationBar
@@ -194,7 +194,7 @@
 
     <el-drawer
       v-model="sessionDrawerVisible"
-      title="会话上下文"
+      :title="t('message.dmSessionContext')"
       direction="rtl"
       size="480px"
       class="dm-admin__session-drawer"
@@ -202,25 +202,25 @@
       <LoadingWrap :loading="sessionLoading" :rows="4">
         <div v-if="sessionContext" class="dm-session flex flex-col gap-3">
           <div class="dm-session__meta rounded-lg bg-msg-card p-3 text-sm text-msg-muted">
-            <div>会话：{{ sessionContext.session_key }}</div>
-            <div>发送方：{{ sessionContext.sender_mid }}</div>
-            <div>对话方：{{ sessionContext.talker_mid }}</div>
-            <div>消息数：{{ sessionContext.total ?? (sessionContext.items?.length ?? 0) }}</div>
+            <div>{{ t('message.sessionKey') }}{{ sessionContext.session_key }}</div>
+            <div>{{ t('message.sessionSender') }}{{ sessionContext.sender_mid }}</div>
+            <div>{{ t('message.sessionTalker') }}{{ sessionContext.talker_mid }}</div>
+            <div>{{ t('message.sessionCount') }}{{ sessionContext.total ?? (sessionContext.items?.length ?? 0) }}</div>
           </div>
           <el-table :data="sessionContext.items ?? []" class="dm-session__table" border stripe>
-            <el-table-column label="内容" min-width="200" show-overflow-tooltip>
+            <el-table-column :label="t('message.colMessage')" min-width="200" show-overflow-tooltip>
               <template #default="{ row }">
-                <span class="text-sm text-msg-text">{{ row.message || '[图片/系统消息]' }}</span>
+                <span class="text-sm text-msg-text">{{ row.message || t('message.auditImageMsg') }}</span>
               </template>
             </el-table-column>
-            <el-table-column label="状态" width="90">
+            <el-table-column :label="t('message.colStatus')" width="90">
               <template #default="{ row }">
                 <el-tag :type="stateTag(row.audit_state)" size="default" effect="light">
                   {{ stateText(row.audit_state) }}
                 </el-tag>
               </template>
             </el-table-column>
-            <el-table-column label="时间" width="150">
+            <el-table-column :label="t('message.colTime')" width="150">
               <template #default="{ row }">
                 <TimeText :time="row.created_at" />
               </template>
@@ -235,7 +235,10 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue'
 import { useDebounceFn } from '@vueuse/core'
+import { useI18n } from 'vue-i18n'
 import biliMessage from '@/utils/message'
+
+const { t } = useI18n()
 import {
   adminStatsApiV1MessageDmAdminStatsGet,
   auditQueueApiV1MessageDmAdminAuditGet,
@@ -315,8 +318,8 @@ async function unbanSelected() {
   if (!selectedMids.value.length) return
   try {
     await ElMessageBox.confirm(
-      `确认解封选中的 ${selectedMids.value.length} 名用户？`,
-      '解封用户',
+      t('message.unbanConfirm', { n: selectedMids.value.length }),
+      t('message.unbanConfirmTitle'),
       { type: 'warning' }
     )
   } catch {
@@ -326,10 +329,10 @@ async function unbanSelected() {
   try {
     const res = await unbanUsers({ body: { mids: selectedMids.value } })
     if (res && res.code === 0) {
-      biliMessage.success('已解封选中用户')
+      biliMessage.success(t('message.unbanSuccess'))
       await load()
     } else if (res) {
-      biliMessage.error(res.msg || '解封失败')
+      biliMessage.error(res.msg || t('message.unbanFailed'))
     }
   } finally {
     userActionPending.value = false
@@ -360,7 +363,7 @@ async function openSession(source: AuditSourceInfo) {
   const sessionKey = source.params?.session_key
   const msgkey = source.params?.msgkey
   if (!sessionKey && !msgkey) {
-    biliMessage.warning('该私信缺少会话定位参数，无法查看上下文')
+    biliMessage.warning(t('message.missingSessionParams'))
     return
   }
   sessionLoading.value = true
@@ -392,6 +395,7 @@ function onFilterChange() {
 }
 
 // 驳回 / 下架属于处罚性操作，必须填原因：原因会写进给作者的系统通知
+// 注意：此处传入 AuditReasonDialog 的 actionLabel 需为中文 key（组件内再做 i18n 映射）
 const DM_OP_REASON_LABEL: Partial<Record<string, string>> = {
   reject: '驳回',
   hidden: '下架'
@@ -459,9 +463,9 @@ async function doAudit(
         if (target) target.audit_state = newState
       }
     })
-    biliMessage.success(`已${DM_OP_REASON_LABEL[op] ? DM_OP_REASON_LABEL[op] : '处理'} ${rows.length} 条`)
+    biliMessage.success(t('message.processedCount', { n: rows.length }))
   } catch {
-    biliMessage.error('审核失败，请重试')
+    biliMessage.error(t('message.auditFailed'))
   } finally {
     auditPending.value = false
   }
@@ -479,10 +483,10 @@ const OP_STATE_MAP: Record<string, string> = {
   restore: 'normal'
 }
 
-function msgTypeText(t: string): string {
-  if (t === 'image') return '图片'
-  if (t === 'system') return '系统'
-  return '文本'
+function msgTypeText(type: string): string {
+  if (type === 'image') return t('message.typeImage')
+  if (type === 'system') return t('message.typeSystem')
+  return t('message.typeText')
 }
 
 function stateTag(s: string): 'success' | 'warning' | 'danger' | 'info' {
@@ -493,10 +497,10 @@ function stateTag(s: string): 'success' | 'warning' | 'danger' | 'info' {
 }
 
 function stateText(s: string): string {
-  if (s === 'normal') return '正常'
-  if (s === 'auditing') return '待审核'
-  if (s === 'rejected') return '已驳回'
-  return '已下架'
+  if (s === 'normal') return t('message.stateNormal')
+  if (s === 'auditing') return t('message.stateAuditing')
+  if (s === 'rejected') return t('message.stateRejected')
+  return t('message.stateHidden')
 }
 
 onMounted(async () => {

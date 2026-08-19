@@ -27,18 +27,29 @@ const props = withDefaults(
     upMid?: number | string
     /** 定位直达的评论 rpid：从通知 / 外链进入时携带，加载后滚动到该评论并高亮 */
     focusRpid?: string | number | null
+    /** 强制标记当前用户为匿名（用于内嵌场景，父组件明确控制）；默认根据本地登录态推导 */
+    forceAnonymous?: boolean
   }>(),
   {
     type: COMMENT_TYPE.LOTTERY,
     upMid: undefined,
-    focusRpid: null
+    focusRpid: null,
+    forceAnonymous: false
   }
 )
+
+const emit = defineEmits<{
+  /** 评论总数变化（首次加载 / 发评论 / 回复 / 删除后触发），供外层联动展示计数 */
+  'count-change': [count: number]
+}>()
 
 const userNavStore = useUserNavStore()
 const currentMid = computed(() => userNavStore.user_nav.uid)
 const userAvatar = computed(() => userNavStore.user_nav.face || BiliImg.face.noface)
 const isLoggedIn = computed(() => !!currentMid.value)
+
+/** 是否匿名访问：父组件强制标记 > 后端响应 viewer_is_anonymous > 本地登录态推断 */
+const viewerIsAnonymous = ref(false)
 
 const biliUser = useInject(KeysEnum.BiliUser) as Ref<UserNavModel>
 const openGlobalLoginModal = inject(openGlobalLoginModalKey, () => {})
@@ -51,6 +62,73 @@ const currentPage = ref(1)
 const sortBy = ref<'hot' | 'time'>('hot')
 const isLoading = ref(false)
 const newComment = ref('')
+
+/** @ 提及可选用户：初始为评论列表（含楼中楼）用户，输入 @ 关键字后远程搜索覆盖 */
+const mentionOptions = ref<Array<{ value: string; avatar?: string; mid?: number }>>([])
+const mentionLoading = ref(false)
+
+/** 收集评论列表中的用户（按 mid 去重）作为初始提及候选 */
+function collectMentionUsers() {
+  const seen = new Set<number>()
+  const list: Array<{ value: string; avatar?: string; mid?: number }> = []
+  const collect = (item: CommentItem) => {
+    const m = item.member
+    if (m?.mid != null && !seen.has(m.mid)) {
+      seen.add(m.mid)
+      list.push({ value: m.uname || `用户${m.mid}`, avatar: m.avatar || undefined, mid: m.mid })
+    }
+    item.replies?.forEach(collect)
+  }
+  if (topComment.value) collect(topComment.value)
+  commentList.value.forEach(collect)
+  mentionOptions.value = list
+}
+
+/** el-mention search 事件：输入 @ 关键字后从后端远程搜索用户，覆盖提及候选 */
+async function handleMentionSearch(pattern: string) {
+  if (!pattern.trim()) {
+    collectMentionUsers()
+    return
+  }
+  mentionLoading.value = true
+  try {
+    const res = await commentApi.searchAt(pattern.trim(), 20)
+    if (res && res.code === 0 && res.data) {
+      mentionOptions.value = (res.data as CommentUserBrief[])
+        .filter((u) => u.mid != null)
+        .map((u) => ({
+          value: u.uname || `用户${u.mid}`,
+          avatar: u.avatar || undefined,
+          mid: u.mid
+        }))
+    }
+  } finally {
+    mentionLoading.value = false
+  }
+}
+
+/** 已选中的 @昵称 → mid 映射（提交时传给后端归一化为 @{mid} 存储） */
+const atNameToMid = ref<Record<string, number>>({})
+
+/** el-mention select 事件：记录选中用户昵称 → mid */
+function onMentionSelect(option: { value?: string; mid?: number }) {
+  if (!option?.value || option.mid == null) return
+  atNameToMid.value[option.value] = option.mid
+}
+
+/** 提交前从正文提取所有 @昵称，补全未记录的映射（尽量匹配已搜索/已渲染的用户） */
+function buildAtNameToMid(message: string): Record<string, number> {
+  const map: Record<string, number> = { ...atNameToMid.value }
+  const re = /@([^\s@#]+)/g
+  let m: RegExpExecArray | null
+  while ((m = re.exec(message || '')) !== null) {
+    const name = m[1]
+    if (!name || map[name]) continue
+    const opt = mentionOptions.value.find((o) => o.value === name)
+    if (opt?.mid != null) map[name] = opt.mid
+  }
+  return map
+}
 
 // 定位直达：后端回填的实际聚焦目标（可能为楼中楼），用于高亮与滚动
 const focusTargetRpid = ref<string | null>(null)
@@ -80,6 +158,12 @@ const loadMain = async () => {
     allCount.value = resp.data.all_count
     // 仅当后端确实命中并置顶了目标时才记录聚焦目标，用于滚动定位
     focusTargetRpid.value = resp.data.focus_rpid || null
+    // 后端在匿名访问时返回 viewer_is_anonymous=true（SDK 尚未同步字段前通过 any 兜底读取）；
+    // 优先级：后端标记 > 父组件 forceAnonymous > 本地登录态
+    const fromServer = (resp.data as { viewer_is_anonymous?: boolean })?.viewer_is_anonymous
+    viewerIsAnonymous.value = props.forceAnonymous || fromServer || !isLoggedIn.value
+    // 评论加载后收集提及候选用户
+    collectMentionUsers()
   } finally {
     isLoading.value = false
     // 等 DOM 渲染完成后再滚动到定位目标（楼中楼需先挂载子评论）
@@ -201,8 +285,8 @@ const handlers: CommentHandlers = {
     removeItem(rpid)
     biliMessage.success('已删除')
   },
-  reply: async ({ root, parent, message }) => {
-    const resp = await commentApi.add(props.oid, props.type, root, parent, message)
+  reply: async ({ root, parent, message, atNameToMid }) => {
+    const resp = await commentApi.add(props.oid, props.type, root, parent, message, atNameToMid)
     if (resp.code) {
       biliMessage.error(resp.msg)
       return
@@ -215,9 +299,12 @@ const handlers: CommentHandlers = {
         buildNewComment(resp.data, message, root, parent, replyTo),
         ...(rootItem.replies || [])
       ]
-      rootItem.rcount = Number(rootItem.rcount) + 1
+      // 审核中的评论不计入计数（与后端 total / rcount 只统计 NORMAL 的口径一致）
+      if (!resp.data?.need_audit) {
+        rootItem.rcount = Number(rootItem.rcount) + 1
+        allCount.value += 1
+      }
     }
-    allCount.value += 1
     biliMessage.success('评论成功')
   },
   expandReplies: async (item: CommentItem, page: number) => {
@@ -238,16 +325,21 @@ const submitTopComment = async () => {
     openGlobalLoginModal()
     return
   }
-  const resp = await commentApi.add(props.oid, props.type, '0', '0', msg)
+  const atMap = buildAtNameToMid(msg)
+  const resp = await commentApi.add(props.oid, props.type, '0', '0', msg, atMap)
   if (resp.code) {
     biliMessage.error(resp.msg)
     return
   }
   // 不重新拉取全部评论，直接把新评论插入一级评论列表首条
   commentList.value = [buildNewComment(resp.data, msg, '0', '0', null), ...commentList.value]
-  allCount.value += 1
-  total.value += 1
+  // 审核中的评论不计入计数（与后端 total / all_count 只统计 NORMAL 的口径一致）
+  if (!resp.data?.need_audit) {
+    allCount.value += 1
+    total.value += 1
+  }
   newComment.value = ''
+  atNameToMid.value = {}
   biliMessage.success('评论成功')
 }
 
@@ -256,6 +348,9 @@ watch([sortBy, currentPage], () => {
   focusTargetRpid.value = null
   loadMain()
 })
+
+// 评论总数变化时通知外层（如动态详情页联动 stat.commentCount）
+watch(allCount, (v) => emit('count-change', v))
 
 onMounted(loadMain)
 
@@ -310,12 +405,30 @@ const scrollToFocus = () => {
           <img :src="userAvatar" referrerpolicy="no-referrer" alt="头像" />
         </el-avatar>
         <div class="flex-1">
-          <textarea
+          <el-mention
             v-model="newComment"
-            rows="2"
+            type="textarea"
+            :options="mentionOptions"
+            :loading="mentionLoading"
+            prefix="@"
+            split=" "
             placeholder="发一条友善的评论"
-            class="w-full min-h-10 px-3 py-2 rounded-md bg-bg-secondary border border-border-light text-sm text-text-primary placeholder-text-placeholder outline-none transition-all duration-200 resize-none focus:border-primary focus:ring-1 focus:ring-primary/30"
-          ></textarea>
+            class="w-full lottery-comment-section__mention"
+            :rows="2"
+            resize="vertical"
+            @search="handleMentionSearch"
+            @select="onMentionSelect"
+          >
+            <!-- 提及下拉：头像 + 昵称 -->
+            <template #label="{ item }">
+              <div class="lottery-comment-section__mention-option flex items-center gap-2">
+                <el-avatar :size="24" :src="item.avatar || BiliImg.face.noface" referrerpolicy="no-referrer">
+                  <img :src="item.avatar || BiliImg.face.noface" referrerpolicy="no-referrer" alt="avatar" />
+                </el-avatar>
+                <span class="lottery-comment-section__mention-name text-sm text-text-primary">{{ item.value }}</span>
+              </div>
+            </template>
+          </el-mention>
           <div class="flex items-center justify-end mt-1">
             <el-button size="small" type="primary" :disabled="!newComment.trim()" @click="submitTopComment">
               发表评论
@@ -324,21 +437,27 @@ const scrollToFocus = () => {
         </div>
       </div>
     </div>
-    <el-alert
+    <!-- 未登录：B 站风格登录引导（左侧 avatar 占位 + 右侧浅色块内嵌「请先 登录 后发表评论」） -->
+    <div
       v-else
-      class="lottery-comment-section__login-tip mb-6"
-      title="登录后参与评论"
-      description="登录即可发表评论、为喜欢的抽奖加油打气"
-      type="info"
-      :closable="false"
-      show-icon
+      class="lottery-comment-section__login-tip mb-6 flex gap-3"
     >
-      <template #default>
-        <el-button size="small" type="primary" class="mt-2" @click="openGlobalLoginModal">
-          立即登录
-        </el-button>
-      </template>
-    </el-alert>
+      <el-avatar :size="40" class="shrink-0">
+        <img :src="BiliImg.face.noface" referrerpolicy="no-referrer" alt="头像" />
+      </el-avatar>
+      <div class="lottery-comment-section__login-box flex-1 flex items-center justify-center gap-2 rounded-md bg-bg-secondary py-3 text-sm text-text-secondary border border-border-light">
+        <span>请先</span>
+        <el-link
+          class="lottery-comment-section__login-link"
+          type="primary"
+          underline="never"
+          @click="openGlobalLoginModal"
+        >
+          登录
+        </el-link>
+        <span>后发表评论（╹◡╹）</span>
+      </div>
+    </div>
 
     <!-- 评论列表 -->
     <ul v-if="displayList.length" class="lottery-comment-section__list m-0 p-0 list-none divide-y divide-border-light">
@@ -355,6 +474,23 @@ const scrollToFocus = () => {
     <div v-else class="flex flex-col items-center justify-center py-16 text-text-placeholder">
       <el-icon :size="48" class="opacity-30"><ChatDotSquare /></el-icon>
       <p class="mt-3 text-sm">还没有评论，快来抢沙发吧~</p>
+    </div>
+
+    <!-- 匿名访问半透明蒙层（对标 B 站：未登录只能看前 10 条，登录看全部） -->
+    <div
+      v-if="viewerIsAnonymous && displayList.length > 0"
+      class="lottery-comment-section__mask relative -mt-24 h-24 pointer-events-none"
+    >
+      <div class="absolute inset-x-0 bottom-0 h-24 bg-linear-to-b from-transparent to-bg-card pointer-events-none" />
+    </div>
+    <div
+      v-if="viewerIsAnonymous && displayList.length > 0"
+      class="lottery-comment-section__login-cta mt-2 mb-6 flex flex-col items-center gap-3"
+    >
+      <el-text class="text-sm text-text-secondary">登录后查看全部评论</el-text>
+      <el-button class="lottery-comment-section__login-btn" type="primary" size="default" @click="openGlobalLoginModal">
+        登录
+      </el-button>
     </div>
 
     <!-- 底部分页 -->

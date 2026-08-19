@@ -56,6 +56,19 @@ const user_center_routes = [
       requiresLogin: true,
       icon: IconSetting
     }
+  },
+  {
+    path: 'records',
+    name: RouteName.USER_CENTER_RECORDS,
+    component: () =>
+      import('@/components/opus-detail/RightPannel/PannelItems/SettingComponent/UserCenterRecords.vue'),
+    meta: {
+      title: RouteName.USER_CENTER_RECORDS,
+      description: '查看登录记录与经验记录',
+      isHeaderShow: false,
+      requiresLogin: true,
+      icon: IconList
+    }
   }
 ]
 /**
@@ -64,10 +77,10 @@ const user_center_routes = [
  */
 const routes: CustomRouteRecordRaw[] = [
   {
-    path:'/test',
-    name:'test',
-    component:() => import('@/views/a.vue'),
-     meta: {
+    path: '/test',
+    name: 'test',
+    component: () => import('@/views/a.vue'),
+    meta: {
       title: 'test',
       description: 'test',
       isHeaderShow: import.meta.env.DEV,
@@ -82,7 +95,7 @@ const routes: CustomRouteRecordRaw[] = [
       title: '首页',
       description: '应用首页',
       isHeaderShow: true,
-      order: 0
+      order: 1
     }
   },
   {
@@ -100,7 +113,7 @@ const routes: CustomRouteRecordRaw[] = [
       color: 'var(--color-gradient-hero-vibrant)',
       requiresLogin: false,
       showInHome: true,
-      order: 1,
+      order: 3,
       isHeaderShow: true
     },
     children: [
@@ -155,7 +168,7 @@ const routes: CustomRouteRecordRaw[] = [
           icon: IconChat,
           description: '抽奖卡片详情与评论区',
           showInHome: false,
-          isHeaderShow: true
+          isHeaderShow: false
         }
       },
       {
@@ -260,7 +273,7 @@ const routes: CustomRouteRecordRaw[] = [
       color: 'var(--color-gradient-shopping)',
       requiresLogin: false,
       showInHome: true,
-      order: 2,
+      order: 4,
       isHeaderShow: true
     }
   },
@@ -272,7 +285,7 @@ const routes: CustomRouteRecordRaw[] = [
       title: '更新日志',
       description: '查看项目更新日志',
       isHeaderShow: true,
-      order: 7
+      order: 6
     }
   },
 
@@ -423,7 +436,7 @@ const routes: CustomRouteRecordRaw[] = [
           showInHome: false,
           isHeaderShow: true
         }
-      },
+      }
     ]
   },
 
@@ -458,7 +471,7 @@ const routes: CustomRouteRecordRaw[] = [
         path: 'ats',
         name: 'MESSAGE_ATS',
         component: () => import('@/views/message/AtListView.vue'),
-        meta: { title: '@我的' }
+        meta: { title: "@我的" }
       },
       {
         path: 'likes',
@@ -487,6 +500,76 @@ const routes: CustomRouteRecordRaw[] = [
     ]
   },
   {
+    path: '/app/moment',
+    name: 'MOMENT',
+    component: () => import('@/views/moment/MomentLayout.vue'),
+    redirect: { name: 'MOMENT_ALL_FEED' },
+    meta: {
+      id: 'moment',
+      title: '动态',
+      description: '动态广场、话题与个人空间',
+      color: 'var(--color-gradient-hero-cool)',
+      requiresLogin: true,
+      showInHome: true,
+      isHeaderShow: true,
+      order: 2
+    },
+    children: [
+      {
+        path: '',
+        name: 'MOMENT_ALL_FEED',
+        component: () => import('@/views/moment/AllFeedView.vue'),
+        meta: { title: '动态广场' }
+      },
+      {
+        path: 'topics',
+        name: 'MOMENT_TOPIC_SQUARE',
+        component: () => import('@/views/moment/TopicSquareView.vue'),
+        meta: { title: '话题广场' }
+      },
+      {
+        path: 'topic/:topicId',
+        name: 'MOMENT_TOPIC_FEED',
+        component: () => import('@/views/moment/TopicFeedView.vue'),
+        meta: { title: '话题动态', hidden: true }
+      }
+    ]
+  },
+  {
+    path: '/app/moment-detail/:momentId',
+    name: 'MOMENT_DETAIL',
+    component: () => import('@/views/moment/MomentDetailView.vue'),
+    meta: {
+      title: '动态详情',
+      requiresLogin: false,
+      showInHome: false,
+      isHeaderShow: false,
+      hidden: true
+    }
+  },
+  {
+    path: '/app/space',
+    name: 'MOMENT_MY_SPACE',
+    component: () => import('@/views/moment/MomentSpaceView.vue'),
+    meta: {
+      title: '我的空间',
+      requiresLogin: true,
+      showInHome: false,
+      isHeaderShow: false
+    }
+  },
+  {
+    path: '/app/space/:mid',
+    name: 'MOMENT_USER_SPACE',
+    component: () => import('@/views/moment/MomentSpaceView.vue'),
+    meta: {
+      title: '用户空间',
+      requiresLogin: false,
+      showInHome: false,
+      isHeaderShow: false
+    }
+  },
+  {
     path: '/app/admin',
     name: 'ADMIN',
     component: () => import('@/views/admin/AdminLayout.vue'),
@@ -500,7 +583,7 @@ const routes: CustomRouteRecordRaw[] = [
       showInHome: false,
       isHeaderShow: true,
       adminOnly: true,
-      order: 6
+      order: 5
     },
     children: [
       {
@@ -558,6 +641,36 @@ const routes: CustomRouteRecordRaw[] = [
           requiresMessageRoot: true,
           hidden: true
         }
+      },
+      {
+        path: 'moment-audit',
+        name: 'ADMIN_MOMENT_AUDIT',
+        component: () => import('@/views/admin/MomentAuditListView.vue'),
+        meta: {
+          title: '动态审核',
+          requiresAdmin: true,
+          hidden: true
+        }
+      },
+      {
+        path: 'moment-topic-audit',
+        name: 'ADMIN_MOMENT_TOPIC_AUDIT',
+        component: () => import('@/views/admin/TopicAuditListView.vue'),
+        meta: {
+          title: '话题审核',
+          requiresAdmin: true,
+          hidden: true
+        }
+      },
+      {
+        path: 'user-avatar-audit',
+        name: 'ADMIN_USER_AVATAR_AUDIT',
+        component: () => import('@/views/admin/AvatarAuditListView.vue'),
+        meta: {
+          title: '头像审核',
+          requiresAdmin: true,
+          hidden: true
+        }
       }
     ]
   },
@@ -604,8 +717,7 @@ router.beforeEach(async (to, from) => {
 
   // 同一父路由下的子路由切换（如控制台面板内 tab 切换），不显示 loading
   const isChildRouteSwitch =
-    from.matched.length > 1 && to.matched.length > 1 &&
-    from.matched[0] === to.matched[0]
+    from.matched.length > 1 && to.matched.length > 1 && from.matched[0] === to.matched[0]
 
   if (isChildRouteSwitch) return true
 
@@ -618,18 +730,6 @@ router.afterEach(() => {
   emitter.emit('loading', { isLoading: false, loadingText: '' })
 })
 
-// 捕获导航过程中抛出的错误（如动态导入模块失败），避免未处理的 Promise 拒绝中断应用
-let dynamicImportReloadCount = 0
-router.onError((error) => {
-  // 开发时 Vite dev server 重启会导致旧的动态导入模块 URL 失效，
-  // 重新加载页面拉取最新的模块图即可恢复（最多自动刷新一次，防止死循环）
-  if (
-    /Failed to fetch dynamically imported module/i.test(error.message) &&
-    dynamicImportReloadCount < 1
-  ) {
-    dynamicImportReloadCount++
-    window.location.reload()
-  }
-})
+
 export default router
 export { routes, user_center_routes }

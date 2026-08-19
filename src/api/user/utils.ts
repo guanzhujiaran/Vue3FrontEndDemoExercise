@@ -29,11 +29,13 @@ export const isLogin: () => Promise<[boolean, string, UserNavModel | null, ApiEr
     const status = result.response.status
 
     // nav 返回 -101（账号未登录）或网关注权返回 401 时，视为未登录：
-    // 清空本地用户缓存（用户信息 + JWT），避免残留过期登录态，
-    // 且不要跳转网络诊断页（这只是未登录，不是网络故障）
+    // 清空本地用户信息缓存（user_nav），但【保留 JWT token】——
+    // nav 返回 -101 只代表"这一次请求未认证"，可能是 token 尚未保存/注入的
+    // 竞态（如 Casdoor 回调页跳转瞬间、JWT 刚续期），并不代表 token 本身失效。
+    // 无条件删 token 会把正常登录态误清掉（曾导致登录后立即被登出的问题）。
+    // 真正失效时，后续带 token 的请求会继续 401/-101，由对应用户态兜底处理。
     if (resp?.code === -101 || status === 401) {
       user_nav_store.delete_user_nav()
-      JwtStore.delete_jwt_token()
       return [false, resp?.msg ?? '账号未登录', null, null]
     }
 

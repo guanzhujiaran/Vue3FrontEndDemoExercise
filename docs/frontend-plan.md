@@ -53,6 +53,7 @@ const res = await listNotifyApiV1MessageNotifyListGet({ query: { page: 1, size: 
 - [x] **SDK 统一封装**：在 `src/api/notify/` 下新增 `message-api.ts`，对 hey-api 函数做薄封装（统一入参、loading/错误兜底、空数据处理），业务组件只调用封装层。
 - [x] **布局骨架**：新增 `MessageLayout.vue`（侧边导航 + 内容区），作为消息系统所有页面的父布局；在 `router/index.ts` 注册 `/app/message` 路由组。
 - [x] **权限守卫**：复用现有 `requiresAdmin` 逻辑，消息系统管理类页面（通知管理、设置）标记 `requiresAdmin`/`requiresRoot`。
+- [ ] **未登录访问拦截**：`MessageLayout.vue` 复用 `BiliErrorRouteTo` 未授权提示页（对齐 RPA 浏览器页面）：未登录（`biliUser.uid` 为空）时展示未授权页并倒计时返回首页；心跳在未登录期间暂停，避免未授权请求风暴。
 - [x] **通用组件**：`EmptyState.vue`（空态）、`LoadingWrap.vue`（加载/错误）、`PaginationBar.vue`（分页，对接各 list 接口）、`TimeText.vue`（相对时间展示）。
 - [x] **全局未读状态 store**：`stores/message_unread.ts`（Pinia，持久化），汇总 M2 未读数，供顶部徽标与各模块联动。
 
@@ -72,6 +73,9 @@ const res = await listNotifyApiV1MessageNotifyListGet({ query: { page: 1, size: 
 - [x] 顶部未读徽标组件 `UnreadBadge.vue`：调用 `unreadSummaryApiV1MessageMsgFeedUnreadGet`，渲染各模块未读总数。
 - [x] 心跳保活：`useHeartbeat.ts`（composable，定时调用 `heartbeatApiV1MessageMsgFeedHeartbeatPost`，间隔参考后端 60s）。
 - [x] 与 M1 联动：心跳回调触发未读 store 刷新，列表页提供「刷新」按钮手动兜底。
+- [x] **顶部头像下拉菜单挂载刷新未读**：`AvatarDropdown.vue` 在 `onMounted` 时调用 `fetchUnreadSummary`（`msg_feed/unread` 汇总）刷新 `message_unread` store，使「我的消息」徽标在页面挂载时即展示最新未读数，不必等待进入消息中心后的心跳刷新；未登录时跳过，避免未授权请求。
+- [x] **子页面 keep-alive 缓存**：`MessageLayout.vue` 的 `<router-view>` 外包一层 `<keep-alive>`，缓存各子页面（会话/回复/@/赞/通知/设置），使切换子路由或切走再切回时**内容与滚动位置保留**、子页面组件不再重复挂载/重复请求数据。
+- [x] **心跳防重复**：`useHeartbeat` 的 `onMounted`/`onActivated` 通过 `running` 标志防重，进入消息中心每轮仅触发一次 `sendHeartbeat + unread`；结合 keep-alive 后，子页面首次进入各拉取一次数据，避免重复请求。
 
 ### Phase 3 — 事件提醒（M3）
 
@@ -79,15 +83,27 @@ const res = await listNotifyApiV1MessageNotifyListGet({ query: { page: 1, size: 
 - [ ] 已读与批量已读：`readEvent…Post`（`EventReadReq`）、`unreadEvent…Get` 角标。
 - [ ] 聚合统计视图 `EventStatsView.vue`：调用 `aggregateEvent…Get`，用 vue-echarts 展示趋势/分类占比。
 - [ ] （可选）事件上报调试表单 `reportEvent…Post`（便于自测）。
+- [ ] **`GET /event/list` 对齐 B 站 `x/msgfeed/*` 聚合结构**：后端 `EventListResp` 从「单事件明细」改为「按 source_type+source_id 聚合」：`data.latest`（最新若干条）+ `data.total`（cursor 分页，`items[]` 每条含 `users[]` 完整触发者数组 + `item` 内容实体 + `counts` 人数）；前端 `fetchEventList`/`AtListView`/`ReplyListView`/`LikeListView` 同步改解析。涉及 hey-api SDK 重新生成（需手动同步）。
+- [ ] **触发者展示收敛**：后端 `users[]` 单条最多 4 个（去重后），删除 `follow` 字段；前端 `EventItemCard` 按 B 站样式：左侧最多 2 个头像堆叠 + 中间「用户 + 动作 + 等N人」+ 右侧「内容预览 + 视频封面」。涉及 hey-api SDK 重新生成（需手动同步）。
 
 ### Phase 4 — 私信（M4）
 
+- [ ] **评论区 @ 信息对齐 B 站模型**：后端 `CommentItem` 响应由「`@{mid}` 占位符 + `at_users`」改为 B 站式：`message` 直接含 `@昵称` 文本 + `at_name_to_mid`（昵称→mid 映射）+ `at_name_to_mid_str` + `members`（被@用户信息数组）；提交 `CommentAddReq` 支持 `@昵称` 文本 + `at_name_to_mid`。前端 `LotteryCommentItem`/`LotteryCommentSection` 渲染 `@昵称` 为链接、提交时解析 @ 昵称 → mid 映射。涉及 hey-api SDK 重新生成（需手动同步）。
 - [ ] 会话列表 `DmSessionList.vue`：`listSessions…Get`，按 `DmRelationEnum`（normal/stranger）分组、未读高亮、最后一条消息预览。
 - [ ] 聊天窗 `DmChatView.vue`：`listMessages…Get` 消息气泡（`DmMsgTypeEnum`：text/image/system），滚动加载更多。
 - [ ] 发送消息：`sendDm…Post`（`DmSendReq`）。
 - [ ] 删除/撤回：`deleteDm…Post`（`DmDeleteReq`）、`recallDm…Post`（`DmRecallReq`，受时间窗口限制，UI 提示）。
 - [ ] 会话删除：`deleteDmSession…Post`（`DmSessionDeleteReq`）。
 - [ ] 已读水位：`ackDm…Post`（`DmAckReq`，清空未读、抬高水位），进入会话自动 ack。
+
+### Phase 4.5 — 动态话题限制/创建、举报、系统消息
+
+- [x] **评论项布局对齐 B 站**：`LotteryCommentItem.vue` 时间从顶部用户名行移至**正文下方左下角**（与赞/踩/回复同一行左侧）；**右侧加 el-dropdown 三点菜单**（`MoreFilled` 图标），菜单项（对标 B 站）：「复制评论链接」「加入黑名单」「举报」（「删除」仍在底部操作行，仅作者本人可见）；链接复制调用 `navigator.clipboard.writeText`，加入黑名单与举报先占位 `biliMessage.info('功能开发中')` 后续接真实接口
+- [x] **动态卡片跳转详情页触发区域收敛**：`MomentCard.vue` 不再整卡点击跳转详情页，仅当点击「发布时间标签（`moment-card__time-label`）」或「正文内容（`moment-content-renderer`）」时才触发 `click` 事件（父组件 `openDetail` 跳 `MOMENT_DETAIL`）。其余区域（头像/用户名/话题卡片/图片/转发卡/互动栏/评论区等）各自绑定独立的点击行为，`click` 事件不冒泡到详情页跳转。
+- [ ] **动态话题限制与用户创建**：`MomentPublishForm` 的话题只能从话题广场选择（已支持 el-select），禁止正文里随便携带 `#话题#`；用户可创建话题（需审核，状态枚举 `pending/normal/rejected`，与评论审核一致），后端提供 `createTopic` 接口 + 话题广场 `topic/square` 过滤 `pending` 不展示。前端 `MomentPublishForm` 增加「申请新话题」入口（弹窗 el-input + 提交后提示「待审核」），`MomentContentRenderer` 渲染 `TOPIC` 节点时对 `pending` 话题给视觉区分。
+- [ ] **动态卡片话题卡片**：`MomentCard.vue` 在内容上方增加「话题卡片」块（对齐 B 站样式：左侧话题 icon + 话题名 + 讨论数/动态数，hover 显示话题简介），点击跳转话题广场页。后端 `MomentFeedItem.topic` 扩展为 `MomentTopicRef`（含 `topicCover/topicDesc/discussionCount` 等）。
+- [ ] **动态举报 + 系统消息通知**：`MomentCard` 右上角加 el-popover 或 dropdown 三点菜单，含「举报」按钮（需登录，`isLoggedIn` 检查），点击打开举报弹窗 `ReportDialog`（选择举报理由枚举 `ReportReasonEnum`：垃圾广告/人身攻击/色情低俗/违法违规/抄袭侵权/其他 + 备注），提交走 `reportMoment` 接口。后端写举报记录 + 通过站内系统消息（`NotifyMessage`）通知举报成功/失败给当前用户。前端 `NotifyListView` 已有系统消息渲染，需新增举报结果的消息类型枚举与卡片样式。涉及后端多项（举报表/系统消息写入）与 hey-api SDK 重新生成（需手动同步）。
+- [ ] **话题详情与排序（对齐 B 站）**：后端 `GET /topic/detail/{topicId}` 返回 B 站式 `TopicDetailResp`（`top_details.topic_item`：view/discuss/fav/dynamics/like/share/jump_url/back_color/share_pic/description/ctime；`topic_creator`：uid/face/name；`has_create_jurisdiction`、`close_pub_layer_entry`）；`GET /topic/feed/{topicId}` 增加 `sort` 参数（`hot`/`time`，默认 `hot`）。后端 `TMomentTopic` 扩展 view/discuss/fav/dynamics/like/share/back_color/share_pic/description/ctime 字段（统计计数与话题元信息）；`POST /topic/create` 用户自建话题（需审核 `pending`，与评论审核一致）。前端新增 `TopicDetailView.vue`：顶部话题详情卡片（话题名 + 描述 + 4.5亿浏览/94万讨论/参与话题按钮 + 点赞/收藏/分享），下方 tab（热门/最新）切排序展示该话题下的动态列表。涉及后端多项 + hey-api SDK 重新生成（需手动同步）。
 
 ### Phase 5 — 推送（M5）
 
@@ -102,6 +118,12 @@ const res = await listNotifyApiV1MessageNotifyListGet({ query: { page: 1, size: 
 
 ### Phase 7 — 体验打磨与联调
 
+- [x] **动态收藏夹**：后端新增 `/api/v1/favorite/*`（收藏夹 CRUD、收藏/取消、夹内动态、主页可见性设置）；`MomentDetailView.vue` 收藏按钮改为打开 `MomentFavoriteDialog.vue` 收藏夹选择弹窗（列夹、选夹收藏/取消、新建收藏夹，封面仅存 URL）；`MomentSpaceView.vue` 收藏 tab 展示收藏夹 + 各夹收藏动态（MomentCard 复用）；设置 tab 提供「主页展示收藏」开关（默认开，控制自身主页收藏 tab 显隐）。
+- [x] **他人主页收藏展示**：后端新增公开读接口 `GET /favorite/user/folders` / `GET /favorite/user/dynamics`（无需登录，受主人 `showFavorites` 控制，网关已加代理与白名单）；前端 `moment-api.ts` 新增 `fetchUserFavoriteFolders(mid)` / `fetchUserFavoriteDynIds(mid, folderId, ...)`；`MomentSpaceView.vue` 他人主页收藏 tab 加载主人公开收藏夹 + 动态（`showFavorites=0` 或 403 时不展示收藏 tab）。
+- [x] **评论项点击用户名/头像跳转用户空间**：`LotteryCommentItem.vue` 头像（`el-avatar`）与用户名（`.lottery-comment-item__name`）增加点击跳转（`router.push` 到 `MOMENT_USER_SPACE?mid=`），与动态卡（`MomentCard` 头像/用户名跳转）行为对齐；「回复 @用户名」中的被回复用户名同样可点击跳转其用户空间。
+- [x] **UserCard 大头像/昵称点击跳转用户空间**：`UserCard.vue`（avatar dropdown 悬浮用户卡片）中的大头像（`.user-card__avatar`）与用户昵称（`.user-card__name`）增加点击跳转（`router.push` 到 `MOMENT_USER_SPACE?mid=`，用 `card.mid`），与其它用户跳转行为对齐。
+- [x] **动态发布/转发成功提示**：`MomentPublishForm.vue` 发布/转发成功后改用 `ElMessageBox.alert` 弹出成功 messagebox，5 秒后自动关闭（用户手动关闭时取消定时器，避免泄漏）。
+- [ ] **attach 卡片独立模块渲染（对齐 B 站 `module_additional`）**：后端 2.21.0 起动态 attach 卡不再写入正文 `contentJson` 的 RESOURCE 节点，改存 `TMoment.bizType/bizRid` 只落 bizType+bizId，Feed/详情装配为独立 `moduleType="additional"` 模块（渲染于 desc 正文下方）。前端同步：① `moment-api.ts` 封装 `MomentCreateReq.attach` 字段（`attachResource` 单独提交，不再经 `buildMomentContentNodes` 追加 RESOURCE 节点）；② `MomentCard.vue` / `MomentDetailView.vue` 按 `moduleType="additional"` 在正文下方渲染附加卡（bizType 跳转落地页、name/cover/jumpUrl 由后端 RPC 实时返回）；③ `MomentContentRenderer` 移除 RESOURCE 节点内联渲染（旧数据兼容可保留）。涉及 hey-api SDK 重新生成（需手动同步）。
 - [ ] 实时刷新策略：心跳（M2）+ 路由切换刷新 + 手动刷新三者统一，避免请求风暴。
 - [ ] 空态 / 错误 / loading 全模块覆盖（复用 Phase 0 通用组件）。
 - [ ] 响应式与移动端适配（Element Plus + Tailwind 栅格）。

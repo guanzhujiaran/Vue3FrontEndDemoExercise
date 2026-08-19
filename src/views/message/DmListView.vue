@@ -1,14 +1,14 @@
 <template>
   <div class="dm-chat flex h-full flex-col">
     <div class="dm-chat__header flex items-center gap-3 border-b border-msg-divider p-3">
-      <el-button text :icon="ArrowLeft" @click="goBack">返回</el-button>
+      <el-button text :icon="ArrowLeft" @click="goBack">{{ t('common.back') }}</el-button>
       <span class="dm-chat__title text-base font-bold text-msg-text-active">
         {{ talkerName || `用户${talkerMid}` }}
       </span>
     </div>
 
     <LoadingWrap :loading="loading" class="dm-chat__body flex-1 min-h-0 overflow-y-auto p-4">
-      <EmptyState v-if="messages.length === 0" text="还没有消息，打个招呼吧" />
+      <EmptyState v-if="messages.length === 0" :text="t('message.dmEmpty')" />
       <ul v-else class="dm-chat__messages flex flex-col gap-3">
         <li
           v-for="msg in messages"
@@ -21,14 +21,14 @@
             v-if="msg.audit_state === 'rejected' || msg.audit_state === 'hidden'"
             class="dm-chat__bubble max-w-[70%] rounded-lg bg-msg-card p-3 text-sm text-msg-muted"
           >
-            {{ msg.audit_state === 'hidden' ? '[该消息已被管理员下架]' : '[该消息已被管理员驳回]' }}
+            {{ msg.audit_state === 'hidden' ? t('message.dmHidden') : t('message.dmRejected') }}
           </div>
           <!-- 撤回：双方均不可见 -->
           <div
             v-else-if="msg.msg_status === 'recalled'"
             class="dm-chat__bubble max-w-[70%] rounded-lg bg-msg-card p-3 text-sm text-msg-muted"
           >
-            撤回了一条消息
+            {{ t('message.dmRecalled') }}
           </div>
           <!-- 正常气泡 -->
           <div
@@ -52,10 +52,10 @@
         :rows="1"
         resize="none"
         class="dm-chat__input flex-1"
-        placeholder="输入消息，Enter 发送"
+        :placeholder="t('message.dmSendPlaceholder')"
         @keydown.enter.exact.prevent="onSend"
       />
-      <el-button type="primary" :disabled="!draft.trim()" @click="onSend">发送</el-button>
+      <el-button type="primary" :disabled="!draft.trim()" @click="onSend">{{ t('message.dmSend') }}</el-button>
     </div>
   </div>
 </template>
@@ -63,11 +63,13 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { ArrowLeft } from '@element-plus/icons-vue'
 import { fetchDmMessages, sendDm, type DmMessageItem } from '@/api/notify/message-api'
 import LoadingWrap from '@/components/message/LoadingWrap.vue'
 import EmptyState from '@/components/message/EmptyState.vue'
 
+const { t } = useI18n()
 const route = useRoute()
 const router = useRouter()
 

@@ -273,6 +273,8 @@
   --color-bg: var(--el-bg-color);
   --color-bg-page: var(--el-bg-color-page);
   --color-bg-overlay: var(--el-bg-color-overlay);
+  /* 次级背景（评论区输入框等）：跟随主题亮/暗自动变化 */
+  --color-bg-secondary: var(--el-fill-color-lighter);
 
   /* ==================== Module Card 渐变 ==================== */
   --color-gradient-module-primary: linear-gradient(

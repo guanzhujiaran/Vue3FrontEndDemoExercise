@@ -5,6 +5,7 @@ import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
 import { createHead } from '@vueuse/head'
 import App from './App.vue'
 import router from './router'
+import i18n from '@/i18n'
 import { useHueThemeStore } from '@/stores/hue_theme'
 import urql, { cacheExchange, fetchExchange } from '@urql/vue'
 import Clarity from '@microsoft/clarity'
@@ -21,6 +22,7 @@ pinia.use(piniaPluginPersistedstate)
 app
   .use(pinia)
   .use(router)
+  .use(i18n)
   .use(head)
   .use(urql, {
     url: import.meta.env.VITE_GRAPH_API,

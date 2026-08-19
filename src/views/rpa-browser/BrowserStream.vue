@@ -15,6 +15,7 @@ import DebugBox from '@/components/rpa-browser/DebugBox.vue'
 import ToolboxPanel from '@/components/rpa-browser/ToolboxPanel.vue'
 import EditCustomActionDialog from '@/components/rpa-browser/EditCustomActionDialog.vue'
 import MinimizeBar from '@/components/rpa-browser/MinimizeBar.vue'
+import ResourceInteractionBar from '@/components/interaction/ResourceInteractionBar.vue'
 import { RouteName } from '@/models/router/index.ts'
 import { useBrowserSessionState } from '@/composables/useBrowserSessionState'
 
@@ -431,6 +432,9 @@ onMounted(() => {
     >
       <template #extra>
         <div class="flex flex-wrap items-center gap-4">
+          <!-- 收藏/点赞（2.17.0：RPA 浏览器走 be-message 通用互动） -->
+          <ResourceInteractionBar biz-type="rpa_browser" :biz-id="browserId" />
+
           <div class="flex items-center gap-2">
             <span >浏览器:</span>
             <el-tag :type="isConnected ? 'success' : isConnecting ? 'warning' : 'info'">

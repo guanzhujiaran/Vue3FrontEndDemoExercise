@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { onMounted, ref, computed, watch } from 'vue'
 import { storeToRefs } from 'pinia'
+import { ElMessage } from 'element-plus'
 import userApi from '@/api/user/user_api.ts'
+import { fetchAvatarAuditMine } from '@/api/notify/moment-api'
 import { useUserNavStore } from '@/stores/user_nav'
 import { BiliImg } from '@/assets/img/BiliImg.ts'
 import type { User_base_info_config_form } from '@/models/user/user_setting/user_base_info_config_model.ts'
@@ -118,8 +120,64 @@ const casdoorIdentities = computed(() => {
   ].filter((it) => it.value !== undefined && it.value !== null && it.value !== '')
 })
 
+// ==================== 修改头像（2.16.0：仅支持图片 URL） ====================
+const avatarDialogVisible = ref(false)
+const avatarUrl = ref('')
+const avatarSubmitting = ref(false)
+const avatarErrMsg = ref('')
+// 头像更换审核状态（先审后发）：pending 时展示待审核徽标，不改变公开头像
+const avatarAudit = ref<{ auditStatus: string; newAvatar?: string } | null>(null)
+
+const loadAvatarAudit = async () => {
+  try {
+    const res = await fetchAvatarAuditMine()
+    avatarAudit.value = res ? { auditStatus: res.auditStatus, newAvatar: res.newAvatar } : null
+  } catch (_) {
+    avatarAudit.value = null
+  }
+}
+
+const openAvatarDialog = () => {
+  avatarUrl.value = navInfo?.value?.face || ''
+  avatarErrMsg.value = ''
+  avatarDialogVisible.value = true
+}
+
+const submitAvatar = async () => {
+  const url = avatarUrl.value.trim()
+  if (!url) {
+    avatarErrMsg.value = '请输入头像图片链接'
+    return
+  }
+  avatarSubmitting.value = true
+  avatarErrMsg.value = ''
+  const res = await userApi.UpdateUserInfo({ avatar: url })
+  // businessHandler 对 code !== 0 的响应不会抛出异常，而是返回 { success:false, msg }
+  // 需主动检查，失败时展示后端 msg 并保持弹窗打开，不能直接关闭/更新头像
+  if (!res.success) {
+    avatarErrMsg.value = res.msg || '头像更新失败'
+    avatarSubmitting.value = false
+    return
+  }
+  avatarDialogVisible.value = false
+  avatarSubmitting.value = false
+  // 头像走「先审后发」：avatar_status=pending 表示已提交审核，未即时生效，
+  // 不更新本地 nav 头像（仍显示旧头像），审核通过后由服务端写入公开头像。
+  if (res.data?.avatar_status === 'pending') {
+    await loadAvatarAudit()
+    ElMessage.success('头像更换申请已提交，审核通过后生效')
+    return
+  }
+  // 非头像审核场景（理论不会走到）：头像即时生效，更新本地 nav 展示
+  if (navInfo.value) {
+    navInfo.value.face = url
+  }
+  await loadDetail()
+}
+
 onMounted(() => {
   loadDetail()
+  loadAvatarAudit()
 })
 </script>
 
@@ -149,16 +207,36 @@ onMounted(() => {
 
     <!-- 数据展示 -->
     <div v-else class="user-center-body flex flex-col gap-6">
-      <!-- 头像与基础标识（本系统 nav + profile + Casdoor 头像优先） -->
+      <!-- 头像与基础标识（头像取本系统 nav 的 face，即审核通过后的公开头像） -->
       <el-card class="user-center-profile-card" shadow="never">
         <div class="user-center-profile-card__body flex items-center gap-4">
-          <el-avatar
-            class="user-center-profile-card__avatar"
-            :size="64"
-            :src="casdoor?.avatar || navInfo?.face || BiliImg.face.noface"
-          >
-            {{ profile?.uname || userNavRef.value?.user_name || 'U' }}
-          </el-avatar>
+          <div class="user-center-profile-card__avatar-wrap flex items-start gap-3">
+            <el-avatar
+              class="user-center-profile-card__avatar"
+              :size="64"
+              :src="navInfo?.face || BiliImg.face.noface"
+            >
+              {{ profile?.uname || userNavRef.value?.user_name || 'U' }}
+            </el-avatar>
+            <div class="user-center-profile-card__avatar-actions flex flex-col gap-2">
+              <el-button
+                class="user-center-profile-card__avatar-edit"
+                size="large"
+                @click="openAvatarDialog"
+              >
+                修改头像
+              </el-button>
+              <el-tag
+                v-if="avatarAudit?.auditStatus === 'pending'"
+                class="user-center-profile-card__avatar-audit-tag"
+                type="warning"
+                size="default"
+                effect="light"
+              >
+                头像审核中
+              </el-tag>
+            </div>
+          </div>
           <div class="user-center-profile-card__meta flex flex-col">
             <span class="user-center-profile-card__name text-xl font-bold text-text-primary">
               {{ profile?.uname || casdoor?.displayName || navInfo?.user_name || '—' }}
@@ -216,7 +294,7 @@ onMounted(() => {
           <el-descriptions-item label="性别">{{ fmt(profile?.sex) }}</el-descriptions-item>
           <el-descriptions-item label="生日">{{ fmt(profile?.birthday) }}</el-descriptions-item>
           <el-descriptions-item label="头像地址" :span="2">
-            <span class="break-all">{{ fmt(profile?.avatar || navInfo?.face) }}</span>
+            <span class="break-all">{{ fmt(navInfo?.face) }}</span>
           </el-descriptions-item>
           <el-descriptions-item label="个性签名" :span="2">
             {{ fmt(profile?.usersign) }}
@@ -282,5 +360,46 @@ onMounted(() => {
         </el-button>
       </div>
     </div>
+
+    <!-- 修改头像弹窗（仅支持图片 URL） -->
+    <el-dialog
+      v-model="avatarDialogVisible"
+      class="user-center-avatar-dialog"
+      title="修改头像"
+      width="480px"
+    >
+      <div class="user-center-avatar-dialog__body flex flex-col gap-3">
+        <el-input
+          v-model="avatarUrl"
+          class="user-center-avatar-dialog__url"
+          size="large"
+          placeholder="请输入图片链接（http/https，≤1MB）"
+          clearable
+        />
+        <el-text v-if="avatarErrMsg" class="user-center-avatar-dialog__err text-danger" tag="p">
+          {{ avatarErrMsg }}
+        </el-text>
+        <el-text class="user-center-avatar-dialog__tip text-text-secondary text-sm" tag="p">
+          头像仅支持图片 URL 链接；后端将校验图片在 1s 内可下载且大小不超过 1MB。
+          提交后将进入审核，审核通过后新头像才会公开显示。
+        </el-text>
+      </div>
+      <template #footer>
+        <div class="user-center-avatar-dialog__footer flex justify-end gap-2">
+          <el-button class="user-center-avatar-dialog__cancel" size="large" @click="avatarDialogVisible = false">
+            取消
+          </el-button>
+          <el-button
+            class="user-center-avatar-dialog__submit"
+            type="primary"
+            size="large"
+            :loading="avatarSubmitting"
+            @click="submitAvatar"
+          >
+            保存
+          </el-button>
+        </div>
+      </template>
+    </el-dialog>
   </div>
 </template>

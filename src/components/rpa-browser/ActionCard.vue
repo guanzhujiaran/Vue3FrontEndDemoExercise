@@ -1,7 +1,10 @@
 <script setup lang="ts">
 import { computed, type Component } from 'vue'
 import { Mouse, Edit, Top, View, Timer, Camera, Connection, SetUp, RefreshRight, Star, Grid, Cpu, Link, QuestionFilled } from '@element-plus/icons-vue'
+import { useI18n } from 'vue-i18n'
 import type { ActionDetail } from './debugbox-types'
+
+const { t } = useI18n()
 
 interface Props {
   action: {
@@ -52,29 +55,30 @@ const actionTitle = computed(() => {
     return props.action.name
   }
   
-  const titleMap: Record<string, string> = {
-    click: '点击',
-    input: '输入',
-    navigation: '导航',
-    navigate: '页面导航',
-    new_page: '新建页面',
-    screenshot: '截图',
-    wait: '等待',
-    scroll: '滚动',
-    hover: '悬停',
-    evaluate: '执行JS',
-    select: '选择',
-    keyboard: '键盘',
-    mouse: '鼠标',
-    llm: 'LLM',
-    loop: '循环',
-    if_else: '条件',
-    composite: '组合',
-    custom: '自定义',
-    plugin: '插件'
+  const titleKeyMap: Record<string, string> = {
+    click: 'rpa.actClick',
+    input: 'rpa.actInput',
+    navigation: 'rpa.actNavigation',
+    navigate: 'rpa.actNavigate',
+    new_page: 'rpa.actNewPage',
+    screenshot: 'rpa.actScreenshot',
+    wait: 'rpa.actWait',
+    scroll: 'rpa.actScroll',
+    hover: 'rpa.actHover',
+    evaluate: 'rpa.actEvaluate',
+    select: 'rpa.actSelect',
+    keyboard: 'rpa.actKeyboard',
+    mouse: 'rpa.actMouse',
+    llm: 'rpa.actLlm',
+    loop: 'rpa.actLoop',
+    if_else: 'rpa.actIfElse',
+    composite: 'rpa.actComposite',
+    custom: 'rpa.actCustom',
+    plugin: 'rpa.actPlugin'
   }
-  
-  return titleMap[props.action.action_id] || props.action.json_schema?.title || props.action.action_id
+
+  const key = titleKeyMap[props.action.action_id]
+  return key ? t(key) : (props.action.json_schema?.title || props.action.action_id)
 })
 
 const actionDescription = computed(() => {
@@ -86,29 +90,30 @@ const actionDescription = computed(() => {
   const desc = props.action.json_schema?.description || ''
   if (desc) return desc
   
-  const descMap: Record<string, string> = {
-    click: '点击页面元素',
-    input: '在输入框中输入文本',
-    navigation: '导航到指定URL',
-    navigate: '导航到指定URL',
-    new_page: '打开新页面或标签页',
-    screenshot: '截取当前页面截图',
-    wait: '等待指定时间或条件',
-    scroll: '滚动页面到指定位置',
-    hover: '悬停在页面元素上',
-    evaluate: '执行JavaScript代码',
-    select: '选择下拉框选项',
-    keyboard: '模拟键盘输入',
-    mouse: '模拟鼠标操作',
-    llm: '调用大语言模型',
-    loop: '循环执行操作',
-    if_else: '条件判断分支',
-    composite: '组合多个操作',
-    custom: '自定义操作',
-    plugin: '插件操作'
+  const descKeyMap: Record<string, string> = {
+    click: 'rpa.actClickDesc',
+    input: 'rpa.actInputDesc',
+    navigation: 'rpa.actNavigationDesc',
+    navigate: 'rpa.actNavigateDesc',
+    new_page: 'rpa.actNewPageDesc',
+    screenshot: 'rpa.actScreenshotDesc',
+    wait: 'rpa.actWaitDesc',
+    scroll: 'rpa.actScrollDesc',
+    hover: 'rpa.actHoverDesc',
+    evaluate: 'rpa.actEvaluateDesc',
+    select: 'rpa.actSelectDesc',
+    keyboard: 'rpa.actKeyboardDesc',
+    mouse: 'rpa.actMouseDesc',
+    llm: 'rpa.actLlmDesc',
+    loop: 'rpa.actLoopDesc',
+    if_else: 'rpa.actIfElseDesc',
+    composite: 'rpa.actCompositeDesc',
+    custom: 'rpa.actCustomDesc',
+    plugin: 'rpa.actPluginDesc'
   }
-  
-  return descMap[props.action.action_id] || ''
+
+  const key = descKeyMap[props.action.action_id]
+  return key ? t(key) : ''
 })
 
 const configParamsEntries = computed(() => {
@@ -134,9 +139,9 @@ const detailBadges = computed(() => {
   const ad = props.action.action_detail
   if (!ad) return []
   const badges: string[] = []
-  if (ad.is_public) badges.push('公开')
-  if (ad.is_verified) badges.push('已认证')
-  if (ad.likes_count && ad.likes_count > 0) badges.push(`${ad.likes_count} 赞`)
+  if (ad.is_public) badges.push(t('rpa.publicTag'))
+  if (ad.is_verified) badges.push(t('rpa.verifiedTag'))
+  if (ad.likes_count && ad.likes_count > 0) badges.push(t('rpa.likesCount', { n: ad.likes_count }))
   return badges
 })
 </script>

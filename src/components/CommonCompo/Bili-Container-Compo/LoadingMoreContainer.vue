@@ -1,7 +1,6 @@
 <script setup lang="ts">
-import { type PropType, ref, computed, inject, onMounted, onBeforeUnmount } from 'vue'
+import { type PropType, ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useThrottleFn } from '@vueuse/core'
-import { windowHeightKey } from '@/models/inject/inject_type.ts'
 const props = defineProps({
   handleLoad: {
     type: Function as PropType<() => void>,
@@ -22,10 +21,19 @@ const isError = defineModel('isError', {
   type: Boolean
 })
 
-// 根容器注入的窗口高度，乘以系数作为滚动容器的高度上限
-const HEIGHT_RATIO = 0.7
-const windowHeight = inject(windowHeightKey, ref(window.innerHeight))
-const maxHeightPx = computed(() => `${Math.floor(windowHeight.value * HEIGHT_RATIO)}px`)
+// 滚动容器高度 = 窗口高度 × 高度系数（v-model 可配置，默认 0.7）
+const heightRatio = defineModel<number>('heightRatio', { default: 0.7 })
+
+// 强制约束高度系数 ∈ (0, 1)：非法值回退默认，>=1 收拢到 0.99
+const effectiveHeightRatio = computed(() => {
+  const raw = Number(heightRatio.value)
+  if (!Number.isFinite(raw) || raw <= 0) return 0.7
+  return Math.min(raw, 0.99)
+})
+
+// 组件自行维护窗口高度，乘以系数作为滚动容器的高度上限
+const windowHeight = ref(window.innerHeight)
+const maxHeightPx = computed(() => `${Math.floor(windowHeight.value * effectiveHeightRatio.value)}px`)
 
 const handleLoad = useThrottleFn(() => {
   if (!isMore.value || isError.value) return
@@ -44,10 +52,15 @@ function onScroll() {
     handleLoad()
   }
 }
+const onWindowResize = () => {
+  windowHeight.value = window.innerHeight
+}
 onMounted(() => {
+  window.addEventListener('resize', onWindowResize)
   scrollbarRef.value?.wrapRef?.addEventListener('scroll', onScroll)
 })
 onBeforeUnmount(() => {
+  window.removeEventListener('resize', onWindowResize)
   scrollbarRef.value?.wrapRef?.removeEventListener('scroll', onScroll)
 })
 </script>

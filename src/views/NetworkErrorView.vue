@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { Connection, RefreshRight } from '@element-plus/icons-vue'
 import { useThemeStore } from '@/stores/theme'
 
+const { t } = useI18n()
 const themeStore = useThemeStore()
 
 // 定义 props
@@ -11,7 +13,7 @@ interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  errorMessage: '无法连接到服务器'
+  errorMessage: ''
 })
 
 // 定义 emit
@@ -33,9 +35,9 @@ const timeoutIds: ReturnType<typeof setTimeout>[] = []
 
 // 要检测的服务器列表
 const servers = [
-  { name: '该网站服务器', host: window.location.hostname },
-  { name: 'B站服务器', host: 'www.bilibili.com' },
-  { name: '百度服务器', host: 'www.baidu.com' }
+  { name: t('network.serverOwn'), host: window.location.hostname },
+  { name: t('network.serverBili'), host: 'www.bilibili.com' },
+  { name: t('network.serverBaidu'), host: 'www.baidu.com' }
 ]
 
 const getServerIP = async (hostname: string): Promise<string> => {
@@ -189,41 +191,41 @@ onUnmounted(() => {
         <el-icon class="mb-4 text-[var(--el-color-primary)]" :size="48">
           <Connection />
         </el-icon>
-        <el-text class="my-4 text-[2rem] text-[var(--el-text-color-primary)] md:text-2xl" tag="h1">网络连接诊断</el-text>
-        <el-text class="text-[1.1rem] text-text-regular" tag="p">{{ props.errorMessage }}</el-text>
+        <el-text class="my-4 text-[2rem] text-[var(--el-text-color-primary)] md:text-2xl" tag="h1">{{ t('network.title') }}</el-text>
+        <el-text class="text-[1.1rem] text-text-regular" tag="p">{{ props.errorMessage || t('network.errorDefault') }}</el-text>
       </div>
 
       <!-- Ping测试结果 -->
       <div class="mb-8">
         <div class="mb-4 flex items-center justify-between md:flex-col md:items-start md:gap-4">
-          <el-text class="m-0 text-2xl text-[var(--el-text-color-primary)]" tag="h2">服务器连接测试</el-text>
+          <el-text class="m-0 text-2xl text-[var(--el-text-color-primary)]" tag="h2">{{ t('network.serverTest') }}</el-text>
           <el-button
             type="primary"
             :loading="isPinging"
             @click="retryPing"
             :icon="RefreshRight"
           >
-            {{ isPinging ? '检测中...' : '重新检测' }}
+            {{ isPinging ? t('network.detecting') : t('network.retest') }}
           </el-button>
         </div>
 
         <el-table :data="pingResults" stripe style="width: 100%">
-          <el-table-column prop="host" label="服务器" width="200" />
-          <el-table-column prop="ip" label="IP地址" width="180" />
-          <el-table-column prop="latency" label="延迟" width="120">
+          <el-table-column prop="host" :label="t('network.colServer')" width="200" />
+          <el-table-column prop="ip" :label="t('network.colIp')" width="180" />
+          <el-table-column prop="latency" :label="t('network.colLatency')" width="120">
             <template #default="{ row }">
-              <el-text v-if="row.status === 'pending'" tag="span">检测中...</el-text>
+              <el-text v-if="row.status === 'pending'" tag="span">{{ t('network.statusDetecting') }}</el-text>
               <el-text v-else-if="row.status === 'success'" class="text-[var(--el-color-success)]" tag="span">
                 {{ row.latency }}ms
               </el-text>
-              <el-text v-else class="text-[var(--el-color-danger)]" tag="span">超时</el-text>
+              <el-text v-else class="text-[var(--el-color-danger)]" tag="span">{{ t('network.timeout') }}</el-text>
             </template>
           </el-table-column>
-          <el-table-column prop="status" label="状态" width="120">
+          <el-table-column prop="status" :label="t('network.colStatus')" width="120">
             <template #default="{ row }">
-              <el-tag v-if="row.status === 'pending'" type="info">检测中</el-tag>
-              <el-tag v-else-if="row.status === 'success'" type="success">正常</el-tag>
-              <el-tag v-else type="danger">失败</el-tag>
+              <el-tag v-if="row.status === 'pending'" type="info">{{ t('network.statusDetecting') }}</el-tag>
+              <el-tag v-else-if="row.status === 'success'" type="success">{{ t('network.statusNormal') }}</el-tag>
+              <el-tag v-else type="danger">{{ t('network.statusFailed') }}</el-tag>
             </template>
           </el-table-column>
         </el-table>
@@ -232,17 +234,17 @@ onUnmounted(() => {
       <!-- 提示信息 -->
       <div class="mb-8">
         <el-alert
-          title="诊断建议"
+          :title="t('network.adviceTitle')"
           type="info"
           :effect="themeStore.themeEffectString"
           :closable="false"
         >
           <template #default>
             <ul class="mt-2 mb-0 pl-6">
-              <li class="mb-2 leading-relaxed">如果主服务器连接失败，请检查您的网络连接</li>
-              <li class="mb-2 leading-relaxed">如果DNS服务器连接失败，可能是DNS解析问题</li>
-              <li class="mb-2 leading-relaxed">如果其他外部网站可以访问，可能是服务器暂时不可用</li>
-              <li class="mb-2 leading-relaxed">建议刷新页面或稍后重试</li>
+              <li class="mb-2 leading-relaxed">{{ t('network.advice1') }}</li>
+              <li class="mb-2 leading-relaxed">{{ t('network.advice2') }}</li>
+              <li class="mb-2 leading-relaxed">{{ t('network.advice3') }}</li>
+              <li class="mb-2 leading-relaxed">{{ t('network.advice4') }}</li>
             </ul>
           </template>
         </el-alert>
@@ -251,10 +253,10 @@ onUnmounted(() => {
       <!-- 操作按钮 -->
       <div class="mt-8 flex justify-center gap-4 md:flex-col">
         <el-button size="large" @click="retryPing" :loading="isPinging">
-          重新检测
+          {{ t('network.retest') }}
         </el-button>
         <el-button size="large" type="primary" @click="goHome">
-          返回首页
+          {{ t('network.backHome') }}
         </el-button>
       </div>
     </div>

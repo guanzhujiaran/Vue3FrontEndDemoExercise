@@ -30,17 +30,20 @@
       </el-text>
 
       <el-text v-if="source.up_mid" class="audit-source-link__up" size="small" type="info">
-        UP：{{ source.up_mid }}
+        {{ t('message.upPrefix') }}{{ source.up_mid }}
       </el-text>
     </template>
-    <el-text v-else class="audit-source-link__empty" size="default" type="info">未知来源</el-text>
+    <el-text v-else class="audit-source-link__empty" size="default" type="info">{{ t('message.unknownSource') }}</el-text>
   </div>
 </template>
 
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { TopRight } from '@element-plus/icons-vue'
 import type { AuditSourceInfo } from '@/api/notify/hey-api'
+
+const { t } = useI18n()
 
 const props = defineProps<{
   source?: AuditSourceInfo | null

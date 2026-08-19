@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { ElIcon } from 'element-plus'
 import { BiliErrorRouteToTxt } from '@/assets/text/BiliErrorTxt.ts'
 import { KeysEnum, useInject } from '@/models/base/provide_model.ts'
@@ -10,6 +11,7 @@ import router from '@/router'
 import { RouteName } from '@/models/router'
 import { Fold, Expand, Avatar } from '@element-plus/icons-vue'
 
+const { t } = useI18n()
 const userInfo = useInject(KeysEnum.BiliUser) as Ref<UserNavModel>
 const use_route = useRoute()
 
@@ -89,7 +91,7 @@ const menuDefaultActive = computed(() => {
 })
 
 const getCurrentRouteTitle = computed(() => {
-  if (!use_route.name) return '浏览器管理'
+  if (!use_route.name) return t('user.browserMgmt')
 
   // 首先尝试直接匹配路由名称
   const currentRoute = user_center_routes.find((route) => route.name === use_route.name)
@@ -109,7 +111,7 @@ const getCurrentRouteTitle = computed(() => {
   // 最后检查是否是根路径，返回默认首页标题
   if (use_route.path === '/app/user-center/') {
     const defaultRoute = user_center_routes.find((route) => route.path === '')
-    return defaultRoute?.meta?.title || '浏览器管理首页'
+    return defaultRoute?.meta?.title || t('user.browserMgmtHome')
   }
 
   return use_route.name as string
@@ -150,11 +152,11 @@ const scrollbarHeight = computed(() => {
                 class="user-info hover:cursor-pointer mb-5 flex items-center border-b border-border px-5 pb-5 transition-all duration-300"
                 @click="router.push({ name: RouteName.USER_CENTER })"
               >
-                <el-avatar :icon="Avatar" />
+                <el-avatar :src="userInfo.face || undefined" :icon="Avatar" />
                 <div class="user-details ml-3">
                   <el-text class="user-name text-base font-semibold text-[var(--el-text-color-primary)]" tag="div">{{ userInfo.user_name }}</el-text>
                   <div class="user-role mt-1 text-xs text-text-secondary">
-                    {{ userInfo.role === 'root' ? '管理员' : '普通用户' }}
+                    {{ userInfo.role === 'root' ? t('user.admin') : t('user.normalUser') }}
                   </div>
                 </div>
               </div>
@@ -201,7 +203,7 @@ const scrollbarHeight = computed(() => {
                   </transition>
                 </div>
                 <div v-else class="empty-state p-5 text-center text-text-secondary">
-                  <el-text class="my-4 text-base" tag="p">未找到组件 - 路由: {{ route.path }}, 名称: {{ route.name }}</el-text>
+                  <el-text class="my-4 text-base" tag="p">{{ t('user.notFound', { path: route.path, name: route.name }) }}</el-text>
                 </div>
               </RouterView>
             </div>
