@@ -2057,6 +2057,12 @@ export type EventAggregateItem = {
      */
     source_id: string;
     /**
+     * Biz Id
+     *
+     * 组内最新一条事件的业务资源id（如评论rpid），与 source_type 共同唯一定位原资源供前端跳转
+     */
+    biz_id?: string | null;
+    /**
      * Source Title
      */
     source_title?: string | null;
@@ -2161,6 +2167,12 @@ export type EventMsgfeedContent = {
      * Business
      */
     business?: string;
+    /**
+     * Biz Id
+     *
+     * 业务资源id（如评论rpid / 动态dynId），与 business(bizType) 共同唯一定位原资源供前端跳转
+     */
+    biz_id?: string | null;
     /**
      * Title
      */
@@ -2348,7 +2360,7 @@ export type EventReportReq = {
     /**
      * Biz Id
      *
-     * 业务唯一标识（如评论id），参与幂等键计算；为空时同一人对同一实体的同类行为只记一条
+     * 业务资源id（如评论rpid / 动态dynId）：与 source_type(bizType) 共同唯一定位原资源供前端跳转；同时参与幂等键计算，为空时同一人对同一实体的同类行为只记一条
      */
     biz_id?: string | null;
 };
@@ -3120,6 +3132,12 @@ export type InteractionStatusItem = {
      * 转发数（dynamic 时=动态统计；非动态资源无转发，恒为 0）
      */
     repostCount?: number;
+    /**
+     * Viewcount
+     *
+     * 浏览数（dynamic 时=TMomentStat.viewCount；非动态=TInteractionStat.viewCount；2.23.0）
+     */
+    viewCount?: number;
     /**
      * 资源详情（非动态资源经 RPC 获取，弱依赖可空；2.18.0）
      */
@@ -7270,6 +7288,21 @@ export type StandardResponseFollowRelationResp = {
 };
 
 /**
+ * StandardResponse[InteractionStatusItem]
+ */
+export type StandardResponseInteractionStatusItem = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: InteractionStatusItem | null;
+};
+
+/**
  * StandardResponse[InteractionStatusResp]
  */
 export type StandardResponseInteractionStatusResp = {
@@ -10507,6 +10540,93 @@ export type InteractionStatusApiV1MomentInteractionStatusGetResponses = {
 };
 
 export type InteractionStatusApiV1MomentInteractionStatusGetResponse = InteractionStatusApiV1MomentInteractionStatusGetResponses[keyof InteractionStatusApiV1MomentInteractionStatusGetResponses];
+
+export type InteractionStatusDetailApiV1MomentInteractionStatusBizIdGetData = {
+    body?: never;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Jwt
+         */
+        'x-bili-jwt'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string | null;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string | null;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string | null;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string | null;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string | null;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string | null;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string | null;
+    };
+    path: {
+        /**
+         * Biz Id
+         */
+        biz_id: string;
+    };
+    query: {
+        /**
+         * Biztype
+         *
+         * 资源类型（文字：dynamic/lottery/...）
+         */
+        bizType: string;
+    };
+    url: '/api/v1/moment/interaction/status/{biz_id}';
+};
+
+export type InteractionStatusDetailApiV1MomentInteractionStatusBizIdGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type InteractionStatusDetailApiV1MomentInteractionStatusBizIdGetError = InteractionStatusDetailApiV1MomentInteractionStatusBizIdGetErrors[keyof InteractionStatusDetailApiV1MomentInteractionStatusBizIdGetErrors];
+
+export type InteractionStatusDetailApiV1MomentInteractionStatusBizIdGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseInteractionStatusItem;
+};
+
+export type InteractionStatusDetailApiV1MomentInteractionStatusBizIdGetResponse = InteractionStatusDetailApiV1MomentInteractionStatusBizIdGetResponses[keyof InteractionStatusDetailApiV1MomentInteractionStatusBizIdGetResponses];
 
 export type ReportApiV1MomentReportPostData = {
     body: MomentReportReq;

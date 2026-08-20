@@ -115,19 +115,12 @@ async function onCopyLink() {
   }
 }
 
-/** 加入黑名单（拉黑评论作者） */
-async function onBlock() {
-  try {
-    await blockUser(Number(props.item.mid), {
-      onError: (msg) => {
-        biliMessage.error(msg)
-        return true
-      },
-    })
-    biliMessage.success('已加入黑名单')
-  } catch {
-    biliMessage.error('拉黑失败，请稍后重试')
-  }
+/** 加入黑名单（拉黑评论作者）：成功提示由调用方预设，失败提示由后端响应驱动（统一 businessHandler 处理） */
+function onBlock() {
+  blockUser(Number(props.item.mid), {
+    showSuccessToast: true,
+    successMessage: '已加入黑名单',
+  })
 }
 
 /** 统一举报弹窗（P11-T6） */

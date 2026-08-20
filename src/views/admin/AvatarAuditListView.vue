@@ -2,7 +2,7 @@
   <div class="avatar-audit-list h-full flex flex-col">
     <!-- 工具栏 -->
     <div class="avatar-audit-list__toolbar mb-4 flex items-center justify-between">
-      <h2 class="avatar-audit-list__title text-base font-bold text-msg-text-active">头像更换审核队列</h2>
+      <h2 class="avatar-audit-list__title text-base font-bold text-text-primary">头像更换审核队列</h2>
       <el-button
         class="avatar-audit-list__refresh-btn"
         size="default"

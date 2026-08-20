@@ -6,24 +6,24 @@
         v-if="loading"
         class="moment-detail__skeleton max-w-2xl mx-auto pt-6"
       >
-        <div class="moment-detail__skeleton-card bg-msg-card rounded-lg border border-msg-border p-4 shadow-sm animate-pulse">
+        <div class="moment-detail__skeleton-card bg-bg-overlay rounded-lg border border-border-light p-4 shadow-sm animate-pulse">
           <div class="moment-detail__skeleton-header flex items-center gap-3 mb-4">
-            <div class="moment-detail__skeleton-avatar h-10 w-10 shrink-0 rounded-full bg-msg-muted/30"></div>
+            <div class="moment-detail__skeleton-avatar h-10 w-10 shrink-0 rounded-full bg-text-placeholder/30"></div>
             <div class="moment-detail__skeleton-author flex-1 space-y-2">
-              <div class="moment-detail__skeleton-line h-4 w-32 rounded bg-msg-muted/30"></div>
-              <div class="moment-detail__skeleton-line h-3 w-20 rounded bg-msg-muted/20"></div>
+              <div class="moment-detail__skeleton-line h-4 w-32 rounded bg-text-placeholder/30"></div>
+              <div class="moment-detail__skeleton-line h-3 w-20 rounded bg-text-placeholder/20"></div>
             </div>
           </div>
           <div class="moment-detail__skeleton-body space-y-2 mb-4">
-            <div class="moment-detail__skeleton-line h-4 w-full rounded bg-msg-muted/20"></div>
-            <div class="moment-detail__skeleton-line h-4 w-3/4 rounded bg-msg-muted/20"></div>
-            <div class="moment-detail__skeleton-line h-4 w-1/2 rounded bg-msg-muted/20"></div>
+            <div class="moment-detail__skeleton-line h-4 w-full rounded bg-text-placeholder/20"></div>
+            <div class="moment-detail__skeleton-line h-4 w-3/4 rounded bg-text-placeholder/20"></div>
+            <div class="moment-detail__skeleton-line h-4 w-1/2 rounded bg-text-placeholder/20"></div>
           </div>
-          <div class="moment-detail__skeleton-image h-32 max-w-sm rounded-lg bg-msg-muted/20"></div>
-          <div class="moment-detail__skeleton-actions flex items-center gap-6 mt-4 pt-3 border-t border-msg-divider">
-            <div class="moment-detail__skeleton-action h-5 w-10 rounded bg-msg-muted/20"></div>
-            <div class="moment-detail__skeleton-action h-5 w-10 rounded bg-msg-muted/20"></div>
-            <div class="moment-detail__skeleton-action h-5 w-10 rounded bg-msg-muted/20"></div>
+          <div class="moment-detail__skeleton-image h-32 max-w-sm rounded-lg bg-text-placeholder/20"></div>
+          <div class="moment-detail__skeleton-actions flex items-center gap-6 mt-4 pt-3 border-t border-border-lighter">
+            <div class="moment-detail__skeleton-action h-5 w-10 rounded bg-text-placeholder/20"></div>
+            <div class="moment-detail__skeleton-action h-5 w-10 rounded bg-text-placeholder/20"></div>
+            <div class="moment-detail__skeleton-action h-5 w-10 rounded bg-text-placeholder/20"></div>
           </div>
         </div>
       </div>
@@ -53,12 +53,13 @@
             <el-tab-pane :label="`评论${commentCountLabel}`" name="comment">
               <section
                 v-if="activeTab === 'comment' && commentMounted"
-                class="moment-detail__comment bg-msg-card rounded-lg border border-msg-border p-4"
+                class="moment-detail__comment bg-bg-overlay rounded-lg border border-border-light p-4"
               >
                 <LotteryCommentSection
                   :oid="detail.dynIdStr"
                   :type="COMMENT_TYPE.DYNAMIC"
                   :up-mid="detail.mid"
+                  :focus-rpid="focusRpid"
                   @count-change="handleCommentCountChange"
                 />
               </section>
@@ -68,7 +69,7 @@
             <el-tab-pane :label="`赞与转发`" name="repost">
               <section
                 v-if="activeTab === 'repost' && repostMounted"
-                class="moment-detail__repost bg-msg-card rounded-lg border border-msg-border p-4"
+                class="moment-detail__repost bg-bg-overlay rounded-lg border border-border-light p-4"
               >
                 <ul class="moment-detail__repost-list m-0 p-0 list-none divide-y divide-border-light">
                   <li
@@ -79,7 +80,7 @@
                     <!-- 类型图标 -->
                     <div
                       class="moment-detail__repost-icon shrink-0 flex items-center justify-center w-8 h-8 rounded-full"
-                      :class="entry.kind === 'like' ? 'bg-primary-light-3 text-primary' : 'bg-msg-main text-msg-muted'"
+                      :class="entry.kind === 'like' ? 'bg-primary-light-3 text-primary' : 'bg-bg-page text-text-placeholder'"
                     >
                       <el-icon :size="16">
                         <LikeIcon v-if="entry.kind === 'like'" />
@@ -95,26 +96,26 @@
                     />
 
                     <div class="moment-detail__repost-info flex-1 min-w-0">
-                      <el-text class="block truncate text-sm font-bold text-msg-text-active">
+                      <el-text class="block truncate text-sm font-bold text-text-primary">
                         {{ entry.uname || '未知用户' }}
-                        <el-text class="ml-1 text-xs text-msg-muted">
+                        <el-text class="ml-1 text-xs text-text-placeholder">
                           {{ entry.kind === 'like' ? '赞了这条动态' : '转发了这条动态' }}
                         </el-text>
                       </el-text>
                       <el-text
                         v-if="entry.kind === 'forward' && entry.text"
-                        class="block text-sm text-msg-muted whitespace-pre-line break-all"
+                        class="block text-sm text-text-placeholder whitespace-pre-line break-all"
                       >
                         {{ entry.text }}
                       </el-text>
-                      <el-text class="block text-xs text-msg-muted mt-1">
+                      <el-text class="block text-xs text-text-placeholder mt-1">
                         {{ formatRelativeTime(entry.time) }}
                       </el-text>
                     </div>
                   </li>
 
                   <li v-if="!repostEntries.length" class="py-8 text-center">
-                    <el-text class="text-sm text-msg-muted">还没有人赞过或转发过</el-text>
+                    <el-text class="text-sm text-text-placeholder">还没有人赞过或转发过</el-text>
                   </li>
                 </ul>
               </section>
@@ -127,38 +128,38 @@
     <!-- 右侧悬浮工具栏（随窗口滚动，对标 B 站） -->
     <aside
       v-if="detail"
-      class="moment-detail__toolbar fixed right-8 top-1/2 -translate-y-1/2 z-50 flex flex-col items-center gap-2 rounded-full bg-msg-card shadow-lg border border-msg-border px-2 py-4"
+      class="moment-detail__toolbar fixed right-8 top-1/2 -translate-y-1/2 z-50 flex flex-col items-center gap-2 rounded-full bg-bg-overlay shadow-lg border border-border-light px-2 py-4"
     >
       <!-- 点赞 -->
       <div class="moment-detail__toolbar-item flex flex-col items-center gap-0.5 cursor-pointer" @click="handleThumb(detail.dynIdStr)">
-        <el-icon :size="22" class="hover:text-msg-link" :class="{ 'text-msg-link': isLiked }">
+        <el-icon :size="22" class="hover:text-primary" :class="{ 'text-primary': isLiked }">
           <LikeIcon />
         </el-icon>
-        <span class="text-xs text-msg-muted">{{ formatNum(statLikeCount) }}</span>
+        <span class="text-xs text-text-placeholder">{{ formatNum(statLikeCount) }}</span>
       </div>
 
       <!-- 收藏 -->
       <div class="moment-detail__toolbar-item flex flex-col items-center gap-0.5 cursor-pointer" @click="showFavoriteDialog = true">
-        <el-icon :size="22" class="hover:text-msg-link"><FavoriteIcon /></el-icon>
-        <span class="text-xs text-msg-muted">{{ formatNum(statFavoriteCount) }}</span>
+        <el-icon :size="22" class="hover:text-primary"><FavoriteIcon /></el-icon>
+        <span class="text-xs text-text-placeholder">{{ formatNum(statFavoriteCount) }}</span>
       </div>
 
       <!-- 转发 -->
       <div class="moment-detail__toolbar-item flex flex-col items-center gap-0.5 cursor-pointer" @click="showRepostDialog = true">
-        <el-icon :size="22" class="hover:text-msg-link"><ForwardIcon /></el-icon>
-        <span class="text-xs text-msg-muted">{{ formatNum(statRepostCount) }}</span>
+        <el-icon :size="22" class="hover:text-primary"><ForwardIcon /></el-icon>
+        <span class="text-xs text-text-placeholder">{{ formatNum(statRepostCount) }}</span>
       </div>
 
       <!-- 评论 -->
       <div class="moment-detail__toolbar-item flex flex-col items-center gap-0.5 cursor-pointer" @click="switchToComment">
-        <el-icon :size="22" class="hover:text-msg-link"><CommentIcon /></el-icon>
-        <span class="text-xs text-msg-muted">{{ formatNum(statCommentCount) }}</span>
+        <el-icon :size="22" class="hover:text-primary"><CommentIcon /></el-icon>
+        <span class="text-xs text-text-placeholder">{{ formatNum(statCommentCount) }}</span>
       </div>
 
       <!-- 浏览（仅展示 stat.viewCount，不可点击） -->
       <div class="moment-detail__toolbar-item flex flex-col items-center gap-0.5 select-none">
-        <el-icon :size="22" class="text-msg-muted"><View /></el-icon>
-        <span class="text-xs text-msg-muted">{{ formatNum(statViewCount) }}</span>
+        <el-icon :size="22" class="text-text-placeholder"><View /></el-icon>
+        <span class="text-xs text-text-placeholder">{{ formatNum(statViewCount) }}</span>
       </div>
     </aside>
 
@@ -213,7 +214,6 @@ import MomentPublishForm from '@/components/moment/MomentPublishForm.vue'
 import MomentFavoriteDialog from '@/components/moment/MomentFavoriteDialog.vue'
 import ReportDialog from '@/components/moment/ReportDialog.vue'
 import { BiliImg } from '@/assets/img/BiliImg'
-import biliMessage from '@/utils/message'
 
 defineOptions({ name: 'MomentDetailView' })
 
@@ -221,6 +221,8 @@ const route = useRoute()
 const router = useRouter()
 // 动态 ID 为 19 位雪花 ID，超出 JS Number 安全范围，必须全程以字符串传递，否则精度丢失
 const momentId = String(route.params.momentId)
+// 定位直达的评论 rpid（来自互动通知跳转 query），传给评论区滚动定位
+const focusRpid = computed(() => String(route.query.rpid ?? '') || null)
 
 const detail = ref<MomentDetailResp | null>(null)
 const loading = ref(false)
@@ -395,9 +397,8 @@ function handleReport(dynIdStr: string) {
   reportDialogVisible.value = true
 }
 
-/** 2.22.1：删除确认与 API 已下沉 MomentCard，详情页删除成功返回上一页 */
+/** 2.22.1：删除确认与 API 已下沉 MomentCard，删除成功提示由 MomentCard 统一弹出（避免重复提示），详情页仅返回上一页 */
 function handleRemove(_dynIdStr: string) {
-  biliMessage.success('已删除')
   if (window.history.length > 1) {
     router.back()
   } else {

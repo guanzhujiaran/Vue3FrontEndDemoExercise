@@ -1,6 +1,6 @@
 <template>
   <div
-    class="moment-card bg-msg-card hover:bg-msg-card-hover rounded-lg border border-msg-border p-4 transition-colors"
+    class="moment-card bg-bg-overlay hover:bg-fill-light rounded-lg border border-border-light p-4 transition-colors"
   >
     <!-- 作者信息 -->
     <div class="moment-card__header flex items-center gap-3 mb-3">
@@ -32,7 +32,7 @@
         <div class="flex items-center gap-2">
           <!-- 用户名：点击跳用户空间（无悬浮卡片） -->
           <span
-            class="moment-card__username text-sm font-bold text-msg-text-active truncate cursor-pointer hover:text-msg-link"
+            class="moment-card__username text-sm font-bold text-text-primary truncate cursor-pointer hover:text-primary"
             @click.stop="handleAvatarClick"
           >
             {{ authorInfo?.uname || '未知用户' }}
@@ -48,14 +48,14 @@
           </el-tag>
         </div>
         <!-- 发布时间：仅点击时间标签跳详情页；日期旁展示 IP 属地 + 运营商（不可跳转） -->
-        <div class="moment-card__time text-xs text-msg-muted mt-1">
+        <div class="moment-card__time text-xs text-text-placeholder mt-1">
           <span
-            class="moment-card__time-label cursor-pointer hover:text-msg-link"
+            class="moment-card__time-label cursor-pointer hover:text-primary"
             @click.stop="handleClick"
           >{{ timeLabel }}</span>
           <span
             v-if="ipLocationLabel"
-            class="moment-card__ip-location ml-1.5 text-msg-muted/80"
+            class="moment-card__ip-location ml-1.5 text-text-placeholder/80"
           >
             · ip属地: {{ ipLocationLabel }}
           </span>
@@ -87,11 +87,11 @@
       <div
         v-for="t in topicModules"
         :key="t.topicId"
-        class="moment-card__topic-card flex items-center gap-2 rounded-md border border-msg-border bg-msg-main/50 px-3 py-2 cursor-pointer transition-colors hover:border-msg-link/50"
+        class="moment-card__topic-card flex items-center gap-2 rounded-md border border-border-light bg-bg-page/50 px-3 py-2 cursor-pointer transition-colors hover:border-primary/50"
         @click.stop="openTopic(t)"
       >
-        <el-icon class="moment-card__topic-icon text-msg-link shrink-0"><Collection /></el-icon>
-        <span class="moment-card__topic-name text-sm font-medium text-msg-link truncate">
+        <el-icon class="moment-card__topic-icon text-primary shrink-0"><Collection /></el-icon>
+        <span class="moment-card__topic-name text-sm font-medium text-primary truncate">
           #{{ t.topicName || `话题 ${t.topicId}` }}#
         </span>
       </div>
@@ -106,7 +106,7 @@
       >
         <MomentContentRenderer :nodes="descModule.nodes" />
       </div>
-      <el-text v-else class="text-sm text-msg-muted">暂无内容</el-text>
+      <el-text v-else class="text-sm text-text-placeholder">暂无内容</el-text>
     </div>
 
     <!-- 图片：对齐 B 站相册预览（单图等比限高 / grid2=2张268px / grid3=≥3张404px），
@@ -185,7 +185,7 @@
     <!-- 转发源（平铺展示原动态内容）：点击跳原动态详情 -->
     <div
       v-if="forwardModule"
-      class="moment-card__forward bg-msg-main rounded-md border border-msg-divider p-3 mb-3 cursor-pointer hover:bg-msg-card-hover transition-colors"
+      class="moment-card__forward bg-bg-page rounded-md border border-border-lighter p-3 mb-3 cursor-pointer hover:bg-fill-light transition-colors"
       @click.stop="handleSrcClick"
     >
       <!-- 方式一：嵌套原动态完整卡片（srcMoment） -->
@@ -196,10 +196,10 @@
             :size="24"
             :src="srcMomentAuthor?.face || BiliImg.face.noface"
           />
-          <span class="moment-card__forward-username text-sm font-bold text-msg-text-active truncate">
+          <span class="moment-card__forward-username text-sm font-bold text-text-primary truncate">
             {{ srcMomentAuthor?.uname || '未知用户' }}
           </span>
-          <span class="moment-card__forward-time text-xs text-msg-muted">
+          <span class="moment-card__forward-time text-xs text-text-placeholder">
             {{ srcMomentTime }}
           </span>
         </div>
@@ -207,7 +207,7 @@
           v-if="srcMomentDescNodes?.length"
           :nodes="srcMomentDescNodes"
         />
-        <el-text v-else class="text-sm text-msg-muted">暂无内容</el-text>
+        <el-text v-else class="text-sm text-text-placeholder">暂无内容</el-text>
         <!-- 原动态图片：B 站相册预览布局（单图等比 / grid2 / grid3），超出 9 张折叠「更多」 -->
         <div
           v-if="srcMomentImages.length > 0"
@@ -264,12 +264,12 @@
         <!-- 原动态若是转发，递归平铺（最多两层） -->
         <div
           v-if="srcMomentForwardModule"
-          class="moment-card__forward-nested bg-msg-card rounded-md border border-msg-divider p-2 mt-2"
+          class="moment-card__forward-nested bg-bg-overlay rounded-md border border-border-lighter p-2 mt-2"
           @click.stop="handleNestedSrcClick"
         >
           <div class="flex items-center gap-2 mb-1">
-            <span class="text-xs text-msg-muted">转发自</span>
-            <span class="text-xs font-bold text-msg-text-active truncate">
+            <span class="text-xs text-text-placeholder">转发自</span>
+            <span class="text-xs font-bold text-text-primary truncate">
               {{ nestedAuthor?.uname || '未知用户' }}
             </span>
           </div>
@@ -281,11 +281,11 @@
       </template>
       <!-- 方式二：旧结构（仅 uname + nodes，兼容历史数据） -->
       <template v-else>
-        <div class="text-xs text-msg-muted mb-1">
+        <div class="text-xs text-text-placeholder mb-1">
           <el-text size="small">{{ forwardAuthor }}:</el-text>
         </div>
         <MomentContentRenderer v-if="forwardDescNodes?.length" :nodes="forwardDescNodes" />
-        <el-text v-else class="text-sm text-msg-muted">转发内容不可见</el-text>
+        <el-text v-else class="text-sm text-text-placeholder">转发内容不可见</el-text>
       </template>
     </div>
 
@@ -304,7 +304,7 @@
     <!-- 评论区（inlineComment 模式：卡片内下拉展开，首次点击懒加载） -->
     <div
       v-if="inlineComment && showComments"
-      class="moment-card__comments mt-3 border-t border-msg-divider pt-3"
+      class="moment-card__comments mt-3 border-t border-border-lighter pt-3"
       @click.stop
     >
       <LotteryCommentSection
@@ -350,7 +350,6 @@ import type { MomentFeedItem, MomentModule, MomentContentNode } from '@/api/noti
 import { COMMENT_TYPE } from '@/api/lottery_comment'
 import LotteryCommentSection from '@/components/lottery_data/LotteryCommentSection.vue'
 import { BiliImg } from '@/assets/img/BiliImg'
-import biliMessage from '@/utils/message'
 import { useUserNavStore } from '@/stores/user_nav'
 import { useRpaAdminStore } from '@/stores/rpa_admin'
 
@@ -745,12 +744,15 @@ async function handleRemove() {
       await ElMessageBox.confirm('确定删除这条动态吗？', '确认删除', { type: 'warning' })
     }
     const res = isAdmin.value
-      ? await adminRemoveMoment(props.item.dynIdStr)
-      : await removeMoment(props.item.dynIdStr)
-    if (res) {
-      biliMessage.success('已删除')
-      emit('remove', props.item.dynIdStr)
-    }
+      ? await adminRemoveMoment(props.item.dynIdStr, {
+          showSuccessToast: true,
+          successMessage: '已删除',
+        })
+      : await removeMoment(props.item.dynIdStr, {
+          showSuccessToast: true,
+          successMessage: '已删除',
+        })
+    if (res) emit('remove', props.item.dynIdStr)
   } catch {
     // 用户取消或删除失败
   }

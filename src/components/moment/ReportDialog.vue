@@ -67,7 +67,6 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { REPORT_REASONS, reportByBiz } from '@/api/notify/moment-api'
-import biliMessage from '@/utils/message'
 
 const OTHER_REASON = 6 // ReportReasonEnum.OTHER
 
@@ -117,15 +116,20 @@ async function submit() {
   const validPics = pics.value.filter((p) => p && p.trim()).map((p) => p.trim())
   submitting.value = true
   try {
-    const res = await reportByBiz(props.bizType, props.bizId, reasonValue.value, desc, validPics)
-    if (res.code === 0) {
-      biliMessage.success('举报已提交，感谢你的反馈')
-      emit('submitted', res.data || { created: false, triggered: false })
+    const res = await reportByBiz(
+      props.bizType,
+      props.bizId,
+      reasonValue.value,
+      desc,
+      validPics,
+      {
+        showSuccessToast: true,
+        successMessage: '举报已提交，感谢你的反馈',
+      }
+    )
+    if (res) {
+      emit('submitted', res)
       visible.value = false
-    } else if (res.code === 403) {
-      biliMessage.warning(res.msg || '举报失败')
-    } else {
-      biliMessage.warning(res.msg || '举报提交失败')
     }
   } finally {
     submitting.value = false

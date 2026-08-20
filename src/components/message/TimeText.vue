@@ -1,5 +1,5 @@
 <template>
-  <span class="message-time-text text-sm text-msg-muted">{{ display }}</span>
+  <span class="message-time-text text-sm text-text-placeholder">{{ display }}</span>
 </template>
 
 <script setup lang="ts">

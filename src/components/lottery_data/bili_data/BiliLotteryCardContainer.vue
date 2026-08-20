@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, reactive } from 'vue'
+import { computed, reactive, watch } from 'vue'
 import BiliLotteryCard from '@/components/lottery_data/bili_data/BiliLotteryCard.vue'
 import type {
   DynamicLotteryData,
@@ -40,17 +40,37 @@ const bizIds = computed(() => {
   return [...ids]
 })
 
-onMounted(async () => {
-  if (bizIds.value.length === 0) return
-  try {
-    const res = await fetchInteractionStatus('lottery' as any, bizIds.value)
-    for (const item of res?.items ?? []) {
-      if (item?.bizId) statusMap[item.bizId] = item
+// 切页（分页/翻页 data 变化）时重新拉取本页互动状态：
+// watch bizKey（bizIds 排序后拼接），内容不变去重跳过、空页清空；
+// 请求序号 guard 丢弃过期响应，避免快速切页时旧页结果覆盖新页。
+let lastLoadedKey = ''
+let loadSeq = 0
+watch(
+  computed(() => bizIds.value.slice().sort().join(',')),
+  async (key) => {
+    const seq = ++loadSeq
+    if (!key) {
+      lastLoadedKey = ''
+      for (const k of Object.keys(statusMap)) delete statusMap[k]
+      return
     }
-  } catch {
-    // 弱依赖：批量拉取失败，卡片显示默认未互动状态
-  }
-})
+    if (key === lastLoadedKey) return
+    lastLoadedKey = key
+    try {
+      const res = await fetchInteractionStatus('lottery' as any, bizIds.value)
+      if (seq !== loadSeq) return // 过期响应（期间又切页）丢弃
+      // 整页替换：清掉旧状态再写入新页
+      for (const k of Object.keys(statusMap)) delete statusMap[k]
+      for (const item of res?.items ?? []) {
+        if (item?.bizId) statusMap[item.bizId] = item
+      }
+    } catch {
+      lastLoadedKey = '' // 拉取失败：允许下次（切页/内容变化）重试
+      // 弱依赖：失败不清空已展示状态
+    }
+  },
+  { immediate: true }
+)
 
 /** 卡片点赞/收藏变更后更新容器状态（供同页其它卡片 / 后续回显一致） */
 function handleStatusChange(payload: { bizId: string; status: Partial<InteractionStatusItem> }) {

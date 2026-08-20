@@ -1,7 +1,7 @@
 <template>
   <div class="reply-list h-full flex flex-col">
     <div class="reply-list__toolbar mb-4 flex items-center justify-between">
-      <h2 class="reply-list__title text-base font-bold text-msg-text-active">{{ t('message.navReplies') }}</h2>
+      <h2 class="reply-list__title text-base font-bold text-text-primary">{{ t('message.navReplies') }}</h2>
       <el-button
         v-if="unreadCount > 0"
         type="primary"
@@ -40,14 +40,16 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import biliMessage from '@/utils/message'
+import { useRouter } from 'vue-router'
 import {
   fetchEventList,
   markEventRead,
   type EventFeedItem
 } from '@/api/notify/message-api'
+import { openEventDetail } from '@/utils/eventJump'
 
 const { t } = useI18n()
+const router = useRouter()
 import LoadingWrap from '@/components/message/LoadingWrap.vue'
 import EmptyState from '@/components/message/EmptyState.vue'
 import EventItemCard from '@/components/message/EventItemCard.vue'
@@ -87,16 +89,15 @@ async function loadMore() {
 }
 
 async function markAllRead() {
-  const res = await markEventRead({ event_type: 'reply' })
-  if (res.affected > 0) {
-    emit('refreshUnread')
-    biliMessage.success(t('message.markAllRead'))
-  }
+  const res = await markEventRead(
+    { event_type: 'reply' },
+    { showSuccessToast: true, successMessage: t('message.markAllRead') }
+  )
+  if (res.affected > 0) emit('refreshUnread')
 }
 
 function openDetail(item: EventFeedItem) {
-  const uri = item.item?.uri
-  if (uri) window.open(uri, '_blank')
+  void openEventDetail(item, router)
 }
 
 onMounted(load)

@@ -60,7 +60,7 @@ const res = await listNotifyApiV1MessageNotifyListGet({ query: { page: 1, size: 
 ### Phase 1 — 通知中心（M1，核心）
 
 - [x] 通知列表页 `NotifyListView.vue`：分页、按 `NotifyLevelEnum`（normal/important/urgent）与 `NotifyStatusEnum` 筛选、类型图标、相对时间。
-- [x] UI 对齐 Bilibili 消息中心：左侧导航（我的消息 / 回复我的 / @我的 / 收到的赞 / 系统通知 / 消息设置）、暗色主题、`flex-1` 内部滚动、入口收敛到顶部头像下拉菜单。
+- [x] UI 对齐 Bilibili 消息中心：左侧导航（我的消息 / 回复我的 / @我的 / 收到的赞 / 系统通知 / 消息设置）、直接使用 Element Plus 语义化类（`bg-bg-page`/`bg-bg`/`text-text-primary` 等，亮/暗模式自动切换；仅粉色 `msg-pink` 保留特殊色号）、`flex-1` 内部滚动、入口收敛到顶部头像下拉菜单。
 - [x] 标记已读：`readNotify…Post`（支持批量 `NotifyReadReq.notify_ids`）。
 - [x] 删除通知：`deleteNotify…Post`。
 - [x] 未读角标联动：进入页面/心跳刷新时更新 `stores/message_unread`。
@@ -85,6 +85,12 @@ const res = await listNotifyApiV1MessageNotifyListGet({ query: { page: 1, size: 
 - [ ] （可选）事件上报调试表单 `reportEvent…Post`（便于自测）。
 - [ ] **`GET /event/list` 对齐 B 站 `x/msgfeed/*` 聚合结构**：后端 `EventListResp` 从「单事件明细」改为「按 source_type+source_id 聚合」：`data.latest`（最新若干条）+ `data.total`（cursor 分页，`items[]` 每条含 `users[]` 完整触发者数组 + `item` 内容实体 + `counts` 人数）；前端 `fetchEventList`/`AtListView`/`ReplyListView`/`LikeListView` 同步改解析。涉及 hey-api SDK 重新生成（需手动同步）。
 - [ ] **触发者展示收敛**：后端 `users[]` 单条最多 4 个（去重后），删除 `follow` 字段；前端 `EventItemCard` 按 B 站样式：左侧最多 2 个头像堆叠 + 中间「用户 + 动作 + 等N人」+ 右侧「内容预览 + 视频封面」。涉及 hey-api SDK 重新生成（需手动同步）。
+- [x] **互动通知点击跳转（bizType + bizId 定位原资源）**：后端 `EventMsgfeedContent` 新增 `biz_id`（见后端 `docs/消息系统实现计划书.md` Phase J，`business`=bizType、`biz_id`=bizId 唯一定位原资源）。前端 `ReplyListView` / `AtListView` / `LikeListView` 的 `openDetail` 改为按 `item.item.business` + `item.item.biz_id` 分发（抽公共函数 `openEventDetail`，位于 `src/utils/eventJump.ts`）：
+  - `dynamic`（bizId=dynId）→ `router.push` `MOMENT_DETAIL`（`params.momentId=bizId`）；
+  - `comment`（bizId=rpid）→ 调 `commentApi.detail(rpid)` 拿 `oid + type`：`type=dynamic` 跳 `MOMENT_DETAIL`（`query.rpid` 定位该评论）、`type=lottery` 跳 `LOTTERY_CARD_DETAIL`（`query.id=oid&query.rpid`，已有 focusRpid 支持）、其余回落 `uri`；
+  - `lottery`（bizId=lotteryId）→ `LOTTERY_CARD_DETAIL`（`query.id=bizId`）；
+  - 其它 / `biz_id` 为空 → 回落 `item.item.uri` 外链。
+  同时 `MomentDetailView` 支持 `route.query.rpid` 透传给 `LotteryCommentSection.focusRpid`（评论区加载后滚动高亮）。`lottery_comment.ts` 新增 `commentApi.detail(rpid)` 封装。涉及 hey-api SDK 重新生成（需手动同步）。
 
 ### Phase 4 — 私信（M4）
 
@@ -131,6 +137,19 @@ const res = await listNotifyApiV1MessageNotifyListGet({ query: { page: 1, size: 
 - [ ] 后端联调：本地 `docker compose up be-message-service` 起服务，逐模块用真实接口走通 happy path 与异常路径。
 - [ ] 文档补充：在 `README.md` 记录消息系统前端路由、所需权限、环境变量。
 
+### Phase 8 — 布局统一与通用化
+
+- [ ] **通用布局提取 `BiliSideNavLayout`**：将 `MessageLayout.vue`（`/app/message`）的「左侧小菜单栏（`el-menu`，可折叠）+ 右侧 header 小标题 + 内容区」布局骨架提取为通用组件 `src/components/CommonCompo/Bili-Container-Compo/BiliSideNavLayout.vue`（直接使用 Element Plus 语义化类：`bg-bg-page`/`bg-bg`/`text-text-primary`，跟随亮/暗主题自动切换）。
+  - Props：`navGroups`（分组菜单：`{ title?, items: { name, title, shortTitle?, icon?, badge?, badgeValue? }[] }`）、`collapsible`（默认 true）。
+  - 折叠/展开切换逻辑内置在组件内，按钮行置顶；按钮内容分两个具名插槽——`collapse-expanded`（展开态显示的具体内容，默认 `Fold` 图标按钮）/ `collapse-collapsed`（折叠态显示的 icon，默认 `Expand` 图标按钮），外部可自行传入文案/样式。
+  - **收起态短标题**：菜单项支持 `shortTitle` 短标题（未提供时回退取 `title` 首字符）。展开态菜单项横排显示「icon + 完整 `title`（+ badge）」，收起态仅显示「icon + 图标下方 `shortTitle`」竖排布局，形成大图（带全称文字）/小图（带简称文字）两套形态。
+  - **布丁弹性动画**：折叠/展开时侧边栏宽度用回弹曲线过渡 + 果冻摇摆（`scaleX` 先冲过再回弹，duang duang 感），折叠按钮图标同时做左右摇摆（`wobble`）；动画按 Tailwind 4 规范在 `src/assets/theme.css` 的 `@theme` 块内定义 `--animate-sidenav-jelly` / `--animate-sidenav-wobble` 变量（含对应 `@keyframes`），组件内通过 `animate-sidenav-jelly` / `animate-sidenav-wobble` 工具类使用，不写 `<style>`。
+  - 内部：`activeIndex` 由 `route.name` 计算、`handleSelect` 跳 `router.push`、`pageTitle` 取 `route.meta.title`；`header-extra` 具名插槽支持 header 右侧按钮。
+- [ ] **统一三处布局**：`MessageLayout.vue`（消息中心）/ `MomentLayout.vue`（`/app/moment` 动态）/ `AdminLayout.vue`（`/app/admin` 审核）全部复用 `BiliSideNavLayout`，保持「左侧小菜单栏、右侧主要内容、顶部小标题」统一样式，**三处均启用折叠**（默认 `collapsible=true`）：展开时显示带全称文字的导航、折叠时显示 icon + 短标题（`shortTitle`，未提供回退 `title` 首字符）的导航，形成两套左侧导航形态，仅保留业务差异：
+  - 消息：6 个菜单项 + 未读 badge + keep-alive 子页 + 未登录拦截；
+  - 动态：动态广场/话题广场 + 管理员「审核队列」入口 + header「发布动态」按钮 + Feed keep-alive；
+  - 审核：按 `isRpaAdmin`/`isMessageRoot` 权限分组的导航（RPA 管理/消息管理端/动态管理端/用户管理端），子页 `router-view` 直接渲染。
+
 ---
 
 ## 四、实现规范（必须遵守，与项目既有规则一致）
@@ -141,6 +160,7 @@ const res = await listNotifyApiV1MessageNotifyListGet({ query: { page: 1, size: 
 4. **数据层隔离**：业务组件只调用 Phase 0 封装的 `message-api.ts`，不要直接散落 hey-api 函数；类型从 `types.gen.ts` 引用，不重复定义。
 5. **错误处理**：统一走封装层的错误兜底 + `ElMessage` 提示，列表/表单需有 loading 与空态。
 6. **增量推进**：按 Phase 顺序实现，每完成一项打勾；一个模块跑通 happy path 后再进入下一个模块。
+7. **分页器收敛到表格 footer**：使用 `el-table-v2` 的管理列表页（如 `CommentAdminView.vue` / `DmAdminView.vue` / `NotifyAdminView.vue`），分页器统一放入表格 `#footer` 插槽，并同步传 `:footer-height`（等于 `PaginationBar` 实际高度，默认 64px；`total <= pageSize` 不显示分页时传 0），不再在表格容器外单独放置 `PaginationBar`。非 `el-table-v2` 的列表（`el-table`、普通列表）保持现状。
 
 ---
 

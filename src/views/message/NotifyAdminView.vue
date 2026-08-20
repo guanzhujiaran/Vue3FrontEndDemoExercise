@@ -1,89 +1,108 @@
 <template>
   <div class="notify-admin">
     <div class="notify-admin__toolbar mb-4 flex items-center justify-between">
-      <h2 class="text-lg font-bold text-msg-text-active">{{ t('message.notifyAdminTitle') }}</h2>
-      <el-button
-        type="primary"
-        size="default"
-        class="notify-admin__create"
-        @click="openCreate"
-      >
+      <h2 class="text-lg font-bold text-text-primary">{{ t('message.notifyAdminTitle') }}</h2>
+      <el-button type="primary" size="default" class="notify-admin__create" @click="openCreate">
         {{ t('message.publishNotify') }}
       </el-button>
     </div>
 
     <LoadingWrap :loading="loading" :rows="6">
       <EmptyState v-if="items.length === 0" :text="t('message.noNotifyRecord')" />
-      <el-table v-else :data="items" class="notify-admin__table" border stripe>
-        <el-table-column prop="id" :label="t('message.colId')" width="80" />
-        <el-table-column prop="title" :label="t('message.colTitle')" min-width="180" show-overflow-tooltip />
-        <el-table-column :label="t('message.colLevel')" width="100">
-          <template #default="{ row }">
-            <el-tag :type="levelTag(row.level)" size="default" effect="light">
-              {{ levelText(row.level) }}
-            </el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column :label="t('message.colStatus')" width="110">
-          <template #default="{ row }">
-            <el-tag :type="statusTag(row.status)" size="default" effect="plain">
-              {{ statusText(row.status) }}
-            </el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column :label="t('message.colTarget')" width="140">
-          <template #default="{ row }">
-            <span class="text-sm text-msg-muted">{{ targetText(row) }}</span>
-          </template>
-        </el-table-column>
-        <el-table-column :label="t('message.colPublishTime')" width="170">
-          <template #default="{ row }">
-            <TimeText :time="row.publish_at" />
-          </template>
-        </el-table-column>
-        <el-table-column :label="t('message.colAction')" width="200" fixed="right">
-          <template #default="{ row }">
-            <el-button size="default" @click="openEdit(row)">{{ t('message.editNotify') }}</el-button>
-            <el-button
-              v-if="row.status !== 'revoked'"
-              size="default"
-              type="warning"
-              @click="revoke(row)"
-            >
-              {{ t('message.deleteNotify') }}
-            </el-button>
-          </template>
-        </el-table-column>
-      </el-table>
+      <!-- 父容器固定高度，由 AutoResizer 自动测量并传给表格 width/height；滚动条落在表格内部，不依赖外侧布局滚动 -->
+      <div v-else class="notify-admin__table h-[calc(100vh-260px)] min-h-105">
+        <el-auto-resizer>
+          <template #default="{ height, width }">
+            <el-table-v2  :columns="notifyColumns" :data="items" :width="width" :height="height" :row-height="56"
+              :header-height="44" :footer-height="total > pageSize ? 64 : 0" row-key="id" fixed>
+              <template #header-cell="{ column }">
+                <span class="notify-admin__th font-medium text-text-primary">{{ column.title }}</span>
+              </template>
 
-      <PaginationBar
-        v-if="total > pageSize"
-        class="notify-admin__pagination"
-        :total="total"
-        :page-size="pageSize"
-        :current-page="page"
-        @update:current-page="onPageChange"
-      />
+              <template #cell="{ column, rowData }">
+                <!-- 正文（含 #{文本}{"url"} 内联链接），多行截断，悬停 title 展示全文 -->
+                <template v-if="column.key === 'content'">
+                  <div
+                    class="notify-admin__content line-clamp-2 whitespace-pre-wrap text-sm leading-6 text-text-primary"
+                    :title="rowData.content">
+                    <template v-for="(seg, idx) in renderNotifySegments(rowData.content)" :key="idx">
+                      <a v-if="seg.url" :href="seg.url" :target="isExternalUrl(seg.url) ? '_blank' : '_self'"
+                        rel="noopener" class="notify-admin__content-link font-medium text-primary hover:underline"
+                        @click="onInlineLink($event, seg.url)">{{ seg.text }}</a>
+                      <template v-else>{{ seg.text }}</template>
+                    </template>
+                  </div>
+                </template>
+
+                <!-- 级别 -->
+                <template v-else-if="column.key === 'level'">
+                  <el-tag :type="levelTag(rowData.level)" size="default" effect="light">
+                    {{ levelText(rowData.level) }}
+                  </el-tag>
+                </template>
+
+                <!-- 状态 -->
+                <template v-else-if="column.key === 'status'">
+                  <el-tag :type="statusTag(rowData.status)" size="default" effect="plain">
+                    {{ statusText(rowData.status) }}
+                  </el-tag>
+                </template>
+
+                <!-- 目标 -->
+                <template v-else-if="column.key === 'target'">
+                  <span class="text-sm text-text-placeholder">{{ targetText(rowData) }}</span>
+                </template>
+
+                <!-- 发布时间 -->
+                <template v-else-if="column.key === 'publish_at'">
+                  <TimeText :time="rowData.publish_at" />
+                </template>
+
+                <!-- 操作 -->
+                <template v-else-if="column.key === 'actions'">
+                  <el-button size="default" @click="openEdit(rowData)">{{ t('message.editNotify') }}</el-button>
+                  <el-button v-if="rowData.status !== 'revoked'" size="default" type="warning" @click="revoke(rowData)">
+                    {{ t('message.deleteNotify') }}
+                  </el-button>
+                </template>
+
+                <!-- 其余简单列（id / title） -->
+                <template v-else>
+                  <span class="text-sm text-text-primary">{{ rowData[column.dataKey as keyof NotifyAdminItem] }}</span>
+                </template>
+              </template>
+
+              <template #empty>
+                <div class="flex h-full items-center justify-center">
+                  <el-empty :description="t('message.noNotifyRecord')" :image-size="80" />
+                </div>
+              </template>
+
+              <template #footer>
+                <PaginationBar
+                  class="notify-admin__pagination"
+                  :total="total"
+                  :page-size="pageSize"
+                  :current-page="page"
+                  @update:current-page="onPageChange"
+                />
+              </template>
+            </el-table-v2>
+          </template>
+        </el-auto-resizer>
+      </div>
     </LoadingWrap>
 
-    <el-dialog
-      v-model="dialogVisible"
-      :title="editingId ? t('message.notifyDialogEdit') : t('message.notifyDialogCreate')"
-      width="560px"
-      class="notify-admin__dialog"
-    >
+    <el-dialog v-model="dialogVisible"
+      :title="editingId ? t('message.notifyDialogEdit') : t('message.notifyDialogCreate')" width="560px"
+      class="notify-admin__dialog">
       <el-form :model="form" label-width="90px" class="notify-admin__form">
         <el-form-item :label="t('message.notifyFormTitle')" required>
           <el-input v-model="form.title" size="default" :placeholder="t('message.notifyFormTitle')" />
         </el-form-item>
         <el-form-item :label="t('message.notifyFormContent')" required>
-          <el-input
-            v-model="form.content"
-            type="textarea"
-            :rows="4"
-            size="default"
-            :placeholder="t('message.notifyFormContent')"
-          />
+          <el-input v-model="form.content" type="textarea" :rows="4" size="default"
+            :placeholder="t('message.notifyFormContent')" />
         </el-form-item>
         <el-form-item :label="t('message.notifyFormLevel')">
           <el-select v-model="form.level" size="default" class="w-full">
@@ -102,11 +121,8 @@
           </el-select>
         </el-form-item>
         <el-form-item :label="t('message.notifyFormTargetValue')">
-          <el-input
-            v-model="form.target_value"
-            size="default"
-            :placeholder="t('message.notifyTargetValuePlaceholder')"
-          />
+          <el-input v-model="form.target_value" size="default"
+            :placeholder="t('message.notifyTargetValuePlaceholder')" />
         </el-form-item>
         <el-form-item :label="t('message.notifyFormJumpUrl')">
           <el-input v-model="form.jump_url" size="default" :placeholder="t('message.notifyJumpPlaceholder')" />
@@ -127,10 +143,14 @@
 
 <script setup lang="ts">
 import { onMounted, reactive, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
+import { TableV2FixedDir, type Column } from 'element-plus'
 import biliMessage from '@/utils/message'
+import { isExternalUrl, renderNotifySegments } from '@/utils/notifyContent'
 
 const { t } = useI18n()
+const router = useRouter()
 import {
   fetchAdminNotifyList,
   createNotify,
@@ -154,6 +174,21 @@ const total = ref(0)
 const page = ref(1)
 const pageSize = 20
 
+// el-table-v2 列定义。
+// 注意：el-table-v2 只有在存在 fixed 列时，body 宽度才会取 max(容器宽度, 列宽总和)，
+// 列宽总和超出容器才会出现横向滚动条；无任何 fixed 列时列会被压缩进容器、永不横向滚动。
+// 这里标题/正文用 flexGrow 自动分配剩余宽度，操作列固定右侧，窄容器下自动出现横向滚动。
+const notifyColumns: Column<NotifyAdminItem>[] = [
+  { key: 'id', title: t('message.colId'), width: 90, minWidth: 90, dataKey: 'id' },
+  { key: 'title', title: t('message.colTitle'), width: 220, minWidth: 220, dataKey: 'title', flexGrow: 1 },
+  { key: 'content', title: t('message.colContent'), width: 480, minWidth: 480, flexGrow: 2 },
+  { key: 'level', title: t('message.colLevel'), width: 110, minWidth: 110 },
+  { key: 'status', title: t('message.colStatus'), width: 120, minWidth: 120 },
+  { key: 'target', title: t('message.colTarget'), width: 160, minWidth: 160 },
+  { key: 'publish_at', title: t('message.colPublishTime'), width: 180, minWidth: 180 },
+  { key: 'actions', title: t('message.colAction'), width: 230, minWidth: 230, fixed: TableV2FixedDir.RIGHT }
+]
+
 const dialogVisible = ref(false)
 const submitting = ref(false)
 const editingId = ref<number | null>(null)
@@ -170,8 +205,8 @@ const form = reactive<CreateNotifyPayload & { target_type: NotifyTargetType }>({
 async function load() {
   loading.value = true
   const list = await fetchAdminNotifyList({ page: page.value, size: pageSize })
-  items.value = list.items
-  total.value = list.total
+  items.value = list.items ?? []
+  total.value = list.total ?? 0
   loading.value = false
 }
 
@@ -234,24 +269,29 @@ async function submit() {
       level: payload.level,
       status: payload.publish_now ? 'published' : 'draft'
     }
-    res = await updateNotify(editingId.value, upd)
+    res = await updateNotify(editingId.value, upd, {
+      showSuccessToast: true,
+      successMessage: t('message.notifyUpdated'),
+    })
   } else {
-    res = await createNotify(payload)
+    res = await createNotify(payload, {
+      showSuccessToast: true,
+      successMessage: t('message.notifyPublished'),
+    })
   }
   submitting.value = false
   if (res) {
-    biliMessage.success(editingId.value != null ? t('message.notifyUpdated') : t('message.notifyPublished'))
     dialogVisible.value = false
     await load()
   }
 }
 
 async function revoke(row: NotifyAdminItem) {
-  const ok = await revokeNotify(row.id)
-  if (ok) {
-    biliMessage.success(t('message.notifyRevoked'))
-    await load()
-  }
+  const ok = await revokeNotify(row.id, {
+    showSuccessToast: true,
+    successMessage: t('message.notifyRevoked'),
+  })
+  if (ok) await load()
 }
 
 function levelTag(level: NotifyLevel): 'info' | 'warning' | 'danger' {
@@ -284,6 +324,14 @@ function targetText(row: NotifyAdminItem): string {
   }
   const prefix = map[row.target_type] ?? row.target_type
   return row.target_value ? `${prefix}:${row.target_value}` : prefix
+}
+
+/** 正文中点击内联链接：站内路径走 SPA 路由，外链交给浏览器新开标签。 */
+function onInlineLink(ev: MouseEvent, url: string) {
+  if (!isExternalUrl(url)) {
+    ev.preventDefault()
+    router.push(url)
+  }
 }
 
 onMounted(load)

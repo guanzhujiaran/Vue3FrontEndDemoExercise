@@ -15,12 +15,12 @@
         <button
           v-for="folder in folders"
           :key="folder.folderId"
-          class="moment-favorite-dialog__folder-item flex items-center gap-3 p-2.5 rounded-lg border border-msg-border hover:border-msg-link/60 cursor-pointer transition-colors text-left"
+          class="moment-favorite-dialog__folder-item flex items-center gap-3 p-2.5 rounded-lg border border-border-light hover:border-primary/60 cursor-pointer transition-colors text-left"
           @click="toggleFolder(folder)"
         >
           <!-- 封面 -->
           <div
-            class="moment-favorite-dialog__cover shrink-0 w-12 h-12 rounded-lg bg-msg-main flex items-center justify-center overflow-hidden"
+            class="moment-favorite-dialog__cover shrink-0 w-12 h-12 rounded-lg bg-bg-page flex items-center justify-center overflow-hidden"
           >
             <img
               v-if="folder.coverUrl"
@@ -28,7 +28,7 @@
               :src="folder.coverUrl"
               :alt="folder.name"
             />
-            <el-icon v-else :size="20" class="text-msg-muted"><Star /></el-icon>
+            <el-icon v-else :size="20" class="text-text-placeholder"><Star /></el-icon>
           </div>
           <!-- 信息 -->
           <div class="moment-favorite-dialog__info flex-1 min-w-0">
@@ -36,13 +36,13 @@
               <span class="text-sm font-medium truncate">{{ folder.name }}</span>
               <el-tag v-if="folder.isDefault" size="small" type="info" class="ml-1! shrink-0">默认</el-tag>
             </div>
-            <div v-if="folder.description" class="text-xs text-msg-muted truncate">{{ folder.description }}</div>
+            <div v-if="folder.description" class="text-xs text-text-placeholder truncate">{{ folder.description }}</div>
           </div>
           <!-- 状态 -->
           <el-icon
             :size="18"
             class="moment-favorite-dialog__check shrink-0"
-            :class="isFavInFolder(folder.folderId) ? 'text-primary' : 'text-msg-muted/40'"
+            :class="isFavInFolder(folder.folderId) ? 'text-primary' : 'text-text-placeholder/40'"
           >
             <Select :class="isFavInFolder(folder.folderId) ? '' : 'opacity-0'" />
           </el-icon>
@@ -57,7 +57,7 @@
 
       <!-- 新建收藏夹 -->
       <el-collapse-transition>
-        <div v-if="showCreate" class="moment-favorite-dialog__create mt-3 pt-3 border-t border-msg-border flex flex-col gap-2">
+        <div v-if="showCreate" class="moment-favorite-dialog__create mt-3 pt-3 border-t border-border-light flex flex-col gap-2">
           <el-input
             v-model="createForm.name"
             class="moment-favorite-dialog__create-name"
@@ -95,7 +95,7 @@
         </div>
       </el-collapse-transition>
 
-      <div v-if="!showCreate" class="moment-favorite-dialog__create-entry mt-3 pt-3 border-t border-msg-border">
+      <div v-if="!showCreate" class="moment-favorite-dialog__create-entry mt-3 pt-3 border-t border-border-light">
         <el-button
           class="moment-favorite-dialog__create-entry-btn"
           size="default"
@@ -179,18 +179,13 @@ async function load() {
 
 async function toggleFolder(folder: FavoriteFolderResp) {
   const already = isFavInFolder(folder.folderId)
-  try {
-    if (already) {
-      await removeFavorite(props.dynId, folder.folderId, favOptions())
-      favFolderIds.value.delete(folder.folderId)
-    } else {
-      await addFavorite(props.dynId, folder.folderId, favOptions())
-      favFolderIds.value.add(folder.folderId)
-    }
-    emit('changed')
-  } catch {
-    biliMessage.error('操作失败，请稍后重试')
-  }
+  const ok = already
+    ? await removeFavorite(props.dynId, folder.folderId, favOptions())
+    : await addFavorite(props.dynId, folder.folderId, favOptions())
+  if (!ok) return // 失败提示已由统一封装按后端响应弹出
+  if (already) favFolderIds.value.delete(folder.folderId)
+  else favFolderIds.value.add(folder.folderId)
+  emit('changed')
 }
 
 async function handleCreate() {
@@ -203,16 +198,16 @@ async function handleCreate() {
       coverUrl: createForm.value.coverUrl || undefined,
     })
     if (folder) {
-      await addFavorite(props.dynId, folder.folderId, favOptions())
-      favFolderIds.value.add(folder.folderId)
-      folders.value.push(folder)
-      emit('changed')
-      biliMessage.success('已收藏')
-      showCreate.value = false
-      createForm.value = { name: '', description: '', coverUrl: '' }
+      const ok = await addFavorite(props.dynId, folder.folderId, favOptions())
+      if (ok) {
+        favFolderIds.value.add(folder.folderId)
+        folders.value.push(folder)
+        emit('changed')
+        biliMessage.success('已收藏')
+        showCreate.value = false
+        createForm.value = { name: '', description: '', coverUrl: '' }
+      }
     }
-  } catch {
-    biliMessage.error('创建失败，请稍后重试')
   } finally {
     creating.value = false
   }

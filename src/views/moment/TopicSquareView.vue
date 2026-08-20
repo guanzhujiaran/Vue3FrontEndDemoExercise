@@ -26,11 +26,11 @@
         <div
           v-for="item in items"
           :key="item.topicId"
-          class="topic-square__card bg-msg-card hover:bg-msg-card-hover rounded-lg border border-msg-border p-4 transition-colors cursor-pointer"
+          class="topic-square__card bg-bg-overlay hover:bg-fill-light rounded-lg border border-border-light p-4 transition-colors cursor-pointer"
           @click="openTopic(item)"
         >
           <!-- 封面 -->
-          <div class="topic-square__cover aspect-video rounded-md overflow-hidden mb-3 bg-msg-sidebar">
+          <div class="topic-square__cover aspect-video rounded-md overflow-hidden mb-3 bg-bg">
             <img
               v-if="item.topicCover"
               :src="item.topicCover"
@@ -38,14 +38,14 @@
               loading="lazy"
               :alt="item.topicName"
             />
-            <div v-else class="w-full h-full flex items-center justify-center text-msg-muted text-2xl">
+            <div v-else class="w-full h-full flex items-center justify-center text-text-placeholder text-2xl">
               #
             </div>
           </div>
           <!-- 信息 -->
           <div class="topic-square__info">
             <div class="flex items-center gap-2">
-              <span class="topic-square__name text-sm font-bold text-msg-text-active truncate">
+              <span class="topic-square__name text-sm font-bold text-text-primary truncate">
                 #{{ item.topicName }}#
               </span>
               <el-tag v-if="isMineMode" size="default" :type="auditTagType(item)" effect="light">
@@ -53,7 +53,7 @@
               </el-tag>
               <el-tag v-else-if="item.isHot" size="default" type="danger">热门</el-tag>
             </div>
-            <div class="topic-square__meta flex items-center gap-3 mt-2 text-xs text-msg-muted">
+            <div class="topic-square__meta flex items-center gap-3 mt-2 text-xs text-text-placeholder">
               <span>{{ formatNum(item.dynCount) }} 条动态</span>
               <span>{{ formatNum(item.viewCount) }} 浏览</span>
             </div>
@@ -123,7 +123,7 @@
             placeholder="请输入图片 http/https 链接（选填）"
           />
         </el-form-item>
-        <el-text class="topic-create-dialog__tip text-xs text-msg-muted" tag="p">
+        <el-text class="topic-create-dialog__tip text-xs text-text-placeholder" tag="p">
           创建后将进入审核，审核通过后才会公开展示。
         </el-text>
       </el-form>

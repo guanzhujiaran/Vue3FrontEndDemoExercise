@@ -213,10 +213,10 @@ onMounted(() => {
 
 <template>
   <div class="message-admin-permission flex flex-col gap-4">
-    <div class="message-admin-permission__toolbar flex items-center justify-between bg-msg-card px-4 py-3 rounded-lg">
+    <div class="message-admin-permission__toolbar flex items-center justify-between bg-bg-overlay px-4 py-3 rounded-lg">
       <div class="flex flex-col gap-1">
-        <el-text class="text-msg-text-active font-medium">{{ t('message.permTitle') }}</el-text>
-        <span class="text-msg-muted text-xs">
+        <el-text class="text-text-primary font-medium">{{ t('message.permTitle') }}</el-text>
+        <span class="text-text-placeholder text-xs">
           {{ t('message.permSubtitle') }}
         </span>
       </div>
@@ -225,7 +225,7 @@ onMounted(() => {
       </el-button>
     </div>
 
-    <div class="message-admin-permission__table bg-msg-card rounded-lg p-4" v-loading="loading">
+    <div class="message-admin-permission__table bg-bg-overlay rounded-lg p-4" v-loading="loading">
       <el-table
         :data="admins"
         row-key="mid"
@@ -292,10 +292,10 @@ onMounted(() => {
 
           <div
             v-if="selectedSearchUser"
-            class="user-search__selected mt-2 flex items-center gap-2 rounded-lg bg-msg-main p-2"
+            class="user-search__selected mt-2 flex items-center gap-2 rounded-lg bg-bg-page p-2"
           >
             <el-avatar :size="28" :src="selectedSearchUser.avatar || BiliImg.face.noface" referrerpolicy="no-referrer" />
-            <span class="font-medium text-msg-text-active">{{ selectedSearchUser.user_name || t('message.unnamed') }}</span>
+            <span class="font-medium text-text-primary">{{ selectedSearchUser.user_name || t('message.unnamed') }}</span>
             <el-tag class="user-search__level" type="info" effect="plain" disable-transitions>
               Lv.{{ selectedSearchUser.level_info?.current_level ?? 0 }}
             </el-tag>
@@ -308,25 +308,25 @@ onMounted(() => {
             >
               {{ t(vipLabel(selectedSearchUser.vip)) }}
             </el-tag>
-            <span class="text-sm text-msg-muted">mid: {{ selectedSearchUser.mid }}</span>
+            <span class="text-sm text-text-placeholder">mid: {{ selectedSearchUser.mid }}</span>
             <el-button class="ml-auto" text type="info" @click="clearSelectedUser">{{ t('message.clearUser') }}</el-button>
           </div>
 
           <ul
             v-if="searchResults.length"
-            class="user-search__list mt-2 max-h-60 overflow-auto rounded-lg border border-msg-border bg-msg-card"
+            class="user-search__list mt-2 max-h-60 overflow-auto rounded-lg border border-border-light bg-bg-overlay"
             @scroll="onSearchScroll"
           >
             <li
               v-for="u in searchResults"
               :key="u.uid"
-              class="user-search__item flex cursor-pointer items-center gap-2 px-3 py-2 hover:bg-msg-card-hover"
+              class="user-search__item flex cursor-pointer items-center gap-2 px-3 py-2 hover:bg-fill-light"
               @click="onPickUser(u)"
             >
               <el-avatar :size="32" :src="u.avatar || BiliImg.face.noface" referrerpolicy="no-referrer" />
               <div class="user-search__item-info min-w-0 flex-1">
                 <div class="user-search__item-title flex items-center gap-2">
-                  <span class="truncate text-msg-text-active">{{ u.user_name || t('message.unnamed') }}</span>
+                  <span class="truncate text-text-primary">{{ u.user_name || t('message.unnamed') }}</span>
                   <el-tag class="user-search__level" type="info" effect="plain" disable-transitions>
                     Lv.{{ u.level_info?.current_level ?? 0 }}
                   </el-tag>
@@ -349,7 +349,7 @@ onMounted(() => {
                     {{ u.role_info.role_name }}
                   </el-tag>
                 </div>
-                <div class="user-search__item-sub flex flex-wrap items-center gap-x-3 text-xs text-msg-muted">
+                <div class="user-search__item-sub flex flex-wrap items-center gap-x-3 text-xs text-text-placeholder">
                   <span>mid: {{ u.mid }}</span>
                   <span>{{ t('message.expLabel') }}: {{ u.level_info?.current_exp ?? 0 }} / {{ u.level_info?.next_exp ?? '--' }}</span>
                   <span v-if="vipDueDateText(u.vip)">{{ t('message.ucVipExpire') }}{{ vipDueDateText(u.vip) }}</span>
@@ -361,7 +361,7 @@ onMounted(() => {
 
           <div
             v-if="searchResults.length"
-            class="user-search__more mt-2 flex items-center justify-center py-1 text-xs text-msg-muted"
+            class="user-search__more mt-2 flex items-center justify-center py-1 text-xs text-text-placeholder"
           >
             <span v-if="loadingMore">{{ t('message.loadingMore') }}</span>
             <span v-else-if="!hasMore">{{ t('message.noMore') }}</span>
@@ -369,7 +369,7 @@ onMounted(() => {
 
           <p
             v-if="searched && searchKeyword && !searchResults.length && !searching"
-            class="user-search__empty mt-2 text-sm text-msg-muted"
+            class="user-search__empty mt-2 text-sm text-text-placeholder"
           >
             {{ t('message.noMatchUser') }}
           </p>
@@ -392,8 +392,8 @@ onMounted(() => {
               class="message-admin-permission__check block"
             >
               <div class="flex flex-col leading-tight">
-                <span class="text-msg-text-active">{{ p.label }}</span>
-                <span class="text-msg-muted text-xs">{{ p.desc }}</span>
+                <span class="text-text-primary">{{ p.label }}</span>
+                <span class="text-text-placeholder text-xs">{{ p.desc }}</span>
               </div>
             </el-checkbox>
           </el-checkbox-group>

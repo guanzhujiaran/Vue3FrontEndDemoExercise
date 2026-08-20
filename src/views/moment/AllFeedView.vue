@@ -1,7 +1,8 @@
 <template>
     <div class="all-feed h-full flex flex-col">
         <LoadingMoreContainer class="mb-0!" :handle-load="handleLoad" v-model:is-more="isMore"
-            v-model:is-loading="isLoading" v-model:is-error="isError" :height-ratio="0.9">
+            v-model:is-loading="isLoading" v-model:is-error="isError" :height-ratio="0.9"
+            :show-end-text="items.length > 0">
             <template #content>
                 <EmptyState v-if="!isLoading && !isError && items.length === 0" text="还没有动态，快来发布第一条吧 ~" />
                 <div v-else class="all-feed__list space-y-4 max-w-2xl mx-auto pb-4">

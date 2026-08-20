@@ -59,6 +59,7 @@ import {
   publicDynamicsApiV1FavoriteUserDynamicsGet,
   getSpaceInfoApiV1UserSpaceInfoGet,
   interactionStatusApiV1MomentInteractionStatusGet,
+  interactionStatusDetailApiV1MomentInteractionStatusBizIdGet,
   avatarAuditMineApiV1UserAvatarAuditMineGet,
   avatarAuditListApiV1UserAvatarAuditListGet,
   avatarAuditApproveApiV1UserAvatarAuditApprovePost,
@@ -194,7 +195,8 @@ export async function fetchMomentDetail(momentId: string): Promise<MomentDetailR
 // ---- Create / Edit / Remove ----
 
 export async function createMoment(
-  payload: MomentCreateReq
+  payload: MomentCreateReq,
+  options?: RequestOptions
 ): Promise<MomentCreateResp | null> {
   return request<MomentCreateResp | null>(
     () =>
@@ -202,12 +204,14 @@ export async function createMoment(
         headers: authHeaders(),
         body: payload,
       }),
-    null
+    null,
+    options
   )
 }
 
 export async function editMoment(
-  payload: MomentEditReq
+  payload: MomentEditReq,
+  options?: RequestOptions
 ): Promise<MomentEditResp | null> {
   return request<MomentEditResp | null>(
     () =>
@@ -215,12 +219,14 @@ export async function editMoment(
         headers: authHeaders(),
         body: payload,
       }),
-    null
+    null,
+    options
   )
 }
 
 export async function removeMoment(
-  dynId: string
+  dynId: string,
+  options?: RequestOptions
 ): Promise<MomentRemoveResp | null> {
   return request<MomentRemoveResp | null>(
     () =>
@@ -228,13 +234,15 @@ export async function removeMoment(
         headers: authHeaders(),
         body: { dynId: dynId as unknown as number } as MomentRemoveReq,
       }),
-    null
+    null,
+    options
   )
 }
 
 /** 管理员删除任意动态（2.22.1，仅 root 可调；需管理端身份） */
 export async function adminRemoveMoment(
-  dynId: string
+  dynId: string,
+  options?: RequestOptions
 ): Promise<MomentRemoveResp | null> {
   return request<MomentRemoveResp | null>(
     () =>
@@ -242,7 +250,8 @@ export async function adminRemoveMoment(
         headers: authHeaders(),
         body: { dynId: dynId as unknown as number } as MomentRemoveReq,
       }),
-    null
+    null,
+    options
   )
 }
 
@@ -316,7 +325,7 @@ export async function thumbMoment(
   )
 }
 
-/** 批量查询某类型资源当前用户交互态（收藏+点赞+计数） */
+/** 批量查询某类型资源当前用户交互态（收藏+点赞+计数）——列表页专用，不累计浏览 */
 export async function fetchInteractionStatus(
   bizType: InteractionBizTypeEnum,
   bizIds: string[]
@@ -326,6 +335,25 @@ export async function fetchInteractionStatus(
       interactionStatusApiV1MomentInteractionStatusGet({
         headers: authHeaders(),
         query: { bizType, bizIds: bizIds.join(',') },
+      }),
+    null
+  )
+}
+
+/**
+ * 查询单资源交互态——detail 页专用，查询后后端投递 MQ 异步累计浏览数。
+ * 列表批量接口不累计浏览，仅进入详情页（本接口）才 +1。
+ */
+export async function fetchInteractionStatusOne(
+  bizType: InteractionBizTypeEnum,
+  bizId: string
+): Promise<InteractionStatusItem | null> {
+  return request<InteractionStatusItem | null>(
+    () =>
+      interactionStatusDetailApiV1MomentInteractionStatusBizIdGet({
+        headers: authHeaders(),
+        path: { biz_id: bizId },
+        query: { bizType },
       }),
     null
   )
@@ -379,30 +407,24 @@ export async function reportByBiz(
   bizId: number,
   reasonType: number,
   reasonDesc?: string,
-  pics?: string[]
-): Promise<ReportByBizResult> {
-  try {
-    const r = await createReportApiV1ReportPost({
-      headers: authHeaders(),
-      body: {
-        bizType,
-        bizId,
-        reasonType,
-        reasonDesc: reasonDesc?.trim() || null,
-        pics: pics?.length ? pics : null,
-      } as ReportCreateReq,
-    })
-    const rr = r as { code?: number | string; msg?: string; data?: { created?: boolean; triggered?: boolean } | null } | null
-    if (!rr) return { code: -1, msg: '服务器出错，请稍后重试', data: null }
-    const code = typeof rr.code === 'number' ? rr.code : 0
-    return {
-      code,
-      msg: rr.msg || 'ok',
-      data: code === 0 ? { created: !!rr.data?.created, triggered: !!rr.data?.triggered } : null,
-    }
-  } catch {
-    return { code: -1, msg: '服务器出错，请稍后重试', data: null }
-  }
+  pics?: string[],
+  options?: RequestOptions
+): Promise<{ created: boolean; triggered: boolean } | null> {
+  return request<{ created: boolean; triggered: boolean } | null>(
+    () =>
+      createReportApiV1ReportPost({
+        headers: authHeaders(),
+        body: {
+          bizType,
+          bizId,
+          reasonType,
+          reasonDesc: reasonDesc?.trim() || null,
+          pics: pics?.length ? pics : null,
+        } as ReportCreateReq,
+      }),
+    null,
+    options
+  )
 }
 
 // ---- Create Check ----
@@ -1121,7 +1143,8 @@ export async function fetchFavoriteSetting(): Promise<FavoriteSettingResp | null
 
 /** 设置主页是否显示收藏 */
 export async function setFavoriteSetting(
-  showFavorites: boolean
+  showFavorites: boolean,
+  options?: RequestOptions
 ): Promise<FavoriteSettingResp | null> {
   return request<FavoriteSettingResp | null>(
     () =>
@@ -1129,7 +1152,8 @@ export async function setFavoriteSetting(
         headers: authHeaders(),
         body: { showFavorites } as FavoriteSettingReq,
       }),
-    null
+    null,
+    options
   )
 }
 

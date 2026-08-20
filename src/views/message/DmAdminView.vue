@@ -1,35 +1,35 @@
 <template>
   <div class="dm-admin flex flex-col gap-4">
     <div class="dm-admin__header flex items-center justify-between">
-      <h2 class="text-lg font-bold text-msg-text-active">{{ t('message.dmAuditTitle') }}</h2>
+      <h2 class="text-lg font-bold text-text-primary">{{ t('message.dmAuditTitle') }}</h2>
       <el-button size="default" @click="load">{{ t('message.refresh') }}</el-button>
     </div>
 
     <div class="dm-admin__stats grid grid-cols-2 gap-3 md:grid-cols-5">
-      <div class="dm-admin__stat-card rounded-lg bg-msg-card p-4">
-        <div class="text-sm text-msg-muted">{{ t('message.statTotalDm') }}</div>
-        <div class="text-xl font-bold text-msg-link">{{ stats.total_dm }}</div>
+      <div class="dm-admin__stat-card rounded-lg bg-bg-overlay p-4">
+        <div class="text-sm text-text-placeholder">{{ t('message.statTotalDm') }}</div>
+        <div class="text-xl font-bold text-primary">{{ stats.total_dm }}</div>
       </div>
-      <div class="dm-admin__stat-card rounded-lg bg-msg-card p-4">
-        <div class="text-sm text-msg-muted">{{ t('message.statTodayNew') }}</div>
-        <div class="text-xl font-bold text-msg-text-active">{{ stats.today_new }}</div>
+      <div class="dm-admin__stat-card rounded-lg bg-bg-overlay p-4">
+        <div class="text-sm text-text-placeholder">{{ t('message.statTodayNew') }}</div>
+        <div class="text-xl font-bold text-text-primary">{{ stats.today_new }}</div>
       </div>
-      <div class="dm-admin__stat-card rounded-lg bg-msg-card p-4">
-        <div class="text-sm text-msg-muted">{{ t('message.statAuditing') }}</div>
-        <div class="text-xl font-bold text-msg-link">{{ stats.auditing }}</div>
+      <div class="dm-admin__stat-card rounded-lg bg-bg-overlay p-4">
+        <div class="text-sm text-text-placeholder">{{ t('message.statAuditing') }}</div>
+        <div class="text-xl font-bold text-primary">{{ stats.auditing }}</div>
       </div>
-      <div class="dm-admin__stat-card rounded-lg bg-msg-card p-4">
-        <div class="text-sm text-msg-muted">{{ t('message.statRejected') }}</div>
+      <div class="dm-admin__stat-card rounded-lg bg-bg-overlay p-4">
+        <div class="text-sm text-text-placeholder">{{ t('message.statRejected') }}</div>
         <div class="text-xl font-bold text-msg-pink">{{ stats.rejected }}</div>
       </div>
-      <div class="dm-admin__stat-card rounded-lg bg-msg-card p-4">
-        <div class="text-sm text-msg-muted">{{ t('message.statHidden') }}</div>
-        <div class="text-xl font-bold text-msg-muted">{{ stats.hidden }}</div>
+      <div class="dm-admin__stat-card rounded-lg bg-bg-overlay p-4">
+        <div class="text-sm text-text-placeholder">{{ t('message.statHidden') }}</div>
+        <div class="text-xl font-bold text-text-placeholder">{{ stats.hidden }}</div>
       </div>
     </div>
 
     <div v-if="canViewAllStates" class="dm-admin__filter flex items-center gap-3">
-      <span class="text-sm text-msg-muted">{{ t('message.statusFilter') }}</span>
+      <span class="text-sm text-text-placeholder">{{ t('message.statusFilter') }}</span>
       <el-select
         v-model="stateFilter"
         multiple
@@ -49,9 +49,9 @@
     <div
       v-loading="auditPending"
       :element-loading-text="t('message.bulkAuditing')"
-      class="dm-admin__bulk-toolbar flex flex-wrap items-center gap-3 rounded-lg bg-msg-card p-3"
+      class="dm-admin__bulk-toolbar flex flex-wrap items-center gap-3 rounded-lg bg-bg-overlay p-3"
     >
-      <span class="text-sm text-msg-muted">{{ t('message.selectedCount', { n: selectedRows.length }) }}</span>
+      <span class="text-sm text-text-placeholder">{{ t('message.selectedCount', { n: selectedRows.length }) }}</span>
       <el-button
         type="success"
         size="default"
@@ -105,70 +105,115 @@
 
     <LoadingWrap :loading="loading" :rows="6">
       <EmptyState v-if="items.length === 0" :text="t('message.emptyAuditDm')" />
-      <el-table
-        v-else
-        :data="items"
-        class="dm-admin__table"
-        border
-        stripe
-        row-key="msgkey"
-        @selection-change="onSelectionChange"
-      >
-        <el-table-column type="selection" width="50" />
-        <el-table-column :label="t('message.colSender')" width="160">
-          <template #default="{ row }">
-            <UserBriefCell :mid="row.sender_mid" :brief="row.sender" />
-          </template>
-        </el-table-column>
-        <el-table-column :label="t('message.colMessage')" min-width="220" show-overflow-tooltip>
-          <template #default="{ row }">
-            <span class="text-sm text-msg-text">{{ row.message || t('message.auditImageMsg') }}</span>
-          </template>
-        </el-table-column>
-        <el-table-column :label="t('message.colSource')" width="160" show-overflow-tooltip>
-          <template #default="{ row }">
-            <AuditSourceLink
-              :source="row.source"
-              :intercept-navigate="true"
-              @navigate="openSession"
-            />
-          </template>
-        </el-table-column>
-        <el-table-column :label="t('message.colStatus')" width="100">
-          <template #default="{ row }">
-            <el-tag :type="stateTag(row.audit_state)" size="default" effect="light">
-              {{ stateText(row.audit_state) }}
-            </el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column :label="t('message.colType')" width="90">
-          <template #default="{ row }">
-            <el-tag size="default" effect="plain">{{ msgTypeText(row.msg_type) }}</el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column :label="t('message.colReceiver')" width="110">
-          <template #default="{ row }">
-            <span class="text-sm text-msg-text-active">{{ row.talker_mid }}</span>
-          </template>
-        </el-table-column>
-        <el-table-column :label="t('message.colTime')" width="180">
-          <template #default="{ row }">
-            <TimeText :time="row.created_at" />
-          </template>
-        </el-table-column>
-        <el-table-column prop="msgkey" :label="t('message.colMsgkey')" width="150" />
-      </el-table>
+      <!-- 父容器固定高度，由 AutoResizer 自动测量并传给表格 width/height -->
+      <div v-else class="dm-admin__table w-full h-[calc(100vh-320px)] min-h-105">
+        <el-auto-resizer>
+          <template #default="{ height, width }">
+            <el-table-v2
+              :columns="dmColumns"
+              :data="items"
+              :width="width"
+              :height="height"
+              :row-height="56"
+              :header-height="44"
+              :footer-height="total > pageSize ? 64 : 0"
+              row-key="msgkey"
+              fixed
+            >
+              <template #header-cell="{ column }">
+                <div
+                  v-if="column.key === 'selection'"
+                  class="flex h-full items-center justify-center"
+                >
+                  <el-checkbox
+                    :model-value="allSelected"
+                    @change="(v: unknown) => toggleSelectAll(v)"
+                  />
+                </div>
+                <span v-else class="dm-admin__th">{{ column.title }}</span>
+              </template>
 
-      <PaginationBar
-        v-if="total > pageSize"
-        class="dm-admin__pagination"
-        :total="total"
-        :page-size="pageSize"
-        :page-sizes="pageSizes"
-        :current-page="page"
-        @update:current-page="onPageChange"
-        @update:page-size="onPageSizeChange"
-      />
+              <template #cell="{ column, rowData }">
+                <!-- 自定义选择列 -->
+                <template v-if="column.key === 'selection'">
+                  <div class="flex h-full items-center justify-center">
+                    <el-checkbox
+                      :model-value="selectedKeys.has(rowData.msgkey)"
+                      @change="(v: unknown) => toggleRow(rowData, v)"
+                    />
+                  </div>
+                </template>
+
+                <!-- 发送者 -->
+                <template v-else-if="column.key === 'sender'">
+                  <UserBriefCell :mid="rowData.sender_mid" :brief="rowData.sender" />
+                </template>
+
+                <!-- 内容 -->
+                <template v-else-if="column.key === 'message'">
+                  <div class="w-full truncate">
+                    <span class="text-sm text-text-secondary">{{ rowData.message || t('message.auditImageMsg') }}</span>
+                  </div>
+                </template>
+
+                <!-- 内容来源 -->
+                <template v-else-if="column.key === 'source'">
+                  <AuditSourceLink
+                    :source="rowData.source"
+                    :intercept-navigate="true"
+                    @navigate="openSession"
+                  />
+                </template>
+
+                <!-- 状态 -->
+                <template v-else-if="column.key === 'state'">
+                  <el-tag :type="stateTag(rowData.audit_state)" size="default" effect="light">
+                    {{ stateText(rowData.audit_state) }}
+                  </el-tag>
+                </template>
+
+                <!-- 类型 -->
+                <template v-else-if="column.key === 'type'">
+                  <el-tag size="default" effect="plain">{{ msgTypeText(rowData.msg_type) }}</el-tag>
+                </template>
+
+                <!-- 接收方 -->
+                <template v-else-if="column.key === 'talker'">
+                  <span class="text-sm text-text-primary">{{ rowData.talker_mid }}</span>
+                </template>
+
+                <!-- 时间 -->
+                <template v-else-if="column.key === 'ctime'">
+                  <TimeText :time="rowData.created_at" />
+                </template>
+
+                <!-- 其余默认列（msgkey） -->
+                <template v-else>
+                  {{ column.dataKey ? rowData[column.dataKey as keyof DmAuditRow] : '-' }}
+                </template>
+              </template>
+
+              <template #empty>
+                <div class="flex h-full items-center justify-center">
+                  <el-empty :description="t('message.emptyData')" :image-size="80" />
+                </div>
+              </template>
+
+              <template #footer>
+                <PaginationBar
+                  class="dm-admin__pagination"
+                  :total="total"
+                  :page-size="pageSize"
+                  :page-sizes="pageSizes"
+                  :current-page="page"
+                  @update:current-page="onPageChange"
+                  @update:page-size="onPageSizeChange"
+                />
+              </template>
+            </el-table-v2>
+          </template>
+        </el-auto-resizer>
+      </div>
     </LoadingWrap>
 
     <BanUserDialog
@@ -201,7 +246,7 @@
     >
       <LoadingWrap :loading="sessionLoading" :rows="4">
         <div v-if="sessionContext" class="dm-session flex flex-col gap-3">
-          <div class="dm-session__meta rounded-lg bg-msg-card p-3 text-sm text-msg-muted">
+          <div class="dm-session__meta rounded-lg bg-bg-overlay p-3 text-sm text-text-placeholder">
             <div>{{ t('message.sessionKey') }}{{ sessionContext.session_key }}</div>
             <div>{{ t('message.sessionSender') }}{{ sessionContext.sender_mid }}</div>
             <div>{{ t('message.sessionTalker') }}{{ sessionContext.talker_mid }}</div>
@@ -210,7 +255,7 @@
           <el-table :data="sessionContext.items ?? []" class="dm-session__table" border stripe>
             <el-table-column :label="t('message.colMessage')" min-width="200" show-overflow-tooltip>
               <template #default="{ row }">
-                <span class="text-sm text-msg-text">{{ row.message || t('message.auditImageMsg') }}</span>
+                <span class="text-sm text-text-secondary">{{ row.message || t('message.auditImageMsg') }}</span>
               </template>
             </el-table-column>
             <el-table-column :label="t('message.colStatus')" width="90">
@@ -234,9 +279,11 @@
 
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue'
+import type { Column } from 'element-plus'
 import { useDebounceFn } from '@vueuse/core'
 import { useI18n } from 'vue-i18n'
 import biliMessage from '@/utils/message'
+import { businessHandler, type BusinessResponse } from '@/utils/businessHandler'
 
 const { t } = useI18n()
 import {
@@ -285,8 +332,11 @@ const stats = reactive<DmStatsData>({
   hidden: 0
 })
 
-// 多选批量封禁 / 解封（私信违规用户取发送方 mid）
-const selectedRows = ref<DmAuditRow[]>([])
+// 多选批量封禁 / 解封（el-table-v2 无内置选择列，使用 Set 维护选中 msgkey；违规用户取发送方 mid）
+const selectedKeys = ref<Set<string>>(new Set())
+const selectedRows = computed<DmAuditRow[]>(() =>
+  items.value.filter((i) => selectedKeys.value.has(i.msgkey))
+)
 const banDialogVisible = ref(false)
 const adminStore = useMessageAdminStore()
 
@@ -310,8 +360,35 @@ const selectedMids = computed(() =>
   selectedRows.value.map((r) => r.sender_mid).filter((m): m is number => Boolean(m))
 )
 
-function onSelectionChange(rows: DmAuditRow[]) {
-  selectedRows.value = rows
+// el-table-v2 列定义（含自定义选择列）；全部列固定宽度，总列宽 1690px 显著超出常规容器宽度，
+// 保证任意分辨率下表格都可以左右滚动查看全部列
+const dmColumns: Column<DmAuditRow>[] = [
+  { key: 'selection', title: '', width: 50 },
+  { key: 'sender', title: t('message.colSender'), width: 200 },
+  { key: 'message', title: t('message.colMessage'), width: 600, minWidth: 600 },
+  { key: 'source', title: t('message.colSource'), width: 200 },
+  { key: 'state', title: t('message.colStatus'), width: 100 },
+  { key: 'type', title: t('message.colType'), width: 90 },
+  { key: 'talker', title: t('message.colReceiver'), width: 110 },
+  { key: 'ctime', title: t('message.colTime'), width: 180 },
+  { key: 'msgkey', title: t('message.colMsgkey'), width: 160, dataKey: 'msgkey' }
+]
+
+function toggleRow(row: DmAuditRow, val: unknown) {
+  const next = new Set(selectedKeys.value)
+  if (val) next.add(row.msgkey)
+  else next.delete(row.msgkey)
+  selectedKeys.value = next
+}
+
+const allSelected = computed(
+  () => items.value.length > 0 && items.value.every((i) => selectedKeys.value.has(i.msgkey))
+)
+function toggleSelectAll(val: unknown) {
+  const next = new Set(selectedKeys.value)
+  if (val) items.value.forEach((i) => next.add(i.msgkey))
+  else items.value.forEach((i) => next.delete(i.msgkey))
+  selectedKeys.value = next
 }
 
 async function unbanSelected() {
@@ -327,13 +404,13 @@ async function unbanSelected() {
   }
   userActionPending.value = true
   try {
-    const res = await unbanUsers({ body: { mids: selectedMids.value } })
-    if (res && res.code === 0) {
-      biliMessage.success(t('message.unbanSuccess'))
-      await load()
-    } else if (res) {
-      biliMessage.error(res.msg || t('message.unbanFailed'))
-    }
+    await businessHandler<null>(
+      unbanUsers({ body: { mids: selectedMids.value } }) as unknown as Promise<
+        BusinessResponse<null>
+      >,
+      { successMessage: t('message.unbanSuccess') },
+      [() => load()]
+    )
   } finally {
     userActionPending.value = false
   }
@@ -356,6 +433,8 @@ async function load() {
   canViewAllStates.value = Boolean(list?.data?.can_view_all_states)
   Object.assign(stats, st?.data ?? {})
   // 审核列表已内嵌发送者信息（sender），无需前端再回查
+  // 翻页 / 刷新后当前页条目变化，清空选中避免残留
+  selectedKeys.value = new Set()
   loading.value = false
 }
 
@@ -447,25 +526,31 @@ async function doAudit(
   auditPending.value = true
   try {
     const newState = OP_STATE_MAP[op]
-    // 一次批量审核调用，逐条原因通过 notes 映射传入（{ msgkey: 原因 }）
-    const resp = await bulkAuditDmApiV1MessageDmAdminAuditBatchPost({
-      body: {
-        msgkeys: rows.map((r) => r.msgkey),
-        op,
-        notes: reasons ?? undefined
-      }
-    })
-    // 审核成功后就地更新对应行状态，避免整表重新加载导致闪烁
-    const failed = new Set(resp?.failed ?? [])
-    rows.forEach((row) => {
-      if (!failed.has(row.msgkey)) {
-        const target = items.value.find((it) => it.msgkey === row.msgkey)
-        if (target) target.audit_state = newState
-      }
-    })
-    biliMessage.success(t('message.processedCount', { n: rows.length }))
-  } catch {
-    biliMessage.error(t('message.auditFailed'))
+    // 一次批量审核调用，逐条原因通过 notes 映射传入（{ msgkey: 原因 }）；
+    // 成功文案由调用方预设，失败提示由后端响应驱动（统一 businessHandler 处理）
+    await businessHandler<{ failed?: number[] }>(
+      bulkAuditDmApiV1MessageDmAdminAuditBatchPost({
+        body: {
+          msgkeys: rows.map((r) => r.msgkey),
+          op,
+          notes: reasons ?? undefined
+        }
+      }) as unknown as Promise<BusinessResponse<{ failed?: number[] }>>,
+      { successMessage: t('message.processedCount', { n: rows.length }) },
+      [
+        (result) => {
+          if (!result.success || !result.data) return
+          // 审核成功后就地更新对应行状态，避免整表重新加载导致闪烁
+          const failed = new Set(result.data.failed ?? [])
+          rows.forEach((row) => {
+            if (!failed.has(row.msgkey)) {
+              const target = items.value.find((it) => it.msgkey === row.msgkey)
+              if (target) target.audit_state = newState
+            }
+          })
+        },
+      ]
+    )
   } finally {
     auditPending.value = false
   }
@@ -474,6 +559,7 @@ async function doAudit(
 // 防抖包装：避免连续点击触发多次审核调用
 const batchAuditDebounced = useDebounceFn(batchAudit, 500)
 const auditPending = ref(false)
+const userActionPending = ref(false)
 
 // 审核操作 -> 目标状态
 const OP_STATE_MAP: Record<string, string> = {

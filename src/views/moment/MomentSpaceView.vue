@@ -1,5 +1,5 @@
 <template>
-  <div class="moment-space flex-1 h-full flex flex-col bg-msg-main text-msg-text-active">
+  <div class="moment-space flex-1 h-full flex flex-col bg-bg-page text-text-primary">
     <!-- 顶部横幅 + 头像信息 -->
     <section class="moment-space__header relative">
       <!-- 横幅背景 -->
@@ -15,7 +15,7 @@
       <div class="moment-space__user relative px-6 -mt-16">
         <div class="moment-space__user-main flex items-end gap-4">
           <el-avatar
-            class="moment-space__avatar border-4 border-msg-main"
+            class="moment-space__avatar border-4 border-bg-page"
             :size="96"
             :src="targetUser.face || BiliImg.face.noface"
           />
@@ -34,7 +34,7 @@
               </span>
               <el-tag v-if="isOwnSpace" size="default" type="primary">我</el-tag>
             </div>
-            <p v-if="userBio" class="moment-space__bio text-sm text-msg-muted mt-1 truncate">
+            <p v-if="userBio" class="moment-space__bio text-sm text-text-placeholder mt-1 truncate">
               {{ userBio }}
             </p>
           </div>
@@ -92,36 +92,36 @@
         </div>
 
         <!-- 统计栏 -->
-        <div class="moment-space__stats flex items-center gap-6 mt-4 pb-4 text-sm text-msg-muted">
+        <div class="moment-space__stats flex items-center gap-6 mt-4 pb-4 text-sm text-text-placeholder">
           <div class="moment-space__stat-item">
-            <span class="font-bold text-msg-text-active">{{ formatNum(stats.following) }}</span>
+            <span class="font-bold text-text-primary">{{ formatNum(stats.following) }}</span>
             <span class="ml-1">关注</span>
           </div>
           <div class="moment-space__stat-item">
-            <span class="font-bold text-msg-text-active">{{ formatNum(stats.followers) }}</span>
+            <span class="font-bold text-text-primary">{{ formatNum(stats.followers) }}</span>
             <span class="ml-1">粉丝</span>
           </div>
           <div class="moment-space__stat-item">
-            <span class="font-bold text-msg-text-active">{{ formatNum(stats.liked) }}</span>
+            <span class="font-bold text-text-primary">{{ formatNum(stats.liked) }}</span>
             <span class="ml-1">获赞</span>
           </div>
           <div class="moment-space__stat-item">
-            <span class="font-bold text-msg-text-active">{{ formatNum(stats.dynamicCount) }}</span>
+            <span class="font-bold text-text-primary">{{ formatNum(stats.dynamicCount) }}</span>
             <span class="ml-1">动态</span>
           </div>
           <div class="flex-1" />
         </div>
 
         <!-- 2.25.0：横向导航栏（对标 B 站空间） -->
-        <nav class="moment-space__tabs flex items-center gap-2 border-b border-msg-divider pt-4">
+        <nav class="moment-space__tabs flex items-center gap-2 border-b border-border-lighter pt-4">
           <div
             v-for="tab in tabs"
             :key="tab.name"
             class="moment-space__tab-item flex items-center gap-1.5 px-4 py-2 cursor-pointer rounded-md transition-colors"
             :class="
               resolvedActiveTab === tab.name
-                ? 'text-msg-link bg-primary-light-3/50 font-bold'
-                : 'text-msg-muted hover:text-msg-text-active hover:bg-msg-main'
+                ? 'text-primary bg-primary-light-3/50 font-bold'
+                : 'text-text-placeholder hover:text-text-primary hover:bg-bg-page'
             "
             @click="switchTab(tab.name)"
           >
@@ -137,14 +137,14 @@
     <section class="moment-space__body flex-1 min-h-0 overflow-y-auto px-6 py-6">
       <!-- 黑名单互访拒绝：展示受限提示，不加载空间内容（P9-T4） -->
       <div v-if="blocked" class="moment-space__blocked max-w-2xl mx-auto">
-        <div class="moment-space__blocked-card bg-msg-card border border-msg-border rounded-lg p-10 text-center">
-          <el-icon class="moment-space__blocked-icon text-5xl text-msg-muted" :size="48">
+        <div class="moment-space__blocked-card bg-bg-overlay border border-border-light rounded-lg p-10 text-center">
+          <el-icon class="moment-space__blocked-icon text-5xl text-text-placeholder" :size="48">
             <Lock />
           </el-icon>
-          <p class="moment-space__blocked-text mt-4 text-base text-msg-text-active font-medium">
+          <p class="moment-space__blocked-text mt-4 text-base text-text-primary font-medium">
             对方已将你加入黑名单，无法访问其空间
           </p>
-          <p class="moment-space__blocked-sub mt-2 text-sm text-msg-muted">如需解除，请通过其他方式联系对方</p>
+          <p class="moment-space__blocked-sub mt-2 text-sm text-text-placeholder">如需解除，请通过其他方式联系对方</p>
         </div>
       </div>
       <!-- 主页 Tab（仅自己显示） -->
@@ -152,15 +152,15 @@
         <div class="moment-space__home-grid grid grid-cols-1 lg:grid-cols-3 gap-6">
           <!-- 主区域 -->
           <div class="lg:col-span-2 space-y-6">
-            <div class="moment-space__empty-card bg-msg-card border border-msg-border rounded-lg p-6 text-center text-msg-muted">
+            <div class="moment-space__empty-card bg-bg-overlay border border-border-light rounded-lg p-6 text-center text-text-placeholder">
               数据总览开发中
             </div>
           </div>
           <!-- 侧栏 -->
           <div class="space-y-4">
-            <div class="bg-msg-card border border-msg-border rounded-lg p-4 text-sm">
+            <div class="bg-bg-overlay border border-border-light rounded-lg p-4 text-sm">
               <h3 class="font-bold mb-2">个人简介</h3>
-              <p class="text-msg-muted">{{ userBio || '暂无简介' }}</p>
+              <p class="text-text-placeholder">{{ userBio || '暂无简介' }}</p>
             </div>
           </div>
         </div>
@@ -169,7 +169,7 @@
       <!-- 动态 Tab -->
       <div v-if="resolvedActiveTab === 'dynamic' && !blocked" class="moment-space__dynamic max-w-2xl mx-auto">
         <div class="moment-space__dynamic-toolbar mb-4 flex items-center justify-between">
-          <span class="text-sm text-msg-muted">共 {{ items.length }} 条动态</span>
+          <span class="text-sm text-text-placeholder">共 {{ items.length }} 条动态</span>
           <el-button
             v-if="isOwnSpace"
             class="moment-space__dynamic-publish-btn"
@@ -197,7 +197,7 @@
             <div v-if="hasMore" class="flex justify-center py-4">
               <el-button size="default" :loading="loadingMore" @click="loadMore">加载更多</el-button>
             </div>
-            <div v-else-if="items.length > 0" class="text-center text-sm text-msg-muted py-4">
+            <div v-else-if="items.length > 0" class="text-center text-sm text-text-placeholder py-4">
               — 没有更多了 —
             </div>
           </div>
@@ -218,7 +218,7 @@
           >
             {{ folder.name }}（{{ folder.favoriteCount }}）
           </el-tag>
-          <span v-if="favFolders.length === 0" class="text-sm text-msg-muted">暂无收藏夹</span>
+          <span v-if="favFolders.length === 0" class="text-sm text-text-placeholder">暂无收藏夹</span>
         </div>
 
         <LoadingWrap :loading="favLoading">
@@ -233,7 +233,7 @@
             <div v-if="favHasMore" class="flex justify-center py-4">
               <el-button size="default" :loading="favLoading" @click="loadMoreFavorites">加载更多</el-button>
             </div>
-            <div v-else-if="favDynIds.length > 0" class="text-center text-sm text-msg-muted py-4">
+            <div v-else-if="favDynIds.length > 0" class="text-center text-sm text-text-placeholder py-4">
               — 没有更多了 —
             </div>
           </div>
@@ -242,11 +242,11 @@
 
       <!-- 设置 Tab（仅自身空间） -->
       <div v-else-if="resolvedActiveTab === 'settings' && isOwnSpace" class="moment-space__settings max-w-2xl mx-auto">
-        <div class="bg-msg-card border border-msg-border rounded-lg p-4">
+        <div class="bg-bg-overlay border border-border-light rounded-lg p-4">
           <div class="flex items-center justify-between">
             <div>
               <div class="moment-space__settings-label font-medium">在主页展示「收藏」</div>
-              <div class="text-xs text-msg-muted mt-1">关闭后，你的主页（含访客视角）将不再展示收藏 tab</div>
+              <div class="text-xs text-text-placeholder mt-1">关闭后，你的主页（含访客视角）将不再展示收藏 tab</div>
             </div>
             <el-switch
               v-model="showFavorites"
@@ -592,16 +592,14 @@ function loadMoreFavorites() {
   loadFavoriteDyns(activeFolderId.value)
 }
 
-/** 切换主页是否显示收藏（仅自身空间） */
+/** 切换主页是否显示收藏（仅自身空间）：成功文案由调用方预设，失败由后端响应驱动 */
 async function toggleShowFavorites(v: boolean) {
   showFavorites.value = v
-  try {
-    await setFavoriteSetting(v)
-    biliMessage.success(v ? '主页已显示收藏' : '主页已隐藏收藏')
-  } catch {
-    biliMessage.error('设置保存失败')
-    showFavorites.value = !v
-  }
+  const ok = await setFavoriteSetting(v, {
+    showSuccessToast: true,
+    successMessage: v ? '主页已显示收藏' : '主页已隐藏收藏',
+  })
+  if (!ok) showFavorites.value = !v
 }
 
 async function loadMore() {
@@ -687,9 +685,11 @@ async function handlePublish(payload: {
     topics: payload.topics?.length ? payload.topics : undefined,
     lbs: payload.poiName ? { lbsPoi: payload.poiName } : undefined,
   }
-  const res = await createMoment(body)
+  const res = await createMoment(body, {
+    showSuccessToast: true,
+    successMessage: '发布成功，等待审核',
+  })
   if (res) {
-    biliMessage.success('发布成功，等待审核')
     publishVisible.value = false
     loadFirst()
   }

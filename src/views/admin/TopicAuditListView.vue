@@ -2,7 +2,7 @@
   <div class="topic-audit-list h-full flex flex-col">
     <!-- 工具栏 -->
     <div class="topic-audit-list__toolbar mb-4 flex items-center justify-between">
-      <h2 class="topic-audit-list__title text-base font-bold text-msg-text-active">话题审核队列</h2>
+      <h2 class="topic-audit-list__title text-base font-bold text-text-primary">话题审核队列</h2>
       <el-button
         class="topic-audit-list__refresh-btn"
         size="default"
@@ -47,14 +47,14 @@
                 :src="row.topicCover"
                 shape="square"
               />
-              <div v-else class="w-12 h-12 rounded bg-msg-sidebar flex items-center justify-center text-msg-muted text-lg">
+              <div v-else class="w-12 h-12 rounded bg-bg flex items-center justify-center text-text-placeholder text-lg">
                 #
               </div>
             </template>
           </el-table-column>
           <el-table-column label="描述" min-width="180">
             <template #default="{ row }">
-              <span class="block truncate text-sm text-msg-text">{{ row.topicDesc || '-' }}</span>
+              <span class="block truncate text-sm text-text-secondary">{{ row.topicDesc || '-' }}</span>
             </template>
           </el-table-column>
           <el-table-column label="提交时间" width="170">

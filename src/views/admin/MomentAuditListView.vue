@@ -2,7 +2,7 @@
   <div class="moment-audit-list h-full flex flex-col">
     <!-- 工具栏 -->
     <div class="moment-audit-list__toolbar mb-4 flex items-center justify-between">
-      <h2 class="moment-audit-list__title text-base font-bold text-msg-text-active">动态审核队列</h2>
+      <h2 class="moment-audit-list__title text-base font-bold text-text-primary">动态审核队列</h2>
       <el-button
         class="moment-audit-list__refresh-btn"
         size="default"

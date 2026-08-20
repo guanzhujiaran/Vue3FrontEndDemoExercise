@@ -10,10 +10,11 @@
     @closed="onClosed"
   >
     <div class="audit-reason-dialog__body flex flex-col gap-3">
-      <div class="text-sm text-msg-muted">
+      <div class="text-sm text-text-placeholder">
         {{ t('message.auditIntro', { target: targetTextI18n, action: actionLabelI18n }) }}
       </div>
 
+      <!-- 父容器固定高度，由 AutoResizer 自动测量并传给表格 width/height -->
       <div class="audit-reason-dialog__table h-[60vh] min-h-75">
         <el-auto-resizer>
           <template #default="{ height, width }">
@@ -23,6 +24,7 @@
               :width="width"
               :height="height"
               :row-height="84"
+              fixed
             />
           </template>
         </el-auto-resizer>
@@ -176,7 +178,7 @@ function renderUserCell(rowData: AuditReasonItem) {
       reference: () =>
         h(
           'span',
-          { class: 'cursor-default truncate text-sm text-msg-text-active' },
+          { class: 'cursor-default truncate text-sm text-text-primary' },
           uname as string
         ),
       default: () => h(UserCard, { card: brief ?? null, showActions: false })
@@ -184,31 +186,32 @@ function renderUserCell(rowData: AuditReasonItem) {
   )
 }
 
+// 列总宽 > 弹窗最大宽（920px），保证表格可左右滚动查看全部列
 const columns = computed(() => [
   {
     key: 'preview',
     title: t('message.auditColContent'),
-    width: 420,
+    width: 520,
     cellRenderer: ({ rowData }: { rowData: AuditReasonItem }) =>
       h(
         'div',
         { class: 'flex flex-col gap-1 px-2 py-2' },
         [
-          h('span', { class: 'text-xs text-msg-muted' }, rowData.id),
-          h('span', { class: 'line-clamp-2 text-sm text-msg-text' }, rowData.preview || t('message.auditImageMsg'))
+          h('span', { class: 'text-xs text-text-placeholder' }, rowData.id),
+          h('span', { class: 'line-clamp-2 text-sm text-text-secondary' }, rowData.preview || t('message.auditImageMsg'))
         ]
       )
   },
   {
     key: 'user',
     title: t('message.auditColUser'),
-    width: 160,
+    width: 200,
     cellRenderer: ({ rowData }: { rowData: AuditReasonItem }) => renderUserCell(rowData)
   },
   {
     key: 'reason',
     title: t('message.auditColReason'),
-    width: 240,
+    width: 320,
     cellRenderer: ({ rowData }: { rowData: AuditReasonItem }) => renderReasonCell(rowData)
   }
 ])

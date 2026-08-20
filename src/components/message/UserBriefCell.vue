@@ -1,7 +1,7 @@
 <template>
   <el-popover placement="top" :width="320" trigger="hover" popper-class="user-brief-popover">
     <template #reference>
-      <span class="user-brief-cell cursor-default text-sm text-msg-text-active">
+      <span class="user-brief-cell cursor-default text-sm text-text-primary">
         {{ brief?.uname || (mid ? `${t('common.user')}${mid}` : '-') }}
       </span>
     </template>

@@ -1,31 +1,31 @@
 <template>
   <div class="comment-admin flex flex-col gap-4">
     <div class="comment-admin__header flex items-center justify-between">
-      <h2 class="text-lg font-bold text-msg-text-active">{{ t('message.commentAuditTitle') }}</h2>
+      <h2 class="text-lg font-bold text-text-primary">{{ t('message.commentAuditTitle') }}</h2>
       <el-button size="default" @click="load">{{ t('message.refresh') }}</el-button>
     </div>
 
     <div class="comment-admin__stats grid grid-cols-2 gap-3 md:grid-cols-4">
-      <div class="comment-admin__stat-card rounded-lg bg-msg-card p-4">
-        <div class="text-sm text-msg-muted">{{ t('message.statTotalComments') }}</div>
-        <div class="text-xl font-bold text-msg-link">{{ stats.total_comments }}</div>
+      <div class="comment-admin__stat-card rounded-lg bg-bg-overlay p-4">
+        <div class="text-sm text-text-placeholder">{{ t('message.statTotalComments') }}</div>
+        <div class="text-xl font-bold text-primary">{{ stats.total_comments }}</div>
       </div>
-      <div class="comment-admin__stat-card rounded-lg bg-msg-card p-4">
-        <div class="text-sm text-msg-muted">{{ t('message.statTodayNew') }}</div>
-        <div class="text-xl font-bold text-msg-text-active">{{ stats.today_new }}</div>
+      <div class="comment-admin__stat-card rounded-lg bg-bg-overlay p-4">
+        <div class="text-sm text-text-placeholder">{{ t('message.statTodayNew') }}</div>
+        <div class="text-xl font-bold text-text-primary">{{ stats.today_new }}</div>
       </div>
-      <div class="comment-admin__stat-card rounded-lg bg-msg-card p-4">
-        <div class="text-sm text-msg-muted">{{ t('message.statTotalSubjects') }}</div>
-        <div class="text-xl font-bold text-msg-text-active">{{ stats.total_subjects }}</div>
+      <div class="comment-admin__stat-card rounded-lg bg-bg-overlay p-4">
+        <div class="text-sm text-text-placeholder">{{ t('message.statTotalSubjects') }}</div>
+        <div class="text-xl font-bold text-text-primary">{{ stats.total_subjects }}</div>
       </div>
-      <div class="comment-admin__stat-card rounded-lg bg-msg-card p-4">
-        <div class="text-sm text-msg-muted">{{ t('message.statTotalRoot') }}</div>
-        <div class="text-xl font-bold text-msg-text-active">{{ stats.total_root }}</div>
+      <div class="comment-admin__stat-card rounded-lg bg-bg-overlay p-4">
+        <div class="text-sm text-text-placeholder">{{ t('message.statTotalRoot') }}</div>
+        <div class="text-xl font-bold text-text-primary">{{ stats.total_root }}</div>
       </div>
     </div>
 
     <div v-if="canViewAllStates" class="comment-admin__filter flex items-center gap-3">
-      <span class="text-sm text-msg-muted">{{ t('message.statusFilter') }}</span>
+      <span class="text-sm text-text-placeholder">{{ t('message.statusFilter') }}</span>
       <el-select
         v-model="stateFilter"
         multiple
@@ -46,9 +46,9 @@
     <div
       v-loading="auditPending"
       :element-loading-text="t('message.bulkAuditing')"
-      class="comment-admin__bulk-toolbar flex flex-wrap items-center gap-3 rounded-lg bg-msg-card p-3"
+      class="comment-admin__bulk-toolbar flex flex-wrap items-center gap-3 rounded-lg bg-bg-overlay p-3"
     >
-      <span class="text-sm text-msg-muted">{{ t('message.selectedCount', { n: selectedRows.length }) }}</span>
+      <span class="text-sm text-text-placeholder">{{ t('message.selectedCount', { n: selectedRows.length }) }}</span>
       <el-button
         type="success"
         size="default"
@@ -102,7 +102,8 @@
 
     <LoadingWrap :loading="loading" :rows="6">
       <EmptyState v-if="items.length === 0" :text="t('message.emptyAuditComment')" />
-      <div v-else class="comment-admin__table w-full h-[calc(100vh-320px)] min-h-105">
+      <!-- 父容器固定高度，由 AutoResizer 自动测量并传给表格 width/height -->
+      <div v-else class="comment-admin__table h-[calc(100vh-320px)] min-h-105">
         <el-auto-resizer>
           <template #default="{ height, width }">
             <el-table-v2
@@ -112,7 +113,9 @@
               :height="height"
               :row-height="72"
               :header-height="44"
+              :footer-height="total > pageSize ? 64 : 0"
               row-key="rpid"
+              fixed
             >
               <template #header-cell="{ column }">
                 <div
@@ -145,7 +148,7 @@
 
                 <!-- 内容 -->
                 <template v-else-if="column.key === 'message'">
-                  <span class="text-sm text-msg-text">{{ rowData.message }}</span>
+                  <span class="text-sm text-text-secondary">{{ rowData.message }}</span>
                 </template>
 
                 <!-- 内容来源 -->
@@ -162,16 +165,16 @@
 
                 <!-- 平台/设备 -->
                 <template v-else-if="column.key === 'plat_device'">
-                  <span v-if="rowData.plat || rowData.device" class="text-sm text-msg-muted">
+                  <span v-if="rowData.plat || rowData.device" class="text-sm text-text-placeholder">
                     {{ rowData.plat || t('message.unknownPlatform')
                     }}<template v-if="rowData.device"> · {{ rowData.device }}</template>
                   </span>
-                  <span v-else class="text-sm text-msg-muted">—</span>
+                  <span v-else class="text-sm text-text-placeholder">—</span>
                 </template>
 
                 <!-- 点赞 -->
                 <template v-else-if="column.key === 'like'">
-                  <span class="text-sm text-msg-muted">{{ rowData.like_count }}</span>
+                  <span class="text-sm text-text-placeholder">{{ rowData.like_count }}</span>
                 </template>
 
                 <!-- 时间 -->
@@ -190,21 +193,22 @@
                   <el-empty :description="t('message.emptyData')" :image-size="80" />
                 </div>
               </template>
+
+              <template #footer>
+                <PaginationBar
+                  class="comment-admin__pagination"
+                  :total="total"
+                  :page-size="pageSize"
+                  :page-sizes="pageSizes"
+                  :current-page="page"
+                  @update:current-page="onPageChange"
+                  @update:page-size="onPageSizeChange"
+                />
+              </template>
             </el-table-v2>
           </template>
         </el-auto-resizer>
       </div>
-
-      <PaginationBar
-        v-if="total > pageSize"
-        class="comment-admin__pagination"
-        :total="total"
-        :page-size="pageSize"
-        :page-sizes="pageSizes"
-        :current-page="page"
-        @update:current-page="onPageChange"
-        @update:page-size="onPageSizeChange"
-      />
     </LoadingWrap>
 
     <BanUserDialog
@@ -236,6 +240,7 @@ import type { Column } from 'element-plus'
 import { useDebounceFn } from '@vueuse/core'
 import { useI18n } from 'vue-i18n'
 import biliMessage from '@/utils/message'
+import { businessHandler, type BusinessResponse } from '@/utils/businessHandler'
 
 const { t } = useI18n()
 import {
@@ -321,19 +326,20 @@ const selectedMids = computed(() =>
   selectedRows.value.map((r) => r.mid).filter((m): m is number => Boolean(m))
 )
 
-// el-table-v2 列定义（含自定义选择列）；内容列 flexGrow 自适应填充剩余宽度
+// el-table-v2 列定义（含自定义选择列）；全部列固定宽度，总列宽 1870px 显著超出常规容器宽度，
+// 保证任意分辨率下表格都可以左右滚动查看全部列
 const commentColumns: Column<CommentAuditRow>[] = [
   { key: 'selection', title: '', width: 50 },
-  { key: 'author', title: t('message.colAuthor'), width: 160 },
-  { key: 'message', title: t('message.colMessage'), width: 240, minWidth: 240, flexGrow: 1 },
-  { key: 'source', title: t('message.colSource'), width: 180 },
+  { key: 'author', title: t('message.colAuthor'), width: 180 },
+  { key: 'message', title: t('message.colMessage'), width: 480, minWidth: 480 },
+  { key: 'source', title: t('message.colSource'), width: 200 },
   { key: 'state', title: t('message.colStatus'), width: 100 },
   { key: 'type', title: t('message.colType'), width: 90, dataKey: 'type' },
-  { key: 'plat_device', title: t('message.colPlatDevice'), width: 160 },
+  { key: 'plat_device', title: t('message.colPlatDevice'), width: 200 },
   { key: 'like', title: t('message.colLike'), width: 80 },
-  { key: 'ctime', title: t('message.colTime'), width: 180 },
+  { key: 'ctime', title: t('message.colTime'), width: 200 },
   { key: 'rpid', title: t('message.colRpid'), width: 150, dataKey: 'rpid' },
-  { key: 'oid', title: t('message.colOid'), width: 130, dataKey: 'oid' }
+  { key: 'oid', title: t('message.colOid'), width: 140, dataKey: 'oid' }
 ]
 
 async function unbanSelected() {
@@ -349,13 +355,13 @@ async function unbanSelected() {
   }
   userActionPending.value = true
   try {
-    const res = await unbanUsers({ body: { mids: selectedMids.value } })
-    if (res && res.code === 0) {
-      biliMessage.success(t('message.unbanSuccess'))
-      await load()
-    } else if (res) {
-      biliMessage.error(res.msg || t('message.unbanFailed'))
-    }
+    await businessHandler<null>(
+      unbanUsers({ body: { mids: selectedMids.value } }) as unknown as Promise<
+        BusinessResponse<null>
+      >,
+      { successMessage: t('message.unbanSuccess') },
+      [() => load()]
+    )
   } finally {
     userActionPending.value = false
   }
@@ -452,25 +458,31 @@ async function doAudit(
   auditPending.value = true
   try {
     const newState = OP_STATE_MAP[op]
-    // 一次批量审核调用，逐条原因通过 notes 映射传入（{ rpid: 原因 }）
-    const resp = await bulkAuditCommentApiV1CommentAdminAuditBatchPost({
-      body: {
-        rpids: rows.map((r) => r.rpid),
-        op,
-        notes: reasons ?? undefined
-      }
-    })
-    // 审核成功后就地更新对应行状态，避免整表重新加载导致闪烁
-    const failed = new Set(resp?.failed ?? [])
-    rows.forEach((row) => {
-      if (!failed.has(row.rpid)) {
-        const target = items.value.find((it) => it.rpid === row.rpid)
-        if (target) target.audit_state = newState
-      }
-    })
-    biliMessage.success(t('message.processedCount', { n: rows.length }))
-  } catch {
-    biliMessage.error(t('message.auditFailed'))
+    // 一次批量审核调用，逐条原因通过 notes 映射传入（{ rpid: 原因 }）；
+    // 成功文案由调用方预设，失败提示由后端响应驱动（统一 businessHandler 处理）
+    await businessHandler<{ failed?: number[] }>(
+      bulkAuditCommentApiV1CommentAdminAuditBatchPost({
+        body: {
+          rpids: rows.map((r) => r.rpid),
+          op,
+          notes: reasons ?? undefined
+        }
+      }) as unknown as Promise<BusinessResponse<{ failed?: number[] }>>,
+      { successMessage: t('message.processedCount', { n: rows.length }) },
+      [
+        (result) => {
+          if (!result.success || !result.data) return
+          // 审核成功后就地更新对应行状态，避免整表重新加载导致闪烁
+          const failed = new Set(result.data.failed ?? [])
+          rows.forEach((row) => {
+            if (!failed.has(row.rpid)) {
+              const target = items.value.find((it) => it.rpid === row.rpid)
+              if (target) target.audit_state = newState
+            }
+          })
+        },
+      ]
+    )
   } finally {
     auditPending.value = false
   }
@@ -479,6 +491,7 @@ async function doAudit(
 // 防抖包装：避免连续点击触发多次审核调用
 const batchAuditDebounced = useDebounceFn(batchAudit, 500)
 const auditPending = ref(false)
+const userActionPending = ref(false)
 
 // 审核操作 -> 目标状态
 const OP_STATE_MAP: Record<string, string> = {

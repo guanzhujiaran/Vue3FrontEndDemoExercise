@@ -37,8 +37,14 @@
               需转发
             </span>
           </div>
-          <!-- 右侧固定组：ID，不缩小不被换行挤出 -->
+          <!-- 右侧固定组：浏览数 + ID，不缩小不被换行挤出 -->
           <div class="flex shrink-0 items-center gap-1">
+            <span
+              class="lottery-card__view-count inline-flex items-center gap-1 bg-bg-page px-3 py-1 border border-border-light rounded-full font-medium text-text-secondary text-xs"
+              :title="'浏览 ' + viewCount">
+              <component :is="EyeIcon" class="w-4 h-4 shrink-0" />
+              <span>{{ viewCount }}</span>
+            </span>
             <span
               class="inline-flex items-center bg-bg-page px-3 py-1 border border-border-light rounded-full font-medium text-text-secondary text-xs">
               ID: {{ normalizedData.id }}
@@ -383,6 +389,7 @@ import LikeIcon from '@/assets/svgs/like.svg?component'
 import LikeActiveIcon from '@/assets/svgs/like_active.svg?component'
 import FavoriteIcon from '@/assets/svgs/dynamic/detail/side_toolbar/favorite.svg?component'
 import ForwardIcon from '@/assets/svgs/dynamic/detail/side_toolbar/forward.svg?component'
+import EyeIcon from '@/assets/svgs/space/eye.svg?component'
 
 import { LOTTERY_COMMENT_TYPE } from '@/stores/lottery_detail.ts'
 
@@ -428,6 +435,8 @@ const favCount = computed(() => Number(props.status?.favoriteCount ?? 0))
 /** 评论数 / 转发数：来自 props.status 统一接口（dynamic 才有真实计数，lottery 等非动态资源恒为 0） */
 const commentCount = computed(() => Number((props.status as InteractionStatusItem | undefined)?.commentCount ?? 0))
 const forwardCount = computed(() => Number((props.status as InteractionStatusItem | undefined)?.repostCount ?? 0))
+/** 浏览数：来自 props.status 统一接口（status 接口即浏览统计触发点） */
+const viewCount = computed(() => Number((props.status as InteractionStatusItem | undefined)?.viewCount ?? 0))
 
 /** 点赞 / 取消点赞 */
 async function handleLike() {

@@ -11,7 +11,7 @@
     <div class="moment-publish-form__body space-y-4">
       <!-- 内容输入：el-mention 支持 @用户，服务端解析 #话题# -->
       <div class="moment-publish-form__field">
-        <label class="moment-publish-form__label block text-sm font-bold text-msg-text-active mb-2">内容</label>
+        <label class="moment-publish-form__label block text-sm font-bold text-text-primary mb-2">内容</label>
         <el-mention
           v-model="content"
           type="textarea"
@@ -31,18 +31,18 @@
               <el-avatar :size="24" :src="item.avatar || BiliImg.face.noface" referrerpolicy="no-referrer">
                 <img :src="item.avatar || BiliImg.face.noface" referrerpolicy="no-referrer" alt="avatar" />
               </el-avatar>
-              <span class="moment-publish-form__mention-name text-sm text-msg-text-active">{{ item.value }}</span>
+              <span class="moment-publish-form__mention-name text-sm text-text-primary">{{ item.value }}</span>
             </div>
           </template>
         </el-mention>
-        <p class="moment-publish-form__hint text-xs text-msg-muted mt-1">
+        <p class="moment-publish-form__hint text-xs text-text-placeholder mt-1">
           输入 @ 提及用户（需选择）；话题请在下方从已创建且通过审核的话题中选择（最多 5 个），正文中不可直接添加 #话题#
         </p>
       </div>
 
       <!-- 图片（可选，最多 18 张；仅允许站外 http(s) 图片链接，不支持本地上传） -->
       <div class="moment-publish-form__field">
-        <label class="moment-publish-form__label block text-sm font-bold text-msg-text-active mb-2">
+        <label class="moment-publish-form__label block text-sm font-bold text-text-primary mb-2">
           图片（可选，最多 18 张）
         </label>
         <div class="moment-publish-form__images space-y-2">
@@ -77,14 +77,14 @@
         >
           添加图片链接
         </el-button>
-        <p class="moment-publish-form__hint text-xs text-msg-muted mt-1">
+        <p class="moment-publish-form__hint text-xs text-text-placeholder mt-1">
           最多 18 张，展示时九宫格布局（超出 9 张折叠为「更多」）；仅支持站外图片链接，不提供本地上传
         </p>
       </div>
 
       <!-- 话题（2.22.0 多选：最多 5 个，仅可选已过审话题；正文不可 #话题# 标记） -->
       <div class="moment-publish-form__field">
-        <label class="moment-publish-form__label block text-sm font-bold text-msg-text-active mb-2">
+        <label class="moment-publish-form__label block text-sm font-bold text-text-primary mb-2">
           话题（可选，最多 5 个）
         </label>
         <el-select
@@ -119,7 +119,7 @@
       <!-- 转发模式：原动态摘要（只读预览） -->
       <div
         v-if="isRepost"
-        class="moment-publish-form__src bg-msg-main rounded-md border border-msg-divider p-3"
+        class="moment-publish-form__src bg-bg-page rounded-md border border-border-lighter p-3"
       >
         <div class="moment-publish-form__src-author flex items-center gap-2 mb-2">
           <el-avatar
@@ -127,11 +127,11 @@
             :size="24"
             :src="srcAuthorFace || BiliImg.face.noface"
           />
-          <span class="moment-publish-form__src-username text-sm font-bold text-msg-text-active truncate">
+          <span class="moment-publish-form__src-username text-sm font-bold text-text-primary truncate">
             {{ srcAuthorName || '未知用户' }}
           </span>
         </div>
-        <el-text class="moment-publish-form__src-summary text-sm text-msg-muted block whitespace-pre-line break-all">
+        <el-text class="moment-publish-form__src-summary text-sm text-text-placeholder block whitespace-pre-line break-all">
           {{ srcSummary || '原动态内容不可见' }}
         </el-text>
       </div>
@@ -141,7 +141,7 @@
         v-if="attachResource"
         class="moment-publish-form__attach flex items-center gap-3 rounded-lg border border-border-light bg-fill-lighter p-3"
       >
-        <div class="moment-publish-form__attach-cover shrink-0 w-20 h-20 rounded overflow-hidden bg-msg-sidebar">
+        <div class="moment-publish-form__attach-cover shrink-0 w-20 h-20 rounded overflow-hidden bg-bg">
           <img
             v-if="attachResource.cover"
             :src="attachResource.cover"
@@ -150,7 +150,7 @@
           />
         </div>
         <div class="moment-publish-form__attach-body flex-1 min-w-0">
-          <div class="moment-publish-form__attach-title text-sm font-bold text-msg-text-active line-clamp-2">
+          <div class="moment-publish-form__attach-title text-sm font-bold text-text-primary line-clamp-2">
             {{ attachResource.name || `资源 ${attachResource.bizId}` }}
           </div>
         </div>

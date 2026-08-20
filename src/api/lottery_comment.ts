@@ -111,6 +111,15 @@ const commentApi = {
     )
   },
 
+  /** 单条评论详情：按 rpid 查询，返回 oid / type / 正文等（消息通知按 bizId 跳转定位评论区用） */
+  detail(rpid: string | number): Promise<RootObject<CommentItem>> {
+    return commentDetailApiV1CommentDetailRpidGet({
+      path: { rpid: String(rpid) }
+    }).then(
+      (r) => (r ?? { code: -1, msg: '评论详情获取失败', data: {} }) as unknown as RootObject<CommentItem>
+    )
+  },
+
   /** @ 提及用户搜索：按昵称 / 注册名前缀匹配（登录即可），返回简单用户结构 */
   searchAt(keyword: string, limit = 10): Promise<RootObject<CommentUserBrief[]>> {
     return atSearchApiV1CommentAtSearchGet({

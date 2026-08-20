@@ -1,8 +1,8 @@
 <template>
   <div class="dm-chat flex h-full flex-col">
-    <div class="dm-chat__header flex items-center gap-3 border-b border-msg-divider p-3">
+    <div class="dm-chat__header flex items-center gap-3 border-b border-border-lighter p-3">
       <el-button text :icon="ArrowLeft" @click="goBack">{{ t('common.back') }}</el-button>
-      <span class="dm-chat__title text-base font-bold text-msg-text-active">
+      <span class="dm-chat__title text-base font-bold text-text-primary">
         {{ talkerName || `用户${talkerMid}` }}
       </span>
     </div>
@@ -19,14 +19,14 @@
           <!-- 管理端驳回 / 下架：保留气泡位置，显示占位文案 -->
           <div
             v-if="msg.audit_state === 'rejected' || msg.audit_state === 'hidden'"
-            class="dm-chat__bubble max-w-[70%] rounded-lg bg-msg-card p-3 text-sm text-msg-muted"
+            class="dm-chat__bubble max-w-[70%] rounded-lg bg-bg-overlay p-3 text-sm text-text-placeholder"
           >
             {{ msg.audit_state === 'hidden' ? t('message.dmHidden') : t('message.dmRejected') }}
           </div>
           <!-- 撤回：双方均不可见 -->
           <div
             v-else-if="msg.msg_status === 'recalled'"
-            class="dm-chat__bubble max-w-[70%] rounded-lg bg-msg-card p-3 text-sm text-msg-muted"
+            class="dm-chat__bubble max-w-[70%] rounded-lg bg-bg-overlay p-3 text-sm text-text-placeholder"
           >
             {{ t('message.dmRecalled') }}
           </div>
@@ -34,10 +34,10 @@
           <div
             v-else
             class="dm-chat__bubble max-w-[70%] whitespace-pre-wrap wrap-break-word rounded-lg p-3 text-sm"
-            :class="isSelf(msg) ? 'bg-msg-link text-white' : 'bg-msg-card text-msg-text'"
+            :class="isSelf(msg) ? 'bg-primary text-white' : 'bg-bg-overlay text-text-secondary'"
           >
             <span class="dm-chat__content">{{ msg.content }}</span>
-            <span class="dm-chat__time mt-1 block text-right text-xs text-msg-muted">
+            <span class="dm-chat__time mt-1 block text-right text-xs text-text-placeholder">
               {{ formatTime(msg.msg_ts) }}
             </span>
           </div>
@@ -45,7 +45,7 @@
       </ul>
     </LoadingWrap>
 
-    <div class="dm-chat__footer flex items-end gap-2 border-t border-msg-divider p-3">
+    <div class="dm-chat__footer flex items-end gap-2 border-t border-border-lighter p-3">
       <el-input
         v-model="draft"
         type="textarea"

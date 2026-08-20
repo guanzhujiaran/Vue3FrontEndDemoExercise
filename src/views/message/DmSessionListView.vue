@@ -6,7 +6,7 @@
         <li
           v-for="session in items"
           :key="session.talker_mid"
-          class="dm-list__item group flex cursor-pointer items-center gap-4 rounded-lg bg-msg-card p-4 transition-colors hover:bg-msg-card-hover"
+          class="dm-list__item group flex cursor-pointer items-center gap-4 rounded-lg bg-bg-overlay p-4 transition-colors hover:bg-fill-light"
           @click="openSession(session.talker_mid, session.talker_name)"
         >
           <div class="dm-list__avatar-wrap relative shrink-0">
@@ -25,12 +25,12 @@
           </div>
           <div class="dm-list__body min-w-0 flex-1">
             <div class="dm-list__head mb-1 flex items-center justify-between">
-              <span class="dm-list__name truncate text-sm font-medium text-msg-text-active">
+              <span class="dm-list__name truncate text-sm font-medium text-text-primary">
                 {{ session.talker_name || `用户${session.talker_mid}` }}
               </span>
               <TimeText v-if="session.last_msg_time" :time="session.last_msg_time" />
             </div>
-            <p class="dm-list__last line-clamp-1 text-sm text-msg-muted">{{ session.last_msg || ' ' }}</p>
+            <p class="dm-list__last line-clamp-1 text-sm text-text-placeholder">{{ session.last_msg || ' ' }}</p>
           </div>
         </li>
       </ul>

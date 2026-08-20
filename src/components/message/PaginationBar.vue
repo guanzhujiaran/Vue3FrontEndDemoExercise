@@ -1,6 +1,6 @@
 <template>
   <div class="message-pagination-bar flex items-center justify-between py-4">
-    <span class="message-pagination-bar__total text-sm text-msg-muted">{{ t('message.totalItems', { total }) }}</span>
+    <span class="message-pagination-bar__total text-sm text-text-placeholder">{{ t('message.totalItems', { total }) }}</span>
     <el-pagination
       layout="prev, pager, next, sizes"
       :total="total"

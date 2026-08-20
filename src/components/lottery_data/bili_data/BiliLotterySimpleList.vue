@@ -140,7 +140,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, reactive, onMounted } from 'vue'
+import { computed, ref, reactive, watch } from 'vue'
 import BiliLotteryCard from '@/components/lottery_data/bili_data/BiliLotteryCard.vue'
 import BiliStatusIcon from '@/components/CommonCompo/Bili-Status-Compo/BiliStatusIcon.vue'
 import { normalizeLotteryData } from '@/utils/lotteryNormalization.ts'
@@ -196,8 +196,10 @@ const interactLoading = ref(false)
 async function loadAllStatus() {
   const ids = parsedData.value.map((i) => String(i.normalized.id)).filter(Boolean)
   if (!ids.length) return
+  const seq = ++loadSeq
   try {
     const res = await fetchInteractionStatus('lottery' as any, ids)
+    if (seq !== loadSeq) return // 过期响应（期间又切页）丢弃
     for (const item of res?.items ?? []) {
       if (item?.bizId) statusMap[item.bizId] = item
     }
@@ -205,7 +207,26 @@ async function loadAllStatus() {
     // 弱依赖：失败不阻断展示
   }
 }
-onMounted(loadAllStatus)
+// 切页（分页/翻页 data 变化）时重新拉取本页互动状态；内容不变去重跳过、空页清空
+let lastLoadedKey = ''
+let loadSeq = 0
+watch(
+  computed(() => {
+    const ids = parsedData.value.map((i) => String(i.normalized.id)).filter(Boolean)
+    return ids.slice().sort().join(',')
+  }),
+  async (key) => {
+    if (!key) {
+      lastLoadedKey = ''
+      for (const k of Object.keys(statusMap)) delete statusMap[k]
+      return
+    }
+    if (key === lastLoadedKey) return
+    lastLoadedKey = key
+    await loadAllStatus()
+  },
+  { immediate: true }
+)
 
 function statusOf(item: SimpleListItem): InteractionStatusItem {
   return statusMap[String(item.normalized.id)] ?? { bizId: String(item.normalized.id), bizType: 'lottery' } as InteractionStatusItem

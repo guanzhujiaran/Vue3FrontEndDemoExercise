@@ -6,6 +6,11 @@ const props = defineProps({
     type: Function as PropType<() => void>,
     required: true,
     default: () => { }
+  },
+  // 是否显示「到底了」文案：列表为空等空态场景可传入 false 关闭
+  showEndText: {
+    type: Boolean,
+    default: true
   }
 })
 const isMore = defineModel('isMore', {
@@ -74,7 +79,7 @@ onBeforeUnmount(() => {
       <div class="loading-more-txt relative w-full text-center bg-transparent py-2"
         style="background-color: transparent">
         <span v-if="isMore" @click="handleLoad" class="cursor-pointer">查看更多</span>
-        <span v-else-if="!isError" class="cursor-pointer">到底了喵~</span>
+        <span v-else-if="!isError && showEndText" class="cursor-pointer">到底了喵~</span>
       </div>
     </el-scrollbar>
   </div>

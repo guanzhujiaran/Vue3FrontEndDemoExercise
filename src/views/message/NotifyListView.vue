@@ -1,7 +1,7 @@
 <template>
   <div class="notify-list h-full flex flex-col">
     <div class="notify-list__toolbar mb-4 flex items-center justify-between">
-      <h2 class="notify-list__title flex items-center gap-2 text-base font-bold text-msg-text-active">
+      <h2 class="notify-list__title flex items-center gap-2 text-base font-bold text-text-primary">
         {{ t('message.notifyTitle') }}
         <el-badge
           v-if="notifyUnread > 0"
@@ -11,7 +11,7 @@
         />
       </h2>
       <div class="notify-list__actions flex items-center gap-3">
-        <el-checkbox v-model="onlyUnread" size="default" class="notify-list__unread-check text-msg-text-active" @change="onFilterChange">
+        <el-checkbox v-model="onlyUnread" size="default" class="notify-list__unread-check text-text-primary" @change="onFilterChange">
           {{ t('message.onlyUnread') }}
         </el-checkbox>
         <el-button
@@ -35,18 +35,18 @@
         <li
           v-for="item in displayItems"
           :key="item.id"
-          class="notify-list__item group relative flex gap-4 rounded-lg bg-msg-card p-4 transition-colors hover:bg-msg-card-hover"
+          class="notify-list__item group relative flex gap-4 rounded-lg bg-bg-overlay p-4 transition-colors hover:bg-fill-light"
         >
-          <div class="notify-list__indicator mt-2 h-2 w-2 shrink-0 rounded-full" :class="item.is_read ? 'bg-msg-muted' : 'bg-msg-pink'" />
+          <div class="notify-list__indicator mt-2 h-2 w-2 shrink-0 rounded-full" :class="item.is_read ? 'bg-text-placeholder' : 'bg-msg-pink'" />
           <div class="notify-list__body min-w-0 flex-1">
             <div class="notify-list__head mb-1 flex items-center gap-2">
-              <span class="notify-list__title truncate text-sm font-bold text-msg-text-active">{{ item.title }}</span>
+              <span class="notify-list__title truncate text-sm font-bold text-text-primary">{{ item.title }}</span>
               <el-tag v-if="item.level !== 'normal'" :type="levelTagType(item.level)" size="default" effect="dark" round>
                 {{ levelText(item.level) }}
               </el-tag>
             </div>
-            <p class="notify-list__summary whitespace-pre-wrap text-sm leading-6 text-msg-muted">
-              <template v-for="(seg, idx) in renderSegments(item.content)" :key="idx">
+            <p class="notify-list__summary whitespace-pre-wrap text-sm leading-6 text-text-placeholder">
+              <template v-for="(seg, idx) in renderNotifySegments(item.content)" :key="idx">
                 <a
                   v-if="seg.url"
                   :href="seg.url"
@@ -58,7 +58,7 @@
                 <template v-else>{{ seg.text }}</template>
               </template>
             </p>
-            <div class="notify-list__meta mt-2 flex items-center gap-4 text-xs text-msg-muted">
+            <div class="notify-list__meta mt-2 flex items-center gap-4 text-xs text-text-placeholder">
               <TimeText :time="item.publish_at" />
             </div>
           </div>
@@ -74,7 +74,7 @@
               {{ t('message.markRead') }}
             </el-button>
             <el-button
-              v-if="item.jump_url && !hasInlineLink(item.content)"
+              v-if="item.jump_url && !hasNotifyInlineLink(item.content)"
               type="primary"
               size="default"
               class="notify-list__jump-btn"
@@ -102,7 +102,7 @@
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import biliMessage from '@/utils/message'
+import { hasNotifyInlineLink, isExternalUrl, renderNotifySegments } from '@/utils/notifyContent'
 import {
   fetchNotifyList,
   markNotifyRead,
@@ -157,21 +157,25 @@ function onPageChange(p: number) {
 }
 
 async function markItemRead(id: number) {
-  const resp = await markNotifyRead([id])
+  const resp = await markNotifyRead([id], {
+    showSuccessToast: true,
+    successMessage: t('message.markedRead'),
+  })
   if (!resp || (resp.affected ?? 0) <= 0) return
   const item = items.value.find((i) => i.id === id)
   if (item) item.is_read = true
   emit('refreshUnread')
-  biliMessage.success(t('message.markedRead'))
 }
 
 async function markAllRead() {
   // 全部已读：不传 ids，由后端标记当前用户全部可见通知为已读（支持跨页）
-  const resp = await markNotifyRead()
+  const resp = await markNotifyRead(undefined, {
+    showSuccessToast: true,
+    successMessage: t('message.markAllRead'),
+  })
   if (!resp || (resp.affected ?? 0) <= 0) return
   items.value.forEach((i) => (i.is_read = true))
   emit('refreshUnread')
-  biliMessage.success(t('message.markAllRead'))
 }
 
 /** 点「查看原文」：站内路径走路由，外链（B 站动态 / 专栏）新开标签页。 */
@@ -185,40 +189,10 @@ function openJump(item: NotifyItem) {
   }
 }
 
-/** 通知正文里 #{文本}{"url"} 的内联链接 —— 与 B 站 system_notify 同构。
- *
- *  返回的段落里 url 为空的是纯文本片段；带 url 的是可点击的链接片段，
- *  Vue 模板按顺序遍历渲染即可。
- */
-const INLINE_LINK_RE = /#\{([^{}]*?)\}\{"((?:https?:\/\/[^"\s]+|\/app\/\S+))"\}/g
-
-function renderSegments(content: string): Array<{ text: string; url: string | null }> {
-  if (!content) return []
-  const segs: Array<{ text: string; url: string | null }> = []
-  let lastIndex = 0
-  let m: RegExpExecArray | null
-  while ((m = INLINE_LINK_RE.exec(content)) !== null) {
-    if (m.index > lastIndex) {
-      segs.push({ text: content.slice(lastIndex, m.index), url: null })
-    }
-    segs.push({ text: m[1], url: m[2] })
-    lastIndex = m.index + m[0].length
-  }
-  if (lastIndex < content.length) {
-    segs.push({ text: content.slice(lastIndex), url: null })
-  }
-  return segs
-}
-
-function hasInlineLink(content: string): boolean {
-  // 重新构造一份正则，避免与 renderSegments 共享 lastIndex 状态导致漏判
-  return new RegExp(INLINE_LINK_RE.source).test(content)
-}
-
 /** 正文中点击内联链接：站内路径走路由，外链交给浏览器新开标签。 */
 function onInlineLink(ev: MouseEvent, url: string) {
   // 让原生 href 仍然兜底（防止 JS 异常时无响应），但站内跳转走 SPA 路由更顺滑
-  if (!/^https?:\/\//.test(url)) {
+  if (!isExternalUrl(url)) {
     ev.preventDefault()
     router.push(url)
   }

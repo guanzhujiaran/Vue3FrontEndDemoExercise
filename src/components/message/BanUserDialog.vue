@@ -9,15 +9,15 @@
     @closed="onClosed"
   >
     <div class="ban-user-dialog__body flex flex-col gap-4">
-      <div class="ban-user-dialog__mids rounded-lg bg-msg-card p-3">
-        <div class="text-sm text-msg-muted">{{ t('message.banMidsLabel') }}</div>
-        <div class="mt-1 break-all text-sm text-msg-text-active">
+      <div class="ban-user-dialog__mids rounded-lg bg-bg-overlay p-3">
+        <div class="text-sm text-text-placeholder">{{ t('message.banMidsLabel') }}</div>
+        <div class="mt-1 break-all text-sm text-text-primary">
           {{ mids.join('、') || t('message.banNoSelect') }}
         </div>
       </div>
 
       <div class="ban-user-dialog__field">
-        <div class="mb-1 text-sm text-msg-muted">{{ t('message.banServiceLabel') }}</div>
+        <div class="mb-1 text-sm text-text-placeholder">{{ t('message.banServiceLabel') }}</div>
         <el-select
           v-model="form.ban_services"
           class="ban-user-dialog__services w-full"
@@ -37,7 +37,7 @@
       </div>
 
       <div class="ban-user-dialog__field">
-        <div class="mb-1 text-sm text-msg-muted">{{ t('message.banDurationLabel') }}</div>
+        <div class="mb-1 text-sm text-text-placeholder">{{ t('message.banDurationLabel') }}</div>
         <el-radio-group v-model="form.duration_type" class="ban-user-dialog__duration">
           <el-radio value="temporary">{{ t('message.banTemporary') }}</el-radio>
           <el-radio value="permanent">{{ t('message.banPermanent') }}</el-radio>
@@ -45,7 +45,7 @@
       </div>
 
       <div v-if="form.duration_type === 'temporary'" class="ban-user-dialog__field">
-        <div class="mb-1 text-sm text-msg-muted">{{ t('message.banDaysLabel') }}</div>
+        <div class="mb-1 text-sm text-text-placeholder">{{ t('message.banDaysLabel') }}</div>
         <el-input-number
           v-model="form.duration_days"
           class="ban-user-dialog__days"
@@ -57,7 +57,7 @@
       </div>
 
       <div class="ban-user-dialog__field">
-        <div class="mb-1 text-sm text-msg-muted">{{ t('message.banReasonLabel') }}</div>
+        <div class="mb-1 text-sm text-text-placeholder">{{ t('message.banReasonLabel') }}</div>
         <el-input
           v-model="form.reason"
           class="ban-user-dialog__reason"

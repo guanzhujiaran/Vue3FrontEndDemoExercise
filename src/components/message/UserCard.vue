@@ -1,8 +1,8 @@
 <template>
-  <div class="user-card w-80 max-w-full rounded-lg bg-msg-card p-4 shadow-lg">
+  <div class="user-card w-80 max-w-full rounded-lg bg-bg-overlay p-4 shadow-lg">
     <div class="user-card__header flex gap-3">
       <div
-        class="user-card__avatar-wrap h-16 w-16 shrink-0 overflow-hidden rounded-full border border-msg-border cursor-pointer hover:opacity-90 transition-opacity"
+        class="user-card__avatar-wrap h-16 w-16 shrink-0 overflow-hidden rounded-full border border-border-light cursor-pointer hover:opacity-90 transition-opacity"
         @click.stop="goUserSpace"
       >
         <img
@@ -12,15 +12,15 @@
           alt="avatar"
           referrerpolicy="no-referrer"
         />
-        <div v-else class="user-card__avatar-placeholder flex h-full w-full items-center justify-center bg-msg-muted">
-          <el-icon class="text-msg-card" size="24"><UserFilled /></el-icon>
+        <div v-else class="user-card__avatar-placeholder flex h-full w-full items-center justify-center bg-text-placeholder">
+          <el-icon class="text-bg-overlay" size="24"><UserFilled /></el-icon>
         </div>
       </div>
 
       <div class="user-card__info flex flex-1 flex-col justify-center gap-1 overflow-hidden">
         <div class="user-card__name-row flex items-center gap-2">
           <span
-            class="user-card__name truncate text-base font-bold text-msg-text-active cursor-pointer hover:text-msg-link transition-colors"
+            class="user-card__name truncate text-base font-bold text-text-primary cursor-pointer hover:text-primary transition-colors"
             @click.stop="goUserSpace"
           >
             {{ card?.uname || card?.mid || '-' }}
@@ -42,19 +42,19 @@
           </span>
         </div>
 
-        <div class="user-card__stats flex items-center gap-2 text-sm text-msg-muted">
+        <div class="user-card__stats flex items-center gap-2 text-sm text-text-placeholder">
           <span>{{ followingText }} {{ t('message.ucFollowing') }}</span>
-          <span class="text-msg-divider">|</span>
+          <span class="text-border-lighter">|</span>
           <span>{{ followerText }} {{ t('message.ucFollower') }}</span>
-          <span class="text-msg-divider">|</span>
+          <span class="text-border-lighter">|</span>
           <span>{{ likeText }} {{ t('message.ucLiked') }}</span>
         </div>
 
-        <div v-if="roleText" class="user-card__role text-xs text-msg-link">
+        <div v-if="roleText" class="user-card__role text-xs text-primary">
           {{ roleText }}
         </div>
 
-        <div v-if="card?.sign" class="user-card__sign truncate text-xs text-msg-muted">
+        <div v-if="card?.sign" class="user-card__sign truncate text-xs text-text-placeholder">
           {{ card.sign }}
         </div>
       </div>
@@ -80,7 +80,7 @@
       </el-button>
     </div>
 
-    <div v-if="extraLines.length" class="user-card__extra mt-2 flex flex-col gap-1 border-t border-msg-divider pt-2 text-xs text-msg-muted">
+    <div v-if="extraLines.length" class="user-card__extra mt-2 flex flex-col gap-1 border-t border-border-lighter pt-2 text-xs text-text-placeholder">
       <div v-for="(line, i) in extraLines" :key="i" class="user-card__extra-line">
         {{ line }}
       </div>
@@ -157,7 +157,7 @@ const sexIcon = computed(() => {
 })
 
 const sexClass = computed(() =>
-  props.card?.sex === '女' ? 'text-msg-pink' : 'text-msg-link'
+  props.card?.sex === '女' ? 'text-msg-pink' : 'text-primary'
 )
 
 const levelText = computed(() => (props.card?.level ? String(props.card.level) : ''))

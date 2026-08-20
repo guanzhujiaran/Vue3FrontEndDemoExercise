@@ -1,5 +1,5 @@
 <template>
-  <div class="resource-interaction-bar inline-flex items-center gap-3 text-sm text-msg-muted">
+  <div class="resource-interaction-bar inline-flex items-center gap-3 text-sm text-text-placeholder">
     <!-- 点赞 -->
     <div
       class="resource-interaction-bar__thumb inline-flex items-center gap-1 cursor-pointer select-none transition-colors"
@@ -33,7 +33,7 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import { CaretTop, Star, StarFilled } from '@element-plus/icons-vue'
-import { thumbMoment, fetchInteractionStatus } from '@/api/notify/moment-api'
+import { thumbMoment, fetchInteractionStatus, fetchInteractionStatusOne } from '@/api/notify/moment-api'
 import type { InteractionBizTypeEnum } from '@/api/notify/moment-api'
 import MomentFavoriteDialog from '@/components/moment/MomentFavoriteDialog.vue'
 import biliMessage from '@/utils/message'
@@ -41,6 +41,8 @@ import biliMessage from '@/utils/message'
 const props = defineProps<{
   bizType: InteractionBizTypeEnum
   bizId: string
+  /** detail 页场景：走单资源接口（后端投递 MQ 累计浏览）；默认 false（列表等场景不累计浏览） */
+  countView?: boolean
 }>()
 
 const isLiked = ref(false)
@@ -52,8 +54,10 @@ const favDialogVisible = ref(false)
 
 async function loadStatus() {
   try {
-    const resp = await fetchInteractionStatus(props.bizType, [props.bizId])
-    const item = resp?.items?.[0]
+    // detail 场景（countView=true）走单资源接口（累计浏览）；否则走批量接口（列表不累计浏览）
+    const item = props.countView
+      ? await fetchInteractionStatusOne(props.bizType, props.bizId)
+      : (await fetchInteractionStatus(props.bizType, [props.bizId]))?.items?.[0]
     if (item) {
       isLiked.value = item.isLike
       isFavorite.value = item.isFavorite

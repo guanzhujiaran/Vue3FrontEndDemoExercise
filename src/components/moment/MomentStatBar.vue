@@ -1,5 +1,5 @@
 <template>
-  <div class="moment-stat-bar flex items-center gap-4 text-sm text-msg-muted">
+  <div class="moment-stat-bar flex items-center gap-4 text-sm text-text-placeholder">
     <!-- 点赞 -->
     <div
       class="moment-stat-bar__thumb flex items-center gap-1 cursor-pointer select-none"
@@ -12,7 +12,7 @@
 
     <!-- 评论：点击跳详情页评论区（信息流）或滚动到评论区（详情页） -->
     <div
-      class="moment-stat-bar__comment flex items-center gap-1 cursor-pointer select-none hover:text-msg-link transition-colors"
+      class="moment-stat-bar__comment flex items-center gap-1 cursor-pointer select-none hover:text-primary transition-colors"
       @click="handleComment"
     >
       <el-icon :size="16"><ChatDotRound /></el-icon>
@@ -21,7 +21,7 @@
 
     <!-- 转发：点击打开转发弹窗 -->
     <div
-      class="moment-stat-bar__repost flex items-center gap-1 cursor-pointer select-none hover:text-msg-link transition-colors"
+      class="moment-stat-bar__repost flex items-center gap-1 cursor-pointer select-none hover:text-primary transition-colors"
       @click="handleRepost"
     >
       <el-icon :size="16"><Share /></el-icon>

@@ -4,7 +4,7 @@
     @click.stop="handleClick"
   >
     <!-- 封面（无封面时占位图标） -->
-    <div class="moment-attach-card__cover shrink-0 w-16 h-16 rounded overflow-hidden bg-msg-sidebar flex items-center justify-center">
+    <div class="moment-attach-card__cover shrink-0 w-16 h-16 rounded overflow-hidden bg-bg flex items-center justify-center">
       <img
         v-if="bizType === 'lottery' && cover"
         :src="cover"
@@ -12,12 +12,12 @@
         referrerpolicy="no-referrer"
         :alt="title"
       />
-      <el-icon v-else :size="24" class="text-msg-muted">
+      <el-icon v-else :size="24" class="text-text-placeholder">
         <Collection />
       </el-icon>
     </div>
     <div class="moment-attach-card__body flex-1 min-w-0">
-      <div class="moment-attach-card__title text-sm font-bold text-msg-text-active line-clamp-2">
+      <div class="moment-attach-card__title text-sm font-bold text-text-primary line-clamp-2">
         {{ title }}
       </div>
       <div class="moment-attach-card__type mt-1">

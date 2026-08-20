@@ -9,6 +9,8 @@ import LotteryCommentSection from '@/components/lottery_data/LotteryCommentSecti
 import ResourceInteractionBar from '@/components/interaction/ResourceInteractionBar.vue'
 import { useLotteryDetailStore, LOTTERY_COMMENT_TYPE } from '@/stores/lottery_detail.ts'
 import { normalizeLotteryData } from '@/utils/lotteryNormalization.ts'
+import { fetchInteractionStatusOne } from '@/api/notify/moment-api'
+import type { InteractionStatusItemView as InteractionStatusItem } from '@/api/notify/moment-api'
 
 const { t } = useI18n()
 const route = useRoute()
@@ -25,6 +27,32 @@ const focusRpid = computed(() => String(route.query.rpid ?? '') || null)
 
 // 卡片详情 + 评论区按 lotteryId 作为 key，保证切换不同卡片时重新渲染并拉取对应评论
 const bodyKey = computed(() => lotteryId.value || 'empty')
+
+// 详情页互动状态（bizType=lottery）：走单资源接口并累计浏览，供卡片回显浏览数/点赞/收藏等
+const status = ref<InteractionStatusItem | null>(null)
+
+async function loadInteractionStatus() {
+  if (!lotteryId.value) return
+  try {
+    status.value = await fetchInteractionStatusOne('lottery', lotteryId.value)
+  } catch {
+    // 静默：互动状态加载失败不影响卡片浏览
+  }
+}
+
+watch(lotteryId, () => {
+  status.value = null
+  void loadInteractionStatus()
+})
+void loadInteractionStatus()
+
+/** 卡片内点赞/收藏等变更后，浅合并同步详情页互动状态 */
+function handleStatusChange(payload: { bizId: string; status: Partial<InteractionStatusItem> }) {
+  status.value = {
+    ...(status.value ?? ({ bizId: payload.bizId, bizType: 'lottery' } as InteractionStatusItem)),
+    ...payload.status,
+  }
+}
 </script>
 
 <template>
@@ -40,10 +68,14 @@ const bodyKey = computed(() => lotteryId.value || 'empty')
 
     <div :key="bodyKey" class="lottery-card-detail__body">
       <div v-if="detailData" class="lottery-card-detail__card mb-6">
-        <BiliLotteryCard :lottery-data="detailData" />
+        <BiliLotteryCard
+          :lottery-data="detailData"
+          :status="status ?? undefined"
+          @update-status="handleStatusChange"
+        />
         <!-- 收藏 / 点赞（2.17.0：抽奖卡片走 be-message 通用互动） -->
         <div v-if="lotteryId" class="lottery-card-detail__interaction mt-3 flex justify-start">
-          <ResourceInteractionBar biz-type="lottery" :biz-id="lotteryId" />
+          <ResourceInteractionBar biz-type="lottery" :biz-id="lotteryId" count-view />
         </div>
       </div>
       <el-alert
@@ -58,9 +90,9 @@ const bodyKey = computed(() => lotteryId.value || 'empty')
         show-icon
       />
 
-      <section class="lottery-card-detail__comment">
+      <section v-if="lotteryId" class="lottery-card-detail__comment">
         <LotteryCommentSection
-          :oid="lotteryId || '0'"
+          :oid="lotteryId"
           :type="LOTTERY_COMMENT_TYPE"
           :up-mid="upMid"
           :focus-rpid="focusRpid"

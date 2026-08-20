@@ -34,6 +34,7 @@ import {
 // 所有响应类型均从生成的 hey-api SDK 导入，不再手写。
 // 对外暴露的旧类型名以别名形式重导出，避免改动各消费组件。
 import { request, authHeaders } from '@/api/http'
+import type { RequestOptions } from '@/api/http'
 import type {
   NotifyLevelEnum,
   NotifyStatusEnum,
@@ -71,6 +72,7 @@ export type { MessageSettingUpdateReq as MessageSettingPartial } from '@/api/not
 export type { EventMsgfeedItem as EventFeedItem } from '@/api/notify/hey-api'
 export type { EventMsgfeedSection as EventFeedSection } from '@/api/notify/hey-api'
 export type { EventUserBrief as EventFeedUser } from '@/api/notify/hey-api'
+export type { NotifyItem, NotifyAdminItem, NotifyListResp, NotifyAdminListResp } from '@/api/notify/hey-api'
 
 // 内部使用的小类型别名（枚举字面量联合）
 export type NotifyLevel = NotifyLevelEnum
@@ -107,25 +109,27 @@ export async function fetchNotifyUnread(): Promise<number> {
   )
 }
 
-export async function markNotifyRead(ids?: number[]): Promise<NotifyReadResp> {
+export async function markNotifyRead(ids?: number[], options?: RequestOptions): Promise<NotifyReadResp> {
   return request<NotifyReadResp>(
     () =>
       readNotifyApiV1MessageNotifyReadPost({
         headers: authHeaders(),
         body: { notify_ids: ids ?? null }
       }),
-    { affected: 0, unread_count: 0 }
+    { affected: 0, unread_count: 0 },
+    options
   )
 }
 
-export async function deleteNotify(ids: number[]): Promise<number> {
+export async function deleteNotify(ids: number[], options?: RequestOptions): Promise<number> {
   return request<number>(
     () =>
       deleteNotifyApiV1MessageNotifyDeletePost({
         headers: authHeaders(),
         body: { notify_ids: ids }
       }),
-    0
+    0,
+    options
   )
 }
 
@@ -146,7 +150,10 @@ export async function fetchAdminNotifyList(params: {
   )
 }
 
-export async function createNotify(payload: CreateNotifyPayload): Promise<NotifyAdminItem | null> {
+export async function createNotify(
+  payload: CreateNotifyPayload,
+  options?: RequestOptions
+): Promise<NotifyAdminItem | null> {
   return request<NotifyAdminItem | null>(
     () =>
       createNotifyApiV1MessageNotifyAdminCreatePost({
@@ -167,7 +174,8 @@ export async function createNotify(payload: CreateNotifyPayload): Promise<Notify
 
 export async function updateNotify(
   id: number,
-  payload: UpdateNotifyPayload
+  payload: UpdateNotifyPayload,
+  options?: RequestOptions
 ): Promise<NotifyAdminItem | null> {
   return request<NotifyAdminItem | null>(
     () =>
@@ -188,14 +196,15 @@ export async function updateNotify(
   )
 }
 
-export async function revokeNotify(id: number): Promise<boolean> {
+export async function revokeNotify(id: number, options?: RequestOptions): Promise<boolean> {
   return request<boolean>(
     () =>
       revokeNotifyApiV1MessageNotifyAdminRevokeNotifyIdPost({
         headers: authHeaders(),
         path: { notify_id: id }
       }),
-    false
+    false,
+    options
   )
 }
 
@@ -241,12 +250,15 @@ export async function fetchEventList(params: {
   )
 }
 
-export async function markEventRead(params: {
-  event_ids?: number[]
-  event_type?: EventType
-  source_type?: SourceType
-  source_id?: string
-}): Promise<EventReadResp> {
+export async function markEventRead(
+  params: {
+    event_ids?: number[]
+    event_type?: EventType
+    source_type?: SourceType
+    source_id?: string
+  },
+  options?: RequestOptions
+): Promise<EventReadResp> {
   return request<EventReadResp>(
     () =>
       readEventApiV1MessageEventReadPost({
@@ -258,7 +270,8 @@ export async function markEventRead(params: {
           source_id: params.source_id ?? null
         }
       }),
-    { affected: 0, unread_count: 0 }
+    { affected: 0, unread_count: 0 },
+    options
   )
 }
 
@@ -345,7 +358,10 @@ export async function fetchMessageSetting(): Promise<MessageSettingResp | null> 
   )
 }
 
-export async function updateMessageSetting(payload: MessageSettingPartial): Promise<MessageSettingResp | null> {
+export async function updateMessageSetting(
+  payload: MessageSettingPartial,
+  options?: RequestOptions
+): Promise<MessageSettingResp | null> {
   return request<MessageSettingResp | null>(
     () =>
       updateSettingApiV1MessageSettingUpdatePost({
@@ -361,6 +377,7 @@ export async function updateMessageSetting(payload: MessageSettingPartial): Prom
           dnd_end_hour: payload.dnd_end_hour ?? null
         }
       }),
-    null
+    null,
+    options
   )
 }

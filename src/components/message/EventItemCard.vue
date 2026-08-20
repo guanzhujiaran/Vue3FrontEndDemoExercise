@@ -1,6 +1,6 @@
 <template>
   <div
-    class="event-item-card group relative flex cursor-pointer gap-3 rounded-lg bg-msg-card p-4 transition-colors hover:bg-msg-card-hover"
+    class="event-item-card group relative flex cursor-pointer gap-3 rounded-lg bg-bg-overlay p-4 transition-colors hover:bg-fill-light"
     @click="openDetail"
   >
     <!-- 左侧：最多 2 个头像堆叠（对齐 B 站 msgfeed 样式） -->
@@ -8,7 +8,7 @@
       <img
         v-for="(u, idx) in showUsers"
         :key="u.mid ?? idx"
-        class="event-item-card__avatar absolute rounded-full border-2 border-msg-card object-cover"
+        class="event-item-card__avatar absolute rounded-full border-2 border-bg-overlay object-cover"
         :class="idx === 0 ? 'h-10 w-10 left-0 top-0 z-10' : 'h-7 w-7 left-5 top-5 z-20'"
         :src="u.avatar || BiliImg.face.noface"
         :alt="u.nickname || 'avatar'"
@@ -18,10 +18,10 @@
 
     <div class="event-item-card__body min-w-0 flex-1">
       <div class="event-item-card__head mb-1 flex items-center gap-2 text-sm">
-        <span class="event-item-card__name shrink-0 font-medium text-msg-text-active">{{ actorText }}</span>
-        <span class="event-item-card__action truncate text-msg-muted">{{ actionText }}</span>
+        <span class="event-item-card__name shrink-0 font-medium text-text-primary">{{ actorText }}</span>
+        <span class="event-item-card__action truncate text-text-placeholder">{{ actionText }}</span>
       </div>
-      <div class="event-item-card__meta flex items-center gap-3 text-xs text-msg-muted">
+      <div class="event-item-card__meta flex items-center gap-3 text-xs text-text-placeholder">
         <TimeText :time="props.item.like_time" />
         <span v-if="sourceText" class="event-item-card__source truncate">{{ sourceText }}</span>
       </div>
@@ -29,7 +29,7 @@
 
     <!-- 右侧：内容预览（评论摘要 / 动态标题）+ 视频封面 -->
     <div class="event-item-card__right hidden shrink-0 flex-col items-end gap-2 md:flex">
-      <p v-if="previewText" class="event-item-card__preview line-clamp-2 max-w-56 text-right text-xs text-msg-muted">
+      <p v-if="previewText" class="event-item-card__preview line-clamp-2 max-w-56 text-right text-xs text-text-placeholder">
         {{ previewText }}
       </p>
       <img

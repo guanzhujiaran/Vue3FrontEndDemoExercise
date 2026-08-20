@@ -3,7 +3,7 @@
     <!-- 话题详情头部（对齐 B 站） -->
     <div
       v-if="detail"
-      class="topic-feed__detail shrink-0 mb-4 rounded-lg bg-msg-card border border-msg-border p-5"
+      class="topic-feed__detail shrink-0 mb-4 rounded-lg bg-bg-overlay border border-border-light p-5"
     >
       <div class="topic-feed__detail-top flex items-start gap-4">
         <img
@@ -14,11 +14,11 @@
           alt="topic cover"
         />
         <div class="topic-feed__detail-main min-w-0 flex-1">
-          <h2 class="topic-feed__topic-name text-xl font-bold text-msg-text-active">#{{ topicName }}#</h2>
-          <p v-if="topicItem.description" class="topic-feed__topic-desc mt-1 text-sm text-msg-muted line-clamp-2">
+          <h2 class="topic-feed__topic-name text-xl font-bold text-text-primary">#{{ topicName }}#</h2>
+          <p v-if="topicItem.description" class="topic-feed__topic-desc mt-1 text-sm text-text-placeholder line-clamp-2">
             {{ topicItem.description }}
           </p>
-          <p class="topic-feed__topic-stats mt-2 text-sm text-msg-muted">
+          <p class="topic-feed__topic-stats mt-2 text-sm text-text-placeholder">
             <span v-if="topicItem.view">{{ formatCount(topicItem.view) }}浏览</span>
             <span v-if="topicItem.discuss" class="mx-2">·</span>
             <span v-if="topicItem.discuss">{{ formatCount(topicItem.discuss) }}讨论</span>
@@ -33,8 +33,8 @@
         </div>
       </div>
     </div>
-    <div v-else class="topic-feed__banner bg-msg-card rounded-lg border border-msg-border p-4 mb-4 shrink-0">
-      <h2 class="topic-feed__topic-name text-xl font-bold text-msg-text-active">#{{ topicName }}#</h2>
+    <div v-else class="topic-feed__banner bg-bg-overlay rounded-lg border border-border-light p-4 mb-4 shrink-0">
+      <h2 class="topic-feed__topic-name text-xl font-bold text-text-primary">#{{ topicName }}#</h2>
     </div>
 
     <!-- 热门 / 最新排序 -->

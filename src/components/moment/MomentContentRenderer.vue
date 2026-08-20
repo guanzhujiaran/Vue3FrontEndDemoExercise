@@ -1,5 +1,5 @@
 <template>
-  <div class="moment-content-renderer text-sm leading-relaxed text-msg-text-active">
+  <div class="moment-content-renderer text-sm leading-relaxed text-text-primary">
     <template v-for="(node, idx) in nodes" :key="idx">
       <!-- 纯文本 -->
       <el-text v-if="node.type === 'WORDS'" class="moment-content-renderer__words">{{ node.text }}</el-text>
@@ -7,7 +7,7 @@
       <!-- @用户 -->
       <el-link
         v-else-if="node.type === 'AT'"
-        class="moment-content-renderer__at text-msg-link"
+        class="moment-content-renderer__at text-primary"
         type="primary"
         underline="never"
         :href="node.jumpUrl || '#'"
@@ -19,7 +19,7 @@
       <!-- 话题 -->
       <el-link
         v-else-if="node.type === 'TOPIC'"
-        class="moment-content-renderer__topic text-msg-link font-bold"
+        class="moment-content-renderer__topic text-primary font-bold"
         type="primary"
         underline="never"
         :href="node.jumpUrl || '#'"
@@ -31,7 +31,7 @@
       <!-- 链接 -->
       <el-link
         v-else-if="node.type === 'LINK'"
-        class="moment-content-renderer__link text-msg-link"
+        class="moment-content-renderer__link text-primary"
         type="primary"
         underline="never"
         :href="node.jumpUrl || '#'"
@@ -53,7 +53,7 @@
           :src="node.cover"
           :alt="node.name || 'resource'"
         />
-        <span class="moment-content-renderer__resource-name text-msg-link font-medium truncate">
+        <span class="moment-content-renderer__resource-name text-primary font-medium truncate">
           {{ node.name || '查看详情' }}
         </span>
         <el-tag v-if="resourceTypeLabel(node.bizType)" size="default" type="info" effect="plain">

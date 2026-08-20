@@ -12,7 +12,7 @@ import commentApi, {
   type CommentType,
   type CommentUserBrief
 } from '@/api/lottery_comment.ts'
-import biliMessage from '@/utils/message'
+import { businessHandler } from '@/utils/businessHandler'
 import { useUserNavStore } from '@/stores/user_nav'
 import { useInject, KeysEnum } from '@/models/base/provide_model.ts'
 import type { UserNavModel } from '@/models/user/user_model.ts'
@@ -92,9 +92,11 @@ async function handleMentionSearch(pattern: string) {
   }
   mentionLoading.value = true
   try {
-    const res = await commentApi.searchAt(pattern.trim(), 20)
-    if (res && res.code === 0 && res.data) {
-      mentionOptions.value = (res.data as CommentUserBrief[])
+    const res = await businessHandler(commentApi.searchAt(pattern.trim(), 20), {
+      showSuccessToast: false,
+    })
+    if (res.success && res.data) {
+      mentionOptions.value = res.data
         .filter((u) => u.mid != null)
         .map((u) => ({
           value: u.uname || `用户${u.mid}`,
@@ -138,29 +140,35 @@ const displayList = computed(() =>
 )
 
 const loadMain = async () => {
+  // oid 无效（0 / 空 / undefined）时直接跳过，避免发出 oid=0 的无效请求
+  const rawOid = String(props.oid ?? '').trim()
+  if (!rawOid || rawOid === '0') {
+    isLoading.value = false
+    return
+  }
   isLoading.value = true
   try {
-    const resp = await commentApi.listMain(
+    const resp = await businessHandler(commentApi.listMain(
       props.oid,
       props.type,
       sortBy.value,
       currentPage.value,
       10,
       props.focusRpid
-    )
-    if (resp.code || !resp.data) {
-      biliMessage.error(resp.msg || '评论区加载失败')
-      return
-    }
-    topComment.value = resp.data.top
-    commentList.value = resp.data.items
-    total.value = resp.data.total
-    allCount.value = resp.data.all_count
+    ), {
+      showSuccessToast: false,
+    })
+    if (!resp.success || !resp.data) return
+    const data = resp.data
+    topComment.value = data.top
+    commentList.value = data.items
+    total.value = data.total
+    allCount.value = data.all_count
     // 仅当后端确实命中并置顶了目标时才记录聚焦目标，用于滚动定位
-    focusTargetRpid.value = resp.data.focus_rpid || null
+    focusTargetRpid.value = data.focus_rpid || null
     // 后端在匿名访问时返回 viewer_is_anonymous=true（SDK 尚未同步字段前通过 any 兜底读取）；
     // 优先级：后端标记 > 父组件 forceAnonymous > 本地登录态
-    const fromServer = (resp.data as { viewer_is_anonymous?: boolean })?.viewer_is_anonymous
+    const fromServer = (data as { viewer_is_anonymous?: boolean })?.viewer_is_anonymous
     viewerIsAnonymous.value = props.forceAnonymous || fromServer || !isLoggedIn.value
     // 评论加载后收集提及候选用户
     collectMentionUsers()
@@ -252,11 +260,11 @@ const buildNewComment = (
 
 const handlers: CommentHandlers = {
   like: async ({ rpid, nextAction }) => {
-    const resp = await commentApi.action(rpid, nextAction)
-    if (resp.code) {
-      biliMessage.error(resp.msg)
-      return
-    }
+    // 点赞静默成功（对标 B 站交互），失败提示由后端响应驱动（统一 businessHandler 处理）
+    const result = await businessHandler(commentApi.action(rpid, nextAction), {
+      showSuccessToast: false,
+    })
+    if (!result.success) return
     const item = findItem(rpid)
     if (item) {
       const old = item.action
@@ -277,43 +285,44 @@ const handlers: CommentHandlers = {
     } catch {
       return
     }
-    const resp = await commentApi.del(rpid)
-    if (resp.code) {
-      biliMessage.error(resp.msg)
-      return
-    }
-    removeItem(rpid)
-    biliMessage.success('已删除')
+    await businessHandler(
+      commentApi.del(rpid),
+      { successMessage: '已删除' },
+      [() => removeItem(rpid)]
+    )
   },
   reply: async ({ root, parent, message, atNameToMid }) => {
-    const resp = await commentApi.add(props.oid, props.type, root, parent, message, atNameToMid)
-    if (resp.code) {
-      biliMessage.error(resp.msg)
-      return
-    }
-    // 不重新拉取全部评论，直接把新回复插入对应根评论的楼中楼首条
-    const rootItem = findItem(root)
-    const replyTo = findItem(parent)?.member ?? null
-    if (rootItem) {
-      rootItem.replies = [
-        buildNewComment(resp.data, message, root, parent, replyTo),
-        ...(rootItem.replies || [])
+    await businessHandler(
+      commentApi.add(props.oid, props.type, root, parent, message, atNameToMid),
+      { successMessage: '评论成功' },
+      [
+        (result) => {
+          if (!result.success || !result.data) return
+          // 不重新拉取全部评论，直接把新回复插入对应根评论的楼中楼首条
+          const rootItem = findItem(root)
+          const replyTo = findItem(parent)?.member ?? null
+          if (rootItem) {
+            rootItem.replies = [
+              buildNewComment(result.data, message, root, parent, replyTo),
+              ...(rootItem.replies || [])
+            ]
+            // 审核中的评论不计入计数（与后端 total / rcount 只统计 NORMAL 的口径一致）
+            if (!result.data?.need_audit) {
+              rootItem.rcount = Number(rootItem.rcount) + 1
+              allCount.value += 1
+            }
+          }
+        },
       ]
-      // 审核中的评论不计入计数（与后端 total / rcount 只统计 NORMAL 的口径一致）
-      if (!resp.data?.need_audit) {
-        rootItem.rcount = Number(rootItem.rcount) + 1
-        allCount.value += 1
-      }
-    }
-    biliMessage.success('评论成功')
+    )
   },
   expandReplies: async (item: CommentItem, page: number) => {
-    const resp = await commentApi.listReply(item.rpid, props.oid, props.type, page, 10)
-    if (resp.code) {
-      biliMessage.error(resp.msg)
-      return { items: [], total: 0 }
-    }
-    return { items: resp.data.items, total: resp.data.total }
+    const result = await businessHandler(
+      commentApi.listReply(item.rpid, props.oid, props.type, page, 10),
+      { showSuccessToast: false }
+    )
+    if (!result.success || !result.data) return { items: [], total: 0 }
+    return { items: result.data.items, total: result.data.total }
   }
 }
 provide(CommentHandlersKey, handlers)
@@ -326,21 +335,27 @@ const submitTopComment = async () => {
     return
   }
   const atMap = buildAtNameToMid(msg)
-  const resp = await commentApi.add(props.oid, props.type, '0', '0', msg, atMap)
-  if (resp.code) {
-    biliMessage.error(resp.msg)
-    return
-  }
-  // 不重新拉取全部评论，直接把新评论插入一级评论列表首条
-  commentList.value = [buildNewComment(resp.data, msg, '0', '0', null), ...commentList.value]
-  // 审核中的评论不计入计数（与后端 total / all_count 只统计 NORMAL 的口径一致）
-  if (!resp.data?.need_audit) {
-    allCount.value += 1
-    total.value += 1
-  }
-  newComment.value = ''
-  atNameToMid.value = {}
-  biliMessage.success('评论成功')
+  await businessHandler(
+    commentApi.add(props.oid, props.type, '0', '0', msg, atMap),
+    { successMessage: '评论成功' },
+    [
+      (result) => {
+        if (!result.success || !result.data) return
+        // 不重新拉取全部评论，直接把新评论插入一级评论列表首条
+        commentList.value = [
+          buildNewComment(result.data, msg, '0', '0', null),
+          ...commentList.value
+        ]
+        // 审核中的评论不计入计数（与后端 total / all_count 只统计 NORMAL 的口径一致）
+        if (!result.data?.need_audit) {
+          allCount.value += 1
+          total.value += 1
+        }
+        newComment.value = ''
+        atNameToMid.value = {}
+      },
+    ]
+  )
 }
 
 watch([sortBy, currentPage], () => {
