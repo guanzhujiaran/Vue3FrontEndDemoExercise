@@ -59,10 +59,10 @@ async function loadStatus() {
       ? await fetchInteractionStatusOne(props.bizType, props.bizId)
       : (await fetchInteractionStatus(props.bizType, [props.bizId]))?.items?.[0]
     if (item) {
-      isLiked.value = item.isLike
-      isFavorite.value = item.isFavorite
-      likeCount.value = item.likeCount
-      favoriteCount.value = item.favoriteCount
+      isLiked.value = item.isLike ?? false
+      isFavorite.value = item.isFavorite ?? false
+      likeCount.value = item.likeCount ?? 0
+      favoriteCount.value = item.favoriteCount ?? 0
     }
   } catch {
     // 静默：交互态加载失败不影响浏览
@@ -81,8 +81,8 @@ async function handleThumb() {
   try {
     const resp = await thumbMoment(props.bizId, targetUp, { bizType: props.bizType })
     if (resp) {
-      likeCount.value = resp.likeCount
-      isLiked.value = resp.isLike
+      likeCount.value = resp.likeCount ?? 0
+      isLiked.value = resp.isLike ?? false
     }
   } catch {
     // 回滚

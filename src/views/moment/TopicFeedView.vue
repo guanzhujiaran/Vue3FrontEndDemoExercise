@@ -53,11 +53,12 @@
     >
       <template #content>
         <EmptyState v-if="!isLoading && !isError && items.length === 0" text="该话题下暂无动态" />
-        <div v-else class="topic-feed__list space-y-4 max-w-2xl mx-auto pb-4">
+        <div v-else class="topic-feed__list space-y-4 max-w-2xl mx-auto py-4">
           <MomentCard
             v-for="item in items"
             :key="item.dynIdStr"
             :item="item"
+            :status="statusOf(item.dynIdStr)"
             :show-more-actions="true"
             @click="openDetail"
             @src-click="openDetail"
@@ -65,20 +66,19 @@
             @thumb="handleThumb(item)"
             @report="handleReport(item)"
             @remove="handleRemove(item)"
-            @message="openMessage"
           />
         </div>
       </template>
     </LoadingMoreContainer>
-    <ReportDialog v-model="reportDialogVisible" biz-type="dynamic" :biz-id="reportDynId" />
+    <ReportDialog v-model="reportDialogVisible" :biz-type="ReportBizTypeEnum.DYNAMIC" :biz-id="reportDynId" />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, watch, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { fetchTopicFeed, fetchTopicDetail, thumbMoment } from '@/api/notify/moment-api'
-import type { MomentFeedItem, MomentTopicDetailResp } from '@/api/notify/moment-api'
+import { fetchTopicFeed, fetchTopicDetail, fetchInteractionStatus, InteractionBizTypeEnum, ReportBizTypeEnum, thumbMoment } from '@/api/notify/moment-api'
+import type { MomentFeedItem, MomentTopicDetailResp, InteractionStatusItem } from '@/api/notify/moment-api'
 import LoadingMoreContainer from '@/components/CommonCompo/Bili-Container-Compo/LoadingMoreContainer.vue'
 import EmptyState from '@/components/message/EmptyState.vue'
 import MomentCard from '@/components/moment/MomentCard.vue'
@@ -90,15 +90,32 @@ defineOptions({ name: 'TopicFeedView' })
 const route = useRoute()
 const router = useRouter()
 
-const topicId = Number(route.params.topicId)
+const topicId = String(route.params.topicId)
 const topicName = (route.query.topicName as string) || `话题 ${topicId}`
-const total = ref(0)
 
 const items = ref<MomentFeedItem[]>([])
 const isLoading = ref(false)
 const isMore = ref(true)
 const isError = ref(false)
 let historyOffset: number | undefined
+
+// 2.41.0：卡片统计统一走 /interaction/status 批量接口（卡片不再内置 stat 模块）
+const statusMap = ref<Record<string, InteractionStatusItem>>({})
+async function loadStatus(ids: string[]) {
+  const fresh = ids.filter((id) => !statusMap.value[id])
+  if (!fresh.length) return
+  try {
+    const res = await fetchInteractionStatus(InteractionBizTypeEnum.DYNAMIC, fresh)
+    for (const it of res?.items ?? []) {
+      if (it?.bizId) statusMap.value[it.bizId] = it
+    }
+  } catch {
+    // 弱依赖：失败不阻断展示
+  }
+}
+function statusOf(dynIdStr: string): InteractionStatusItem | null {
+  return statusMap.value[dynIdStr] ?? null
+}
 
 /** 话题详情（对齐 B 站 top_details） */
 const detail = ref<MomentTopicDetailResp | null>(null)
@@ -145,9 +162,10 @@ const handleLoad = async () => {
     } else {
       items.value.push(...newItems)
     }
+    // 2.41.0：批量拉取本页卡片互动统计（统一 status 接口）
+    if (newItems.length) void loadStatus(newItems.map((i) => i.dynIdStr))
     isMore.value = res.hasMore ?? false
-    total.value = res.total ?? 0
-    historyOffset = res.historyOffset
+    historyOffset = res.historyOffset ?? undefined
   } catch (e) {
     console.error('加载话题动态失败:', e)
     isError.value = true
@@ -196,29 +214,26 @@ function openUserSpace(item: MomentFeedItem) {
   router.push({ name: 'MOMENT_USER_SPACE', params: { mid: String(item.mid) } })
 }
 
-/** 发消息：跳转私信会话 */
-function openMessage(mid: number) {
-  router.push({ name: 'MESSAGE_DM_CHAT', params: { talkerMid: String(mid) } })
-}
-
 async function handleThumb(item: MomentFeedItem) {
   const up = item.modules?.find((m) => m.moduleType === 'interaction')?.isLike ? 2 : 1
   const res = await thumbMoment(item.dynIdStr, up)
   if (res) {
     const interMod = item.modules?.find((m) => m.moduleType === 'interaction')
     if (interMod) interMod.isLike = up === 1
-    if (item.stat) {
-      item.stat.likeCount = (item.stat.likeCount || 0) + (up === 1 ? 1 : -1)
+    const st = statusMap.value[item.dynIdStr]
+    if (st) {
+      st.isLike = up === 1
+      st.likeCount = Math.max(0, Number(st.likeCount ?? 0) + (up === 1 ? 1 : -1))
     }
   }
 }
 
 /** 统一举报弹窗（P11-T6） */
 const reportDialogVisible = ref(false)
-const reportDynId = ref<number>(0)
+const reportDynId = ref<string>('')
 
 function handleReport(item: MomentFeedItem) {
-  reportDynId.value = Number(item.dynIdStr)
+  reportDynId.value = item.dynIdStr // str 直接传递，避免雪花 ID 精度丢失
   reportDialogVisible.value = true
 }
 

@@ -4,10 +4,10 @@ import { useRouter, useRoute } from 'vue-router'
 import { ArrowLeft, Refresh, Check } from '@element-plus/icons-vue'
 import BiliPageHeader from '@/components/CommonCompo/Bili-Container-Compo/BiliPageHeader.vue'
 import CenteredContainer from '@/components/CommonCompo/Bili-Container-Compo/CenteredContainer.vue'
-import { upsertFingerprintRouterApiV1RpaBrowserUpsertFingerprintPost, genRandFingerprintRouterApiV1RpaBrowserGenRandFingerprintPost, readFingerprintRouterApiV1RpaBrowserReadFingerprintPost } from '@/api/browser/hey-api'
+import { 浏览器指纹管理Service } from '@/api/browser/hey-api'
 import { useUserNavStore } from '@/stores/user_nav'
 import biliMessage from '@/utils/message'
-import type { BrowserFingerprintUpsertParams } from '@/api/browser/hey-api/types.gen'
+import type { BrowserFingerprintUpsertParams } from '@/api/browser/hey-api'
 
 const router = useRouter()
 const route = useRoute()
@@ -40,13 +40,9 @@ const loadFingerprintData = async () => {
 
   loading.value = true
   try {
-    const response = await readFingerprintRouterApiV1RpaBrowserReadFingerprintPost({
+    const response = await 浏览器指纹管理Service.readFingerprintRouterApiV1RpaBrowserReadFingerprintPost({
       query: { browser_id: browserId },
-      headers: {
-        'x-bili-mid': userNavStore.user_nav.uid,
-        'x-bili-level': userNavStore.user_nav.level_info.current_level
-      }
-    }) as any  // responseStyle='data' → 直接返回 {code, data, msg}
+          }) as any  // responseStyle='data' → 直接返回 {code, data, msg}
 
     if (response?.code === 0 && response?.data) {
       const data = response.data as any
@@ -80,13 +76,9 @@ const loadFingerprintData = async () => {
 const handleGenerateRandom = async () => {
   generating.value = true
   try {
-    const response = await genRandFingerprintRouterApiV1RpaBrowserGenRandFingerprintPost({
+    const response = await 浏览器指纹管理Service.genRandFingerprintRouterApiV1RpaBrowserGenRandFingerprintPost({
       body: {},
-      headers: {
-        'x-bili-mid': userNavStore.user_nav.uid,
-        'x-bili-level': userNavStore.user_nav.level_info.current_level
-      }
-    }) as any  // responseStyle='data' → 直接返回 {code, data, msg}
+          }) as any  // responseStyle='data' → 直接返回 {code, data, msg}
 
     if (response?.code === 0 && response?.data) {
       const data = response.data as any
@@ -118,13 +110,9 @@ const handleGenerateRandom = async () => {
 const handleSubmit = async () => {
   loading.value = true
   try {
-    const response = await upsertFingerprintRouterApiV1RpaBrowserUpsertFingerprintPost({
+    const response = await 浏览器指纹管理Service.upsertFingerprintRouterApiV1RpaBrowserUpsertFingerprintPost({
       body: formData.value,
-      headers: {
-        'x-bili-mid': userNavStore.user_nav.uid,
-        'x-bili-level': userNavStore.user_nav.level_info.current_level
-      }
-    }) as any  // responseStyle='data' → 直接返回 {code, data, msg}
+          }) as any  // responseStyle='data' → 直接返回 {code, data, msg}
 
     if (response?.code === 0) {
       biliMessage.success(isEdit ? '更新成功' : '创建成功')

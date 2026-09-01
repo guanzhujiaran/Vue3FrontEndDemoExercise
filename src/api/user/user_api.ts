@@ -11,9 +11,14 @@ import type {
   Set_user_role_form,
 } from '@/models/user/user_setting/user_base_info_config_model.ts'
 import type { UserCasdoorInfoModel } from '@/models/user/casdoor/user_casdoor_info_model.ts'
+import type {
+  FollowListResp,
+  FollowOpResp,
+  FollowRelationResp,
+} from '@/models/user/blocklist_model.ts'
 
 // 用户类型统一从 SDK 导入，单一数据源，消除重复定义
-export type {
+import type {
   PptrUserLevelInfo,
   PptrUserVipInfo,
   PptrUserRoleInfo,
@@ -24,13 +29,37 @@ export type {
   UserActLogListResp,
   UserExpRecordItem,
   UserExpRecordListResp,
-} from '@/api/notify/hey-api'
+} from '@/api/community/hey-api'
+
+/**
+ * 从 hey-api 的 error（HTTP 非 2xx / 连接失败）中尽力还原后端返回的业务对象。
+ *
+ * hey-api / ofetch 在不同情况下会把响应体挂在 error 自身、error.data 或
+ * error.response._data 上，这里统一探测：只要拿到后端按 RootObject 契约返回的
+ * 内容（带 code 字段）就原样透传，避免用前端兜底文案覆盖后端真实报错。
+ */
+function extractBackendError<T>(error: unknown): BusinessResponse<T> | null {
+  if (!error || typeof error !== 'object') return null
+  const candidates: unknown[] = [
+    error,
+    (error as { data?: unknown }).data,
+    (error as { response?: { _data?: unknown } }).response?._data,
+  ]
+  for (const candidate of candidates) {
+    if (candidate && typeof candidate === 'object' && 'code' in candidate) {
+      const root = candidate as RootObject<T>
+      return { code: root.code, data: root.data, msg: root.msg }
+    }
+  }
+  return null
+}
 
 /**
  * 统一把 hey-api 的 RequestResult（{ data, error }）适配成 businessHandler 约定的
- * { code, data, msg } 业务响应契约：
- *   - 网络/HTTP 失败（r.error 存在或 data 为空）：code=-1，交由 businessHandler 判失败并弹错；
- *   - 成功：把后端业务对象包进 data，code 置 0。
+ * { code, data, msg } 业务响应契约，**原样透传后端返回的内容，不改写、不丢弃**：
+ *   - 后端按 RootObject 契约返回（含 code 字段）时，直接透传其 code / data / msg；
+ *   - HTTP 非 2xx / 连接失败时，优先还原后端随错误响应体返回的内容，仍以后端 msg 提示；
+ *   - 只有确实拿不到任何后端内容（如服务不可达、空响应）时，才用调用方传入的 failMsg 兜底。
  *
  * 所有 user_api 方法统一经 businessHandler 包装，保证「全部接口用 businessHandler 处理请求」，
  * 后端返回业务失败码（如 casdoor/info 的 -3）时会自动弹错误提示，无需调用方各自 try/catch。
@@ -40,15 +69,17 @@ function adapt<T>(
   failMsg: string
 ): Promise<BusinessResponse<T>> {
   return result.then((r) => {
-    if (r.error || r.data == null) {
-      return { code: -1, msg: failMsg, data: undefined }
-    }
     // hey-api 在 responseStyle 默认（data）下，r.data 已是后端的 RootObject
-    const root = r.data as unknown as RootObject<T>
+    const root = r.data as unknown as RootObject<T> | null
     if (root && typeof root === 'object' && 'code' in root) {
       return { code: root.code, data: root.data, msg: root.msg }
     }
-    return { code: 0, msg: 'ok', data: r.data as T }
+    // HTTP 非 2xx / 连接失败：后端通常仍会随错误响应体返回 { code, msg }，优先透传真实报错
+    const backendError = extractBackendError<T>(r.error)
+    if (backendError) return backendError
+    // 裸数据（无 code 字段）：视为成功，原样包进 data，不伪造后端 msg
+    if (r.data != null) return { code: 0, msg: '', data: r.data as T }
+    return { code: -1, msg: failMsg, data: undefined }
   })
 }
 
@@ -136,7 +167,12 @@ class UserApi {
     )
   }
 
-  Logout(): Promise<BusinessHandlerResult<string>> {
+  /**
+   * 退出登录：必须走后端接口——JWT 存放于 HttpOnly Cookie（bili_jwt），
+   * 只有网关会下发清除该 Cookie 的响应，前端删不掉。
+   * @param silent 静默模式（不弹「退出登录成功」toast），用于注销账号等已有自定义提示的场景
+   */
+  Logout(silent = false): Promise<BusinessHandlerResult<string>> {
     return businessHandler<string>(
       adapt<string>(
         client.post({
@@ -145,7 +181,11 @@ class UserApi {
         }),
         '退出登录失败'
       ),
-      { successMessage: '退出登录成功', errorMessage: '退出登录失败' }
+      {
+        showSuccessToast: !silent,
+        successMessage: '退出登录成功',
+        errorMessage: '退出登录失败'
+      }
     )
   }
 
@@ -244,6 +284,86 @@ class UserApi {
         '获取经验记录失败'
       ),
       { showSuccessToast: false, errorMessage: '获取经验记录失败' }
+    )
+  }
+
+  // 用户中心「黑名单」：分页拉取本人拉黑的用户列表
+  BlocklistList(
+    page_num = 1,
+    page_size = 20,
+  ): Promise<BusinessHandlerResult<FollowListResp>> {
+    return businessHandler<FollowListResp>(
+      adapt<FollowListResp>(
+        client.get({
+          url: '/api/v1/user/blocklist',
+          query: { page_num, page_size },
+        }),
+        '获取黑名单失败',
+      ),
+      { showSuccessToast: false, errorMessage: '获取黑名单失败' },
+    )
+  }
+
+  // 用户中心「黑名单」：拉黑指定 mid
+  BlocklistAdd(target_mid: number): Promise<BusinessHandlerResult<FollowOpResp>> {
+    return businessHandler<FollowOpResp>(
+      adapt<FollowOpResp>(
+        client.post({
+          url: '/api/v1/user/blocklist',
+          body: { target_mid },
+          headers: { 'Content-Type': 'application/json' },
+        }),
+        '拉黑失败',
+      ),
+      { showSuccessToast: false, errorMessage: '拉黑失败' },
+    )
+  }
+
+  // 用户中心「黑名单」：解除拉黑指定 mid
+  BlocklistRemove(target_mid: number): Promise<BusinessHandlerResult<FollowOpResp>> {
+    return businessHandler<FollowOpResp>(
+      adapt<FollowOpResp>(
+        client.delete({
+          url: '/api/v1/user/blocklist',
+          query: { target_mid },
+        }),
+        '解除拉黑失败',
+      ),
+      { showSuccessToast: false, errorMessage: '解除拉黑失败' },
+    )
+  }
+
+  // 用户中心「黑名单」：查询与某用户的双向关系（是否已拉黑 / 被拉黑）
+  BlocklistCheck(target_mid: number): Promise<BusinessHandlerResult<FollowRelationResp>> {
+    return businessHandler<FollowRelationResp>(
+      adapt<FollowRelationResp>(
+        client.get({
+          url: '/api/v1/user/blocklist/check',
+          query: { target_mid },
+        }),
+        '关系查询失败',
+      ),
+      { showSuccessToast: false, errorMessage: '关系查询失败' },
+    )
+  }
+
+  // 用户中心「账号注销」：二次确认后提交注销申请（异步清理）
+  // silent=true 时静默成功，由调用方自行提示（注销文案需说明「后台异步清理」，且紧接登出跳转）
+  Deactivate(confirm = true, silent = false): Promise<BusinessHandlerResult<string>> {
+    return businessHandler<string>(
+      adapt<string>(
+        client.post({
+          url: '/api/v1/user/deactivate',
+          body: { confirm },
+          headers: { 'Content-Type': 'application/json' },
+        }),
+        '注销申请提交失败',
+      ),
+      {
+        showSuccessToast: !silent,
+        successMessage: '注销申请已提交',
+        errorMessage: '注销申请提交失败',
+      },
     )
   }
 }

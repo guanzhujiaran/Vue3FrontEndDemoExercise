@@ -9,8 +9,8 @@ import LotteryCommentSection from '@/components/lottery_data/LotteryCommentSecti
 import ResourceInteractionBar from '@/components/interaction/ResourceInteractionBar.vue'
 import { useLotteryDetailStore, LOTTERY_COMMENT_TYPE } from '@/stores/lottery_detail.ts'
 import { normalizeLotteryData } from '@/utils/lotteryNormalization.ts'
-import { fetchInteractionStatusOne } from '@/api/notify/moment-api'
-import type { InteractionStatusItemView as InteractionStatusItem } from '@/api/notify/moment-api'
+import { fetchInteractionStatusOne, InteractionBizTypeEnum } from '@/api/notify/moment-api'
+import type { InteractionStatusItem } from '@/api/notify/moment-api'
 
 const { t } = useI18n()
 const route = useRoute()
@@ -34,7 +34,7 @@ const status = ref<InteractionStatusItem | null>(null)
 async function loadInteractionStatus() {
   if (!lotteryId.value) return
   try {
-    status.value = await fetchInteractionStatusOne('lottery', lotteryId.value)
+    status.value = await fetchInteractionStatusOne(InteractionBizTypeEnum.LOTTERY, lotteryId.value)
   } catch {
     // 静默：互动状态加载失败不影响卡片浏览
   }
@@ -49,7 +49,7 @@ void loadInteractionStatus()
 /** 卡片内点赞/收藏等变更后，浅合并同步详情页互动状态 */
 function handleStatusChange(payload: { bizId: string; status: Partial<InteractionStatusItem> }) {
   status.value = {
-    ...(status.value ?? ({ bizId: payload.bizId, bizType: 'lottery' } as InteractionStatusItem)),
+    ...(status.value ?? { bizId: payload.bizId, bizType: InteractionBizTypeEnum.LOTTERY }),
     ...payload.status,
   }
 }
@@ -75,7 +75,7 @@ function handleStatusChange(payload: { bizId: string; status: Partial<Interactio
         />
         <!-- 收藏 / 点赞（2.17.0：抽奖卡片走 be-message 通用互动） -->
         <div v-if="lotteryId" class="lottery-card-detail__interaction mt-3 flex justify-start">
-          <ResourceInteractionBar biz-type="lottery" :biz-id="lotteryId" count-view />
+          <ResourceInteractionBar :biz-type="InteractionBizTypeEnum.LOTTERY" :biz-id="lotteryId" count-view />
         </div>
       </div>
       <el-alert

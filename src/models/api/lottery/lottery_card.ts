@@ -138,6 +138,8 @@ export interface ReserveInfoFlatData {
   etime: number
   jump_url: string
   reserve_sid: number
+  /** lotdata 主键 lottery_id（对外互动资源 ID） */
+  lottery_id?: number | null
   available: boolean
   app_sche: string
   dynamic_id?: number | null

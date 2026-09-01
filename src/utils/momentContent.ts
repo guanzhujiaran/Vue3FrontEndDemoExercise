@@ -14,9 +14,11 @@
  * 与 `moment_publish._nodes_to_text` 的解析口径对应，前端拼装结果可直接提交后端。
  */
 
+import type { InteractionBizTypeEnum } from '@/api/notify/moment-api'
+
 export interface MomentAttachResource {
-  /** 资源类型（如 lottery） */
-  bizType: string
+  /** 资源类型（InteractionBizTypeEnum 值） */
+  bizType: InteractionBizTypeEnum
   /** 资源 id（字符串，避免 19 位 ID 精度丢失） */
   bizId: string
   /** 资源标题（attach 卡片显示名） */

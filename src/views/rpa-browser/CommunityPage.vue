@@ -5,11 +5,11 @@ import { ElMessageBox } from 'element-plus'
 import BiliPageHeader from '@/components/CommonCompo/Bili-Container-Compo/BiliPageHeader.vue'
 import FlexContainer from '@/components/CommonCompo/Bili-Container-Compo/FlexContainer.vue'
 import CenteredContainer from '@/components/CommonCompo/Bili-Container-Compo/CenteredContainer.vue'
-import { listCommunityActionsApiV1RpaBrowserControlCommunityActionsListPost, listCommunityPluginsApiV1RpaBrowserControlCommunityPluginsListPost, listCommunityWorkflowsApiV1RpaBrowserControlCommunityWorkflowsListPost, forkCustomActionApiV1RpaBrowserControlCustomActionsForkPost, forkPluginApiV1RpaBrowserControlPluginsForkPost, forkWorkflowApiV1RpaBrowserControlWorkflowsForkPost } from '@/api/browser/hey-api'
+import { 工作流管理Service, 插件挂载管理Service, 社区互动管理Service, 自定义操作管理Service } from '@/api/browser/hey-api'
 import { useUserNavStore } from '@/stores/user_nav'
 import biliMessage from '@/utils/message'
 import ResourceInteractionBar from '@/components/interaction/ResourceInteractionBar.vue'
-import type { FilterType, SortBy, SortOrder } from '@/api/browser/hey-api/types.gen'
+import type { FilterType, SortBy, SortOrder } from '@/api/browser/hey-api'
 
 type TabType = 'actions' | 'plugins' | 'workflows'
 
@@ -40,7 +40,7 @@ const sortOptions = [
 const loadActionsList = async () => {
   loading.value = true
   try {
-    const response = await listCommunityActionsApiV1RpaBrowserControlCommunityActionsListPost({
+    const response = await 社区互动管理Service.listCommunityActionsApiV1RpaBrowserControlCommunityActionsListPost({
       body: {
         page: currentPage.value,
         per_page: pageSize.value,
@@ -69,7 +69,7 @@ const loadActionsList = async () => {
 const loadPluginsList = async () => {
   loading.value = true
   try {
-    const response = await listCommunityPluginsApiV1RpaBrowserControlCommunityPluginsListPost({
+    const response = await 社区互动管理Service.listCommunityPluginsApiV1RpaBrowserControlCommunityPluginsListPost({
       body: {
         page: currentPage.value,
         per_page: pageSize.value,
@@ -98,7 +98,7 @@ const loadPluginsList = async () => {
 const loadWorkflowsList = async () => {
   loading.value = true
   try {
-    const response = await listCommunityWorkflowsApiV1RpaBrowserControlCommunityWorkflowsListPost({
+    const response = await 社区互动管理Service.listCommunityWorkflowsApiV1RpaBrowserControlCommunityWorkflowsListPost({
       body: {
         page: currentPage.value,
         per_page: pageSize.value,
@@ -146,7 +146,7 @@ const handleForkAction = async (actionId: number) => {
       type: 'info'
     })
 
-    const response = await forkCustomActionApiV1RpaBrowserControlCustomActionsForkPost({
+    const response = await 自定义操作管理Service.forkCustomActionApiV1RpaBrowserControlCustomActionsForkPost({
       body: { id: actionId },
       headers: {
         'x-bili-mid': userNavStore.user_nav.uid,
@@ -175,7 +175,7 @@ const handleForkPlugin = async (pluginId: number) => {
       type: 'info'
     })
 
-    const response = await forkPluginApiV1RpaBrowserControlPluginsForkPost({
+    const response = await 插件挂载管理Service.forkPluginApiV1RpaBrowserControlPluginsForkPost({
       body: { id: pluginId },
       headers: {
         'x-bili-mid': userNavStore.user_nav.uid,
@@ -204,7 +204,7 @@ const handleForkWorkflow = async (workflowId: number) => {
       type: 'info'
     })
 
-    const response = await forkWorkflowApiV1RpaBrowserControlWorkflowsForkPost({
+    const response = await 工作流管理Service.forkWorkflowApiV1RpaBrowserControlWorkflowsForkPost({
       body: { id: workflowId },
       headers: {
         'x-bili-mid': userNavStore.user_nav.uid,

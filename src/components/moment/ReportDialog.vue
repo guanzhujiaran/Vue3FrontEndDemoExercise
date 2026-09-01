@@ -66,7 +66,7 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-import { REPORT_REASONS, reportByBiz } from '@/api/notify/moment-api'
+import { REPORT_REASONS, ReportBizTypeEnum, reportByBiz } from '@/api/notify/moment-api'
 
 const OTHER_REASON = 6 // ReportReasonEnum.OTHER
 
@@ -74,8 +74,8 @@ const MAX_PICS = 3
 
 const props = defineProps<{
   modelValue: boolean
-  bizType: string // dynamic / comment / user
-  bizId: number
+  bizType: ReportBizTypeEnum // 举报来源类型（ReportBizTypeEnum 值）
+  bizId: string // 雪花 id 用 str 传递，避免 Number() 精度丢失
 }>()
 
 const emit = defineEmits<{

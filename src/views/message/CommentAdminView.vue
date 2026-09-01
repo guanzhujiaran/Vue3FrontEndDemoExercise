@@ -1,8 +1,7 @@
 <template>
   <div class="comment-admin flex flex-col gap-4">
-    <div class="comment-admin__header flex items-center justify-between">
+    <div class="comment-admin__header">
       <h2 class="text-lg font-bold text-text-primary">{{ t('message.commentAuditTitle') }}</h2>
-      <el-button size="default" @click="load">{{ t('message.refresh') }}</el-button>
     </div>
 
     <div class="comment-admin__stats grid grid-cols-2 gap-3 md:grid-cols-4">
@@ -100,6 +99,18 @@
       </template>
     </div>
 
+    <div class="comment-admin__table-bar mb-2 flex items-center justify-end">
+      <el-button
+        class="comment-admin__refresh-btn"
+        size="default"
+        :icon="Refresh"
+        :loading="loading"
+        @click="load"
+      >
+        {{ t('message.refresh') }}
+      </el-button>
+    </div>
+
     <LoadingWrap :loading="loading" :rows="6">
       <EmptyState v-if="items.length === 0" :text="t('message.emptyAuditComment')" />
       <!-- 父容器固定高度，由 AutoResizer 自动测量并传给表格 width/height -->
@@ -110,7 +121,7 @@
               :columns="commentColumns"
               :data="items"
               :width="width"
-              :height="height"
+              :height="fitTableHeight(height)"
               :row-height="72"
               :header-height="44"
               :footer-height="total > pageSize ? 64 : 0"
@@ -143,7 +154,7 @@
 
                 <!-- 作者 -->
                 <template v-else-if="column.key === 'author'">
-                  <UserBriefCell :mid="rowData.mid" :brief="rowData.member" />
+                  <UserBriefCell :mid="rowData.mid" :brief="rowData.member" :show-actions="true" />
                 </template>
 
                 <!-- 内容 -->
@@ -239,19 +250,19 @@ import { computed, onMounted, reactive, ref } from 'vue'
 import type { Column } from 'element-plus'
 import { useDebounceFn } from '@vueuse/core'
 import { useI18n } from 'vue-i18n'
+import { Refresh } from '@element-plus/icons-vue'
 import biliMessage from '@/utils/message'
 import { businessHandler, type BusinessResponse } from '@/utils/businessHandler'
 
 const { t } = useI18n()
 import {
-  adminStatsApiV1CommentAdminStatsGet,
-  auditQueueApiV1CommentAdminAuditGet,
-  bulkAuditCommentApiV1CommentAdminAuditBatchPost,
-  unbanUsers,
+  CommentAdminService,
+  CommentStateEnum,
+  MessageAdminBanService,
   type StandardResponseCommentAuditItem,
   type StandardResponseCommentAuditListResp,
   type StandardResponseCommentStatsResp,
-} from '@/api/notify/hey-api'
+} from '@/api/community/hey-api'
 
 type CommentAuditRow = NonNullable<StandardResponseCommentAuditItem['data']>
 type CommentAuditListData = NonNullable<StandardResponseCommentAuditListResp['data']>
@@ -272,7 +283,8 @@ const total = ref(0)
 const page = ref(1)
 const pageSize = ref(20)
 const pageSizes = [10, 20, 50, 100]
-const stateFilter = ref<string[]>([])
+// 默认筛选「审核中」（审核员进入页面最关心待审队列）
+const stateFilter = ref<string[]>(['auditing'])
 const canViewAllStates = ref(false)
 const stats = reactive<CommentStatsData>({
   total_comments: 0,
@@ -356,7 +368,7 @@ async function unbanSelected() {
   userActionPending.value = true
   try {
     await businessHandler<null>(
-      unbanUsers({ body: { mids: selectedMids.value } }) as unknown as Promise<
+      MessageAdminBanService.unbanUsers({ body: { mids: selectedMids.value } }) as unknown as Promise<
         BusinessResponse<null>
       >,
       { successMessage: t('message.unbanSuccess') },
@@ -367,17 +379,27 @@ async function unbanSelected() {
   }
 }
 
+// 表格高度自适应：数据不满一屏时收缩到内容实际高度，底部滚动条紧跟最后一行数据
+const TABLE_HEADER_H = 44
+const TABLE_ROW_H = 72
+const TABLE_FOOTER_H = 64
+function fitTableHeight(avail: number): number {
+  const footerH = total.value > pageSize.value ? TABLE_FOOTER_H : 0
+  const contentH = TABLE_HEADER_H + items.value.length * TABLE_ROW_H + footerH
+  return Math.min(avail, Math.max(contentH, TABLE_HEADER_H + TABLE_ROW_H + footerH))
+}
+
 async function load() {
   loading.value = true
   const [list, st] = await Promise.all([
-    auditQueueApiV1CommentAdminAuditGet({
+    CommentAdminService.auditQueueApiV1CommentAdminAuditGet({
       query: {
         state: stateFilter.value.length ? stateFilter.value : undefined,
         page_num: page.value,
         page_size: pageSize.value
       }
     }),
-    adminStatsApiV1CommentAdminStatsGet()
+    CommentAdminService.adminStatsApiV1CommentAdminStatsGet()
   ])
   items.value = list?.data?.items ?? []
   total.value = list?.data?.total ?? 0
@@ -460,14 +482,14 @@ async function doAudit(
     const newState = OP_STATE_MAP[op]
     // 一次批量审核调用，逐条原因通过 notes 映射传入（{ rpid: 原因 }）；
     // 成功文案由调用方预设，失败提示由后端响应驱动（统一 businessHandler 处理）
-    await businessHandler<{ failed?: number[] }>(
-      bulkAuditCommentApiV1CommentAdminAuditBatchPost({
+    await businessHandler<{ failed?: string[] }>(
+      CommentAdminService.bulkAuditCommentApiV1CommentAdminAuditBatchPost({
         body: {
           rpids: rows.map((r) => r.rpid),
           op,
           notes: reasons ?? undefined
         }
-      }) as unknown as Promise<BusinessResponse<{ failed?: number[] }>>,
+      }) as unknown as Promise<BusinessResponse<{ failed?: string[] }>>,
       { successMessage: t('message.processedCount', { n: rows.length }) },
       [
         (result) => {
@@ -477,7 +499,7 @@ async function doAudit(
           rows.forEach((row) => {
             if (!failed.has(row.rpid)) {
               const target = items.value.find((it) => it.rpid === row.rpid)
-              if (target) target.audit_state = newState
+              if (target) target.state = newState
             }
           })
         },
@@ -493,26 +515,26 @@ const batchAuditDebounced = useDebounceFn(batchAudit, 500)
 const auditPending = ref(false)
 const userActionPending = ref(false)
 
-// 审核操作 -> 目标状态
-const OP_STATE_MAP: Record<string, string> = {
-  pass: 'normal',
-  reject: 'rejected',
-  hidden: 'hidden',
-  restore: 'normal'
+// 审核操作 -> 目标状态（用于本地就地更新行状态，须为数值枚举，与后端响应一致）
+const OP_STATE_MAP: Record<string, CommentStateEnum> = {
+  pass: CommentStateEnum.NORMAL,
+  reject: CommentStateEnum.REJECTED,
+  hidden: CommentStateEnum.HIDDEN,
+  restore: CommentStateEnum.NORMAL
 }
 
-function stateTag(s: string): 'success' | 'warning' | 'danger' | 'info' {
-  if (s === 'normal') return 'success'
-  if (s === 'auditing') return 'warning'
-  if (s === 'rejected' || s === 'hidden') return 'danger'
+function stateTag(s: CommentStateEnum): 'success' | 'warning' | 'danger' | 'info' {
+  if (s === CommentStateEnum.NORMAL) return 'success'
+  if (s === CommentStateEnum.AUDITING) return 'warning'
+  if (s === CommentStateEnum.REJECTED || s === CommentStateEnum.HIDDEN) return 'danger'
   return 'info'
 }
 
-function stateText(s: string): string {
-  if (s === 'normal') return t('message.stateNormal')
-  if (s === 'auditing') return t('message.stateAuditing')
-  if (s === 'rejected') return t('message.stateRejected')
-  if (s === 'hidden') return t('message.stateHidden')
+function stateText(s: CommentStateEnum): string {
+  if (s === CommentStateEnum.NORMAL) return t('message.stateNormal')
+  if (s === CommentStateEnum.AUDITING) return t('message.stateAuditing')
+  if (s === CommentStateEnum.REJECTED) return t('message.stateRejected')
+  if (s === CommentStateEnum.HIDDEN) return t('message.stateHidden')
   return t('message.stateDeleted')
 }
 

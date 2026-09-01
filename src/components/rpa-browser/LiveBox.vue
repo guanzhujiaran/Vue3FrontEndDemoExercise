@@ -2,17 +2,7 @@
 import { ref, watch, onMounted, onUnmounted, inject, provide, type Ref } from 'vue'
 import { VideoPlay, VideoPause, Plus, Close } from '@element-plus/icons-vue'
 import { ElMessageBox } from 'element-plus'
-import {
-  createWebrtcOfferApiV1RpaBrowserControlWebrtcOfferPost,
-  handleWebrtcAnswerApiV1RpaBrowserControlWebrtcAnswerPost,
-  closeWebrtcStreamApiV1RpaBrowserControlWebrtcClosePost,
-  addIceCandidateApiV1RpaBrowserControlWebrtcIceCandidatePost,
-  getWebrtcStatusApiV1RpaBrowserControlWebrtcStatusPost,
-  getPageInfoApiV1RpaBrowserControlOperationGetPageInfoPost,
-  switchPageApiV1RpaBrowserControlOperationSwitchPagePost,
-  closePageApiV1RpaBrowserControlOperationClosePagePost,
-  openPageApiV1RpaBrowserControlOperationOpenPagePost
-} from '@/api/browser/hey-api'
+import { WebRtc视频流Service, 自动化控制Service } from '@/api/browser/hey-api'
 import { useUserNavStore } from '@/stores/user_nav'
 import biliMessage from '@/utils/message'
 import { useI18n } from 'vue-i18n'
@@ -65,8 +55,7 @@ interface PageInfo {
 // 调用 get_page_info API 获取页面信息
 const fetchPagesList = async (): Promise<PageInfo | null> => {
   try {
-    const response = await getPageInfoApiV1RpaBrowserControlOperationGetPageInfoPost({
-      headers: getHeaders(),
+    const response = await 自动化控制Service.getPageInfoApiV1RpaBrowserControlOperationGetPageInfoPost({
       query: { browser_id: props.browserId },
       body: {}
     })
@@ -88,9 +77,8 @@ const fetchPagesList = async (): Promise<PageInfo | null> => {
 
 const closeWebRtcStream = async () => {
   try {
-    const response = await closeWebrtcStreamApiV1RpaBrowserControlWebrtcClosePost({
+    const response = await WebRtc视频流Service.closeWebrtcStreamApiV1RpaBrowserControlWebrtcClosePost({
       query: { browser_id: props.browserId },
-      headers: getHeaders(),
       body: { stream_key: streamKey.value || '' }
     })
 
@@ -107,10 +95,8 @@ const closeWebRtcStream = async () => {
 
 const loadWebrtcStatus = async () => {
   try {
-    const response = await getWebrtcStatusApiV1RpaBrowserControlWebrtcStatusPost({
-      query: { browser_id: props.browserId },
-      headers: getHeaders()
-    })
+    const response = await WebRtc视频流Service.getWebrtcStatusApiV1RpaBrowserControlWebrtcStatusPost({
+      query: { browser_id: props.browserId }})
 
     if (response?.code === 0 && response?.data) {
       const data = response.data.data as Record<string, unknown>
@@ -200,9 +186,8 @@ const initWebRTC = async () => {
         console.log('ICE candidate:', event.candidate)
         // 发送 ICE candidate 到后端
         try {
-          await addIceCandidateApiV1RpaBrowserControlWebrtcIceCandidatePost({
+          await WebRtc视频流Service.addIceCandidateApiV1RpaBrowserControlWebrtcIceCandidatePost({
             query: { browser_id: props.browserId },
-            headers: getHeaders(),
             body: {
               stream_key: streamKey.value || '',
               candidate: event.candidate.candidate,
@@ -234,9 +219,8 @@ const initWebRTC = async () => {
     }
 
     // 先调用 /webrtc/offer 获取 offer 数据
-    const offerResponse = await createWebrtcOfferApiV1RpaBrowserControlWebrtcOfferPost({
+    const offerResponse = await WebRtc视频流Service.createWebrtcOfferApiV1RpaBrowserControlWebrtcOfferPost({
       query: { browser_id: props.browserId },
-      headers: getHeaders(),
       body: { page_index: currentPageIndex.value }
     })
 
@@ -255,9 +239,8 @@ const initWebRTC = async () => {
       await peerConnection.value.setLocalDescription(answer)
 
       // 发送 answer 到后端
-      const answerResponse = await handleWebrtcAnswerApiV1RpaBrowserControlWebrtcAnswerPost({
+      const answerResponse = await WebRtc视频流Service.handleWebrtcAnswerApiV1RpaBrowserControlWebrtcAnswerPost({
         query: { browser_id: props.browserId },
-        headers: getHeaders(),
         body: {
           stream_key: offerData.stream_key,
           sdp: answer.sdp || '',
@@ -326,8 +309,7 @@ const handleAddPage = async () => {
   }
 
   try {
-    const response = await openPageApiV1RpaBrowserControlOperationOpenPagePost({
-      headers: getHeaders(),
+    const response = await 自动化控制Service.openPageApiV1RpaBrowserControlOperationOpenPagePost({
       query: { browser_id: props.browserId },
       body: { url: 'about:blank', page_index: -1 }
     })
@@ -356,8 +338,7 @@ const handleClosePage = async (index: number) => {
   }
 
   try {
-    const response = await closePageApiV1RpaBrowserControlOperationClosePagePost({
-      headers: getHeaders(),
+    const response = await 自动化控制Service.closePageApiV1RpaBrowserControlOperationClosePagePost({
       query: { browser_id: props.browserId },
       body: { page_index: index }
     })
@@ -385,8 +366,7 @@ const handleSwitchPage = async (index: number) => {
   const wasStreaming = isStreaming.value
 
   try {
-    const response = await switchPageApiV1RpaBrowserControlOperationSwitchPagePost({
-      headers: getHeaders(),
+    const response = await 自动化控制Service.switchPageApiV1RpaBrowserControlOperationSwitchPagePost({
       query: { browser_id: props.browserId },
       body: { page_index: index }
     })

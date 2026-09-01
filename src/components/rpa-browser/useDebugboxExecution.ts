@@ -1,10 +1,5 @@
 import { ref, type Ref } from 'vue'
-import {
-  executeActionApiV1RpaBrowserControlActionsExecutePost,
-  executeWorkflowApiV1RpaBrowserControlWorkflowsExecutePost,
-  previewActionParamsApiV1RpaBrowserControlActionsPreviewPost,
-  validateActionParamsApiV1RpaBrowserControlActionsValidatePost,
-} from '@/api/browser/hey-api'
+import { 执行引擎Service } from '@/api/browser/hey-api'
 import type { ActionPreviewResponse } from '@/api/browser/hey-api'
 import { useUserNavStore } from '@/stores/user_nav'
 import biliMessage from '@/utils/message'
@@ -63,7 +58,7 @@ export function useDebugboxExecution(
     }
 
     try {
-      const response = await executeActionApiV1RpaBrowserControlActionsExecutePost({
+      const response = await 执行引擎Service.executeActionApiV1RpaBrowserControlActionsExecutePost({
         query: { browser_id: browserId }, body, headers: userNavStore.user_header,
       })
       if (response?.code !== 0) {
@@ -100,7 +95,7 @@ export function useDebugboxExecution(
     operatingKind.value = 'preview'
 
     try {
-      const response = await previewActionParamsApiV1RpaBrowserControlActionsPreviewPost({
+      const response = await 执行引擎Service.previewActionParamsApiV1RpaBrowserControlActionsPreviewPost({
         query: { browser_id: browserId }, body: { action_id: item.action_id, params: getActionParams(item), input_vars: getInputVars(item), output_vars: getOutputVars(item) }, headers: userNavStore.user_header,
       })
       if (response?.code !== 0) {
@@ -131,7 +126,7 @@ export function useDebugboxExecution(
     operatingKind.value = 'validate'
 
     try {
-      const response = await validateActionParamsApiV1RpaBrowserControlActionsValidatePost({
+      const response = await 执行引擎Service.validateActionParamsApiV1RpaBrowserControlActionsValidatePost({
         query: { browser_id: browserId }, body: { action_id: item.action_id, params: getActionParams(item), input_vars: getInputVars(item), output_vars: getOutputVars(item) }, headers: userNavStore.user_header,
       })
       if (response?.code !== 0) {
@@ -185,7 +180,7 @@ export function useDebugboxExecution(
         return step
       })
 
-      const response = await executeWorkflowApiV1RpaBrowserControlWorkflowsExecutePost({
+      const response = await 执行引擎Service.executeWorkflowApiV1RpaBrowserControlWorkflowsExecutePost({
         query: { browser_id: browserId }, body: { steps, variables: {}, input_data: {}, output_vars: [] }, headers: userNavStore.user_header,
       })
 
@@ -241,7 +236,7 @@ export function useDebugboxExecution(
         action_id: child.action_id, action_type: child.action_type || child.action_id,
         params: getActionParams(child), input_vars: getInputVars(child), output_vars: getOutputVars(child),
       }))
-      const response = await executeWorkflowApiV1RpaBrowserControlWorkflowsExecutePost({
+      const response = await 执行引擎Service.executeWorkflowApiV1RpaBrowserControlWorkflowsExecutePost({
         query: { browser_id: browserId }, body: { steps, variables: {}, input_data: {}, output_vars: [] }, headers: userNavStore.user_header,
       })
       if (response?.code === 0) {
@@ -301,7 +296,7 @@ export function useDebugboxExecution(
 
     branchOperating.value[childKey] = true
     try {
-      const response = await executeActionApiV1RpaBrowserControlActionsExecutePost({
+      const response = await 执行引擎Service.executeActionApiV1RpaBrowserControlActionsExecutePost({
         query: { browser_id: browserId }, body: { action_id: child.action_id, params: getActionParams(child), input_vars: getInputVars(child), output_vars: getOutputVars(child), step_children: getStepChildren(child) }, headers: userNavStore.user_header,
       })
       if (response?.code !== 0) {
@@ -336,7 +331,7 @@ export function useDebugboxExecution(
 
     branchOperating.value[childKey] = true
     try {
-      const response = await previewActionParamsApiV1RpaBrowserControlActionsPreviewPost({
+      const response = await 执行引擎Service.previewActionParamsApiV1RpaBrowserControlActionsPreviewPost({
         query: { browser_id: browserId }, body: { action_id: child.action_id, params: getActionParams(child), input_vars: getInputVars(child), output_vars: getOutputVars(child) }, headers: userNavStore.user_header,
       })
       if (response?.code !== 0) {
@@ -361,7 +356,7 @@ export function useDebugboxExecution(
 
     branchOperating.value[childKey] = true
     try {
-      const response = await validateActionParamsApiV1RpaBrowserControlActionsValidatePost({
+      const response = await 执行引擎Service.validateActionParamsApiV1RpaBrowserControlActionsValidatePost({
         query: { browser_id: browserId }, body: { action_id: child.action_id, params: getActionParams(child), input_vars: getInputVars(child), output_vars: getOutputVars(child) }, headers: userNavStore.user_header,
       })
       if (response?.code !== 0) {

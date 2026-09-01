@@ -355,7 +355,7 @@
   <MomentPublishForm
     v-model:visible="forwardVisible"
     :attach-resource="{
-      bizType: 'lottery',
+      bizType: InteractionBizTypeEnum.LOTTERY,
       bizId: lotteryId,
       name: normalizedData.title || undefined,
     }"
@@ -365,7 +365,7 @@
   <MomentFavoriteDialog
     v-model="favDialogVisible"
     :dyn-id="lotteryId"
-    biz-type="lottery"
+    :biz-type="InteractionBizTypeEnum.LOTTERY"
     :biz-id="lotteryId"
     @changed="handleFavChanged"
   />
@@ -408,8 +408,8 @@ import { getBiliUserSpaceUrl } from '@/utils/PageOpen/BiliJump.ts'
 import { isMobileDevice } from '@/utils/Browser/useDeviceDetect.ts'
 import { BiliCommTxt } from '@/assets/text/BiliCommTxt.ts'
 import { handleLotteryLinkClick, setLotteryParticipation, isLotteryParticipated } from '@/utils/lotteryParticipation'
-import { thumbMoment, fetchInteractionStatus } from '@/api/notify/moment-api'
-import type { InteractionStatusItemView as InteractionStatusItem } from '@/api/notify/moment-api'
+import { thumbMoment, fetchInteractionStatus, InteractionBizTypeEnum } from '@/api/notify/moment-api'
+import type { InteractionStatusItem } from '@/api/notify/moment-api'
 import MomentPublishForm from '@/components/moment/MomentPublishForm.vue'
 import MomentFavoriteDialog from '@/components/moment/MomentFavoriteDialog.vue'
 import LotteryCommentSection from '@/components/lottery_data/LotteryCommentSection.vue'
@@ -444,7 +444,7 @@ async function handleLike() {
   interactLoading.value = true
   const nextActive = !likeActive.value
   const res = await thumbMoment(lotteryId.value, nextActive ? 1 : 2, {
-    bizType: 'lottery' as any,
+    bizType: InteractionBizTypeEnum.LOTTERY,
     bizId: lotteryId.value,
   })
   interactLoading.value = false
@@ -479,7 +479,7 @@ function handleFavorite() {
 /** 收藏夹变更后重新拉取最新互动状态并上报容器层 */
 async function handleFavChanged() {
   try {
-    const res = await fetchInteractionStatus('lottery' as any, [lotteryId.value])
+    const res = await fetchInteractionStatus(InteractionBizTypeEnum.LOTTERY, [lotteryId.value])
     const item = res?.items?.[0]
     if (item?.bizId) {
       emit('update-status', { bizId: item.bizId, status: item })

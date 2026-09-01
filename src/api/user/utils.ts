@@ -1,4 +1,3 @@
-import { useJwtStore } from '@/stores/jwt_token'
 import userApi from './user_api'
 import type { UserNavModel } from '@/models/user/user_model.ts'
 import { useUserNavStore } from '@/stores/user_nav.ts'
@@ -7,7 +6,6 @@ import type { RootObject } from '@/models/api/base_model.ts'
 import biliMessage from '@/utils/message'
 
 export const isLogin: () => Promise<[boolean, string, UserNavModel | null, ApiError | null]> = async () => {
-  const JwtStore = useJwtStore()
   const user_nav_store = useUserNavStore()
   
   try {
@@ -55,13 +53,9 @@ export const isLogin: () => Promise<[boolean, string, UserNavModel | null, ApiEr
     }
     
     user_nav_store.save_user_nav(resp.data)
-    
-    // 如果 pptr 网关在 nav 响应中注入了新 JWT token（JWT 非当天签发时自动续期），
-    // 直接保存，不再调用单独的 refresh_token 接口
-    if (resp.data?.jwt_token) {
-      JwtStore.save_jwt_token(resp.data.jwt_token)
-    }
-    
+
+    // JWT 续期已改由服务端通过 HttpOnly Cookie 下发（nav 响应不再携带 token），前端无需处理
+
     return [true, resp.msg, resp.data, null]
   } catch (error: any) {
     // 兜底：client 直接抛出（极端网络异常等）

@@ -2,7 +2,7 @@
   <el-dialog
     v-model="visible"
     class="moment-favorite-dialog"
-    :title="props.bizType && props.bizType !== 'dynamic' ? '收藏到收藏夹' : '收藏动态'"
+    :title="props.bizType && props.bizType !== InteractionBizTypeEnum.DYNAMIC ? '收藏到收藏夹' : '收藏动态'"
     width="420px"
     align-center
   >
@@ -18,17 +18,15 @@
           class="moment-favorite-dialog__folder-item flex items-center gap-3 p-2.5 rounded-lg border border-border-light hover:border-primary/60 cursor-pointer transition-colors text-left"
           @click="toggleFolder(folder)"
         >
-          <!-- 封面 -->
+          <!-- 封面（无封面 / 封面审核未通过时展示默认图片兜底） -->
           <div
             class="moment-favorite-dialog__cover shrink-0 w-12 h-12 rounded-lg bg-bg-page flex items-center justify-center overflow-hidden"
           >
             <img
-              v-if="folder.coverUrl"
               class="w-full h-full object-cover"
-              :src="folder.coverUrl"
+              :src="folder.coverUrl || DEFAULT_FOLDER_COVER"
               :alt="folder.name"
             />
-            <el-icon v-else :size="20" class="text-text-placeholder"><Star /></el-icon>
           </div>
           <!-- 信息 -->
           <div class="moment-favorite-dialog__info flex-1 min-w-0">
@@ -111,7 +109,11 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
-import { Star, Select, Plus } from '@element-plus/icons-vue'
+import { Select, Plus } from '@element-plus/icons-vue'
+
+// 收藏夹默认封面：封面为空 / 封面审核未通过时前端兜底展示的默认图片
+const DEFAULT_FOLDER_COVER =
+  'https://i0.hdslb.com/bfs/vc/b8eb9637fec90527a6dc9737acdc3577e275c7b5.png'
 import {
   fetchFavoriteFolders,
   createFavoriteFolder,
@@ -154,7 +156,7 @@ function isFavInFolder(folderId: string): boolean {
 
 function favOptions(): { bizType?: InteractionBizTypeEnum; bizId?: string } {
   // 非动态资源时显式传 bizType/bizId；动态资源走默认（bizType=dynamic）
-  if (props.bizType && props.bizType !== 'dynamic') {
+  if (props.bizType && props.bizType !== InteractionBizTypeEnum.DYNAMIC) {
     return { bizType: props.bizType, bizId: props.bizId ?? props.dynId }
   }
   return {}

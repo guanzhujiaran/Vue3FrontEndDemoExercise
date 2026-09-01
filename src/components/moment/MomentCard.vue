@@ -25,7 +25,6 @@
           :card="hoverUserCard"
           @follow="handleUserFollow"
           @unfollow="handleUserUnfollow"
-          @message="handleUserMessage"
         />
       </el-popover>
       <div class="moment-card__author flex-1 min-w-0" @click.stop>
@@ -97,12 +96,11 @@
       </div>
     </div>
 
-    <!-- 正文内容：仅点击正文渲染区（moment-content-renderer）跳详情页；内部 @/话题/链接节点自带跳转，不触详情 -->
+    <!-- 正文内容：点击文字不跳详情；内部 @/话题/链接/资源节点自带跳转，不触详情 -->
     <div class="moment-card__body mb-3">
       <div
         v-if="descModule?.nodes?.length"
-        class="moment-card__body-renderer cursor-pointer"
-        @click.stop="handleClick"
+        class="moment-card__body-renderer"
       >
         <MomentContentRenderer :nodes="descModule.nodes" />
       </div>
@@ -292,7 +290,7 @@
     <!-- 互动统计 -->
     <div @click.stop>
       <MomentStatBar
-        :stat="item.stat"
+        :stat="props.status ?? null"
         :is-liked="interactionModule?.isLike ?? false"
         :loading="thumbLoading"
         @thumb="handleThumb"
@@ -309,7 +307,7 @@
     >
       <LotteryCommentSection
         :oid="props.item.dynIdStr"
-        :type="COMMENT_TYPE.DYNAMIC"
+        :type="CommentTypeEnum.DYNAMIC"
         :up-mid="props.item.mid"
         @count-change="handleCommentCountChange"
       />
@@ -320,8 +318,8 @@
       v-model:visible="showRepostDialog"
       is-repost
       :src-dyn-id="props.item.dynIdStr"
-      :src-author-name="authorInfo?.uname"
-      :src-author-face="authorInfo?.face"
+      :src-author-name="authorInfo?.uname ?? undefined"
+      :src-author-face="authorInfo?.face ?? undefined"
       :src-summary="repostSrcSummary"
       @success="handleRepostSuccess"
     />
@@ -336,18 +334,21 @@ import MomentContentRenderer from './MomentContentRenderer.vue'
 import MomentPublishForm from './MomentPublishForm.vue'
 import MomentStatBar from './MomentStatBar.vue'
 import MomentAttachCard from './MomentAttachCard.vue'
-import UserCard, { type UserCardData } from '@/components/message/UserCard.vue'
+import UserCard from '@/components/message/UserCard.vue'
+import { useUserCardCache } from '@/composables/useUserCardCache'
 import {
-  fetchRelationStat,
-  fetchUpStat,
-  fetchFollowRelation,
   followUser,
   unfollowUser,
   adminRemoveMoment,
   removeMoment,
 } from '@/api/notify/moment-api'
-import type { MomentFeedItem, MomentModule, MomentContentNode } from '@/api/notify/moment-api'
-import { COMMENT_TYPE } from '@/api/lottery_comment'
+import type {
+  MomentFeedItem,
+  MomentModule,
+  MomentContentNode,
+  InteractionStatusItem,
+} from '@/api/notify/moment-api'
+import { CommentTypeEnum } from '@/api/lottery_comment'
 import LotteryCommentSection from '@/components/lottery_data/LotteryCommentSection.vue'
 import { BiliImg } from '@/assets/img/BiliImg'
 import { useUserNavStore } from '@/stores/user_nav'
@@ -360,9 +361,12 @@ const props = withDefaults(
     canRemove?: boolean
     /** 评论交互模式：true=卡片内下拉展开评论区（信息流，对标 B 站）；false=emit comment（详情页切 tab） */
     inlineComment?: boolean
+    /** 2.41.0：互动统计（来自统一 /interaction/status 批量接口），卡片不再内置 stat 模块 */
+    status?: InteractionStatusItem | null
   }>(),
   {
     inlineComment: true,
+    status: null,
   }
 )
 
@@ -374,7 +378,6 @@ const emit = defineEmits<{
   edit: [dynIdStr: string]
   report: [dynIdStr: string]
   avatarClick: [item: MomentFeedItem]
-  message: [mid: number]
   /** 点击评论（inlineComment=false 时）：父组件切换到评论 tab（详情页） */
   comment: [item: MomentFeedItem]
 }>()
@@ -420,83 +423,70 @@ const showRepostDialog = ref(false)
 /** 内联评论区展开状态 */
 const showComments = ref(false)
 
-/** 悬浮用户卡片：懒加载关注/粉丝/获赞统计 + 关注关系 */
-const hoverUserCard = ref<UserCardData | null>(null)
-const hoverCardLoading = ref(false)
-const hoverCardMid = ref<number | null>(null)
-async function loadHoverCard(mid?: number | null) {
-  if (!mid || mid === hoverCardMid.value) return
-  if (hoverCardLoading.value) return
-  hoverCardLoading.value = true
-  hoverCardMid.value = mid
-  const base: UserCardData = {
-    mid,
-    uname: authorInfo.value?.uname,
-    avatar: authorInfo.value?.face,
-  }
-  try {
-    const [rel, up, relation] = await Promise.all([
-      fetchRelationStat(mid),
-      fetchUpStat(mid),
-      fetchFollowRelation(mid),
-    ])
-    hoverUserCard.value = {
-      ...base,
-      following_count: rel?.following_count,
-      follower_count: rel?.follower_count,
-      like_count: up?.like_count,
-      is_following: relation?.following,
+/**
+ * 悬浮用户卡片：数据取自 `useUserCardCache` 常驻共享缓存（2.32.0）。
+ *
+ * - 缓存挂在模块作用域，组件卸载（列表重渲染 / 路由切换 / popover 销毁）**不销毁**，
+ *   同一用户再次悬浮零请求；
+ * - 一次 `/user/space/info` 拿全资料 + `follow_stat` + `upstat` + `is_followed`，
+ *   不再并发 `/message/follow/stat` + `/community/upstat` + `/message/follow/relation`；
+ * - 请求失败不写缓存，下次悬浮可重试。
+ */
+const { cache: cardCache, loadUserCard, patchUserCard } = useUserCardCache()
+const hoverUserCard = computed(() => {
+  const mid = authorInfo.value?.mid
+  if (!mid) return null
+  // 未命中缓存时先给出作者模块自带的昵称/头像，卡片不会空白
+  return (
+    cardCache.get(mid) ?? {
+      mid,
+      uname: authorInfo.value?.uname ?? null,
+      avatar: authorInfo.value?.face ?? null,
     }
-  } catch {
-    hoverUserCard.value = base
-  } finally {
-    hoverCardLoading.value = false
-  }
+  )
+})
+
+function loadHoverCard(mid?: number | null) {
+  if (!mid) return
+  void loadUserCard(mid, {
+    mid,
+    uname: authorInfo.value?.uname ?? null,
+    avatar: authorInfo.value?.face ?? null,
+  })
 }
 
-/** 关注 / 取关（用户卡片按钮） */
+/**
+ * 关注 / 取关（用户卡片按钮）。
+ *
+ * 成功后直接改共享缓存里的 `is_following`（2.32.0：不再回查
+ * `/message/follow/relation`，接口成功即代表状态已翻转）；失败保持原状态。
+ */
 async function handleUserFollow(mid: number) {
   try {
-    // 成功弹「已关注」，失败（如不能关注自己）弹后端 msg，均不手动 catch
-    await followUser(mid, {
+    const resp = await followUser(mid, {
       showSuccessToast: true,
       successMessage: '已关注',
     })
-    refreshHoverRelation(mid)
+    // 业务失败 request 返回 null（不抛异常），保持原状态；成功以回执 followed 为准
+    if (!resp) return
+    const followed = resp.followed ?? true
+    patchUserCard(mid, { is_following: followed })
   } catch {
-    // 失败（如"不能关注自己"）businessHandler 已弹错，状态保持不变
+    // 意外异常保持原状态
   }
 }
 async function handleUserUnfollow(mid: number) {
   try {
-    await unfollowUser(mid, {
+    const resp = await unfollowUser(mid, {
       showSuccessToast: true,
       successMessage: '已取消关注',
     })
-    refreshHoverRelation(mid)
+    if (!resp) return
+    const followed = resp.followed ?? false
+    patchUserCard(mid, { is_following: followed })
   } catch {
-    // 失败保持原状态
+    // 意外异常保持原状态
   }
-}
-
-/** 刷新卡片上的关注状态（is_following） */
-async function refreshHoverRelation(mid: number) {
-  try {
-    const relation = await fetchFollowRelation(mid)
-    if (hoverUserCard.value) {
-      hoverUserCard.value = {
-        ...hoverUserCard.value,
-        is_following: relation?.following,
-      }
-    }
-  } catch {
-    // 忽略刷新失败
-  }
-}
-
-/** 发消息（跳转私信会话） */
-function handleUserMessage(mid: number) {
-  emit('message', mid)
 }
 
 /** 按 moduleType 查找模块 */
@@ -572,7 +562,7 @@ const srcMomentTime = computed(() => {
 
 /** 原动态若本身是转发，再往上一层 */
 const nestedSrcMoment = computed<MomentFeedItem | undefined>(
-  () => srcMomentForwardModule.value?.srcMoment
+  () => srcMomentForwardModule.value?.srcMoment ?? undefined
 )
 const nestedAuthor = computed<MomentModule | undefined>(() =>
   nestedSrcMoment.value?.modules?.find((m) => m.moduleType === 'author')
@@ -771,17 +761,17 @@ function handleComment() {
   }
 }
 
-/** 内联评论区总数变化：联动更新卡片 stat.commentCount */
+/** 内联评论区总数变化：联动更新卡片 status.commentCount */
 function handleCommentCountChange(count: number) {
-  if (props.item.stat) {
-    props.item.stat = { ...(props.item.stat || {}), commentCount: count }
+  if (props.status) {
+    props.status.commentCount = count
   }
 }
 
-/** 转发成功：乐观更新当前卡片的 repostCount */
+/** 转发成功：乐观更新当前卡片 status.repostCount */
 function handleRepostSuccess() {
-  if (props.item.stat) {
-    props.item.stat.repostCount = (props.item.stat.repostCount || 0) + 1
+  if (props.status) {
+    props.status.repostCount = (props.status.repostCount ?? 0) + 1
   }
 }
 

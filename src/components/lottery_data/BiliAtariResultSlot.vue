@@ -84,13 +84,13 @@ const getFilteredPrizeItems = computed((): PrizeResult[] => {
 
   for (const prize of data.value.prize_result) {
     const firstPrizeItem = prize.lottery_result.first_prize_result.find(
-      (item) => item.uid === Number(props.uid)
+      (item) => item.uid === props.uid
     )
     const secondPrizeItem = prize.lottery_result.second_prize_result?.find(
-      (item) => item.uid === Number(props.uid)
+      (item) => item.uid === props.uid
     )
     const thirdPrizeItem = prize.lottery_result.third_prize_result?.find(
-      (item) => item.uid === Number(props.uid)
+      (item) => item.uid === props.uid
     )
 
     if (firstPrizeItem || secondPrizeItem || thirdPrizeItem) {
@@ -102,14 +102,14 @@ const getFilteredPrizeItems = computed((): PrizeResult[] => {
 })
 
 const getPrizeLevel = (prize: PrizeResult): string => {
-  if (prize.lottery_result.first_prize_result.some((item) => item.uid === Number(props.uid))) {
+  if (prize.lottery_result.first_prize_result.some((item) => item.uid === props.uid)) {
     return '一等奖'
   } else if (
-    prize.lottery_result.second_prize_result?.some((item) => item.uid === Number(props.uid))
+    prize.lottery_result.second_prize_result?.some((item) => item.uid === props.uid)
   ) {
     return '二等奖'
   } else if (
-    prize.lottery_result.third_prize_result?.some((item) => item.uid === Number(props.uid))
+    prize.lottery_result.third_prize_result?.some((item) => item.uid === props.uid)
   ) {
     return '三等奖'
   }

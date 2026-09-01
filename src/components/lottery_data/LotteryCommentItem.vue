@@ -1,14 +1,13 @@
 <script setup lang="ts">
-import { inject, ref, computed } from 'vue'
+import { inject, ref, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { Pointer, ChatDotRound, Delete, Bottom, ArrowDown, MoreFilled } from '@element-plus/icons-vue'
 import type { CommentItem } from '@/api/lottery_comment.ts'
-import { CommentHandlersKey } from '@/api/lottery_comment.ts'
-import commentApi from '@/api/lottery_comment'
+import { CommentHandlersKey, CommentStateEnum } from '@/api/lottery_comment.ts'
 import { BiliImg } from '@/assets/img/BiliImg.ts'
-import type { CommentUserBrief } from '@/api/notify/hey-api'
-import { blockUser } from '@/api/notify/moment-api'
+import { blockUser, ReportBizTypeEnum } from '@/api/notify/moment-api'
 import ReportDialog from '@/components/moment/ReportDialog.vue'
+import LotteryCommentMention from '@/components/lottery_data/LotteryCommentMention.vue'
 import biliMessage from '@/utils/message'
 
 const props = defineProps<{
@@ -24,11 +23,18 @@ const props = defineProps<{
 
 const handlers = inject(CommentHandlersKey)!
 
+// 子评论被删除后通知父级（持有 subItems 的组件）从楼中楼列表同步移除
+const emit = defineEmits<{ (e: 'deleted', rpid: string): void }>()
+
 const showReply = ref(false)
 const replyContent = ref('')
 const subLoading = ref(false)
-const subPage = ref(0)
+/** 楼中楼分页：subItems 渲染当前页；subCurrentPage 当前页码；subTotal 总数；subPageSize 每页条数 */
+const subItems = ref<CommentItem[]>([])
+const subExpanded = ref(false)
+const subCurrentPage = ref(1)
 const subTotal = ref(0)
+const subPageSize = 10
 
 const isOwn = computed(
   () => !!props.currentMid && String(props.currentMid) === String(props.item.mid)
@@ -36,9 +42,10 @@ const isOwn = computed(
 const isUp = computed(
   () => !!props.upMid && String(props.upMid) === String(props.item.mid)
 )
-const hasMoreSub = computed(
-  () => Number(props.item.rcount) > (props.item.replies?.length || 0)
-)
+/** 是否存在子回复（决定是否展示「共 N 条回复」折叠入口） */
+const hasMoreSub = computed(() => Number(props.item.rcount) > 0)
+/** 总页数：至少 1 页，避免 0 页导致分页器无页码可点 */
+const subTotalPages = computed(() => Math.max(1, Math.ceil(subTotal.value / subPageSize)))
 
 /** 把正文按 @昵称 / #话题# 拆成可渲染分段（文本 / @链接 / 话题链接） */
 const renderedSegments = computed(() => {
@@ -88,7 +95,11 @@ const onHate = () => {
 }
 const router = useRouter()
 
-const onDelete = () => handlers.del(props.item.rpid)
+const onDelete = async () => {
+  // Section 的 del 内部会先弹确认框；仅当后端删除成功才通知父级同步移除
+  const res = await handlers.del(props.item.rpid)
+  if (res?.success) emit('deleted', String(props.item.rpid))
+}
 
 /** 点击头像 / 用户名跳转用户空间 */
 function goUserSpace() {
@@ -117,7 +128,7 @@ async function onCopyLink() {
 
 /** 加入黑名单（拉黑评论作者）：成功提示由调用方预设，失败提示由后端响应驱动（统一 businessHandler 处理） */
 function onBlock() {
-  blockUser(Number(props.item.mid), {
+  blockUser(props.item.mid, {
     showSuccessToast: true,
     successMessage: '已加入黑名单',
   })
@@ -125,75 +136,94 @@ function onBlock() {
 
 /** 统一举报弹窗（P11-T6） */
 const reportDialogVisible = ref(false)
-const reportCommentRpid = ref<number>(0)
+const reportCommentRpid = ref<string>('')
 
-/** 举报评论：打开统一举报弹窗（bizType=comment，bizId=rpid） */
+/** 举报评论：打开统一举报弹窗（bizType=comment，bizId=rpid str 直接传递） */
 function onReport() {
   if (!props.item?.rpid) return
-  reportCommentRpid.value = Number(props.item.rpid)
+  reportCommentRpid.value = props.item.rpid
   reportDialogVisible.value = true
 }
 
-/** 回复输入框的 @ 提及候选与映射 */
-const replyMentionOptions = ref<Array<{ value: string; avatar?: string; mid?: number }>>([])
-const replyMentionLoading = ref(false)
-const replyAtNameToMid = ref<Record<string, number>>({})
-
-async function handleReplyMentionSearch(pattern: string) {
-  if (!pattern.trim()) {
-    replyMentionOptions.value = []
-    return
-  }
-  replyMentionLoading.value = true
-  try {
-    const res = await commentApi.searchAt(pattern.trim(), 20)
-    if (res && res.code === 0 && res.data) {
-      replyMentionOptions.value = (res.data as CommentUserBrief[])
-        .filter((u) => u.mid != null)
-        .map((u) => ({
-          value: u.uname || `用户${u.mid}`,
-          avatar: u.avatar || undefined,
-          mid: u.mid
-        }))
-    }
-  } finally {
-    replyMentionLoading.value = false
-  }
-}
-
-function onReplyMentionSelect(opt: { value?: string; mid?: number }) {
-  if (!opt?.value || opt.mid == null) return
-  replyAtNameToMid.value[opt.value] = opt.mid
-}
+/** 回复输入框引用：复用主评论框同一套 @ 提及组件 */
+const replyMentionRef = ref<InstanceType<typeof LotteryCommentMention> | null>(null)
 
 const submitReply = () => {
   const msg = replyContent.value.trim()
   if (!msg) return
   const root = props.item.root === '0' ? props.item.rpid : props.item.root
+  const atMap = replyMentionRef.value?.buildAtNameToMid(msg) || {}
   handlers.reply({
     root,
     parent: props.item.rpid,
     message: msg,
-    atNameToMid: Object.keys(replyAtNameToMid.value).length ? { ...replyAtNameToMid.value } : undefined
+    atNameToMid: Object.keys(atMap).length ? atMap : undefined,
+    // 被回复者即当前评论作者，直接传入可保证楼中楼回复稳定显示「回复 @xxx」
+    replyTo: props.item.member ?? null
   })
-  replyContent.value = ''
-  replyAtNameToMid.value = {}
+  replyMentionRef.value?.reset()
   showReply.value = false
 }
 
-const loadSubReplies = async () => {
+/** 加载指定页的子回复（用于分页切换；替换当前页 subItems） */
+async function loadSubRepliesPage(page: number) {
   if (subLoading.value) return
   subLoading.value = true
   try {
-    const page = subPage.value + 1
     const resp = await handlers.expandReplies(props.item, page)
+    subItems.value = resp.items
     subTotal.value = resp.total
-    subPage.value = page
-    props.item.replies = page === 1 ? resp.items : [...(props.item.replies || []), ...resp.items]
+    subCurrentPage.value = page
   } finally {
     subLoading.value = false
   }
 }
+
+/** 展开楼中楼：首次展开加载第 1 页，后续翻页通过 gotoSubPage */
+async function openSubReplies() {
+  subExpanded.value = true
+  if (subItems.value.length === 0) {
+    await loadSubRepliesPage(1)
+  }
+}
+
+/** 子评论被删除后，从当前展开的楼中楼列表同步移除（UI 实时消失） */
+function onSubDeleted(rpid: string) {
+  subItems.value = subItems.value.filter((s) => String(s.rpid) !== rpid)
+}
+
+/** 跳转到指定页（页码相同 / 越界则忽略） */
+function gotoSubPage(page: number) {
+  if (page === subCurrentPage.value) return
+  if (page < 1 || page > subTotalPages.value) return
+  loadSubRepliesPage(page)
+}
+
+/** 收起楼中楼：折叠回「共 N 条回复」入口，保留已加载数据以便再次展开 */
+function collapseSubReplies() {
+  subExpanded.value = false
+}
+
+/**
+ * 同步父级新增的子回复：用户在本评论的楼中楼发表回复后，
+ * 父级会把新回复 prepend 到 item.replies；展开态下需同步进 subItems 以立即可见。
+ * 分页自身触发的 item.replies 变更（subLoading=true）会被跳过。
+ */
+watch(
+  () => props.item.replies,
+  (newReplies) => {
+    if (subLoading.value) return
+    if (!newReplies) return
+    const existing = new Set(subItems.value.map((s) => s.rpid))
+    const fresh = newReplies.filter((r) => !existing.has(r.rpid))
+    if (fresh.length) {
+      // 回复后无论楼中楼是否已展开都自动展开，确保用户能立刻看到自己/他人的新回复
+      subExpanded.value = true
+      subItems.value = [...fresh, ...subItems.value]
+    }
+  },
+  { deep: true }
+)
 </script>
 
 <template>
@@ -227,7 +257,7 @@ const loadSubReplies = async () => {
         </span>
         <el-tag v-if="isUp" type="primary" size="small" effect="plain" round>UP</el-tag>
         <el-tag
-          v-if="item.state === 'auditing'"
+          v-if="item.state === CommentStateEnum.AUDITING"
           type="warning"
           size="small"
           effect="light"
@@ -238,6 +268,7 @@ const loadSubReplies = async () => {
         </el-tag>
         <span v-if="item.member?.level" class="text-xs text-text-placeholder">Lv{{ item.member.level }}</span>
         <span v-if="item.is_top" class="text-xs text-primary">置顶</span>
+        <span v-if="item.ip_location" class="text-xs text-text-placeholder">IP属地：{{ item.ip_location }}</span>
       </div>
 
       <p class="lottery-comment-item__content mt-1 text-sm leading-relaxed text-text-regular break-words whitespace-pre-wrap">
@@ -300,14 +331,6 @@ const loadSubReplies = async () => {
           <el-icon :size="14"><ChatDotRound /></el-icon>
           <span>回复</span>
         </button>
-        <button
-          v-if="isOwn"
-          class="inline-flex items-center gap-1 text-sm cursor-pointer border-none bg-transparent px-0 text-text-placeholder hover:text-danger transition-colors"
-          @click="onDelete"
-        >
-          <el-icon :size="14"><Delete /></el-icon>
-          <span>删除</span>
-        </button>
 
         <!-- 右侧三点菜单（对标 B 站） -->
         <el-dropdown
@@ -332,71 +355,80 @@ const loadSubReplies = async () => {
               <el-dropdown-item class="lottery-comment-item__more-report" @click="onReport">
                 <el-icon class="mr-1"><ChatDotRound /></el-icon>举报
               </el-dropdown-item>
+              <!-- 自评删除：仅自己可见，置于三点菜单最底部，对标 B 站 -->
+              <el-dropdown-item
+                v-if="isOwn"
+                class="lottery-comment-item__more-delete"
+                @click="onDelete"
+              >
+                <el-icon class="mr-1"><Delete /></el-icon>删除
+              </el-dropdown-item>
             </el-dropdown-menu>
           </template>
         </el-dropdown>
       </div>
 
-      <!-- 楼中楼展开 -->
-      <div v-if="item.root === '0' && hasMoreSub && subPage === 0" class="mt-1">
+      <!-- 楼中楼折叠入口：点击展开并加载第 1 页 -->
+      <div v-if="item.root === '0' && hasMoreSub && !subExpanded" class="mt-1">
         <span
           class="inline-flex items-center gap-1 cursor-pointer text-primary text-sm hover:opacity-80 transition-opacity"
-          @click="loadSubReplies"
+          @click="openSubReplies"
         >
           共 {{ item.rcount }} 条回复
           <el-icon :size="14"><ArrowDown /></el-icon>
         </span>
       </div>
 
-      <!-- 子回复列表（仅一级，新系统楼中楼固定两层） -->
-      <ul v-if="item.replies && item.replies.length" class="mt-2 space-y-0 border-l border-border-light pl-3">
-        <li v-for="sub in item.replies" :key="sub.rpid">
+      <!-- 展开态子回复列表：分页加载当前页 subItems -->
+      <ul v-if="subExpanded && subItems.length" class="mt-2 space-y-0 border-l border-border-light pl-3">
+        <li v-for="sub in subItems" :key="sub.rpid">
           <LotteryCommentItem
             :item="sub"
             :depth="(depth || 0) + 1"
             :up-mid="upMid"
             :current-mid="currentMid"
             :focused="focusedRpid === sub.rpid"
+            @deleted="onSubDeleted"
           />
         </li>
       </ul>
 
-      <!-- 加载更多子回复 -->
-      <div v-if="subPage > 0 && hasMoreSub" class="mt-1">
-        <span
-          class="inline-flex items-center gap-1 cursor-pointer text-primary text-sm hover:opacity-80 transition-opacity"
-          :class="{ 'opacity-60': subLoading }"
-          @click="loadSubReplies"
+      <!-- 展开态分页器（B 站风格：共N页 + 页码 + 下一页 + 收起）；只有一页时整组隐藏 -->
+      <div v-if="subExpanded && subTotalPages > 1" class="lottery-comment-item__sub-pagination mt-2 flex items-center gap-3 text-xs">
+        <span class="text-text-placeholder">共{{ subTotalPages }}页</span>
+        <button
+          v-for="p in subTotalPages"
+          :key="p"
+          class="cursor-pointer border-none bg-transparent px-1 transition-colors"
+          :class="p === subCurrentPage ? 'text-primary font-medium' : 'text-text-secondary hover:text-primary'"
+          @click="gotoSubPage(p)"
         >
-          {{ subLoading ? '加载中...' : '查看更多回复' }}
-        </span>
+          {{ p }}
+        </button>
+        <button
+          v-if="subCurrentPage < subTotalPages"
+          class="cursor-pointer border-none bg-transparent text-text-secondary hover:text-primary transition-colors"
+          @click="gotoSubPage(subCurrentPage + 1)"
+        >
+          下一页
+        </button>
+        <button
+          class="ml-auto cursor-pointer border-none bg-transparent text-text-placeholder hover:text-primary transition-colors"
+          @click="collapseSubReplies"
+        >
+          收起
+        </button>
       </div>
 
-      <!-- 回复输入框：el-mention 支持 @ 提及 -->
+      <!-- 回复输入框：复用可复用 @ 提及组件，与主评论框一致 -->
       <div v-if="showReply" class="mt-2">
-        <el-mention
+        <LotteryCommentMention
+          ref="replyMentionRef"
           v-model="replyContent"
-          type="textarea"
-          class="w-full lottery-comment-item__reply-mention"
-          :options="replyMentionOptions"
-          :loading="replyMentionLoading"
-          prefix="@"
-          split=" "
           :placeholder="`回复 @${item.member?.uname || '匿名用户'}`"
           :rows="2"
-          resize="vertical"
-          @search="handleReplyMentionSearch"
-          @select="onReplyMentionSelect"
-        >
-          <template #label="{ item: opt }">
-            <div class="lottery-comment-item__reply-mention-option flex items-center gap-2">
-              <el-avatar :size="24" :src="opt.avatar || BiliImg.face.noface" referrerpolicy="no-referrer">
-                <img :src="opt.avatar || BiliImg.face.noface" referrerpolicy="no-referrer" alt="avatar" />
-              </el-avatar>
-              <span class="lottery-comment-item__reply-mention-name text-sm text-text-primary">{{ opt.value }}</span>
-            </div>
-          </template>
-        </el-mention>
+          class="lottery-comment-item__reply-mention"
+        />
         <div class="flex items-center justify-end mt-1">
           <el-button size="small" type="primary" :disabled="!replyContent.trim()" @click="submitReply">
             发表回复
@@ -404,6 +436,6 @@ const loadSubReplies = async () => {
         </div>
       </div>
     </div>
-    <ReportDialog v-model="reportDialogVisible" biz-type="comment" :biz-id="reportCommentRpid" />
+    <ReportDialog v-model="reportDialogVisible" :biz-type="ReportBizTypeEnum.COMMENT" :biz-id="reportCommentRpid" />
   </div>
 </template>

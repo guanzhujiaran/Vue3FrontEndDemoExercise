@@ -5,13 +5,8 @@ import { Delete, Edit, PriceTag, Refresh, Search, Loading } from '@element-plus/
 import { useDebounceFn } from '@vueuse/core'
 import FlexContainer from '@/components/CommonCompo/Bili-Container-Compo/FlexContainer.vue'
 import BiliPageHeader from '@/components/CommonCompo/Bili-Container-Compo/BiliPageHeader.vue'
-import {
-  listCustomActionsApiV1RpaBrowserControlCustomActionsListPost,
-  listCustomActionTagsApiV1RpaBrowserControlCustomActionsTagsPost,
-  updateCustomActionApiV1RpaBrowserControlCustomActionsUpdatePost,
-  deleteCustomActionApiV1RpaBrowserControlCustomActionsDeletePost,
-} from '@/api/browser/hey-api'
-import type { FilterType, SortBy, SortOrder } from '@/api/browser/hey-api/types.gen'
+import { 自定义操作管理Service } from '@/api/browser/hey-api'
+import type { FilterType, SortBy, SortOrder } from '@/api/browser/hey-api'
 import { useUserNavStore } from '@/stores/user_nav'
 import { businessHandler } from '@/utils/businessHandler'
 import ResourceInteractionBar from '@/components/interaction/ResourceInteractionBar.vue'
@@ -72,7 +67,7 @@ const loadActions = async (append = false) => {
   }
 
   const result = await businessHandler<{ items?: ActionItem[]; total?: number }>(
-    listCustomActionsApiV1RpaBrowserControlCustomActionsListPost({
+    自定义操作管理Service.listCustomActionsApiV1RpaBrowserControlCustomActionsListPost({
       body: {
         page: currentPage.value,
         per_page: pageSize.value,
@@ -82,7 +77,6 @@ const loadActions = async (append = false) => {
         name: searchText.value || null,
         tag: filterTag.value || null,
       },
-      headers: userNavStore.user_header,
     }) as any,
     { successMessage: '', errorMessage: '获取动作列表失败', showSuccessToast: false }
   )
@@ -107,8 +101,7 @@ const loadMore = () => {
 
 const loadTags = async () => {
   const result = await businessHandler<string[]>(
-    listCustomActionTagsApiV1RpaBrowserControlCustomActionsTagsPost({
-      headers: userNavStore.user_header,
+    自定义操作管理Service.listCustomActionTagsApiV1RpaBrowserControlCustomActionsTagsPost({
     }) as any,
     { successMessage: '', errorMessage: '获取标签列表失败', showSuccessToast: false }
   )
@@ -142,9 +135,8 @@ const handleRename = async (item: ActionItem) => {
   if (newName === item.name) return
 
   const result = await businessHandler(
-    updateCustomActionApiV1RpaBrowserControlCustomActionsUpdatePost({
+    自定义操作管理Service.updateCustomActionApiV1RpaBrowserControlCustomActionsUpdatePost({
       body: { action_id: item.action_id, name: newName },
-      headers: userNavStore.user_header,
     }) as any,
     { successMessage: '重命名成功', errorMessage: '重命名失败' }
   )
@@ -155,9 +147,8 @@ const handleRename = async (item: ActionItem) => {
 
 const handleTogglePublic = async (item: ActionItem) => {
   const result = await businessHandler(
-    updateCustomActionApiV1RpaBrowserControlCustomActionsUpdatePost({
+    自定义操作管理Service.updateCustomActionApiV1RpaBrowserControlCustomActionsUpdatePost({
       body: { action_id: item.action_id, is_public: item.is_public },
-      headers: userNavStore.user_header,
     }) as any,
     {
       successMessage: item.is_public ? '已设为公开' : '已设为私有',
@@ -201,9 +192,8 @@ const handleSaveTags = async () => {
   if (!tagEditingItem.value) return
   tagDialogLoading.value = true
   const result = await businessHandler(
-    updateCustomActionApiV1RpaBrowserControlCustomActionsUpdatePost({
+    自定义操作管理Service.updateCustomActionApiV1RpaBrowserControlCustomActionsUpdatePost({
       body: { action_id: tagEditingItem.value.action_id, tags: tagEditingItem.value.tags },
-      headers: userNavStore.user_header,
     }) as any,
     { successMessage: '标签保存成功', errorMessage: '标签保存失败' }
   )
@@ -225,9 +215,8 @@ const handleDelete = async (item: ActionItem) => {
     return
   }
   const result = await businessHandler(
-    deleteCustomActionApiV1RpaBrowserControlCustomActionsDeletePost({
+    自定义操作管理Service.deleteCustomActionApiV1RpaBrowserControlCustomActionsDeletePost({
       body: { action_id: item.action_id },
-      headers: userNavStore.user_header,
     }) as any,
     { successMessage: '删除成功', errorMessage: '删除失败' }
   )

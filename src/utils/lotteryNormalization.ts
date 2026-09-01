@@ -61,7 +61,8 @@ const normalizeFlatReserveInfo = (
 
   const normalized: Partial<NormalizedLottery> = {
     originalData,
-    id: resData.reserve_sid,
+    // 预约抽奖对外互动资源 ID 统一为 lottery_id；旧数据缺失时兜底 reserve_sid
+    id: resData.lottery_id ?? resData.reserve_sid,
     type: 'RESERVATION',
     displayType: '预约抽奖',
     title: buildReserveTitle(resData.lottery_prize_info, resData.reserve_sid, prizes),
@@ -282,7 +283,8 @@ export const normalizeLotteryData = (data: AnyLotteryData): NormalizedLottery =>
         })
         break
       case 10:
-        normalized.id = dynData.business_id_str
+        // 预约抽奖对外互动资源 ID 统一为 lottery_id（与官方/充电一致），不再用 business_id/预约 sid
+        normalized.id = dynData.lottery_id
         normalized.type = 'RESERVATION'
         normalized.displayType = '预约抽奖'
         normalized.title = dynData.first_prize_cmt || `预约抽奖 #${dynData.lottery_id}`

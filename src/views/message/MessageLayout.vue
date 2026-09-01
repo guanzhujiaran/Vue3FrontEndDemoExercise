@@ -46,7 +46,7 @@ const isLoggedIn = computed(() => !!biliUser.value.uid)
 // keep-alive 缓存的子页面组件名（会话/回复/@/赞/通知/设置）。
 // 聊天页 DmListView 按 talkerMid 动态切换、管理后台页各有独立状态，均不缓存。
 const messagePageCacheNames = [
-  'DmSessionListView',
+  'DmWhisperLayout',
   'ReplyListView',
   'AtListView',
   'LikeListView',
@@ -63,12 +63,12 @@ const unread = reactive<UnreadSummary>({
 const navGroups = computed(() => [
   {
     items: [
-      { name: 'MESSAGE_HOME', title: t('message.navMyMessages'), shortTitle: '消息', icon: ChatDotRound, badge: true, badgeValue: unread.dm ?? 0 },
-      { name: 'MESSAGE_REPLIES', title: t('message.navReplies'), shortTitle: '回复', icon: ChatLineRound, badge: true, badgeValue: unread.reply ?? 0 },
-      { name: 'MESSAGE_ATS', title: t('message.navAts'), shortTitle: '@我', icon: Promotion, badge: true, badgeValue: unread.at ?? 0 },
-      { name: 'MESSAGE_LIKES', title: t('message.navLikes'), shortTitle: '赞', icon: Pointer, badge: true, badgeValue: unread.like ?? 0 },
-      { name: 'MESSAGE_NOTIFY', title: t('message.navNotify'), shortTitle: '通知', icon: Bell, badge: true, badgeValue: unread.notify ?? 0 },
-      { name: 'MESSAGE_SETTINGS', title: t('message.navSettings'), shortTitle: '设置', icon: Setting, badge: false, badgeValue: 0 }
+      { name: 'MESSAGE_WHISPER', title: t('message.navMyMessages'), icon: ChatDotRound, badge: true, badgeValue: unread.dm ?? 0 },
+      { name: 'MESSAGE_REPLIES', title: t('message.navReplies'), icon: ChatLineRound, badge: true, badgeValue: unread.reply ?? 0 },
+      { name: 'MESSAGE_ATS', title: t('message.navAts'), icon: Promotion, badge: true, badgeValue: unread.at ?? 0 },
+      { name: 'MESSAGE_LIKES', title: t('message.navLikes'), icon: Pointer, badge: true, badgeValue: unread.like ?? 0 },
+      { name: 'MESSAGE_NOTIFY', title: t('message.navNotify'), icon: Bell, badge: true, badgeValue: unread.notify ?? 0 },
+      { name: 'MESSAGE_SETTINGS', title: t('message.navSettings'), icon: Setting, badge: false, badgeValue: 0 }
     ]
   }
 ])

@@ -41,7 +41,7 @@
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { TopRight } from '@element-plus/icons-vue'
-import type { AuditSourceInfo } from '@/api/notify/hey-api'
+import type { AuditSourceInfo } from '@/api/community/hey-api'
 
 const { t } = useI18n()
 

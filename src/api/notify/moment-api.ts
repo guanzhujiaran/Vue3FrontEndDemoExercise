@@ -3,69 +3,10 @@
  *
  * 仅在此处调用 hey-api 生成的 SDK，业务视图/组件统一调用本文件的封装函数。
  */
-import {
-  feedAllApiV1MomentFeedAllGet,
-  feedSpaceApiV1MomentFeedSpaceMidGet,
-  detailApiV1MomentDetailMomentIdGet,
-  createDynamicApiV1MomentCreatePost,
-  editDynamicApiV1MomentEditPost,
-  removeDynamicApiV1MomentRemovePost,
-  adminRemoveDynamicApiV1MomentAdminRemovePost,
-  repostDynamicApiV1MomentRepostPost,
-  topDynamicApiV1MomentSpaceTopPost,
-  untopDynamicApiV1MomentSpaceUntopPost,
-  thumbApiV1MomentThumbPost,
-  reportApiV1MomentReportPost,
-  createReportApiV1ReportPost,
-  createCheckApiV1MomentCreateCheckPost,
-  topicSquareApiV1MomentTopicSquareGet,
-  topicHotSearchApiV1MomentTopicHotSearchGet,
-  topicFeedApiV1MomentTopicFeedTopicIdGet,
-  topicDetailApiV1MomentTopicDetailTopicIdGet,
-  topicCreateApiV1MomentTopicCreatePost,
-  topicMineApiV1MomentTopicMineGet,
-  topicAuditListApiV1MomentTopicAuditListGet,
-  topicAuditApproveApiV1MomentTopicAuditApprovePost,
-  topicAuditRejectApiV1MomentTopicAuditRejectPost,
-  atListApiV1MomentAtListGet,
-  atSearchApiV1MomentAtSearchGet,
-  poiNearbyApiV1MomentPoiNearbyGet,
-  poiSearchApiV1MomentPoiSearchGet,
-  auditListApiV1MomentAuditListGet,
-  auditApproveApiV1MomentAuditApprovePost,
-  auditRejectApiV1MomentAuditRejectPost,
-  auditDetailApiV1MomentAuditDynIdGet,
-  auditHistoryApiV1MomentAuditListHistoryGet,
-  getStatApiV1MessageFollowStatGet,
-  getRelationApiV1MessageFollowRelationGet,
-  followUserApiV1MessageFollowDoPost,
-  unfollowUserApiV1MessageFollowUndoPost,
-  blockUserApiV1MessageFollowBlockPost,
-  getUpstatApiV1MomentUpstatGet,
-  getMomentLikersApiV1MomentMomentIdLikersGet,
-  getMomentForwardsApiV1MomentMomentIdForwardsGet,
-  createFolderApiV1FavoriteFolderCreatePost,
-  updateFolderApiV1FavoriteFolderUpdatePost,
-  deleteFolderApiV1FavoriteFolderDeletePost,
-  listFoldersApiV1FavoriteFolderListGet,
-  addFavoriteApiV1FavoriteAddPost,
-  removeFavoriteApiV1FavoriteRemovePost,
-  listFavoritesApiV1FavoriteListGet,
-  listFavoriteItemsApiV1FavoriteItemsGet,
-  dynFoldersApiV1FavoriteDynFoldersGet,
-  getSettingApiV1FavoriteSettingGet,
-  setSettingApiV1FavoriteSettingPost,
-  publicFoldersApiV1FavoriteUserFoldersGet,
-  publicDynamicsApiV1FavoriteUserDynamicsGet,
-  getSpaceInfoApiV1UserSpaceInfoGet,
-  interactionStatusApiV1MomentInteractionStatusGet,
-  interactionStatusDetailApiV1MomentInteractionStatusBizIdGet,
-  avatarAuditMineApiV1UserAvatarAuditMineGet,
-  avatarAuditListApiV1UserAvatarAuditListGet,
-  avatarAuditApproveApiV1UserAvatarAuditApprovePost,
-  avatarAuditRejectApiV1UserAvatarAuditRejectPost,
-} from '@/api/notify/hey-api'
+import { AvatarAuditService, FavoriteService, FolderCoverAuditService, InteractionBizTypeEnum, MessageFollowService, MomentAuditService, MomentFeedService, MomentService, MomentTopicAuditService, PptrUserGatewayService, ReportBizTypeEnum, ReportService } from '@/api/community/hey-api'
 import { request, authHeaders, type RequestOptions } from '@/api/http'
+import { client } from '@/api/community/hey-api/client.gen'
+
 import type {
   MomentFeedResp,
   MomentFeedItem,
@@ -102,14 +43,15 @@ import type {
   MomentAuditActionReq,
   MomentAuditRejectReq,
   MomentAuditItem,
+  MomentAuditStatusEnum,
+  MomentAuditStatisticsResp,
+  MomentAuditTypeStat,
   AvatarAuditMineResp,
   AvatarAuditListResp,
   AvatarAuditApproveReq,
   AvatarAuditRejectReq,
-  MomentUpStatResp,
   MomentLikerListResp,
   MomentForwardListResp,
-  FollowCountResp,
   FollowRelationResp,
   FollowOpResp,
   FavoriteFolderCreateReq,
@@ -127,33 +69,40 @@ import type {
   FavoriteSettingResp,
   InteractionStatusResp,
   InteractionStatusItem,
-  InteractionBizTypeEnum,
+  FolderCoverAuditListResp,
+  FolderCoverAuditItem,
+  FolderCoverAuditApproveReq,
+  FolderCoverAuditRejectReq,
   SpaceInfoResp,
-} from '@/api/notify/hey-api'
+  StandardResponseSpaceInfoResp,
+} from '@/api/community/hey-api'
+
 
 /**
- * 扩展互动状态：补充评论数 / 转发数 / 浏览数（动态资源才有评论转发；浏览数所有资源都有）。
- * 用于前端展示卡片页脚互动栏（参考 B 站动态：有数量→icon+数字，无数量→中文「评论/点赞/转发/收藏」）。
+ * 互动资源类型 / 举报来源类型，直接使用 SDK 生成的数值枚举（单一数据源，不再手写镜像）：
+ * - InteractionBizTypeEnum：DYNAMIC=1 / LOTTERY=2 / RPA_ACTION=3 / RPA_WORKFLOW=4 / RPA_BROWSER=5 / RPA_PLUGIN=6
+ * - ReportBizTypeEnum：DYNAMIC=1 / COMMENT=2 / USER=3 / RESOURCE=4
  */
-export type InteractionStatusItemView = InteractionStatusItem & {
-  commentCount?: number
-  repostCount?: number
-  viewCount?: number
-}
+export { InteractionBizTypeEnum, ReportBizTypeEnum }
 
 // ---- Feed ----
 
 export async function fetchAllFeed(params: {
-  page_size?: number
-  history_offset?: number
+  ps?: number
+  last_showlist?: string
+  sort?: 'recommend' | 'time'
+  uniq_id?: string
 } = {}): Promise<MomentFeedResp> {
   return request<MomentFeedResp>(
     () =>
-      feedAllApiV1MomentFeedAllGet({
-        headers: authHeaders(),
+      MomentFeedService.feedAllApiV1CommunityFeedAllGet({
         query: {
-          page_size: params.page_size ?? 20,
-          history_offset: params.history_offset,
+          // 对齐 B 站 rcmd：推荐流用 ps + last_showlist（服务端去重），无 page/offset；
+          // uniq_id 供未登录用户服务端派生随机权重（千人千面）
+          ps: params.ps ?? 20,
+          last_showlist: params.last_showlist,
+          sort: params.sort,
+          uniq_id: params.uniq_id,
         },
       }),
     { items: [], hasMore: false }
@@ -166,8 +115,7 @@ export async function fetchSpaceFeed(
 ): Promise<MomentFeedResp> {
   return request<MomentFeedResp>(
     () =>
-      feedSpaceApiV1MomentFeedSpaceMidGet({
-        headers: authHeaders(),
+      MomentFeedService.feedSpaceApiV1CommunityFeedSpaceMidGet({
         path: { mid },
         query: {
           page_size: params.page_size ?? 20,
@@ -183,8 +131,7 @@ export async function fetchSpaceFeed(
 export async function fetchMomentDetail(momentId: string): Promise<MomentDetailResp | null> {
   return request<MomentDetailResp | null>(
     () =>
-      detailApiV1MomentDetailMomentIdGet({
-        headers: authHeaders(),
+      MomentFeedService.detailApiV1CommunityDetailMomentIdGet({
         // 传字符串避免 19 位 dynId 精度丢失；SDK path 类型为 number，运行时字符串原样拼接
         path: { moment_id: momentId as unknown as number },
       }),
@@ -200,8 +147,7 @@ export async function createMoment(
 ): Promise<MomentCreateResp | null> {
   return request<MomentCreateResp | null>(
     () =>
-      createDynamicApiV1MomentCreatePost({
-        headers: authHeaders(),
+      MomentService.createDynamicApiV1CommunityCreatePost({
         body: payload,
       }),
     null,
@@ -215,8 +161,7 @@ export async function editMoment(
 ): Promise<MomentEditResp | null> {
   return request<MomentEditResp | null>(
     () =>
-      editDynamicApiV1MomentEditPost({
-        headers: authHeaders(),
+      MomentService.editDynamicApiV1CommunityEditPost({
         body: payload,
       }),
     null,
@@ -230,8 +175,7 @@ export async function removeMoment(
 ): Promise<MomentRemoveResp | null> {
   return request<MomentRemoveResp | null>(
     () =>
-      removeDynamicApiV1MomentRemovePost({
-        headers: authHeaders(),
+      MomentService.removeDynamicApiV1CommunityRemovePost({
         body: { dynId: dynId as unknown as number } as MomentRemoveReq,
       }),
     null,
@@ -246,8 +190,7 @@ export async function adminRemoveMoment(
 ): Promise<MomentRemoveResp | null> {
   return request<MomentRemoveResp | null>(
     () =>
-      adminRemoveDynamicApiV1MomentAdminRemovePost({
-        headers: authHeaders(),
+      MomentService.adminRemoveDynamicApiV1CommunityAdminRemovePost({
         body: { dynId: dynId as unknown as number } as MomentRemoveReq,
       }),
     null,
@@ -262,9 +205,11 @@ export async function repostMoment(
 ): Promise<MomentRepostResp | null> {
   return request<MomentRepostResp | null>(
     () =>
-      repostDynamicApiV1MomentRepostPost({
-        headers: authHeaders(),
-        body: payload as MomentRepostReq,
+      MomentService.repostDynamicApiV1CommunityRepostPost({
+        body: {
+          ...payload,
+          srcDynId: payload.srcDynId as unknown as number,
+        } as MomentRepostReq,
       }),
     null
   )
@@ -275,8 +220,7 @@ export async function repostMoment(
 export async function topMoment(dynId: string): Promise<boolean> {
   const r = await request<{ isTop?: number } | null>(
     () =>
-      topDynamicApiV1MomentSpaceTopPost({
-        headers: authHeaders(),
+      MomentService.topDynamicApiV1CommunitySpaceTopPost({
         body: { dynId: dynId as unknown as number },
       }),
     null
@@ -287,8 +231,7 @@ export async function topMoment(dynId: string): Promise<boolean> {
 export async function untopMoment(dynId: string): Promise<boolean> {
   const r = await request<{ isTop?: number } | null>(
     () =>
-      untopDynamicApiV1MomentSpaceUntopPost({
-        headers: authHeaders(),
+      MomentService.untopDynamicApiV1CommunitySpaceUntopPost({
         body: { dynId: dynId as unknown as number },
       }),
     null
@@ -306,17 +249,16 @@ export async function thumbMoment(
   up: number, // 1=like, 2=unlike
   options: { bizType?: InteractionBizTypeEnum; bizId?: string } = {}
 ): Promise<MomentThumbResp | null> {
-  const bizType = options.bizType ?? 'dynamic'
+  const bizType = options.bizType ?? InteractionBizTypeEnum.DYNAMIC
   const bizId = options.bizId ?? dynId
   return request<MomentThumbResp | null>(
     () =>
-      thumbApiV1MomentThumbPost({
-        headers: authHeaders(),
+      MomentService.thumbApiV1CommunityThumbPost({
         body: {
           bizType,
           bizId: bizId as unknown as number,
           up,
-          ...(bizType === 'dynamic'
+          ...(bizType === InteractionBizTypeEnum.DYNAMIC
             ? { dynId: dynId as unknown as number }
             : {}),
         } as MomentThumbReq,
@@ -332,8 +274,7 @@ export async function fetchInteractionStatus(
 ): Promise<InteractionStatusResp | null> {
   return request<InteractionStatusResp | null>(
     () =>
-      interactionStatusApiV1MomentInteractionStatusGet({
-        headers: authHeaders(),
+      MomentService.interactionStatusApiV1CommunityInteractionStatusGet({
         query: { bizType, bizIds: bizIds.join(',') },
       }),
     null
@@ -350,8 +291,7 @@ export async function fetchInteractionStatusOne(
 ): Promise<InteractionStatusItem | null> {
   return request<InteractionStatusItem | null>(
     () =>
-      interactionStatusDetailApiV1MomentInteractionStatusBizIdGet({
-        headers: authHeaders(),
+      MomentService.interactionStatusDetailApiV1CommunityInteractionStatusBizIdGet({
         path: { biz_id: bizId },
         query: { bizType },
       }),
@@ -368,8 +308,7 @@ export async function reportMoment(
 ): Promise<MomentReportResp | null> {
   return request<MomentReportResp | null>(
     () =>
-      reportApiV1MomentReportPost({
-        headers: authHeaders(),
+      MomentService.reportApiV1CommunityReportPost({
         body: { dynId: dynId as unknown as number, reasonType, reasonDesc } as MomentReportReq,
       }),
     null
@@ -392,19 +331,13 @@ export const REPORT_REASONS: { label: string; value: number }[] = [
   { label: '其他', value: 6 },
 ]
 
-export interface ReportByBizResult {
-  code: number
-  msg: string
-  data: { created: boolean; triggered: boolean } | null
-}
-
 /**
  * 统一举报（动态/评论/用户空间三类合一，`bizType`+`bizId` 区分来源）。
  * 走 `POST /api/v1/report`，幂等（一人一对象一次），支持图片附件 `pics`（最多 3 张）。
  */
 export async function reportByBiz(
-  bizType: string,
-  bizId: number,
+  bizType: ReportBizTypeEnum,
+  bizId: string,
   reasonType: number,
   reasonDesc?: string,
   pics?: string[],
@@ -412,8 +345,7 @@ export async function reportByBiz(
 ): Promise<{ created: boolean; triggered: boolean } | null> {
   return request<{ created: boolean; triggered: boolean } | null>(
     () =>
-      createReportApiV1ReportPost({
-        headers: authHeaders(),
+      ReportService.createReportApiV1ReportPost({
         body: {
           bizType,
           bizId,
@@ -432,8 +364,7 @@ export async function reportByBiz(
 export async function checkCreate(scene: string): Promise<boolean> {
   const r = await request<{ canCreate?: boolean } | null>(
     () =>
-      createCheckApiV1MomentCreateCheckPost({
-        headers: authHeaders(),
+      MomentService.createCheckApiV1CommunityCreateCheckPost({
         body: { scene },
       }),
     null
@@ -446,19 +377,16 @@ export async function checkCreate(scene: string): Promise<boolean> {
 export async function fetchTopicSquare(params: {
   page?: number
   page_size?: number
-  hot_only?: boolean
 } = {}): Promise<MomentTopicSquareResp> {
   return request<MomentTopicSquareResp>(
     () =>
-      topicSquareApiV1MomentTopicSquareGet({
-        headers: authHeaders(),
+      MomentService.topicSquareApiV1CommunityTopicSquareGet({
         query: {
           page: params.page ?? 1,
           page_size: params.page_size ?? 20,
-          hot_only: params.hot_only,
         },
       }),
-    { items: [], hasMore: false, page: 1, page_size: params.page_size ?? 20 }
+    { items: [], hasMore: false }
   )
 }
 
@@ -472,8 +400,7 @@ export async function createTopic(params: {
 }): Promise<MomentTopicCreateResp | null> {
   return request<MomentTopicCreateResp | null>(
     () =>
-      topicCreateApiV1MomentTopicCreatePost({
-        headers: authHeaders(),
+      MomentService.topicCreateApiV1CommunityTopicCreatePost({
         body: {
           topicName: params.topicName,
           topicCover: params.topicCover,
@@ -491,8 +418,7 @@ export async function fetchMyTopics(params: {
 } = {}): Promise<MomentTopicMineResp> {
   return request<MomentTopicMineResp>(
     () =>
-      topicMineApiV1MomentTopicMineGet({
-        headers: authHeaders(),
+      MomentService.topicMineApiV1CommunityTopicMineGet({
         query: {
           page: params.page ?? 1,
           page_size: params.page_size ?? 20,
@@ -509,8 +435,7 @@ export async function fetchTopicAuditList(params: {
 } = {}): Promise<MomentTopicAuditListResp> {
   return request<MomentTopicAuditListResp>(
     () =>
-      topicAuditListApiV1MomentTopicAuditListGet({
-        headers: authHeaders(),
+      MomentTopicAuditService.topicAuditListApiV1CommunityTopicAuditListGet({
         query: {
           page_num: params.page_num ?? 1,
           page_size: params.page_size ?? 20,
@@ -527,8 +452,7 @@ export async function topicAuditApprove(
 ): Promise<MomentTopicAuditListResp | null> {
   return request<MomentTopicAuditListResp | null>(
     () =>
-      topicAuditApproveApiV1MomentTopicAuditApprovePost({
-        headers: authHeaders(),
+      MomentTopicAuditService.topicAuditApproveApiV1CommunityTopicAuditApprovePost({
         body: { topicId, remark } as MomentTopicAuditApproveReq,
       }),
     null
@@ -543,8 +467,7 @@ export async function topicAuditReject(
 ): Promise<MomentTopicAuditListResp | null> {
   return request<MomentTopicAuditListResp | null>(
     () =>
-      topicAuditRejectApiV1MomentTopicAuditRejectPost({
-        headers: authHeaders(),
+      MomentTopicAuditService.topicAuditRejectApiV1CommunityTopicAuditRejectPost({
         body: { topicId, rejectReason, remark } as MomentTopicAuditRejectReq,
       }),
     null
@@ -557,8 +480,7 @@ export async function fetchTopicHotSearch(params: {
 } = {}): Promise<MomentTopicSquareResp> {
   return request<MomentTopicSquareResp>(
     () =>
-      topicHotSearchApiV1MomentTopicHotSearchGet({
-        headers: authHeaders(),
+      MomentService.topicHotSearchApiV1CommunityTopicHotSearchGet({
         query: {
           page: params.page ?? 1,
           page_size: params.page_size ?? 20,
@@ -574,8 +496,7 @@ export async function fetchTopicFeed(
 ): Promise<MomentTopicFeedResp> {
   return request<MomentTopicFeedResp>(
     () =>
-      topicFeedApiV1MomentTopicFeedTopicIdGet({
-        headers: authHeaders(),
+      MomentService.topicFeedApiV1CommunityTopicFeedTopicIdGet({
         path: { topicId },
         query: {
           page_size: params.page_size ?? 20,
@@ -583,7 +504,7 @@ export async function fetchTopicFeed(
           sort: params.sort ?? 'hot',
         },
       }),
-    { topicId, topicName: '', items: [], hasMore: false }
+    { topicId, topicName: '', items: [], hasMore: false, topicIdStr: String(topicId) }
   )
 }
 
@@ -591,8 +512,7 @@ export async function fetchTopicFeed(
 export async function fetchTopicDetail(topicId: number): Promise<MomentTopicDetailResp | null> {
   return request<MomentTopicDetailResp | null>(
     () =>
-      topicDetailApiV1MomentTopicDetailTopicIdGet({
-        headers: authHeaders(),
+      MomentService.topicDetailApiV1CommunityTopicDetailTopicIdGet({
         path: { topicId },
       }),
     null
@@ -606,8 +526,7 @@ export async function fetchAtList(params: {
 } = {}): Promise<MomentAtListResp> {
   return request<MomentAtListResp>(
     () =>
-      atListApiV1MomentAtListGet({
-        headers: authHeaders(),
+      MomentService.atListApiV1CommunityAtListGet({
         query: { page_size: params.page_size ?? 20 },
       }),
     { following: [], followers: [] }
@@ -619,8 +538,7 @@ export async function searchAtUsers(keyword: string, params: {
 } = {}): Promise<MomentAtSearchResp> {
   return request<MomentAtSearchResp>(
     () =>
-      atSearchApiV1MomentAtSearchGet({
-        headers: authHeaders(),
+      MomentService.atSearchApiV1CommunityAtSearchGet({
         query: { keyword, page_size: params.page_size ?? 10 },
       }),
     { items: [], hasMore: false }
@@ -635,8 +553,7 @@ export async function fetchPoiNearby(params: {
 } = {}): Promise<MomentPoiResp> {
   return request<MomentPoiResp>(
     () =>
-      poiNearbyApiV1MomentPoiNearbyGet({
-        headers: authHeaders(),
+      MomentService.poiNearbyApiV1CommunityPoiNearbyGet({
         query: {
           page: params.page ?? 1,
           page_size: params.page_size ?? 20,
@@ -652,33 +569,23 @@ export async function searchPoi(keyword: string, params: {
 } = {}): Promise<MomentPoiResp> {
   return request<MomentPoiResp>(
     () =>
-      poiSearchApiV1MomentPoiSearchGet({
-        headers: authHeaders(),
+      MomentService.poiSearchApiV1CommunityPoiSearchGet({
         query: { keyword, page: params.page ?? 1, page_size: params.page_size ?? 20 },
       }),
     { items: [], hasMore: false }
   )
 }
 
-// ---- Relation Stat (用户关系统计) ----
-
-export async function fetchRelationStat(vmid: number) {
-  return request<FollowCountResp | null>(
-    () =>
-      getStatApiV1MessageFollowStatGet({
-        headers: authHeaders(),
-        query: { vmid },
-      }),
-    null
-  )
-}
+// ---- User Space Info (用户空间资料，对标 B 站 acc/info，P9-T4) ----
+// 2.51.0 起 `follow_stat` / `upstat` 已由 `/user/space/info` 内联返回，
+// 原 `fetchRelationStat` / `fetchUpStat` 两个薄封装于 2.52.0 随 `/message/follow/stat`
+// 与 `/community/upstat` 端点一并移除。
 
 /** 我与某人的关注关系（是否已关注 / 是否被关注 / 是否互关 / 拉黑状态） */
 export async function fetchFollowRelation(target_mid: number): Promise<FollowRelationResp | null> {
   return request<FollowRelationResp | null>(
     () =>
-      getRelationApiV1MessageFollowRelationGet({
-        headers: authHeaders(),
+      MessageFollowService.getRelationApiV1MessageFollowRelationGet({
         query: { target_mid },
       }),
     null
@@ -692,8 +599,7 @@ export async function followUser(
 ): Promise<FollowOpResp | null> {
   return request<FollowOpResp | null>(
     () =>
-      followUserApiV1MessageFollowDoPost({
-        headers: authHeaders(),
+      MessageFollowService.followUserApiV1MessageFollowDoPost({
         body: { target_mid: targetMid },
       }),
     null,
@@ -708,8 +614,7 @@ export async function unfollowUser(
 ): Promise<FollowOpResp | null> {
   return request<FollowOpResp | null>(
     () =>
-      unfollowUserApiV1MessageFollowUndoPost({
-        headers: authHeaders(),
+      MessageFollowService.unfollowUserApiV1MessageFollowUndoPost({
         body: { target_mid: targetMid },
       }),
     null,
@@ -724,8 +629,7 @@ export async function blockUser(
 ): Promise<FollowOpResp | null> {
   return request<FollowOpResp | null>(
     () =>
-      blockUserApiV1MessageFollowBlockPost({
-        headers: authHeaders(),
+      MessageFollowService.blockUserApiV1MessageFollowBlockPost({
         body: { target_mid: targetMid },
       }),
     null,
@@ -741,8 +645,7 @@ export async function fetchMomentLikers(
 ): Promise<MomentLikerListResp> {
   return request<MomentLikerListResp>(
     () =>
-      getMomentLikersApiV1MomentMomentIdLikersGet({
-        headers: authHeaders(),
+      MomentFeedService.getMomentLikersApiV1CommunityMomentIdLikersGet({
         path: { moment_id: momentId as unknown as number },
         query: { page_num: params.page_num ?? 1, page_size: params.page_size ?? 20 },
       }),
@@ -756,8 +659,7 @@ export async function fetchMomentForwards(
 ): Promise<MomentForwardListResp> {
   return request<MomentForwardListResp>(
     () =>
-      getMomentForwardsApiV1MomentMomentIdForwardsGet({
-        headers: authHeaders(),
+      MomentFeedService.getMomentForwardsApiV1CommunityMomentIdForwardsGet({
         path: { moment_id: momentId as unknown as number },
         query: { page_num: params.page_num ?? 1, page_size: params.page_size ?? 20 },
       }),
@@ -765,27 +667,7 @@ export async function fetchMomentForwards(
   )
 }
 
-// ---- Up Stat (空间统计：动态数 / 获赞数，对标 B 站 upstat) ----
-
-export async function fetchUpStat(vmid: number): Promise<MomentUpStatResp | null> {
-  return request<MomentUpStatResp | null>(
-    () =>
-      getUpstatApiV1MomentUpstatGet({
-        headers: authHeaders(),
-        query: { vmid },
-      }),
-    null
-  )
-}
-
 // ---- User Space Info (用户空间资料，对标 B 站 acc/info，P9-T4) ----
-
-/** 空间信息读取结果：保留业务码，供调用方区分「正常 / 用户不存在(1008) / 黑名单拒绝(403) / 失败」 */
-export interface SpaceInfoResult {
-  code: number
-  msg: string
-  data: SpaceInfoResp | null
-}
 
 /**
  * 读取单用户空间完整资料（对标 B 站 `/x/space/wbi/acc/info?mid=`）。
@@ -795,11 +677,11 @@ export interface SpaceInfoResult {
  * - `code === 403` 黑名单互访拒绝（本人除外，已拉黑 / 被拉黑）；
  * - `code === 1008`（USER_NOT_FOUND）目标用户不存在；
  * - 其它 / 网络失败为 `-1`。
+ * 返回类型直接使用 SDK 生成的 StandardResponseSpaceInfoResp。
  */
-export async function fetchUserSpaceInfo(mid: number): Promise<SpaceInfoResult> {
+export async function fetchUserSpaceInfo(mid: number): Promise<StandardResponseSpaceInfoResp> {
   try {
-    const r = await getSpaceInfoApiV1UserSpaceInfoGet({
-      headers: authHeaders(),
+    const r = await PptrUserGatewayService.getSpaceInfoApiV1UserSpaceInfoGet({
       query: { mid },
     })
     const rr = r as {
@@ -818,14 +700,16 @@ export async function fetchUserSpaceInfo(mid: number): Promise<SpaceInfoResult> 
 // ---- Audit (Admin) ----
 
 export async function fetchAuditList(params: {
+  /** 审核状态筛选：auditing（默认，待审核）/ normal（已过审，可驳回撤回）/ rejected（已驳回，可通过恢复）/ hidden（已下架） */
+  auditStatus?: MomentAuditStatusEnum
   page_num?: number
   page_size?: number
 } = {}): Promise<MomentAuditListResp> {
   return request<MomentAuditListResp>(
     () =>
-      auditListApiV1MomentAuditListGet({
-        headers: authHeaders(),
+      MomentAuditService.auditListApiV1CommunityAuditListGet({
         query: {
+          auditStatus: params.auditStatus,
           page_num: params.page_num ?? 1,
           page_size: params.page_size ?? 20,
         },
@@ -844,8 +728,7 @@ export async function fetchAuditHistory(params: {
 } = {}): Promise<MomentAuditLogListResp> {
   return request<MomentAuditLogListResp>(
     () =>
-      auditHistoryApiV1MomentAuditListHistoryGet({
-        headers: authHeaders(),
+      MomentAuditService.auditHistoryApiV1CommunityAuditListHistoryGet({
         query: {
           dynId: params.dynId as unknown as number | undefined,
           operatorMid: params.operatorMid,
@@ -865,8 +748,7 @@ export async function auditApprove(
 ): Promise<MomentAuditDetailResp | null> {
   return request<MomentAuditDetailResp | null>(
     () =>
-      auditApproveApiV1MomentAuditApprovePost({
-        headers: authHeaders(),
+      MomentAuditService.auditApproveApiV1CommunityAuditApprovePost({
         body: { dynId: dynId as unknown as number, remark } as MomentAuditActionReq,
       }),
     null
@@ -880,8 +762,7 @@ export async function auditReject(
 ): Promise<MomentAuditDetailResp | null> {
   return request<MomentAuditDetailResp | null>(
     () =>
-      auditRejectApiV1MomentAuditRejectPost({
-        headers: authHeaders(),
+      MomentAuditService.auditRejectApiV1CommunityAuditRejectPost({
         body: { dynId: dynId as unknown as number, rejectReason, remark } as MomentAuditRejectReq,
       }),
     null
@@ -893,8 +774,7 @@ export async function fetchAuditDetail(
 ): Promise<MomentAuditDetailResp | null> {
   return request<MomentAuditDetailResp | null>(
     () =>
-      auditDetailApiV1MomentAuditDynIdGet({
-        headers: authHeaders(),
+      MomentAuditService.auditDetailApiV1CommunityAuditDynIdGet({
         path: { dynId: dynId as unknown as number },
       }),
     null
@@ -907,8 +787,7 @@ export async function fetchAuditDetail(
 export async function fetchAvatarAuditMine(): Promise<AvatarAuditMineResp | null> {
   return request<AvatarAuditMineResp | null>(
     () =>
-      avatarAuditMineApiV1UserAvatarAuditMineGet({
-        headers: authHeaders(),
+      AvatarAuditService.avatarAuditMineApiV1UserAvatarAuditMineGet({
       }),
     null
   )
@@ -921,8 +800,7 @@ export async function fetchAvatarAuditList(params: {
 } = {}): Promise<AvatarAuditListResp> {
   return request<AvatarAuditListResp>(
     () =>
-      avatarAuditListApiV1UserAvatarAuditListGet({
-        headers: authHeaders(),
+      AvatarAuditService.avatarAuditListApiV1UserAvatarAuditListGet({
         query: {
           page_num: params.page_num ?? 1,
           page_size: params.page_size ?? 20,
@@ -939,8 +817,7 @@ export async function avatarAuditApprove(
 ): Promise<AvatarAuditListResp | null> {
   return request<AvatarAuditListResp | null>(
     () =>
-      avatarAuditApproveApiV1UserAvatarAuditApprovePost({
-        headers: authHeaders(),
+      AvatarAuditService.avatarAuditApproveApiV1UserAvatarAuditApprovePost({
         body: { pk, remark } as AvatarAuditApproveReq,
       }),
     null
@@ -955,9 +832,56 @@ export async function avatarAuditReject(
 ): Promise<AvatarAuditListResp | null> {
   return request<AvatarAuditListResp | null>(
     () =>
-      avatarAuditRejectApiV1UserAvatarAuditRejectPost({
-        headers: authHeaders(),
+      AvatarAuditService.avatarAuditRejectApiV1UserAvatarAuditRejectPost({
         body: { pk, reason, remark } as AvatarAuditRejectReq,
+      }),
+    null
+  )
+}
+
+// ---- Folder Cover Audit（收藏夹封面审核）----
+
+/** 管理端待审核收藏夹封面列表（RootUser） */
+export async function fetchFolderCoverAuditList(params: {
+  page_num?: number
+  page_size?: number
+} = {}): Promise<FolderCoverAuditListResp> {
+  return request<FolderCoverAuditListResp>(
+    () =>
+      FolderCoverAuditService.folderCoverAuditListApiV1FavoriteFolderCoverAuditListGet({
+        query: {
+          page_num: params.page_num ?? 1,
+          page_size: params.page_size ?? 20,
+        },
+      }),
+    { items: [], total: 0, page_num: 1, page_size: params.page_size ?? 20 }
+  )
+}
+
+/** 管理端审核通过收藏夹封面（RootUser，通过后新封面公开显示） */
+export async function folderCoverAuditApprove(
+  pk: number,
+  remark?: string
+): Promise<FolderCoverAuditItem | null> {
+  return request<FolderCoverAuditItem | null>(
+    () =>
+      FolderCoverAuditService.folderCoverAuditApproveApiV1FavoriteFolderCoverAuditApprovePost({
+        body: { pk, remark } as FolderCoverAuditApproveReq,
+      }),
+    null
+  )
+}
+
+/** 管理端审核驳回收藏夹封面（RootUser，保持原封面） */
+export async function folderCoverAuditReject(
+  pk: number,
+  reason: string,
+  remark?: string
+): Promise<FolderCoverAuditItem | null> {
+  return request<FolderCoverAuditItem | null>(
+    () =>
+      FolderCoverAuditService.folderCoverAuditRejectApiV1FavoriteFolderCoverAuditRejectPost({
+        body: { pk, reason, remark } as FolderCoverAuditRejectReq,
       }),
     null
   )
@@ -971,8 +895,7 @@ export async function createFavoriteFolder(
 ): Promise<FavoriteFolderResp | null> {
   return request<FavoriteFolderResp | null>(
     () =>
-      createFolderApiV1FavoriteFolderCreatePost({
-        headers: authHeaders(),
+      FavoriteService.createFolderApiV1FavoriteFolderCreatePost({
         body: data,
       }),
     null
@@ -985,8 +908,7 @@ export async function updateFavoriteFolder(
 ): Promise<null> {
   return request<null>(
     () =>
-      updateFolderApiV1FavoriteFolderUpdatePost({
-        headers: authHeaders(),
+      FavoriteService.updateFolderApiV1FavoriteFolderUpdatePost({
         body: data,
       }),
     null
@@ -999,8 +921,7 @@ export async function deleteFavoriteFolder(
 ): Promise<null> {
   return request<null>(
     () =>
-      deleteFolderApiV1FavoriteFolderDeletePost({
-        headers: authHeaders(),
+      FavoriteService.deleteFolderApiV1FavoriteFolderDeletePost({
         body: { folderId } as FavoriteFolderDeleteReq,
       }),
     null
@@ -1011,8 +932,7 @@ export async function deleteFavoriteFolder(
 export async function fetchFavoriteFolders(): Promise<FavoriteFolderResp[]> {
   return request<FavoriteFolderResp[]>(
     () =>
-      listFoldersApiV1FavoriteFolderListGet({
-        headers: authHeaders(),
+      FavoriteService.listFoldersApiV1FavoriteFolderListGet({
       }),
     []
   )
@@ -1026,17 +946,16 @@ export async function addFavorite(
   folderId: string,
   options: { bizType?: InteractionBizTypeEnum; bizId?: string } = {}
 ): Promise<FavoriteAddResp | null> {
-  const bizType = options.bizType ?? 'dynamic'
+  const bizType = options.bizType ?? InteractionBizTypeEnum.DYNAMIC
   const bizId = options.bizId ?? dynId
   return request<FavoriteAddResp | null>(
     () =>
-      addFavoriteApiV1FavoriteAddPost({
-        headers: authHeaders(),
+      FavoriteService.addFavoriteApiV1FavoriteAddPost({
         body: {
           bizType,
           bizId,
           folderId,
-          ...(bizType === 'dynamic' ? { dynId } : {}),
+          ...(bizType === InteractionBizTypeEnum.DYNAMIC ? { dynId } : {}),
         } as FavoriteAddReq,
       }),
     null
@@ -1049,17 +968,16 @@ export async function removeFavorite(
   folderId: string,
   options: { bizType?: InteractionBizTypeEnum; bizId?: string } = {}
 ): Promise<FavoriteAddResp | null> {
-  const bizType = options.bizType ?? 'dynamic'
+  const bizType = options.bizType ?? InteractionBizTypeEnum.DYNAMIC
   const bizId = options.bizId ?? dynId
   return request<FavoriteAddResp | null>(
     () =>
-      removeFavoriteApiV1FavoriteRemovePost({
-        headers: authHeaders(),
+      FavoriteService.removeFavoriteApiV1FavoriteRemovePost({
         body: {
           bizType,
           bizId,
           folderId,
-          ...(bizType === 'dynamic' ? { dynId } : {}),
+          ...(bizType === InteractionBizTypeEnum.DYNAMIC ? { dynId } : {}),
         } as FavoriteRemoveReq,
       }),
     null
@@ -1073,8 +991,7 @@ export async function fetchFavoriteDynIds(
 ): Promise<FavoriteListResp> {
   return request<FavoriteListResp>(
     () =>
-      listFavoritesApiV1FavoriteListGet({
-        headers: authHeaders(),
+      FavoriteService.listFavoritesApiV1FavoriteListGet({
         query: {
           folderId,
           page: params.page ?? 1,
@@ -1096,8 +1013,7 @@ export async function fetchFavoriteItems(
 ): Promise<FavoriteItemListResp> {
   return request<FavoriteItemListResp>(
     () =>
-      listFavoriteItemsApiV1FavoriteItemsGet({
-        headers: authHeaders(),
+      FavoriteService.listFavoriteItemsApiV1FavoriteItemsGet({
         query: {
           folderId,
           bizType: params.bizType ?? null,
@@ -1114,16 +1030,15 @@ export async function fetchDynFavoriteFolders(
   dynId: string,
   options: { bizType?: InteractionBizTypeEnum; bizId?: string } = {}
 ): Promise<FavoriteDynFoldersResp | null> {
-  const bizType = options.bizType ?? 'dynamic'
+  const bizType = options.bizType ?? InteractionBizTypeEnum.DYNAMIC
   const bizId = options.bizId ?? dynId
   return request<FavoriteDynFoldersResp | null>(
     () =>
-      dynFoldersApiV1FavoriteDynFoldersGet({
-        headers: authHeaders(),
+      FavoriteService.dynFoldersApiV1FavoriteDynFoldersGet({
         query: {
           bizType,
           bizId,
-          ...(bizType === 'dynamic' ? { dynId } : {}),
+          ...(bizType === InteractionBizTypeEnum.DYNAMIC ? { dynId } : {}),
         },
       }),
     null
@@ -1134,8 +1049,7 @@ export async function fetchDynFavoriteFolders(
 export async function fetchFavoriteSetting(): Promise<FavoriteSettingResp | null> {
   return request<FavoriteSettingResp | null>(
     () =>
-      getSettingApiV1FavoriteSettingGet({
-        headers: authHeaders(),
+      FavoriteService.getSettingApiV1FavoriteSettingGet({
       }),
     null
   )
@@ -1148,8 +1062,7 @@ export async function setFavoriteSetting(
 ): Promise<FavoriteSettingResp | null> {
   return request<FavoriteSettingResp | null>(
     () =>
-      setSettingApiV1FavoriteSettingPost({
-        headers: authHeaders(),
+      FavoriteService.setSettingApiV1FavoriteSettingPost({
         body: { showFavorites } as FavoriteSettingReq,
       }),
     null,
@@ -1162,9 +1075,9 @@ export async function fetchUserFavoriteFolders(
   mid: number
 ): Promise<FavoriteFolderResp[] | null> {
   try {
-    return await request<FavoriteFolderResp[]>(
+    return await request<FavoriteFolderResp[] | null>(
       () =>
-        publicFoldersApiV1FavoriteUserFoldersGet({
+        FavoriteService.publicFoldersApiV1FavoriteUserFoldersGet({
           query: { mid },
         }),
       null
@@ -1181,9 +1094,9 @@ export async function fetchUserFavoriteDynIds(
   params: { page?: number; pageSize?: number } = {}
 ): Promise<FavoriteListResp | null> {
   try {
-    return await request<FavoriteListResp>(
+    return await request<FavoriteListResp | null>(
       () =>
-        publicDynamicsApiV1FavoriteUserDynamicsGet({
+        FavoriteService.publicDynamicsApiV1FavoriteUserDynamicsGet({
           query: {
             mid,
             folderId,
@@ -1196,6 +1109,17 @@ export async function fetchUserFavoriteDynIds(
   } catch {
     return null
   }
+}
+
+/** 动态审核总统计：按类型 + 按状态分组计数（role=root，与审核列表同守卫） */
+export async function fetchAuditStatistics(): Promise<MomentAuditStatisticsResp> {
+  return request<MomentAuditStatisticsResp>(
+    () =>
+      client.get({
+        url: '/api/v1/moment/audit/statistics',
+      }),
+    { byType: [], byStatus: {}, total: 0 }
+  );
 }
 
 // ---- Re-export types for consumers ----
@@ -1227,11 +1151,12 @@ export type {
   MomentAuditDetailResp,
   MomentAuditLogListResp,
   MomentAuditItem,
+  MomentAuditStatusEnum,
+  MomentAuditStatisticsResp,
+  MomentAuditTypeStat,
   MomentContentNode,
   MomentModule,
   MomentTopicInfo,
-  FollowCountResp,
-  MomentUpStatResp,
   FavoriteFolderCreateReq,
   FavoriteFolderUpdateReq,
   FavoriteFolderDeleteReq,
@@ -1247,11 +1172,17 @@ export type {
   FavoriteSettingResp,
   InteractionStatusResp,
   InteractionStatusItem,
-  InteractionBizTypeEnum,
   SpaceInfoResp,
+  MomentLikerListResp,
+  MomentForwardListResp,
+  MomentTopicDetailResp,
   AvatarAuditMineResp,
   AvatarAuditListResp,
   AvatarAuditItem,
   AvatarAuditApproveReq,
   AvatarAuditRejectReq,
-} from '@/api/notify/hey-api'
+  FolderCoverAuditListResp,
+  FolderCoverAuditItem,
+  FolderCoverAuditApproveReq,
+  FolderCoverAuditRejectReq,
+} from '@/api/community/hey-api'

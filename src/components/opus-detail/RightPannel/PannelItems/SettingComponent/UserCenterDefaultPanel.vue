@@ -6,6 +6,8 @@ import userApi from '@/api/user/user_api.ts'
 import { fetchAvatarAuditMine } from '@/api/notify/moment-api'
 import { useUserNavStore } from '@/stores/user_nav'
 import { BiliImg } from '@/assets/img/BiliImg.ts'
+import BiliStyleExpBar from '@/components/CommonCompo/BiliStyleExpBar.vue'
+import LevelPrivilegePopover from '@/components/CommonCompo/LevelPrivilegePopover.vue'
 import type { User_base_info_config_form } from '@/models/user/user_setting/user_base_info_config_model.ts'
 import type { CasdoorUserModel } from '@/models/user/casdoor/casdoor_user_model.ts'
 
@@ -84,19 +86,7 @@ const fmt = (v: any): string => {
 const navLevel = computed(() => navInfo.value?.level_info ?? null)
 const levelCurrent = computed(() => navLevel.value?.current_level ?? navLevel.value?.current_level_exp)
 const levelExp = computed(() => navLevel.value?.current_level_exp ?? navLevel.value?.current_exp)
-const levelMin = computed(() => navLevel.value?.current_min)
 const levelNext = computed(() => navLevel.value?.current_exp_to_next_level ?? navLevel.value?.next_exp)
-
-const levelInfoText = () => {
-  const cur = levelExp.value
-  const min = levelMin.value
-  const max = levelNext.value
-  if (cur == null) return '—'
-  if (min != null && max != null && max !== '--') {
-    return `${cur} / (${min} ~ ${max})`
-  }
-  return String(cur)
-}
 
 // Casdoor 只读账户：仅挑选几个最重要的字段展示（余额 / 积分 / 等级 等）
 const casdoorHighlights = computed(() => {
@@ -209,8 +199,8 @@ onMounted(() => {
     <div v-else class="user-center-body flex flex-col gap-6">
       <!-- 头像与基础标识（头像取本系统 nav 的 face，即审核通过后的公开头像） -->
       <el-card class="user-center-profile-card" shadow="never">
-        <div class="user-center-profile-card__body flex items-center gap-4">
-          <div class="user-center-profile-card__avatar-wrap flex items-start gap-3">
+        <div class="user-center-profile-card__body flex flex-wrap items-start gap-4">
+          <div class="user-center-profile-card__avatar-wrap flex flex-col items-start gap-3 shrink-0">
             <el-avatar
               class="user-center-profile-card__avatar"
               :size="64"
@@ -237,20 +227,46 @@ onMounted(() => {
               </el-tag>
             </div>
           </div>
-          <div class="user-center-profile-card__meta flex flex-col">
-            <span class="user-center-profile-card__name text-xl font-bold text-text-primary">
-              {{ profile?.uname || casdoor?.displayName || navInfo?.user_name || '—' }}
-            </span>
+          <div class="user-center-profile-card__meta flex flex-col flex-1 gap-1 min-w-48">
+            <div class="user-center-profile-card__meta-head flex items-center gap-2 min-w-0">
+              <span class="user-center-profile-card__name text-xl font-bold text-text-primary wrap-break-word min-w-0">
+                {{ profile?.uname || casdoor?.displayName || navInfo?.user_name || '—' }}
+              </span>
+              <el-button
+                class="user-center-profile-card__refresh"
+                size="small"
+                @click="loadDetail"
+              >
+                刷新
+              </el-button>
+            </div>
             <span class="user-center-profile-card__sub text-sm text-text-secondary">
               @{{ navInfo?.user_name || '—' }} · UID {{ navInfo?.uid ?? '—' }}
             </span>
           </div>
-          <div class="user-center-profile-card__level ml-auto flex flex-col items-end">
-            <el-tag type="primary" effect="light" size="large">
-              等级 {{ fmt(levelCurrent) }}
-            </el-tag>
-            <span class="user-center-profile-card__exp text-xs text-text-secondary mt-1">
-              经验 {{ levelInfoText() }}
+          <div class="user-center-profile-card__level flex flex-col items-end gap-1 min-w-65 md:ml-auto">
+            <el-popover
+              v-if="navLevel"
+              class="user-center-profile-card__exp-popover"
+              placement="bottom-end"
+              :width="320"
+              :show-arrow="true"
+              trigger="hover"
+              :persistent="false"
+              popper-class="user-center-exp-popover"
+            >
+              <template #reference>
+                <BiliStyleExpBar
+                  :level-info="navLevel"
+                  size="large"
+                  :show-text="true"
+                  class="user-center-profile-card__exp"
+                />
+              </template>
+              <LevelPrivilegePopover :current-level="Number(levelCurrent) || 0" />
+            </el-popover>
+            <span v-else class="user-center-profile-card__exp text-xs text-text-secondary">
+              暂无等级信息
             </span>
           </div>
         </div>
@@ -354,11 +370,6 @@ onMounted(() => {
         />
       </el-card>
 
-      <div class="user-center-actions flex justify-end">
-        <el-button class="user-center-actions__refresh" size="default" @click="loadDetail">
-          刷新
-        </el-button>
-      </div>
     </div>
 
     <!-- 修改头像弹窗（仅支持图片 URL） -->

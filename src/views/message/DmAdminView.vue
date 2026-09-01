@@ -103,6 +103,18 @@
       </template>
     </div>
 
+    <div class="dm-admin__table-bar mb-2 flex items-center justify-end">
+      <el-button
+        class="dm-admin__refresh-btn"
+        size="default"
+        :icon="Refresh"
+        :loading="loading"
+        @click="load"
+      >
+        {{ t('message.refresh') }}
+      </el-button>
+    </div>
+
     <LoadingWrap :loading="loading" :rows="6">
       <EmptyState v-if="items.length === 0" :text="t('message.emptyAuditDm')" />
       <!-- 父容器固定高度，由 AutoResizer 自动测量并传给表格 width/height -->
@@ -113,7 +125,7 @@
               :columns="dmColumns"
               :data="items"
               :width="width"
-              :height="height"
+              :height="fitTableHeight(height)"
               :row-height="56"
               :header-height="44"
               :footer-height="total > pageSize ? 64 : 0"
@@ -146,7 +158,7 @@
 
                 <!-- 发送者 -->
                 <template v-else-if="column.key === 'sender'">
-                  <UserBriefCell :mid="rowData.sender_mid" :brief="rowData.sender" />
+                  <UserBriefCell :mid="rowData.sender_mid" :brief="rowData.sender" :show-actions="true" />
                 </template>
 
                 <!-- 内容 -->
@@ -282,22 +294,12 @@ import { computed, onMounted, reactive, ref } from 'vue'
 import type { Column } from 'element-plus'
 import { useDebounceFn } from '@vueuse/core'
 import { useI18n } from 'vue-i18n'
+import { Refresh } from '@element-plus/icons-vue'
 import biliMessage from '@/utils/message'
 import { businessHandler, type BusinessResponse } from '@/utils/businessHandler'
 
 const { t } = useI18n()
-import {
-  adminStatsApiV1MessageDmAdminStatsGet,
-  auditQueueApiV1MessageDmAdminAuditGet,
-  bulkAuditDmApiV1MessageDmAdminAuditBatchPost,
-  sessionContextApiV1MessageDmAdminSessionGet,
-  unbanUsers,
-  type AuditSourceInfo,
-  type DmSessionContextResp,
-  type StandardResponseDmAuditItem,
-  type StandardResponseDmAuditListResp,
-  type StandardResponseDmStatsResp,
-} from '@/api/notify/hey-api'
+import { MessageDmAdminService, MessageAdminBanService, DmAuditStateEnum, DmMsgTypeEnum, type AuditSourceInfo, type DmSessionContextResp, type StandardResponseDmAuditItem, type StandardResponseDmAuditListResp, type StandardResponseDmStatsResp } from '@/api/community/hey-api'
 
 // 从生成 SDK 的响应类型派生出 data 实体类型（responseStyle: 'data' 下函数直接返回 data）
 type DmAuditRow = NonNullable<StandardResponseDmAuditItem['data']>
@@ -319,7 +321,8 @@ const total = ref(0)
 const page = ref(1)
 const pageSize = ref(20)
 const pageSizes = [10, 20, 50, 100]
-const stateFilter = ref<string[]>([])
+// 默认筛选「审核中」（与评论审核一致：审核员进入页面最关心待审队列）
+const stateFilter = ref<string[]>(['auditing'])
 const canViewAllStates = ref(false)
 const sessionDrawerVisible = ref(false)
 const sessionLoading = ref(false)
@@ -405,7 +408,7 @@ async function unbanSelected() {
   userActionPending.value = true
   try {
     await businessHandler<null>(
-      unbanUsers({ body: { mids: selectedMids.value } }) as unknown as Promise<
+      MessageAdminBanService.unbanUsers({ body: { mids: selectedMids.value } }) as unknown as Promise<
         BusinessResponse<null>
       >,
       { successMessage: t('message.unbanSuccess') },
@@ -416,22 +419,32 @@ async function unbanSelected() {
   }
 }
 
+// 表格高度自适应：数据不满一屏时收缩到内容实际高度，底部滚动条紧跟最后一行数据
+const TABLE_HEADER_H = 44
+const TABLE_ROW_H = 56
+const TABLE_FOOTER_H = 64
+function fitTableHeight(avail: number): number {
+  const footerH = total.value > pageSize.value ? TABLE_FOOTER_H : 0
+  const contentH = TABLE_HEADER_H + items.value.length * TABLE_ROW_H + footerH
+  return Math.min(avail, Math.max(contentH, TABLE_HEADER_H + TABLE_ROW_H + footerH))
+}
+
 async function load() {
   loading.value = true
   const [list, st] = await Promise.all([
-    auditQueueApiV1MessageDmAdminAuditGet({
+    MessageDmAdminService.auditQueueApiV1MessageDmAdminAuditGet({
       query: {
         state: stateFilter.value.length ? stateFilter.value : undefined,
         page_num: page.value,
         page_size: pageSize.value
       }
     }),
-    adminStatsApiV1MessageDmAdminStatsGet()
+    MessageDmAdminService.adminStatsApiV1MessageDmAdminStatsGet()
   ])
-  items.value = list?.data?.items ?? []
-  total.value = list?.data?.total ?? 0
-  canViewAllStates.value = Boolean(list?.data?.can_view_all_states)
-  Object.assign(stats, st?.data ?? {})
+  items.value = list?.data?.data?.items ?? []
+  total.value = list?.data?.data?.total ?? 0
+  canViewAllStates.value = Boolean(list?.data?.data?.can_view_all_states)
+  Object.assign(stats, st?.data?.data ?? {})
   // 审核列表已内嵌发送者信息（sender），无需前端再回查
   // 翻页 / 刷新后当前页条目变化，清空选中避免残留
   selectedKeys.value = new Set()
@@ -448,10 +461,10 @@ async function openSession(source: AuditSourceInfo) {
   sessionLoading.value = true
   sessionDrawerVisible.value = true
   try {
-    const ctx = await sessionContextApiV1MessageDmAdminSessionGet({
+    const ctx = await MessageDmAdminService.sessionContextApiV1MessageDmAdminSessionGet({
       query: { session_key: sessionKey ?? null, msgkey: msgkey ?? null }
     })
-    sessionContext.value = ctx?.data ?? null
+    sessionContext.value = ctx?.data?.data ?? null
   } finally {
     sessionLoading.value = false
   }
@@ -529,13 +542,13 @@ async function doAudit(
     // 一次批量审核调用，逐条原因通过 notes 映射传入（{ msgkey: 原因 }）；
     // 成功文案由调用方预设，失败提示由后端响应驱动（统一 businessHandler 处理）
     await businessHandler<{ failed?: number[] }>(
-      bulkAuditDmApiV1MessageDmAdminAuditBatchPost({
+      MessageDmAdminService.bulkAuditDmApiV1MessageDmAdminAuditBatchPost({
         body: {
           msgkeys: rows.map((r) => r.msgkey),
           op,
           notes: reasons ?? undefined
         }
-      }) as unknown as Promise<BusinessResponse<{ failed?: number[] }>>,
+      }) as unknown as Promise<BusinessResponse<{ failed?: string[] }>>,
       { successMessage: t('message.processedCount', { n: rows.length }) },
       [
         (result) => {
@@ -562,30 +575,31 @@ const auditPending = ref(false)
 const userActionPending = ref(false)
 
 // 审核操作 -> 目标状态
-const OP_STATE_MAP: Record<string, string> = {
-  pass: 'normal',
-  reject: 'rejected',
-  hidden: 'hidden',
-  restore: 'normal'
+// 后端枚举是整数：审核动作落到哪个状态必须用枚举值表达，不能写字符串字面量
+const OP_STATE_MAP: Record<string, DmAuditStateEnum> = {
+  pass: DmAuditStateEnum.NORMAL,
+  reject: DmAuditStateEnum.REJECTED,
+  hidden: DmAuditStateEnum.HIDDEN,
+  restore: DmAuditStateEnum.NORMAL
 }
 
-function msgTypeText(type: string): string {
-  if (type === 'image') return t('message.typeImage')
-  if (type === 'system') return t('message.typeSystem')
+function msgTypeText(type?: DmMsgTypeEnum): string {
+  if (type === DmMsgTypeEnum.IMAGE) return t('message.typeImage')
+  if (type === DmMsgTypeEnum.SYSTEM) return t('message.typeSystem')
   return t('message.typeText')
 }
 
-function stateTag(s: string): 'success' | 'warning' | 'danger' | 'info' {
-  if (s === 'normal') return 'success'
-  if (s === 'auditing') return 'warning'
-  if (s === 'rejected') return 'danger'
+function stateTag(s?: DmAuditStateEnum): 'success' | 'warning' | 'danger' | 'info' {
+  if (s === DmAuditStateEnum.NORMAL) return 'success'
+  if (s === DmAuditStateEnum.AUDITING) return 'warning'
+  if (s === DmAuditStateEnum.REJECTED) return 'danger'
   return 'info'
 }
 
-function stateText(s: string): string {
-  if (s === 'normal') return t('message.stateNormal')
-  if (s === 'auditing') return t('message.stateAuditing')
-  if (s === 'rejected') return t('message.stateRejected')
+function stateText(s?: DmAuditStateEnum): string {
+  if (s === DmAuditStateEnum.NORMAL) return t('message.stateNormal')
+  if (s === DmAuditStateEnum.AUDITING) return t('message.stateAuditing')
+  if (s === DmAuditStateEnum.REJECTED) return t('message.stateRejected')
   return t('message.stateHidden')
 }
 

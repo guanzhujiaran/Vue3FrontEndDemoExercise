@@ -1,6 +1,6 @@
 import { ref } from 'vue'
 import { defineStore } from 'pinia'
-import { myStatusApiV1MessageAdminMeGet } from '@/api/notify/hey-api'
+import { MessageAdminService } from '@/api/community/hey-api'
 
 export interface MessageAdminMe {
   is_root: boolean
@@ -24,7 +24,7 @@ export const useMessageAdminStore = defineStore('message-admin', () => {
 
   const fetchStatus = async () => {
     try {
-      const res = await myStatusApiV1MessageAdminMeGet()
+      const res = await MessageAdminService.myStatusApiV1MessageAdminMeGet()
       // SDK 默认 responseStyle 为 'fields'，返回完整响应 { code, msg, data: {...} }
       const payload = res && typeof res === 'object' ? (res as Record<string, unknown>).data : undefined
       if (payload && typeof payload === 'object') {

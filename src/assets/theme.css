@@ -384,6 +384,36 @@
     var(--el-color-primary-dark-2) 100%
   );
 
+  /* ==================== 用户等级色（B 站风格，对齐 bilibili LV 配色） ==================== */
+  /* from 渐变起始色 / to 渐变结束色 / track 进度条轨道色 */
+  --color-level-0-from: #bfbfbf;
+  --color-level-0-to: #d9d9d9;
+  --color-level-0-track: #f0f0f0;
+
+  --color-level-1-from: #646464;
+  --color-level-1-to: #8c8c8c;
+  --color-level-1-track: #e8e8e8;
+
+  --color-level-2-from: #5dacd5;
+  --color-level-2-to: #7cc5e5;
+  --color-level-2-track: #e6f4fb;
+
+  --color-level-3-from: #7cc78f;
+  --color-level-3-to: #98d494;
+  --color-level-3-track: #eaf6e9;
+
+  --color-level-4-from: #f0c674;
+  --color-level-4-to: #f4c16f;
+  --color-level-4-track: #fcf4e3;
+
+  --color-level-5-from: #e89090;
+  --color-level-5-to: #e89191;
+  --color-level-5-track: #fbecec;
+
+  --color-level-6-from: #f8a66a;
+  --color-level-6-to: #f8b26a;
+  --color-level-6-track: #fdeede;
+
   /* ==================== 文本渐变 ==================== */
   --color-gradient-text-primary: linear-gradient(
     135deg,
@@ -495,4 +525,18 @@
   padding-bottom: env(safe-area-inset-bottom, 0px);
   padding-left: env(safe-area-inset-left, 0px);
   box-sizing: border-box;
+}
+
+/* ==================== 侧边导航折叠态：禁用 Element Plus 默认的 hover 标题弹层 ====================
+   折叠态下菜单项只展示 icon，不需要再弹出菜单标题 tooltip；
+   Element Plus 在 el-menu collapse 模式下，popper-class 仍会被挂到 .el-popper 上，
+   这里通过自定义 popper-class 把折叠态下的弹层整体隐藏，避免塌陷样式干扰。 */
+.bili-side-nav-layout__popper--hidden {
+  display: none !important;
+}
+
+/* 侧边导航内容区：外层 el-scrollbar 只做纵向滚动，隐藏横向滚动条（横向滚动由 el-table-v2 等内部表格自管理），
+   避免空态/内容不满时出现无意义的横向滚动条 */
+.bili-side-nav-layout__content .el-scrollbar__bar.is-horizontal {
+  display: none !important;
 }

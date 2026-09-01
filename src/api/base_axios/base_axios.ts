@@ -7,7 +7,6 @@
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
  */
 // src/axios.js
-import { useJwtStore } from '@/stores/jwt_token'
 import { useUserNavStore } from '@/stores/user_nav'
 import { useLocaleStore } from '@/stores/locale'
 import axios, { type AxiosInstance, type CreateAxiosDefaults } from 'axios'
@@ -26,12 +25,9 @@ declare module 'axios' {
   export function create(config?: AxiosRequestConfig): AxiosInstance
 }
 export const AXIOS_REQ_AUTH_INJECTION = (config: any = AXIOS_CONFIG) => {
-  // 添加 Authorization token
-  const JwtStore = useJwtStore()
-  const token = JwtStore.jwt
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`
-  }
+  // JWT 已改为 HttpOnly Cookie，浏览器自动随请求携带，无需手动注入 Authorization 头
+  // 跨域开发环境也需要携带 Cookie
+  config.withCredentials = true
 
   // 添加浏览器自动化API所需的认证头
   const UserNavStore = useUserNavStore()

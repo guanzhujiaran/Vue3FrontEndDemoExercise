@@ -27,7 +27,6 @@
 import { ref } from 'vue'
 import biliMessage from '@/utils/message'
 import { useCasdoor } from 'casdoor-vue-sdk'
-import { useJwtStore } from '@/stores/jwt_token'
 
 const emit = defineEmits(['login-success'])
 

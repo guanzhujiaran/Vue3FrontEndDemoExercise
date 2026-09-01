@@ -5,6 +5,7 @@
             <el-aside width="auto">
                 <el-scrollbar view-class="h-full">
                     <el-menu :default-active="activeIndex" :collapse="collapsed" :collapse-transition="false"
+                        :popper-class="collapsed ? 'bili-side-nav-layout__popper--hidden' : ''"
                         class="bili-side-nav-layout__nav h-full overflow-x-hidden border-r bg-bg/50 rounded-lg! py-4 origin-left will-change-[width,transform] transition-[width] duration-420 ease-[cubic-bezier(0.34,1.56,0.64,1)]"
                         :class="[
                             collapsed ? 'w-16' : 'w-52',
@@ -24,9 +25,10 @@
                             </slot>
                         </div>
                         <template v-for="group in navGroups" :key="group.title">
-                            <div v-if="group.title && !collapsed"
-                                class="bili-side-nav-layout__group-title px-4 py-2 text-xs text-text-placeholder">
-                                {{ group.title }}
+                            <div v-if="group.title"
+                                class="bili-side-nav-layout__group-title px-4 py-2 text-xs text-text-placeholder"
+                                :class="{ 'bili-side-nav-layout__group-title--collapsed text-center px-0': collapsed }">
+                                {{ collapsed ? (group.shortTitle ?? group.title) : group.title }}
                             </div>
                             <el-menu-item v-for="item in group.items" :key="item.name" :index="item.name"
                                 class="bili-side-nav-layout__nav-item mb-3 last:mb-0"
@@ -36,9 +38,6 @@
                                 <el-icon>
                                     <component :is="item.icon" />
                                 </el-icon>
-                                <span v-if="collapsed" class="bili-side-nav-layout__nav-short-text mt-0.5 text-xs leading-none">
-                                    {{ item.shortTitle ?? item.title.charAt(0) }}
-                                </span>
                                 <template #title>
                                     <div v-if="!collapsed" class="flex w-full items-center">
                                         <span class="bili-side-nav-layout__nav-text flex-1 truncate text-lg">{{
@@ -57,12 +56,13 @@
 
             <el-container class="bili-side-nav-layout__main bg-bg rounded-lg ">
                 <el-header
-                    class="bili-side-nav-layout__header flex items-center justify-between rounded-lg px-6 py-4 shrink-0">
+                    class="bili-side-nav-layout__header flex items-center justify-between rounded-lg px-6 py-0 shrink-0">
                     <h1 class="bili-side-nav-layout__title text-base font-bold">{{ pageTitle }}</h1>
                     <slot name="header-extra" />
                 </el-header>
-                <el-main class="bili-side-nav-layout__main-body p-3">
-                    <el-scrollbar class="bili-side-nav-layout__content" @scroll="onContentScroll">
+                <el-main class="bili-side-nav-layout__main-body p-3 overflow-hidden">
+                    <el-scrollbar class="bili-side-nav-layout__content h-full" view-class="h-full"
+                        wrap-style="overflow-x: hidden;" @scroll="onContentScroll">
                         <slot />
                         <ScrollButtons :scroll-top="contentScrollTop" :top-threshold="100" :bottom-threshold="100" />
                     </el-scrollbar>
@@ -80,7 +80,6 @@ import { Fold, Expand } from '@element-plus/icons-vue'
 export interface BiliSideNavItem {
     name: string
     title: string
-    shortTitle?: string
     icon?: Component
     badge?: boolean
     badgeValue?: number
@@ -88,6 +87,7 @@ export interface BiliSideNavItem {
 
 export interface BiliSideNavGroup {
     title?: string
+    shortTitle?: string
     items: BiliSideNavItem[]
 }
 
@@ -141,6 +141,11 @@ function onContentScroll(payload: { scrollTop: number; scrollLeft: number }) {
 }
 
 function handleSelect(index: string) {
+    // 防御：菜单项 name 必须对应已注册的路由 name，否则 router.push 会抛 "No match" 并触发 Vue 未捕获错误
+    if (!router.hasRoute(index)) {
+        console.warn(`[BiliSideNavLayout] 点击了未注册路由的菜单项：${index}`)
+        return
+    }
     router.push({ name: index })
 }
 

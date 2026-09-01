@@ -74,15 +74,15 @@ onMounted(async () => {
 const navGroups = computed(() => [
   {
     items: [
-      { name: 'MOMENT_ALL_FEED', title: '动态广场', shortTitle: '动态', icon: Grid },
-      { name: 'MOMENT_TOPIC_SQUARE', title: '话题广场', shortTitle: '话题', icon: Collection },
+      { name: 'MOMENT_ALL_FEED', title: '动态广场', icon: Grid },
+      { name: 'MOMENT_TOPIC_SQUARE', title: '话题广场', icon: Collection },
     ]
   },
   ...(isAdmin.value
     ? [
         {
           title: '管理',
-          items: [{ name: 'ADMIN_MOMENT_AUDIT', title: '审核队列', shortTitle: '审核', icon: Checked }]
+          items: [{ name: 'ADMIN_MOMENT_AUDIT', title: '审核队列', icon: Checked }]
         }
       ]
     : [])

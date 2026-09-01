@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import { Minus } from '@element-plus/icons-vue'
-import { updateCustomActionApiV1RpaBrowserControlCustomActionsUpdatePost } from '@/api/browser/hey-api'
+import { 自定义操作管理Service } from '@/api/browser/hey-api'
 import { useUserNavStore } from '@/stores/user_nav'
 import biliMessage from '@/utils/message'
 import DebugBox from './DebugBox.vue'
@@ -133,7 +133,7 @@ async function handleSave() {
   const steps = debugBoxRef.value?.getSteps() || []
   saving.value = true
   try {
-    const response = await updateCustomActionApiV1RpaBrowserControlCustomActionsUpdatePost({
+    const response = await 自定义操作管理Service.updateCustomActionApiV1RpaBrowserControlCustomActionsUpdatePost({
       body: {
         action_id: actionId,
         name: editingName.value || undefined,

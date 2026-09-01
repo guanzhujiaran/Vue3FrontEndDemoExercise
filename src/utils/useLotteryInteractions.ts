@@ -11,7 +11,7 @@
  */
 
 import { reactive, ref, onMounted } from 'vue'
-import { fetchInteractionStatus, thumbMoment } from '@/api/notify/moment-api'
+import { fetchInteractionStatus, InteractionBizTypeEnum, thumbMoment } from '@/api/notify/moment-api'
 import type { InteractionStatusItem } from '@/api/notify/moment-api'
 
 export function useLotteryInteractions(
@@ -24,7 +24,7 @@ export function useLotteryInteractions(
     const ids = getBizIds()
     if (!ids.length) return
     try {
-      const res = await fetchInteractionStatus('lottery' as any, ids)
+      const res = await fetchInteractionStatus(InteractionBizTypeEnum.LOTTERY, ids)
       for (const item of res?.items ?? []) {
         if (item?.bizId) statusMap[item.bizId] = item
       }
@@ -35,10 +35,7 @@ export function useLotteryInteractions(
   onMounted(loadAll)
 
   function statusOf(bizId: string): InteractionStatusItem {
-    return (
-      statusMap[bizId] ??
-      ({ bizId, bizType: 'lottery' } as unknown as InteractionStatusItem)
-    )
+    return statusMap[bizId] ?? { bizId, bizType: InteractionBizTypeEnum.LOTTERY }
   }
 
   async function like(bizId: string) {
@@ -47,7 +44,7 @@ export function useLotteryInteractions(
     const st = statusOf(bizId)
     const next = !Boolean(st.isLike)
     const res = await thumbMoment(bizId, next ? 1 : 2, {
-      bizType: 'lottery' as any,
+      bizType: InteractionBizTypeEnum.LOTTERY,
       bizId,
     })
     loading.value = false

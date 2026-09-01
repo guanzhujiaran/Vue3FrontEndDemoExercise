@@ -193,7 +193,7 @@ import {
   buildMomentContentNodes,
   type MomentAttachResource,
 } from '@/utils/momentContent'
-import type { CommentUserBrief } from '@/api/notify/hey-api'
+import type { CommentUserBrief } from '@/api/community/hey-api'
 
 const visible = defineModel<boolean>('visible', { default: false })
 
@@ -238,7 +238,7 @@ const emit = defineEmits<{
     atNameToMid?: Record<string, number>
     attachResource?: MomentAttachResource
   }]
-  success: [dynId: number]
+  success: [dynId: string]
 }>()
 
 const content = ref('')

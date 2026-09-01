@@ -1,20 +1,22 @@
 import type { CreateClientConfig } from './hey-api/client.gen'
-import { useJwtStore } from '@/stores/jwt_token'
 import { useLocaleStore } from '@/stores/locale'
+import { useUserNavStore } from '@/stores/user_nav'
 
 export const createClientConfig: CreateClientConfig = (config) => ({
   ...config,
   baseUrl:'',
   timeout:30000,
   responseStyle: 'data',
+  // JWT 已改为 HttpOnly Cookie，浏览器自动随请求携带（credentials 保证跨域也携带）
+  credentials: 'include',
   onRequest: ({ options }) => {
-    const JwtStore = useJwtStore()
-    const token = JwtStore.jwt
-    if (token) {
-      options.headers.set('Authorization', `Bearer ${token}`)
-    }
     // 注入当前语言，供后端 fastapi-i18n 按 Accept-Language 返回对应语言文案
     const LocaleStore = useLocaleStore()
     options.headers.set('Accept-Language', LocaleStore.acceptLanguage)
+    // 统一注入 browser 鉴权头（x-bili-mid / x-bili-level / x-bili-role）
+    const UserNavStore = useUserNavStore()
+    for (const [k, v] of Object.entries(UserNavStore.user_header)) {
+      options.headers.set(k, v)
+    }
   }
 })

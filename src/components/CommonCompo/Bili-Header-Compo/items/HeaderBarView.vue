@@ -87,7 +87,7 @@ onUnmounted(() => {
 
 <template>
   <div id="bili-header"
-    class="sticky top-0 z-50 border-b border-[var(--el-border-color-light)] bg-bg/90 backdrop-blur-md backdrop-saturate-150 shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
+    class="sticky top-0 z-50 border-b border-(--el-border-color-light) bg-bg/90 backdrop-blur-md backdrop-saturate-150 shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
     <div class="flex items-center justify-between w-full px-2 md:px-0 lg:px-4 relative">
       <el-scrollbar class="headerbar-scroller z-10">
         <el-menu :default-active="route.path" mode="horizontal" class="flex w-fit" :collapse="false" :ellipsis="false">
@@ -97,7 +97,7 @@ onUnmounted(() => {
         </el-menu>
       </el-scrollbar>
       <ul
-        class="el-menu el-menu--horizontal flex items-center justify-center flex-shrink-0 px-2 sm:px-3 md:px-4 relative z-10 bg-transparent! border-b-0!">
+        class="el-menu el-menu--horizontal flex items-center justify-center shrink-0 px-2 sm:px-3 md:px-4 relative z-10 bg-transparent! border-b-0!">
         <AvatarDropdown />
       </ul>
     </div>

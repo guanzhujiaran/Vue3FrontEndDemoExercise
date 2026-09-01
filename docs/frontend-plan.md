@@ -2,7 +2,7 @@
 
 > 本文档**独立于后端**，只描述前端如何基于已生成的接口 SDK 逐步实现消息系统控制台。
 > 后端服务（be-message-service）的接口契约已通过 `@hey-api/openapi-ts` 生成到
-> `src/api/notify/hey-api/`，下列每个模块都标注了可直接调用的 SDK 函数名，实现时按需 import 即可。
+> `src/api/community/hey-api/`，下列每个模块都标注了可直接调用的 SDK 函数名，实现时按需 import 即可。
 >
 > 用法：每完成一项，把前面的 `- [ ]` 改成 `- [x]`。
 
@@ -18,12 +18,12 @@
 | 路由 | Vue Router（已含 `/app/feedback`、admin 守卫 `requiresAdmin`） |
 | 网络 | axios / ofetch + **hey-api 生成的 SDK**（`responseStyle: 'data'`，已注入 JWT） |
 | 图表 | echarts / vue-echarts（事件聚合统计用） |
-| 已生成 SDK | `src/api/notify/hey-api/`（sdk.gen.ts / types.gen.ts / client.gen.ts） |
+| 已生成 SDK | `src/api/community/hey-api/`（sdk.gen.ts / types.gen.ts / client.gen.ts） |
 | 已存在页面 | `FeedbackView.vue`、`utils/notification-api-test.ts` |
 
-**SDK 调用约定**：从 `@/api/notify/hey-api` 导入对应函数，例如：
+**SDK 调用约定**：从 `@/api/community/hey-api` 导入对应函数，例如：
 ```ts
-import { listNotifyApiV1MessageNotifyListGet } from '@/api/notify/hey-api'
+import { listNotifyApiV1MessageNotifyListGet } from '@/api/community/hey-api'
 const res = await listNotifyApiV1MessageNotifyListGet({ query: { page: 1, size: 20 } })
 // res 已是 data（responseStyle:'data'），类型由 sdk.gen 推导
 ```
@@ -61,7 +61,7 @@ const res = await listNotifyApiV1MessageNotifyListGet({ query: { page: 1, size: 
 
 - [x] 通知列表页 `NotifyListView.vue`：分页、按 `NotifyLevelEnum`（normal/important/urgent）与 `NotifyStatusEnum` 筛选、类型图标、相对时间。
 - [x] UI 对齐 Bilibili 消息中心：左侧导航（我的消息 / 回复我的 / @我的 / 收到的赞 / 系统通知 / 消息设置）、直接使用 Element Plus 语义化类（`bg-bg-page`/`bg-bg`/`text-text-primary` 等，亮/暗模式自动切换；仅粉色 `msg-pink` 保留特殊色号）、`flex-1` 内部滚动、入口收敛到顶部头像下拉菜单。
-- [x] 标记已读：`readNotify…Post`（支持批量 `NotifyReadReq.notify_ids`）。
+- [x] ~~标记已读：`readNotify…Post`（支持批量 `NotifyReadReq.notify_ids`）~~ → **2.49.0 起移除**：后端「读取即已读」（`/notify/list` 返回前自动置为已读），前端不再调用任何标记已读接口，`markNotifyRead` 与「标记已读 / 全部已读」按钮删除；「仅看未读」筛选同步移除（读取即已读后 offset 分页会跳条），新到通知由出参 `is_read` 快照高亮。涉及 hey-api SDK 重新生成（需手动同步）。
 - [x] 删除通知：`deleteNotify…Post`。
 - [x] 未读角标联动：进入页面/心跳刷新时更新 `stores/message_unread`。
 - [x] 通知详情抽屉 `NotifyDetailDrawer.vue`（点击列表项展示全文 + 来源）。
@@ -126,9 +126,11 @@ const res = await listNotifyApiV1MessageNotifyListGet({ query: { page: 1, size: 
 
 - [x] **动态收藏夹**：后端新增 `/api/v1/favorite/*`（收藏夹 CRUD、收藏/取消、夹内动态、主页可见性设置）；`MomentDetailView.vue` 收藏按钮改为打开 `MomentFavoriteDialog.vue` 收藏夹选择弹窗（列夹、选夹收藏/取消、新建收藏夹，封面仅存 URL）；`MomentSpaceView.vue` 收藏 tab 展示收藏夹 + 各夹收藏动态（MomentCard 复用）；设置 tab 提供「主页展示收藏」开关（默认开，控制自身主页收藏 tab 显隐）。
 - [x] **他人主页收藏展示**：后端新增公开读接口 `GET /favorite/user/folders` / `GET /favorite/user/dynamics`（无需登录，受主人 `showFavorites` 控制，网关已加代理与白名单）；前端 `moment-api.ts` 新增 `fetchUserFavoriteFolders(mid)` / `fetchUserFavoriteDynIds(mid, folderId, ...)`；`MomentSpaceView.vue` 他人主页收藏 tab 加载主人公开收藏夹 + 动态（`showFavorites=0` 或 403 时不展示收藏 tab）。
+- [x] **收藏夹封面默认图兜底（纯前端）**：后端收藏夹封面「先审后发」——封面为空/审核未通过时 `coverUrl` 为空。前端 `MomentFavoriteDialog.vue` 收藏夹列表封面（`.moment-favorite-dialog__cover`）改为 `:src="folder.coverUrl || DEFAULT_FOLDER_COVER"` 兜底展示默认封面图（`https://i0.hdslb.com/bfs/vc/b8eb9637fec90527a6dc9737acdc3577e275c7b5.png`，组件内常量 `DEFAULT_FOLDER_COVER`），移除原空封面 Star 图标；不依赖 SDK 重新生成。
 - [x] **评论项点击用户名/头像跳转用户空间**：`LotteryCommentItem.vue` 头像（`el-avatar`）与用户名（`.lottery-comment-item__name`）增加点击跳转（`router.push` 到 `MOMENT_USER_SPACE?mid=`），与动态卡（`MomentCard` 头像/用户名跳转）行为对齐；「回复 @用户名」中的被回复用户名同样可点击跳转其用户空间。
 - [x] **UserCard 大头像/昵称点击跳转用户空间**：`UserCard.vue`（avatar dropdown 悬浮用户卡片）中的大头像（`.user-card__avatar`）与用户昵称（`.user-card__name`）增加点击跳转（`router.push` 到 `MOMENT_USER_SPACE?mid=`，用 `card.mid`），与其它用户跳转行为对齐。
 - [x] **动态发布/转发成功提示**：`MomentPublishForm.vue` 发布/转发成功后改用 `ElMessageBox.alert` 弹出成功 messagebox，5 秒后自动关闭（用户手动关闭时取消定时器，避免泄漏）。
+- [x] **评论区加载失败错误态（复用 `BiliError`）**：`LotteryCommentSection.vue` 的 `loadMain` 在 `resp.success === false`（请求失败）时置 `isError = true`，模板以通用错误组件 `BiliError`（`txt="评论加载失败"`、`@click-retry="loadMain"`）替换评论列表/空态区域，展示错误图 + 文案（「点击重试」）+ 重试按钮；`oid` 无效（0/空）的提前返回不视为错误，不展示错误态。复用 `src/components/CommonCompo/Bili-Feedback-Compo/BiliError.vue`（抽奖结果 `BiliAtariResultSlot.vue` 已用同款）。
 - [ ] **attach 卡片独立模块渲染（对齐 B 站 `module_additional`）**：后端 2.21.0 起动态 attach 卡不再写入正文 `contentJson` 的 RESOURCE 节点，改存 `TMoment.bizType/bizRid` 只落 bizType+bizId，Feed/详情装配为独立 `moduleType="additional"` 模块（渲染于 desc 正文下方）。前端同步：① `moment-api.ts` 封装 `MomentCreateReq.attach` 字段（`attachResource` 单独提交，不再经 `buildMomentContentNodes` 追加 RESOURCE 节点）；② `MomentCard.vue` / `MomentDetailView.vue` 按 `moduleType="additional"` 在正文下方渲染附加卡（bizType 跳转落地页、name/cover/jumpUrl 由后端 RPC 实时返回）；③ `MomentContentRenderer` 移除 RESOURCE 节点内联渲染（旧数据兼容可保留）。涉及 hey-api SDK 重新生成（需手动同步）。
 - [ ] 实时刷新策略：心跳（M2）+ 路由切换刷新 + 手动刷新三者统一，避免请求风暴。
 - [ ] 空态 / 错误 / loading 全模块覆盖（复用 Phase 0 通用组件）。
@@ -140,12 +142,12 @@ const res = await listNotifyApiV1MessageNotifyListGet({ query: { page: 1, size: 
 ### Phase 8 — 布局统一与通用化
 
 - [ ] **通用布局提取 `BiliSideNavLayout`**：将 `MessageLayout.vue`（`/app/message`）的「左侧小菜单栏（`el-menu`，可折叠）+ 右侧 header 小标题 + 内容区」布局骨架提取为通用组件 `src/components/CommonCompo/Bili-Container-Compo/BiliSideNavLayout.vue`（直接使用 Element Plus 语义化类：`bg-bg-page`/`bg-bg`/`text-text-primary`，跟随亮/暗主题自动切换）。
-  - Props：`navGroups`（分组菜单：`{ title?, items: { name, title, shortTitle?, icon?, badge?, badgeValue? }[] }`）、`collapsible`（默认 true）。
+  - Props：`navGroups`（分组菜单：`{ title?, items: { name, title, icon?, badge?, badgeValue? }[] }`）、`collapsible`（默认 true）。
   - 折叠/展开切换逻辑内置在组件内，按钮行置顶；按钮内容分两个具名插槽——`collapse-expanded`（展开态显示的具体内容，默认 `Fold` 图标按钮）/ `collapse-collapsed`（折叠态显示的 icon，默认 `Expand` 图标按钮），外部可自行传入文案/样式。
-  - **收起态短标题**：菜单项支持 `shortTitle` 短标题（未提供时回退取 `title` 首字符）。展开态菜单项横排显示「icon + 完整 `title`（+ badge）」，收起态仅显示「icon + 图标下方 `shortTitle`」竖排布局，形成大图（带全称文字）/小图（带简称文字）两套形态。
+  - **收起态纯图标**：收起态仅显示「icon」单图标（不显示菜单项标题文字，也不弹出 hover tooltip），展开态菜单项横排显示「icon + 完整 `title`（+ badge）」，形成大图（带全称文字）/小图（纯图标）两套形态。**分组标题（`group.title`）在折叠/展开两种状态下都保留显示**，作为分组分隔：展开态左对齐、显示完整 `title`；折叠态居中显示，且支持可选的 `shortTitle` 字段硬编码短名（例如 `RPA 管理` → `RPA`、`消息管理端` → `消息`、`动态管理端` → `动态`、`用户管理端` → `用户`），未提供 `shortTitle` 时回退到 `title`。实现上通过 `el-menu` 的 `:popper-class` 在折叠态传入 `bili-side-nav-layout__popper--hidden`，结合 `src/assets/theme.css` 中 `.bili-side-nav-layout__popper--hidden { display: none !important; }` 全局钩子把折叠态下 Element Plus 自动渲染的菜单标题 tooltip 弹层整个隐藏，从根上避免塌陷/片状样式。
   - **布丁弹性动画**：折叠/展开时侧边栏宽度用回弹曲线过渡 + 果冻摇摆（`scaleX` 先冲过再回弹，duang duang 感），折叠按钮图标同时做左右摇摆（`wobble`）；动画按 Tailwind 4 规范在 `src/assets/theme.css` 的 `@theme` 块内定义 `--animate-sidenav-jelly` / `--animate-sidenav-wobble` 变量（含对应 `@keyframes`），组件内通过 `animate-sidenav-jelly` / `animate-sidenav-wobble` 工具类使用，不写 `<style>`。
   - 内部：`activeIndex` 由 `route.name` 计算、`handleSelect` 跳 `router.push`、`pageTitle` 取 `route.meta.title`；`header-extra` 具名插槽支持 header 右侧按钮。
-- [ ] **统一三处布局**：`MessageLayout.vue`（消息中心）/ `MomentLayout.vue`（`/app/moment` 动态）/ `AdminLayout.vue`（`/app/admin` 审核）全部复用 `BiliSideNavLayout`，保持「左侧小菜单栏、右侧主要内容、顶部小标题」统一样式，**三处均启用折叠**（默认 `collapsible=true`）：展开时显示带全称文字的导航、折叠时显示 icon + 短标题（`shortTitle`，未提供回退 `title` 首字符）的导航，形成两套左侧导航形态，仅保留业务差异：
+- [ ] **统一三处布局**：`MessageLayout.vue`（消息中心）/ `MomentLayout.vue`（`/app/moment` 动态）/ `AdminLayout.vue`（`/app/admin` 审核）全部复用 `BiliSideNavLayout`，保持「左侧小菜单栏、右侧主要内容、顶部小标题」统一样式，**三处均启用折叠**（默认 `collapsible=true`）：展开时显示带全称文字的导航、折叠时仅显示 icon 的导航，形成两套左侧导航形态，仅保留业务差异：
   - 消息：6 个菜单项 + 未读 badge + keep-alive 子页 + 未登录拦截；
   - 动态：动态广场/话题广场 + 管理员「审核队列」入口 + header「发布动态」按钮 + Feed keep-alive；
   - 审核：按 `isRpaAdmin`/`isMessageRoot` 权限分组的导航（RPA 管理/消息管理端/动态管理端/用户管理端），子页 `router-view` 直接渲染。
@@ -160,7 +162,9 @@ const res = await listNotifyApiV1MessageNotifyListGet({ query: { page: 1, size: 
 4. **数据层隔离**：业务组件只调用 Phase 0 封装的 `message-api.ts`，不要直接散落 hey-api 函数；类型从 `types.gen.ts` 引用，不重复定义。
 5. **错误处理**：统一走封装层的错误兜底 + `ElMessage` 提示，列表/表单需有 loading 与空态。
 6. **增量推进**：按 Phase 顺序实现，每完成一项打勾；一个模块跑通 happy path 后再进入下一个模块。
-7. **分页器收敛到表格 footer**：使用 `el-table-v2` 的管理列表页（如 `CommentAdminView.vue` / `DmAdminView.vue` / `NotifyAdminView.vue`），分页器统一放入表格 `#footer` 插槽，并同步传 `:footer-height`（等于 `PaginationBar` 实际高度，默认 64px；`total <= pageSize` 不显示分页时传 0），不再在表格容器外单独放置 `PaginationBar`。非 `el-table-v2` 的列表（`el-table`、普通列表）保持现状。
+7. **分页器收敛到表格 footer**：使用 `el-table-v2` 的管理列表页（如 `CommentAdminView.vue` / `DmAdminView.vue` / `NotifyAdminView.vue`），分页器统一放入表格 `#footer` 插槽，并同步传 `:footer-height`（等于 `PaginationBar` 实际高度，默认 64px；`total <= pageSize` 不显示分页时传 0），不再在表格容器外单独放置 `PaginationBar`。
+8. **管理端列表统一 `el-table-v2`**：`MomentAuditListView.vue`（动态审核）/ `TopicAuditListView.vue`（话题审核）/ `AvatarAuditListView.vue`（头像审核）/ `MessageAdminPermission.vue`（管理端权限）从普通 `el-table` 升级为 `el-table-v2` 虚拟滚动表格，整体对齐 `CommentAdminView.vue`：`el-auto-resizer` + 固定高度容器（`h-[calc(100vh-320px)] min-h-105`）+ `#footer` 分页（`PaginationBar`）+ 自定义 `#header-cell` / `#cell` / `#empty` 模板；**移除原 `el-table` 的 `stripe` 与内联 `:header-cell-style` / `:cell-style`（`var()` 内联样式，违反主题规范）**，状态/类型标签统一用 `el-tag` 语义化配色。
+9. **管理列表页统一刷新按钮**：所有 `el-table-v2` 管理列表页在**表格紧上方**提供「刷新」按钮（独立一行右对齐，`:icon="Refresh"` `:loading="loading"` 点击重新拉取当前页数据），不再放页面最顶部工具栏（标题行仅保留标题与新建等业务按钮）。`CommentAdminView.vue`（评论审核）/ `DmAdminView.vue`（私信审核）/ `NotifyAdminView.vue`（通知管理）/ `MessageAdminPermission.vue`（管理端权限）/ `MomentAuditListView.vue`（动态审核）/ `TopicAuditListView.vue`（话题审核）/ `AvatarAuditListView.vue`（头像审核）七处统一。
 
 ---
 

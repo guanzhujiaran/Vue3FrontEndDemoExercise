@@ -3,9 +3,11 @@ import { computed, nextTick, onMounted, provide, ref, watch, type Ref } from 'vu
 import { ElMessageBox } from 'element-plus'
 import { ChatDotSquare } from '@element-plus/icons-vue'
 import LotteryCommentItem from '@/components/lottery_data/LotteryCommentItem.vue'
+import LotteryCommentMention from '@/components/lottery_data/LotteryCommentMention.vue'
 import commentApi, {
   CommentHandlersKey,
-  COMMENT_TYPE,
+  CommentTypeEnum,
+  CommentSortEnum,
   type CommentAddResp,
   type CommentHandlers,
   type CommentItem,
@@ -18,11 +20,12 @@ import { useInject, KeysEnum } from '@/models/base/provide_model.ts'
 import type { UserNavModel } from '@/models/user/user_model.ts'
 import { BiliImg } from '@/assets/img/BiliImg.ts'
 import { openGlobalLoginModalKey } from '@/models/inject/inject_type.ts'
+import BiliError from '@/components/CommonCompo/Bili-Feedback-Compo/BiliError.vue'
 
 const props = withDefaults(
   defineProps<{
     oid: string | number
-    /** 评论区业务类型，必须来自后端 CommentTypeEnum 白名单（见 COMMENT_TYPE） */
+    /** 评论区业务类型，必须来自 SDK 生成的 CommentTypeEnum */
     type?: CommentType
     upMid?: number | string
     /** 定位直达的评论 rpid：从通知 / 外链进入时携带，加载后滚动到该评论并高亮 */
@@ -31,7 +34,7 @@ const props = withDefaults(
     forceAnonymous?: boolean
   }>(),
   {
-    type: COMMENT_TYPE.LOTTERY,
+    type: CommentTypeEnum.LOTTERY,
     upMid: undefined,
     focusRpid: null,
     forceAnonymous: false
@@ -59,14 +62,14 @@ const topComment = ref<CommentItem | null>(null)
 const total = ref(0)
 const allCount = ref(0)
 const currentPage = ref(1)
-const sortBy = ref<'hot' | 'time'>('hot')
+const sortBy = ref<CommentSortEnum>(CommentSortEnum.HOT)
 const isLoading = ref(false)
+const isError = ref(false)
 const newComment = ref('')
+const topMentionRef = ref<InstanceType<typeof LotteryCommentMention> | null>(null)
 
 /** @ 提及可选用户：初始为评论列表（含楼中楼）用户，输入 @ 关键字后远程搜索覆盖 */
 const mentionOptions = ref<Array<{ value: string; avatar?: string; mid?: number }>>([])
-const mentionLoading = ref(false)
-
 /** 收集评论列表中的用户（按 mid 去重）作为初始提及候选 */
 function collectMentionUsers() {
   const seen = new Set<number>()
@@ -84,54 +87,6 @@ function collectMentionUsers() {
   mentionOptions.value = list
 }
 
-/** el-mention search 事件：输入 @ 关键字后从后端远程搜索用户，覆盖提及候选 */
-async function handleMentionSearch(pattern: string) {
-  if (!pattern.trim()) {
-    collectMentionUsers()
-    return
-  }
-  mentionLoading.value = true
-  try {
-    const res = await businessHandler(commentApi.searchAt(pattern.trim(), 20), {
-      showSuccessToast: false,
-    })
-    if (res.success && res.data) {
-      mentionOptions.value = res.data
-        .filter((u) => u.mid != null)
-        .map((u) => ({
-          value: u.uname || `用户${u.mid}`,
-          avatar: u.avatar || undefined,
-          mid: u.mid
-        }))
-    }
-  } finally {
-    mentionLoading.value = false
-  }
-}
-
-/** 已选中的 @昵称 → mid 映射（提交时传给后端归一化为 @{mid} 存储） */
-const atNameToMid = ref<Record<string, number>>({})
-
-/** el-mention select 事件：记录选中用户昵称 → mid */
-function onMentionSelect(option: { value?: string; mid?: number }) {
-  if (!option?.value || option.mid == null) return
-  atNameToMid.value[option.value] = option.mid
-}
-
-/** 提交前从正文提取所有 @昵称，补全未记录的映射（尽量匹配已搜索/已渲染的用户） */
-function buildAtNameToMid(message: string): Record<string, number> {
-  const map: Record<string, number> = { ...atNameToMid.value }
-  const re = /@([^\s@#]+)/g
-  let m: RegExpExecArray | null
-  while ((m = re.exec(message || '')) !== null) {
-    const name = m[1]
-    if (!name || map[name]) continue
-    const opt = mentionOptions.value.find((o) => o.value === name)
-    if (opt?.mid != null) map[name] = opt.mid
-  }
-  return map
-}
-
 // 定位直达：后端回填的实际聚焦目标（可能为楼中楼），用于高亮与滚动
 const focusTargetRpid = ref<string | null>(null)
 
@@ -147,6 +102,7 @@ const loadMain = async () => {
     return
   }
   isLoading.value = true
+  isError.value = false
   try {
     const resp = await businessHandler(commentApi.listMain(
       props.oid,
@@ -158,7 +114,10 @@ const loadMain = async () => {
     ), {
       showSuccessToast: false,
     })
-    if (!resp.success || !resp.data) return
+    if (!resp.success || !resp.data) {
+      isError.value = true
+      return
+    }
     const data = resp.data
     topComment.value = data.top
     commentList.value = data.items
@@ -196,16 +155,18 @@ const findItem = (rpid: string): CommentItem | null => {
 }
 
 const removeItem = (rpid: string) => {
+  // 仅当被删的是一级评论（顶层）时才扣减 total；楼中楼子评论的删除不应影响一级列表计数
+  const wasTop = commentList.value.some((it) => String(it.rpid) === String(rpid))
   const filterList = (list: CommentItem[]): CommentItem[] =>
     list
-      .filter((it) => it.rpid !== rpid)
+      .filter((it) => String(it.rpid) !== String(rpid))
       .map((it) => {
         it.replies = filterList(it.replies || [])
         return it
       })
   commentList.value = filterList(commentList.value)
   if (topComment.value?.rpid === rpid) topComment.value = null
-  total.value = Math.max(0, total.value - 1)
+  if (wasTop) total.value = Math.max(0, total.value - 1)
   allCount.value = Math.max(0, allCount.value - 1)
 }
 
@@ -226,7 +187,7 @@ const buildNewComment = (
   return {
     rpid: data.rpid,
     oid: String(props.oid),
-    type: props.type as string,
+    type: props.type as CommentTypeEnum,
     mid: uid,
     member: {
       mid: uid,
@@ -285,13 +246,14 @@ const handlers: CommentHandlers = {
     } catch {
       return
     }
-    await businessHandler(
+    // 返回 businessHandler 结果，供子组件判断删除是否成功后同步移除 UI
+    return businessHandler(
       commentApi.del(rpid),
       { successMessage: '已删除' },
       [() => removeItem(rpid)]
     )
   },
-  reply: async ({ root, parent, message, atNameToMid }) => {
+  reply: async ({ root, parent, message, atNameToMid, replyTo }) => {
     await businessHandler(
       commentApi.add(props.oid, props.type, root, parent, message, atNameToMid),
       { successMessage: '评论成功' },
@@ -300,10 +262,11 @@ const handlers: CommentHandlers = {
           if (!result.success || !result.data) return
           // 不重新拉取全部评论，直接把新回复插入对应根评论的楼中楼首条
           const rootItem = findItem(root)
-          const replyTo = findItem(parent)?.member ?? null
+          // 优先用子组件直接传入的被回复者（更可靠，避免展开后 findItem 找不到楼中楼节点）
+          const replyToMember = replyTo ?? findItem(parent)?.member ?? null
           if (rootItem) {
             rootItem.replies = [
-              buildNewComment(result.data, message, root, parent, replyTo),
+              buildNewComment(result.data, message, root, parent, replyToMember),
               ...(rootItem.replies || [])
             ]
             // 审核中的评论不计入计数（与后端 total / rcount 只统计 NORMAL 的口径一致）
@@ -334,7 +297,7 @@ const submitTopComment = async () => {
     openGlobalLoginModal()
     return
   }
-  const atMap = buildAtNameToMid(msg)
+  const atMap = topMentionRef.value?.buildAtNameToMid(msg) || {}
   await businessHandler(
     commentApi.add(props.oid, props.type, '0', '0', msg, atMap),
     { successMessage: '评论成功' },
@@ -351,8 +314,7 @@ const submitTopComment = async () => {
           allCount.value += 1
           total.value += 1
         }
-        newComment.value = ''
-        atNameToMid.value = {}
+        topMentionRef.value?.reset()
       },
     ]
   )
@@ -397,16 +359,16 @@ const scrollToFocus = () => {
       <div class="flex items-center gap-3">
         <button
           class="text-sm cursor-pointer border-none bg-transparent px-0 transition-colors"
-          :class="sortBy === 'hot' ? 'text-primary font-medium' : 'text-text-placeholder hover:text-text-secondary'"
-          @click="sortBy = 'hot'"
+          :class="sortBy === CommentSortEnum.HOT ? 'text-primary font-medium' : 'text-text-placeholder hover:text-text-secondary'"
+          @click="sortBy = CommentSortEnum.HOT"
         >
           按热度
         </button>
         <span class="text-text-placeholder text-xs">|</span>
         <button
           class="text-sm cursor-pointer border-none bg-transparent px-0 transition-colors"
-          :class="sortBy === 'time' ? 'text-primary font-medium' : 'text-text-placeholder hover:text-text-secondary'"
-          @click="sortBy = 'time'"
+          :class="sortBy === CommentSortEnum.TIME ? 'text-primary font-medium' : 'text-text-placeholder hover:text-text-secondary'"
+          @click="sortBy = CommentSortEnum.TIME"
         >
           按时间
         </button>
@@ -420,30 +382,14 @@ const scrollToFocus = () => {
           <img :src="userAvatar" referrerpolicy="no-referrer" alt="头像" />
         </el-avatar>
         <div class="flex-1">
-          <el-mention
+          <LotteryCommentMention
+            ref="topMentionRef"
             v-model="newComment"
-            type="textarea"
-            :options="mentionOptions"
-            :loading="mentionLoading"
-            prefix="@"
-            split=" "
+            :local-options="mentionOptions"
             placeholder="发一条友善的评论"
-            class="w-full lottery-comment-section__mention"
             :rows="2"
-            resize="vertical"
-            @search="handleMentionSearch"
-            @select="onMentionSelect"
-          >
-            <!-- 提及下拉：头像 + 昵称 -->
-            <template #label="{ item }">
-              <div class="lottery-comment-section__mention-option flex items-center gap-2">
-                <el-avatar :size="24" :src="item.avatar || BiliImg.face.noface" referrerpolicy="no-referrer">
-                  <img :src="item.avatar || BiliImg.face.noface" referrerpolicy="no-referrer" alt="avatar" />
-                </el-avatar>
-                <span class="lottery-comment-section__mention-name text-sm text-text-primary">{{ item.value }}</span>
-              </div>
-            </template>
-          </el-mention>
+            class="lottery-comment-section__mention"
+          />
           <div class="flex items-center justify-end mt-1">
             <el-button size="small" type="primary" :disabled="!newComment.trim()" @click="submitTopComment">
               发表评论
@@ -474,8 +420,15 @@ const scrollToFocus = () => {
       </div>
     </div>
 
+    <!-- 评论区加载失败错误态（复用抽奖结果同款 BiliError） -->
+    <BiliError
+      v-if="isError"
+      class="py-16"
+      txt="评论加载失败"
+      @click-retry="loadMain"
+    />
     <!-- 评论列表 -->
-    <ul v-if="displayList.length" class="lottery-comment-section__list m-0 p-0 list-none divide-y divide-border-light">
+    <ul v-else-if="displayList.length" class="lottery-comment-section__list m-0 p-0 list-none divide-y divide-border-light">
       <li v-for="item in displayList" :key="item.rpid" class="lottery-comment-section__list-item">
         <LotteryCommentItem
           :item="item"

@@ -122,7 +122,7 @@
     <MomentPublishForm
       v-model:visible="forwardVisible"
       :attach-resource="{
-        bizType: 'lottery',
+        bizType: InteractionBizTypeEnum.LOTTERY,
         bizId: forwardingItem ? String(forwardingItem.normalized.id) : '',
         name: forwardingItem?.normalized.title || undefined,
       }"
@@ -132,7 +132,7 @@
     <MomentFavoriteDialog
       v-model="favDialogVisible"
       :dyn-id="favItem ? String(favItem.normalized.id) : ''"
-      biz-type="lottery"
+      :biz-type="InteractionBizTypeEnum.LOTTERY"
       :biz-id="favItem ? String(favItem.normalized.id) : ''"
       @changed="handleFavChanged"
     />
@@ -148,7 +148,7 @@ import { handleLotteryLinkClick, isLotteryParticipated } from '@/utils/lotteryPa
 import MoreIcon from '@/assets/svgs/more.svg?component'
 import MomentPublishForm from '@/components/moment/MomentPublishForm.vue'
 import MomentFavoriteDialog from '@/components/moment/MomentFavoriteDialog.vue'
-import { fetchInteractionStatus, thumbMoment } from '@/api/notify/moment-api'
+import { fetchInteractionStatus, InteractionBizTypeEnum, thumbMoment } from '@/api/notify/moment-api'
 import type { InteractionStatusItem } from '@/api/notify/moment-api'
 
 interface SimpleListItem {
@@ -198,7 +198,7 @@ async function loadAllStatus() {
   if (!ids.length) return
   const seq = ++loadSeq
   try {
-    const res = await fetchInteractionStatus('lottery' as any, ids)
+    const res = await fetchInteractionStatus(InteractionBizTypeEnum.LOTTERY, ids)
     if (seq !== loadSeq) return // 过期响应（期间又切页）丢弃
     for (const item of res?.items ?? []) {
       if (item?.bizId) statusMap[item.bizId] = item
@@ -229,7 +229,7 @@ watch(
 )
 
 function statusOf(item: SimpleListItem): InteractionStatusItem {
-  return statusMap[String(item.normalized.id)] ?? { bizId: String(item.normalized.id), bizType: 'lottery' } as InteractionStatusItem
+  return statusMap[String(item.normalized.id)] ?? { bizId: String(item.normalized.id), bizType: InteractionBizTypeEnum.LOTTERY }
 }
 
 async function handleLike(item: SimpleListItem) {
@@ -238,7 +238,7 @@ async function handleLike(item: SimpleListItem) {
   const id = String(item.normalized.id)
   const st = statusOf(item)
   const next = !Boolean(st.isLike)
-  const res = await thumbMoment(id, next ? 1 : 2, { bizType: 'lottery' as any, bizId: id })
+  const res = await thumbMoment(id, next ? 1 : 2, { bizType: InteractionBizTypeEnum.LOTTERY, bizId: id })
   interactLoading.value = false
   if (res) {
     statusMap[id] = { ...st, isLike: next, likeCount: Math.max(0, Number(st.likeCount ?? 0) + (next ? 1 : -1)) }

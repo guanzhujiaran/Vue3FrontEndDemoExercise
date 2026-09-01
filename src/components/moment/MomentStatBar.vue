@@ -38,10 +38,10 @@
 
 <script setup lang="ts">
 import { CaretTop, ChatDotRound, Share, View } from '@element-plus/icons-vue'
-import type { MomentFeedItem } from '@/api/notify/moment-api'
+import type { InteractionStatusItem } from '@/api/notify/moment-api'
 
 const props = defineProps<{
-  stat: MomentFeedItem['stat'] | null
+  stat: InteractionStatusItem | null
   isLiked: boolean
   loading?: boolean
 }>()

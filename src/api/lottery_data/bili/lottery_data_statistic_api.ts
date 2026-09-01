@@ -6,10 +6,7 @@
  * @FilePath: \Vue3FrontEndDemoExercise\src\api\lottery_data\bili\lottery_data_statistic_api.ts
  * @Description: B 站抽奖数据统计 API（基于 hey-api 生成的客户端）
  */
-import {
-  lotteryHofApiV1LotteryDatabaseBiliLotteryHofLotTypeGet,
-  lotteryResultApiV1LotteryDatabaseBiliLotteryResultGet,
-} from '@/api/bili_lottery_data/hey-api'
+import { V1BiliService } from '@/api/bili_lottery_data/hey-api'
 import type {
   BiliLotStatisticLotTypeEnum,
   BiliLotStatisticRankTypeEnum,
@@ -33,7 +30,7 @@ class LotteryDataStatisticApi {
     lot_type: LotteryRankLotType,
     rank_type: LotteryRankType,
   ): Promise<RootObject<LotteryRankResp>> {
-    const res = await lotteryHofApiV1LotteryDatabaseBiliLotteryHofLotTypeGet({
+    const res = await V1BiliService.lotteryHofApiV1LotteryDatabaseBiliLotteryHofLotTypeGet({
       path: { lot_type: lot_type as unknown as BiliLotStatisticLotTypeEnum },
       query: {
         date: date as unknown as BiliLotStatisticRankDateTypeEnum,
@@ -60,7 +57,7 @@ class LotteryDataStatisticApi {
     offset: number
     limit: number
   }): Promise<RootObject<LotteryResultResp>> {
-    const res = await lotteryResultApiV1LotteryDatabaseBiliLotteryResultGet({
+    const res = await V1BiliService.lotteryResultApiV1LotteryDatabaseBiliLotteryResultGet({
       query: {
         uid,
         date: date as unknown as BiliLotStatisticRankDateTypeEnum,

@@ -1,16 +1,16 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { ElMessage, ElMessageBox, type Column } from 'element-plus'
 import { useI18n } from 'vue-i18n'
-import { Plus, Search } from '@element-plus/icons-vue'
+import { Plus, Search, Refresh } from '@element-plus/icons-vue'
 import { BiliImg } from '@/assets/img/BiliImg.ts'
+import LoadingWrap from '@/components/message/LoadingWrap.vue'
+import EmptyState from '@/components/message/EmptyState.vue'
+import BiliError from '@/components/CommonCompo/Bili-Feedback-Compo/BiliError.vue'
+import PaginationBar from '@/components/message/PaginationBar.vue'
 
 const { t } = useI18n()
-import {
-  listAdminsApiV1MessageAdminListGet,
-  grantAdminApiV1MessageAdminGrantPost,
-  revokeAdminApiV1MessageAdminRevokePost
-} from '@/api/notify/hey-api'
+import { MessageAdminService } from '@/api/community/hey-api'
 import { useMessageAdminStore } from '@/stores/message_admin'
 import {
   type MessageAdminItem,
@@ -29,8 +29,20 @@ const admins = ref<MessageAdminItem[]>([])
 const total = ref(0)
 const page = ref(1)
 const pageSize = ref(20)
+const pageSizes = [10, 20, 50, 100]
 const loading = ref(false)
+const isError = ref(false)
 const submitting = ref(false)
+
+// el-table-v2 列定义（与 CommentAdminView 保持同构；权限列自动分配剩余宽度，操作列固定右侧）
+const permColumns: Column<MessageAdminItem>[] = [
+  { key: 'mid', title: t('message.colMid'), width: 150, dataKey: 'mid' },
+  { key: 'granted_by', title: t('message.colGrantedBy'), width: 150, dataKey: 'granted_by' },
+  { key: 'permissions', title: t('message.permLabel'), width: 320, minWidth: 260, flexGrow: 1 },
+  { key: 'note', title: t('message.colNote'), width: 200, minWidth: 160, dataKey: 'note' },
+  { key: 'created_at', title: t('message.colCreatedAt'), width: 200, minWidth: 180, dataKey: 'created_at' },
+  { key: 'action', title: t('message.colAction'), width: 110, fixed: 'right' }
+]
 
 const searchKeyword = ref('')
 const searchResults = ref<PptrUserSearchItem[]>([])
@@ -108,21 +120,34 @@ const grantForm = reactive<{ mid: string; permissions: string[]; note: string }>
   note: ''
 })
 
+// 表格高度自适应：数据不满一屏时收缩到内容实际高度，底部滚动条紧跟最后一行数据
+const TABLE_HEADER_H = 44
+const TABLE_ROW_H = 56
+const TABLE_FOOTER_H = 64
+function fitTableHeight(avail: number): number {
+  const footerH = total.value > pageSize.value ? TABLE_FOOTER_H : 0
+  const contentH = TABLE_HEADER_H + admins.value.length * TABLE_ROW_H + footerH
+  return Math.min(avail, Math.max(contentH, TABLE_HEADER_H + TABLE_ROW_H + footerH))
+}
+
 async function fetchList() {
   loading.value = true
   try {
-    const res = await listAdminsApiV1MessageAdminListGet({
+    const res = await MessageAdminService.listAdminsApiV1MessageAdminListGet({
       query: { page_num: page.value, page_size: pageSize.value }
     })
     if (res) {
       const data = res as unknown as MessageAdminListResp
       admins.value = data.items ?? []
       total.value = Number(data.total ?? 0)
+      isError.value = false
     } else {
-      ElMessage.error(t('message.listLoadFailed'))
+      // 后端返回空响应：等同加载失败，交给 <BiliError> 特殊展示
+      isError.value = true
     }
   } catch {
-    ElMessage.error(t('message.listLoadFailed'))
+    // 后端接口报错：交给 <BiliError> 做特殊展示，点击重试重新拉取
+    isError.value = true
   } finally {
     loading.value = false
   }
@@ -130,6 +155,12 @@ async function fetchList() {
 
 function onPageChange(p: number) {
   page.value = p
+  fetchList()
+}
+
+function onPageSizeChange(size: number) {
+  pageSize.value = size
+  page.value = 1
   fetchList()
 }
 
@@ -149,14 +180,14 @@ function openGrant() {
 }
 
 async function onGrant() {
-  const mid = Number(grantForm.mid)
+  const mid = grantForm.mid
   if (!mid || mid <= 0) {
     ElMessage.warning(t('message.invalidMid'))
     return
   }
   submitting.value = true
   try {
-    const res = await grantAdminApiV1MessageAdminGrantPost({
+    const res = await MessageAdminService.grantAdminApiV1MessageAdminGrantPost({
       body: {
         mid,
         permissions: grantForm.permissions,
@@ -189,7 +220,7 @@ async function onRevoke(row: MessageAdminItem) {
   }
   submitting.value = true
   try {
-    const res = await revokeAdminApiV1MessageAdminRevokePost({ body: { mid: row.mid } })
+    const res = await MessageAdminService.revokeAdminApiV1MessageAdminRevokePost({ body: { mid: row.mid } })
     if (res) {
       ElMessage.success(t('message.revokeSuccess'))
       await fetchList()
@@ -225,53 +256,94 @@ onMounted(() => {
       </el-button>
     </div>
 
-    <div class="message-admin-permission__table bg-bg-overlay rounded-lg p-4" v-loading="loading">
-      <el-table
-        :data="admins"
-        row-key="mid"
-        size="large"
-        class="message-admin-permission__el-table"
-        :empty-text="t('message.emptyAdmin')"
+    <div class="message-admin-permission__table-bar mb-2 flex items-center justify-end">
+      <el-button
+        class="message-admin-permission__refresh-btn"
+        size="default"
+        :icon="Refresh"
+        :loading="loading"
+        @click="fetchList"
       >
-        <el-table-column prop="mid" :label="t('message.colMid')" width="150" />
-        <el-table-column prop="granted_by" :label="t('message.colGrantedBy')" width="150" />
-        <el-table-column :label="t('message.permLabel')" min-width="260">
-          <template #default="{ row }">
-            <template v-if="row.permissions && row.permissions.length">
-              <el-tag
-                v-for="perm in row.permissions"
-                :key="perm"
-                type="success"
-                effect="plain"
-                class="message-admin-permission__tag mr-2 mb-1"
-              >
-                {{ t(permissionLabel(perm)) }}
-              </el-tag>
-            </template>
-            <el-text v-else type="info">{{ t('message.none') }}</el-text>
-          </template>
-        </el-table-column>
-        <el-table-column prop="note" :label="t('message.colNote')" min-width="160" show-overflow-tooltip />
-        <el-table-column prop="created_at" :label="t('message.colCreatedAt')" min-width="180" show-overflow-tooltip />
-        <el-table-column :label="t('message.colAction')" width="110" align="right">
-          <template #default="{ row }">
-            <el-button v-if="isRoot" link type="danger" :disabled="submitting" @click="onRevoke(row)">
-              {{ t('message.revokePermission') }}
-            </el-button>
-          </template>
-        </el-table-column>
-      </el-table>
-
-      <div class="message-admin-permission__pager flex justify-end mt-4">
-        <el-pagination
-          :current-page="page"
-          :page-size="pageSize"
-          :total="total"
-          layout="total, prev, pager, next"
-          @current-change="onPageChange"
-        />
-      </div>
+        {{ t('message.refresh') }}
+      </el-button>
     </div>
+
+    <BiliError v-if="isError" :txt="t('message.listLoadFailed')" @click-retry="fetchList" />
+    <LoadingWrap v-else :loading="loading" :rows="6">
+      <EmptyState v-if="admins.length === 0" :text="t('message.emptyAdmin')" />
+      <!-- 父容器固定高度，由 AutoResizer 自动测量并传给表格 width/height；滚动条落在表格内部，不依赖外侧布局滚动 -->
+      <div v-else class="message-admin-permission__table h-[calc(100vh-320px)] min-h-105">
+        <el-auto-resizer>
+          <template #default="{ height, width }">
+            <el-table-v2
+              :columns="permColumns"
+              :data="admins"
+              :width="width"
+              :height="height"
+              :row-height="56"
+              :header-height="44"
+              :footer-height="total > pageSize ? 64 : 0"
+              row-key="mid"
+              fixed
+            >
+              <template #header-cell="{ column }">
+                <span class="message-admin-permission__th">{{ column.title }}</span>
+              </template>
+
+              <template #cell="{ column, rowData }">
+                <!-- 权限标签 -->
+                <template v-if="column.key === 'permissions'">
+                  <template v-if="rowData.permissions && rowData.permissions.length">
+                    <el-tag
+                      v-for="perm in rowData.permissions"
+                      :key="perm"
+                      type="success"
+                      effect="plain"
+                      class="message-admin-permission__tag mr-2 mb-1"
+                    >
+                      {{ t(permissionLabel(perm)) }}
+                    </el-tag>
+                  </template>
+                  <el-text v-else type="info">{{ t('message.none') }}</el-text>
+                </template>
+
+                <!-- 操作 -->
+                <template v-else-if="column.key === 'action'">
+                  <el-button v-if="isRoot" link type="danger" :disabled="submitting" @click="onRevoke(rowData)">
+                    {{ t('message.revokePermission') }}
+                  </el-button>
+                </template>
+
+                <!-- 其余简单列（mid / granted_by / note / created_at） -->
+                <template v-else>
+                  <span class="text-sm text-text-primary">
+                    {{ column.dataKey ? rowData[column.dataKey as keyof MessageAdminItem] : '-' }}
+                  </span>
+                </template>
+              </template>
+
+              <template #empty>
+                <div class="flex h-full items-center justify-center">
+                  <el-empty :description="t('message.emptyAdmin')" :image-size="80" />
+                </div>
+              </template>
+
+              <template #footer>
+                <PaginationBar
+                  class="message-admin-permission__pagination"
+                  :total="total"
+                  :page-size="pageSize"
+                  :page-sizes="pageSizes"
+                  :current-page="page"
+                  @update:current-page="onPageChange"
+                  @update:page-size="onPageSizeChange"
+                />
+              </template>
+            </el-table-v2>
+          </template>
+        </el-auto-resizer>
+      </div>
+    </LoadingWrap>
 
     <el-dialog v-model="grantVisible" :title="t('message.grantDialogTitle')" width="520px" :close-on-click-modal="false">
       <el-form :model="grantForm" label-width="88px" @submit.prevent>
@@ -392,8 +464,8 @@ onMounted(() => {
               class="message-admin-permission__check block"
             >
               <div class="flex flex-col leading-tight">
-                <span class="text-text-primary">{{ p.label }}</span>
-                <span class="text-text-placeholder text-xs">{{ p.desc }}</span>
+                <span class="text-text-primary">{{ t(p.label) }}</span>
+                <span class="text-text-placeholder text-xs">{{ t(p.desc) }}</span>
               </div>
             </el-checkbox>
           </el-checkbox-group>

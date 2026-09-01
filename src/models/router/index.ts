@@ -75,13 +75,18 @@ export enum RouteName {
   // 消息中心管理端
   MESSAGE_DM_ADMIN = '私信审核',
   MESSAGE_COMMENT_ADMIN = '评论审核',
-  MESSAGE_DM_CHAT = '私信聊天',
+  // 我的消息（B 站 whisper 风格主从布局）：/app/message/whisper 常驻左侧最近消息列表
+  MESSAGE_WHISPER = '我的消息',
+  MESSAGE_WHISPER_HOME = '我的消息',
+  MESSAGE_WHISPER_CHAT = '私信聊天',
   // 用户中心子路由
   USER_GLOBAL_CONFIG = '用户全局设置',
   USER_INFO_CONFIG = '用户基本信息设置',
   USER_CENTER_RECORDS = '我的记录',
 
   USER_CENTER_DASHBOARD = '用户中心仪表盘',
+  USER_CENTER_BLOCKLIST = '用户黑名单',
+  USER_CENTER_DEACTIVATE = '账号注销',
   // 抽奖数据子路由
   SCRAPY_STAT = '爬虫状态',
   BILI_ATARI_RANKING = 'B站中奖名人堂',

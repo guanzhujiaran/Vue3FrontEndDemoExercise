@@ -1,15 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import { Minus, VideoPlay, Loading, CircleCheck, CircleClose } from '@element-plus/icons-vue'
-import {
-  createCustomActionApiV1RpaBrowserControlCustomActionsCreatePost,
-  updateCustomActionApiV1RpaBrowserControlCustomActionsUpdatePost,
-  getCustomActionApiV1RpaBrowserControlCustomActionsGetPost,
-  createWorkflowApiV1RpaBrowserControlWorkflowsCreatePost,
-  updateWorkflowApiV1RpaBrowserControlWorkflowsUpdatePost,
-  executeWorkflowApiV1RpaBrowserControlWorkflowsExecutePost,
-  listFingerprintRouterApiV1RpaBrowserListFingerprintPost,
-} from '@/api/browser/hey-api'
+import { 工作流管理Service, 执行引擎Service, 浏览器指纹管理Service, 自定义操作管理Service } from '@/api/browser/hey-api'
 import { useUserNavStore } from '@/stores/user_nav'
 import { businessHandler } from '@/utils/businessHandler'
 import biliMessage from '@/utils/message'
@@ -60,7 +52,7 @@ const selectedBrowserId = ref<number | null>(null)
 
 async function loadBrowserList() {
   const result = await businessHandler<{ items?: BrowserOption[] }>(
-    listFingerprintRouterApiV1RpaBrowserListFingerprintPost({
+    浏览器指纹管理Service.listFingerprintRouterApiV1RpaBrowserListFingerprintPost({
       body: { page: 1, per_page: 100 },
       headers: userNavStore.user_header,
     }) as any,
@@ -160,7 +152,7 @@ watch(() => props.modelValue, async (visible) => {
       const customActionId = props.workflowDetail.custom_action_id as string | undefined
       if (customActionId) {
         const result = await businessHandler<{ steps?: Record<string, unknown>[] }>(
-          getCustomActionApiV1RpaBrowserControlCustomActionsGetPost({
+          自定义操作管理Service.getCustomActionApiV1RpaBrowserControlCustomActionsGetPost({
             body: { action_id: customActionId },
             headers: userNavStore.user_header,
           }) as any,
@@ -240,7 +232,7 @@ async function handleRun() {
   runSummary.value = null
   runError.value = ''
   try {
-    const response = await executeWorkflowApiV1RpaBrowserControlWorkflowsExecutePost({
+    const response = await 执行引擎Service.executeWorkflowApiV1RpaBrowserControlWorkflowsExecutePost({
       query: { browser_id: String(selectedBrowserId.value) },
       body: {
         steps,
@@ -290,7 +282,7 @@ async function handleSave() {
     let customActionId = existingCustomActionId
     if (existingCustomActionId) {
       const updateResult = await businessHandler<{ action_id: string }>(
-        updateCustomActionApiV1RpaBrowserControlCustomActionsUpdatePost({
+        自定义操作管理Service.updateCustomActionApiV1RpaBrowserControlCustomActionsUpdatePost({
           body: {
             action_id: existingCustomActionId,
             name: workflowName.value,
@@ -307,7 +299,7 @@ async function handleSave() {
       }
     } else {
       const createResult = await businessHandler<{ action_id: string }>(
-        createCustomActionApiV1RpaBrowserControlCustomActionsCreatePost({
+        自定义操作管理Service.createCustomActionApiV1RpaBrowserControlCustomActionsCreatePost({
           body: {
             name: workflowName.value,
             description: workflowDescription.value,
@@ -333,7 +325,7 @@ async function handleSave() {
     if (isEditing && props.workflowDetail) {
       const workflowId = props.workflowDetail.id as number
       const wfResult = await businessHandler(
-        updateWorkflowApiV1RpaBrowserControlWorkflowsUpdatePost({
+        工作流管理Service.updateWorkflowApiV1RpaBrowserControlWorkflowsUpdatePost({
           body: {
             id: workflowId,
             name: workflowName.value,
@@ -354,7 +346,7 @@ async function handleSave() {
       }
     } else {
       const wfResult = await businessHandler(
-        createWorkflowApiV1RpaBrowserControlWorkflowsCreatePost({
+        工作流管理Service.createWorkflowApiV1RpaBrowserControlWorkflowsCreatePost({
           body: {
             name: workflowName.value,
             description: workflowDescription.value,

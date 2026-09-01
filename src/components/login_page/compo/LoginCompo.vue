@@ -2,7 +2,6 @@
 import { ref, onMounted } from 'vue'
 import { isLogin } from '@/api/user/utils'
 import { useRouter } from 'vue-router'
-import { useJwtStore } from '@/stores/jwt_token'
 import emitter from '@/utils/mitt.ts'
 import biliMessage from '@/utils/message'
 import OAuthLoginProviders from './OAuthLoginProviders.vue'
@@ -66,10 +65,7 @@ const check_login = () => {
 
 // 处理 OAuth 登录成功
 const handleOAuthLoginSuccess = async (data: { token: string, uid: string, user_name: string }) => {
-  const JwtStore = useJwtStore()
-  JwtStore.save_jwt_token(data.token)
-
-  // 刷新获取用户状态
+  // 刷新获取用户状态（登录态由服务端通过 HttpOnly Cookie 维护）
   const [isLoggedIn, message, userNav] = await isLogin()
 
   if (!isLoggedIn && message !== '未登录') {

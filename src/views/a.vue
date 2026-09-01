@@ -1,22 +1,23 @@
 <template>
     <div class="sidenav-test">
-        <!-- 测试 BiliSideNavLayout：堆满内容验证 整页无滚动条 / 侧边栏铺满 / 仅内部滚动 -->
+        <!-- 测试 BiliSideNavLayout 空态：模拟管理页「标题 + 刷新按钮行 + 空占位符」，复现空态横向滚动条 -->
         <BiliSideNavLayout :nav-groups="navGroups" :collapsible="true">
-            <template #header-extra>
-                <el-button type="primary" size="default">测试按钮</el-button>
-            </template>
+            <div class="sidenav-test__page flex flex-col gap-4">
+                <!-- 标题行 -->
+                <div class="sidenav-test__toolbar flex items-center justify-between">
+                    <h2 class="sidenav-test__title text-lg font-bold text-text-primary">通知管理</h2>
+                    <el-button type="primary" size="default" class="sidenav-test__create">发布通知</el-button>
+                </div>
 
-            <!-- 内容区：堆满大量卡片，验证内容区 el-scrollbar 内部滚动 -->
-            <div class="sidenav-test__content grid gap-3">
-                <el-card v-for="n in 60" :key="n" class="sidenav-test__card">
-                    <template #header>
-                        <span class="font-bold">卡片 #{{ n }}</span>
-                    </template>
-                    <p class="text-text-secondary">
-                        这是用于测试 BiliSideNavLayout 内容区滚动的第 {{ n }} 张卡片。侧边栏应铺满整个剩余高度，
-                        整页不应出现外部滚动条，内容只在本区域内滚动。
-                    </p>
-                </el-card>
+                <!-- 表格紧上方的刷新按钮行 -->
+                <div class="sidenav-test__table-bar mb-2 flex items-center justify-end">
+                    <el-button class="sidenav-test__refresh-btn" size="default" :icon="Refresh">刷新</el-button>
+                </div>
+
+                <!-- 空态占位符（复现点：空占位符出现时横向滚动条出现），与真实管理页一致由 LoadingWrap 包裹 -->
+                <LoadingWrap :loading="false">
+                    <EmptyState text="暂无数据" />
+                </LoadingWrap>
             </div>
         </BiliSideNavLayout>
     </div>
@@ -30,11 +31,13 @@ import {
     Promotion,
     Pointer,
     Bell,
-    Setting
+    Setting,
+    Refresh
 } from '@element-plus/icons-vue'
 import BiliSideNavLayout from '@/components/CommonCompo/Bili-Container-Compo/BiliSideNavLayout.vue'
+import EmptyState from '@/components/message/EmptyState.vue'
+import LoadingWrap from '@/components/message/LoadingWrap.vue'
 
-// 多组菜单：模拟消息中心完整长列表 + 动态/审核分组，验证侧边栏内容多时自身内部滚动、且铺满整个剩余高度
 const navGroups = computed(() => [
     {
         title: '消息',

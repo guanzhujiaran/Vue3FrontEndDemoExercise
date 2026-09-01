@@ -11,6 +11,7 @@ import LotteryActionsDropdown from '@/components/lottery_data/bili_data/LotteryA
 import MomentPublishForm from '@/components/moment/MomentPublishForm.vue'
 import MomentFavoriteDialog from '@/components/moment/MomentFavoriteDialog.vue'
 import { useLotteryInteractions } from '@/utils/useLotteryInteractions'
+import { InteractionBizTypeEnum } from '@/api/notify/moment-api'
 
 const props = withDefaults(
   defineProps<{
@@ -254,7 +255,7 @@ const prizeIndexOf = (columnKey: PropertyKey | undefined) =>
     <MomentPublishForm
       v-model:visible="forwardVisible"
       :attach-resource="{
-        bizType: 'lottery',
+        bizType: InteractionBizTypeEnum.LOTTERY,
         bizId: forwardingRow ? String(forwardingRow.id) : '',
         name: forwardingRow?.title || undefined,
       }"
@@ -264,7 +265,7 @@ const prizeIndexOf = (columnKey: PropertyKey | undefined) =>
     <MomentFavoriteDialog
       v-model="favDialogVisible"
       :dyn-id="favRow ? String(favRow.id) : ''"
-      biz-type="lottery"
+      :biz-type="InteractionBizTypeEnum.LOTTERY"
       :biz-id="favRow ? String(favRow.id) : ''"
       @changed="handleFavChanged"
     />

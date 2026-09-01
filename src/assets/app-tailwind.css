@@ -142,6 +142,99 @@ elementDark放到theme后面是为了确保暗色状态下直接用elementDark�
   .bg-gradient-text-primary-light {
     background: var(--color-gradient-text-primary-light);
   }
+
+  /* ==================== 用户等级色（B 站风格经验进度条专用） ==================== */
+  /* 等级渐变背景（135deg，徽章用） */
+  .bili-level-bg-0 {
+    background: linear-gradient(135deg, var(--color-level-0-from) 0%, var(--color-level-0-to) 100%);
+  }
+  .bili-level-bg-1 {
+    background: linear-gradient(135deg, var(--color-level-1-from) 0%, var(--color-level-1-to) 100%);
+  }
+  .bili-level-bg-2 {
+    background: linear-gradient(135deg, var(--color-level-2-from) 0%, var(--color-level-2-to) 100%);
+  }
+  .bili-level-bg-3 {
+    background: linear-gradient(135deg, var(--color-level-3-from) 0%, var(--color-level-3-to) 100%);
+  }
+  .bili-level-bg-4 {
+    background: linear-gradient(135deg, var(--color-level-4-from) 0%, var(--color-level-4-to) 100%);
+  }
+  .bili-level-bg-5 {
+    background: linear-gradient(135deg, var(--color-level-5-from) 0%, var(--color-level-5-to) 100%);
+  }
+  .bili-level-bg-6 {
+    background: linear-gradient(135deg, var(--color-level-6-from) 0%, var(--color-level-6-to) 100%);
+  }
+
+  /* 等级填充色（水平渐变，进度条 fill 用） */
+  .bili-level-fill-0 {
+    background: linear-gradient(90deg, var(--color-level-0-from) 0%, var(--color-level-0-to) 100%);
+  }
+  .bili-level-fill-1 {
+    background: linear-gradient(90deg, var(--color-level-1-from) 0%, var(--color-level-1-to) 100%);
+  }
+  .bili-level-fill-2 {
+    background: linear-gradient(90deg, var(--color-level-2-from) 0%, var(--color-level-2-to) 100%);
+  }
+  .bili-level-fill-3 {
+    background: linear-gradient(90deg, var(--color-level-3-from) 0%, var(--color-level-3-to) 100%);
+  }
+  .bili-level-fill-4 {
+    background: linear-gradient(90deg, var(--color-level-4-from) 0%, var(--color-level-4-to) 100%);
+  }
+  .bili-level-fill-5 {
+    background: linear-gradient(90deg, var(--color-level-5-from) 0%, var(--color-level-5-to) 100%);
+  }
+  .bili-level-fill-6 {
+    background: linear-gradient(90deg, var(--color-level-6-from) 0%, var(--color-level-6-to) 100%);
+  }
+
+  /* 等级箭头尖端纯色（与 to 色一致） */
+  .bili-level-arrow-0 {
+    background: var(--color-level-0-to);
+  }
+  .bili-level-arrow-1 {
+    background: var(--color-level-1-to);
+  }
+  .bili-level-arrow-2 {
+    background: var(--color-level-2-to);
+  }
+  .bili-level-arrow-3 {
+    background: var(--color-level-3-to);
+  }
+  .bili-level-arrow-4 {
+    background: var(--color-level-4-to);
+  }
+  .bili-level-arrow-5 {
+    background: var(--color-level-5-to);
+  }
+  .bili-level-arrow-6 {
+    background: var(--color-level-6-to);
+  }
+
+  /* 等级进度条轨道色（淡色背景） */
+  .bili-level-track-0 {
+    background: var(--color-level-0-track);
+  }
+  .bili-level-track-1 {
+    background: var(--color-level-1-track);
+  }
+  .bili-level-track-2 {
+    background: var(--color-level-2-track);
+  }
+  .bili-level-track-3 {
+    background: var(--color-level-3-track);
+  }
+  .bili-level-track-4 {
+    background: var(--color-level-4-track);
+  }
+  .bili-level-track-5 {
+    background: var(--color-level-5-track);
+  }
+  .bili-level-track-6 {
+    background: var(--color-level-6-track);
+  }
 }
 
 @layer components {

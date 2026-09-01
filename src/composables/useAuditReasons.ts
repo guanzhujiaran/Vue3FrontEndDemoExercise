@@ -26,7 +26,7 @@ function loadFromStorage(): string[] {
     if (!raw) return [...DEFAULT_PRESETS]
     const parsed = JSON.parse(raw)
     if (Array.isArray(parsed)) {
-      return parsed.filter((v): v is string => typeof v === 'string' && v.trim())
+      return parsed.filter((v): v is string => typeof v === 'string' && v.trim().length > 0)
     }
   } catch {
     // 解析失败时回退到预设

@@ -6,7 +6,8 @@
 
 <script setup lang="ts">
 import { computed, type Component } from 'vue'
-import { Setting, Bell, ChatDotRound, Comment, Key, Checked, Collection, Avatar } from '@element-plus/icons-vue'
+import { Setting, Bell, ChatDotRound, Comment, Key, Checked, Collection, Avatar, Flag } from '@element-plus/icons-vue'
+import icShoucang from '@/assets/svgs/audit/shoucang.svg?component'
 import { useRpaAdminStore } from '@/stores/rpa_admin'
 import { useMessageAdminStore } from '@/stores/message_admin'
 import BiliSideNavLayout from '@/components/CommonCompo/Bili-Container-Compo/BiliSideNavLayout.vue'
@@ -30,6 +31,7 @@ interface NavItem {
 }
 interface NavGroup {
   title: string
+  shortTitle?: string
   items: NavItem[]
 }
 
@@ -38,32 +40,38 @@ const navGroups = computed<NavGroup[]>(() => {
   if (isRpaAdmin.value) {
     groups.push({
       title: 'RPA 管理',
-      items: [{ name: 'ADMIN_RPA', title: 'RPA 管理后台', shortTitle: 'RPA', icon: Setting }]
+      items: [{ name: 'ADMIN_RPA', title: 'RPA 管理后台', icon: Setting }]
     })
   }
   const messageItems: NavItem[] = []
   if (isRpaAdmin.value) {
-    messageItems.push({ name: 'ADMIN_MESSAGE_NOTIFY', title: '通知管理', shortTitle: '通知', icon: Bell })
-    messageItems.push({ name: 'ADMIN_MESSAGE_DM', title: '私信审核', shortTitle: '私信', icon: ChatDotRound })
-    messageItems.push({ name: 'ADMIN_MESSAGE_COMMENT', title: '评论审核', shortTitle: '评论', icon: Comment })
+    messageItems.push({ name: 'ADMIN_MESSAGE_NOTIFY', title: '通知管理', icon: Bell })
+    messageItems.push({ name: 'ADMIN_MESSAGE_DM', title: '私信审核', icon: ChatDotRound })
+    messageItems.push({ name: 'ADMIN_MESSAGE_COMMENT', title: '评论审核', icon: Comment })
   }
   if (isMessageRoot.value) {
-    messageItems.push({ name: 'ADMIN_MESSAGE_PERMISSION', title: '管理端权限', shortTitle: '权限', icon: Key })
+    messageItems.push({ name: 'ADMIN_MESSAGE_PERMISSION', title: '管理端权限', icon: Key })
   }
   if (messageItems.length) {
-    groups.push({ title: '消息管理端', items: messageItems })
+    groups.push({ title: '消息管理端', shortTitle: '消息', items: messageItems })
   }
   if (isRpaAdmin.value) {
     groups.push({
       title: '动态管理端',
+      shortTitle: '动态',
       items: [
-        { name: 'ADMIN_MOMENT_AUDIT', title: '动态审核', shortTitle: '动态', icon: Checked },
-        { name: 'ADMIN_MOMENT_TOPIC_AUDIT', title: '话题审核', shortTitle: '话题', icon: Collection }
+        { name: 'ADMIN_REPORT', title: '举报审核', icon: Flag },
+        { name: 'ADMIN_MOMENT_AUDIT', title: '动态审核', icon: Checked },
+        { name: 'ADMIN_MOMENT_TOPIC_AUDIT', title: '话题审核', icon: Collection }
       ]
     })
     groups.push({
       title: '用户管理端',
-      items: [{ name: 'ADMIN_USER_AVATAR_AUDIT', title: '头像审核', shortTitle: '头像', icon: Avatar }]
+      shortTitle: '用户',
+      items: [
+        { name: 'ADMIN_USER_AVATAR_AUDIT', title: '头像审核', icon: Avatar },
+        { name: 'ADMIN_USER_FOLDER_COVER_AUDIT', title: '封面审核', icon: icShoucang }
+      ]
     })
   }
   return groups

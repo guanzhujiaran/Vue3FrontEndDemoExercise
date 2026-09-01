@@ -1,7 +1,7 @@
 import { ref } from 'vue'
 import { defineStore } from 'pinia'
-import { roleMeApiAdminRpaRoleMePost } from '@/api/browser/hey-api/sdk.gen'
-import type { AdminStatusResponse } from '@/api/browser/hey-api/types.gen'
+import { 管理员管理Service } from '@/api/browser/hey-api'
+import type { AdminStatusResponse } from '@/api/browser/hey-api'
 
 const DEFAULT_STATUS: AdminStatusResponse = {
   is_root: false,
@@ -22,7 +22,7 @@ export const useRpaAdminStore = defineStore('rpa-admin', () => {
     if (fetchPromise) return fetchPromise
     fetchPromise = (async () => {
       try {
-        const res = await roleMeApiAdminRpaRoleMePost({})
+        const res = await 管理员管理Service.roleMeApiAdminRpaRoleMePost({})
         if (res && res.code === 0 && res.data) {
           status.value = res.data
         } else {

@@ -1,5 +1,5 @@
 import { ref, type Ref } from 'vue'
-import { createCustomActionApiV1RpaBrowserControlCustomActionsCreatePost } from '@/api/browser/hey-api'
+import { 自定义操作管理Service } from '@/api/browser/hey-api'
 import type { BuiltinActionType } from '@/api/browser/hey-api'
 import { useUserNavStore } from '@/stores/user_nav'
 import biliMessage from '@/utils/message'
@@ -158,7 +158,7 @@ export function useDebugboxSave(
           if (item.loopBody?.length) (step.params as Record<string, unknown>).loopBranch = serializeBranchSteps(item.loopBody)
           return step
         })
-        const response = await createCustomActionApiV1RpaBrowserControlCustomActionsCreatePost({
+        const response = await 自定义操作管理Service.createCustomActionApiV1RpaBrowserControlCustomActionsCreatePost({
           body: { name: saveDialogForm.value.name, action_type: 'composite' as BuiltinActionType, description: saveDialogForm.value.description,
             parameters_schema: [], steps, is_public: saveDialogForm.value.isPublic, tags: [],
             input_vars: [], output_vars: [], timeout: 30000, retry_on_error: false, retry_times: 0, retry_delay: 1.0 },
@@ -195,7 +195,7 @@ export function useDebugboxSave(
       if (item.loopBody?.length) (stepData.params as Record<string, unknown>).loopBranch = serializeBranchSteps(item.loopBody)
       if (item.step_children?.length) stepData.children = item.step_children
 
-      const response = await createCustomActionApiV1RpaBrowserControlCustomActionsCreatePost({
+      const response = await 自定义操作管理Service.createCustomActionApiV1RpaBrowserControlCustomActionsCreatePost({
         body: {
           name: saveDialogForm.value.name, action_type: (item.action_type || item.action_id) as BuiltinActionType,
           description: saveDialogForm.value.description,

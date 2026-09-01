@@ -26,11 +26,5 @@ export const useJwtStore = defineStore(
     }
 
     return { jwt, jwt_refresh_ms, save_jwt_token, delete_jwt_token, is_need_jwt_refresh }
-  },
-  {
-    persist: {
-      key: 'biliExplosion-jwt',
-      storage: localStorage
-    }
   }
 )

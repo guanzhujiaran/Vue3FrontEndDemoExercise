@@ -1,6 +1,6 @@
 import { ref, watch, onMounted } from 'vue'
 import type { DroppedItem, BranchPathStep } from './debugbox-types'
-import { listRegisteredActionsApiV1RpaBrowserControlActionsRegisteredPost } from '@/api/browser/hey-api'
+import { 自定义操作管理Service } from '@/api/browser/hey-api'
 import { useUserNavStore } from '@/stores/user_nav'
 
 /** 内部拖拽来源位置（已有的卡片被拖拽时） */
@@ -461,7 +461,7 @@ export function useDebugboxItems(browserId: string, editMode: boolean, initialSt
   /** 拉取服务器端 registered action 定义，用最新 json_schema 刷新缓存 items（递归处理分支） */
   async function refreshRegisteredSchemas(items: DroppedItem[]) {
     try {
-      const res = await listRegisteredActionsApiV1RpaBrowserControlActionsRegisteredPost({ headers: userNavStore.user_header })
+      const res = await 自定义操作管理Service.listRegisteredActionsApiV1RpaBrowserControlActionsRegisteredPost({ headers: userNavStore.user_header })
       if (res?.code !== 0 || !res?.data) return
       const schemaMap = new Map<string, DroppedItem['json_schema']>()
       for (const a of (res.data as unknown[]) || []) {

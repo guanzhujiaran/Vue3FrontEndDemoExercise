@@ -36,6 +36,7 @@
             :item="detail as any"
             :show-more-actions="true"
             :inline-comment="false"
+            :status="status"
             @avatar-click="openUserSpace(detail)"
             @thumb="handleThumb"
             @report="handleReport"
@@ -57,7 +58,7 @@
               >
                 <LotteryCommentSection
                   :oid="detail.dynIdStr"
-                  :type="COMMENT_TYPE.DYNAMIC"
+                  :type="CommentTypeEnum.DYNAMIC"
                   :up-mid="detail.mid"
                   :focus-rpid="focusRpid"
                   @count-change="handleCommentCountChange"
@@ -65,59 +66,92 @@
               </section>
             </el-tab-pane>
 
-            <!-- 赞与转发 tab（混合列表，按时间倒序，对标 B 站） -->
-            <el-tab-pane :label="`赞与转发`" name="repost">
+            <!-- 赞与转发 tab（内部再分「赞」「转发」两个子 tab，各自独立懒加载 + 分页，对标 B 站） -->
+            <el-tab-pane label="赞与转发" name="repost">
               <section
-                v-if="activeTab === 'repost' && repostMounted"
+                v-if="activeTab === 'repost'"
                 class="moment-detail__repost bg-bg-overlay rounded-lg border border-border-light p-4"
               >
-                <ul class="moment-detail__repost-list m-0 p-0 list-none divide-y divide-border-light">
-                  <li
-                    v-for="entry in repostEntries"
-                    :key="entry.key"
-                    class="moment-detail__repost-item flex items-center gap-3 py-3"
+                <el-tabs
+                  v-model="repostSubTab"
+                  class="moment-detail__repost-tabs"
+                  @tab-change="handleRepostSubTabChange"
+                >
+                  <el-tab-pane :label="`赞${likeCountLabel}`" name="like" />
+                  <el-tab-pane :label="`转发${repostCountLabel}`" name="forward" />
+                </el-tabs>
+
+                <div class="moment-detail__repost-body mt-2">
+                  <!-- 首次加载骨架（未请求过数据时展示） -->
+                  <ul
+                    v-if="activeSubList.loading && !activeSubList.loaded"
+                    class="moment-detail__repost-skeleton-list m-0 p-0 list-none divide-y divide-border-light"
                   >
-                    <!-- 类型图标 -->
-                    <div
-                      class="moment-detail__repost-icon shrink-0 flex items-center justify-center w-8 h-8 rounded-full"
-                      :class="entry.kind === 'like' ? 'bg-primary-light-3 text-primary' : 'bg-bg-page text-text-placeholder'"
+                    <li
+                      v-for="n in 3"
+                      :key="n"
+                      class="moment-detail__repost-skeleton flex items-center gap-3 py-3 animate-pulse"
                     >
-                      <el-icon :size="16">
-                        <LikeIcon v-if="entry.kind === 'like'" />
-                        <ForwardIcon v-else />
-                      </el-icon>
-                    </div>
+                      <div class="moment-detail__repost-skeleton-avatar h-10 w-10 shrink-0 rounded-full bg-text-placeholder/30"></div>
+                      <div class="moment-detail__repost-skeleton-info flex-1 space-y-2">
+                        <div class="moment-detail__repost-skeleton-line h-4 w-32 rounded bg-text-placeholder/30"></div>
+                        <div class="moment-detail__repost-skeleton-line h-3 w-20 rounded bg-text-placeholder/20"></div>
+                      </div>
+                    </li>
+                  </ul>
 
-                    <el-avatar
-                      class="moment-detail__repost-avatar shrink-0 cursor-pointer"
-                      :size="40"
-                      :src="entry.face || BiliImg.face.noface"
-                      @click="openUserSpace({ mid: entry.mid })"
-                    />
+                  <ul
+                    v-else-if="activeSubList.items.length"
+                    class="moment-detail__repost-list m-0 p-0 list-none divide-y divide-border-light"
+                  >
+                    <li
+                      v-for="entry in activeSubList.items"
+                      :key="entry.key"
+                      class="moment-detail__repost-item flex items-center gap-3 py-3"
+                    >
+                      <el-avatar
+                        class="moment-detail__repost-avatar shrink-0 cursor-pointer"
+                        :size="40"
+                        :src="entry.face || BiliImg.face.noface"
+                        @click="openUserSpace({ mid: entry.mid })"
+                      />
 
-                    <div class="moment-detail__repost-info flex-1 min-w-0">
-                      <el-text class="block truncate text-sm font-bold text-text-primary">
-                        {{ entry.uname || '未知用户' }}
-                        <el-text class="ml-1 text-xs text-text-placeholder">
-                          {{ entry.kind === 'like' ? '赞了这条动态' : '转发了这条动态' }}
+                      <div class="moment-detail__repost-info flex-1 min-w-0">
+                        <el-text class="moment-detail__repost-name block truncate text-sm font-bold text-text-primary">
+                          {{ entry.uname || '未知用户' }}
                         </el-text>
-                      </el-text>
-                      <el-text
-                        v-if="entry.kind === 'forward' && entry.text"
-                        class="block text-sm text-text-placeholder whitespace-pre-line break-all"
-                      >
-                        {{ entry.text }}
-                      </el-text>
-                      <el-text class="block text-xs text-text-placeholder mt-1">
-                        {{ formatRelativeTime(entry.time) }}
-                      </el-text>
-                    </div>
-                  </li>
+                        <el-text
+                          v-if="entry.text"
+                          class="moment-detail__repost-text block text-sm text-text-primary whitespace-pre-line break-all mt-0.5"
+                        >
+                          {{ entry.text }}
+                        </el-text>
+                        <el-text class="moment-detail__repost-time block text-xs text-text-placeholder mt-1">
+                          {{ formatRelativeTime(entry.time) }}
+                        </el-text>
+                      </div>
+                    </li>
+                  </ul>
 
-                  <li v-if="!repostEntries.length" class="py-8 text-center">
-                    <el-text class="text-sm text-text-placeholder">还没有人赞过或转发过</el-text>
-                  </li>
-                </ul>
+                  <div v-else class="moment-detail__repost-empty py-8 text-center">
+                    <el-text class="text-sm text-text-placeholder">
+                      {{ repostSubTab === 'like' ? '还没有人赞过' : '还没有人转发过' }}
+                    </el-text>
+                  </div>
+
+                  <!-- 分页加载更多 -->
+                  <div v-if="activeSubHasMore" class="moment-detail__repost-more flex justify-center pt-3">
+                    <el-button size="default" :loading="activeSubList.loading" @click="loadMoreSubList">
+                      加载更多
+                    </el-button>
+                  </div>
+                  <div
+                    v-else-if="activeSubList.loaded && activeSubList.items.length"
+                    class="moment-detail__repost-end text-center text-xs text-text-placeholder pt-3"
+                  >
+                    — 没有更多了 —
+                  </div>
+                </div>
               </section>
             </el-tab-pane>
           </el-tabs>
@@ -182,12 +216,12 @@
     />
 
     <!-- 统一举报弹窗 -->
-    <ReportDialog v-model="reportDialogVisible" biz-type="dynamic" :biz-id="reportDynId" />
+    <ReportDialog v-model="reportDialogVisible" :biz-type="ReportBizTypeEnum.DYNAMIC" :biz-id="reportDynId" />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { View } from '@element-plus/icons-vue'
 import LikeIcon from '@/assets/svgs/dynamic/detail/side_toolbar/like.svg?component'
@@ -196,17 +230,19 @@ import ForwardIcon from '@/assets/svgs/dynamic/detail/side_toolbar/forward.svg?c
 import CommentIcon from '@/assets/svgs/dynamic/detail/side_toolbar/comment.svg?component'
 import {
   fetchMomentDetail,
+  fetchInteractionStatusOne,
+  InteractionBizTypeEnum,
+  ReportBizTypeEnum,
   thumbMoment,
   fetchMomentLikers,
   fetchMomentForwards,
 } from '@/api/notify/moment-api'
 import type {
+  InteractionStatusItem,
   MomentDetailResp,
   MomentFeedItem,
-  MomentLikerListResp,
-  MomentForwardListResp,
 } from '@/api/notify/moment-api'
-import { COMMENT_TYPE } from '@/api/lottery_comment'
+import { CommentTypeEnum } from '@/api/lottery_comment'
 import EmptyState from '@/components/message/EmptyState.vue'
 import LotteryCommentSection from '@/components/lottery_data/LotteryCommentSection.vue'
 import MomentCard from '@/components/moment/MomentCard.vue'
@@ -231,8 +267,8 @@ const loading = ref(false)
 const activeTab = ref<'comment' | 'repost'>('comment')
 /** 评论 tab 是否已挂载过（懒加载评论区组件） */
 const commentMounted = ref(false)
-/** 赞与转发 tab 是否已挂载过 */
-const repostMounted = ref(false)
+/** 「赞与转发」下的子 tab：like（赞）/ forward（转发） */
+const repostSubTab = ref<SubListKind>('like')
 
 /** 转发弹窗显隐 */
 const showRepostDialog = ref(false)
@@ -241,27 +277,83 @@ const showFavoriteDialog = ref(false)
 
 /**
  * 点赞明细 / 转发列表（GET /api/v1/moment/{id}/likers 与 /forwards）
+ * 两个子列表相互独立：各自维护「是否已加载 / 分页游标 / 总数」，
+ * 只有在用户切到对应子 tab 时才发起首次请求（懒加载）。
  */
-const likers = ref<MomentLikerListResp['items']>([])
-const forwards = ref<MomentForwardListResp['items']>([])
+type SubListKind = 'like' | 'forward'
+
+/** 统一条目结构，便于「赞」「转发」两个子列表共用一套渲染 */
+interface SubListEntry {
+  key: string
+  kind: SubListKind
+  mid: number
+  uname?: string | null
+  face?: string | null
+  /** 转发语（点赞列表为空） */
+  text?: string | null
+  time?: string | null
+}
+
+interface SubListState {
+  items: SubListEntry[]
+  total: number
+  pageNum: number
+  loading: boolean
+  /** 是否已成功请求过（懒加载开关，避免重复请求） */
+  loaded: boolean
+  /** 是否已被取空（本次返回不足一页，说明没有下一页了） */
+  exhausted: boolean
+}
+
+/** 子列表单页条数（后端上限 50） */
+const SUB_LIST_PAGE_SIZE = 20
+
+function createSubListState(): SubListState {
+  return { items: [], total: 0, pageNum: 0, loading: false, loaded: false, exhausted: false }
+}
+
+const subLists = reactive<Record<SubListKind, SubListState>>({
+  like: createSubListState(),
+  forward: createSubListState(),
+})
+
+/** 当前子 tab 对应的列表状态 */
+const activeSubList = computed(() => subLists[repostSubTab.value])
+/** 当前子列表是否还有下一页（总数 + 末页双重判定，避免总数与明细不一致时空翻页） */
+const activeSubHasMore = computed(() => {
+  const s = activeSubList.value
+  return s.loaded && !s.exhausted && s.items.length < s.total
+})
+
+// 互动状态（2.41.0：详情不返回 stat，统一走 /interaction/status 查询）
+const status = ref<InteractionStatusItem | null>(null)
+async function loadStatus(id: string = momentId) {
+  try {
+    status.value = await fetchInteractionStatusOne(InteractionBizTypeEnum.DYNAMIC, id)
+  } catch {
+    status.value = null
+  }
+}
 
 /** 评论 tab 标签后缀（如「评论 12」）；无评论时不带数字 */
 const commentCountLabel = computed(() => {
-  const n = detail.value?.stat?.commentCount
+  const n = status.value?.commentCount
   return n ? ` ${n}` : ''
 })
 
-/** 悬浮工具栏统计 */
-const statLikeCount = computed(() => detail.value?.stat?.likeCount || 0)
-const statCommentCount = computed(() => detail.value?.stat?.commentCount || 0)
-const statRepostCount = computed(() => detail.value?.stat?.repostCount || 0)
-const statViewCount = computed(() => detail.value?.stat?.viewCount || 0)
-const statFavoriteCount = computed(() => detail.value?.stat?.favoriteCount || 0)
+/** 子 tab 标签后缀：「赞 12」/「转发 3」；为 0 时不带数字 */
+const likeCountLabel = computed(() => (statLikeCount.value ? ` ${statLikeCount.value}` : ''))
+const repostCountLabel = computed(() => (statRepostCount.value ? ` ${statRepostCount.value}` : ''))
 
-/** 当前用户是否已赞（interaction 模块 isLike） */
-const isLiked = computed(() =>
-  Boolean(detail.value?.modules?.find((m) => m.moduleType === 'interaction')?.isLike)
-)
+/** 悬浮工具栏统计（来自统一 status 接口） */
+const statLikeCount = computed(() => status.value?.likeCount || 0)
+const statCommentCount = computed(() => status.value?.commentCount || 0)
+const statRepostCount = computed(() => status.value?.repostCount || 0)
+const statViewCount = computed(() => status.value?.viewCount || 0)
+const statFavoriteCount = computed(() => status.value?.favoriteCount || 0)
+
+/** 当前用户是否已赞（统一 status 接口 isLike） */
+const isLiked = computed(() => Boolean(status.value?.isLike))
 
 /** 详情页作者 / 正文摘要（转发弹窗用） */
 const detailAuthor = computed(() =>
@@ -283,10 +375,11 @@ onMounted(async () => {
   detail.value = await fetchMomentDetail(momentId)
   loading.value = false
   if (detail.value) {
-    await loadRepostData()
+    await loadStatus()
     // 默认激活「评论」tab：首次进入即挂载评论区（否则 commentMounted 恒为 false，
     // 且初始 tab 已是 comment 不会触发 tab-change 事件，评论区永不渲染）
     commentMounted.value = true
+    // 注：「赞与转发」的两个子列表不在首屏请求，等用户切到对应子 tab 时再懒加载
   }
 })
 
@@ -297,52 +390,92 @@ watch(
     if (!newId) return
     loading.value = true
     detail.value = null
-    likers.value = []
-    forwards.value = []
+    status.value = null
+    resetSubLists()
     activeTab.value = 'comment'
     detail.value = await fetchMomentDetail(String(newId))
     loading.value = false
     if (detail.value) {
-      await loadRepostData()
+      await loadStatus(String(newId))
       commentMounted.value = true
     }
   }
 )
 
-/** 加载赞 / 转发数据（GET /moment/{id}/likers 与 /forwards） */
-async function loadRepostData() {
-  const [likerResp, forwardResp] = await Promise.all([
-    fetchMomentLikers(momentId, { page_num: 1, page_size: 50 }),
-    fetchMomentForwards(momentId, { page_num: 1, page_size: 50 }),
-  ])
-  likers.value = likerResp.items || []
-  forwards.value = forwardResp.items || []
+/** 重置赞 / 转发两个子列表（切换动态后重新回到未加载状态，等待用户切 tab 再请求） */
+function resetSubLists() {
+  subLists.like = createSubListState()
+  subLists.forward = createSubListState()
+  repostSubTab.value = 'like'
 }
 
-/** 赞与转发混合列表（对标 B 站）：赞 + 转发按时间倒序合并，带类型标识 */
-const repostEntries = computed(() => {
-  const likeEntries = likers.value.map((it) => ({
-    key: `like-${it.mid}`,
-    kind: 'like' as const,
-    mid: it.mid,
-    uname: it.uname,
-    face: it.face,
-    text: '',
-    time: it.like_time,
-  }))
-  const forwardEntries = forwards.value.map((it) => ({
-    key: `forward-${it.dynId}`,
-    kind: 'forward' as const,
-    mid: it.mid,
-    uname: it.uname,
-    face: it.face,
-    text: it.text,
-    time: it.pubTime,
-  }))
-  return [...likeEntries, ...forwardEntries]
-    .filter((e) => e.time)
-    .sort((a, b) => new Date(b.time!).getTime() - new Date(a.time!).getTime())
-})
+/**
+ * 加载单个子列表（GET /moment/{id}/likers 或 /forwards）
+ * - reset=true：从第 1 页重新拉取（首次加载 / 切换动态 / 数据变更后刷新）
+ * - reset=false：追加下一页（加载更多）
+ */
+async function loadSubList(kind: SubListKind, id: string = momentId, reset = true) {
+  const state = subLists[kind]
+  if (state.loading) return
+  const nextPage = reset ? 1 : state.pageNum + 1
+  state.loading = true
+  try {
+    let rows: SubListEntry[]
+    let total: number
+    if (kind === 'like') {
+      const resp = await fetchMomentLikers(id, {
+        page_num: nextPage,
+        page_size: SUB_LIST_PAGE_SIZE,
+      })
+      rows = (resp.items || []).map((it) => ({
+        key: `like-${it.mid}`,
+        kind: 'like' as const,
+        mid: it.mid,
+        uname: it.uname,
+        face: it.face,
+        text: '',
+        time: it.like_time,
+      }))
+      total = resp.total ?? state.total
+    } else {
+      const resp = await fetchMomentForwards(id, {
+        page_num: nextPage,
+        page_size: SUB_LIST_PAGE_SIZE,
+      })
+      rows = (resp.items || []).map((it) => ({
+        key: `forward-${it.dynId}`,
+        kind: 'forward' as const,
+        mid: it.mid,
+        uname: it.uname,
+        face: it.face,
+        text: it.text,
+        time: it.pubTime,
+      }))
+      total = resp.total ?? state.total
+    }
+    state.items = reset ? rows : [...state.items, ...rows]
+    state.total = total
+    state.pageNum = nextPage
+    state.exhausted = rows.length < SUB_LIST_PAGE_SIZE
+    state.loaded = true
+  } catch {
+    // 请求失败也标记为已加载，避免一直转圈
+    state.loaded = true
+  } finally {
+    state.loading = false
+  }
+}
+
+/** 懒加载入口：只有该子列表从未加载过时才发请求 */
+function ensureSubListLoaded(kind: SubListKind, id: string = momentId) {
+  if (subLists[kind].loaded) return
+  void loadSubList(kind, id, true)
+}
+
+/** 当前子列表「加载更多」 */
+function loadMoreSubList() {
+  void loadSubList(repostSubTab.value, momentId, false)
+}
 
 /** 相对时间格式化（对标 B 站：刚刚 / N分钟前 / N小时前 / 昨天 / 日期） */
 function formatRelativeTime(t?: string | null) {
@@ -375,25 +508,21 @@ async function handleThumb(dynIdStr: string) {
   if (!detail.value) return
   const up = isLiked.value ? 2 : 1
   const res = await thumbMoment(dynIdStr, up)
-  if (res) {
-    const interMod = detail.value.modules?.find((m) => m.moduleType === 'interaction')
-    if (interMod) interMod.isLike = up === 1
-    if (detail.value.stat) {
-      detail.value.stat.likeCount = Math.max(0, (detail.value.stat.likeCount || 0) + (up === 1 ? 1 : -1))
-    }
-    // 已赞时从 likers 列表加入当前用户（简化）
-    if (up === 1 && likers.value) {
-      // TODO：接入真实接口后重新拉取或本地乐观更新
-    }
+  if (res && status.value) {
+    // 2.41.0：乐观更新统一 status 接口数据
+    status.value.isLike = up === 1
+    status.value.likeCount = Math.max(0, (status.value.likeCount || 0) + (up === 1 ? 1 : -1))
+    // 赞列表已加载过则刷新（让自己的赞即时出现/消失），未加载过保持懒加载
+    if (subLists.like.loaded) void loadSubList('like', momentId, true)
   }
 }
 
 /** 统一举报弹窗（P11-T6） */
 const reportDialogVisible = ref(false)
-const reportDynId = ref<number>(0)
+const reportDynId = ref<string>('')
 
 function handleReport(dynIdStr: string) {
-  reportDynId.value = Number(dynIdStr)
+  reportDynId.value = dynIdStr // str 直接传递，避免雪花 ID 精度丢失
   reportDialogVisible.value = true
 }
 
@@ -412,37 +541,31 @@ function switchToComment() {
   activeTab.value = 'comment'
 }
 
-/** tab 切换：切到评论/赞与转发时懒加载 */
+/** 主 tab 切换：切到评论时挂载评论区；切到赞与转发时懒加载当前子 tab 列表 */
 function handleTabChange(name: string | number) {
   if (name === 'comment') commentMounted.value = true
-  if (name === 'repost') {
-    repostMounted.value = true
-  }
+  if (name === 'repost') ensureSubListLoaded(repostSubTab.value)
 }
 
-/** 评论区总数变化：联动更新动态卡片的 commentCount 与评论 tab 标签 */
+/** 子 tab 切换（赞 / 转发）：仅首次切到该子 tab 时才请求（懒加载） */
+function handleRepostSubTabChange(name: string | number) {
+  ensureSubListLoaded(name as SubListKind)
+}
+
+/** 评论区总数变化：联动更新统一 status 的 commentCount 与评论 tab 标签 */
 function handleCommentCountChange(count: number) {
-  if (detail.value) {
-    detail.value.stat = { ...(detail.value.stat || {}), commentCount: count }
-  }
+  if (status.value) status.value.commentCount = count
 }
 
 /** 转发成功：乐观更新转发数 */
 function handleRepostSuccess() {
-  if (detail.value?.stat) {
-    detail.value.stat.repostCount = (detail.value.stat.repostCount || 0) + 1
-  }
+  if (status.value) status.value.repostCount = (status.value.repostCount || 0) + 1
+  // 转发列表已加载过则刷新，未加载过保持懒加载
+  if (subLists.forward.loaded) void loadSubList('forward', momentId, true)
 }
 
-/** 收藏变更：刷新详情以更新收藏数 */
+/** 收藏变更：重查统一 status 以更新收藏数 */
 async function handleFavoriteChanged() {
-  try {
-    const fresh = await fetchMomentDetail(momentId)
-    if (fresh?.stat) {
-      detail.value = { ...detail.value, stat: fresh.stat }
-    }
-  } catch {
-    // 忽略刷新失败，不打断用户操作
-  }
+  await loadStatus()
 }
 </script>

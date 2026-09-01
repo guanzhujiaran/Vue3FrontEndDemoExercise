@@ -7,8 +7,8 @@ import type {
   ReserveInfoFlatData
 } from '@/models/api/lottery/lottery_card.ts'
 import { normalizeLotteryData } from '@/utils/lotteryNormalization'
-import { fetchInteractionStatus } from '@/api/notify/moment-api'
-import type { InteractionStatusItemView as InteractionStatusItem } from '@/api/notify/moment-api'
+import { fetchInteractionStatus, InteractionBizTypeEnum } from '@/api/notify/moment-api'
+import type { InteractionStatusItem } from '@/api/notify/moment-api'
 
 const lotteryDataArr = withDefaults(
   defineProps<{ data: (DynamicLotteryData | ReservationLotteryData | ReserveInfoFlatData)[] }>(),
@@ -57,7 +57,7 @@ watch(
     if (key === lastLoadedKey) return
     lastLoadedKey = key
     try {
-      const res = await fetchInteractionStatus('lottery' as any, bizIds.value)
+      const res = await fetchInteractionStatus(InteractionBizTypeEnum.LOTTERY, bizIds.value)
       if (seq !== loadSeq) return // 过期响应（期间又切页）丢弃
       // 整页替换：清掉旧状态再写入新页
       for (const k of Object.keys(statusMap)) delete statusMap[k]
@@ -74,7 +74,7 @@ watch(
 
 /** 卡片点赞/收藏变更后更新容器状态（供同页其它卡片 / 后续回显一致） */
 function handleStatusChange(payload: { bizId: string; status: Partial<InteractionStatusItem> }) {
-  const prev = statusMap[payload.bizId] ?? { bizId: payload.bizId, bizType: 'lottery' } as InteractionStatusItem
+  const prev = statusMap[payload.bizId] ?? { bizId: payload.bizId, bizType: InteractionBizTypeEnum.LOTTERY }
   statusMap[payload.bizId] = { ...prev, ...payload.status }
 }
 </script>

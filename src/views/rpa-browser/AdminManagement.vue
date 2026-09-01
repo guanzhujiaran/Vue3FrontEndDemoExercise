@@ -9,27 +9,7 @@ import { useRpaAdminStore } from '@/stores/rpa_admin.ts'
 import { useUserNavStore } from '@/stores/user_nav.ts'
 import { businessHandler } from '@/utils/businessHandler'
 import biliMessage from '@/utils/message'
-import {
-  grantAdminApiAdminRpaRoleGrantPost as grantAdmin,
-  revokeAdminApiAdminRpaRoleRevokePost as revokeAdmin,
-  listAdminsApiAdminRpaRoleListPost as listAdmins,
-  submitApprovalApiAdminRpaApprovalSubmitPost as submitApproval,
-  listApprovalsApiAdminRpaApprovalListPost as listApprovals,
-  reviewApprovalApiAdminRpaApprovalReviewPost as reviewApproval,
-  listTagsApiAdminRpaTagListPost as listTags,
-  createTagApiAdminRpaTagCreatePost as createTag,
-  updateTagApiAdminRpaTagUpdatePost as updateTag,
-  deleteTagApiAdminRpaTagDeletePost as deleteTag,
-  attachTagApiAdminRpaTagAttachPost as attachTag,
-  detachTagApiAdminRpaTagDetachPost as detachTag,
-  listCertificationsApiAdminRpaCertificationListPost as listCertifications,
-  certifyApiAdminRpaCertificationCertifyPost as certify,
-  revokeCertificationApiAdminRpaCertificationRevokePost as revokeCertification,
-  type RpaAdminItemResp as RpaAdminItem,
-  type ApprovalItemResp as ApprovalItem,
-  type TagItemResp as TagItem,
-  type CertificationItemResp as CertificationItem
-} from '@/api/browser/hey-api/sdk.gen'
+import { 管理员管理Service, type RpaAdminItemResp as RpaAdminItem, type ApprovalItemResp as ApprovalItem, type TagItemResp as TagItem, type CertificationItemResp as CertificationItem } from '@/api/browser/hey-api'
 import { client } from '@/api/browser/hey-api/client.gen'
 
 const adminStore = useRpaAdminStore()
@@ -51,7 +31,7 @@ const grantNote = ref('')
 const loadAdmins = async () => {
   loading.value = true
   const res = await businessHandler(
-    listAdmins({ body: { page: adminPage.value, per_page: 20 } }),
+    管理员管理Service.listAdminsApiAdminRpaRoleListPost({ body: { page: adminPage.value, per_page: 20 } }),
     { showSuccessToast: false, errorMessage: '获取管理员列表失败' }
   )
   if (res.success && res.data) {
@@ -62,12 +42,12 @@ const loadAdmins = async () => {
 }
 
 const handleGrant = async () => {
-  const mid = Number(grantMid.value)
+  const mid = grantMid.value
   if (!mid || mid <= 0) {
     biliMessage.error('请输入有效的用户 mid')
     return
   }
-  await businessHandler(grantAdmin({ body: { mid, note: grantNote.value } }), {
+  await businessHandler(管理员管理Service.grantAdminApiAdminRpaRoleGrantPost({ body: { mid, note: grantNote.value } }), {
     successMessage: '已授予管理员权限',
     errorMessage: '授予失败'
   })
@@ -86,7 +66,7 @@ const handleRevoke = async (item: RpaAdminItem) => {
   } catch {
     return
   }
-  await businessHandler(revokeAdmin({ body: { mid: item.mid } }), {
+  await businessHandler(管理员管理Service.revokeAdminApiAdminRpaRoleRevokePost({ body: { mid: item.mid } }), {
     successMessage: '已撤销管理员权限',
     errorMessage: '撤销失败'
   })
@@ -111,7 +91,7 @@ const submitForm = ref({
 const loadApprovals = async () => {
   loading.value = true
   const res = await businessHandler(
-    listApprovals({
+    管理员管理Service.listApprovalsApiAdminRpaApprovalListPost({
       body: {
         page: approvalPage.value,
         per_page: 20,
@@ -133,7 +113,7 @@ const handleSubmitApproval = async () => {
     return
   }
   await businessHandler(
-    submitApproval({
+    管理员管理Service.submitApprovalApiAdminRpaApprovalSubmitPost({
       body: {
         resource_type: submitForm.value.resource_type,
         resource_id: submitForm.value.resource_id,
@@ -161,7 +141,7 @@ const handleReview = async (item: ApprovalItem, status: 'approved' | 'rejected')
     return
   }
   await businessHandler(
-    reviewApproval({
+    管理员管理Service.reviewApprovalApiAdminRpaApprovalReviewPost({
       body: { approval_id: item.id, status, review_note: reviewNoteMap.value[item.id] || '' }
     }),
     { successMessage: '审核完成', errorMessage: '审核失败' }
@@ -181,7 +161,7 @@ const attachForm = ref({ tag_id: 0, target_type: 'action', target_id: '' })
 
 const loadTags = async () => {
   const res = await businessHandler(
-    listTags({ body: { page: tagPage.value, per_page: 100 } }),
+    管理员管理Service.listTagsApiAdminRpaTagListPost({ body: { page: tagPage.value, per_page: 100 } }),
     { showSuccessToast: false, errorMessage: '获取标签失败' }
   )
   if (res.success && res.data) {
@@ -207,7 +187,7 @@ const handleSaveTag = async () => {
   }
   if (tagForm.value.id) {
     await businessHandler(
-      updateTag({
+      管理员管理Service.updateTagApiAdminRpaTagUpdatePost({
         body: { id: tagForm.value.id, name: tagForm.value.name, color: tagForm.value.color }
       }),
       {
@@ -217,7 +197,7 @@ const handleSaveTag = async () => {
     )
   } else {
     await businessHandler(
-      createTag({ body: { name: tagForm.value.name, color: tagForm.value.color } }),
+      管理员管理Service.createTagApiAdminRpaTagCreatePost({ body: { name: tagForm.value.name, color: tagForm.value.color } }),
       {
         successMessage: '标签已创建',
         errorMessage: '创建失败'
@@ -237,7 +217,7 @@ const handleDeleteTag = async (tag: TagItem) => {
   } catch {
     return
   }
-  await businessHandler(deleteTag({ body: { id: tag.id } }), {
+  await businessHandler(管理员管理Service.deleteTagApiAdminRpaTagDeletePost({ body: { id: tag.id } }), {
     successMessage: '标签已删除',
     errorMessage: '删除失败'
   })
@@ -255,7 +235,7 @@ const handleAttach = async () => {
     return
   }
   await businessHandler(
-    attachTag({
+    管理员管理Service.attachTagApiAdminRpaTagAttachPost({
       body: {
         tag_id: attachForm.value.tag_id,
         target_type: attachForm.value.target_type,
@@ -268,7 +248,7 @@ const handleAttach = async () => {
 }
 
 const handleDetach = async (tag: TagItem, targetType: string, targetId: string) => {
-  await businessHandler(detachTag({ body: { tag_id: tag.id, target_type: targetType, target_id: targetId } }), {
+  await businessHandler(管理员管理Service.detachTagApiAdminRpaTagDetachPost({ body: { tag_id: tag.id, target_type: targetType, target_id: targetId } }), {
     successMessage: '已移除标签',
     errorMessage: '移除失败'
   })
@@ -282,7 +262,7 @@ const certForm = ref({ target_type: 'action', target_id: '', note: '' })
 
 const loadCerts = async () => {
   const res = await businessHandler(
-    listCertifications({
+    管理员管理Service.listCertificationsApiAdminRpaCertificationListPost({
       body: { page: certPage.value, per_page: 20 }
     }),
     { showSuccessToast: false, errorMessage: '获取认证列表失败' }
@@ -299,7 +279,7 @@ const handleCertify = async () => {
     return
   }
   await businessHandler(
-    certify({
+    管理员管理Service.certifyApiAdminRpaCertificationCertifyPost({
       body: {
         target_type: certForm.value.target_type,
         target_id: certForm.value.target_id,
@@ -324,7 +304,7 @@ const handleRevokeCert = async (item: CertificationItem) => {
     return
   }
   await businessHandler(
-    revokeCertification({ body: { target_type: item.target_type, target_id: item.target_id } }),
+    管理员管理Service.revokeCertificationApiAdminRpaCertificationRevokePost({ body: { target_type: item.target_type, target_id: item.target_id } }),
     {
       successMessage: '已撤销官方认证',
       errorMessage: '撤销失败'

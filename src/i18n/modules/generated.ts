@@ -14,7 +14,8 @@ export const generated = {
       tabUserCenter: '用户中心',
       tabShopping: '山姆会员商店',
       visitNow: '立即访问',
-      aboutDesc: 'BiliExplosion 是一个帮助 B 站用户管理和分析抽奖数据的工具，提供多种功能帮助您更好地参与 B 站活动。',
+      aboutDesc:
+        'BiliExplosion 是一个帮助 B 站用户管理和分析抽奖数据的工具，提供多种功能帮助您更好地参与 B 站活动。',
       quickLinks: '快速链接',
       linkBrowserMgmt: '浏览器管理',
       linkLottery: '抽奖数据',
@@ -55,7 +56,7 @@ export const generated = {
       serverBaidu: '百度服务器'
     }
   },
-  'en': {
+  en: {
     home: {
       slogan: 'Bilibili Headquarters Explosion',
       loginNow: 'Login Now',
@@ -68,12 +69,14 @@ export const generated = {
       tabUserCenter: 'User Center',
       tabShopping: "Sam's Club",
       visitNow: 'Visit Now',
-      aboutDesc: 'BiliExplosion is a tool that helps Bilibili users manage and analyze lottery data, providing various features to help you better participate in Bilibili events.',
+      aboutDesc:
+        'BiliExplosion is a tool that helps Bilibili users manage and analyze lottery data, providing various features to help you better participate in Bilibili events.',
       quickLinks: 'Quick Links',
       linkBrowserMgmt: 'Browser Management',
       linkLottery: 'Lottery Data',
       contactMe: 'Contact Me',
-      contactNote: 'I am the only one working on both frontend and backend, so updates may be slow.',
+      contactNote:
+        'I am the only one working on both frontend and backend, so updates may be slow.',
       busuanziPv: 'Total site visits',
       busuanziUv: 'Total site visitors',
       busuanziTimes: '',
@@ -100,7 +103,8 @@ export const generated = {
       adviceTitle: 'Diagnostic Suggestions',
       advice1: 'If the main server connection fails, please check your network connection',
       advice2: 'If the DNS server connection fails, it may be a DNS resolution issue',
-      advice3: 'If other external websites are accessible, the server may be temporarily unavailable',
+      advice3:
+        'If other external websites are accessible, the server may be temporarily unavailable',
       advice4: 'We recommend refreshing the page or trying again later',
       backHome: 'Back to Home',
       errorDefault: 'Unable to connect to server',
@@ -122,7 +126,8 @@ export const generated = {
       tabUserCenter: '使用者中心',
       tabShopping: '山姆會員商店',
       visitNow: '立即前往',
-      aboutDesc: 'BiliExplosion 是一個幫助 B 站使用者管理和分析抽獎資料的工具，提供多種功能協助您更好地參與 B 站活動。',
+      aboutDesc:
+        'BiliExplosion 是一個幫助 B 站使用者管理和分析抽獎資料的工具，提供多種功能協助您更好地參與 B 站活動。',
       quickLinks: '快速連結',
       linkBrowserMgmt: '瀏覽器管理',
       linkLottery: '抽獎資料',
@@ -163,7 +168,7 @@ export const generated = {
       serverBaidu: '百度伺服器'
     }
   },
-  'ja': {
+  ja: {
     home: {
       slogan: 'びりびり本社爆破',
       loginNow: '今すぐログイン',
@@ -176,7 +181,8 @@ export const generated = {
       tabUserCenter: 'ユーザーセンター',
       tabShopping: 'サムズクラブ',
       visitNow: '今すぐアクセス',
-      aboutDesc: 'BiliExplosion は B 站ユーザーがくじデータを管理・分析するためのツールで、B 站のイベントに参加するためのさまざまな機能を提供します。',
+      aboutDesc:
+        'BiliExplosion は B 站ユーザーがくじデータを管理・分析するためのツールで、B 站のイベントに参加するためのさまざまな機能を提供します。',
       quickLinks: 'クイックリンク',
       linkBrowserMgmt: 'ブラウザ管理',
       linkLottery: 'くじデータ',
@@ -208,7 +214,8 @@ export const generated = {
       adviceTitle: '診断のアドバイス',
       advice1: 'メインサーバーへの接続に失敗した場合は、ネットワーク接続を確認してください',
       advice2: 'DNSサーバーへの接続に失敗した場合は、DNS解決の問題の可能性があります',
-      advice3: '他の外部サイトにアクセスできる場合は、サーバーが一時的に利用できない可能性があります',
+      advice3:
+        '他の外部サイトにアクセスできる場合は、サーバーが一時的に利用できない可能性があります',
       advice4: 'ページを更新するか、後でもう一度お試しください',
       backHome: 'ホームに戻る',
       errorDefault: 'サーバーに接続できません',
@@ -217,7 +224,7 @@ export const generated = {
       serverBaidu: 'Baiduサーバー'
     }
   },
-  'ko': {
+  ko: {
     home: {
       slogan: '비리비리 본사 폭발',
       loginNow: '지금 로그인',
@@ -230,7 +237,8 @@ export const generated = {
       tabUserCenter: '사용자 센터',
       tabShopping: '샘스클럽',
       visitNow: '지금 방문',
-      aboutDesc: 'BiliExplosion은 B站 사용자가 추첨 데이터를 관리하고 분석할 수 있도록 돕는 도구로, B站 활동에 더 잘 참여할 수 있는 다양한 기능을 제공합니다.',
+      aboutDesc:
+        'BiliExplosion은 B站 사용자가 추첨 데이터를 관리하고 분석할 수 있도록 돕는 도구로, B站 활동에 더 잘 참여할 수 있는 다양한 기능을 제공합니다.',
       quickLinks: '빠른 링크',
       linkBrowserMgmt: '브라우저 관리',
       linkLottery: '추첨 데이터',
@@ -282,7 +290,7 @@ export const userNs = {
     normalUser: '普通用户',
     notFound: '未找到组件 - 路由: {path}, 名称: {name}'
   },
-  'en': {
+  en: {
     browserMgmt: 'Browser Management',
     browserMgmtHome: 'Browser Management Home',
     admin: 'Admin',
@@ -296,14 +304,14 @@ export const userNs = {
     normalUser: '普通使用者',
     notFound: '未找到組件 - 路由: {path}, 名稱: {name}'
   },
-  'ja': {
+  ja: {
     browserMgmt: 'ブラウザ管理',
     browserMgmtHome: 'ブラウザ管理ホーム',
     admin: '管理者',
     normalUser: '一般ユーザー',
     notFound: 'コンポーネントが見つかりません - ルート: {path}, 名前: {name}'
   },
-  'ko': {
+  ko: {
     browserMgmt: '브라우저 관리',
     browserMgmtHome: '브라우저 관리 홈',
     admin: '관리자',
@@ -321,7 +329,7 @@ export const changelogNs = {
     improved: '功能优化',
     fixed: '问题修复'
   },
-  'en': {
+  en: {
     title: 'Changelog',
     subtitle: 'View the project update history and feature changes',
     added: 'Added',
@@ -335,14 +343,14 @@ export const changelogNs = {
     improved: '功能優化',
     fixed: '問題修復'
   },
-  'ja': {
+  ja: {
     title: '更新履歴',
     subtitle: 'プロジェクトの更新履歴と機能変更を確認',
     added: '追加機能',
     improved: '機能改善',
     fixed: '不具合修正'
   },
-  'ko': {
+  ko: {
     title: '업데이트 내역',
     subtitle: '프로젝트 업데이트 기록과 기능 변경 사항 보기',
     added: '추가된 기능',
@@ -359,16 +367,19 @@ export const lotteryNs = {
     cardDetailDesc: '查看抽奖卡片详情，并在底部参与评论区讨论',
     noCardDetail: '未获取到卡片详情',
     missingLotteryId: '缺少抽奖 ID',
-    enterViaCommentBtn: '请通过抽奖列表中的「评论区」按钮进入本页面以查看完整卡片，评论区仍可正常浏览。',
+    enterViaCommentBtn:
+      '请通过抽奖列表中的「评论区」按钮进入本页面以查看完整卡片，评论区仍可正常浏览。',
     enterViaCommentBtnShort: '请通过抽奖列表中的「评论区」按钮进入本页面。'
   },
-  'en': {
+  en: {
     biliLotteryData: 'Bilibili Lottery Data',
     cardDetailTitle: 'Lottery Card Details',
-    cardDetailDesc: 'View lottery card details and join the discussion in the comment section below.',
+    cardDetailDesc:
+      'View lottery card details and join the discussion in the comment section below.',
     noCardDetail: 'Card details not found',
     missingLotteryId: 'Missing lottery ID',
-    enterViaCommentBtn: 'Please enter this page via the "Comment" button in the lottery list to view the full card. The comment section is still available.',
+    enterViaCommentBtn:
+      'Please enter this page via the "Comment" button in the lottery list to view the full card. The comment section is still available.',
     enterViaCommentBtnShort: 'Please enter this page via the "Comment" button in the lottery list.'
   },
   'zh-TW': {
@@ -377,25 +388,28 @@ export const lotteryNs = {
     cardDetailDesc: '查看抽獎卡片詳情，並在底部參與評論區討論',
     noCardDetail: '未獲取到卡片詳情',
     missingLotteryId: '缺少抽獎 ID',
-    enterViaCommentBtn: '請透過抽獎清單中的「評論區」按鈕進入本頁面以查看完整卡片，評論區仍可正常瀏覽。',
+    enterViaCommentBtn:
+      '請透過抽獎清單中的「評論區」按鈕進入本頁面以查看完整卡片，評論區仍可正常瀏覽。',
     enterViaCommentBtnShort: '請透過抽獎清單中的「評論區」按鈕進入本頁面。'
   },
-  'ja': {
+  ja: {
     biliLotteryData: 'B站くじデータ',
     cardDetailTitle: 'くじカード詳細',
     cardDetailDesc: 'くじカードの詳細を確認し、下部のコメント欄で議論に参加できます',
     noCardDetail: 'カード詳細が取得できませんでした',
     missingLotteryId: 'くじ ID が不足しています',
-    enterViaCommentBtn: '抽選リストの「コメント」ボタンからこのページに入って完全なカードを表示してください。コメント欄は引き続き利用可能です。',
+    enterViaCommentBtn:
+      '抽選リストの「コメント」ボタンからこのページに入って完全なカードを表示してください。コメント欄は引き続き利用可能です。',
     enterViaCommentBtnShort: '抽選リストの「コメント」ボタンからこのページに入ってください。'
   },
-  'ko': {
+  ko: {
     biliLotteryData: 'B站 추첨 데이터',
     cardDetailTitle: '추첨 카드 상세',
     cardDetailDesc: '추첨 카드 상세를 확인하고 하단의 댓글 섹션에서 토론에 참여하세요.',
     noCardDetail: '카드 상세를 가져오지 못했습니다',
     missingLotteryId: '추첨 ID 누락',
-    enterViaCommentBtn: '전체 카드를 보려면 추첨 목록의 "댓글" 버튼을 통해 이 페이지로 들어가세요. 댓글 섹션은 계속 이용 가능합니다.',
+    enterViaCommentBtn:
+      '전체 카드를 보려면 추첨 목록의 "댓글" 버튼을 통해 이 페이지로 들어가세요. 댓글 섹션은 계속 이용 가능합니다.',
     enterViaCommentBtnShort: '추첨 목록의 "댓글" 버튼을 통해 이 페이지로 들어가세요.'
   }
 }
@@ -408,7 +422,7 @@ export const callbackNs = {
     loginProcessFail: '登录处理失败',
     loginFail: '登录失败：'
   },
-  'en': {
+  en: {
     loginFailMissing: 'Login failed: missing required login information',
     loginSuccess: 'Login successful, redirecting...',
     loginProcessFail: 'Login processing failed',
@@ -420,13 +434,13 @@ export const callbackNs = {
     loginProcessFail: '登入處理失敗',
     loginFail: '登入失敗：'
   },
-  'ja': {
+  ja: {
     loginFailMissing: 'ログイン失敗：必要なログイン情報が不足しています',
     loginSuccess: 'ログイン成功、リダイレクト中...',
     loginProcessFail: 'ログイン処理に失敗しました',
     loginFail: 'ログイン失敗：'
   },
-  'ko': {
+  ko: {
     loginFailMissing: '로그인 실패: 필요한 로그인 정보 누락',
     loginSuccess: '로그인 성공, 이동 중...',
     loginProcessFail: '로그인 처리 실패',
@@ -446,12 +460,15 @@ export const samsNs = {
     bannedDontShow: '不再提示',
     emptyData: '没有商品数据'
   },
-  'en': {
+  en: {
     bannedTitle: 'Important Notice',
     bannedHeader: "The admin's Sam's Club account has been banned",
-    bannedDesc: "Due to the admin's Sam's Club account being banned, product data cannot be updated normally.",
-    bannedNote: 'This may cause product prices, inventory and other information to be outdated. The admin is working to restore the service, please wait patiently.',
-    bannedTip: 'You can continue browsing existing product information, but please note that the data may not be up to date.',
+    bannedDesc:
+      "Due to the admin's Sam's Club account being banned, product data cannot be updated normally.",
+    bannedNote:
+      'This may cause product prices, inventory and other information to be outdated. The admin is working to restore the service, please wait patiently.',
+    bannedTip:
+      'You can continue browsing existing product information, but please note that the data may not be up to date.',
     bannedKnow: 'Got it',
     bannedDontShow: "Don't show again",
     emptyData: 'No product data'
@@ -466,21 +483,25 @@ export const samsNs = {
     bannedDontShow: '不再提示',
     emptyData: '沒有商品資料'
   },
-  'ja': {
+  ja: {
     bannedTitle: '重要なお知らせ',
     bannedHeader: "運営者の Sam's Club アカウントが停止されました",
-    bannedDesc: "運営者（管理者）の Sam's Club アカウントが停止されたため、商品データを正常に更新できません。",
-    bannedNote: '商品価格や在庫などの情報が最新でない可能性があります。運営者がサービス復旧に努めていますので、しばらくお待ちください。',
+    bannedDesc:
+      "運営者（管理者）の Sam's Club アカウントが停止されたため、商品データを正常に更新できません。",
+    bannedNote:
+      '商品価格や在庫などの情報が最新でない可能性があります。運営者がサービス復旧に努めていますので、しばらくお待ちください。',
     bannedTip: '既存の商品情報は引き続き閲覧できますが、データが最新でない可能性があります。',
     bannedKnow: '了解しました',
     bannedDontShow: '再表示しない',
     emptyData: '商品データがありません'
   },
-  'ko': {
+  ko: {
     bannedTitle: '중요 알림',
     bannedHeader: "운영자의 Sam's Club 계정이 정지되었습니다",
-    bannedDesc: "운영자(관리자)의 Sam's Club 계정이 정지되어 상품 데이터를 정상적으로 업데이트할 수 없습니다.",
-    bannedNote: '상품 가격, 재고 등의 정보가 최신이 아닐 수 있습니다. 운영자가 서비스 복구를 위해 노력 중이니 잠시 기다려 주세요.',
+    bannedDesc:
+      "운영자(관리자)의 Sam's Club 계정이 정지되어 상품 데이터를 정상적으로 업데이트할 수 없습니다.",
+    bannedNote:
+      '상품 가격, 재고 등의 정보가 최신이 아닐 수 있습니다. 운영자가 서비스 복구를 위해 노력 중이니 잠시 기다려 주세요.',
     bannedTip: '기존 상품 정보는 계속浏览할 수 있지만 데이터가 최신이 아닐 수 있습니다.',
     bannedKnow: '알겠습니다',
     bannedDontShow: '다시 표시하지 않음',
@@ -539,10 +560,18 @@ export const messageNs = {
     totalItems: '共 {total} 条',
     upPrefix: 'UP：',
     unknownSource: '未知来源',
-    replyAction: '回复了我的评论',
-    atAction: "{'@'}了我",
-    likeAction: '赞了我的评论',
-    likeMultiple: '等总计{count}人赞了我的评论',
+    replyAction: '回复了我的{target}',
+    atAction: "{'@'}了我的{target}",
+    likeAction: '赞了我的{target}',
+    likeMultiple: '等总计{count}人赞了我的{target}',
+    resourceDynamic: '动态',
+    resourceLottery: '抽奖',
+    resourceRpaAction: '自动化操作',
+    resourceRpaWorkflow: '工作流',
+    resourceRpaBrowser: '浏览器',
+    resourceRpaPlugin: '插件',
+    resourceUnknown: '内容',
+    targetComment: '评论',
     loadMore: '加载更多',
     sourceVideo: '视频',
     sourceDynamic: '动态',
@@ -553,7 +582,12 @@ export const messageNs = {
     sourcePrefix: '来源：',
     sourceIn: '中',
     eventReply: '回复',
+    commentDeleted: '该评论已被删除',
     eventLike: '点赞',
+    auditRejectAction: '驳回了你的{target}',
+    hideAction: '下架了你的{target}',
+    reportRejectAction: '你提交的举报未通过审核',
+    reportResolvedAction: '你提交的举报已成立并处理',
     ucFollowing: '关注',
     ucFollower: '粉丝',
     ucLiked: '获赞',
@@ -751,7 +785,7 @@ export const messageNs = {
     unnamed: '未命名',
     expLabel: '经验'
   },
-  'en': {
+  en: {
     navMyMessages: 'My Messages',
     navReplies: 'Replies',
     navAts: "{'@'}Mentions",
@@ -765,7 +799,7 @@ export const messageNs = {
     emptyDm: 'No direct messages yet, chat with friends',
     emptySubtitle: "Let's chat with friends (´･ω･`)ﾉ",
     titleFallback: 'My Messages',
-    dmEmpty: "No messages yet, say hi~",
+    dmEmpty: 'No messages yet, say hi~',
     dmHidden: '[This message has been removed by the admin]',
     dmRejected: '[This message has been rejected by the admin]',
     dmRecalled: 'Recalled a message',
@@ -785,7 +819,8 @@ export const messageNs = {
     settingsNotify: 'Message Reminder',
     settingsNotifyTip: '(After turning off, messages will no longer be reminded)',
     settingsStrangerDm: 'Smart DM Filter',
-    settingsStrangerDmTip: '(When enabled, sessions suspected of harassment or abuse will be auto-blocked)',
+    settingsStrangerDmTip:
+      '(When enabled, sessions suspected of harassment or abuse will be auto-blocked)',
     settingsReply: 'Reply Reminder',
     settingsReplyTip: '(Whose comment reminders to receive)',
     settingsAt: "{'@'}Mention Reminder",
@@ -800,10 +835,18 @@ export const messageNs = {
     totalItems: 'Total {total} items',
     upPrefix: 'UP: ',
     unknownSource: 'Unknown source',
-    replyAction: 'replied to my comment',
-    atAction: 'mentioned me',
-    likeAction: 'liked my comment',
-    likeMultiple: 'and {count} others liked my comment',
+    replyAction: 'replied to my {target}',
+    atAction: 'mentioned me in their {target}',
+    likeAction: 'liked my {target}',
+    likeMultiple: 'and {count} others liked my {target}',
+    resourceDynamic: 'dynamic',
+    resourceLottery: 'lottery',
+    resourceRpaAction: 'automation action',
+    resourceRpaWorkflow: 'workflow',
+    resourceRpaBrowser: 'browser',
+    resourceRpaPlugin: 'plugin',
+    resourceUnknown: 'content',
+    targetComment: 'comment',
     loadMore: 'Load more',
     sourceVideo: 'Video',
     sourceDynamic: 'Dynamic',
@@ -815,6 +858,10 @@ export const messageNs = {
     sourceIn: ' in ',
     eventReply: 'Reply',
     eventLike: 'Like',
+    auditRejectAction: 'rejected your {target}',
+    hideAction: 'took down your {target}',
+    reportRejectAction: 'your report was rejected',
+    reportResolvedAction: 'your report has been resolved',
     ucFollowing: 'Following',
     ucFollower: 'Followers',
     ucLiked: 'Likes',
@@ -847,7 +894,8 @@ export const messageNs = {
     auditTakeDown: 'Take down',
     auditComment: 'Comment',
     auditDm: 'DM',
-    auditIntro: 'The following are the {target} objects to be reviewed. Please fill in the {action} reason for each (this reason will be notified to the corresponding author)',
+    auditIntro:
+      'The following are the {target} objects to be reviewed. Please fill in the {action} reason for each (this reason will be notified to the corresponding author)',
     auditBanInvolved: 'Ban involved users ({n})',
     auditConfirm: 'Confirm {action}',
     auditReasonPlaceholder: 'Select or input a reason',
@@ -950,9 +998,11 @@ export const messageNs = {
     unbanFailed: 'Unban failed',
     auditFailed: 'Audit failed, please retry',
     processedCount: 'Processed {n}',
-    missingSessionParams: 'This DM lacks conversation location parameters and context cannot be viewed',
+    missingSessionParams:
+      'This DM lacks conversation location parameters and context cannot be viewed',
     permTitle: 'Message Admin Permissions (Fine-grained)',
-    permSubtitle: 'Only root can grant/revoke. Root-only permissions (plaintext / audit verdict) are auto-excluded from the grant list.',
+    permSubtitle:
+      'Only root can grant/revoke. Root-only permissions (plaintext / audit verdict) are auto-excluded from the grant list.',
     grantPermission: 'Grant Permission',
     emptyAdmin: 'No admins',
     colMid: 'User Mid',
@@ -1060,10 +1110,18 @@ export const messageNs = {
     totalItems: '共 {total} 筆',
     upPrefix: 'UP：',
     unknownSource: '未知來源',
-    replyAction: '回覆了我的評論',
-    atAction: "{'@'}了我",
-    likeAction: '讚了我的評論',
-    likeMultiple: '等總計{count}人讚了我的評論',
+    replyAction: '回覆了我的{target}',
+    atAction: "{'@'}了我的{target}",
+    likeAction: '讚了我的{target}',
+    likeMultiple: '等總計{count}人讚了我的{target}',
+    resourceDynamic: '動態',
+    resourceLottery: '抽獎',
+    resourceRpaAction: '自動化操作',
+    resourceRpaWorkflow: '工作流',
+    resourceRpaBrowser: '瀏覽器',
+    resourceRpaPlugin: '外掛',
+    resourceUnknown: '內容',
+    targetComment: '評論',
     loadMore: '載入更多',
     sourceVideo: '影片',
     sourceDynamic: '動態',
@@ -1074,7 +1132,12 @@ export const messageNs = {
     sourcePrefix: '來源：',
     sourceIn: '中',
     eventReply: '回覆',
+    commentDeleted: '該評論已被刪除',
     eventLike: '讚',
+    auditRejectAction: '駁回了你的{target}',
+    hideAction: '下架了你的{target}',
+    reportRejectAction: '你提交的檢舉未通過審核',
+    reportResolvedAction: '你提交的檢舉已成立並處理',
     ucFollowing: '關注',
     ucFollower: '粉絲',
     ucLiked: '獲讚',
@@ -1272,7 +1335,7 @@ export const messageNs = {
     unnamed: '未命名',
     expLabel: '經驗'
   },
-  'ja': {
+  ja: {
     navMyMessages: 'マイメッセージ',
     navReplies: '返信',
     navAts: "{'@'}された",
@@ -1306,7 +1369,8 @@ export const messageNs = {
     settingsNotify: 'メッセージ通知',
     settingsNotifyTip: '（オフにするとメッセージの通知が届きません）',
     settingsStrangerDm: 'DM スマートフィルター',
-    settingsStrangerDmTip: '（オンにすると、迷惑や不適切な可能性のあるセッションを自動ブロックします）',
+    settingsStrangerDmTip:
+      '（オンにすると、迷惑や不適切な可能性のあるセッションを自動ブロックします）',
     settingsReply: '返信の通知',
     settingsReplyTip: '（誰のコメント通知を受け取るか）',
     settingsAt: "{'@'}の通知",
@@ -1321,10 +1385,18 @@ export const messageNs = {
     totalItems: '全 {total} 件',
     upPrefix: 'UP：',
     unknownSource: '不明なソース',
-    replyAction: '私のコメントに返信しました',
-    atAction: "私を{'@'}しました",
-    likeAction: '私のコメントにいいねしました',
-    likeMultiple: 'など計{count}人が私のコメントにいいねしました',
+    replyAction: '私の{target}に返信しました',
+    atAction: '{target}で私をメンションしました',
+    likeAction: '私の{target}にいいねしました',
+    likeMultiple: 'など計{count}人が私の{target}にいいねしました',
+    resourceDynamic: 'ダイナミック',
+    resourceLottery: '抽選',
+    resourceRpaAction: '自動化アクション',
+    resourceRpaWorkflow: 'ワークフロー',
+    resourceRpaBrowser: 'ブラウザ',
+    resourceRpaPlugin: 'プラグイン',
+    resourceUnknown: 'コンテンツ',
+    targetComment: 'コメント',
     loadMore: 'もっと見る',
     sourceVideo: '動画',
     sourceDynamic: '動的',
@@ -1335,7 +1407,12 @@ export const messageNs = {
     sourcePrefix: 'ソース：',
     sourceIn: 'の',
     eventReply: '返信',
+    commentDeleted: 'このコメントは削除されました',
     eventLike: 'いいね',
+    auditRejectAction: 'あなたの{target}を差し戻しました',
+    hideAction: 'あなたの{target}を下架しました',
+    reportRejectAction: 'あなたの通報は審査を通過しませんでした',
+    reportResolvedAction: 'あなたの通報は成立し処理されました',
     ucFollowing: 'フォロー中',
     ucFollower: 'フォロワー',
     ucLiked: 'いいね',
@@ -1368,7 +1445,8 @@ export const messageNs = {
     auditTakeDown: '削除',
     auditComment: 'コメント',
     auditDm: 'DM',
-    auditIntro: '以下は今回の{target}審査対象です。各項目の{action}理由を入力してください（この理由は該当する作者に通知されます）',
+    auditIntro:
+      '以下は今回の{target}審査対象です。各項目の{action}理由を入力してください（この理由は該当する作者に通知されます）',
     auditBanInvolved: '関連ユーザーをBAN（{n}）',
     auditConfirm: '{action}を確定',
     auditReasonPlaceholder: '理由を選択または入力',
@@ -1472,9 +1550,11 @@ export const messageNs = {
     unbanFailed: 'BAN解除失敗',
     auditFailed: '審査失敗、再試行してください',
     processedCount: '{n} 件を処理しました',
-    missingSessionParams: 'このDMには会話特定パラメータが不足しており、コンテキストを表示できません',
+    missingSessionParams:
+      'このDMには会話特定パラメータが不足しており、コンテキストを表示できません',
     permTitle: 'メッセージ管理権限（きめ細かい付与）',
-    permSubtitle: 'root のみ付与/解除可能。root専用権限（平文/審査判定）は付与リストから自動除外されます。',
+    permSubtitle:
+      'root のみ付与/解除可能。root専用権限（平文/審査判定）は付与リストから自動除外されます。',
     grantPermission: '権限を付与',
     emptyAdmin: '管理者はいません',
     colMid: 'ユーザー Mid',
@@ -1533,7 +1613,7 @@ export const messageNs = {
     unnamed: '名前なし',
     expLabel: '経験値'
   },
-  'ko': {
+  ko: {
     navMyMessages: '내 메시지',
     navReplies: '내게 답글',
     navAts: "{'@'}멘션",
@@ -1582,10 +1662,18 @@ export const messageNs = {
     totalItems: '총 {total}개',
     upPrefix: 'UP: ',
     unknownSource: '알 수 없는 출처',
-    replyAction: '내 댓글에 답글을 달았습니다',
-    atAction: "나를 {'@'}했습니다",
-    likeAction: '내 댓글에 좋아요를 눌렀습니다',
-    likeMultiple: '등 총 {count}명이 내 댓글에 좋아요를 눌렀습니다',
+    replyAction: '내 {target}에 답글을 달았습니다',
+    atAction: '내 {target}에서 나를 멘션했습니다',
+    likeAction: '내 {target}에 좋아요를 눌렀습니다',
+    likeMultiple: '등 총 {count}명이 내 {target}에 좋아요를 눌렀습니다',
+    resourceDynamic: '다이나믹',
+    resourceLottery: '추첨',
+    resourceRpaAction: '자동화 액션',
+    resourceRpaWorkflow: '워크플로',
+    resourceRpaBrowser: '브라우저',
+    resourceRpaPlugin: '플러그인',
+    resourceUnknown: '콘텐츠',
+    targetComment: '댓글',
     loadMore: '더 보기',
     sourceVideo: '영상',
     sourceDynamic: '동적',
@@ -1596,7 +1684,12 @@ export const messageNs = {
     sourcePrefix: '출처: ',
     sourceIn: '에서 ',
     eventReply: '답글',
+    commentDeleted: '삭제된 댓글입니다',
     eventLike: '좋아요',
+    auditRejectAction: '회원님의 {target}을 반려했습니다',
+    hideAction: '회원님의 {target}을 내렸습니다',
+    reportRejectAction: '제출한 신고가 심사를 통과하지 못했습니다',
+    reportResolvedAction: '제출한 신고가 인정되어 처리되었습니다',
     ucFollowing: '팔로잉',
     ucFollower: '팔로워',
     ucLiked: '좋아요',
@@ -1629,7 +1722,8 @@ export const messageNs = {
     auditTakeDown: '삭제',
     auditComment: '댓글',
     auditDm: '쪽지',
-    auditIntro: '다음은 이번 {target} 심사 대상입니다. 각 항목의 {action} 사유를 입력하세요 (해당 사유는 작성자에게 통지됩니다)',
+    auditIntro:
+      '다음은 이번 {target} 심사 대상입니다. 각 항목의 {action} 사유를 입력하세요 (해당 사유는 작성자에게 통지됩니다)',
     auditBanInvolved: '관련 사용자 차단 ({n})',
     auditConfirm: '{action} 확인',
     auditReasonPlaceholder: '사유를 선택하거나 입력',
@@ -1735,7 +1829,8 @@ export const messageNs = {
     processedCount: '{n}건 처리됨',
     missingSessionParams: '이 쪽지에는 대화 위치 매개변수가 없어 컨텍스트를 볼 수 없습니다',
     permTitle: '메시지 관리 권한 (세분화 부여)',
-    permSubtitle: 'root만 부여/해제 가능. root 전용 권한(평문/심사 판정)은 부여 목록에서 자동 제외됩니다.',
+    permSubtitle:
+      'root만 부여/해제 가능. root 전용 권한(평문/심사 판정)은 부여 목록에서 자동 제외됩니다.',
     grantPermission: '권한 부여',
     emptyAdmin: '관리자 없음',
     colMid: '사용자 Mid',
@@ -1911,7 +2006,7 @@ export const rpaNs = {
     detailClose: '关闭',
     detailNotConfigured: '未配置'
   },
-  'en': {
+  en: {
     pleaseLogin: 'Please log in first',
     networkError: 'Network error, please retry later',
     newPageSuccess: 'New page created',
@@ -1920,7 +2015,8 @@ export const rpaNs = {
     closePageFailed: 'Failed to close page',
     switchPageFailed: 'Failed to switch page',
     atLeastOnePage: 'At least one page must remain',
-    startStreamConfirm: 'Starting the live stream will begin monitoring the current page. Continue?',
+    startStreamConfirm:
+      'Starting the live stream will begin monitoring the current page. Continue?',
     startStreamTitle: 'Start Live Stream Confirmation',
     startStream: 'Start',
     stopStream: 'Stop',
@@ -2137,7 +2233,7 @@ export const rpaNs = {
     detailClose: '關閉',
     detailNotConfigured: '未設定'
   },
-  'ja': {
+  ja: {
     pleaseLogin: '先にログインしてください',
     networkError: 'ネットワークエラー、しばらくしてから再試行してください',
     newPageSuccess: 'ページを新規作成しました',
@@ -2205,7 +2301,7 @@ export const rpaNs = {
     actCustomDesc: 'カスタム操作',
     actPluginDesc: 'プラグイン操作'
   },
-  'ko': {
+  ko: {
     pleaseLogin: '먼저 로그인하세요',
     networkError: '네트워크 오류, 나중에 다시 시도하세요',
     newPageSuccess: '새 페이지 생성됨',

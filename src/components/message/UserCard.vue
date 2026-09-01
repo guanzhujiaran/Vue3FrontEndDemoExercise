@@ -28,12 +28,11 @@
           <el-icon v-if="sexIcon" :class="sexClass" size="14">
             <component :is="sexIcon" />
           </el-icon>
-          <span
+          <LevelIcon
             v-if="levelText"
-            class="user-card__level rounded px-1 text-xs font-bold text-white bg-msg-pink"
-          >
-            LV{{ levelText }}
-          </span>
+            class="user-card__level"
+            :level="Number(levelText)"
+          />
           <span
             v-if="isVip"
             class="user-card__vip rounded px-1 text-xs font-bold text-black bg-warning"
@@ -93,8 +92,12 @@ import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { Female, Male, UserFilled } from '@element-plus/icons-vue'
+import LevelIcon from '@/components/CommonCompo/LevelIcon.vue'
 
 const { t } = useI18n()
+
+/** 外部 chat 应用基地址：发送消息按钮直接按卡片 uid 跳转对应会话（B 站 whisper 风格） */
+const CHAT_BASE_URL = 'http://localhost/app/message/whisper'
 
 export interface UserCardData {
   mid?: number | null
@@ -135,7 +138,6 @@ const props = withDefaults(
 const emit = defineEmits<{
   follow: [mid: number]
   unfollow: [mid: number]
-  message: [mid: number]
 }>()
 
 const actionLoading = ref(false)
@@ -160,7 +162,11 @@ const sexClass = computed(() =>
   props.card?.sex === '女' ? 'text-msg-pink' : 'text-primary'
 )
 
-const levelText = computed(() => (props.card?.level ? String(props.card.level) : ''))
+/** level 可能为 0（Lv0 是合法等级，不能用 truthy 判断） */
+const levelText = computed(() => {
+  const lv = props.card?.level
+  return lv !== undefined && lv !== null ? String(lv) : ''
+})
 
 const isVip = computed(() => {
   const vt = props.card?.vip_type
@@ -215,10 +221,13 @@ async function handleFollow() {
   }
 }
 
+/** 发送消息：直接按卡片 uid 跳转到对应 chat 用户（外部 chat 应用，新标签打开） */
 function handleMessage() {
   const mid = props.card?.mid
   if (!mid) return
-  emit('message', mid)
+  const name = props.card?.uname || ''
+  const url = `${CHAT_BASE_URL}/${mid}?name=${encodeURIComponent(name)}`
+  window.open(url, '_blank')
 }
 
 const router = useRouter()

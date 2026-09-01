@@ -2,7 +2,6 @@
 import { onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import i18n from '@/i18n'
-import { useJwtStore } from '@/stores/jwt_token'
 import biliMessage from '@/utils/message'
 import { isLogin } from '@/api/user/utils'
 
@@ -20,21 +19,17 @@ function t(key: string): string {
 }
 const route = useRoute()
 const router = useRouter()
-const jwtStore = useJwtStore()
 
 const processCallback = async () => {
-  const token = route.query.token as string
   const uid = route.query.uid as string
   const user_name = route.query.user_name as string
 
-  if (!token || !uid || !user_name) {
+  if (!uid || !user_name) {
     biliMessage.error(t('callback.loginFailMissing'))
     return
   }
 
   try {
-    jwtStore.save_jwt_token(decodeURIComponent(token))
-
     biliMessage.success(t('callback.loginSuccess'))
 
     // 保存 token 后主动刷新登录态，从服务端拉取完整用户信息。

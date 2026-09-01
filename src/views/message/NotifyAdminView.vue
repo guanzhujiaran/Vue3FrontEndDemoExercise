@@ -7,13 +7,25 @@
       </el-button>
     </div>
 
+    <div class="notify-admin__table-bar mb-2 flex items-center justify-end">
+      <el-button
+        class="notify-admin__refresh-btn"
+        size="default"
+        :icon="Refresh"
+        :loading="loading"
+        @click="load"
+      >
+        {{ t('message.refresh') }}
+      </el-button>
+    </div>
+
     <LoadingWrap :loading="loading" :rows="6">
       <EmptyState v-if="items.length === 0" :text="t('message.noNotifyRecord')" />
       <!-- 父容器固定高度，由 AutoResizer 自动测量并传给表格 width/height；滚动条落在表格内部，不依赖外侧布局滚动 -->
       <div v-else class="notify-admin__table h-[calc(100vh-260px)] min-h-105">
         <el-auto-resizer>
           <template #default="{ height, width }">
-            <el-table-v2  :columns="notifyColumns" :data="items" :width="width" :height="height" :row-height="56"
+            <el-table-v2  :columns="notifyColumns" :data="items" :width="width" :height="fitTableHeight(height)" :row-height="56"
               :header-height="44" :footer-height="total > pageSize ? 64 : 0" row-key="id" fixed>
               <template #header-cell="{ column }">
                 <span class="notify-admin__th font-medium text-text-primary">{{ column.title }}</span>
@@ -61,7 +73,7 @@
                 <!-- 操作 -->
                 <template v-else-if="column.key === 'actions'">
                   <el-button size="default" @click="openEdit(rowData)">{{ t('message.editNotify') }}</el-button>
-                  <el-button v-if="rowData.status !== 'revoked'" size="default" type="warning" @click="revoke(rowData)">
+                  <el-button v-if="rowData.status !== NotifyStatusEnum.REVOKED" size="default" type="warning" @click="revoke(rowData)">
                     {{ t('message.deleteNotify') }}
                   </el-button>
                 </template>
@@ -105,19 +117,20 @@
             :placeholder="t('message.notifyFormContent')" />
         </el-form-item>
         <el-form-item :label="t('message.notifyFormLevel')">
+          <!-- 后端枚举是整数，选项 value 必须绑定枚举值而非字符串字面量 -->
           <el-select v-model="form.level" size="default" class="w-full">
-            <el-option :label="t('message.notifyLevelNormal')" value="normal" />
-            <el-option :label="t('message.notifyLevelImportant')" value="important" />
-            <el-option :label="t('message.notifyLevelUrgent')" value="urgent" />
+            <el-option :label="t('message.notifyLevelNormal')" :value="NotifyLevelEnum.NORMAL" />
+            <el-option :label="t('message.notifyLevelImportant')" :value="NotifyLevelEnum.IMPORTANT" />
+            <el-option :label="t('message.notifyLevelUrgent')" :value="NotifyLevelEnum.URGENT" />
           </el-select>
         </el-form-item>
         <el-form-item :label="t('message.notifyFormTargetType')">
           <el-select v-model="form.target_type" size="default" class="w-full">
-            <el-option :label="t('message.notifyTargetAll')" value="all" />
-            <el-option :label="t('message.notifyTargetRole')" value="role" />
-            <el-option :label="t('message.notifyTargetLevel')" value="level" />
-            <el-option :label="t('message.notifyTargetVip')" value="vip" />
-            <el-option :label="t('message.notifyTargetCustom')" value="custom" />
+            <el-option :label="t('message.notifyTargetAll')" :value="NotifyTargetTypeEnum.ALL" />
+            <el-option :label="t('message.notifyTargetRole')" :value="NotifyTargetTypeEnum.ROLE" />
+            <el-option :label="t('message.notifyTargetLevel')" :value="NotifyTargetTypeEnum.LEVEL" />
+            <el-option :label="t('message.notifyTargetVip')" :value="NotifyTargetTypeEnum.VIP" />
+            <el-option :label="t('message.notifyTargetCustom')" :value="NotifyTargetTypeEnum.CUSTOM" />
           </el-select>
         </el-form-item>
         <el-form-item :label="t('message.notifyFormTargetValue')">
@@ -146,6 +159,7 @@ import { onMounted, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { TableV2FixedDir, type Column } from 'element-plus'
+import { Refresh } from '@element-plus/icons-vue'
 import biliMessage from '@/utils/message'
 import { isExternalUrl, renderNotifySegments } from '@/utils/notifyContent'
 
@@ -156,6 +170,9 @@ import {
   createNotify,
   updateNotify,
   revokeNotify,
+  NotifyLevelEnum,
+  NotifyStatusEnum,
+  NotifyTargetTypeEnum,
   type NotifyAdminItem,
   type NotifyLevel,
   type NotifyStatus,
@@ -196,11 +213,22 @@ const form = reactive<CreateNotifyPayload & { target_type: NotifyTargetType }>({
   title: '',
   content: '',
   jump_url: null,
-  target_type: 'all',
+  target_type: NotifyTargetTypeEnum.ALL,
   target_value: '',
-  level: 'normal',
+  level: NotifyLevelEnum.NORMAL,
   publish_now: true
 })
+
+// 表格高度自适应：数据不满一屏时收缩到「表头 + 行数 + 分页」的实际内容高度，
+// 让表格底部滚动条紧跟最后一行数据，而不是固定在固定高度容器的底部空白处
+const TABLE_HEADER_H = 44
+const TABLE_ROW_H = 56
+const TABLE_FOOTER_H = 64
+function fitTableHeight(avail: number): number {
+  const footerH = total.value > pageSize ? TABLE_FOOTER_H : 0
+  const contentH = TABLE_HEADER_H + items.value.length * TABLE_ROW_H + footerH
+  return Math.min(avail, Math.max(contentH, TABLE_HEADER_H + TABLE_ROW_H + footerH))
+}
 
 async function load() {
   loading.value = true
@@ -219,9 +247,9 @@ function resetForm() {
   form.title = ''
   form.content = ''
   form.jump_url = null
-  form.target_type = 'all'
+  form.target_type = NotifyTargetTypeEnum.ALL
   form.target_value = ''
-  form.level = 'normal'
+  form.level = NotifyLevelEnum.NORMAL
   form.publish_now = true
 }
 
@@ -239,7 +267,7 @@ function openEdit(row: NotifyAdminItem) {
   form.target_type = row.target_type
   form.target_value = row.target_value ?? ''
   form.level = row.level
-  form.publish_now = row.status === 'published'
+  form.publish_now = row.status === NotifyStatusEnum.PUBLISHED
   dialogVisible.value = true
 }
 
@@ -267,7 +295,7 @@ async function submit() {
       target_type: payload.target_type,
       target_value: payload.target_value,
       level: payload.level,
-      status: payload.publish_now ? 'published' : 'draft'
+      status: payload.publish_now ? NotifyStatusEnum.PUBLISHED : NotifyStatusEnum.DRAFT
     }
     res = await updateNotify(editingId.value, upd, {
       showSuccessToast: true,
@@ -294,35 +322,35 @@ async function revoke(row: NotifyAdminItem) {
   if (ok) await load()
 }
 
-function levelTag(level: NotifyLevel): 'info' | 'warning' | 'danger' {
-  if (level === 'urgent') return 'danger'
-  if (level === 'important') return 'warning'
+function levelTag(level: NotifyLevel | undefined): 'info' | 'warning' | 'danger' {
+  if (level === NotifyLevelEnum.URGENT) return 'danger'
+  if (level === NotifyLevelEnum.IMPORTANT) return 'warning'
   return 'info'
 }
-function levelText(level: NotifyLevel): string {
-  if (level === 'urgent') return t('message.notifyLevelUrgent')
-  if (level === 'important') return t('message.notifyLevelImportant')
+function levelText(level: NotifyLevel | undefined): string {
+  if (level === NotifyLevelEnum.URGENT) return t('message.notifyLevelUrgent')
+  if (level === NotifyLevelEnum.IMPORTANT) return t('message.notifyLevelImportant')
   return t('message.notifyLevelNormal')
 }
-function statusTag(status: NotifyStatus): 'info' | 'success' | 'danger' {
-  if (status === 'published') return 'success'
-  if (status === 'revoked') return 'danger'
+function statusTag(status: NotifyStatus | undefined): 'info' | 'success' | 'danger' {
+  if (status === NotifyStatusEnum.PUBLISHED) return 'success'
+  if (status === NotifyStatusEnum.REVOKED) return 'danger'
   return 'info'
 }
-function statusText(status: NotifyStatus): string {
-  if (status === 'published') return t('message.notifyPublished')
-  if (status === 'revoked') return t('message.notifyRevoked')
+function statusText(status: NotifyStatus | undefined): string {
+  if (status === NotifyStatusEnum.PUBLISHED) return t('message.notifyPublished')
+  if (status === NotifyStatusEnum.REVOKED) return t('message.notifyRevoked')
   return t('message.notifyFormDraft')
 }
 function targetText(row: NotifyAdminItem): string {
   const map: Record<NotifyTargetType, string> = {
-    all: t('message.notifyTargetAll'),
-    role: t('message.notifyTargetRole'),
-    level: t('message.notifyTargetLevel'),
-    vip: t('message.notifyTargetVip'),
-    custom: t('message.notifyTargetCustom')
+    [NotifyTargetTypeEnum.ALL]: t('message.notifyTargetAll'),
+    [NotifyTargetTypeEnum.ROLE]: t('message.notifyTargetRole'),
+    [NotifyTargetTypeEnum.LEVEL]: t('message.notifyTargetLevel'),
+    [NotifyTargetTypeEnum.VIP]: t('message.notifyTargetVip'),
+    [NotifyTargetTypeEnum.CUSTOM]: t('message.notifyTargetCustom')
   }
-  const prefix = map[row.target_type] ?? row.target_type
+  const prefix = map[row.target_type] ?? String(row.target_type)
   return row.target_value ? `${prefix}:${row.target_value}` : prefix
 }
 

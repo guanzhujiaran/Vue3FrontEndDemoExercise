@@ -1,14 +1,13 @@
 import { ref } from 'vue'
 import { defineStore } from 'pinia'
 import type { AnyLotteryData } from '@/models/api/lottery/lottery_card.ts'
-import { COMMENT_TYPE, type CommentType } from '@/api/lottery_comment.ts'
+import { CommentTypeEnum, type CommentType } from '@/api/lottery_comment.ts'
 
 /**
  * 抽奖评论区在新评论系统 (/api/v1/comment/*) 中使用的 type 值。
- * 直接引用后端 CommentTypeEnum 的前端镜像 COMMENT_TYPE.LOTTERY，
- * 不自行硬编码字符串，确保与后端白名单一致。
+ * 直接使用 SDK 生成的 CommentTypeEnum.LOTTERY（=3），不自行硬编码。
  */
-export const LOTTERY_COMMENT_TYPE: CommentType = COMMENT_TYPE.LOTTERY
+export const LOTTERY_COMMENT_TYPE: CommentType = CommentTypeEnum.LOTTERY
 
 /**
  * 抽奖卡片详情页共享 store。

@@ -11,8 +11,21 @@ import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
 import Sitemap from 'vite-plugin-sitemap'
 import tailwindcss from '@tailwindcss/vite'
 import svgLoader from 'vite-svg-loader'
-import { heyApiPlugin } from '@hey-api/vite-plugin';
-
+import { heyApiPlugin } from '@hey-api/vite-plugin'
+import { type UserParser } from '@hey-api/shared'
+const hey_api_parser: UserParser = {
+  hooks: {
+    symbols: {
+      getFilePath: (symbol) => {
+        // API 客户端类：按服务（tag）拆分到 services/
+        if (symbol.kind === 'class' && symbol.name?.endsWith('Service')) {
+          return `services/${symbol.name}`
+        }
+        return
+      }
+    }
+  }
+}
 const pathSrc = path.resolve(__dirname, 'src')
 export default defineConfig({
   plugins: [
@@ -77,9 +90,21 @@ export default defineConfig({
           {
             name: '@hey-api/client-ofetch',
             runtimeConfigPath: '@/api/browser/runtime_config'
+          },
+          { enums: 'javascript', name: '@hey-api/typescript' },
+
+          {
+            name: '@hey-api/sdk',
+            responseStyle: 'data',
+            paramsStructure: 'grouped',
+            operations: {
+              strategy: 'byTags',
+              containerName: (name) => `${name}Service`
+            }
           }
-        ]
-      },
+        ],
+        parser: hey_api_parser
+      }
     }),
     heyApiPlugin({
       config: {
@@ -89,22 +114,44 @@ export default defineConfig({
           {
             name: '@hey-api/client-ofetch',
             runtimeConfigPath: '@/api/bili_lottery_data/runtime_config'
+          },
+          { enums: 'javascript', name: '@hey-api/typescript' },
+          {
+            name: '@hey-api/sdk',
+            responseStyle: 'data',
+            paramsStructure: 'grouped',
+            operations: {
+              strategy: 'byTags',
+              containerName: (name) => `${name}Service`
+            }
           }
-        ]
-      },
+        ],
+        parser: hey_api_parser
+      }
     }),
     heyApiPlugin({
       config: {
         input: 'http://localhost:18739/openapi.json',
-        output: 'src/api/notify/hey-api',
+        output: 'src/api/community/hey-api',
         plugins: [
           {
             name: '@hey-api/client-ofetch',
-            runtimeConfigPath: '@/api/notify/runtime_config',
+            runtimeConfigPath: '@/api/community/runtime_config'
+          },
+          { enums: 'javascript', name: '@hey-api/typescript' },
+          {
+            name: '@hey-api/sdk',
+            responseStyle: 'data',
+            paramsStructure: 'grouped',
+            operations: {
+              strategy: 'byTags',
+              containerName: (name) => `${name}Service`
+            }
           }
-        ]
-      },
-    }),
+        ],
+        parser: hey_api_parser
+      }
+    })
   ],
   resolve: {
     alias: {
@@ -126,6 +173,6 @@ export default defineConfig({
         changeOrigin: true,
         rewrite: (path) => path
       }
-    },
+    }
   }
 })

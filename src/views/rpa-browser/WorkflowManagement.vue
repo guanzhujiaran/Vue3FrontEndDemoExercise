@@ -6,14 +6,8 @@ import { useDebounceFn } from '@vueuse/core'
 import FlexContainer from '@/components/CommonCompo/Bili-Container-Compo/FlexContainer.vue'
 import BiliPageHeader from '@/components/CommonCompo/Bili-Container-Compo/BiliPageHeader.vue'
 import WorkflowEditDialog from '@/components/rpa-browser/WorkflowEditDialog.vue'
-import {
-  listWorkflowsApiV1RpaBrowserControlWorkflowsListPost,
-  getWorkflowDetailApiV1RpaBrowserControlWorkflowsGetPost,
-  updateWorkflowApiV1RpaBrowserControlWorkflowsUpdatePost,
-  deleteWorkflowApiV1RpaBrowserControlWorkflowsDeletePost,
-  duplicateWorkflowApiV1RpaBrowserControlWorkflowsDuplicatePost,
-} from '@/api/browser/hey-api'
-import type { FilterType, SortBy, SortOrder } from '@/api/browser/hey-api/types.gen'
+import { 工作流管理Service } from '@/api/browser/hey-api'
+import type { FilterType, SortBy, SortOrder } from '@/api/browser/hey-api'
 import { useUserNavStore } from '@/stores/user_nav'
 import { businessHandler } from '@/utils/businessHandler'
 import ResourceInteractionBar from '@/components/interaction/ResourceInteractionBar.vue'
@@ -82,7 +76,7 @@ const loadWorkflows = async (append = false) => {
   }
 
   const result = await businessHandler<{ items?: WorkflowItem[]; total?: number }>(
-    listWorkflowsApiV1RpaBrowserControlWorkflowsListPost({
+    工作流管理Service.listWorkflowsApiV1RpaBrowserControlWorkflowsListPost({
       body: {
         page: currentPage.value,
         per_page: pageSize.value,
@@ -90,7 +84,6 @@ const loadWorkflows = async (append = false) => {
         sort_by: sortBy.value,
         sort_order: sortOrder.value,
       },
-      headers: userNavStore.user_header,
     }) as any,
     { successMessage: '', errorMessage: '获取工作流列表失败', showSuccessToast: false }
   )
@@ -133,9 +126,8 @@ const handleCreate = () => {
 const handleEdit = async (item: WorkflowItem) => {
   editDialogLoading.value = true
   const result = await businessHandler<Record<string, unknown>>(
-    getWorkflowDetailApiV1RpaBrowserControlWorkflowsGetPost({
+    工作流管理Service.getWorkflowDetailApiV1RpaBrowserControlWorkflowsGetPost({
       body: { id: item.id },
-      headers: userNavStore.user_header,
     }) as any,
     { successMessage: '', errorMessage: '获取工作流详情失败', showSuccessToast: false }
   )
@@ -161,9 +153,8 @@ const handleDuplicate = async (item: WorkflowItem) => {
     return
   }
   const result = await businessHandler(
-    duplicateWorkflowApiV1RpaBrowserControlWorkflowsDuplicatePost({
+    工作流管理Service.duplicateWorkflowApiV1RpaBrowserControlWorkflowsDuplicatePost({
       body: { id: item.id, new_name: newName },
-      headers: userNavStore.user_header,
     }) as any,
     { successMessage: '复制成功', errorMessage: '复制失败' }
   )
@@ -174,9 +165,8 @@ const handleDuplicate = async (item: WorkflowItem) => {
 
 const handleTogglePublic = async (item: WorkflowItem) => {
   const result = await businessHandler(
-    updateWorkflowApiV1RpaBrowserControlWorkflowsUpdatePost({
+    工作流管理Service.updateWorkflowApiV1RpaBrowserControlWorkflowsUpdatePost({
       body: { id: item.id, is_public: item.is_public },
-      headers: userNavStore.user_header,
     }) as any,
     {
       successMessage: item.is_public ? '已设为公开' : '已设为私有',
@@ -190,9 +180,8 @@ const handleTogglePublic = async (item: WorkflowItem) => {
 
 const handleToggleEnabled = async (item: WorkflowItem) => {
   const result = await businessHandler(
-    updateWorkflowApiV1RpaBrowserControlWorkflowsUpdatePost({
+    工作流管理Service.updateWorkflowApiV1RpaBrowserControlWorkflowsUpdatePost({
       body: { id: item.id, is_enabled: item.is_enabled },
-      headers: userNavStore.user_header,
     }) as any,
     {
       successMessage: item.is_enabled ? '已启用' : '已禁用',
@@ -215,9 +204,8 @@ const handleDelete = async (item: WorkflowItem) => {
     return
   }
   const result = await businessHandler(
-    deleteWorkflowApiV1RpaBrowserControlWorkflowsDeletePost({
+    工作流管理Service.deleteWorkflowApiV1RpaBrowserControlWorkflowsDeletePost({
       body: { id: item.id },
-      headers: userNavStore.user_header,
     }) as any,
     { successMessage: '删除成功', errorMessage: '删除失败' }
   )

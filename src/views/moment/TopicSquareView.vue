@@ -185,7 +185,7 @@ async function loadFirst() {
     items.value = res.items || []
     total.value = items.value.length
   } else {
-    const res = await fetchTopicSquare({ page: 1, page_size: pageSize, hot_only: viewMode.value === 'hot' || undefined })
+    const res = await fetchTopicSquare({ page: 1, page_size: pageSize })
     items.value = res.items || []
     total.value = (res as any).total ?? 0
   }
@@ -199,7 +199,7 @@ async function onPageChange(p: number) {
     const res = await fetchMyTopics({ page: p, page_size: pageSize })
     items.value = res.items || []
   } else {
-    const res = await fetchTopicSquare({ page: p, page_size: pageSize, hot_only: viewMode.value === 'hot' || undefined })
+    const res = await fetchTopicSquare({ page: p, page_size: pageSize })
     items.value = res.items || []
   }
   loading.value = false

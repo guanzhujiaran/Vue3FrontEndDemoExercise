@@ -39,12 +39,12 @@
       <div class="ban-user-dialog__field">
         <div class="mb-1 text-sm text-text-placeholder">{{ t('message.banDurationLabel') }}</div>
         <el-radio-group v-model="form.duration_type" class="ban-user-dialog__duration">
-          <el-radio value="temporary">{{ t('message.banTemporary') }}</el-radio>
-          <el-radio value="permanent">{{ t('message.banPermanent') }}</el-radio>
+          <el-radio :value="BanDurationTypeEnum.TEMPORARY">{{ t('message.banTemporary') }}</el-radio>
+          <el-radio :value="BanDurationTypeEnum.PERMANENT">{{ t('message.banPermanent') }}</el-radio>
         </el-radio-group>
       </div>
 
-      <div v-if="form.duration_type === 'temporary'" class="ban-user-dialog__field">
+      <div v-if="form.duration_type === BanDurationTypeEnum.TEMPORARY" class="ban-user-dialog__field">
         <div class="mb-1 text-sm text-text-placeholder">{{ t('message.banDaysLabel') }}</div>
         <el-input-number
           v-model="form.duration_days"
@@ -89,7 +89,7 @@
 import { computed, reactive, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import biliMessage from '@/utils/message'
-import { banUsers } from '@/api/notify/hey-api'
+import { MessageAdminBanService, BanDurationTypeEnum } from '@/api/community/hey-api'
 import { useMessageAdminStore } from '@/stores/message_admin'
 
 const { t } = useI18n()
@@ -128,12 +128,12 @@ const visible = computed({
 const submitting = ref(false)
 const form = reactive<{
   ban_services: string[]
-  duration_type: 'temporary' | 'permanent'
+  duration_type: BanDurationTypeEnum
   duration_days: number
   reason: string
 }>({
   ban_services: [],
-  duration_type: 'temporary',
+  duration_type: BanDurationTypeEnum.TEMPORARY,
   duration_days: 7,
   reason: ''
 })
@@ -142,7 +142,10 @@ const canSubmit = computed(() => {
   if (!props.mids.length) return false
   if (!form.ban_services.length) return false
   if (!form.reason.trim()) return false
-  if (form.duration_type === 'temporary' && (!form.duration_days || form.duration_days < 1)) {
+  if (
+    form.duration_type === BanDurationTypeEnum.TEMPORARY &&
+    (!form.duration_days || form.duration_days < 1)
+  ) {
     return false
   }
   return true
@@ -150,7 +153,7 @@ const canSubmit = computed(() => {
 
 function resetForm() {
   form.ban_services = []
-  form.duration_type = 'temporary'
+  form.duration_type = BanDurationTypeEnum.TEMPORARY
   form.duration_days = 7
   form.reason = ''
 }
@@ -163,22 +166,22 @@ async function submit() {
   if (!canSubmit.value) return
   submitting.value = true
   try {
-    const res = await banUsers({
+    const res = await MessageAdminBanService.banUsers({
       body: {
         mids: props.mids,
         ban_services: form.ban_services,
         reason: form.reason.trim(),
         duration_type: form.duration_type,
         duration_days:
-          form.duration_type === 'temporary' ? form.duration_days : null
+          form.duration_type === BanDurationTypeEnum.TEMPORARY ? form.duration_days : null
       }
     })
-    if (res && res.code === 0) {
+    if (res) {
       biliMessage.success(t('message.banSuccess', { count: props.mids.length }))
       emit('success')
       visible.value = false
-    } else if (res) {
-      biliMessage.error(res.msg || t('message.banFailed'))
+    } else {
+      biliMessage.error(t('message.banFailed'))
     }
   } finally {
     submitting.value = false

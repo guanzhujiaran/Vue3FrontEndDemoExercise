@@ -17,6 +17,8 @@ import {
   Lightning as IconLightning,
   CreditCard as IconCreditCard,
   List as IconList,
+  CircleClose as IconCircleClose,
+  Warning as IconWarning,
   Trophy as IconTrophy,
   Monitor as IconMonitor,
   Link as IconLink,
@@ -68,6 +70,32 @@ const user_center_routes = [
       isHeaderShow: false,
       requiresLogin: true,
       icon: IconList
+    }
+  },
+  {
+    path: 'blocklist',
+    name: RouteName.USER_CENTER_BLOCKLIST,
+    component: () =>
+      import('@/components/opus-detail/RightPannel/PannelItems/SettingComponent/UserCenterBlocklist.vue'),
+    meta: {
+      title: RouteName.USER_CENTER_BLOCKLIST,
+      description: '管理黑名单（拉黑用户）',
+      isHeaderShow: false,
+      requiresLogin: true,
+      icon: IconCircleClose
+    }
+  },
+  {
+    path: 'deactivate',
+    name: RouteName.USER_CENTER_DEACTIVATE,
+    component: () =>
+      import('@/components/opus-detail/RightPannel/PannelItems/SettingComponent/UserCenterDeactivate.vue'),
+    meta: {
+      title: RouteName.USER_CENTER_DEACTIVATE,
+      description: '注销当前账户',
+      isHeaderShow: false,
+      requiresLogin: true,
+      icon: IconWarning
     }
   }
 ]
@@ -444,7 +472,7 @@ const routes: CustomRouteRecordRaw[] = [
     path: '/app/message',
     name: 'MESSAGE',
     component: () => import('@/views/message/MessageLayout.vue'),
-    redirect: { name: 'MESSAGE_HOME' },
+    redirect: { name: 'MESSAGE_WHISPER' },
     meta: {
       id: 'message',
       title: '消息中心',
@@ -456,10 +484,25 @@ const routes: CustomRouteRecordRaw[] = [
     },
     children: [
       {
-        path: '',
-        name: 'MESSAGE_HOME',
-        component: () => import('@/views/message/DmSessionListView.vue'),
-        meta: { title: '我的消息' }
+        path: 'whisper',
+        name: 'MESSAGE_WHISPER',
+        component: () => import('@/views/message/DmWhisperLayout.vue'),
+        redirect: { name: 'MESSAGE_WHISPER_HOME' },
+        meta: { title: '我的消息' },
+        children: [
+          {
+            path: '',
+            name: 'MESSAGE_WHISPER_HOME',
+            component: () => import('@/views/message/MessageEmptyView.vue'),
+            meta: { title: '我的消息' }
+          },
+          {
+            path: ':talkerId',
+            name: 'MESSAGE_WHISPER_CHAT',
+            component: () => import('@/views/message/DmListView.vue'),
+            meta: { title: '私信聊天', hidden: true }
+          }
+        ]
       },
       {
         path: 'replies',
@@ -490,12 +533,6 @@ const routes: CustomRouteRecordRaw[] = [
         name: 'MESSAGE_SETTINGS',
         component: () => import('@/views/message/MessageSettingsView.vue'),
         meta: { title: '消息设置' }
-      },
-      {
-        path: 'chat/:talkerMid',
-        name: 'MESSAGE_DM_CHAT',
-        component: () => import('@/views/message/DmListView.vue'),
-        meta: { title: '私信聊天', hidden: true }
       }
     ]
   },
@@ -643,6 +680,16 @@ const routes: CustomRouteRecordRaw[] = [
         }
       },
       {
+        path: 'report',
+        name: 'ADMIN_REPORT',
+        component: () => import('@/views/admin/ReportAdminView.vue'),
+        meta: {
+          title: '举报审核',
+          requiresAdmin: true,
+          hidden: true
+        }
+      },
+      {
         path: 'moment-audit',
         name: 'ADMIN_MOMENT_AUDIT',
         component: () => import('@/views/admin/MomentAuditListView.vue'),
@@ -668,6 +715,16 @@ const routes: CustomRouteRecordRaw[] = [
         component: () => import('@/views/admin/AvatarAuditListView.vue'),
         meta: {
           title: '头像审核',
+          requiresAdmin: true,
+          hidden: true
+        }
+      },
+      {
+        path: 'user-folder-cover-audit',
+        name: 'ADMIN_USER_FOLDER_COVER_AUDIT',
+        component: () => import('@/views/admin/FolderCoverAuditListView.vue'),
+        meta: {
+          title: '封面审核',
           requiresAdmin: true,
           hidden: true
         }

@@ -5,13 +5,9 @@ import {
   ElAutocomplete, ElEmpty, ElTreeV2, ElButton, ElText,
   ElMessage, ElTooltip, ElSelect, ElOption, ElSegmented,
 } from 'element-plus'
-import {
-  listCustomActionsApiV1RpaBrowserControlCustomActionsListPost,
-  listRegisteredActionsApiV1RpaBrowserControlActionsRegisteredPost,
-  getCustomActionApiV1RpaBrowserControlCustomActionsGetPost,
-} from '@/api/browser/hey-api'
+import { 自定义操作管理Service } from '@/api/browser/hey-api'
 import { client } from '@/api/browser/hey-api/client.gen'
-import type { FilterType, SortBy, SortOrder } from '@/api/browser/hey-api/types.gen'
+import type { FilterType, SortBy, SortOrder } from '@/api/browser/hey-api'
 import { useUserNavStore } from '@/stores/user_nav'
 
 // ── 常量 ─────────────────────────────────────────────
@@ -137,7 +133,7 @@ async function searchTags(query: string) {
 async function fetchActions(page: number, append = false) {
   try {
     const filterType = (activeTab.value === ToolboxTab.PRIVATE ? 'private' : 'public') as FilterType
-    const res = await listCustomActionsApiV1RpaBrowserControlCustomActionsListPost({
+    const res = await 自定义操作管理Service.listCustomActionsApiV1RpaBrowserControlCustomActionsListPost({
       body: {
         page,
         per_page: PER_PAGE,
@@ -183,7 +179,7 @@ async function reloadActions() {
 }
 
 async function loadRegistered() {
-  const res = await listRegisteredActionsApiV1RpaBrowserControlActionsRegisteredPost({ headers: userNavStore.user_header })
+  const res = await 自定义操作管理Service.listRegisteredActionsApiV1RpaBrowserControlActionsRegisteredPost({ headers: userNavStore.user_header })
   if (res?.code === 0 && res?.data) {
     registeredActions.value = ((res.data as unknown[]) || []).filter(
       (a: Record<string, unknown>) => a.action_id !== 'composite',
@@ -373,7 +369,7 @@ async function handleEditCustomAction(nodeData: Record<string, unknown>) {
   const id = nodeData.action_id as string
   if (!id) { ElMessage.warning('无效的操作标识'); return }
   try {
-    const res = await getCustomActionApiV1RpaBrowserControlCustomActionsGetPost({
+    const res = await 自定义操作管理Service.getCustomActionApiV1RpaBrowserControlCustomActionsGetPost({
       body: { action_id: id }, headers: userNavStore.user_header,
     })
     if (res?.code === 0 && res?.data) emit('edit-action', res.data as Record<string, unknown>)
@@ -464,7 +460,7 @@ const treeHeight = computed(() => Math.floor(window.innerHeight * 0.45))
             <div
               v-for="(item, idx) in actionList"
               :key="(item as Record<string, unknown>).action_id as string"
-              class="flex items-center justify-between w-full gap-2 px-2 py-2 rounded cursor-grab active:cursor-grabbing hover:bg-[var(--el-fill-color-light)] transition-colors"
+              class="flex items-center justify-between w-full gap-2 px-2 py-2 rounded cursor-grab active:cursor-grabbing hover:bg-(--el-fill-color-light) transition-colors"
               draggable="true"
               @dragstart="handleDragStart($event, item)"
               @mousedown.stop @dragstart.stop
@@ -482,7 +478,7 @@ const treeHeight = computed(() => Math.floor(window.innerHeight * 0.45))
                   <span
                     v-for="tag in getTagsInfo(item as Record<string, unknown>).visible"
                     :key="tag"
-                    class="text-xs px-1.5 py-px rounded bg-[var(--el-color-primary-light-9)] text-[var(--el-color-primary)] shrink-0"
+                    class="text-xs px-1.5 py-px rounded bg-(--el-color-primary-light-9) text-(--el-color-primary) shrink-0"
                   >{{ tag }}</span>
                   <el-tooltip v-if="getTagsInfo(item as Record<string, unknown>).hasOverflow" :show-after="300" popper-class="toolbox-tooltip">
                     <template #content>
@@ -495,7 +491,7 @@ const treeHeight = computed(() => Math.floor(window.innerHeight * 0.45))
                 </template>
               </span>
               <span class="flex items-center gap-1 shrink-0">
-                <el-button size="small" text :icon="Edit" class="!p-0.5 !h-auto"
+                <el-button size="small" text :icon="Edit" class="p-0.5! h-auto!"
                   @click.stop="handleEditCustomAction(item as Record<string, unknown>)"
                 />
               </span>

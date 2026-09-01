@@ -1,11 +1,5 @@
-import {
-  listMainApiV1CommentMainGet,
-  replyListApiV1CommentReplyGet,
-  addCommentApiV1CommentAddPost,
-  commentActionApiV1CommentActionPost,
-  deleteCommentApiV1CommentDelPost,
-  atSearchApiV1CommentAtSearchGet,
-} from '@/api/notify/hey-api'
+import { CommentService, CommentTypeEnum, CommentSortEnum, CommentStateEnum } from '@/api/community/hey-api'
+import type { BusinessHandlerResult } from '@/utils/businessHandler'
 import type {
   CommentUserBrief,
   CommentItem,
@@ -13,32 +7,20 @@ import type {
   CommentSubListResp,
   CommentAddResp,
   CommentActionResp,
-  CommentTypeEnum,
-  CommentStateEnum,
-} from '@/api/notify/hey-api'
+} from '@/api/community/hey-api'
 import type { RootObject } from '@/models/api/base_model.ts'
 import type { InjectionKey } from 'vue'
 
 /**
- * 评论区业务类型，严格对齐后端 be-message-service 的
- * `app.models.enums.CommentTypeEnum`。
- *
- * 后端对该字段做了白名单强校验：传入枚举外的值（任意不在下列表中的字符串）
- * FastAPI / Pydantic 会直接拒绝并返回 422 错误。因此前端不自行发明类型，
- * 只能从这里取——新增类型必须先改后端枚举，再同步到此处。
- *
- * SDK 生成的 CommentTypeEnum = 'dynamic' | 'article' | 'lottery' | 'feedback' | 'other'
- * 这里提供对象形式方便业务代码取值（如 COMMENT_TYPE.LOTTERY）。
+ * 评论区业务类型 / 排序 / 状态，直接使用 SDK 生成的数值枚举，不再手写字符串镜像：
+ * - CommentTypeEnum：DYNAMIC=1 / ARTICLE=2 / LOTTERY=3 / FEEDBACK=4 / OTHER=5
+ * - CommentSortEnum：HOT=1 / TIME=2
+ * - CommentStateEnum：NORMAL=1 / AUDITING=2 / REJECTED=3 / HIDDEN=4 / DELETED=5
+ * 与后端 be-message-service `app.models.enums.*` 严格对齐，保证前后端取值永远一致。
  */
-export const COMMENT_TYPE = {
-  DYNAMIC: 'dynamic',
-  ARTICLE: 'article',
-  LOTTERY: 'lottery',
-  FEEDBACK: 'feedback',
-  OTHER: 'other'
-} as const
+export { CommentTypeEnum, CommentSortEnum, CommentStateEnum }
 
-/** 后端合法的评论区 type 字面量联合类型（白名单），等价于 CommentTypeEnum */
+/** 后端合法的评论区 type 类型，等价于 SDK 生成的 CommentTypeEnum */
 export type CommentType = CommentTypeEnum
 
 // 以下类型直接从 SDK re-export，单一数据源，消除重复定义
@@ -49,16 +31,13 @@ export type {
   CommentSubListResp,
   CommentAddResp,
   CommentActionResp,
-  // 评论状态枚举（normal / auditing / rejected / hidden / deleted），
-  // 前端判断审核中评论（item.state === 'auditing'）时以此类型为准
-  CommentStateEnum
 }
 
 /** 评论区交互回调（由 LotteryCommentSection 通过 provide 下发给子组件） */
 export interface CommentHandlers {
   like: (payload: { rpid: string; nextAction: 0 | 1 | 2 }) => void
-  del: (rpid: string) => void
-  reply: (payload: { root: string; parent: string; message: string; atNameToMid?: Record<string, number> }) => void
+  del: (rpid: string) => Promise<BusinessHandlerResult<null> | undefined>
+  reply: (payload: { root: string; parent: string; message: string; atNameToMid?: Record<string, number>; replyTo?: CommentUserBrief | null }) => void
   /** 楼中楼展开：返回某一页的子回复与总数 */
   expandReplies: (item: CommentItem, page: number) => Promise<{ items: CommentItem[]; total: number }>
 }
@@ -78,12 +57,12 @@ const commentApi = {
   listMain(
     oid: string | number,
     type: CommentType,
-    sort: 'hot' | 'time' = 'hot',
+    sort: CommentSortEnum = CommentSortEnum.HOT,
     page_num = 1,
     page_size = 10,
     focusRpid?: string | number | null
   ): Promise<RootObject<CommentListResp>> {
-    return listMainApiV1CommentMainGet({
+    return CommentService.listMainApiV1CommentMainGet({
       query: {
         oid: String(oid),
         type,
@@ -104,7 +83,7 @@ const commentApi = {
     page_num = 1,
     page_size = 10
   ): Promise<RootObject<CommentSubListResp>> {
-    return replyListApiV1CommentReplyGet({
+    return CommentService.replyListApiV1CommentReplyGet({
       query: { root: String(root), oid: String(oid), type, page_num, page_size }
     }).then(
       (r) => (r ?? { code: -1, msg: '回复加载失败', data: {} }) as unknown as RootObject<CommentSubListResp>
@@ -113,7 +92,7 @@ const commentApi = {
 
   /** 单条评论详情：按 rpid 查询，返回 oid / type / 正文等（消息通知按 bizId 跳转定位评论区用） */
   detail(rpid: string | number): Promise<RootObject<CommentItem>> {
-    return commentDetailApiV1CommentDetailRpidGet({
+    return CommentService.commentDetailApiV1CommentDetailRpidGet({
       path: { rpid: String(rpid) }
     }).then(
       (r) => (r ?? { code: -1, msg: '评论详情获取失败', data: {} }) as unknown as RootObject<CommentItem>
@@ -122,7 +101,7 @@ const commentApi = {
 
   /** @ 提及用户搜索：按昵称 / 注册名前缀匹配（登录即可），返回简单用户结构 */
   searchAt(keyword: string, limit = 10): Promise<RootObject<CommentUserBrief[]>> {
-    return atSearchApiV1CommentAtSearchGet({
+    return CommentService.atSearchApiV1CommentAtSearchGet({
       query: { keyword, limit }
     }).then(
       (r) => (r ?? { code: -1, msg: '@用户搜索失败', data: [] }) as unknown as RootObject<CommentUserBrief[]>
@@ -137,7 +116,7 @@ const commentApi = {
     message: string,
     atNameToMid?: Record<string, number>
   ): Promise<RootObject<CommentAddResp>> {
-    return addCommentApiV1CommentAddPost({
+    return CommentService.addCommentApiV1CommentAddPost({
       body: {
         oid: String(oid),
         type,
@@ -152,7 +131,7 @@ const commentApi = {
   },
 
   action(rpid: string | number, action: 0 | 1 | 2): Promise<RootObject<CommentActionResp>> {
-    return commentActionApiV1CommentActionPost({
+    return CommentService.commentActionApiV1CommentActionPost({
       body: { rpid: String(rpid), action }
     }).then(
       (r) => (r ?? { code: -1, msg: '操作失败', data: {} }) as unknown as RootObject<CommentActionResp>
@@ -160,7 +139,7 @@ const commentApi = {
   },
 
   del(rpid: string | number): Promise<RootObject<null>> {
-    return deleteCommentApiV1CommentDelPost({
+    return CommentService.deleteCommentApiV1CommentDelPost({
       body: { rpid: String(rpid) }
     }).then((r) => (r ?? { code: -1, msg: '删除失败', data: null }) as unknown as RootObject<null>)
   }

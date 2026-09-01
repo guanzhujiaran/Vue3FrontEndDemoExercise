@@ -59,7 +59,7 @@ import { useI18n } from 'vue-i18n'
 import { ElAutocomplete, ElButton, ElPopover, ElTag } from 'element-plus'
 import UserCard from '@/components/message/UserCard.vue'
 import { useAuditReasons } from '@/composables/useAuditReasons'
-import type { CommentUserBrief } from '@/api/notify/hey-api'
+import type { CommentUserBrief } from '@/api/community/hey-api'
 
 const { t } = useI18n()
 
@@ -124,7 +124,10 @@ const allFilled = computed(
   () => props.items.length > 0 && props.items.every((it) => (reasons.value[it.id] ?? '').trim())
 )
 
-const fetchSuggestions = (queryString: string, cb: (items: { value: string }[]) => void) => {
+const fetchSuggestions = (
+  queryString: string,
+  cb: (items: Array<string | { value: string }>) => void
+) => {
   const q = queryString.trim().toLowerCase()
   const list = defaultReasons.value
     .filter((r) => (q ? r.toLowerCase().includes(q) : true))

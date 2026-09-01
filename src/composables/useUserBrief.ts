@@ -1,8 +1,8 @@
 import { reactive } from 'vue'
 import {
-  batchUserInfoApiV1MessageAdminUserBatchGet,
+  MessageAdminUserService,
   type CommentUserBrief,
-} from '@/api/notify/hey-api'
+} from '@/api/community/hey-api'
 
 /**
  * 审核端按 mid 查询用户信息（昵称 / 头像 / 等级 / 大会员）。
@@ -21,7 +21,7 @@ async function fetchUserBriefs(mids: number[]): Promise<void> {
   const unique = [...new Set(mids.filter((m): m is number => Boolean(m) && !userCache.has(m)))]
   if (!unique.length) return
   try {
-    const res = await batchUserInfoApiV1MessageAdminUserBatchGet({ query: { mids: unique } })
+    const res = await MessageAdminUserService.batchUserInfoApiV1MessageAdminUserBatchGet({ query: { mids: unique } })
     // responseStyle 可能返回完整 StandardResponse 或仅 data，二者兼容
     const list = ((res as Record<string, unknown>)?.['data'] ?? res) as
       | CommentUserBrief[]

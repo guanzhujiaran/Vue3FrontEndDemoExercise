@@ -455,9 +455,35 @@ export type ActionLogListRequest = {
 /**
  * ActionLogSourceEnum
  *
- * 操作日志来源
+ * 枚举选项：
+ * - ACTION: action
+ * - WORKFLOW: workflow
+ * - PLUGIN: plugin
  */
-export type ActionLogSourceEnum = 'action' | 'workflow' | 'plugin';
+export const ActionLogSourceEnum = {
+    /**
+     * ACTION
+     */
+    ACTION: 'action',
+    /**
+     * WORKFLOW
+     */
+    WORKFLOW: 'workflow',
+    /**
+     * PLUGIN
+     */
+    PLUGIN: 'plugin'
+} as const;
+
+/**
+ * ActionLogSourceEnum
+ *
+ * 枚举选项：
+ * - ACTION: action
+ * - WORKFLOW: workflow
+ * - PLUGIN: plugin
+ */
+export type ActionLogSourceEnum = typeof ActionLogSourceEnum[keyof typeof ActionLogSourceEnum];
 
 /**
  * ActionLogStatsResponse
@@ -492,9 +518,35 @@ export type ActionLogStatsResponse = {
 /**
  * ActionLogStatusEnum
  *
- * 操作日志状态
+ * 枚举选项：
+ * - SUCCESS: success
+ * - FAILED: failed
+ * - TIMEOUT: timeout
  */
-export type ActionLogStatusEnum = 'success' | 'failed' | 'timeout';
+export const ActionLogStatusEnum = {
+    /**
+     * SUCCESS
+     */
+    SUCCESS: 'success',
+    /**
+     * FAILED
+     */
+    FAILED: 'failed',
+    /**
+     * TIMEOUT
+     */
+    TIMEOUT: 'timeout'
+} as const;
+
+/**
+ * ActionLogStatusEnum
+ *
+ * 枚举选项：
+ * - SUCCESS: success
+ * - FAILED: failed
+ * - TIMEOUT: timeout
+ */
+export type ActionLogStatusEnum = typeof ActionLogStatusEnum[keyof typeof ActionLogStatusEnum];
 
 /**
  * ActionMetadataResponse
@@ -1621,9 +1673,41 @@ export type BasePaginationRespWorkflowListItemResponse = {
 /**
  * BrowserEnum
  *
- * 浏览器类型枚举
+ * 枚举选项：
+ * - chrome: chrome
+ * - Edge: Edge
+ * - Opera: Opera
+ * - Vivaldi: Vivaldi
  */
-export type BrowserEnum = 'chrome' | 'Edge' | 'Opera' | 'Vivaldi';
+export const BrowserEnum = {
+    /**
+     * chrome
+     */
+    CHROME: 'chrome',
+    /**
+     * Edge
+     */
+    EDGE: 'Edge',
+    /**
+     * Opera
+     */
+    OPERA: 'Opera',
+    /**
+     * Vivaldi
+     */
+    VIVALDI: 'Vivaldi'
+} as const;
+
+/**
+ * BrowserEnum
+ *
+ * 枚举选项：
+ * - chrome: chrome
+ * - Edge: Edge
+ * - Opera: Opera
+ * - Vivaldi: Vivaldi
+ */
+export type BrowserEnum = typeof BrowserEnum[keyof typeof BrowserEnum];
 
 /**
  * BrowserFingerprintCreateParams
@@ -2044,6 +2128,9 @@ export type BrowserSessionStatus = {
      * 浏览器是否正在运行
      */
     browser_running: boolean;
+    /**
+     * 会话生命周期状态
+     */
     lifecycle_state: SessionLifecycleState;
     /**
      * Active Connections
@@ -2080,9 +2167,113 @@ export type BrowserSessionStatus = {
 /**
  * BuiltinActionType
  *
- * 内置操作类型
+ * 枚举选项：
+ * - CLICK: click
+ * - INPUT: input
+ * - WAIT: wait
+ * - SCROLL: scroll
+ * - NAVIGATE: navigate
+ * - SCREENSHOT: screenshot
+ * - LLM: llm
+ * - HOVER: hover
+ * - NEW_PAGE: new_page
+ * - GET_TEXT: get_text
+ * - GET_WINDOW: get_window
+ * - FETCH_EXTERNAL_DATA: fetch_external_data
+ * - PRINT: print
+ * - LOOP: loop
+ * - COMPOSITE: composite
+ * - IF_ELSE: if_else
  */
-export type BuiltinActionType = 'click' | 'input' | 'wait' | 'scroll' | 'navigate' | 'screenshot' | 'llm' | 'hover' | 'new_page' | 'get_text' | 'get_window' | 'fetch_external_data' | 'print' | 'loop' | 'composite' | 'if_else';
+export const BuiltinActionType = {
+    /**
+     * CLICK
+     */
+    CLICK: 'click',
+    /**
+     * INPUT
+     */
+    INPUT: 'input',
+    /**
+     * WAIT
+     */
+    WAIT: 'wait',
+    /**
+     * SCROLL
+     */
+    SCROLL: 'scroll',
+    /**
+     * NAVIGATE
+     */
+    NAVIGATE: 'navigate',
+    /**
+     * SCREENSHOT
+     */
+    SCREENSHOT: 'screenshot',
+    /**
+     * LLM
+     */
+    LLM: 'llm',
+    /**
+     * HOVER
+     */
+    HOVER: 'hover',
+    /**
+     * NEW_PAGE
+     */
+    NEW_PAGE: 'new_page',
+    /**
+     * GET_TEXT
+     */
+    GET_TEXT: 'get_text',
+    /**
+     * GET_WINDOW
+     */
+    GET_WINDOW: 'get_window',
+    /**
+     * FETCH_EXTERNAL_DATA
+     */
+    FETCH_EXTERNAL_DATA: 'fetch_external_data',
+    /**
+     * PRINT
+     */
+    PRINT: 'print',
+    /**
+     * LOOP
+     */
+    LOOP: 'loop',
+    /**
+     * COMPOSITE
+     */
+    COMPOSITE: 'composite',
+    /**
+     * IF_ELSE
+     */
+    IF_ELSE: 'if_else'
+} as const;
+
+/**
+ * BuiltinActionType
+ *
+ * 枚举选项：
+ * - CLICK: click
+ * - INPUT: input
+ * - WAIT: wait
+ * - SCROLL: scroll
+ * - NAVIGATE: navigate
+ * - SCREENSHOT: screenshot
+ * - LLM: llm
+ * - HOVER: hover
+ * - NEW_PAGE: new_page
+ * - GET_TEXT: get_text
+ * - GET_WINDOW: get_window
+ * - FETCH_EXTERNAL_DATA: fetch_external_data
+ * - PRINT: print
+ * - LOOP: loop
+ * - COMPOSITE: composite
+ * - IF_ELSE: if_else
+ */
+export type BuiltinActionType = typeof BuiltinActionType[keyof typeof BuiltinActionType];
 
 /**
  * CertificationItemResp
@@ -2818,9 +3009,35 @@ export type ConditionRule = {
 /**
  * ConditionValueType
  *
- * 条件值类型 —— 限制用户只能使用这三种类型做判断
+ * 枚举选项：
+ * - BOOLEAN: BOOLEAN
+ * - NULL: NULL
+ * - STRING: STRING
  */
-export type ConditionValueType = 'BOOLEAN' | 'NULL' | 'STRING';
+export const ConditionValueType = {
+    /**
+     * BOOLEAN
+     */
+    BOOLEAN: 'BOOLEAN',
+    /**
+     * NULL
+     */
+    NULL: 'NULL',
+    /**
+     * STRING
+     */
+    STRING: 'STRING'
+} as const;
+
+/**
+ * ConditionValueType
+ *
+ * 枚举选项：
+ * - BOOLEAN: BOOLEAN
+ * - NULL: NULL
+ * - STRING: STRING
+ */
+export type ConditionValueType = typeof ConditionValueType[keyof typeof ConditionValueType];
 
 /**
  * CreateSessionResponse
@@ -2992,8 +3209,48 @@ export type ExecuteStepResponse = {
 
 /**
  * FilterType
+ *
+ * 枚举选项：
+ * - ALL: all
+ * - PRIVATE: private
+ * - PUBLIC: public
+ * - COMMUNITY: community
+ * - VERIFIED: verified
  */
-export type FilterType = 'all' | 'private' | 'public' | 'community' | 'verified';
+export const FilterType = {
+    /**
+     * ALL
+     */
+    ALL: 'all',
+    /**
+     * PRIVATE
+     */
+    PRIVATE: 'private',
+    /**
+     * PUBLIC
+     */
+    PUBLIC: 'public',
+    /**
+     * COMMUNITY
+     */
+    COMMUNITY: 'community',
+    /**
+     * VERIFIED
+     */
+    VERIFIED: 'verified'
+} as const;
+
+/**
+ * FilterType
+ *
+ * 枚举选项：
+ * - ALL: all
+ * - PRIVATE: private
+ * - PUBLIC: public
+ * - COMMUNITY: community
+ * - VERIFIED: verified
+ */
+export type FilterType = typeof FilterType[keyof typeof FilterType];
 
 /**
  * GetPageInfoRequest
@@ -3133,9 +3390,35 @@ export type ListTagByTargetRequest = {
 /**
  * LogicOperator
  *
- * 逻辑运算符 —— 支持 AND / OR / NOT 组合多个原子条件
+ * 枚举选项：
+ * - AND: AND
+ * - OR: OR
+ * - NOT: NOT
  */
-export type LogicOperator = 'AND' | 'OR' | 'NOT';
+export const LogicOperator = {
+    /**
+     * AND
+     */
+    AND: 'AND',
+    /**
+     * OR
+     */
+    OR: 'OR',
+    /**
+     * NOT
+     */
+    NOT: 'NOT'
+} as const;
+
+/**
+ * LogicOperator
+ *
+ * 枚举选项：
+ * - AND: AND
+ * - OR: OR
+ * - NOT: NOT
+ */
+export type LogicOperator = typeof LogicOperator[keyof typeof LogicOperator];
 
 /**
  * NameSearchRequest
@@ -4002,9 +4285,35 @@ export type PermissionLevelConfig = {
 /**
  * PlatformEnum
  *
- * 操作系统平台枚举
+ * 枚举选项：
+ * - windows: windows
+ * - linux: linux
+ * - macos: macos
  */
-export type PlatformEnum = 'windows' | 'linux' | 'macos';
+export const PlatformEnum = {
+    /**
+     * windows
+     */
+    WINDOWS: 'windows',
+    /**
+     * linux
+     */
+    LINUX: 'linux',
+    /**
+     * macos
+     */
+    MACOS: 'macos'
+} as const;
+
+/**
+ * PlatformEnum
+ *
+ * 枚举选项：
+ * - windows: windows
+ * - linux: linux
+ * - macos: macos
+ */
+export type PlatformEnum = typeof PlatformEnum[keyof typeof PlatformEnum];
 
 /**
  * PluginConfig
@@ -4407,19 +4716,122 @@ export type RpcMethodInfoResponse = {
 /**
  * SessionLifecycleState
  *
- * 会话生命周期状态
+ * 枚举选项：
+ * - INITIALIZING: initializing
+ * - ACTIVE: active
+ * - IDLE: idle
+ * - SUSPENDING: suspending
+ * - TERMINATING: terminating
+ * - TERMINATED: terminated
  */
-export type SessionLifecycleState = 'initializing' | 'active' | 'idle' | 'suspending' | 'terminating' | 'terminated';
+export const SessionLifecycleState = {
+    /**
+     * INITIALIZING
+     */
+    INITIALIZING: 'initializing',
+    /**
+     * ACTIVE
+     */
+    ACTIVE: 'active',
+    /**
+     * IDLE
+     */
+    IDLE: 'idle',
+    /**
+     * SUSPENDING
+     */
+    SUSPENDING: 'suspending',
+    /**
+     * TERMINATING
+     */
+    TERMINATING: 'terminating',
+    /**
+     * TERMINATED
+     */
+    TERMINATED: 'terminated'
+} as const;
+
+/**
+ * SessionLifecycleState
+ *
+ * 枚举选项：
+ * - INITIALIZING: initializing
+ * - ACTIVE: active
+ * - IDLE: idle
+ * - SUSPENDING: suspending
+ * - TERMINATING: terminating
+ * - TERMINATED: terminated
+ */
+export type SessionLifecycleState = typeof SessionLifecycleState[keyof typeof SessionLifecycleState];
 
 /**
  * SortBy
+ *
+ * 枚举选项：
+ * - UPDATED_AT: updated_at
+ * - LIKES_COUNT: likes_count
+ * - FORKS_COUNT: forks_count
+ * - CREATED_AT: created_at
+ * - NAME: name
  */
-export type SortBy = 'updated_at' | 'likes_count' | 'forks_count' | 'created_at' | 'name';
+export const SortBy = {
+    /**
+     * UPDATED_AT
+     */
+    UPDATED_AT: 'updated_at',
+    /**
+     * LIKES_COUNT
+     */
+    LIKES_COUNT: 'likes_count',
+    /**
+     * FORKS_COUNT
+     */
+    FORKS_COUNT: 'forks_count',
+    /**
+     * CREATED_AT
+     */
+    CREATED_AT: 'created_at',
+    /**
+     * NAME
+     */
+    NAME: 'name'
+} as const;
+
+/**
+ * SortBy
+ *
+ * 枚举选项：
+ * - UPDATED_AT: updated_at
+ * - LIKES_COUNT: likes_count
+ * - FORKS_COUNT: forks_count
+ * - CREATED_AT: created_at
+ * - NAME: name
+ */
+export type SortBy = typeof SortBy[keyof typeof SortBy];
 
 /**
  * SortOrder
+ *
+ * 枚举选项：
+ * - DESC: desc
+ * - ASC: asc
  */
-export type SortOrder = 'desc' | 'asc';
+export const SortOrder = { /**
+     * DESC
+     */
+    DESC: 'desc', /**
+     * ASC
+     */
+    ASC: 'asc' } as const;
+
+/**
+ * SortOrder
+ *
+ * 枚举选项：
+ * - DESC: desc
+ * - ASC: asc
+ */
+export type SortOrder = typeof SortOrder[keyof typeof SortOrder];
 
 /**
  * StandardResponse[ActionForkResponse]

@@ -204,9 +204,95 @@ export type ArticleInfo = {
 /**
  * BackgroundServiceName
  *
- * 后台服务名称枚举
+ * 枚举选项：
+ * - DYN_DETAIL_DATABASE_CLEANER: DYN_DETAIL_DATABASE_CLEANER
+ * - GET_PROXY_METHODS_SCHEDULER: GET_PROXY_METHODS_SCHEDULER
+ * - SAMSCCLUB_SCHEDULER: SAMSCCLUB_SCHEDULER
+ * - SAMSCCLUB_SPU_DETAIL_SCHEDULER: SAMSCCLUB_SPU_DETAIL_SCHEDULER
+ * - GET_RESERVE_INFO: GET_RESERVE_INFO
+ * - GET_DYN: GET_DYN
+ * - GET_TOPIC: GET_TOPIC
+ * - REFRESH_BILI_LOTDATA_DATABASE: REFRESH_BILI_LOTDATA_DATABASE
+ * - LOTTERY_API_ROBOT_DYN_SCHEDULER: LOTTERY_API_ROBOT_DYN_SCHEDULER
+ * - LOTTERY_API_ROBOT_RESERVE_SCHEDULER: LOTTERY_API_ROBOT_RESERVE_SCHEDULER
+ * - GMFLV2_SCHEDULER: GMFLV2_SCHEDULER
+ * - GET_OTHERS_LOT_DYN: GET_OTHERS_LOT_DYN
+ * - STUCK_CHECK_SCHEDULER: STUCK_CHECK_SCHEDULER
  */
-export type BackgroundServiceName = 'DYN_DETAIL_DATABASE_CLEANER' | 'GET_PROXY_METHODS_SCHEDULER' | 'SAMSCCLUB_SCHEDULER' | 'SAMSCCLUB_SPU_DETAIL_SCHEDULER' | 'GET_RESERVE_INFO' | 'GET_DYN' | 'GET_TOPIC' | 'REFRESH_BILI_LOTDATA_DATABASE' | 'LOTTERY_API_ROBOT_DYN_SCHEDULER' | 'LOTTERY_API_ROBOT_RESERVE_SCHEDULER' | 'GMFLV2_SCHEDULER' | 'GET_OTHERS_LOT_DYN' | 'STUCK_CHECK_SCHEDULER';
+export const BackgroundServiceName = {
+    /**
+     * DYN_DETAIL_DATABASE_CLEANER
+     */
+    DYN_DETAIL_DATABASE_CLEANER: 'DYN_DETAIL_DATABASE_CLEANER',
+    /**
+     * GET_PROXY_METHODS_SCHEDULER
+     */
+    GET_PROXY_METHODS_SCHEDULER: 'GET_PROXY_METHODS_SCHEDULER',
+    /**
+     * SAMSCCLUB_SCHEDULER
+     */
+    SAMSCCLUB_SCHEDULER: 'SAMSCCLUB_SCHEDULER',
+    /**
+     * SAMSCCLUB_SPU_DETAIL_SCHEDULER
+     */
+    SAMSCCLUB_SPU_DETAIL_SCHEDULER: 'SAMSCCLUB_SPU_DETAIL_SCHEDULER',
+    /**
+     * GET_RESERVE_INFO
+     */
+    GET_RESERVE_INFO: 'GET_RESERVE_INFO',
+    /**
+     * GET_DYN
+     */
+    GET_DYN: 'GET_DYN',
+    /**
+     * GET_TOPIC
+     */
+    GET_TOPIC: 'GET_TOPIC',
+    /**
+     * REFRESH_BILI_LOTDATA_DATABASE
+     */
+    REFRESH_BILI_LOTDATA_DATABASE: 'REFRESH_BILI_LOTDATA_DATABASE',
+    /**
+     * LOTTERY_API_ROBOT_DYN_SCHEDULER
+     */
+    LOTTERY_API_ROBOT_DYN_SCHEDULER: 'LOTTERY_API_ROBOT_DYN_SCHEDULER',
+    /**
+     * LOTTERY_API_ROBOT_RESERVE_SCHEDULER
+     */
+    LOTTERY_API_ROBOT_RESERVE_SCHEDULER: 'LOTTERY_API_ROBOT_RESERVE_SCHEDULER',
+    /**
+     * GMFLV2_SCHEDULER
+     */
+    GMFLV2_SCHEDULER: 'GMFLV2_SCHEDULER',
+    /**
+     * GET_OTHERS_LOT_DYN
+     */
+    GET_OTHERS_LOT_DYN: 'GET_OTHERS_LOT_DYN',
+    /**
+     * STUCK_CHECK_SCHEDULER
+     */
+    STUCK_CHECK_SCHEDULER: 'STUCK_CHECK_SCHEDULER'
+} as const;
+
+/**
+ * BackgroundServiceName
+ *
+ * 枚举选项：
+ * - DYN_DETAIL_DATABASE_CLEANER: DYN_DETAIL_DATABASE_CLEANER
+ * - GET_PROXY_METHODS_SCHEDULER: GET_PROXY_METHODS_SCHEDULER
+ * - SAMSCCLUB_SCHEDULER: SAMSCCLUB_SCHEDULER
+ * - SAMSCCLUB_SPU_DETAIL_SCHEDULER: SAMSCCLUB_SPU_DETAIL_SCHEDULER
+ * - GET_RESERVE_INFO: GET_RESERVE_INFO
+ * - GET_DYN: GET_DYN
+ * - GET_TOPIC: GET_TOPIC
+ * - REFRESH_BILI_LOTDATA_DATABASE: REFRESH_BILI_LOTDATA_DATABASE
+ * - LOTTERY_API_ROBOT_DYN_SCHEDULER: LOTTERY_API_ROBOT_DYN_SCHEDULER
+ * - LOTTERY_API_ROBOT_RESERVE_SCHEDULER: LOTTERY_API_ROBOT_RESERVE_SCHEDULER
+ * - GMFLV2_SCHEDULER: GMFLV2_SCHEDULER
+ * - GET_OTHERS_LOT_DYN: GET_OTHERS_LOT_DYN
+ * - STUCK_CHECK_SCHEDULER: STUCK_CHECK_SCHEDULER
+ */
+export type BackgroundServiceName = typeof BackgroundServiceName[keyof typeof BackgroundServiceName];
 
 /**
  * BiliLotStatisticInfoResp
@@ -228,8 +314,42 @@ export type BiliLotStatisticInfoResp = {
 
 /**
  * BiliLotStatisticLotTypeEnum
+ *
+ * 枚举选项：
+ * - official: official
+ * - reserve: reserve
+ * - charge: charge
+ * - total: total
  */
-export type BiliLotStatisticLotTypeEnum = 'official' | 'reserve' | 'charge' | 'total';
+export const BiliLotStatisticLotTypeEnum = {
+    /**
+     * official
+     */
+    OFFICIAL: 'official',
+    /**
+     * reserve
+     */
+    RESERVE: 'reserve',
+    /**
+     * charge
+     */
+    CHARGE: 'charge',
+    /**
+     * total
+     */
+    TOTAL: 'total'
+} as const;
+
+/**
+ * BiliLotStatisticLotTypeEnum
+ *
+ * 枚举选项：
+ * - official: official
+ * - reserve: reserve
+ * - charge: charge
+ * - total: total
+ */
+export type BiliLotStatisticLotTypeEnum = typeof BiliLotStatisticLotTypeEnum[keyof typeof BiliLotStatisticLotTypeEnum];
 
 /**
  * BiliLotStatisticLotteryResultResp
@@ -257,13 +377,87 @@ export type BiliLotStatisticLotteryResultResp = {
 
 /**
  * BiliLotStatisticRankDateTypeEnum
+ *
+ * 枚举选项：
+ * - month: month
+ * - pre_month: pre_month
+ * - year: year
+ * - pre_year: pre_year
+ * - total: total
  */
-export type BiliLotStatisticRankDateTypeEnum = 'month' | 'pre_month' | 'year' | 'pre_year' | 'total';
+export const BiliLotStatisticRankDateTypeEnum = {
+    /**
+     * month
+     */
+    MONTH: 'month',
+    /**
+     * pre_month
+     */
+    PRE_MONTH: 'pre_month',
+    /**
+     * year
+     */
+    YEAR: 'year',
+    /**
+     * pre_year
+     */
+    PRE_YEAR: 'pre_year',
+    /**
+     * total
+     */
+    TOTAL: 'total'
+} as const;
+
+/**
+ * BiliLotStatisticRankDateTypeEnum
+ *
+ * 枚举选项：
+ * - month: month
+ * - pre_month: pre_month
+ * - year: year
+ * - pre_year: pre_year
+ * - total: total
+ */
+export type BiliLotStatisticRankDateTypeEnum = typeof BiliLotStatisticRankDateTypeEnum[keyof typeof BiliLotStatisticRankDateTypeEnum];
 
 /**
  * BiliLotStatisticRankTypeEnum
+ *
+ * 枚举选项：
+ * - first: first
+ * - second: second
+ * - third: third
+ * - total: total
  */
-export type BiliLotStatisticRankTypeEnum = 'first' | 'second' | 'third' | 'total';
+export const BiliLotStatisticRankTypeEnum = {
+    /**
+     * first
+     */
+    FIRST: 'first',
+    /**
+     * second
+     */
+    SECOND: 'second',
+    /**
+     * third
+     */
+    THIRD: 'third',
+    /**
+     * total
+     */
+    TOTAL: 'total'
+} as const;
+
+/**
+ * BiliLotStatisticRankTypeEnum
+ *
+ * 枚举选项：
+ * - first: first
+ * - second: second
+ * - third: third
+ * - total: total
+ */
+export type BiliLotStatisticRankTypeEnum = typeof BiliLotStatisticRankTypeEnum[keyof typeof BiliLotStatisticRankTypeEnum];
 
 /**
  * BiliUserInfoSimple
@@ -485,9 +679,35 @@ export type CommonLotteryResp = {
 /**
  * CrawlerHealthStatus
  *
- * 爬虫健康状态枚举
+ * 枚举选项：
+ * - NORMAL: normal
+ * - STUCK: stuck
+ * - STOPPED: stopped
  */
-export type CrawlerHealthStatus = 'normal' | 'stuck' | 'stopped';
+export const CrawlerHealthStatus = {
+    /**
+     * NORMAL
+     */
+    NORMAL: 'normal',
+    /**
+     * STUCK
+     */
+    STUCK: 'stuck',
+    /**
+     * STOPPED
+     */
+    STOPPED: 'stopped'
+} as const;
+
+/**
+ * CrawlerHealthStatus
+ *
+ * 枚举选项：
+ * - NORMAL: normal
+ * - STUCK: stuck
+ * - STOPPED: stopped
+ */
+export type CrawlerHealthStatus = typeof CrawlerHealthStatus[keyof typeof CrawlerHealthStatus];
 
 /**
  * CustomBaseModelHashable
@@ -1010,9 +1230,41 @@ export type LotteryArticleResp = {
 /**
  * LotteryDataSortEnum
  *
- * 抽奖数据排序字段枚举（用于预约/官方/充电/话题抽奖）
+ * 枚举选项：
+ * - lottery_time: lottery_time
+ * - participants: participants
+ * - first_prize: first_prize
+ * - created_at: created_at
  */
-export type LotteryDataSortEnum = 'lottery_time' | 'participants' | 'first_prize' | 'created_at';
+export const LotteryDataSortEnum = {
+    /**
+     * lottery_time
+     */
+    LOTTERY_TIME: 'lottery_time',
+    /**
+     * participants
+     */
+    PARTICIPANTS: 'participants',
+    /**
+     * first_prize
+     */
+    FIRST_PRIZE: 'first_prize',
+    /**
+     * created_at
+     */
+    CREATED_AT: 'created_at'
+} as const;
+
+/**
+ * LotteryDataSortEnum
+ *
+ * 枚举选项：
+ * - lottery_time: lottery_time
+ * - participants: participants
+ * - first_prize: first_prize
+ * - created_at: created_at
+ */
+export type LotteryDataSortEnum = typeof LotteryDataSortEnum[keyof typeof LotteryDataSortEnum];
 
 /**
  * LotteryFilterParamsResp
@@ -1127,9 +1379,41 @@ export type OfficialLotExtraInfoResp = {
 /**
  * OfficialLotType
  *
- * 官方抽奖类型枚举
+ * 枚举选项：
+ * - reserve_lot: 预约抽奖
+ * - charge_lot: 充电抽奖
+ * - official_lot: 官方抽奖
+ * - lot_dyn_origin_dyn: 抽奖动态的源动态
  */
-export type OfficialLotType = '预约抽奖' | '充电抽奖' | '官方抽奖' | '抽奖动态的源动态';
+export const OfficialLotType = {
+    /**
+     * reserve_lot
+     */
+    RESERVE_LOT: '预约抽奖',
+    /**
+     * charge_lot
+     */
+    CHARGE_LOT: '充电抽奖',
+    /**
+     * official_lot
+     */
+    OFFICIAL_LOT: '官方抽奖',
+    /**
+     * lot_dyn_origin_dyn
+     */
+    LOT_DYN_ORIGIN_DYN: '抽奖动态的源动态'
+} as const;
+
+/**
+ * OfficialLotType
+ *
+ * 枚举选项：
+ * - reserve_lot: 预约抽奖
+ * - charge_lot: 充电抽奖
+ * - official_lot: 官方抽奖
+ * - lot_dyn_origin_dyn: 抽奖动态的源动态
+ */
+export type OfficialLotType = typeof OfficialLotType[keyof typeof OfficialLotType];
 
 /**
  * OfficialLotteryResp
@@ -1177,16 +1461,50 @@ export type OfficialLotteryResp = {
 /**
  * OthersLotDynSortEnum
  *
- * 第三方抽奖动态排序字段枚举
+ * 枚举选项：
+ * - pub_time: pubTime
+ * - created_at: created_at
  */
-export type OthersLotDynSortEnum = 'pubTime' | 'created_at';
+export const OthersLotDynSortEnum = { /**
+     * pub_time
+     */
+    PUB_TIME: 'pubTime', /**
+     * created_at
+     */
+    CREATED_AT: 'created_at' } as const;
+
+/**
+ * OthersLotDynSortEnum
+ *
+ * 枚举选项：
+ * - pub_time: pubTime
+ * - created_at: created_at
+ */
+export type OthersLotDynSortEnum = typeof OthersLotDynSortEnum[keyof typeof OthersLotDynSortEnum];
 
 /**
  * OthersLotDynSortOrderEnum
  *
- * 第三方抽奖动态排序方向枚举
+ * 枚举选项：
+ * - asc: asc
+ * - desc: desc
  */
-export type OthersLotDynSortOrderEnum = 'asc' | 'desc';
+export const OthersLotDynSortOrderEnum = { /**
+     * asc
+     */
+    ASC: 'asc', /**
+     * desc
+     */
+    DESC: 'desc' } as const;
+
+/**
+ * OthersLotDynSortOrderEnum
+ *
+ * 枚举选项：
+ * - asc: asc
+ * - desc: desc
+ */
+export type OthersLotDynSortOrderEnum = typeof OthersLotDynSortOrderEnum[keyof typeof OthersLotDynSortOrderEnum];
 
 /**
  * ProgressStatusResp
@@ -1338,6 +1656,12 @@ export type ReserveInfoResp = {
      * App Sche
      */
     app_sche: string;
+    /**
+     * Lottery Id
+     *
+     * lotdata 主键 lottery_id（对外互动资源 ID）
+     */
+    lottery_id?: number | null;
     raw: TUpReserveRelationInfoResp | null;
     /**
      * Dynamic Id
@@ -1549,16 +1873,83 @@ export type SchedulerJobDetailModel = {
 /**
  * ScrapyTypeEnum
  *
- * 可查询的爬虫类型枚举，对应 get_scrapy_status 的合法入参
+ * 枚举选项：
+ * - DYN: dyn
+ * - TOPIC: topic
+ * - RESERVE: reserve
+ * - OTHER_SPACE: other_space
+ * - OTHER_DYN: other_dyn
+ * - REFRESH_BILI_OFFICIAL: refresh_bili_official
+ * - REFRESH_BILI_RESERVE: refresh_bili_reserve
  */
-export type ScrapyTypeEnum = 'dyn' | 'topic' | 'reserve' | 'other_space' | 'other_dyn' | 'refresh_bili_official' | 'refresh_bili_reserve';
+export const ScrapyTypeEnum = {
+    /**
+     * DYN
+     */
+    DYN: 'dyn',
+    /**
+     * TOPIC
+     */
+    TOPIC: 'topic',
+    /**
+     * RESERVE
+     */
+    RESERVE: 'reserve',
+    /**
+     * OTHER_SPACE
+     */
+    OTHER_SPACE: 'other_space',
+    /**
+     * OTHER_DYN
+     */
+    OTHER_DYN: 'other_dyn',
+    /**
+     * REFRESH_BILI_OFFICIAL
+     */
+    REFRESH_BILI_OFFICIAL: 'refresh_bili_official',
+    /**
+     * REFRESH_BILI_RESERVE
+     */
+    REFRESH_BILI_RESERVE: 'refresh_bili_reserve'
+} as const;
+
+/**
+ * ScrapyTypeEnum
+ *
+ * 枚举选项：
+ * - DYN: dyn
+ * - TOPIC: topic
+ * - RESERVE: reserve
+ * - OTHER_SPACE: other_space
+ * - OTHER_DYN: other_dyn
+ * - REFRESH_BILI_OFFICIAL: refresh_bili_official
+ * - REFRESH_BILI_RESERVE: refresh_bili_reserve
+ */
+export type ScrapyTypeEnum = typeof ScrapyTypeEnum[keyof typeof ScrapyTypeEnum];
 
 /**
  * SortOrderEnum
  *
- * 通用排序方向枚举
+ * 枚举选项：
+ * - asc: asc
+ * - desc: desc
  */
-export type SortOrderEnum = 'asc' | 'desc';
+export const SortOrderEnum = { /**
+     * asc
+     */
+    ASC: 'asc', /**
+     * desc
+     */
+    DESC: 'desc' } as const;
+
+/**
+ * SortOrderEnum
+ *
+ * 枚举选项：
+ * - asc: asc
+ * - desc: desc
+ */
+export type SortOrderEnum = typeof SortOrderEnum[keyof typeof SortOrderEnum];
 
 /**
  * StandardResponse[AddDynamicLotteryResp]
@@ -2247,9 +2638,77 @@ export type TUpReserveRelationInfoResp = {
 /**
  * TimePresetEnum
  *
- * 时间快捷筛选枚举（值如 '1d'/'3d' 等，handler 会转为时间戳）
+ * 枚举选项：
+ * - last_1_day: 1d
+ * - last_3_days: 3d
+ * - last_5_days: 5d
+ * - last_7_days: 7d
+ * - last_14_days: 14d
+ * - last_30_days: 30d
+ * - last_60_days: 60d
+ * - last_90_days: 90d
+ * - last_180_days: 180d
+ * - last_365_days: 365d
  */
-export type TimePresetEnum = '1d' | '3d' | '5d' | '7d' | '14d' | '30d' | '60d' | '90d' | '180d' | '365d';
+export const TimePresetEnum = {
+    /**
+     * last_1_day
+     */
+    LAST_1_DAY: '1d',
+    /**
+     * last_3_days
+     */
+    LAST_3_DAYS: '3d',
+    /**
+     * last_5_days
+     */
+    LAST_5_DAYS: '5d',
+    /**
+     * last_7_days
+     */
+    LAST_7_DAYS: '7d',
+    /**
+     * last_14_days
+     */
+    LAST_14_DAYS: '14d',
+    /**
+     * last_30_days
+     */
+    LAST_30_DAYS: '30d',
+    /**
+     * last_60_days
+     */
+    LAST_60_DAYS: '60d',
+    /**
+     * last_90_days
+     */
+    LAST_90_DAYS: '90d',
+    /**
+     * last_180_days
+     */
+    LAST_180_DAYS: '180d',
+    /**
+     * last_365_days
+     */
+    LAST_365_DAYS: '365d'
+} as const;
+
+/**
+ * TimePresetEnum
+ *
+ * 枚举选项：
+ * - last_1_day: 1d
+ * - last_3_days: 3d
+ * - last_5_days: 5d
+ * - last_7_days: 7d
+ * - last_14_days: 14d
+ * - last_30_days: 30d
+ * - last_60_days: 60d
+ * - last_90_days: 90d
+ * - last_180_days: 180d
+ * - last_365_days: 365d
+ */
+export type TimePresetEnum = typeof TimePresetEnum[keyof typeof TimePresetEnum];
 
 /**
  * ValidationError
@@ -2335,8 +2794,48 @@ export type WorkerModel = {
 
 /**
  * WorkerStatus
+ *
+ * 枚举选项：
+ * - complete: 1
+ * - nullData: 2
+ * - pending: 3
+ * - fail: 4
+ * - timeoutError: 5
  */
-export type WorkerStatus = 1 | 2 | 3 | 4 | 5;
+export const WorkerStatus = {
+    /**
+     * complete
+     */
+    COMPLETE: 1,
+    /**
+     * nullData
+     */
+    NULL_DATA: 2,
+    /**
+     * pending
+     */
+    PENDING: 3,
+    /**
+     * fail
+     */
+    FAIL: 4,
+    /**
+     * timeoutError
+     */
+    TIMEOUT_ERROR: 5
+} as const;
+
+/**
+ * WorkerStatus
+ *
+ * 枚举选项：
+ * - complete: 1
+ * - nullData: 2
+ * - pending: 3
+ * - fail: 4
+ * - timeoutError: 5
+ */
+export type WorkerStatus = typeof WorkerStatus[keyof typeof WorkerStatus];
 
 /**
  * lotteryArticleReq
@@ -3160,6 +3659,12 @@ export type ReserveInfoRespWritable = {
      * App Sche
      */
     app_sche: string;
+    /**
+     * Lottery Id
+     *
+     * lotdata 主键 lottery_id（对外互动资源 ID）
+     */
+    lottery_id?: number | null;
     raw: TUpReserveRelationInfoRespWritable | null;
     /**
      * Dynamic Id

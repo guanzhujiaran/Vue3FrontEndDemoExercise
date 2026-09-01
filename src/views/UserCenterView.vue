@@ -1,216 +1,36 @@
-<script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { useRoute } from 'vue-router'
-import { useI18n } from 'vue-i18n'
-import { ElIcon } from 'element-plus'
-import { BiliErrorRouteToTxt } from '@/assets/text/BiliErrorTxt.ts'
-import { KeysEnum, useInject } from '@/models/base/provide_model.ts'
-import type { UserNavModel } from '@/models/user/user_model.ts'
-import { user_center_routes } from '@/router'
-import router from '@/router'
-import { RouteName } from '@/models/router'
-import { Fold, Expand, Avatar } from '@element-plus/icons-vue'
-
-const { t } = useI18n()
-const userInfo = useInject(KeysEnum.BiliUser) as Ref<UserNavModel>
-const use_route = useRoute()
-
-const isLoggedIn = computed(() => userInfo.value.uid && userInfo.value.uid !== '0')
-
-// 添加侧边栏展开/收起状态
-const isSidebarCollapsed = ref(false)
-
-// 屏幕宽度检测
-const screenWidth = ref(window.innerWidth)
-const isSmallScreen = computed(() => screenWidth.value <= 768)
-
-// 响应式侧边栏状态
-const responsiveSidebarCollapsed = computed(() => {
-  // 在「用户资料设置」页面强制展开侧边栏，不允许收缩
-  if (use_route.name === RouteName.USER_INFO_CONFIG) {
-    return false
-  }
-  // 在小屏幕下，使用手动控制的状态
-  // 在大屏幕下，如果手动收起，则使用收起状态
-  return isSmallScreen.value ? isSidebarCollapsed.value : isSidebarCollapsed.value
-})
-
-// 切换侧边栏状态
-const toggleSidebar = () => {
-  isSidebarCollapsed.value = !isSidebarCollapsed.value
-}
-
-// 监听窗口大小变化
-const handleResize = () => {
-  screenWidth.value = window.innerWidth
-  
-  // 在小屏幕时自动收起侧边栏
-  if (isSmallScreen.value) {
-    isSidebarCollapsed.value = true
-  } else {
-    // 大屏幕时恢复默认展开状态
-    isSidebarCollapsed.value = false
-  }
-}
-
-onMounted(() => {
-  window.addEventListener('resize', handleResize)
-  // 初始化时检查屏幕大小
-  handleResize()
-})
-
-onUnmounted(() => {
-  window.removeEventListener('resize', handleResize)
-})
-
-// 菜单项点击处理函数
-const handleMenuClick = (child: any) => {
-  if (child.name) {
-    router.push({ name: child.name })
-  } else if (child.path) {
-    router.push(child.path)
-  }
-}
-
-const menuDefaultActive = computed(() => {
-  // 如果有路由名称，直接使用
-  if (use_route.name) {
-    const matchedRoute = user_center_routes.find((route) => route.name === use_route.name)
-    if (matchedRoute) {
-      return matchedRoute.name as string
-    }
-  }
-
-  // 如果是根路径，返回默认首页路由名
-  if (use_route.path === '/app/user-center/') {
-    const defaultRoute = user_center_routes.find((route) => route.path === '')
-    return (defaultRoute?.name as string) || user_center_routes[0]?.name
-  }
-
-  return user_center_routes[0]?.name
-})
-
-const getCurrentRouteTitle = computed(() => {
-  if (!use_route.name) return t('user.browserMgmt')
-
-  // 首先尝试直接匹配路由名称
-  const currentRoute = user_center_routes.find((route) => route.name === use_route.name)
-  if (currentRoute?.meta?.title) {
-    return currentRoute.meta.title
-  }
-
-  // 如果直接匹配失败，尝试匹配RouteName枚举值
-  const matchedRoute = user_center_routes.find(
-    (route) =>
-      route.name === RouteName.USER_CENTER_DASHBOARD && use_route.path === '/app/user-center/'
-  )
-  if (matchedRoute?.meta?.title) {
-    return matchedRoute.meta.title
-  }
-
-  // 最后检查是否是根路径，返回默认首页标题
-  if (use_route.path === '/app/user-center/') {
-    const defaultRoute = user_center_routes.find((route) => route.path === '')
-    return defaultRoute?.meta?.title || t('user.browserMgmtHome')
-  }
-
-  return use_route.name as string
-})
-const env = import.meta.env
-const mainContentRef = ref<HTMLElement | null>(null)
-const headerRef = ref<HTMLElement | null>(null)
-
-const scrollbarHeight = computed(() => {
-  if (!mainContentRef.value || !headerRef.value) return 0
-  return mainContentRef.value.clientHeight - headerRef.value.clientHeight
-})
-</script>
-
 <template>
-  <FlexContainer>
-    <el-container v-if="isLoggedIn">
-      <div class="user-center-layout h-screen flex w-full" style="height: calc(100vh - 60px - 40px); overflow: hidden;">
-        <!-- 侧边栏 -->
-        <el-aside class="sidebar transition-all duration-300 ease-in-out p-0" :class="{ 'sidebar-collapsed': responsiveSidebarCollapsed, 'sidebar-small': isSmallScreen }">
-          <div class="sidebar-content h-full">
-            <el-menu
-              :defaultActive="menuDefaultActive"
-              class="sidebar-menu h-full border-r border-[var(--el-border-color-light)] text-lg"
-              :collapse="responsiveSidebarCollapsed"
-            >
-              <div class="sidebar-toggle-wrapper flex p-2">
-                <el-button
-                  link
-                  :icon="responsiveSidebarCollapsed ? Expand : Fold"
-                  @click="toggleSidebar"
-                  class="sidebar-toggle-button"
-                  size="large"
-                ></el-button>
-              </div>
-
-              <div
-                class="user-info hover:cursor-pointer mb-5 flex items-center border-b border-border px-5 pb-5 transition-all duration-300"
-                @click="router.push({ name: RouteName.USER_CENTER })"
-              >
-                <el-avatar :src="userInfo.face || undefined" :icon="Avatar" />
-                <div class="user-details ml-3">
-                  <el-text class="user-name text-base font-semibold text-[var(--el-text-color-primary)]" tag="div">{{ userInfo.user_name }}</el-text>
-                  <div class="user-role mt-1 text-xs text-text-secondary">
-                    {{ userInfo.role === 'root' ? t('user.admin') : t('user.normalUser') }}
-                  </div>
-                </div>
-              </div>
-
-              <div
-                v-for="(child, index) in user_center_routes"
-                :key="index"
-                @click="handleMenuClick(child)"
-                class="menu-item-wrapper cursor-pointer overflow-hidden mb-3 transition-all duration-300 ease-in-out"
-              >
-                <el-menu-item
-                  :index="child.name"
-                  :title="child.meta.description || child.meta.title"
-                  class="py-3"
-                >
-                  <el-icon v-if="child.meta.icon">
-                    <component :is="child.meta.icon" />
-                  </el-icon>
-                  <el-text class="transition-all duration-300 text-lg" tag="span">{{ child.meta.title }}</el-text>
-                </el-menu-item>
-              </div>
-            </el-menu>
-          </div>
-        </el-aside>
-        <!-- 主内容区 -->
-        <el-main class="main-content transition-all duration-300 ease-in-out p-0 pl-1 sm:pl-2 " style="overflow: hidden; display: flex; flex-direction: column;" ref="mainContentRef">
-          <el-header class="content-header transition-all duration-300" style="height: 60px; display: flex; align-items: center; padding: 0 20px; background-color: var(--el-bg-color-page); border-bottom: 1px solid var(--el-border-color-light);" ref="headerRef">
-            <h2>
-              <el-text tag="h2">{{ getCurrentRouteTitle }}</el-text>
-            </h2>
-          </el-header>
-          <el-scrollbar
-            :height="scrollbarHeight"
-            wrap-style="display:flex;"
-            view-style="flex-grow:1;"
-          >
-            <div class="content-body transition-all duration-300 p-1! sm:p-2!" style="background-color: var(--el-bg-color); min-height: 100%;">
-              <RouterView v-slot="{ Component, route }">
-                <div v-if="Component">
-                  <transition name="slide-fade">
-                    <keep-alive>
-                      <component :is="Component" :key="route.path" />
-                    </keep-alive>
-                  </transition>
-                </div>
-                <div v-else class="empty-state p-5 text-center text-text-secondary">
-                  <el-text class="my-4 text-base" tag="p">{{ t('user.notFound', { path: route.path, name: route.name }) }}</el-text>
-                </div>
-              </RouterView>
-            </div>
-          </el-scrollbar>
-        </el-main>
-      </div>
-    </el-container>
-    <BiliErrorRouteTo v-else :detail="BiliErrorRouteToTxt.not_logged_in" />
-  </FlexContainer>
+  <div class="user-center h-full">
+    <BiliSideNavLayout :nav-groups="navGroups">
+      <template #default>
+        <router-view v-slot="{ Component }">
+          <component :is="Component" />
+        </router-view>
+      </template>
+    </BiliSideNavLayout>
+  </div>
 </template>
+
+<script setup lang="ts">
+import { computed } from 'vue'
+import { User, HomeFilled, Tickets, CircleClose, Warning } from '@element-plus/icons-vue'
+import { RouteName } from '@/models/router/index.ts'
+import type { BiliSideNavGroup } from '@/components/CommonCompo/Bili-Container-Compo/BiliSideNavLayout.vue'
+import BiliSideNavLayout from '@/components/CommonCompo/Bili-Container-Compo/BiliSideNavLayout.vue'
+
+defineOptions({ name: 'UserCenterView' })
+
+// 复用通用侧边导航布局：菜单项 name 必须对应已注册子路由的 name（RouteName 枚举值），
+// 由布局内部负责跳转与高亮。
+const navGroups = computed<BiliSideNavGroup[]>(() => [
+  {
+    title: '个人中心',
+    items: [
+      { name: RouteName.USER_CENTER_DASHBOARD, title: '仪表盘', icon: HomeFilled },
+      { name: RouteName.USER_INFO_CONFIG, title: '个人资料', icon: User },
+      { name: RouteName.USER_CENTER_RECORDS, title: '我的记录', icon: Tickets },
+      { name: RouteName.USER_CENTER_BLOCKLIST, title: '黑名单', icon: CircleClose },
+      { name: RouteName.USER_CENTER_DEACTIVATE, title: '账号注销', icon: Warning }
+    ]
+  }
+])
+</script>

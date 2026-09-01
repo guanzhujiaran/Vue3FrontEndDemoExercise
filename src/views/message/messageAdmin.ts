@@ -1,11 +1,11 @@
-import type { AdminItem } from '@/api/notify/hey-api/types.gen'
+import type { AdminItem } from '@/api/community/hey-api'
 import type {
   PptrUserSearchItem,
   PptrUserSearchResult,
   PptrUserLevelInfo,
   PptrUserVipInfo,
   PptrUserRoleInfo
-} from '@/api/notify/hey-api'
+} from '@/api/community/hey-api'
 import userApi from '@/api/user/user_api'
 
 /** 单个管理员记录（与后端 AdminItem 对齐） */

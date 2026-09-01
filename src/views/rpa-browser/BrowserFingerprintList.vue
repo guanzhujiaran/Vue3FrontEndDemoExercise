@@ -6,10 +6,10 @@ import { ElMessageBox } from 'element-plus'
 import FlexContainer from '@/components/CommonCompo/Bili-Container-Compo/FlexContainer.vue'
 import CenteredContainer from '@/components/CommonCompo/Bili-Container-Compo/CenteredContainer.vue'
 import BiliPageHeader from '@/components/CommonCompo/Bili-Container-Compo/BiliPageHeader.vue'
-import { listFingerprintRouterApiV1RpaBrowserListFingerprintPost, deleteFingerprintRouterApiV1RpaBrowserDeleteFingerprintPost, renameFingerprintRouterApiV1RpaBrowserRenameFingerprintPost } from '@/api/browser/hey-api'
+import { 浏览器指纹管理Service } from '@/api/browser/hey-api'
 import { useUserNavStore } from '@/stores/user_nav'
 import { businessHandler } from '@/utils/businessHandler'
-import type { BrowserFingerprintListParams } from '@/api/browser/hey-api/types.gen'
+import type { BrowserFingerprintListParams } from '@/api/browser/hey-api'
 import { RouteName } from '@/models/router/index.ts'
 
 interface UserBrowserInfo {
@@ -52,7 +52,7 @@ const loadFingerprintList = async () => {
 
   // businessHandler 直接接收 hey-api 返回的 {code, data, msg}（responseStyle='data' 已解包）
   const result = await businessHandler<{ items?: UserBrowserInfo[]; total?: number }>(
-    listFingerprintRouterApiV1RpaBrowserListFingerprintPost({
+    浏览器指纹管理Service.listFingerprintRouterApiV1RpaBrowserListFingerprintPost({
       body: params,
       headers: {
         'x-bili-mid': userNavStore.user_nav.uid,
@@ -86,7 +86,7 @@ const handleDelete = async (browserId: string | number) => {
   }
 
   await businessHandler(
-    deleteFingerprintRouterApiV1RpaBrowserDeleteFingerprintPost({
+    浏览器指纹管理Service.deleteFingerprintRouterApiV1RpaBrowserDeleteFingerprintPost({
       query: { browser_id: String(browserId) },
       headers: {
         'x-bili-mid': userNavStore.user_nav.uid,
@@ -113,7 +113,7 @@ const handleRename = async (browserId: string | number, currentName: string | nu
   }
 
   await businessHandler(
-    renameFingerprintRouterApiV1RpaBrowserRenameFingerprintPost({
+    浏览器指纹管理Service.renameFingerprintRouterApiV1RpaBrowserRenameFingerprintPost({
       body: { custom_name: newName },
       query: { browser_id: String(browserId) },
       headers: {

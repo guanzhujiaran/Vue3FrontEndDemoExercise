@@ -6,7 +6,7 @@ import { useDebounceFn } from '@vueuse/core'
 import { ElMessageBox, ElDialog } from 'element-plus'
 import BiliPageHeader from '@/components/CommonCompo/Bili-Container-Compo/BiliPageHeader.vue'
 import FlexContainer from '@/components/CommonCompo/Bili-Container-Compo/FlexContainer.vue'
-import { readFingerprintRouterApiV1RpaBrowserReadFingerprintPost, createBrowserSessionApiV1RpaBrowserControlCreatePost, closeBrowserSessionApiV1RpaBrowserControlClosePost, browserSessionStatusApiV1RpaBrowserControlStatusPost, getWebrtcStatusApiV1RpaBrowserControlWebrtcStatusPost, executeActionApiV1RpaBrowserControlActionsExecutePost, getPageInfoApiV1RpaBrowserControlOperationGetPageInfoPost } from '@/api/browser/hey-api'
+import { WebRtc视频流Service, 执行引擎Service, 浏览器会话控制Service, 浏览器指纹管理Service, 自动化控制Service } from '@/api/browser/hey-api'
 import { useUserNavStore } from '@/stores/user_nav'
 import biliMessage from '@/utils/message'
 import { businessHandler } from '@/utils/businessHandler'
@@ -114,13 +114,9 @@ const loadBrowserInfo = async () => {
   }
 
   const result = await businessHandler<BrowserInfo>(
-    readFingerprintRouterApiV1RpaBrowserReadFingerprintPost({
+    浏览器指纹管理Service.readFingerprintRouterApiV1RpaBrowserReadFingerprintPost({
       query: { browser_id: browserId },
-      headers: {
-        'x-bili-mid': userNavStore.user_nav.uid,
-        'x-bili-level': String(userNavStore.user_nav.level_info.current_level)
-      }
-    }) as any,
+          }) as any,
     { successMessage: '', errorMessage: '获取指纹信息失败', showSuccessToast: false }
   )
 
@@ -138,9 +134,8 @@ const handleStartSession = async () => {
   onSessionStarting()
   
   try {
-    const response = await createBrowserSessionApiV1RpaBrowserControlCreatePost({
+    const response = await 浏览器会话控制Service.createBrowserSessionApiV1RpaBrowserControlCreatePost({
       query: { browser_id: browserId },
-      headers: userNavStore.user_header,
       timeout: 300000 // 5分钟超时，浏览器启动可能需要较长时间
     }) as any  // responseStyle='data' → 直接返回 {code, data, msg}
 
@@ -180,13 +175,9 @@ const handleStopSession = async () => {
       type: 'warning'
     })
 
-    const response = await closeBrowserSessionApiV1RpaBrowserControlClosePost({
+    const response = await 浏览器会话控制Service.closeBrowserSessionApiV1RpaBrowserControlClosePost({
       query: { browser_id: browserId },
-      headers: {
-        'x-bili-mid': userNavStore.user_nav.uid,
-        'x-bili-level': userNavStore.user_nav.level_info.current_level
-      }
-    }) as any  // responseStyle='data' → 直接返回 {code, data, msg}
+          }) as any  // responseStyle='data' → 直接返回 {code, data, msg}
 
     if (response?.code === 0) {
       biliMessage.success('会话已关闭')
@@ -213,13 +204,9 @@ const handleToggleStream = () => {
 
 const loadBrowserSessionStatus = async () => {
   try {
-    const response = await browserSessionStatusApiV1RpaBrowserControlStatusPost({
+    const response = await 浏览器会话控制Service.browserSessionStatusApiV1RpaBrowserControlStatusPost({
       query: { browser_id: browserId },
-      headers: {
-        'x-bili-mid': userNavStore.user_nav.uid,
-        'x-bili-level': userNavStore.user_nav.level_info.current_level
-      }
-    })
+          })
 
     onStatusResponse(response)
 
@@ -236,13 +223,9 @@ const loadBrowserSessionStatus = async () => {
 
 const loadWebrtcStatus = async () => {
   try {
-    const response: any = await getWebrtcStatusApiV1RpaBrowserControlWebrtcStatusPost({
+    const response: any = await WebRtc视频流Service.getWebrtcStatusApiV1RpaBrowserControlWebrtcStatusPost({
       query: { browser_id: browserId },
-      headers: {
-        'x-bili-mid': userNavStore.user_nav.uid,
-        'x-bili-level': userNavStore.user_nav.level_info.current_level
-      }
-    })  // responseStyle='data' → 直接返回 {code, data, msg}
+          })  // responseStyle='data' → 直接返回 {code, data, msg}
 
     if (response?.code === 0 && response?.data) {
       const data = response.data
@@ -281,8 +264,7 @@ const getHeaders = () => ({
 // 调用 get_page_info API 获取页面信息
 const fetchPagesList = async () => {
   try {
-    const response: any = await getPageInfoApiV1RpaBrowserControlOperationGetPageInfoPost({
-      headers: getHeaders(),
+    const response: any = await 自动化控制Service.getPageInfoApiV1RpaBrowserControlOperationGetPageInfoPost({
       query: { browser_id: browserId },
       body: {}
     })  // responseStyle='data' → 直接返回 {code, data, msg}
@@ -305,9 +287,8 @@ const fetchPagesList = async () => {
 
 const executeAction = async (actionId: string, params: Record<string, unknown> = {}, pageIndex?: number) => {
   try {
-    const response: any = await executeActionApiV1RpaBrowserControlActionsExecutePost({
+    const response: any = await 执行引擎Service.executeActionApiV1RpaBrowserControlActionsExecutePost({
       query: { browser_id: browserId },
-      headers: getHeaders(),
       body: {
         action_id: actionId,
         params,
@@ -372,9 +353,8 @@ const handleScreenshot = async () => {
   executingScreenshot.value = true
 
   try {
-    const response: any = await executeActionApiV1RpaBrowserControlActionsExecutePost({
+    const response: any = await 执行引擎Service.executeActionApiV1RpaBrowserControlActionsExecutePost({
       query: { browser_id: browserId },
-      headers: getHeaders(),
       body: { action_id: 'screenshot', params: {} }
     })  // responseStyle='data' → 直接返回 {code, data, msg}
 

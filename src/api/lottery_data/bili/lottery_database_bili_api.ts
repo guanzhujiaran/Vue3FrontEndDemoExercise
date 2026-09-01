@@ -6,25 +6,7 @@
  * @FilePath: \Vue3FrontEndDemoExercise\src\api\lottery_data\bili\lottery_database_bili_api.ts
  * @Description: B 站抽奖数据库 API 接口定义（基于 hey-api 生成的客户端）
  */
-import {
-  getReserveLotteryApiV1LotteryDatabaseBiliGetReserveLotteryPost,
-  getOfficialLotteryApiV1LotteryDatabaseBiliGetOfficialLotteryPost,
-  getChargeLotteryApiV1LotteryDatabaseBiliGetChargeLotteryPost,
-  getLiveLotteryApiV1LotteryDatabaseBiliGetLiveLotteryPost,
-  getTopicLotteryApiV1LotteryDatabaseBiliGetTopicLotteryPost,
-  getAllLotteryApiV1LotteryDatabaseBiliGetAllLotteryPost,
-  addDynamicLotteryApiV1LotteryDatabaseBiliAddDynamicLotteryPost,
-  bulkAddDynamicLotteryApiV1LotteryDatabaseBiliBulkAddDynamicLotteryPost,
-  addTopicLotteryApiV1LotteryDatabaseBiliAddTopicLotteryPost,
-  bulkAddTopicLotteryApiV1LotteryDatabaseBiliBulkAddTopicLotteryPost,
-  addOthersLotDynApiV1LotteryDatabaseBiliAddOthersLotDynPost,
-  bulkAddOthersLotDynApiV1LotteryDatabaseBiliBulkAddOthersLotDynPost,
-  searchLotteryByKeywordApiV1LotteryDatabaseBiliSearchLotteryByKeywordPost,
-  getOthersLotDynListApiV1LotteryDatabaseBiliGetOthersLotDynListPost,
-  getLotteryFilterParamsApiV1LotteryDatabaseBiliGetLotteryFilterParamsGet,
-  getSingleScrapyStatusApiV1LotteryDatabaseBiliGetSingleScrapyStatusPost,
-  getAllLotScrapyStatusApiV1LotteryDatabaseBiliGetAllLotScrapyStatusGet,
-} from '@/api/bili_lottery_data/hey-api'
+import { V1BiliService } from '@/api/bili_lottery_data/hey-api'
 import type {
   LotteryAdvancedQueryParams,
   LotteryPaginationParams,
@@ -37,10 +19,16 @@ import type {
   OthersLotDynSortEnum,
   OthersLotDynSortOrderEnum,
   TimePresetEnum,
-  LotExtraInfoResp,
-  OthersLotPrizeInfo,
+  CommonLotExtraInfoResp,
   ScrapyTypeEnum,
 } from '@/api/bili_lottery_data/hey-api'
+import type { OthersLotPrizeInfo } from '@/models/api/lottery/lottery_card'
+
+export type {
+  LotteryPaginationParams,
+  LotteryAdvancedQueryParams,
+  LotterySearchPaginationParams,
+}
 import type { RootObject } from '@/models/api/base_model.ts'
 import type { LotDataView, ScrapyStatusResp, ScrapyStatus, OfficialScrapyStatus } from '@/models/api/lottery/lotdata'
 
@@ -183,7 +171,7 @@ export interface OthersLotDynItem {
   dynId_str?: string
   up_uid_str?: string | null
   prize_info?: OthersLotPrizeInfo | null
-  extra_info?: LotExtraInfoResp | null
+  extra_info?: CommonLotExtraInfoResp | null
   extra_fields?: Record<string, any> | null
 }
 
@@ -234,7 +222,7 @@ class LotteryDataBaseApi {
   async getReserveLottery(
     params: LotteryAdvancedQueryParams
   ): Promise<RootObject<LotDataView<ReserveInfoResp>>> {
-    const res = await getReserveLotteryApiV1LotteryDatabaseBiliGetReserveLotteryPost({
+    const res = await V1BiliService.getReserveLotteryApiV1LotteryDatabaseBiliGetReserveLotteryPost({
       body: params as any,
     })
     return res as any
@@ -243,7 +231,7 @@ class LotteryDataBaseApi {
   async getOfficialLottery(
     params: LotteryAdvancedQueryParams
   ): Promise<RootObject<LotDataView<OfficialLotteryResp>>> {
-    const res = await getOfficialLotteryApiV1LotteryDatabaseBiliGetOfficialLotteryPost({
+    const res = await V1BiliService.getOfficialLotteryApiV1LotteryDatabaseBiliGetOfficialLotteryPost({
       body: params as any,
     })
     return res as any
@@ -252,7 +240,7 @@ class LotteryDataBaseApi {
   async getChargeLottery(
     params: LotteryAdvancedQueryParams
   ): Promise<RootObject<LotDataView<ChargeLotteryResp>>> {
-    const res = await getChargeLotteryApiV1LotteryDatabaseBiliGetChargeLotteryPost({
+    const res = await V1BiliService.getChargeLotteryApiV1LotteryDatabaseBiliGetChargeLotteryPost({
       body: params as any,
     })
     return res as any
@@ -261,7 +249,7 @@ class LotteryDataBaseApi {
   async getLiveLottery(
     params: LotteryAdvancedQueryParams
   ): Promise<RootObject<LotDataView<LiveLotteryResp>>> {
-    const res = await getLiveLotteryApiV1LotteryDatabaseBiliGetLiveLotteryPost({
+    const res = await V1BiliService.getLiveLotteryApiV1LotteryDatabaseBiliGetLiveLotteryPost({
       body: params as any,
     })
     return res as any
@@ -270,7 +258,7 @@ class LotteryDataBaseApi {
   async getTopicLottery(
     params: LotteryAdvancedQueryParams
   ): Promise<RootObject<LotDataView<TopicLotteryResp>>> {
-    const res = await getTopicLotteryApiV1LotteryDatabaseBiliGetTopicLotteryPost({
+    const res = await V1BiliService.getTopicLotteryApiV1LotteryDatabaseBiliGetTopicLotteryPost({
       body: params as any,
     })
     return res as any
@@ -284,7 +272,7 @@ class LotteryDataBaseApi {
     pub_time_start: number | null = null,
     pub_time_end: number | null = null,
   ): Promise<RootObject<AllLotteryResp>> {
-    const res = await getAllLotteryApiV1LotteryDatabaseBiliGetAllLotteryPost({
+    const res = await V1BiliService.getAllLotteryApiV1LotteryDatabaseBiliGetAllLotteryPost({
       query: {
         created_at_preset,
         created_at_start,
@@ -300,7 +288,7 @@ class LotteryDataBaseApi {
   // ==================== 提交抽奖数据 ====================
 
   async addDynamicLottery(dynamic_id_or_url: string): Promise<RootObject<AddDynamicLotteryResp>> {
-    const res = await addDynamicLotteryApiV1LotteryDatabaseBiliAddDynamicLotteryPost({
+    const res = await V1BiliService.addDynamicLotteryApiV1LotteryDatabaseBiliAddDynamicLotteryPost({
       body: { dynamic_id_or_url } as AddDynamicLotteryReq,
     })
     return res as any
@@ -309,14 +297,14 @@ class LotteryDataBaseApi {
   async bulkAddDynamicLottery(
     dynamic_id_or_urls: string[]
   ): Promise<RootObject<BulkAddDynamicLotteryResp[]>> {
-    const res = await bulkAddDynamicLotteryApiV1LotteryDatabaseBiliBulkAddDynamicLotteryPost({
+    const res = await V1BiliService.bulkAddDynamicLotteryApiV1LotteryDatabaseBiliBulkAddDynamicLotteryPost({
       body: { dynamic_id_or_urls } as BulkAddDynamicLotteryReq,
     })
     return res as any
   }
 
   async addTopicLottery(topic_id: string | number): Promise<RootObject<AddTopicLotteryResp>> {
-    const res = await addTopicLotteryApiV1LotteryDatabaseBiliAddTopicLotteryPost({
+    const res = await V1BiliService.addTopicLotteryApiV1LotteryDatabaseBiliAddTopicLotteryPost({
       body: { topic_id } as AddTopicLotteryReq,
     })
     return res as any
@@ -325,14 +313,14 @@ class LotteryDataBaseApi {
   async bulkAddTopicLottery(
     topic_ids: Array<string | number>
   ): Promise<RootObject<AddTopicLotteryResp[]>> {
-    const res = await bulkAddTopicLotteryApiV1LotteryDatabaseBiliBulkAddTopicLotteryPost({
+    const res = await V1BiliService.bulkAddTopicLotteryApiV1LotteryDatabaseBiliBulkAddTopicLotteryPost({
       body: { topic_ids } as BulkAddTopicLotteryReq,
     })
     return res as any
   }
 
   async addOthersLotDyn(dynamic_id_or_url: string): Promise<RootObject<AddDynamicLotteryResp>> {
-    const res = await addOthersLotDynApiV1LotteryDatabaseBiliAddOthersLotDynPost({
+    const res = await V1BiliService.addOthersLotDynApiV1LotteryDatabaseBiliAddOthersLotDynPost({
       body: { dynamic_id_or_url } as AddDynamicLotteryReq,
     })
     return res as any
@@ -341,7 +329,7 @@ class LotteryDataBaseApi {
   async bulkAddOthersLotDyn(
     dynamic_id_or_urls: string[]
   ): Promise<RootObject<AddDynamicLotteryResp[]>> {
-    const res = await bulkAddOthersLotDynApiV1LotteryDatabaseBiliBulkAddOthersLotDynPost({
+    const res = await V1BiliService.bulkAddOthersLotDynApiV1LotteryDatabaseBiliBulkAddOthersLotDynPost({
       body: { dynamic_id_or_urls } as BulkAddOthersLotDynReq,
     })
     return res as any
@@ -352,7 +340,7 @@ class LotteryDataBaseApi {
   async searchLotteryByKeyword(
     params: LotterySearchPaginationParams
   ): Promise<RootObject<LotDataView<any>>> {
-    const res = await searchLotteryByKeywordApiV1LotteryDatabaseBiliSearchLotteryByKeywordPost({
+    const res = await V1BiliService.searchLotteryByKeywordApiV1LotteryDatabaseBiliSearchLotteryByKeywordPost({
       body: params as any,
     })
     return res as any
@@ -364,7 +352,7 @@ class LotteryDataBaseApi {
     params: OthersLotDynListParams
   ): Promise<RootObject<LotDataView<OthersLotDynItem>>> {
     const { page_num, page_size, sort_by, sort_order, is_lot, created_at_preset, pub_time_preset, pub_time_start, pub_time_end, created_at_start, created_at_end } = params
-    const res = await getOthersLotDynListApiV1LotteryDatabaseBiliGetOthersLotDynListPost({
+    const res = await V1BiliService.getOthersLotDynListApiV1LotteryDatabaseBiliGetOthersLotDynListPost({
       body: { page_num, page_size },
       query: {
         sort_by: sort_by as OthersLotDynSortEnum,
@@ -384,7 +372,7 @@ class LotteryDataBaseApi {
   // ==================== 筛选参数元数据 ====================
 
   async getLotteryFilterParams(): Promise<RootObject<LotteryFilterParamsResp>> {
-    const res = await getLotteryFilterParamsApiV1LotteryDatabaseBiliGetLotteryFilterParamsGet()
+    const res = await V1BiliService.getLotteryFilterParamsApiV1LotteryDatabaseBiliGetLotteryFilterParamsGet()
     return res as any
   }
 
@@ -392,7 +380,7 @@ class LotteryDataBaseApi {
 
   // 直接调用后端的全量接口 lottery_database/bili/GetAllLotScrapyStatus，一次返回所有爬虫状态
   async get_all_scrapy_status(): Promise<RootObject<ScrapyStatusResp>> {
-    const res = await getAllLotScrapyStatusApiV1LotteryDatabaseBiliGetAllLotScrapyStatusGet()
+    const res = await V1BiliService.getAllLotScrapyStatusApiV1LotteryDatabaseBiliGetAllLotScrapyStatusGet()
     return res as any
   }
 
@@ -400,7 +388,7 @@ class LotteryDataBaseApi {
   async get_single_scrapy_status(
     scrapy_name: ScrapyTypeEnum
   ): Promise<RootObject<ScrapyStatus | OfficialScrapyStatus | null>> {
-    const res = await getSingleScrapyStatusApiV1LotteryDatabaseBiliGetSingleScrapyStatusPost({
+    const res = await V1BiliService.getSingleScrapyStatusApiV1LotteryDatabaseBiliGetSingleScrapyStatusPost({
       query: { scrapy_name },
     })
     return res as any

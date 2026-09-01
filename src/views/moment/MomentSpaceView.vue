@@ -187,6 +187,7 @@
               v-for="item in items"
               :key="item.dynIdStr"
               :item="item"
+              :status="statusOf(item.dynIdStr)"
               :show-more-actions="isOwnSpace"
               :can-remove="isOwnSpace"
               @click="openDetail"
@@ -271,12 +272,12 @@
     />
 
     <!-- 统一举报弹窗（用户空间） -->
-    <ReportDialog v-model="reportDialogVisible" biz-type="user" :biz-id="reportSpaceMid" />
+    <ReportDialog v-model="reportDialogVisible" :biz-type="ReportBizTypeEnum.USER" :biz-id="reportSpaceMid" />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, type Component } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
   Promotion,
@@ -288,8 +289,6 @@ import {
 } from '@element-plus/icons-vue'
 import {
   fetchSpaceFeed,
-  fetchRelationStat,
-  fetchUpStat,
   fetchUserSpaceInfo,
   fetchMomentDetail,
   createMoment,
@@ -298,9 +297,19 @@ import {
   setFavoriteSetting,
   fetchFavoriteFolders,
   fetchFavoriteDynIds,
+  fetchUserFavoriteFolders,
+  fetchUserFavoriteDynIds,
+  fetchInteractionStatus,
+  InteractionBizTypeEnum,
+  ReportBizTypeEnum,
 } from '@/api/notify/moment-api'
 import type { FavoriteFolderResp } from '@/api/notify/moment-api'
-import type { MomentFeedItem, MomentCreateReq, FollowCountResp, SpaceInfoResp } from '@/api/notify/moment-api'
+import type {
+  MomentFeedItem,
+  MomentCreateReq,
+  SpaceInfoResp,
+  InteractionStatusItem,
+} from '@/api/notify/moment-api'
 import LoadingWrap from '@/components/message/LoadingWrap.vue'
 import EmptyState from '@/components/message/EmptyState.vue'
 import MomentCard from '@/components/moment/MomentCard.vue'
@@ -318,8 +327,8 @@ const userNavStore = useUserNavStore()
 // 路由 mid 存在 → 查看他人空间；不存在 → 自身空间
 // 2.25.0：currentMid 必须为 computed —— 登录态是异步加载的（App.vue onMounted 后 nav 请求才返回），
 // setup 阶段同步快照 uid 恒为空串，导致自己空间被误判为未登录（「请先登录」）
-const routeMid = computed(() => (route.params.mid ? Number(route.params.mid) : null))
-const currentMid = computed(() => Number(userNavStore.user_nav.uid) || 0)
+const routeMid = computed(() => (route.params.mid ? String(route.params.mid) : null))
+const currentMid = computed(() => userNavStore.user_nav.uid || '')
 const spaceMid = computed(() => routeMid.value ?? currentMid.value)
 const isOwnSpace = computed(() => routeMid.value === null || routeMid.value === currentMid.value)
 
@@ -338,8 +347,17 @@ const isFollowed = ref(false)
 // 黑名单互访拒绝状态：true 时空间页显示受限提示、不加载内容（P9-T4）
 const blocked = ref(false)
 
-// 统计（关注 / 粉丝来自后端关系统计接口，获赞由动态聚合，动态数为已加载动态数）
+// 统计（2.32.0：全部随 /user/space/info 一次返回，不再并发 follow/stat + upstat）
 const stats = ref({ following: 0, followers: 0, liked: 0, dynamicCount: 0 })
+
+/** 2.32.0：把 `/user/space/info` 内联的聚合统计落到 stats（不再单独请求） */
+function applySpaceStats(info: SpaceInfoResp | null | undefined): void {
+  if (!info) return
+  stats.value.following = info.follow_stat?.following_count ?? 0
+  stats.value.followers = info.follow_stat?.follower_count ?? 0
+  stats.value.dynamicCount = info.upstat?.dynamic_count ?? 0
+  stats.value.liked = info.upstat?.like_count ?? 0
+}
 
 // 2.25.0：横向导航栏图标（统一使用 src/assets/svgs/space/ 下 B 站风格 SVG）
 import SpaceHomeIcon from '@/assets/svgs/space/home.svg?component'
@@ -366,7 +384,13 @@ const levelBadge = computed(() => {
 })
 
 // 自身空间 tab 列表
-const ownTabs = [
+interface SpaceTab {
+  name: string
+  title: string
+  icon: Component
+  badge?: string
+}
+const ownTabs: SpaceTab[] = [
   { name: 'home', title: '主页', icon: SpaceHomeIcon },
   { name: 'dynamic', title: '动态', icon: SpaceDynamicIcon },
   { name: 'collections', title: '合集和系列', icon: SpaceCollectionIcon, badge: '0' },
@@ -374,7 +398,7 @@ const ownTabs = [
   { name: 'settings', title: '设置', icon: SpaceSettingIcon },
 ]
 // 他人空间 tab 列表（收藏 tab 仅当主人开启「显示收藏」时才展示）
-const otherTabs = [
+const otherTabs: SpaceTab[] = [
   { name: 'dynamic', title: '动态', icon: SpaceDynamicIcon },
 ]
 const tabs = computed(() => {
@@ -401,6 +425,24 @@ const items = ref<MomentFeedItem[]>([])
 const loading = ref(false)
 const loadingMore = ref(false)
 const hasMore = ref(false)
+
+// 2.41.0：卡片统计统一走 /interaction/status 批量接口（卡片不再内置 stat 模块）
+const statusMap = ref<Record<string, InteractionStatusItem>>({})
+async function loadStatus(ids: string[]) {
+  const fresh = ids.filter((id) => !statusMap.value[id])
+  if (!fresh.length) return
+  try {
+    const res = await fetchInteractionStatus(InteractionBizTypeEnum.DYNAMIC, fresh)
+    for (const it of res?.items ?? []) {
+      if (it?.bizId) statusMap.value[it.bizId] = it
+    }
+  } catch {
+    // 弱依赖：失败不阻断展示
+  }
+}
+function statusOf(dynIdStr: string): InteractionStatusItem | null {
+  return statusMap.value[dynIdStr] ?? null
+}
 let historyOffset: number | undefined
 
 // 收藏夹 / 收藏 tab
@@ -476,24 +518,14 @@ async function loadFirst() {
     targetUser.value.face = userNavStore.user_nav.face
   }
 
-  const [res, relationStat, upStat] = await Promise.all([
-    fetchSpaceFeed(mid, { page_size: 20 }),
-    fetchRelationStat(mid),
-    fetchUpStat(mid),
-  ])
+  const res = await fetchSpaceFeed(mid, { page_size: 20 })
   items.value = res.items || []
   hasMore.value = res.hasMore ?? false
-  historyOffset = res.historyOffset
-  // 关系统计：关注 / 粉丝
-  if (relationStat) {
-    stats.value.following = relationStat.following_count
-    stats.value.followers = relationStat.follower_count
-  }
-  // 空间统计（对标 B 站 upstat）：动态总数 / 获赞总数均来自后端专用接口
-  if (upStat) {
-    stats.value.dynamicCount = upStat.dynamic_count
-    stats.value.liked = upStat.like_count
-  }
+  historyOffset = res.historyOffset ?? undefined
+  // 2.41.0：批量拉取本页卡片互动统计（统一 status 接口）
+  if (items.value.length) void loadStatus(items.value.map((i) => i.dynIdStr))
+  // 2.32.0：关系统计 / 空间统计已随 space/info 一次返回，不再单独请求
+  applySpaceStats(space.data)
   loading.value = false
 
   // 收藏：加载主页收藏可见性（仅自身空间可写开关）与收藏夹列表
@@ -593,13 +625,14 @@ function loadMoreFavorites() {
 }
 
 /** 切换主页是否显示收藏（仅自身空间）：成功文案由调用方预设，失败由后端响应驱动 */
-async function toggleShowFavorites(v: boolean) {
-  showFavorites.value = v
-  const ok = await setFavoriteSetting(v, {
+async function toggleShowFavorites(v: boolean | string | number) {
+  const enabled = Boolean(v)
+  showFavorites.value = enabled
+  const ok = await setFavoriteSetting(enabled, {
     showSuccessToast: true,
-    successMessage: v ? '主页已显示收藏' : '主页已隐藏收藏',
+    successMessage: enabled ? '主页已显示收藏' : '主页已隐藏收藏',
   })
-  if (!ok) showFavorites.value = !v
+  if (!ok) showFavorites.value = !enabled
 }
 
 async function loadMore() {
@@ -610,8 +643,10 @@ async function loadMore() {
   const newItems = res.items || []
   items.value.push(...newItems)
   hasMore.value = res.hasMore ?? false
-  historyOffset = res.historyOffset
+  historyOffset = res.historyOffset ?? undefined
   loadingMore.value = false
+  // 2.41.0：批量拉取本页卡片互动统计（统一 status 接口）
+  if (newItems.length) void loadStatus(newItems.map((i) => i.dynIdStr))
 }
 
 function openDetail(item: MomentFeedItem) {
@@ -619,7 +654,8 @@ function openDetail(item: MomentFeedItem) {
 }
 
 function onCardAvatarClick(item: MomentFeedItem) {
-  if (item.mid !== spaceMid.value) {
+  // item.mid 是 number，spaceMid 取自路由 params 是字符串，比较前先对齐类型
+  if (String(item.mid) !== spaceMid.value) {
     router.push({ name: 'MOMENT_USER_SPACE', params: { mid: String(item.mid) } })
   }
 }
@@ -639,11 +675,11 @@ function handleDM() {
 
 /** 统一举报弹窗（P11-T6，用户空间举报：bizType=user，bizId=mid） */
 const reportDialogVisible = ref(false)
-const reportSpaceMid = ref<number>(0)
+const reportSpaceMid = ref<string>('')
 
 function handleReport() {
   if (!spaceMid.value) return
-  reportSpaceMid.value = Number(spaceMid.value)
+  reportSpaceMid.value = String(spaceMid.value) // mid 转 str，避免大整数精度丢失
   reportDialogVisible.value = true
 }
 
@@ -657,8 +693,10 @@ async function handleThumb(item: MomentFeedItem) {
   if (res) {
     const interMod = item.modules?.find((m) => m.moduleType === 'interaction')
     if (interMod) interMod.isLike = up === 1
-    if (item.stat) {
-      item.stat.likeCount = (item.stat.likeCount || 0) + (up === 1 ? 1 : -1)
+    const st = statusMap.value[item.dynIdStr]
+    if (st) {
+      st.isLike = up === 1
+      st.likeCount = Math.max(0, Number(st.likeCount ?? 0) + (up === 1 ? 1 : -1))
     }
   }
 }
@@ -683,7 +721,7 @@ async function handlePublish(payload: {
     content: content.length ? content : [{ type: 'WORDS', text: payload.content }],
     // 2.22.0：多话题经 MomentCreateReq.topics 单独提交
     topics: payload.topics?.length ? payload.topics : undefined,
-    lbs: payload.poiName ? { lbsPoi: payload.poiName } : undefined,
+    lbs: payload.poiName ? { poi: payload.poiName } : undefined,
   }
   const res = await createMoment(body, {
     showSuccessToast: true,

@@ -1,7 +1,6 @@
 <template>
   <div class="at-list h-full flex flex-col">
     <div class="at-list__toolbar mb-4 flex items-center justify-between">
-      <h2 class="at-list__title text-base font-bold text-text-primary">{{ t('message.navAts') }}</h2>
       <el-button
         v-if="unreadCount > 0"
         type="primary"
@@ -12,28 +11,30 @@
         {{ t('message.markAllRead') }}
       </el-button>
     </div>
-    <LoadingWrap :loading="loading" class="at-list__content flex-1 min-h-0 overflow-y-auto">
-      <EmptyState v-if="items.length === 0" :text="t('message.emptyAt')" />
-      <ul v-else class="at-list__items space-y-3">
-        <EventItemCard
-          v-for="item in items"
-          :key="item.id"
-          :item="item"
-          @open="openDetail"
+    <LoadingMoreContainer
+      class="at-list__content"
+      fill-parent
+      :handle-load="handleLoad"
+      v-model:is-more="isMore"
+      v-model:is-loading="isLoading"
+      v-model:is-error="isError"
+      :show-end-text="items.length > 0"
+    >
+      <template #content>
+        <EmptyState
+          v-if="!isLoading && !isError && items.length === 0"
+          :text="t('message.emptyAt')"
         />
-      </ul>
-      <div v-if="hasMore" class="at-list__loadmore mt-4 flex justify-center">
-        <el-button
-          text
-          size="default"
-          class="at-list__loadmore-btn"
-          :loading="loadingMore"
-          @click="loadMore"
-        >
-          {{ t('message.loadMore') }}
-        </el-button>
-      </div>
-    </LoadingWrap>
+        <ul v-else class="at-list__items space-y-3 py-4">
+          <EventItemCard
+            v-for="item in items"
+            :key="item.id"
+            :item="item"
+            @open="openDetail"
+          />
+        </ul>
+      </template>
+    </LoadingMoreContainer>
   </div>
 </template>
 
@@ -44,13 +45,14 @@ import { useRouter } from 'vue-router'
 import {
   fetchEventList,
   markEventRead,
+  EventTypeEnum,
   type EventFeedItem
 } from '@/api/notify/message-api'
 import { openEventDetail } from '@/utils/eventJump'
 
 const { t } = useI18n()
 const router = useRouter()
-import LoadingWrap from '@/components/message/LoadingWrap.vue'
+import LoadingMoreContainer from '@/components/CommonCompo/Bili-Container-Compo/LoadingMoreContainer.vue'
 import EmptyState from '@/components/message/EmptyState.vue'
 import EventItemCard from '@/components/message/EventItemCard.vue'
 
@@ -61,45 +63,52 @@ defineOptions({ name: 'AtListView' })
 const atUnread = defineModel<number>('atUnread', { default: 0 })
 const emit = defineEmits<{ refreshUnread: [] }>()
 
+const PAGE_SIZE = 20
+
 const items = ref<EventFeedItem[]>([])
-const loading = ref(false)
-const loadingMore = ref(false)
+const isLoading = ref(false)
+const isMore = ref(true)
+const isError = ref(false)
 // B 站式游标分页：cursorId 为下一页起点（上一页 total.cursor.id）
-const cursorId = ref<number | null>(null)
-const hasMore = ref(false)
+let cursorId: number | null = null
 
 const unreadCount = computed(() => atUnread.value)
 
-async function load() {
-  loading.value = true
-  const list = await fetchEventList({ event_type: 'at', size: 20 })
-  items.value = list.total?.items ?? []
-  cursorId.value = list.total?.cursor?.id ?? null
-  hasMore.value = !(list.total?.cursor?.is_end ?? true)
-  loading.value = false
-}
-
-async function loadMore() {
-  if (loadingMore.value || !hasMore.value) return
-  loadingMore.value = true
-  const list = await fetchEventList({ event_type: 'at', cursor_id: cursorId.value, size: 20 })
-  items.value = [...items.value, ...(list.total?.items ?? [])]
-  cursorId.value = list.total?.cursor?.id ?? null
-  hasMore.value = !(list.total?.cursor?.is_end ?? true)
-  loadingMore.value = false
+/** 首屏加载 / 触底加载统一入口（LoadingMoreContainer 触底回调） */
+async function handleLoad() {
+  if (isLoading.value) return
+  isError.value = false
+  isLoading.value = true
+  try {
+    const isFirst = items.value.length === 0
+    const list = await fetchEventList({
+      event_type: EventTypeEnum.AT,
+      cursor_id: isFirst ? null : cursorId,
+      size: PAGE_SIZE
+    })
+    const pageItems = list.total?.items ?? []
+    items.value = isFirst ? pageItems : [...items.value, ...pageItems]
+    cursorId = list.total?.cursor?.id ?? null
+    isMore.value = !(list.total?.cursor?.is_end ?? true)
+  } catch (e) {
+    console.error('加载@我的列表失败:', e)
+    isError.value = true
+  } finally {
+    isLoading.value = false
+  }
 }
 
 async function markAllRead() {
   const res = await markEventRead(
-    { event_type: 'at' },
+    { event_type: EventTypeEnum.AT },
     { showSuccessToast: true, successMessage: t('message.markAllRead') }
   )
-  if (res.affected > 0) emit('refreshUnread')
+  if ((res.affected ?? 0) > 0) emit('refreshUnread')
 }
 
 function openDetail(item: EventFeedItem) {
   void openEventDetail(item, router)
 }
 
-onMounted(load)
+onMounted(handleLoad)
 </script>
