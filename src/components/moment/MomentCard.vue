@@ -293,9 +293,12 @@
         :stat="props.status ?? null"
         :is-liked="interactionModule?.isLike ?? false"
         :loading="thumbLoading"
+        :is-disliked="isDisliked"
+        :dislike-loading="dislikeLoading"
         @thumb="handleThumb"
         @comment="handleComment"
         @repost="showRepostDialog = true"
+        @dislike="handleDislike"
       />
     </div>
 
@@ -307,7 +310,7 @@
     >
       <LotteryCommentSection
         :oid="props.item.dynIdStr"
-        :type="CommentTypeEnum.DYNAMIC"
+        :type="InteractionBizTypeEnum.DYNAMIC"
         :up-mid="props.item.mid"
         @count-change="handleCommentCountChange"
       />
@@ -341,18 +344,21 @@ import {
   unfollowUser,
   adminRemoveMoment,
   removeMoment,
+  dislikeMoment,
 } from '@/api/notify/moment-api'
+import { isMomentDisliked, setMomentDisliked } from '@/composables/useMomentDislike'
 import type {
   MomentFeedItem,
   MomentModule,
   MomentContentNode,
   InteractionStatusItem,
 } from '@/api/notify/moment-api'
-import { CommentTypeEnum } from '@/api/lottery_comment'
+import { InteractionBizTypeEnum } from '@/api/lottery_comment'
 import LotteryCommentSection from '@/components/lottery_data/LotteryCommentSection.vue'
 import { BiliImg } from '@/assets/img/BiliImg'
 import { useUserNavStore } from '@/stores/user_nav'
 import { useRpaAdminStore } from '@/stores/rpa_admin'
+import biliMessage from '@/utils/message'
 
 const props = withDefaults(
   defineProps<{
@@ -375,15 +381,21 @@ const emit = defineEmits<{
   srcClick: [item: MomentFeedItem]
   thumb: [dynIdStr: string]
   remove: [dynIdStr: string]
-  edit: [dynIdStr: string]
   report: [dynIdStr: string]
   avatarClick: [item: MomentFeedItem]
   /** 点击评论（inlineComment=false 时）：父组件切换到评论 tab（详情页） */
   comment: [item: MomentFeedItem]
+  /** 2.62.0：点踩 / 取消点踩（API 已由卡片内调用，父组件仅收通知） */
+  dislike: [dynIdStr: string, isDislike: boolean]
 }>()
 
 const router = useRouter()
 const thumbLoading = ref(false)
+/** 2.62.0：点踩请求中（防连点） */
+const dislikeLoading = ref(false)
+
+/** 2.62.0：是否已点踩（本地乐观态优先，回落互动态 `status.isDislike`） */
+const isDisliked = computed(() => isMomentDisliked(props.item.dynIdStr, props.status))
 
 const userNavStore = useUserNavStore()
 const currentMid = computed(() => Number(userNavStore.user_nav?.uid) || 0)
@@ -516,7 +528,7 @@ const forwardDescNodes = computed<MomentContentNode[]>(
 )
 
 /** 嵌套的原动态完整卡片（平铺渲染主数据源） */
-const srcMoment = computed<MomentFeedItem | undefined>(() => forwardModule.value?.srcMoment)
+const srcMoment = computed<MomentFeedItem | undefined>(() => forwardModule.value?.srcMoment ?? undefined)
 
 /** 原动态的 author / desc / dynamic / forward 模块 */
 const srcMomentAuthor = computed<MomentModule | undefined>(() =>
@@ -709,6 +721,31 @@ async function handleThumb() {
   emit('thumb', props.item.dynIdStr)
   // 父组件负责调用 API 并更新状态
   thumbLoading.value = false
+}
+
+/**
+ * 点踩 / 取消点踩（2.62.0，计划书 §5.20）：与删除一致**下沉卡片内**（调 API + 提示），
+ * 父组件只收通知（需要时可从列表移除 / 打点），不在各页面重复实现。
+ *
+ * 后端语义：幂等（明细表唯一约束，一人一踩）；点踩后该资源**对所有人略降**
+ * （`dislike_ratio`）、**对点踩者本人大幅降权**（精排后处理）；
+ * **不改变内容可见性**（不下架）——与举报审核的隐藏处置语义分离。
+ * 点踩数不对外展示，这里只维护「我已踩」的状态。
+ */
+async function handleDislike() {
+  if (dislikeLoading.value) return
+  dislikeLoading.value = true
+  try {
+    const next = !isDisliked.value
+    const res = await dislikeMoment(props.item.dynIdStr, next ? 1 : 2)
+    // 业务失败 request 返回 null（不抛异常），保持原状态
+    if (!res) return
+    setMomentDisliked(props.item.dynIdStr, next)
+    biliMessage.success(next ? '已点踩，将减少此类内容' : '已取消点踩')
+    emit('dislike', props.item.dynIdStr, next)
+  } finally {
+    dislikeLoading.value = false
+  }
 }
 
 /**

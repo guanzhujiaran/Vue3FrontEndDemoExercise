@@ -3,7 +3,7 @@
 import type { RequestResult } from '../client';
 import { client } from '../client.gen';
 import type { Options } from '../sdk.gen';
-import type { AdminRemoveDynamicApiV1CommunityAdminRemovePostData, AdminRemoveDynamicApiV1CommunityAdminRemovePostErrors, AdminRemoveDynamicApiV1CommunityAdminRemovePostResponses, AtListApiV1CommunityAtListGetData, AtListApiV1CommunityAtListGetErrors, AtListApiV1CommunityAtListGetResponses, AtSearchApiV1CommunityAtSearchGetData, AtSearchApiV1CommunityAtSearchGetErrors, AtSearchApiV1CommunityAtSearchGetResponses, CreateCheckApiV1CommunityCreateCheckPostData, CreateCheckApiV1CommunityCreateCheckPostErrors, CreateCheckApiV1CommunityCreateCheckPostResponses, CreateDynamicApiV1CommunityCreatePostData, CreateDynamicApiV1CommunityCreatePostErrors, CreateDynamicApiV1CommunityCreatePostResponses, DislikeApiV1CommunityDislikePostData, DislikeApiV1CommunityDislikePostErrors, DislikeApiV1CommunityDislikePostResponses, EditDynamicApiV1CommunityEditPostData, EditDynamicApiV1CommunityEditPostErrors, EditDynamicApiV1CommunityEditPostResponses, InteractionStatusApiV1CommunityInteractionStatusGetData, InteractionStatusApiV1CommunityInteractionStatusGetErrors, InteractionStatusApiV1CommunityInteractionStatusGetResponses, InteractionStatusDetailApiV1CommunityInteractionStatusBizIdGetData, InteractionStatusDetailApiV1CommunityInteractionStatusBizIdGetErrors, InteractionStatusDetailApiV1CommunityInteractionStatusBizIdGetResponses, PoiNearbyApiV1CommunityPoiNearbyGetData, PoiNearbyApiV1CommunityPoiNearbyGetErrors, PoiNearbyApiV1CommunityPoiNearbyGetResponses, PoiSearchApiV1CommunityPoiSearchGetData, PoiSearchApiV1CommunityPoiSearchGetErrors, PoiSearchApiV1CommunityPoiSearchGetResponses, RemoveDynamicApiV1CommunityRemovePostData, RemoveDynamicApiV1CommunityRemovePostErrors, RemoveDynamicApiV1CommunityRemovePostResponses, ReportApiV1CommunityReportPostData, ReportApiV1CommunityReportPostErrors, ReportApiV1CommunityReportPostResponses, RepostDynamicApiV1CommunityRepostPostData, RepostDynamicApiV1CommunityRepostPostErrors, RepostDynamicApiV1CommunityRepostPostResponses, ShareApiV1CommunitySharePostData, ShareApiV1CommunitySharePostErrors, ShareApiV1CommunitySharePostResponses, ThumbApiV1CommunityThumbPostData, ThumbApiV1CommunityThumbPostErrors, ThumbApiV1CommunityThumbPostResponses, TopDynamicApiV1CommunitySpaceTopPostData, TopDynamicApiV1CommunitySpaceTopPostErrors, TopDynamicApiV1CommunitySpaceTopPostResponses, TopicCreateApiV1CommunityTopicCreatePostData, TopicCreateApiV1CommunityTopicCreatePostErrors, TopicCreateApiV1CommunityTopicCreatePostResponses, TopicDetailApiV1CommunityTopicDetailTopicIdGetData, TopicDetailApiV1CommunityTopicDetailTopicIdGetErrors, TopicDetailApiV1CommunityTopicDetailTopicIdGetResponses, TopicFeedApiV1CommunityTopicFeedTopicIdGetData, TopicFeedApiV1CommunityTopicFeedTopicIdGetErrors, TopicFeedApiV1CommunityTopicFeedTopicIdGetResponses, TopicHotSearchApiV1CommunityTopicHotSearchGetData, TopicHotSearchApiV1CommunityTopicHotSearchGetErrors, TopicHotSearchApiV1CommunityTopicHotSearchGetResponses, TopicMineApiV1CommunityTopicMineGetData, TopicMineApiV1CommunityTopicMineGetErrors, TopicMineApiV1CommunityTopicMineGetResponses, TopicSquareApiV1CommunityTopicSquareGetData, TopicSquareApiV1CommunityTopicSquareGetErrors, TopicSquareApiV1CommunityTopicSquareGetResponses, UntopDynamicApiV1CommunitySpaceUntopPostData, UntopDynamicApiV1CommunitySpaceUntopPostErrors, UntopDynamicApiV1CommunitySpaceUntopPostResponses } from '../types.gen';
+import type { AdminRemoveDynamicApiV1CommunityAdminRemovePostData, AdminRemoveDynamicApiV1CommunityAdminRemovePostErrors, AdminRemoveDynamicApiV1CommunityAdminRemovePostResponses, AtListApiV1CommunityAtListGetData, AtListApiV1CommunityAtListGetErrors, AtListApiV1CommunityAtListGetResponses, AtSearchApiV1CommunityAtSearchGetData, AtSearchApiV1CommunityAtSearchGetErrors, AtSearchApiV1CommunityAtSearchGetResponses, CreateCheckApiV1CommunityCreateCheckPostData, CreateCheckApiV1CommunityCreateCheckPostErrors, CreateCheckApiV1CommunityCreateCheckPostResponses, CreateDynamicApiV1CommunityCreatePostData, CreateDynamicApiV1CommunityCreatePostErrors, CreateDynamicApiV1CommunityCreatePostResponses, DislikeApiV1CommunityDislikePostData, DislikeApiV1CommunityDislikePostErrors, DislikeApiV1CommunityDislikePostResponses, InteractionStatusApiV1CommunityInteractionStatusGetData, InteractionStatusApiV1CommunityInteractionStatusGetErrors, InteractionStatusApiV1CommunityInteractionStatusGetResponses, InteractionStatusDetailApiV1CommunityInteractionStatusBizIdGetData, InteractionStatusDetailApiV1CommunityInteractionStatusBizIdGetErrors, InteractionStatusDetailApiV1CommunityInteractionStatusBizIdGetResponses, PoiNearbyApiV1CommunityPoiNearbyGetData, PoiNearbyApiV1CommunityPoiNearbyGetErrors, PoiNearbyApiV1CommunityPoiNearbyGetResponses, PoiSearchApiV1CommunityPoiSearchGetData, PoiSearchApiV1CommunityPoiSearchGetErrors, PoiSearchApiV1CommunityPoiSearchGetResponses, RemoveDynamicApiV1CommunityRemovePostData, RemoveDynamicApiV1CommunityRemovePostErrors, RemoveDynamicApiV1CommunityRemovePostResponses, ReportApiV1CommunityReportPostData, ReportApiV1CommunityReportPostErrors, ReportApiV1CommunityReportPostResponses, RepostDynamicApiV1CommunityRepostPostData, RepostDynamicApiV1CommunityRepostPostErrors, RepostDynamicApiV1CommunityRepostPostResponses, ShareApiV1CommunitySharePostData, ShareApiV1CommunitySharePostErrors, ShareApiV1CommunitySharePostResponses, ThumbApiV1CommunityThumbPostData, ThumbApiV1CommunityThumbPostErrors, ThumbApiV1CommunityThumbPostResponses, TopDynamicApiV1CommunitySpaceTopPostData, TopDynamicApiV1CommunitySpaceTopPostErrors, TopDynamicApiV1CommunitySpaceTopPostResponses, TopicCreateApiV1CommunityTopicCreatePostData, TopicCreateApiV1CommunityTopicCreatePostErrors, TopicCreateApiV1CommunityTopicCreatePostResponses, TopicDetailApiV1CommunityTopicDetailTopicIdGetData, TopicDetailApiV1CommunityTopicDetailTopicIdGetErrors, TopicDetailApiV1CommunityTopicDetailTopicIdGetResponses, TopicFeedApiV1CommunityTopicFeedTopicIdGetData, TopicFeedApiV1CommunityTopicFeedTopicIdGetErrors, TopicFeedApiV1CommunityTopicFeedTopicIdGetResponses, TopicHotSearchApiV1CommunityTopicHotSearchGetData, TopicHotSearchApiV1CommunityTopicHotSearchGetErrors, TopicHotSearchApiV1CommunityTopicHotSearchGetResponses, TopicMineApiV1CommunityTopicMineGetData, TopicMineApiV1CommunityTopicMineGetErrors, TopicMineApiV1CommunityTopicMineGetResponses, TopicSquareApiV1CommunityTopicSquareGetData, TopicSquareApiV1CommunityTopicSquareGetErrors, TopicSquareApiV1CommunityTopicSquareGetResponses, UntopDynamicApiV1CommunitySpaceUntopPostData, UntopDynamicApiV1CommunitySpaceUntopPostErrors, UntopDynamicApiV1CommunitySpaceUntopPostResponses } from '../types.gen';
 
 export class MomentService {
     /**
@@ -13,21 +13,6 @@ export class MomentService {
         return (options.client ?? client).post<CreateDynamicApiV1CommunityCreatePostResponses, CreateDynamicApiV1CommunityCreatePostErrors, ThrowOnError, 'data'>({
             responseStyle: 'data',
             url: '/api/v1/community/create',
-            ...options,
-            headers: {
-                'Content-Type': 'application/json',
-                ...options.headers
-            }
-        });
-    }
-    
-    /**
-     * 编辑动态
-     */
-    public static editDynamicApiV1CommunityEditPost<ThrowOnError extends boolean = false>(options: Options<EditDynamicApiV1CommunityEditPostData, ThrowOnError>): RequestResult<EditDynamicApiV1CommunityEditPostResponses, EditDynamicApiV1CommunityEditPostErrors, ThrowOnError, 'data'> {
-        return (options.client ?? client).post<EditDynamicApiV1CommunityEditPostResponses, EditDynamicApiV1CommunityEditPostErrors, ThrowOnError, 'data'>({
-            responseStyle: 'data',
-            url: '/api/v1/community/edit',
             ...options,
             headers: {
                 'Content-Type': 'application/json',
@@ -133,6 +118,8 @@ export class MomentService {
     
     /**
      * 点赞 / 取消点赞
+     *
+     * 点赞 / 取消点赞（幂等）。`bizType` + `bizId` 定位任意资源。
      */
     public static thumbApiV1CommunityThumbPost<ThrowOnError extends boolean = false>(options: Options<ThumbApiV1CommunityThumbPostData, ThrowOnError>): RequestResult<ThumbApiV1CommunityThumbPostResponses, ThumbApiV1CommunityThumbPostErrors, ThrowOnError, 'data'> {
         return (options.client ?? client).post<ThumbApiV1CommunityThumbPostResponses, ThumbApiV1CommunityThumbPostErrors, ThrowOnError, 'data'>({
@@ -147,11 +134,10 @@ export class MomentService {
     }
     
     /**
-     * 点踩 / 取消点踩（2.35.0）
+     * 点踩 / 取消点踩（2.35.0；2.56.0 支持全部资源）
      *
-     * 点踩 / 取消点踩（幂等）。
+     * 点踩 / 取消点踩（幂等）。`bizType` + `bizId` 定位任意资源。
      *
-     * MVP 仅支持动态资源：`bizType` 必须为 `dynamic`，`bizId` 与 `dynId` 任取其一。
      * 计数供 EdgeRank `dislike_ratio` 降权使用。
      */
     public static dislikeApiV1CommunityDislikePost<ThrowOnError extends boolean = false>(options: Options<DislikeApiV1CommunityDislikePostData, ThrowOnError>): RequestResult<DislikeApiV1CommunityDislikePostResponses, DislikeApiV1CommunityDislikePostErrors, ThrowOnError, 'data'> {
@@ -167,9 +153,11 @@ export class MomentService {
     }
     
     /**
-     * 分享上报（2.35.0）
+     * 分享上报（2.35.0；2.56.0 支持全部资源）
      *
-     * 分享上报：normal 动态 ``shareCount`` 原子 +1（行为上报，不幂等）。
+     * 分享上报：``shareCount`` 原子 +1（行为上报，不幂等）。
+     *
+     * `bizType` + `bizId` 定位任意资源（缺省 dynamic）。
      */
     public static shareApiV1CommunitySharePost<ThrowOnError extends boolean = false>(options: Options<ShareApiV1CommunitySharePostData, ThrowOnError>): RequestResult<ShareApiV1CommunitySharePostResponses, ShareApiV1CommunitySharePostErrors, ThrowOnError, 'data'> {
         return (options.client ?? client).post<ShareApiV1CommunitySharePostResponses, ShareApiV1CommunitySharePostErrors, ThrowOnError, 'data'>({
@@ -185,6 +173,11 @@ export class MomentService {
     
     /**
      * 批量查询某类型资源当前用户收藏/点赞态 + 计数（列表专用，不累计浏览）
+     *
+     * 批量互动态（2.60.0 起匿名可读，计划书 §5.18）。
+     *
+     * 匿名时 `user` 为 None → `viewer_mid=0`（非合法 mid），点赞 / 收藏态恒 false，
+     * 计数与举报数照常返回。
      */
     public static interactionStatusApiV1CommunityInteractionStatusGet<ThrowOnError extends boolean = false>(options: Options<InteractionStatusApiV1CommunityInteractionStatusGetData, ThrowOnError>): RequestResult<InteractionStatusApiV1CommunityInteractionStatusGetResponses, InteractionStatusApiV1CommunityInteractionStatusGetErrors, ThrowOnError, 'data'> {
         return (options.client ?? client).get<InteractionStatusApiV1CommunityInteractionStatusGetResponses, InteractionStatusApiV1CommunityInteractionStatusGetErrors, ThrowOnError, 'data'>({
@@ -201,6 +194,10 @@ export class MomentService {
      *
      * 列表批量接口不累计浏览，仅进入详情页（本接口）才 +1——
      * 经 ViewLog 按 bizType+bizId+mid+refDate 去重幂等，同日重复进入详情不重复计数。
+     *
+     * 2.60.0（§5.18）：匿名可读，`user` 为 None 时 `viewer_mid=0`（点赞 / 收藏态恒 false）；
+     * 浏览 MQ **仅登录用户投递**——匿名无 mid，`TInteractionViewLog`（uq bizType+bizId+mid）
+     * 会把全部游客流量压成 mid=0 一行，计数失真且污染明细表，沿用「浏览统计仅登录用户」语义。
      */
     public static interactionStatusDetailApiV1CommunityInteractionStatusBizIdGet<ThrowOnError extends boolean = false>(options: Options<InteractionStatusDetailApiV1CommunityInteractionStatusBizIdGetData, ThrowOnError>): RequestResult<InteractionStatusDetailApiV1CommunityInteractionStatusBizIdGetResponses, InteractionStatusDetailApiV1CommunityInteractionStatusBizIdGetErrors, ThrowOnError, 'data'> {
         return (options.client ?? client).get<InteractionStatusDetailApiV1CommunityInteractionStatusBizIdGetResponses, InteractionStatusDetailApiV1CommunityInteractionStatusBizIdGetErrors, ThrowOnError, 'data'>({
@@ -211,7 +208,12 @@ export class MomentService {
     }
     
     /**
-     * 举报动态
+     * 举报资源（2.56.0 支持全部资源）
+     *
+     * 举报资源（幂等，不改资源状态，达阈值仅加入审核队列）。
+     *
+     * `bizType` + `bizId` 定位任意资源（缺省 dynamic）；
+     * 统一举报另有独立域 `POST /api/v1/report`，两者等价。
      */
     public static reportApiV1CommunityReportPost<ThrowOnError extends boolean = false>(options: Options<ReportApiV1CommunityReportPostData, ThrowOnError>): RequestResult<ReportApiV1CommunityReportPostResponses, ReportApiV1CommunityReportPostErrors, ThrowOnError, 'data'> {
         return (options.client ?? client).post<ReportApiV1CommunityReportPostResponses, ReportApiV1CommunityReportPostErrors, ThrowOnError, 'data'>({
@@ -226,7 +228,7 @@ export class MomentService {
     }
     
     /**
-     * 话题广场
+     * 话题广场（推荐流）
      */
     public static topicSquareApiV1CommunityTopicSquareGet<ThrowOnError extends boolean = false>(options?: Options<TopicSquareApiV1CommunityTopicSquareGetData, ThrowOnError>): RequestResult<TopicSquareApiV1CommunityTopicSquareGetResponses, TopicSquareApiV1CommunityTopicSquareGetErrors, ThrowOnError, 'data'> {
         return (options?.client ?? client).get<TopicSquareApiV1CommunityTopicSquareGetResponses, TopicSquareApiV1CommunityTopicSquareGetErrors, ThrowOnError, 'data'>({
@@ -259,7 +261,7 @@ export class MomentService {
     }
     
     /**
-     * 话题动态流（支持热门/最新排序）
+     * 话题动态流（recommend 推荐流默认 / time 最新；hot 为 recommend 兼容别名）
      */
     public static topicFeedApiV1CommunityTopicFeedTopicIdGet<ThrowOnError extends boolean = false>(options: Options<TopicFeedApiV1CommunityTopicFeedTopicIdGetData, ThrowOnError>): RequestResult<TopicFeedApiV1CommunityTopicFeedTopicIdGetResponses, TopicFeedApiV1CommunityTopicFeedTopicIdGetErrors, ThrowOnError, 'data'> {
         return (options.client ?? client).get<TopicFeedApiV1CommunityTopicFeedTopicIdGetResponses, TopicFeedApiV1CommunityTopicFeedTopicIdGetErrors, ThrowOnError, 'data'>({

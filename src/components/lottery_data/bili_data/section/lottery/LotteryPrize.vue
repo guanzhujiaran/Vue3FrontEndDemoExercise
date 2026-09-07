@@ -14,7 +14,7 @@ const formatPrizeCount = (count: number | null) => {
 
 const imageViewerVisible = ref(false)
 const currentImage = ref('')
-const handleImageClick = (imageUrl: string) => {
+const handleImageClick = (imageUrl: string | null) => {
   if (imageUrl) {
     currentImage.value = imageUrl
     imageViewerVisible.value = true

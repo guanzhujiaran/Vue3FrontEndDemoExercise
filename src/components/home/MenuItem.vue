@@ -6,11 +6,11 @@
     :index="item.path"
     @click="handleMenuItemClick"
   >
-    <span class="text-lg">{{ item.title }}</span>
+    <span class="text-lg">{{ item.i18nKey ? t(item.i18nKey) : item.title }}</span>
   </el-menu-item>
   <!-- 中间层子菜单：桌面端单击标题跳转；移动端单击展开，双击（两次快速点击）跳转 -->
   <el-sub-menu v-else :index="item.path" @click="handleSubMenuClick">
-    <template #title><span class="text-lg">{{ item.title }}</span></template>
+    <template #title><span class="text-lg">{{ item.i18nKey ? t(item.i18nKey) : item.title }}</span></template>
     <template v-for="(child, idx) in item.children" :key="child.path">
       <MenuItem :item="child" :is-first="idx === 0" />
     </template>
@@ -19,12 +19,16 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { ElMenuItem, ElSubMenu } from 'element-plus'
 import { useRouter } from 'vue-router'
+
+const { t } = useI18n()
 
 interface MenuItem {
   path: string
   title: string
+  i18nKey?: string
   requiresLogin?: boolean
   children?: MenuItem[]
 }

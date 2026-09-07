@@ -36,6 +36,8 @@ interface CustomRouteMeta {
   adminOnly?: boolean
   /** 自定义标签 */
   tags?: string[]
+  /** 标题的国际化 key（对应 i18n nav.* 命名空间）；存在时导航菜单优先用 t(key) 渲染 */
+  titleI18nKey?: string
 }
 
 /**

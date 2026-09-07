@@ -39,7 +39,8 @@
                     :title="rowData.content">
                     <template v-for="(seg, idx) in renderNotifySegments(rowData.content)" :key="idx">
                       <a v-if="seg.url" :href="seg.url" :target="isExternalUrl(seg.url) ? '_blank' : '_self'"
-                        rel="noopener" class="notify-admin__content-link font-medium text-primary hover:underline"
+                        :rel="LINK_REL" :referrerpolicy="LINK_REFERRER_POLICY"
+                        class="notify-admin__content-link font-medium text-primary hover:underline"
                         @click="onInlineLink($event, seg.url)">{{ seg.text }}</a>
                       <template v-else>{{ seg.text }}</template>
                     </template>
@@ -157,11 +158,13 @@
 <script setup lang="ts">
 import { onMounted, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { LINK_REL, LINK_REFERRER_POLICY } from '@/utils/PageOpen/linkPolicy'
 import { useI18n } from 'vue-i18n'
 import { TableV2FixedDir, type Column } from 'element-plus'
 import { Refresh } from '@element-plus/icons-vue'
 import biliMessage from '@/utils/message'
 import { isExternalUrl, renderNotifySegments } from '@/utils/notifyContent'
+import { jumpToTarget } from '@/utils/routeJump'
 
 const { t } = useI18n()
 const router = useRouter()
@@ -354,11 +357,11 @@ function targetText(row: NotifyAdminItem): string {
   return row.target_value ? `${prefix}:${row.target_value}` : prefix
 }
 
-/** 正文中点击内联链接：站内路径走 SPA 路由，外链交给浏览器新开标签。 */
+/** 正文中点击内联链接：站内目标（route: 路由名 / 存量路径）走 SPA 路由，外链交给浏览器新开标签。 */
 function onInlineLink(ev: MouseEvent, url: string) {
   if (!isExternalUrl(url)) {
     ev.preventDefault()
-    router.push(url)
+    jumpToTarget(router, url)
   }
 }
 

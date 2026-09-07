@@ -257,7 +257,7 @@ import { businessHandler, type BusinessResponse } from '@/utils/businessHandler'
 const { t } = useI18n()
 import {
   CommentAdminService,
-  CommentStateEnum,
+  ResourceAuditStatusEnum,
   MessageAdminBanService,
   type StandardResponseCommentAuditItem,
   type StandardResponseCommentAuditListResp,
@@ -516,25 +516,25 @@ const auditPending = ref(false)
 const userActionPending = ref(false)
 
 // 审核操作 -> 目标状态（用于本地就地更新行状态，须为数值枚举，与后端响应一致）
-const OP_STATE_MAP: Record<string, CommentStateEnum> = {
-  pass: CommentStateEnum.NORMAL,
-  reject: CommentStateEnum.REJECTED,
-  hidden: CommentStateEnum.HIDDEN,
-  restore: CommentStateEnum.NORMAL
+const OP_STATE_MAP: Record<string, ResourceAuditStatusEnum> = {
+  pass: ResourceAuditStatusEnum.NORMAL,
+  reject: ResourceAuditStatusEnum.REJECTED,
+  hidden: ResourceAuditStatusEnum.HIDDEN,
+  restore: ResourceAuditStatusEnum.NORMAL
 }
 
-function stateTag(s: CommentStateEnum): 'success' | 'warning' | 'danger' | 'info' {
-  if (s === CommentStateEnum.NORMAL) return 'success'
-  if (s === CommentStateEnum.AUDITING) return 'warning'
-  if (s === CommentStateEnum.REJECTED || s === CommentStateEnum.HIDDEN) return 'danger'
+function stateTag(s: ResourceAuditStatusEnum): 'success' | 'warning' | 'danger' | 'info' {
+  if (s === ResourceAuditStatusEnum.NORMAL) return 'success'
+  if (s === ResourceAuditStatusEnum.AUDITING) return 'warning'
+  if (s === ResourceAuditStatusEnum.REJECTED || s === ResourceAuditStatusEnum.HIDDEN) return 'danger'
   return 'info'
 }
 
-function stateText(s: CommentStateEnum): string {
-  if (s === CommentStateEnum.NORMAL) return t('message.stateNormal')
-  if (s === CommentStateEnum.AUDITING) return t('message.stateAuditing')
-  if (s === CommentStateEnum.REJECTED) return t('message.stateRejected')
-  if (s === CommentStateEnum.HIDDEN) return t('message.stateHidden')
+function stateText(s: ResourceAuditStatusEnum): string {
+  if (s === ResourceAuditStatusEnum.NORMAL) return t('message.stateNormal')
+  if (s === ResourceAuditStatusEnum.AUDITING) return t('message.stateAuditing')
+  if (s === ResourceAuditStatusEnum.REJECTED) return t('message.stateRejected')
+  if (s === ResourceAuditStatusEnum.HIDDEN) return t('message.stateHidden')
   return t('message.stateDeleted')
 }
 

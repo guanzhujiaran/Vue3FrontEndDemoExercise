@@ -1,16 +1,5 @@
 <template>
   <div class="at-list h-full flex flex-col">
-    <div class="at-list__toolbar mb-4 flex items-center justify-between">
-      <el-button
-        v-if="unreadCount > 0"
-        type="primary"
-        size="default"
-        class="at-list__read-all"
-        @click="markAllRead"
-      >
-        {{ t('message.markAllRead') }}
-      </el-button>
-    </div>
     <LoadingMoreContainer
       class="at-list__content"
       fill-parent
@@ -39,13 +28,13 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import {
   fetchEventList,
   markEventRead,
-  EventTypeEnum,
+  InteractionActionTypeEnum,
   type EventFeedItem
 } from '@/api/notify/message-api'
 import { openEventDetail } from '@/utils/eventJump'
@@ -72,8 +61,6 @@ const isError = ref(false)
 // B 站式游标分页：cursorId 为下一页起点（上一页 total.cursor.id）
 let cursorId: number | null = null
 
-const unreadCount = computed(() => atUnread.value)
-
 /** 首屏加载 / 触底加载统一入口（LoadingMoreContainer 触底回调） */
 async function handleLoad() {
   if (isLoading.value) return
@@ -82,7 +69,7 @@ async function handleLoad() {
   try {
     const isFirst = items.value.length === 0
     const list = await fetchEventList({
-      event_type: EventTypeEnum.AT,
+      event_type: InteractionActionTypeEnum.AT,
       cursor_id: isFirst ? null : cursorId,
       size: PAGE_SIZE
     })
@@ -90,6 +77,8 @@ async function handleLoad() {
     items.value = isFirst ? pageItems : [...items.value, ...pageItems]
     cursorId = list.total?.cursor?.id ?? null
     isMore.value = !(list.total?.cursor?.is_end ?? true)
+    // 首屏：拉取列表后自动把「当前时刻之前」的 @ 全部置为已读（取代原「全部已读」按钮）
+    if (isFirst) await markReadBeforeNow()
   } catch (e) {
     console.error('加载@我的列表失败:', e)
     isError.value = true
@@ -98,12 +87,13 @@ async function handleLoad() {
   }
 }
 
-async function markAllRead() {
-  const res = await markEventRead(
-    { event_type: EventTypeEnum.AT },
-    { showSuccessToast: true, successMessage: t('message.markAllRead') }
-  )
-  if ((res.affected ?? 0) > 0) emit('refreshUnread')
+/** 自动已读：把当前时刻之前、归属本用户的该类型互动提醒全部标记为已读 */
+async function markReadBeforeNow() {
+  await markEventRead({
+    event_type: InteractionActionTypeEnum.AT,
+    read_before: new Date().toISOString()
+  })
+  emit('refreshUnread')
 }
 
 function openDetail(item: EventFeedItem) {

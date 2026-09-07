@@ -5,6 +5,7 @@ import TableV2FixableHeaderCell from '@/components/CommonCompo/TableV2Compo/Tabl
 import { useTableV2FixedColumns } from '@/utils/useTableV2FixedColumns'
 import type { AnyLotteryData, NormalizedLottery } from '@/models/api/lottery/lottery_card'
 import { gotoBiliUserSpace } from '@/utils/PageOpen/BiliJump';
+import { LINK_REL, LINK_REFERRER_POLICY } from '@/utils/PageOpen/linkPolicy'
 import { handleLotteryLinkClick, setLotteryParticipation, isLotteryParticipated } from '@/utils/lotteryParticipation'
 import { normalizeLotteryData, formatTimestamp } from '@/utils/lotteryNormalization'
 import LotteryActionsDropdown from '@/components/lottery_data/bili_data/LotteryActionsDropdown.vue'
@@ -194,7 +195,8 @@ const prizeIndexOf = (columnKey: PropertyKey | undefined) =>
                     size="default"
                     :href="getRowDetailUrl(rowData)"
                     target="_blank"
-                    rel="noreferrer"
+                    :rel="LINK_REL"
+                    :referrerpolicy="LINK_REFERRER_POLICY"
                     @click.stop="handleLotteryLinkClick(String(rowData.id))"
                     class="text-xs"
                     underline="never"

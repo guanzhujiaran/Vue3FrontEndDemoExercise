@@ -199,7 +199,6 @@ const visible = defineModel<boolean>('visible', { default: false })
 
 const props = withDefaults(
   defineProps<{
-    isEdit?: boolean
     /** 转发模式：true 时使用统一编辑器转发动态（内部调 repostMoment） */
     isRepost?: boolean
     /** 转发源动态 ID（字符串，避免 19 位 ID 精度丢失） */
@@ -216,7 +215,6 @@ const props = withDefaults(
     topicList?: MomentTopicInfo[]
   }>(),
   {
-    isEdit: false,
     isRepost: false,
     srcDynId: '',
     srcAuthorName: '',
@@ -248,12 +246,12 @@ const submitting = ref(false)
 
 const dialogTitle = computed(() => {
   if (props.isRepost) return '转发动态'
-  return props.isEdit ? '编辑动态' : '发布动态'
+  return '发布动态'
 })
 
 const submitLabel = computed(() => {
   if (props.isRepost) return '转发'
-  return props.isEdit ? '保存' : '发布'
+  return '发布'
 })
 
 /** @ 提及候选：远程搜索用户 */

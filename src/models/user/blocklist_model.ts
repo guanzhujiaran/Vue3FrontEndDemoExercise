@@ -6,11 +6,18 @@
  * 以复用「单一数据源」约定。
  */
 
-/** 黑名单 / 关注列表单条记录（仅含 mid 与关系建立时间） */
+import type { UserBriefPublic } from '@/models/user/user_brief_model.ts'
+
+/** 黑名单 / 关注列表单条记录 */
 export interface FollowListItem {
   mid: number
   /** 拉黑时间（ISO 字符串） */
   created_at: string
+  /**
+   * 被拉黑用户的**公开**展示信息（后端经 PptrUser.get_many 回查后投影为 public）。
+   * 用户已注销 / 回查失败时为 null，前端渲染「账号已注销」。
+   */
+  user: UserBriefPublic | null
 }
 
 /** 黑名单 / 关注列表分页响应 */

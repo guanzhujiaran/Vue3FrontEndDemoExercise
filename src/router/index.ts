@@ -121,6 +121,7 @@ const routes: CustomRouteRecordRaw[] = [
     component: () => import('@/views/HomeView.vue'),
     meta: {
       title: '首页',
+      titleI18nKey: 'nav.home',
       description: '应用首页',
       isHeaderShow: true,
       order: 1
@@ -136,6 +137,7 @@ const routes: CustomRouteRecordRaw[] = [
     meta: {
       id: 'lottery',
       title: 'B站抽奖数据',
+      titleI18nKey: 'nav.lotteryData',
       icon: IconDataAnalysis,
       description: '查看和分析B站各类抽奖数据',
       color: 'var(--color-gradient-hero-vibrant)',
@@ -165,6 +167,7 @@ const routes: CustomRouteRecordRaw[] = [
         component: () => import('@/components/lottery_data/bili_data/ScrapyStatus.vue'),
         meta: {
           title: '爬虫状态',
+          titleI18nKey: 'nav.scrapyStat',
           icon: IconMonitor,
           description: '查看数据爬虫的运行状态',
           color: 'var(--color-gradient-hero-warm)',
@@ -179,6 +182,7 @@ const routes: CustomRouteRecordRaw[] = [
         component: () => import('@/components/lottery_data/BiliAtariRanking.vue'),
         meta: {
           title: 'B站中奖名人堂',
+          titleI18nKey: 'nav.biliAtariRanking',
           icon: IconTrophy,
           description: '查看B站中奖排行榜',
           color: 'var(--color-gradient-hero-elegant)',
@@ -207,6 +211,7 @@ const routes: CustomRouteRecordRaw[] = [
         },
         meta: {
           title: 'B站抽奖数据',
+          titleI18nKey: 'nav.lotteryBiliData',
           icon: IconList,
           description: 'B站各类抽奖数据汇总',
           showInHome: false,
@@ -220,6 +225,7 @@ const routes: CustomRouteRecordRaw[] = [
             component: () => import('@/components/lottery_data/bili_data/OfficialLottery.vue'),
             meta: {
               title: '官方抽奖',
+              titleI18nKey: 'nav.officialLottery',
               icon: IconPromotion,
               description: 'B站官方活动抽奖数据',
               color: 'var(--color-gradient-lottery-item)',
@@ -234,6 +240,7 @@ const routes: CustomRouteRecordRaw[] = [
             component: () => import('@/components/lottery_data/bili_data/ReserveLottery.vue'),
             meta: {
               title: '预约抽奖',
+              titleI18nKey: 'nav.reserveLottery',
               icon: IconLightning,
               description: 'B站预约活动抽奖数据',
               color: 'var(--color-gradient-lottery-item)',
@@ -248,6 +255,7 @@ const routes: CustomRouteRecordRaw[] = [
             component: () => import('@/components/lottery_data/bili_data/ChargeLottery.vue'),
             meta: {
               title: '充电抽奖',
+              titleI18nKey: 'nav.chargeLottery',
               icon: IconCreditCard,
               description: 'B站充电活动抽奖数据',
               color: 'var(--color-gradient-lottery-item)',
@@ -262,6 +270,7 @@ const routes: CustomRouteRecordRaw[] = [
             component: () => import('@/components/lottery_data/bili_data/TopicLottery.vue'),
             meta: {
               title: '话题抽奖',
+              titleI18nKey: 'nav.topicLottery',
               icon: IconChat,
               description: 'B站话题活动抽奖数据',
               color: 'var(--color-gradient-lottery-item)',
@@ -276,6 +285,7 @@ const routes: CustomRouteRecordRaw[] = [
             component: () => import('@/components/lottery_data/bili_data/OthersLotDynList.vue'),
             meta: {
               title: '第三方抽奖动态',
+              titleI18nKey: 'nav.othersLotDynList',
               icon: IconShare2,
               description: 'B站第三方非官方号发布的抽奖动态列表',
               color: 'var(--color-gradient-lottery-item)',
@@ -296,6 +306,7 @@ const routes: CustomRouteRecordRaw[] = [
     meta: {
       id: 'shopping',
       title: '山姆会员店',
+      titleI18nKey: 'nav.samsClub',
       icon: IconShoppingCart,
       description: '山姆会员店信息查询',
       color: 'var(--color-gradient-shopping)',
@@ -311,6 +322,7 @@ const routes: CustomRouteRecordRaw[] = [
     component: () => import('@/views/ChangelogView.vue'),
     meta: {
       title: '更新日志',
+      titleI18nKey: 'nav.changelog',
       description: '查看项目更新日志',
       isHeaderShow: true,
       order: 6
@@ -352,6 +364,7 @@ const routes: CustomRouteRecordRaw[] = [
     meta: {
       id: 'rpa-browser',
       title: 'RPA浏览器',
+      titleI18nKey: 'nav.rpaBrowser',
       icon: IconConnection,
       description: '浏览器指纹管理和自动化控制',
       color: 'var(--color-gradient-hero-cool)',
@@ -367,6 +380,7 @@ const routes: CustomRouteRecordRaw[] = [
         component: () => import('@/views/rpa-browser/BrowserFingerprintList.vue'),
         meta: {
           title: RouteName.RPA_BROWSER_FINGERPRINT_LIST,
+          titleI18nKey: 'nav.browserFingerprintList',
           icon: IconConnection,
           description: '浏览器指纹列表',
           order: 1,
@@ -432,9 +446,24 @@ const routes: CustomRouteRecordRaw[] = [
         component: () => import('@/views/rpa-browser/ActionManagement.vue'),
         meta: {
           title: RouteName.RPA_BROWSER_ACTION_MANAGEMENT,
+          titleI18nKey: 'nav.actionManagement',
           icon: IconConnection,
           description: '管理自定义动作',
           order: 6,
+          showInHome: false,
+          isHeaderShow: true
+        }
+      },
+      {
+        path: 'approval-center',
+        name: 'RPA_BROWSER_APPROVAL_CENTER',
+        component: () => import('@/views/rpa-browser/ApprovalCenter.vue'),
+        meta: {
+          title: '审批中心',
+          titleI18nKey: 'nav.approvalCenter',
+          icon: IconConnection,
+          description: '提交公开审批申请并查看我的申请',
+          order: 9,
           showInHome: false,
           isHeaderShow: true
         }
@@ -445,6 +474,7 @@ const routes: CustomRouteRecordRaw[] = [
         component: () => import('@/views/rpa-browser/WorkflowManagement.vue'),
         meta: {
           title: RouteName.RPA_BROWSER_WORKFLOW_MANAGEMENT,
+          titleI18nKey: 'nav.workflowManagement',
           icon: IconConnection,
           description: '管理工作流配置与执行',
           order: 7,
@@ -458,6 +488,7 @@ const routes: CustomRouteRecordRaw[] = [
         component: () => import('@/views/rpa-browser/ActionLogView.vue'),
         meta: {
           title: RouteName.RPA_BROWSER_ACTION_LOG,
+          titleI18nKey: 'nav.actionLog',
           icon: IconDataAnalysis,
           description: '查看浏览器操作的执行日志',
           order: 8,
@@ -544,6 +575,7 @@ const routes: CustomRouteRecordRaw[] = [
     meta: {
       id: 'moment',
       title: '动态',
+      titleI18nKey: 'nav.moment',
       description: '动态广场、话题与个人空间',
       color: 'var(--color-gradient-hero-cool)',
       requiresLogin: true,
@@ -614,6 +646,7 @@ const routes: CustomRouteRecordRaw[] = [
     meta: {
       id: 'admin',
       title: '管理后台',
+      titleI18nKey: 'nav.admin',
       icon: IconSetting,
       description: 'RPA 与消息中心的管理员功能集中管理',
       requiresLogin: true,
@@ -632,12 +665,48 @@ const routes: CustomRouteRecordRaw[] = [
       {
         path: 'rpa',
         name: 'ADMIN_RPA',
-        component: () => import('@/views/rpa-browser/AdminManagement.vue'),
+        redirect: { name: 'ADMIN_RPA_APPROVAL' },
         meta: {
           title: 'RPA 管理后台',
           requiresAdmin: true,
           hidden: true
         }
+      },
+      {
+        path: 'rpa/approval',
+        name: 'ADMIN_RPA_APPROVAL',
+        component: () => import('@/views/rpa-browser/admin/ApprovalAdmin.vue'),
+        meta: { title: '操作审批', requiresAdmin: true, hidden: true }
+      },
+      {
+        path: 'rpa/report',
+        name: 'ADMIN_RPA_REPORT',
+        component: () => import('@/views/rpa-browser/admin/CommunityReportAdmin.vue'),
+        meta: { title: '社区举报', requiresAdmin: true, hidden: true }
+      },
+      {
+        path: 'rpa/audit',
+        name: 'ADMIN_RPA_AUDIT',
+        component: () => import('@/views/rpa-browser/admin/AuditLogAdmin.vue'),
+        meta: { title: '操作审计', requiresAdmin: true, hidden: true }
+      },
+      {
+        path: 'rpa/cert',
+        name: 'ADMIN_RPA_CERT',
+        component: () => import('@/views/rpa-browser/admin/CertificationAdmin.vue'),
+        meta: { title: '官方认证', requiresAdmin: true, hidden: true }
+      },
+      {
+        path: 'rpa/tag',
+        name: 'ADMIN_RPA_TAG',
+        component: () => import('@/views/rpa-browser/admin/TagAdmin.vue'),
+        meta: { title: '标签管理', requiresAdmin: true, hidden: true }
+      },
+      {
+        path: 'rpa/role',
+        name: 'ADMIN_RPA_ROLE',
+        component: () => import('@/views/rpa-browser/admin/AdminRoleAdmin.vue'),
+        meta: { title: '管理员权限', requiresAdmin: true, hidden: true }
       },
       {
         path: 'message-notify',

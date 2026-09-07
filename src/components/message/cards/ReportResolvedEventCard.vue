@@ -9,9 +9,9 @@
 
 <script setup lang="ts">
 /**
- * 举报已处理通知卡片（EventTypeEnum.REPORT_RESOLVED = 7）。
+ * 举报已处理通知卡片（InteractionActionTypeEnum.REPORT_RESOLVED = 7）。
  *
- * 继承 `SystemEventCardBase`：动作文案由基类按 EventTypeEnum 查表
+ * 继承 `SystemEventCardBase`：动作文案由基类按 InteractionActionTypeEnum 查表
  * （针对举报本身，不含资源名），本类只声明语义图标与语义色（success）。
  */
 import SystemEventCardBase from './SystemEventCardBase.vue'

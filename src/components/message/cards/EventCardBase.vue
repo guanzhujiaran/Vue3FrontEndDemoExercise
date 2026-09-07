@@ -17,7 +17,7 @@
     </div>
 
     <div class="event-card__body min-w-0 flex-1">
-      <!-- 头部：触发者 + 动作（动作文案由继承者按 EventTypeEnum 覆盖） -->
+      <!-- 头部：触发者 + 动作（动作文案由继承者按 InteractionActionTypeEnum 覆盖） -->
       <div class="event-card__head mb-1 flex items-center gap-2 text-sm">
         <span class="event-card__name text-text-primary shrink-0 font-medium">{{ actorText }}</span>
         <span class="event-card__action text-text-placeholder truncate">
@@ -25,7 +25,7 @@
         </span>
       </div>
 
-      <!-- 正文：由继承者按 EventTypeEnum 填充 -->
+      <!-- 正文：由继承者按 InteractionActionTypeEnum 填充 -->
       <slot name="body" />
 
       <!-- 底部：时间 + 继承者扩展的元信息 / 互动按钮 -->
@@ -40,7 +40,8 @@
       <slot name="right">
         <el-text
           v-if="rightPreview"
-          class="event-card__preview text-text-placeholder max-w-56 text-right text-xs"
+          class="event-card__preview max-w-56 text-right"
+          :class="previewClass ?? 'text-text-placeholder text-xs'"
           :line-clamp="2"
           tag="p"
         >
@@ -63,12 +64,12 @@
  * 互动通知卡片「抽象基类」——统一骨架（模板方法模式）。
  *
  * 只负责三件事：
- * 1. 渲染所有 EventTypeEnum 共用的骨架（头像堆叠 / 头部 / 底部时间栏 / 右侧预览）；
+ * 1. 渲染所有 InteractionActionTypeEnum 共用的骨架（头像堆叠 / 头部 / 底部时间栏 / 右侧预览）；
  * 2. 经 `useEventCard` 集中推导公共字段；
  * 3. 暴露 `action` / `body` / `meta` / `right` 四个插槽供继承者填充差异部分。
  *
  * 继承者（如 `LikeEventCard.vue`）只需声明 `item`、按需覆盖 `action-text` /
- * `preview-text`，并在插槽里写自己的 EventTypeEnum 专属内容。
+ * `preview-text`，并在插槽里写自己的 InteractionActionTypeEnum 专属内容。
  */
 import { computed } from 'vue'
 import TimeText from '@/components/message/TimeText.vue'
@@ -78,17 +79,24 @@ import type { EventFeedItem } from '@/api/notify/message-api'
 
 const props = defineProps<{
   item: EventFeedItem
-  /** 动作文案覆盖（不传时按 EventTypeEnum 查默认表） */
+  /** 动作文案覆盖（不传时按 InteractionActionTypeEnum 查默认表） */
   actionText?: string
   /** 右侧预览文案覆盖（不传时取原资源标题 / 事件正文） */
   previewText?: string
+  /**
+   * 右侧预览文字格式覆盖（不传时走默认的小号灰字）。
+   *
+   * 用于「左右两侧展示同一段内容」的卡片（如回复卡片）：继承者把左侧正文的
+   * 高亮样式传进来，保证两侧文字格式一致。
+   */
+  previewClass?: string
 }>()
 const emit = defineEmits<{ open: [EventFeedItem] }>()
 
 const { showUsers, actorText, defaultActionText, content, coverUrl, timeDisplay } =
   useEventCard(props)
 
-/** 头部动作文案：继承者覆盖优先，回落按 EventTypeEnum 查表 */
+/** 头部动作文案：继承者覆盖优先，回落按 InteractionActionTypeEnum 查表 */
 const headAction = computed(() => props.actionText ?? defaultActionText.value)
 
 /** 右侧预览文案：继承者覆盖优先，回落原资源标题 / 事件正文 */

@@ -2,7 +2,7 @@
   <el-dialog
     v-model="visible"
     class="moment-favorite-dialog"
-    :title="props.bizType && props.bizType !== InteractionBizTypeEnum.DYNAMIC ? '收藏到收藏夹' : '收藏动态'"
+    :title="bizTypeNum !== InteractionBizTypeEnum.DYNAMIC ? '收藏到收藏夹' : '收藏动态'"
     width="420px"
     align-center
   >
@@ -115,22 +115,21 @@ import { Select, Plus } from '@element-plus/icons-vue'
 const DEFAULT_FOLDER_COVER =
   'https://i0.hdslb.com/bfs/vc/b8eb9637fec90527a6dc9737acdc3577e275c7b5.png'
 import {
+  InteractionBizTypeEnum,
   fetchFavoriteFolders,
   createFavoriteFolder,
   addFavorite,
   removeFavorite,
   fetchDynFavoriteFolders,
 } from '@/api/notify/moment-api'
-import type {
-  FavoriteFolderResp,
-  InteractionBizTypeEnum,
-} from '@/api/notify/moment-api'
+import type { FavoriteFolderResp } from '@/api/notify/moment-api'
 import biliMessage from '@/utils/message'
 
 const props = defineProps<{
   modelValue: boolean
   dynId: string
-  bizType?: InteractionBizTypeEnum
+  /** 支持数字枚举或字符串（如 "rpa_workflow"），统一归一为数字枚举 */
+  bizType?: InteractionBizTypeEnum | string
   bizId?: string
 }>()
 const emit = defineEmits<{
@@ -142,6 +141,18 @@ const visible = computed({
   get: () => props.modelValue,
   set: (v) => emit('update:modelValue', v),
 })
+
+/** bizType 归一为数字枚举（后端契约用数字）；无 bizType 时回退动态 DYNAMIC=1 */
+function toBizTypeNum(v: InteractionBizTypeEnum | string | undefined): InteractionBizTypeEnum {
+  if (v == null) return InteractionBizTypeEnum.DYNAMIC
+  if (typeof v === 'number') return v
+  const num = InteractionBizTypeEnum[
+    String(v).toUpperCase() as keyof typeof InteractionBizTypeEnum
+  ]
+  return typeof num === 'number' ? (num as InteractionBizTypeEnum) : InteractionBizTypeEnum.DYNAMIC
+}
+
+const bizTypeNum = computed(() => toBizTypeNum(props.bizType))
 
 const folders = ref<FavoriteFolderResp[]>([])
 const favFolderIds = ref<Set<string>>(new Set())
@@ -155,9 +166,9 @@ function isFavInFolder(folderId: string): boolean {
 }
 
 function favOptions(): { bizType?: InteractionBizTypeEnum; bizId?: string } {
-  // 非动态资源时显式传 bizType/bizId；动态资源走默认（bizType=dynamic）
-  if (props.bizType && props.bizType !== InteractionBizTypeEnum.DYNAMIC) {
-    return { bizType: props.bizType, bizId: props.bizId ?? props.dynId }
+  // 非动态资源时显式传归一后的数字 bizType/bizId；动态资源走默认（bizType=dynamic）
+  if (bizTypeNum.value !== InteractionBizTypeEnum.DYNAMIC) {
+    return { bizType: bizTypeNum.value, bizId: props.bizId ?? props.dynId }
   }
   return {}
 }

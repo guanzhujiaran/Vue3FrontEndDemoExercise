@@ -1,16 +1,19 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { ElMessageBox } from 'element-plus'
-import { Delete, Edit, Refresh, Search, Loading, Plus, CopyDocument } from '@element-plus/icons-vue'
+import { useRouter } from 'vue-router'
+import { ElMessageBox, ElMessage } from 'element-plus'
+import { Delete, Edit, Refresh, Search, Loading, Plus, CopyDocument, Promotion, SetUp } from '@element-plus/icons-vue'
 import { useDebounceFn } from '@vueuse/core'
 import FlexContainer from '@/components/CommonCompo/Bili-Container-Compo/FlexContainer.vue'
 import BiliPageHeader from '@/components/CommonCompo/Bili-Container-Compo/BiliPageHeader.vue'
 import WorkflowEditDialog from '@/components/rpa-browser/WorkflowEditDialog.vue'
-import { 工作流管理Service } from '@/api/browser/hey-api'
+import { 工作流管理Service, 管理员管理Service } from '@/api/browser/hey-api'
 import type { FilterType, SortBy, SortOrder } from '@/api/browser/hey-api'
 import { useUserNavStore } from '@/stores/user_nav'
 import { businessHandler } from '@/utils/businessHandler'
 import ResourceInteractionBar from '@/components/interaction/ResourceInteractionBar.vue'
+
+const router = useRouter()
 
 interface WorkflowItem {
   id: number
@@ -193,6 +196,44 @@ const handleToggleEnabled = async (item: WorkflowItem) => {
   }
 }
 
+const handleApplyPublish = async (item: WorkflowItem) => {
+  let desc: string
+  try {
+    const result = await ElMessageBox.prompt(
+      `提交后需管理员审核通过，工作流才会公开到社区（审核前保持私有）。`,
+      `申请公开「${item.name}」`,
+      {
+        confirmButtonText: '提交申请',
+        cancelButtonText: '取消',
+        inputPlaceholder: '请输入申请说明（可选）',
+        inputValue: '',
+      }
+    )
+    desc = result.value || ''
+  } catch {
+    return
+  }
+  const res = await businessHandler(
+    管理员管理Service.submitApprovalApiAdminRpaApprovalSubmitPost({
+      body: {
+        resource_type: 'workflow',
+        resource_id: item.workflow_id,
+        action: 'publish',
+        title: item.name,
+        description: desc,
+      },
+    }),
+    { successMessage: '审批申请已提交，等待管理员审核', errorMessage: '提交失败' }
+  )
+  if (res.success) {
+    ElMessage.success('可在「审批中心」查看审核进度')
+  }
+}
+
+const goApprovalCenter = () => {
+  router.push({ name: 'RPA_BROWSER_APPROVAL_CENTER' })
+}
+
 const handleDelete = async (item: WorkflowItem) => {
   try {
     await ElMessageBox.confirm(
@@ -244,7 +285,8 @@ onMounted(() => {
   <FlexContainer>
     <BiliPageHeader title="工作流管理" description="创建、配置和管理工作流" tagText="工作流">
       <template #extra>
-        <div>
+        <div class="workflow-toolbar-extra flex items-center gap-2">
+          <el-button :icon="SetUp" @click="goApprovalCenter">审批中心</el-button>
           <el-button :icon="Refresh" @click="handleRefresh">刷新</el-button>
           <el-button :icon="Plus" type="primary" @click="handleCreate">新建工作流</el-button>
         </div>
@@ -329,6 +371,8 @@ onMounted(() => {
                 <el-button size="small" :icon="Edit" :loading="editDialogLoading"
                   @click="handleEdit(item)">编辑</el-button>
                 <el-button size="small" :icon="CopyDocument" @click="handleDuplicate(item)">复制</el-button>
+                <el-button v-if="!item.is_public" size="small" type="primary" plain :icon="Promotion"
+                  @click="handleApplyPublish(item)">申请发布</el-button>
                 <el-switch v-model="item.is_public" size="small" inline-prompt active-text="公开" inactive-text="私有"
                   @change="handleTogglePublic(item)" />
                 <el-switch v-model="item.is_enabled" size="small" inline-prompt active-text="启用" inactive-text="禁用"

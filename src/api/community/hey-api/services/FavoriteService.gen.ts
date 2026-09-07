@@ -117,8 +117,8 @@ export class FavoriteService {
     /**
      * 某资源被当前用户收藏在哪些收藏夹
      */
-    public static dynFoldersApiV1FavoriteDynFoldersGet<ThrowOnError extends boolean = false>(options?: Options<DynFoldersApiV1FavoriteDynFoldersGetData, ThrowOnError>): RequestResult<DynFoldersApiV1FavoriteDynFoldersGetResponses, DynFoldersApiV1FavoriteDynFoldersGetErrors, ThrowOnError, 'data'> {
-        return (options?.client ?? client).get<DynFoldersApiV1FavoriteDynFoldersGetResponses, DynFoldersApiV1FavoriteDynFoldersGetErrors, ThrowOnError, 'data'>({
+    public static dynFoldersApiV1FavoriteDynFoldersGet<ThrowOnError extends boolean = false>(options: Options<DynFoldersApiV1FavoriteDynFoldersGetData, ThrowOnError>): RequestResult<DynFoldersApiV1FavoriteDynFoldersGetResponses, DynFoldersApiV1FavoriteDynFoldersGetErrors, ThrowOnError, 'data'> {
+        return (options.client ?? client).get<DynFoldersApiV1FavoriteDynFoldersGetResponses, DynFoldersApiV1FavoriteDynFoldersGetErrors, ThrowOnError, 'data'>({
             responseStyle: 'data',
             url: '/api/v1/favorite/dyn/folders',
             ...options

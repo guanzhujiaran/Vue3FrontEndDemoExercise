@@ -6,7 +6,7 @@ import LotteryCommentItem from '@/components/lottery_data/LotteryCommentItem.vue
 import LotteryCommentMention from '@/components/lottery_data/LotteryCommentMention.vue'
 import commentApi, {
   CommentHandlersKey,
-  CommentTypeEnum,
+  InteractionBizTypeEnum,
   CommentSortEnum,
   type CommentAddResp,
   type CommentHandlers,
@@ -25,7 +25,7 @@ import BiliError from '@/components/CommonCompo/Bili-Feedback-Compo/BiliError.vu
 const props = withDefaults(
   defineProps<{
     oid: string | number
-    /** 评论区业务类型，必须来自 SDK 生成的 CommentTypeEnum */
+    /** 评论区业务类型，必须来自 SDK 生成的 InteractionBizTypeEnum */
     type?: CommentType
     upMid?: number | string
     /** 定位直达的评论 rpid：从通知 / 外链进入时携带，加载后滚动到该评论并高亮 */
@@ -34,7 +34,7 @@ const props = withDefaults(
     forceAnonymous?: boolean
   }>(),
   {
-    type: CommentTypeEnum.LOTTERY,
+    type: InteractionBizTypeEnum.LOTTERY,
     upMid: undefined,
     focusRpid: null,
     forceAnonymous: false
@@ -110,7 +110,8 @@ const loadMain = async () => {
       sortBy.value,
       currentPage.value,
       10,
-      props.focusRpid
+      // 仅第一页携带 focusRpid（后端仅首页会把目标评论置顶）；后续页正常分页
+      currentPage.value === 1 ? props.focusRpid : null
     ), {
       showSuccessToast: false,
     })
@@ -119,10 +120,10 @@ const loadMain = async () => {
       return
     }
     const data = resp.data
-    topComment.value = data.top
-    commentList.value = data.items
-    total.value = data.total
-    allCount.value = data.all_count
+    topComment.value = (data.top ?? null) as CommentItem | null
+    commentList.value = (data.items ?? []) as CommentItem[]
+    total.value = data.total ?? 0
+    allCount.value = data.all_count ?? 0
     // 仅当后端确实命中并置顶了目标时才记录聚焦目标，用于滚动定位
     focusTargetRpid.value = data.focus_rpid || null
     // 后端在匿名访问时返回 viewer_is_anonymous=true（SDK 尚未同步字段前通过 any 兜底读取）；
@@ -182,15 +183,20 @@ const buildNewComment = (
   parent: string,
   replyTo: CommentUserBrief | null
 ): CommentItem => {
-  const uid = Number(currentMid.value)
+  // 大雪花 uid 用 Number 会丢精度，这里以字符串 uidStr 为可靠标识（与后端 CommentUserBrief.midStr 对齐），
+  // mid 字段仅按 SDK number 约束给值；后续对该用户的定位/举报请优先用 midStr / 字符串 id 传参
+  const uidStr = currentMid.value != null ? String(currentMid.value) : ''
+  const uid = Number(currentMid.value) || 0
   const nav = userNavStore.user_nav
   return {
     rpid: data.rpid,
     oid: String(props.oid),
-    type: props.type as CommentTypeEnum,
+    type: props.type as InteractionBizTypeEnum,
     mid: uid,
+    midStr: uidStr || null,
     member: {
       mid: uid,
+      midStr: uidStr || null,
       uname: nav.user_name || null,
       avatar: userAvatar.value,
       level: Number(nav.level_info.current_level) || 0,
@@ -212,8 +218,6 @@ const buildNewComment = (
     is_top: false,
     is_essence: false,
     is_up_liked: false,
-    ip_v4_masked: null,
-    ip_v6_masked: null,
     ctime: new Date().toISOString(),
     replies: []
   }
@@ -285,7 +289,7 @@ const handlers: CommentHandlers = {
       { showSuccessToast: false }
     )
     if (!result.success || !result.data) return { items: [], total: 0 }
-    return { items: result.data.items, total: result.data.total }
+    return { items: result.data.items ?? [], total: result.data.total ?? 0 }
   }
 }
 provide(CommentHandlersKey, handlers)
@@ -321,8 +325,7 @@ const submitTopComment = async () => {
 }
 
 watch([sortBy, currentPage], () => {
-  // 切换排序 / 翻页后不再保持定位高亮
-  focusTargetRpid.value = null
+  // 切换排序 / 翻页：高亮交由 loadMain 按后端回填的 focus_rpid 重新决定，避免先清 null 再设回导致闪烁
   loadMain()
 })
 
@@ -341,10 +344,7 @@ const scrollToFocus = () => {
   const rect = el.getBoundingClientRect()
   const top = rect.top + window.scrollY - window.innerHeight / 2 + rect.height / 2
   window.scrollTo({ top, behavior: 'smooth' })
-  // 高亮约 2.5s 后淡出
-  window.setTimeout(() => {
-    if (focusTargetRpid.value === target) focusTargetRpid.value = null
-  }, 2500)
+  // 高亮由 focusRpid 驱动，持续保持，不自动淡出
 }
 </script>
 
@@ -466,6 +466,7 @@ const scrollToFocus = () => {
       <el-pagination
         size="small"
         background
+        hide-on-single-page
         layout="prev, pager, next"
         :total="total"
         :page-size="10"

@@ -1,22 +1,22 @@
 import { isMobileDevice } from '@/utils/Browser/useDeviceDetect.ts'
+import { LINK_WINDOW_FEATURES } from '@/utils/PageOpen/linkPolicy'
 
-const windowOpenFeature = 'noopener=yes,noreferrer=yes'
 const is_mobile = isMobileDevice()
 export const gotoBiliUserSpace = (uid: number | string | undefined) => {
   if (uid) {
     if (is_mobile === 1) {
-      window.open(`https://space.bilibili.com/${uid}`, '_blank', windowOpenFeature)
+      window.open(`https://space.bilibili.com/${uid}`, '_blank', LINK_WINDOW_FEATURES)
     } else {
-      window.open(`bilibili://space/${uid}`, '_blank', windowOpenFeature)
+      window.open(`bilibili://space/${uid}`, '_blank', LINK_WINDOW_FEATURES)
     }
   }
 }
 export const gotoOpusDynamic = (dynamic_id: string | number | undefined) => {
   if (dynamic_id) {
     if (is_mobile === 1) {
-      window.open(`https://www.bilibili.com/opus/${dynamic_id}`, '_blank', windowOpenFeature)
+      window.open(`https://www.bilibili.com/opus/${dynamic_id}`, '_blank', LINK_WINDOW_FEATURES)
     } else {
-      window.open(`bilibili://opus/detail/${dynamic_id}`, '_blank', windowOpenFeature)
+      window.open(`bilibili://opus/detail/${dynamic_id}`, '_blank', LINK_WINDOW_FEATURES)
     }
   }
 }

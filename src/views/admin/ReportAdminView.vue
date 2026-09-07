@@ -14,10 +14,14 @@
         class="report-admin__filter-biz w-36"
         @change="onFilterChange"
       >
-        <el-option label="动态" :value="ReportBizTypeEnum.DYNAMIC" />
-        <el-option label="评论" :value="ReportBizTypeEnum.COMMENT" />
-        <el-option label="用户" :value="ReportBizTypeEnum.USER" />
-        <el-option label="资源" :value="ReportBizTypeEnum.RESOURCE" />
+        <el-option label="动态" :value="InteractionBizTypeEnum.DYNAMIC" />
+        <el-option label="评论" :value="InteractionBizTypeEnum.COMMENT" />
+        <el-option label="用户" :value="InteractionBizTypeEnum.USER" />
+        <el-option label="抽奖" :value="InteractionBizTypeEnum.LOTTERY" />
+        <el-option label="RPA 动作" :value="InteractionBizTypeEnum.RPA_ACTION" />
+        <el-option label="RPA 工作流" :value="InteractionBizTypeEnum.RPA_WORKFLOW" />
+        <el-option label="RPA 浏览器" :value="InteractionBizTypeEnum.RPA_BROWSER" />
+        <el-option label="RPA 插件" :value="InteractionBizTypeEnum.RPA_PLUGIN" />
       </el-select>
       <el-select
         v-model="statusFilter"
@@ -56,8 +60,46 @@
           <span v-else class="text-text-primary">{{ row.reportCount ?? 0 }} 次 / {{ row.reportPeopleCount ?? 0 }} 人</span>
         </template>
       </el-table-column>
-      <el-table-column label="举报人" width="110" prop="reportMid" />
-      <el-table-column label="被举报人" width="110" prop="accusedMid" />
+      <el-table-column label="被举报内容" min-width="220">
+        <template #default="{ row }">
+          <div v-if="row.resource" class="flex items-center gap-2">
+            <el-image
+              v-if="row.resource.cover"
+              :src="row.resource.cover"
+              fit="cover"
+              class="h-10 w-10 shrink-0 rounded"
+              :preview-src-list="[row.resource.cover as string]"
+              preview-teleported
+            />
+            <button
+              v-if="row.resource.exists"
+              type="button"
+              class="line-clamp-2 text-left text-text-primary hover:text-primary"
+              @click="openResource(row.resource.jumpTarget)"
+            >
+              {{ row.resource.title || ('资源 #' + row.bizId) }}
+            </button>
+            <span v-else class="text-sm text-text-placeholder">内容已删除</span>
+          </div>
+          <span v-else class="text-text-placeholder">资源详情不可用</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="举报人" width="170">
+        <template #default="{ row }">
+          <div class="flex items-center gap-2">
+            <el-avatar :size="28" :src="row.reporterFace || undefined" />
+            <span class="text-text-primary">{{ row.reporterName || ('用户 ' + row.reportMid) }}</span>
+          </div>
+        </template>
+      </el-table-column>
+      <el-table-column label="被举报人" width="170">
+        <template #default="{ row }">
+          <div class="flex items-center gap-2">
+            <el-avatar :size="28" :src="row.accusedFace || undefined" />
+            <span class="text-text-primary">{{ row.accusedName || ('用户 ' + row.accusedMid) }}</span>
+          </div>
+        </template>
+      </el-table-column>
       <el-table-column label="举报理由" min-width="140">
         <template #default="{ row }">
           <span class="text-text-primary">#{{ row.reasonType }}</span>
@@ -80,7 +122,7 @@
             v-if="row.auditStatus === 'pending'"
             size="default"
             type="primary"
-            @click="openReview(row)"
+            @click="openReview(row as ReportItem)"
           >
             审核
           </el-button>
@@ -108,8 +150,12 @@
           <el-descriptions-item label="被举报数量">
             {{ reviewTarget.reportCount ?? 0 }} 次 / {{ reviewTarget.reportPeopleCount ?? 0 }} 人
           </el-descriptions-item>
-          <el-descriptions-item label="举报人">{{ reviewTarget.reportMid }}</el-descriptions-item>
-          <el-descriptions-item label="被举报人">{{ reviewTarget.accusedMid }}</el-descriptions-item>
+          <el-descriptions-item label="举报人">
+            {{ reviewTarget.reporterName || ('用户 ' + reviewTarget.reportMid) }}（{{ reviewTarget.reportMid }}）
+          </el-descriptions-item>
+          <el-descriptions-item label="被举报人">
+            {{ reviewTarget.accusedName || ('用户 ' + reviewTarget.accusedMid) }}（{{ reviewTarget.accusedMid }}）
+          </el-descriptions-item>
           <el-descriptions-item label="举报理由">#{{ reviewTarget.reasonType }}</el-descriptions-item>
           <el-descriptions-item v-if="reviewTarget.reasonDesc" label="补充说明">
             {{ reviewTarget.reasonDesc }}
@@ -158,8 +204,10 @@
 
 <script setup lang="ts">
 import { onMounted, reactive, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { fetchReportList, ReportBizTypeEnum, reviewReport, type ReportItem } from '@/api/notify/report-api.ts'
+import { fetchReportList, InteractionBizTypeEnum, reviewReport, type ReportItem } from '@/api/notify/report-api.ts'
+import { jumpToTarget } from '@/utils/routeJump'
 
 const loading = ref(false)
 const submitting = ref(false)
@@ -168,23 +216,31 @@ const reportTotal = ref(0)
 const reportPage = ref(1)
 const pageSize = 20
 
-const bizTypeFilter = ref<ReportBizTypeEnum | ''>('')
+const bizTypeFilter = ref<InteractionBizTypeEnum | ''>('')
 const statusFilter = ref('')
 
 const reviewDialogVisible = ref(false)
 const reviewTarget = ref<ReportItem | null>(null)
 const reviewForm = reactive({ decision: 'resolve' as 'resolve' | 'reject', hideResource: false, remark: '' })
 
-const bizTypeName = (bt: ReportBizTypeEnum) => {
+const bizTypeName = (bt: InteractionBizTypeEnum) => {
   switch (bt) {
-    case ReportBizTypeEnum.DYNAMIC:
+    case InteractionBizTypeEnum.DYNAMIC:
       return '动态'
-    case ReportBizTypeEnum.COMMENT:
+    case InteractionBizTypeEnum.COMMENT:
       return '评论'
-    case ReportBizTypeEnum.USER:
+    case InteractionBizTypeEnum.USER:
       return '用户'
-    case ReportBizTypeEnum.RESOURCE:
-      return '资源'
+    case InteractionBizTypeEnum.LOTTERY:
+      return '抽奖'
+    case InteractionBizTypeEnum.RPA_ACTION:
+      return 'RPA 动作'
+    case InteractionBizTypeEnum.RPA_WORKFLOW:
+      return 'RPA 工作流'
+    case InteractionBizTypeEnum.RPA_BROWSER:
+      return 'RPA 浏览器'
+    case InteractionBizTypeEnum.RPA_PLUGIN:
+      return 'RPA 插件'
     default:
       return String(bt)
   }
@@ -192,13 +248,17 @@ const bizTypeName = (bt: ReportBizTypeEnum) => {
 const statusName = (s: string) =>
   ({ pending: '待处理', resolved: '已成立', rejected: '已驳回' })[s] ?? s
 const statusTagType = (s: string): 'warning' | 'success' | 'info' | 'danger' =>
-  ({ pending: 'warning', resolved: 'success', rejected: 'info' })[s] ?? 'info'
+  ({ pending: 'warning', resolved: 'success', rejected: 'info' } as Record<string, 'warning' | 'success' | 'info' | 'danger'>)[s] ?? 'info'
 
-// lottery（crawler 资源）不允许下架
-const canHide = (row: ReportItem) => row.bizType !== ReportBizTypeEnum.RESOURCE
+// 抽奖（LOTTERY）与用户（USER）不允许下架；动态/评论/RPA 资源允许
+const canHide = (row: ReportItem) =>
+  row.bizType !== InteractionBizTypeEnum.LOTTERY && row.bizType !== InteractionBizTypeEnum.USER
 
 const formatTime = (t?: string | null) =>
   t ? new Date(t).toLocaleString('zh-CN', { hour12: false }) : '-'
+
+const router = useRouter()
+const openResource = (url?: string | null) => jumpToTarget(router, url)
 
 const onFilterChange = () => {
   reportPage.value = 1

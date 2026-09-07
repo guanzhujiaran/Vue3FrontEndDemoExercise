@@ -30,6 +30,8 @@ import type {
   UserExpRecordItem,
   UserExpRecordListResp,
 } from '@/api/community/hey-api'
+// 供消费组件类型化：UserCenterRecords 等直接 import 元素类型
+export type { UserActLogItem, UserExpRecordItem } from '@/api/community/hey-api'
 
 /**
  * 从 hey-api 的 error（HTTP 非 2xx / 连接失败）中尽力还原后端返回的业务对象。
@@ -65,7 +67,7 @@ function extractBackendError<T>(error: unknown): BusinessResponse<T> | null {
  * 后端返回业务失败码（如 casdoor/info 的 -3）时会自动弹错误提示，无需调用方各自 try/catch。
  */
 function adapt<T>(
-  result: Promise<{ data?: T | null; error?: unknown }>,
+  result: Promise<{ data?: unknown; error?: unknown }>,
   failMsg: string
 ): Promise<BusinessResponse<T>> {
   return result.then((r) => {

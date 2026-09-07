@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref, computed, type Ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { type ThemeMode, useThemeStore } from '@/stores/theme.ts'
 import { useUserPrefStore, type SizeTheme } from '@/stores/user_pref.ts'
 import { useHueThemeStore } from '@/stores/hue_theme.ts'
@@ -22,6 +23,7 @@ import { useLocaleStore } from '@/stores/locale'
 import { SUPPORTED_LOCALES, type SupportedLocale } from '@/i18n'
 
 const router = useRouter()
+const { t } = useI18n()
 const isLoggedIn = computed<boolean>(() => !!user_nav_model.value.uid)
 const user_nav_model = useInject(KeysEnum.BiliUser) as Ref<UserNavModel>
 const themeStore = useThemeStore()
@@ -85,26 +87,30 @@ const hueThemes = computed(() => {
     if (item.id === 0) {
       return {
         value: item.id,
-        label: '默认主题',
+        label: t('common.defaultTheme'),
         theme: item.theme
       }
     } else {
       return {
         value: item.id,
-        label: `主题 ${item.id}`,
+        label: `${t('common.theme')} ${item.id}`,
         theme: item.theme
       }
     }
   })
 })
 
-const sizeThemes: { value: SizeTheme; label: string }[] = [
-  { value: 'xs', label: '超小' },
-  { value: 'sm', label: '小号' },
-  { value: 'base', label: '标准' },
-  { value: 'lg', label: '大号' },
-  { value: 'xl', label: '超大' }
-]
+// 大小主题选项（文案随语言切换）
+const sizeThemes = computed<{ value: SizeTheme; label: string }[]>(() => [
+  { value: 'xs', label: t('common.sizeXs') },
+  { value: 'sm', label: t('common.sizeSm') },
+  { value: 'base', label: t('common.sizeBase') },
+  { value: 'lg', label: t('common.sizeLg') },
+  { value: 'xl', label: t('common.sizeXl') }
+])
+
+// 当前主题模式文案（如「主题：深色」），随语言切换
+const themeModeText = computed(() => t('common.themeMode', { mode: t(`common.${themeStore.themeMode}`) }))
 
 const themeVisible = ref(false)
 const sizeThemeVisible = ref(false)
@@ -142,10 +148,10 @@ const handleMessageCenterClick = () => {
 const handleLogout = async () => {
   try {
     await userApi.Logout()
-    biliMessage.success('退出登录成功')
+    biliMessage.success(t('common.logoutSuccess'))
   } catch (error) {
     console.error('退出登录失败:', error)
-    biliMessage.warning('退出登录失败，但已清除本地状态')
+    biliMessage.warning(t('common.logoutFailedCleared'))
   } finally {
     // 清除用户信息和JWT token
     userNavStore.delete_user_nav()
@@ -259,7 +265,7 @@ const handleDropDownVisibleChange = (visible: boolean) => {
       <div
         class="header-login-entry flex items-center justify-center px-4 py-1.5 text-sm font-medium text-[var(--el-text-color-primary)] hover:text-[var(--el-color-primary)] transition-colors"
         v-else>
-        <span> 登录 </span>
+        <span>{{ t('common.login') }}</span>
       </div>
     </div>
     <template #dropdown>
@@ -287,7 +293,7 @@ const handleDropDownVisibleChange = (visible: boolean) => {
                   :show-text="false" />
                 <div class="user-info-exp-text mt-2 text-sm text-text-secondary text-center">
                   <template v-if="user_nav_model?.level_info?.next_exp === '--'">
-                    已满级
+                    {{ t('common.maxLevel') }}
                   </template>
                   <template v-else>
                     {{ displayCurrentExp }} / {{ displayNextExp }}
@@ -300,7 +306,7 @@ const handleDropDownVisibleChange = (visible: boolean) => {
             class="dropdown-item text-sm rounded-xl my-3 group">
             <div class="flex items-center justify-between w-full">
               <HeaderAvatarDropdownItem>
-                <template #text>个人中心</template>
+                <template #text>{{ t('common.userCenter') }}</template>
               </HeaderAvatarDropdownItem>
               <el-icon-arrow-right
                 class="ml-auto h-4 w-4 text-xs text-text-secondary transition-colors duration-300 group-hover:text-[var(--el-text-color-primary)]" />
@@ -312,7 +318,7 @@ const handleDropDownVisibleChange = (visible: boolean) => {
               <HeaderAvatarDropdownItem>
                 <template #text>
                   <div class="flex items-center gap-2">
-                    <span>我的消息</span>
+                    <span>{{ t('common.myMessage') }}</span>
                     <el-badge v-if="totalUnread > 0" :value="totalUnread > 99 ? '99+' : totalUnread" type="danger" />
                   </div>
                 </template>
@@ -331,7 +337,7 @@ const handleDropDownVisibleChange = (visible: boolean) => {
             v-model:visible="themeVisible" placement="left" trigger="hover" :persistent="true">
             <template #reference>
               <div class="flex items-center w-full justify-between">
-                <span>{{ `主题：${themeStore.getThemeText()}` }}</span>
+                <span>{{ themeModeText }}</span>
                 <el-icon-arrow-right
                   class="h-4 w-4 text-xs text-text-secondary transition-colors duration-300 group-hover:text-[var(--el-text-color-primary)]" />
               </div>
@@ -339,19 +345,19 @@ const handleDropDownVisibleChange = (visible: boolean) => {
             <template #default>
               <el-dropdown-item :class="{ activated: themeStore.themeMode === 'dark' }"
                 @click="handleThemeClick('dark')" :icon="Moon" class="flex items-center justify-between group">
-                <span>深色</span>
+                <span>{{ t('common.dark') }}</span>
                 <el-icon-arrow-right
                   class="ml-auto h-4 w-4 text-xs text-text-secondary transition-colors duration-300 group-hover:text-[var(--el-text-color-primary)] activated:!text-[var(--el-color-primary)]" />
               </el-dropdown-item>
               <el-dropdown-item :class="{ activated: themeStore.themeMode === 'light' }"
                 @click="handleThemeClick('light')" :icon="Sunny" class="flex items-center justify-between group">
-                <span>浅色</span>
+                <span>{{ t('common.light') }}</span>
                 <el-icon-arrow-right
                   class="ml-auto h-4 w-4 text-xs text-text-secondary transition-colors duration-300 group-hover:text-[var(--el-text-color-primary)] activated:!text-[var(--el-color-primary)]" />
               </el-dropdown-item>
               <el-dropdown-item :class="{ activated: themeStore.themeMode === 'auto' }"
                 @click="handleThemeClick('auto')" :icon="Monitor" class="flex items-center justify-between group">
-                <span>自动</span>
+                <span>{{ t('common.auto') }}</span>
                 <el-icon-arrow-right
                   class="ml-auto h-4 w-4 text-xs text-text-secondary transition-colors duration-300 group-hover:text-[var(--el-text-color-primary)] activated:!text-[var(--el-color-primary)]" />
               </el-dropdown-item>
@@ -367,7 +373,7 @@ const handleDropDownVisibleChange = (visible: boolean) => {
             v-model:visible="hueThemeVisible" placement="left" trigger="hover">
             <template #reference>
               <div class="flex items-center w-full justify-between">
-                <span>色彩主题：{{ `主题 ${hueThemeStore.currentIndex === 0 ? '默认' : hueThemeStore.currentIndex}` }}</span>
+                <span>{{ t('common.colorTheme') }}：{{ hueThemeStore.currentIndex === 0 ? t('common.defaultTheme') : t('common.theme') + ' ' + hueThemeStore.currentIndex }}</span>
                 <el-icon-arrow-right
                   class="h-4 w-4 text-xs text-text-secondary transition-colors duration-300 group-hover:text-[var(--el-text-color-primary)]" />
               </div>
@@ -392,13 +398,13 @@ const handleDropDownVisibleChange = (visible: boolean) => {
               </div>
               <el-dropdown-item :disabled="!hueThemeStore.canGenerate" @click="handleRandomizeHueTheme()" divided
                 class="flex items-center justify-between group">
-                <span>{{ hueThemeStore.canGenerate ? '创建随机主题' : '已达上限' }}</span>
+                <span>{{ hueThemeStore.canGenerate ? t('common.createRandomTheme') : t('common.limitReached') }}</span>
                 <el-icon-arrow-right
                   class="ml-auto h-4 w-4 text-xs text-text-secondary transition-colors duration-300 group-hover:text-[var(--el-text-color-primary)]" />
               </el-dropdown-item>
               <el-dropdown-item @click="handleRestoreHueTheme()" divided
                 class="flex items-center justify-between group">
-                <span>恢复默认</span>
+                <span>{{ t('common.restoreDefault') }}</span>
                 <el-icon-arrow-right
                   class="ml-auto h-4 w-4 text-xs text-text-secondary transition-colors duration-300 group-hover:text-[var(--el-text-color-primary)]" />
               </el-dropdown-item>
@@ -414,7 +420,7 @@ const handleDropDownVisibleChange = (visible: boolean) => {
             v-model:visible="sizeThemeVisible" placement="left" trigger="hover">
             <template #reference>
               <div class="flex items-center w-full justify-between">
-                <span>大小主题：{{sizeThemes.find((t) => t.value === userPrefStore.sizeTheme)?.label || '标准'}}</span>
+                <span>{{ t('common.sizeTheme') }}：{{ sizeThemes.find((s) => s.value === userPrefStore.sizeTheme)?.label || t('common.sizeBase') }}</span>
                 <el-icon-arrow-right
                   class="h-4 w-4 text-xs text-text-secondary transition-colors duration-300 group-hover:text-[var(--el-text-color-primary)]" />
               </div>
@@ -444,7 +450,7 @@ const handleDropDownVisibleChange = (visible: boolean) => {
                     <path fill="currentColor"
                       d="M512 64C264.6 64 64 264.6 64 512s200.6 448 448 448 448-200.6 448-448S759.4 64 512 64zm0 820c-205.4 0-372-166.6-372-372S306.6 140 512 140s372 166.6 372 372-166.6 372-372 372zm74.5-450.4c-25.6-9.6-44.8-22.4-57.6-38.4-12.8-16-19.2-35.2-19.2-57.6 0-25.6 6.4-46.4 19.2-62.4 12.8-16 33.6-27.2 60.8-35.2l44.8 83.2c-16 6.4-28.8 14.4-38.4 24-9.6 9.6-14.4 22.4-14.4 38.4 0 14.4 6.4 25.6 19.2 33.6 12.8 8 35.2 14.4 67.2 19.2l-25.6 60.8zM376 460.8c6.4-38.4 19.2-73.6 38.4-105.6 22.4-35.2 51.2-62.4 86.4-81.6l-44.8-83.2c-57.6 25.6-102.4 64-134.4 115.2-32 51.2-48 110.4-48 176s16 124.8 48 176c32 51.2 76.8 89.6 134.4 115.2l44.8-83.2c-35.2-19.2-64-46.4-86.4-81.6-19.2-32-32-70.4-38.4-110.4H512v-76.8H376z" />
                   </svg>
-                  语言：{{ currentLangLabel }}
+                  {{ t('common.language') }}：{{ currentLangLabel }}
                 </span>
                 <el-icon-arrow-right
                   class="ml-auto h-4 w-4 text-xs text-text-secondary transition-colors duration-300 group-hover:text-[var(--el-text-color-primary)]" />
@@ -465,7 +471,7 @@ const handleDropDownVisibleChange = (visible: boolean) => {
         <!-- 退出登录按钮 -->
         <el-dropdown-item v-if="isLoggedIn" :icon="SwitchButton" @click="handleLogout"
           class="dropdown-item text-sm rounded-xl my-3 logout-dropdown-item" divided>
-          <span style="color: #f56c6c;">退出登录</span>
+          <span style="color: #f56c6c;">{{ t('common.logout') }}</span>
         </el-dropdown-item>
       </el-dropdown-menu>
     </template>

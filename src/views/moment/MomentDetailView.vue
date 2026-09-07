@@ -58,7 +58,7 @@
               >
                 <LotteryCommentSection
                   :oid="detail.dynIdStr"
-                  :type="CommentTypeEnum.DYNAMIC"
+                  :type="InteractionBizTypeEnum.DYNAMIC"
                   :up-mid="detail.mid"
                   :focus-rpid="focusRpid"
                   @count-change="handleCommentCountChange"
@@ -202,8 +202,8 @@
       v-model:visible="showRepostDialog"
       is-repost
       :src-dyn-id="momentId"
-      :src-author-name="detailAuthor?.uname"
-      :src-author-face="detailAuthor?.face"
+      :src-author-name="detailAuthor?.uname ?? undefined"
+      :src-author-face="detailAuthor?.face ?? undefined"
       :src-summary="detailDescText"
       @success="handleRepostSuccess"
     />
@@ -216,7 +216,7 @@
     />
 
     <!-- 统一举报弹窗 -->
-    <ReportDialog v-model="reportDialogVisible" :biz-type="ReportBizTypeEnum.DYNAMIC" :biz-id="reportDynId" />
+    <ReportDialog v-model="reportDialogVisible" :biz-type="InteractionBizTypeEnum.DYNAMIC" :biz-id="reportDynId" />
   </div>
 </template>
 
@@ -232,7 +232,6 @@ import {
   fetchMomentDetail,
   fetchInteractionStatusOne,
   InteractionBizTypeEnum,
-  ReportBizTypeEnum,
   thumbMoment,
   fetchMomentLikers,
   fetchMomentForwards,
@@ -242,7 +241,6 @@ import type {
   MomentDetailResp,
   MomentFeedItem,
 } from '@/api/notify/moment-api'
-import { CommentTypeEnum } from '@/api/lottery_comment'
 import EmptyState from '@/components/message/EmptyState.vue'
 import LotteryCommentSection from '@/components/lottery_data/LotteryCommentSection.vue'
 import MomentCard from '@/components/moment/MomentCard.vue'

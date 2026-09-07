@@ -34,6 +34,7 @@
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { Collection } from '@element-plus/icons-vue'
+import { openExternalLink } from '@/utils/PageOpen/linkPolicy'
 import { InteractionBizTypeEnum } from '@/api/notify/moment-api'
 
 const props = withDefaults(
@@ -100,7 +101,7 @@ function handleClick() {
       router.push({ name: 'MOMENT_DETAIL', params: { momentId: bizId } })
       break
     default:
-      if (props.jumpUrl) window.open(props.jumpUrl, '_blank')
+      if (props.jumpUrl) openExternalLink(props.jumpUrl)
   }
 }
 </script>

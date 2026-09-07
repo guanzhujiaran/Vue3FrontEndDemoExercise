@@ -151,6 +151,9 @@ export class CommentService {
      * @ 面板昵称搜索：直连 pptr Postgres 按昵称 / 注册名前缀匹配（Phase 3.1）。
      *
      * 走前缀匹配 `keyword%`，对索引友好，不会退化成 `%keyword%` 全表扫描。
+     *
+     * 搜索结果用于 @ 他人，属他人可见场景：返回 :class:`UserBriefOut`，其私域字段
+     * 由序列化期按访问者身份自动剥离。
      */
     public static atSearchApiV1CommentAtSearchGet<ThrowOnError extends boolean = false>(options: Options<AtSearchApiV1CommentAtSearchGetData, ThrowOnError>): RequestResult<AtSearchApiV1CommentAtSearchGetResponses, AtSearchApiV1CommentAtSearchGetErrors, ThrowOnError, 'data'> {
         return (options.client ?? client).get<AtSearchApiV1CommentAtSearchGetResponses, AtSearchApiV1CommentAtSearchGetErrors, ThrowOnError, 'data'>({

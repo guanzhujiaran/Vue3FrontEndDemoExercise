@@ -13,14 +13,14 @@ import {
   MessageEventService,
   MessageDmService,
   MessageSettingService,
-  EventTypeEnum,
+  InteractionActionTypeEnum,
   NotifyLevelEnum,
   NotifyStatusEnum,
   NotifyTargetTypeEnum,
   DmRelationEnum,
   DmMsgTypeEnum,
   DmMsgStatusEnum,
-  DmAuditStateEnum
+  ResourceAuditStatusEnum
 } from '@/api/community/hey-api'
 
 // ---------------------------------------------------------------------------
@@ -39,13 +39,14 @@ import type {
   NotifyUpdateReq,
   EventUnreadResp,
   UserActivityResp,
-  SourceTypeEnum,
+  InteractionBizTypeEnum,
   EventListResp,
   EventReadResp,
   DmSessionItem,
   DmSessionListResp,
   DmMessageItem,
   DmMessageListResp,
+  DmSendResp,
   MessageSettingResp,
   MessageSettingUpdateReq,
   EventMsgfeedItem,
@@ -56,10 +57,10 @@ import type {
 // 对外兼容别名（实现全部来自 SDK；本地 import 后再别名导出，模块内部方可直接使用）
 export type UnreadSummary = EventUnreadResp
 /**
- * 事件类型：直接复用 SDK 生成的 EventTypeEnum（数字枚举，like=1, reply=2, at=3 ...）。
- * 业务组件统一通过 EventTypeEnum.LIKE 等方式传入，无需在本层再做字符串/数字转换。
+ * 事件类型：直接复用 SDK 生成的 InteractionActionTypeEnum（数字枚举，like=1, reply=2, at=3 ...）。
+ * 业务组件统一通过 InteractionActionTypeEnum.LIKE 等方式传入，无需在本层再做字符串/数字转换。
  */
-export type EventType = EventTypeEnum
+export type EventType = InteractionActionTypeEnum
 /**
  * 重新导出 SDK 的枚举**值**，供业务组件以 `XxxEnum.XXX` 比较 / 赋值。
  *
@@ -68,16 +69,16 @@ export type EventType = EventTypeEnum
  * 那样既过不了类型检查，运行时也永远匹配不上。
  */
 export {
-  EventTypeEnum,
+  InteractionActionTypeEnum,
   NotifyLevelEnum,
   NotifyStatusEnum,
   NotifyTargetTypeEnum,
   DmRelationEnum,
   DmMsgTypeEnum,
   DmMsgStatusEnum,
-  DmAuditStateEnum
+  ResourceAuditStatusEnum
 }
-export type SourceType = SourceTypeEnum
+export type SourceType = InteractionBizTypeEnum
 export type NotifyTargetType = NotifyTargetTypeEnum
 export type CreateNotifyPayload = NotifyCreateReq
 export type UpdateNotifyPayload = NotifyUpdateReq
@@ -102,6 +103,7 @@ export type UserActivity = UserActivityResp
 export type {
   DmMessageItem,
   DmMessageListResp,
+  DmSendResp,
   DmSessionItem,
   DmSessionListResp,
   MessageSettingResp,
@@ -275,6 +277,8 @@ export async function markEventRead(
     event_type?: EventType
     source_type?: SourceType
     source_id?: string
+    /** 标记该时间戳（含）之前、归属当前用户的互动提醒全部已读（自动已读用）。 */
+    read_before?: string
   },
   options?: RequestOptions
 ): Promise<EventReadResp> {
@@ -285,7 +289,8 @@ export async function markEventRead(
           event_ids: params.event_ids,
           event_type: params.event_type ?? null,
           source_type: params.source_type ?? null,
-          source_id: params.source_id ?? null
+          source_id: params.source_id ?? null,
+          read_before: params.read_before ?? null
         }
       }),
     { affected: 0, unread_count: 0 },
@@ -330,18 +335,27 @@ export async function fetchDmSessions(
 export async function fetchDmMessages(params: {
   /** 雪花 ID：支持 number 或 str 传参（后端 StrInt 兼容） */
   talker_mid: number | string
+  /** 游标 msgkey：back=本页最小（往更旧翻）；forward=已见最大（增量查新）。首屏不传 */
   cursor?: string | null
   size?: number
+  /**
+   * 翻页方向：back 向旧翻页（默认）/ forward 增量查新（只返回比 cursor 新的消息，升序）。
+   * 注意：direction 为后端新增参数，SDK 重新生成前以断言透传；响应仍复用 DmMessageListResp。
+   */
+  direction?: 'back' | 'forward'
 }): Promise<DmMessageListResp> {
+  // query 以 Record 承载以便透传 SDK 尚未收录的 direction 参数
+  const query: Record<string, unknown> = {
+    talker_mid: params.talker_mid,
+    cursor: params.cursor ?? null,
+    page_size: params.size ?? 20
+  }
+  if (params.direction) query.direction = params.direction
   return request<DmMessageListResp>(
     () =>
       MessageDmService.listMessagesApiV1MessageDmMessagesGet({
-        query: {
-          talker_mid: params.talker_mid,
-          cursor: params.cursor ?? null,
-          page_size: params.size ?? 20
-        }
-      }),
+        query
+      } as Parameters<typeof MessageDmService.listMessagesApiV1MessageDmMessagesGet>[0]),
     { items: [], cursor: null, has_more: false }
   )
 }
@@ -351,8 +365,10 @@ export async function sendDm(payload: {
   receiver_mid: number | string
   content: string
   msg_type?: DmMsgTypeEnum
-}): Promise<boolean> {
-  return request<boolean>(
+}): Promise<DmSendResp | null> {
+  // 返回发送回执（含真实 msgkey / msg_ts），供前端发送成功后「直接本地追加」消息、
+  // 不再整段重拉聊天记录（避免 loading 骨架屏闪动）。失败（含被拉黑等业务拒绝）返回 null。
+  return request<DmSendResp | null>(
     () =>
       MessageDmService.sendDmApiV1MessageDmSendPost({
         body: {
@@ -363,7 +379,7 @@ export async function sendDm(payload: {
           receiver_avatar: null
         }
       }),
-    false
+    null
   )
 }
 
@@ -380,6 +396,30 @@ export async function ackDmSession(params: {
           talker_mid: params.talker_mid,
           ack_msgkey: params.ack_msgkey ?? null
         }
+      }),
+    false
+  )
+}
+
+// 撤回私信（双方均不可见，仅发送者可操作，且受后端时间窗口限制：发送后短时间内）。
+// 返回是否成功；后端业务失败（如超时 / 非本人）已由 request 统一弹错，此处只给调用方结果。
+export async function recallDmMessage(msgkey: string): Promise<boolean> {
+  return request<boolean>(
+    () =>
+      MessageDmService.recallMessageApiV1MessageDmRecallPost({
+        body: { msgkey }
+      }),
+    false
+  )
+}
+
+// 删除私信（仅自己视角不可见，对方仍可见）。
+export async function deleteDmMessages(msgkeys: string[]): Promise<boolean> {
+  if (!msgkeys.length) return true
+  return request<boolean>(
+    () =>
+      MessageDmService.deleteMessagesApiV1MessageDmDeletePost({
+        body: { msgkeys }
       }),
     false
   )

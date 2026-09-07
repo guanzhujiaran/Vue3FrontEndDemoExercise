@@ -51,6 +51,7 @@ export const processRoutesForHeader = (
       return {
         path: fullPath,
         title: meta?.title || '',
+        i18nKey: meta?.titleI18nKey,
         requiresLogin: meta?.requiresLogin || false,
         requiresAdmin: (meta as CustomRouteMeta).requiresAdmin || false,
         order: meta?.order || 0,
@@ -86,11 +87,13 @@ export const processRoutesForHome = (routes: RouteRecordRaw[], parentPath = ''):
 
       const module: CustomRouteMeta & {
         path?: string
-        children?: (CustomRouteMeta & { path?: string; order?: number })[]
+        i18nKey?: string
+        children?: (CustomRouteMeta & { path?: string; order?: number; i18nKey?: string })[]
         order?: number
       } = {
         id: typedMeta.id,
         title: typedMeta.title,
+        i18nKey: typedMeta.titleI18nKey,
         icon: typedMeta.icon,
         description: typedMeta.description,
         path: fullPath,
@@ -101,7 +104,7 @@ export const processRoutesForHome = (routes: RouteRecordRaw[], parentPath = ''):
 
       // 处理子路由
       if (r.children && r.children.length > 0) {
-        const children: (CustomRouteMeta & { path?: string; order?: number })[] = []
+        const children: (CustomRouteMeta & { path?: string; order?: number; i18nKey?: string })[] = []
 
         const processChildren = (childRoutes: RouteRecordRaw[], currentParentPath: string) => {
           childRoutes.forEach((childRoute) => {
@@ -110,6 +113,7 @@ export const processRoutesForHome = (routes: RouteRecordRaw[], parentPath = ''):
               const typedChildMeta = childRoute.meta as CustomRouteMeta
               children.push({
                 title: typedChildMeta.title,
+                i18nKey: typedChildMeta.titleI18nKey,
                 icon: typedChildMeta.icon,
                 description: typedChildMeta.description,
                 path: childPath,

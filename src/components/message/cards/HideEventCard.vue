@@ -9,9 +9,9 @@
 
 <script setup lang="ts">
 /**
- * 内容下架通知卡片（EventTypeEnum.HIDE = 5）。
+ * 内容下架通知卡片（InteractionActionTypeEnum.HIDE = 5）。
  *
- * 继承 `SystemEventCardBase`：动作文案由基类按 EventTypeEnum 查表
+ * 继承 `SystemEventCardBase`：动作文案由基类按 InteractionActionTypeEnum 查表
  * （「下架了你的{yyy}」，yyy 由 `resource_type` 推导），
  * 本类只声明处置说明的语义图标与语义色（warning）。
  */

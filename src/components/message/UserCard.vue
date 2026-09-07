@@ -91,6 +91,7 @@
 import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
+import { openExternalLink, openRouteInNewTab } from '@/utils/PageOpen/linkPolicy'
 import { Female, Male, UserFilled } from '@element-plus/icons-vue'
 import LevelIcon from '@/components/CommonCompo/LevelIcon.vue'
 
@@ -128,10 +129,13 @@ const props = withDefaults(
   defineProps<{
     card?: UserCardData | null
     showActions?: boolean
+    /** 点击头像/昵称时在新标签页打开用户空间（消息页使用，避免离开消息列表） */
+    openInNewTab?: boolean
   }>(),
   {
     card: null,
-    showActions: true
+    showActions: true,
+    openInNewTab: false
   }
 )
 
@@ -225,9 +229,8 @@ async function handleFollow() {
 function handleMessage() {
   const mid = props.card?.mid
   if (!mid) return
-  const name = props.card?.uname || ''
-  const url = `${CHAT_BASE_URL}/${mid}?name=${encodeURIComponent(name)}`
-  window.open(url, '_blank')
+  // 仅用 mid 定位会话，昵称/头像由 whisper 页按 mid 主动拉取，不再通过 ?name= 带入
+  openExternalLink(`${CHAT_BASE_URL}/${mid}`)
 }
 
 const router = useRouter()
@@ -236,6 +239,8 @@ const router = useRouter()
 function goUserSpace() {
   const mid = props.card?.mid
   if (!mid) return
-  router.push({ name: 'MOMENT_USER_SPACE', params: { mid: String(mid) } })
+  const to = { name: 'MOMENT_USER_SPACE', params: { mid: String(mid) } }
+  if (props.openInNewTab) openRouteInNewTab(router, to)
+  else router.push(to)
 }
 </script>

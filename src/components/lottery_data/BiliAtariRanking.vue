@@ -171,7 +171,7 @@ const load_func = async (
     // 兼容两种结构：优先取 resp.data，否则取 resp 本身。
     const payload = (resp as any).data ?? resp
     syncTs.value = payload?.sync_ts ?? 0
-    return (payload?.winners ?? []).map((el) => {
+    return (payload?.winners ?? []).map((el: any) => {
       return {
         score: el.count,
         ...el

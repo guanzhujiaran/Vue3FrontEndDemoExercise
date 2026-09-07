@@ -8,8 +8,11 @@
  * 避免两处各自实现导致口径不一致。
  */
 
-/** 匹配 `#{文本}{"url"}` 内联链接（http(s) 外链或站内 /app 路径） */
-export const INLINE_LINK_RE = /#\{([^{}]*?)\}\{"((?:https?:\/\/[^"\s]+|\/app\/\S+))"\}/g
+/**
+ * 匹配 `#{文本}{"url"}` 内联链接，url 三选一（与后端 `app/utils/notify_markup.py` 必须同步）：
+ * `http(s)://` 外链 / `route:{路由名}?{query}` 站内跳转（现行） / `/app/...` 站内路径（存量兼容）
+ */
+export const INLINE_LINK_RE = /#\{([^{}]*?)\}\{"((?:https?:\/\/[^"\s]+|\/app\/\S+|route:[^"\s]+))"\}/g
 
 export interface NotifySegment {
   text: string

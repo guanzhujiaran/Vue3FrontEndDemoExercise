@@ -299,7 +299,7 @@ import biliMessage from '@/utils/message'
 import { businessHandler, type BusinessResponse } from '@/utils/businessHandler'
 
 const { t } = useI18n()
-import { MessageDmAdminService, MessageAdminBanService, DmAuditStateEnum, DmMsgTypeEnum, type AuditSourceInfo, type DmSessionContextResp, type StandardResponseDmAuditItem, type StandardResponseDmAuditListResp, type StandardResponseDmStatsResp } from '@/api/community/hey-api'
+import { MessageDmAdminService, MessageAdminBanService, ResourceAuditStatusEnum, DmMsgTypeEnum, type AuditSourceInfo, type DmSessionContextResp, type StandardResponseDmAuditItem, type StandardResponseDmAuditListResp, type StandardResponseDmStatsResp } from '@/api/community/hey-api'
 
 // 从生成 SDK 的响应类型派生出 data 实体类型（responseStyle: 'data' 下函数直接返回 data）
 type DmAuditRow = NonNullable<StandardResponseDmAuditItem['data']>
@@ -441,10 +441,10 @@ async function load() {
     }),
     MessageDmAdminService.adminStatsApiV1MessageDmAdminStatsGet()
   ])
-  items.value = list?.data?.data?.items ?? []
-  total.value = list?.data?.data?.total ?? 0
-  canViewAllStates.value = Boolean(list?.data?.data?.can_view_all_states)
-  Object.assign(stats, st?.data?.data ?? {})
+  items.value = list?.data?.items ?? []
+  total.value = list?.data?.total ?? 0
+  canViewAllStates.value = Boolean(list?.data?.can_view_all_states)
+  Object.assign(stats, st?.data ?? {})
   // 审核列表已内嵌发送者信息（sender），无需前端再回查
   // 翻页 / 刷新后当前页条目变化，清空选中避免残留
   selectedKeys.value = new Set()
@@ -464,7 +464,7 @@ async function openSession(source: AuditSourceInfo) {
     const ctx = await MessageDmAdminService.sessionContextApiV1MessageDmAdminSessionGet({
       query: { session_key: sessionKey ?? null, msgkey: msgkey ?? null }
     })
-    sessionContext.value = ctx?.data?.data ?? null
+    sessionContext.value = ctx?.data ?? null
   } finally {
     sessionLoading.value = false
   }
@@ -541,7 +541,7 @@ async function doAudit(
     const newState = OP_STATE_MAP[op]
     // 一次批量审核调用，逐条原因通过 notes 映射传入（{ msgkey: 原因 }）；
     // 成功文案由调用方预设，失败提示由后端响应驱动（统一 businessHandler 处理）
-    await businessHandler<{ failed?: number[] }>(
+    await businessHandler<{ failed?: string[] }>(
       MessageDmAdminService.bulkAuditDmApiV1MessageDmAdminAuditBatchPost({
         body: {
           msgkeys: rows.map((r) => r.msgkey),
@@ -576,11 +576,11 @@ const userActionPending = ref(false)
 
 // 审核操作 -> 目标状态
 // 后端枚举是整数：审核动作落到哪个状态必须用枚举值表达，不能写字符串字面量
-const OP_STATE_MAP: Record<string, DmAuditStateEnum> = {
-  pass: DmAuditStateEnum.NORMAL,
-  reject: DmAuditStateEnum.REJECTED,
-  hidden: DmAuditStateEnum.HIDDEN,
-  restore: DmAuditStateEnum.NORMAL
+const OP_STATE_MAP: Record<string, ResourceAuditStatusEnum> = {
+  pass: ResourceAuditStatusEnum.NORMAL,
+  reject: ResourceAuditStatusEnum.REJECTED,
+  hidden: ResourceAuditStatusEnum.HIDDEN,
+  restore: ResourceAuditStatusEnum.NORMAL
 }
 
 function msgTypeText(type?: DmMsgTypeEnum): string {
@@ -589,17 +589,17 @@ function msgTypeText(type?: DmMsgTypeEnum): string {
   return t('message.typeText')
 }
 
-function stateTag(s?: DmAuditStateEnum): 'success' | 'warning' | 'danger' | 'info' {
-  if (s === DmAuditStateEnum.NORMAL) return 'success'
-  if (s === DmAuditStateEnum.AUDITING) return 'warning'
-  if (s === DmAuditStateEnum.REJECTED) return 'danger'
+function stateTag(s?: ResourceAuditStatusEnum): 'success' | 'warning' | 'danger' | 'info' {
+  if (s === ResourceAuditStatusEnum.NORMAL) return 'success'
+  if (s === ResourceAuditStatusEnum.AUDITING) return 'warning'
+  if (s === ResourceAuditStatusEnum.REJECTED) return 'danger'
   return 'info'
 }
 
-function stateText(s?: DmAuditStateEnum): string {
-  if (s === DmAuditStateEnum.NORMAL) return t('message.stateNormal')
-  if (s === DmAuditStateEnum.AUDITING) return t('message.stateAuditing')
-  if (s === DmAuditStateEnum.REJECTED) return t('message.stateRejected')
+function stateText(s?: ResourceAuditStatusEnum): string {
+  if (s === ResourceAuditStatusEnum.NORMAL) return t('message.stateNormal')
+  if (s === ResourceAuditStatusEnum.AUDITING) return t('message.stateAuditing')
+  if (s === ResourceAuditStatusEnum.REJECTED) return t('message.stateRejected')
   return t('message.stateHidden')
 }
 

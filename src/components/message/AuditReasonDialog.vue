@@ -56,7 +56,7 @@
 <script setup lang="ts">
 import { computed, h, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { ElAutocomplete, ElButton, ElPopover, ElTag } from 'element-plus'
+import { ElAutocomplete, ElButton, ElPopover, ElTag, type AutocompleteDataItem } from 'element-plus'
 import UserCard from '@/components/message/UserCard.vue'
 import { useAuditReasons } from '@/composables/useAuditReasons'
 import type { CommentUserBrief } from '@/api/community/hey-api'
@@ -126,12 +126,12 @@ const allFilled = computed(
 
 const fetchSuggestions = (
   queryString: string,
-  cb: (items: Array<string | { value: string }>) => void
+  cb: (items: Array<AutocompleteDataItem>) => void
 ) => {
   const q = queryString.trim().toLowerCase()
   const list = defaultReasons.value
     .filter((r) => (q ? r.toLowerCase().includes(q) : true))
-    .map((r) => ({ value: r }))
+    .map((r) => ({ value: r }) as AutocompleteDataItem)
   cb(list)
 }
 
@@ -140,8 +140,8 @@ function renderReasonCell(rowData: AuditReasonItem) {
     ElAutocomplete,
     {
       modelValue: reasons.value[rowData.id] ?? '',
-      'onUpdate:modelValue': (v: string) => {
-        reasons.value = { ...reasons.value, [rowData.id]: v }
+      'onUpdate:modelValue': (v: string | number) => {
+        reasons.value = { ...reasons.value, [rowData.id]: String(v) }
       },
       placeholder: t('message.auditReasonPlaceholder'),
       triggerOnFocus: true,
@@ -184,7 +184,7 @@ function renderUserCell(rowData: AuditReasonItem) {
           { class: 'cursor-default truncate text-sm text-text-primary' },
           uname as string
         ),
-      default: () => h(UserCard, { card: brief ?? null, showActions: false })
+      default: () => h(UserCard, { card: brief ?? null, showActions: false, openInNewTab: true })
     }
   )
 }

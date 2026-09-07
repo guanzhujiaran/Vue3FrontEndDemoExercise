@@ -3,9 +3,8 @@
  *
  * 仅在此处调用 hey-api 生成的 SDK，业务视图/组件统一调用本文件的封装函数。
  */
-import { AvatarAuditService, FavoriteService, FolderCoverAuditService, InteractionBizTypeEnum, MessageFollowService, MomentAuditService, MomentFeedService, MomentService, MomentTopicAuditService, PptrUserGatewayService, ReportBizTypeEnum, ReportService } from '@/api/community/hey-api'
+import { AvatarAuditService, FavoriteService, FolderCoverAuditService, InteractionBizTypeEnum, MessageFollowService, MomentAuditService, ResourceAuditStatusEnum, MomentFeedService, MomentService, MomentTopicAuditService, PptrUserGatewayService, ReportService } from '@/api/community/hey-api'
 import { request, authHeaders, type RequestOptions } from '@/api/http'
-import { client } from '@/api/community/hey-api/client.gen'
 
 import type {
   MomentFeedResp,
@@ -13,14 +12,14 @@ import type {
   MomentDetailResp,
   MomentCreateReq,
   MomentCreateResp,
-  MomentEditReq,
-  MomentEditResp,
   MomentRemoveReq,
   MomentRemoveResp,
   MomentRepostReq,
   MomentRepostResp,
   MomentThumbReq,
   MomentThumbResp,
+  MomentDislikeReq,
+  MomentDislikeResp,
   MomentReportReq,
   MomentReportResp,
   ReportCreateReq,
@@ -43,7 +42,6 @@ import type {
   MomentAuditActionReq,
   MomentAuditRejectReq,
   MomentAuditItem,
-  MomentAuditStatusEnum,
   MomentAuditStatisticsResp,
   MomentAuditTypeStat,
   AvatarAuditMineResp,
@@ -81,9 +79,14 @@ import type {
 /**
  * 互动资源类型 / 举报来源类型，直接使用 SDK 生成的数值枚举（单一数据源，不再手写镜像）：
  * - InteractionBizTypeEnum：DYNAMIC=1 / LOTTERY=2 / RPA_ACTION=3 / RPA_WORKFLOW=4 / RPA_BROWSER=5 / RPA_PLUGIN=6
- * - ReportBizTypeEnum：DYNAMIC=1 / COMMENT=2 / USER=3 / RESOURCE=4
+ * - InteractionBizTypeEnum：DYNAMIC=1 / LOTTERY=2 / RPA_ACTION=3 / RPA_WORKFLOW=4 / RPA_BROWSER=5 / RPA_PLUGIN=6 / COMMENT=7 / USER=8
  */
-export { InteractionBizTypeEnum, ReportBizTypeEnum }
+export { InteractionBizTypeEnum }
+
+// 动态审核状态枚举：后端 `ResourceAuditStatusEnum` 为 IntEnum（AUDITING=1/NORMAL=2/REJECTED=3/HIDDEN=4），
+// 请求参数必须传数字；响应里的 `auditStatus` 则是枚举成员名字符串（AUDITING/NORMAL/...）。
+// 统一从 SDK 取值，禁止在视图里手写 'auditing' 之类的字符串（会被 FastAPI 校验拒绝，返回 400）。
+export { ResourceAuditStatusEnum }
 
 // ---- Feed ----
 
@@ -110,7 +113,7 @@ export async function fetchAllFeed(params: {
 }
 
 export async function fetchSpaceFeed(
-  mid: number,
+  mid: number | string,
   params: { page_size?: number; history_offset?: number } = {}
 ): Promise<MomentFeedResp> {
   return request<MomentFeedResp>(
@@ -139,7 +142,7 @@ export async function fetchMomentDetail(momentId: string): Promise<MomentDetailR
   )
 }
 
-// ---- Create / Edit / Remove ----
+// ---- Create / Remove ----
 
 export async function createMoment(
   payload: MomentCreateReq,
@@ -148,20 +151,6 @@ export async function createMoment(
   return request<MomentCreateResp | null>(
     () =>
       MomentService.createDynamicApiV1CommunityCreatePost({
-        body: payload,
-      }),
-    null,
-    options
-  )
-}
-
-export async function editMoment(
-  payload: MomentEditReq,
-  options?: RequestOptions
-): Promise<MomentEditResp | null> {
-  return request<MomentEditResp | null>(
-    () =>
-      MomentService.editDynamicApiV1CommunityEditPost({
         body: payload,
       }),
     null,
@@ -241,27 +230,57 @@ export async function untopMoment(dynId: string): Promise<boolean> {
 
 // ---- Thumb (Like / Unlike) ----
 
-/** 点赞/取消点赞（2.17.0 泛化：支持多业务资源）。
- * 缺省 bizType='dynamic'，此时 bizId 等价 dynId（二者任传其一）。
+/** 点赞/取消点赞（2.17.0 泛化：支持多业务资源；2.56.0 去除 dynId 别名）。
+ * 资源一律以 `bizId` 定位（缺省 bizType='dynamic'，动态时 bizId 即动态 ID）。
  */
 export async function thumbMoment(
-  dynId: string,
+  bizId: string,
   up: number, // 1=like, 2=unlike
   options: { bizType?: InteractionBizTypeEnum; bizId?: string } = {}
 ): Promise<MomentThumbResp | null> {
   const bizType = options.bizType ?? InteractionBizTypeEnum.DYNAMIC
-  const bizId = options.bizId ?? dynId
+  const resolvedBizId = options.bizId ?? bizId
   return request<MomentThumbResp | null>(
     () =>
       MomentService.thumbApiV1CommunityThumbPost({
         body: {
           bizType,
-          bizId: bizId as unknown as number,
+          bizId: resolvedBizId as unknown as number,
           up,
-          ...(bizType === InteractionBizTypeEnum.DYNAMIC
-            ? { dynId: dynId as unknown as number }
-            : {}),
         } as MomentThumbReq,
+      }),
+    null
+  )
+}
+
+// ---- Dislike (点踩 / 取消点踩) ----
+
+/**
+ * 点踩 / 取消点踩（2.35.0 后端已有；2.62.0 前端接入，计划书 §5.20）。
+ *
+ * 后端语义：
+ * - 幂等（明细表 `TResourceDislike` 唯一约束 bizType+bizId+mid，一人一踩）；
+ * - 点踩后① 全站 `dislike_ratio` 对该资源**略降**权重；② 该资源**对点踩者本人大幅降权**
+ *   （`feed_engine` 精排后处理）；
+ * - **不改变内容可见性**（不下架），与举报审核的 `resourceAction=hide` 语义分离。
+ *
+ * 注意：点踩计数不对外展示，前端只用 `isDislike` 渲染踩的状态。
+ */
+export async function dislikeMoment(
+  bizId: string,
+  up: number, // 1=点踩, 2=取消点踩
+  options: { bizType?: InteractionBizTypeEnum; bizId?: string } = {}
+): Promise<MomentDislikeResp | null> {
+  const bizType = options.bizType ?? InteractionBizTypeEnum.DYNAMIC
+  const resolvedBizId = options.bizId ?? bizId
+  return request<MomentDislikeResp | null>(
+    () =>
+      MomentService.dislikeApiV1CommunityDislikePost({
+        body: {
+          bizType,
+          bizId: resolvedBizId as unknown as number,
+          up,
+        } as MomentDislikeReq,
       }),
     null
   )
@@ -302,14 +321,14 @@ export async function fetchInteractionStatusOne(
 // ---- Report ----
 
 export async function reportMoment(
-  dynId: string,
+  bizId: string,
   reasonType: number,
   reasonDesc?: string
 ): Promise<MomentReportResp | null> {
   return request<MomentReportResp | null>(
     () =>
       MomentService.reportApiV1CommunityReportPost({
-        body: { dynId: dynId as unknown as number, reasonType, reasonDesc } as MomentReportReq,
+        body: { bizId: bizId as unknown as number, reasonType, reasonDesc } as MomentReportReq,
       }),
     null
   )
@@ -336,7 +355,7 @@ export const REPORT_REASONS: { label: string; value: number }[] = [
  * 走 `POST /api/v1/report`，幂等（一人一对象一次），支持图片附件 `pics`（最多 3 张）。
  */
 export async function reportByBiz(
-  bizType: ReportBizTypeEnum,
+  bizType: InteractionBizTypeEnum,
   bizId: string,
   reasonType: number,
   reasonDesc?: string,
@@ -375,18 +394,28 @@ export async function checkCreate(scene: string): Promise<boolean> {
 // ---- Topic ----
 
 export async function fetchTopicSquare(params: {
-  page?: number
   page_size?: number
+  last_showlist?: number[] | string
+  keyword?: string
+  hot_only?: boolean
 } = {}): Promise<MomentTopicSquareResp> {
   return request<MomentTopicSquareResp>(
     () =>
       MomentService.topicSquareApiV1CommunityTopicSquareGet({
         query: {
-          page: params.page ?? 1,
           page_size: params.page_size ?? 20,
+          ...(params.last_showlist != null
+            ? {
+                last_showlist: Array.isArray(params.last_showlist)
+                  ? params.last_showlist.join(',')
+                  : params.last_showlist,
+              }
+            : {}),
+          ...(params.keyword ? { keyword: params.keyword } : {}),
+          ...(params.hot_only ? { hot_only: true } : {}),
         },
       }),
-    { items: [], hasMore: false }
+    { items: [], hasMore: false, updateBaseline: null, historyOffset: null, updateNum: 0 }
   )
 }
 
@@ -491,7 +520,7 @@ export async function fetchTopicHotSearch(params: {
 }
 
 export async function fetchTopicFeed(
-  topicId: number,
+  topicId: number | string,
   params: { page_size?: number; history_offset?: number; sort?: 'hot' | 'time' } = {}
 ): Promise<MomentTopicFeedResp> {
   return request<MomentTopicFeedResp>(
@@ -504,12 +533,12 @@ export async function fetchTopicFeed(
           sort: params.sort ?? 'hot',
         },
       }),
-    { topicId, topicName: '', items: [], hasMore: false, topicIdStr: String(topicId) }
+    { topicId: Number(topicId), topicName: '', items: [], hasMore: false, topicIdStr: String(topicId) }
   )
 }
 
 /** 话题详情（对齐 B 站 top_details 结构） */
-export async function fetchTopicDetail(topicId: number): Promise<MomentTopicDetailResp | null> {
+export async function fetchTopicDetail(topicId: number | string): Promise<MomentTopicDetailResp | null> {
   return request<MomentTopicDetailResp | null>(
     () =>
       MomentService.topicDetailApiV1CommunityTopicDetailTopicIdGet({
@@ -679,7 +708,7 @@ export async function fetchMomentForwards(
  * - 其它 / 网络失败为 `-1`。
  * 返回类型直接使用 SDK 生成的 StandardResponseSpaceInfoResp。
  */
-export async function fetchUserSpaceInfo(mid: number): Promise<StandardResponseSpaceInfoResp> {
+export async function fetchUserSpaceInfo(mid: number | string): Promise<StandardResponseSpaceInfoResp> {
   try {
     const r = await PptrUserGatewayService.getSpaceInfoApiV1UserSpaceInfoGet({
       query: { mid },
@@ -701,7 +730,7 @@ export async function fetchUserSpaceInfo(mid: number): Promise<StandardResponseS
 
 export async function fetchAuditList(params: {
   /** 审核状态筛选：auditing（默认，待审核）/ normal（已过审，可驳回撤回）/ rejected（已驳回，可通过恢复）/ hidden（已下架） */
-  auditStatus?: MomentAuditStatusEnum
+  auditStatus?: ResourceAuditStatusEnum
   page_num?: number
   page_size?: number
 } = {}): Promise<MomentAuditListResp> {
@@ -998,7 +1027,7 @@ export async function fetchFavoriteDynIds(
           pageSize: params.pageSize ?? 20,
         },
       }),
-    { folderId, total: 0, dynIds: [] }
+    { folderId, total: 0, items: [] }
   )
 }
 
@@ -1072,7 +1101,7 @@ export async function setFavoriteSetting(
 
 /** 某用户主页公开的收藏夹列表（无需登录；不公开返回 null） */
 export async function fetchUserFavoriteFolders(
-  mid: number
+  mid: number | string
 ): Promise<FavoriteFolderResp[] | null> {
   try {
     return await request<FavoriteFolderResp[] | null>(
@@ -1089,7 +1118,7 @@ export async function fetchUserFavoriteFolders(
 
 /** 某用户某收藏夹下的公开动态 id（无需登录；不公开返回 null） */
 export async function fetchUserFavoriteDynIds(
-  mid: number,
+  mid: number | string,
   folderId: string,
   params: { page?: number; pageSize?: number } = {}
 ): Promise<FavoriteListResp | null> {
@@ -1114,10 +1143,7 @@ export async function fetchUserFavoriteDynIds(
 /** 动态审核总统计：按类型 + 按状态分组计数（role=root，与审核列表同守卫） */
 export async function fetchAuditStatistics(): Promise<MomentAuditStatisticsResp> {
   return request<MomentAuditStatisticsResp>(
-    () =>
-      client.get({
-        url: '/api/v1/moment/audit/statistics',
-      }),
+    () => MomentAuditService.auditStatisticsApiV1CommunityAuditStatisticsGet(),
     { byType: [], byStatus: {}, total: 0 }
   );
 }
@@ -1130,11 +1156,10 @@ export type {
   MomentCreateReq,
   MomentCreateResp,
   MomentAttachRef,
-  MomentEditReq,
-  MomentEditResp,
   MomentRepostReq,
   MomentRepostResp,
   MomentThumbResp,
+  MomentDislikeResp,
   ReportCreateReq,
   MomentTopicSquareResp,
   MomentTopicFeedResp,
@@ -1151,7 +1176,6 @@ export type {
   MomentAuditDetailResp,
   MomentAuditLogListResp,
   MomentAuditItem,
-  MomentAuditStatusEnum,
   MomentAuditStatisticsResp,
   MomentAuditTypeStat,
   MomentContentNode,

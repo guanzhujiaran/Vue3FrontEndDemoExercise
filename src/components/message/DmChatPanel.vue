@@ -13,18 +13,18 @@
           @click="emit('back')"
         />
         <img
-          v-if="talkerAvatar || !showBack"
+          v-if="displayAvatar || !showBack"
           class="h-9 w-9 shrink-0 rounded-full object-cover"
-          :src="talkerAvatar || BiliImg.face.noface"
+          :src="displayAvatar || BiliImg.face.noface"
           alt="avatar"
           referrerpolicy="no-referrer"
         />
         <span class="truncate text-base font-medium text-text-primary">
-          {{ talkerName || `用户${talkerMid}` }}
+          {{ displayName }}
         </span>
       </div>
 
-      <el-dropdown trigger="click" @command="onMenuCommand">
+      <el-dropdown v-if="!talkerMissing" trigger="click" @command="onMenuCommand">
         <el-button text class="shrink-0 p-2" :title="'更多操作'">
           <el-icon :size="20"><MoreFilled /></el-icon>
         </el-button>
@@ -36,7 +36,9 @@
             <el-dropdown-item command="mute">
               {{ isMuted ? '关闭免打扰' : '开启免打扰' }}
             </el-dropdown-item>
-            <el-dropdown-item command="block" divided>加入黑名单</el-dropdown-item>
+            <el-dropdown-item command="block" divided>
+              {{ iBlocked ? '解除拉黑' : '加入黑名单' }}
+            </el-dropdown-item>
             <el-dropdown-item command="report">举报该用户</el-dropdown-item>
           </el-dropdown-menu>
         </template>
@@ -45,12 +47,14 @@
 
     <!-- 消息列表：反向无限加载（最新在底部，默认滚到底；向上拉取更老内容） -->
     <div class="dm-chat-panel__body flex-1 min-h-0 flex flex-col">
-      <LoadingWrap v-if="loading" :loading="loading" class="h-full" />
+      <LoadingWrap v-if="talkerLoading" :loading="true" class="h-full" />
+      <LoadingWrap v-else-if="loading" :loading="loading" class="h-full" />
       <BiliError
         v-else-if="isError"
         :txt="t('message.listLoadFailed')"
         @click-retry="load"
       />
+      <EmptyState v-else-if="talkerMissing" :text="t('message.dmEmpty')" class="h-full" />
       <LoadingMoreContainer
         v-else
         ref="listContainerRef"
@@ -82,53 +86,72 @@
                 <img
                   v-if="!isSelf(msg)"
                   class="dm-chat-panel__avatar h-9 w-9 shrink-0 self-start rounded-full object-cover"
-                  :src="talkerAvatar || BiliImg.face.noface"
+                  :src="displayAvatar || BiliImg.face.noface"
                   alt="avatar"
                   referrerpolicy="no-referrer"
                 />
 
-                <div
-                  class="flex max-w-[70%] flex-col"
-                  :class="isSelf(msg) ? 'items-end' : 'items-start'"
+                <!-- 消息主体：右键弹出「撤回 / 删除」菜单 -->
+                <el-dropdown
+                  trigger="contextmenu"
+                  :show-timeout="0"
+                  :hide-timeout="100"
+                  @command="(cmd: string) => onMessageCommand(msg, cmd)"
                 >
-                  <!-- 对方昵称 -->
-                  <span
-                    v-if="!isSelf(msg)"
-                    class="mb-1 max-w-full truncate px-1 text-xs text-text-secondary"
+                  <div
+                    class="flex max-w-[70%] flex-col"
+                    :class="isSelf(msg) ? 'items-end' : 'items-start'"
                   >
-                    {{ talkerName || `用户${talkerMid}` }}
-                  </span>
+                    <!-- 对方昵称 -->
+                    <span
+                      v-if="!isSelf(msg)"
+                      class="mb-1 max-w-full truncate px-1 text-xs text-text-secondary"
+                    >
+                      {{ displayName }}
+                    </span>
 
-                  <!-- 气泡 -->
-                  <div
-                    v-if="msg.audit_state === DmAuditStateEnum.REJECTED || msg.audit_state === DmAuditStateEnum.HIDDEN"
-                    class="dm-chat-panel__bubble dm-chat-panel__bubble--system rounded-lg px-4 py-2.5 text-sm"
-                  >
-                    {{ msg.audit_state === DmAuditStateEnum.HIDDEN ? t('message.dmHidden') : t('message.dmRejected') }}
-                  </div>
-                  <div
-                    v-else-if="msg.msg_status === DmMsgStatusEnum.RECALLED"
-                    class="dm-chat-panel__bubble dm-chat-panel__bubble--system rounded-lg px-4 py-2.5 text-sm"
-                  >
-                    {{ t('message.dmRecalled') }}
-                  </div>
-                  <div
-                    v-else
-                    class="dm-chat-panel__bubble rounded-lg px-4 py-2.5 text-sm leading-relaxed"
-                    :class="
-                      isSelf(msg)
-                        ? 'bg-primary text-white'
-                        : 'bg-bg-overlay text-text-primary'
-                    "
-                  >
-                    <span class="whitespace-pre-wrap break-words">{{ msg.content }}</span>
-                  </div>
+                    <!-- 气泡 -->
+                    <div
+                      v-if="msg.audit_state === ResourceAuditStatusEnum.REJECTED || msg.audit_state === ResourceAuditStatusEnum.HIDDEN"
+                      class="dm-chat-panel__bubble dm-chat-panel__bubble--system rounded-lg px-4 py-2.5 text-sm"
+                    >
+                      {{ msg.audit_state === ResourceAuditStatusEnum.HIDDEN ? t('message.dmHidden') : t('message.dmRejected') }}
+                    </div>
+                    <div
+                      v-else-if="msg.msg_status === DmMsgStatusEnum.RECALLED"
+                      class="dm-chat-panel__bubble dm-chat-panel__bubble--system rounded-lg px-4 py-2.5 text-sm"
+                    >
+                      {{ t('message.dmRecalled') }}
+                    </div>
+                    <div
+                      v-else
+                      class="dm-chat-panel__bubble rounded-lg px-4 py-2.5 text-sm leading-relaxed"
+                      :class="
+                        isSelf(msg)
+                          ? 'bg-primary text-white'
+                          : 'bg-bg-overlay text-text-primary'
+                      "
+                    >
+                      <span class="whitespace-pre-wrap break-words">{{ msg.content }}</span>
+                    </div>
 
-                  <!-- 时间 -->
-                  <span class="mt-1 px-1 text-xs text-text-placeholder">
-                    {{ formatTime(msg.msg_ts) }}
-                  </span>
-                </div>
+                    <!-- 时间 -->
+                    <span class="mt-1 px-1 text-xs text-text-placeholder">
+                      {{ formatTime(msg.msg_ts) }}
+                    </span>
+                  </div>
+                  <template #dropdown>
+                    <el-dropdown-menu class="dm-chat-panel__msg-menu">
+                      <el-dropdown-item
+                        v-if="isSelf(msg) && canRecall(msg)"
+                        command="recall"
+                      >
+                        撤回
+                      </el-dropdown-item>
+                      <el-dropdown-item command="delete">删除</el-dropdown-item>
+                    </el-dropdown-menu>
+                  </template>
+                </el-dropdown>
               </div>
             </template>
           </div>
@@ -136,31 +159,16 @@
       </LoadingMoreContainer>
     </div>
 
-    <!-- 底部输入区 -->
-    <div class="dm-chat-panel__footer shrink-0 border-t border-border-lighter p-3">
-      <div class="dm-chat-panel__toolbar mb-2 flex items-center gap-1">
-        <el-button text circle title="发送图片" @click="onImage">
-          <template #icon>
-            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
-              <rect x="3" y="5" width="18" height="14" rx="2" />
-              <circle cx="8.5" cy="9.5" r="1.5" />
-              <path d="M21 15l-4.5-4.5L10 17l-3-3L3 18" />
-            </svg>
-          </template>
-        </el-button>
-        <el-button text circle title="表情" @click="onEmoji">
-          <template #icon>
-            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
-              <circle cx="12" cy="12" r="10" />
-              <circle cx="9" cy="9" r="1.2" fill="currentColor" stroke="none" />
-              <circle cx="15" cy="9" r="1.2" fill="currentColor" stroke="none" />
-              <path d="M8 14c1.2 1.6 3 2 4 2s2.8-.4 4-2" />
-            </svg>
-          </template>
-        </el-button>
+    <!-- 底部输入区：用户不存在/拉取失败时隐藏，避免向不存在的用户发送消息 -->
+    <div v-if="!talkerMissing" class="dm-chat-panel__footer shrink-0 border-t border-border-lighter p-3">
+      <!-- 黑名单态：历史私信仍可查看，但输入区禁用并提示 -->
+      <div
+        v-if="blockedWithTalker"
+        class="dm-chat-panel__blocked-tip px-3 py-2.5 text-center text-sm text-text-placeholder"
+      >
+        {{ t('message.dmBlockedCannotSend') }}
       </div>
-
-      <div class="dm-chat-panel__input-row flex items-end gap-3">
+      <div v-else class="dm-chat-panel__input-row flex items-end gap-3">
         <el-input
           v-model="draft"
           type="textarea"
@@ -188,7 +196,7 @@
 
     <ReportDialog
       v-model="reportVisible"
-      :biz-type="ReportBizTypeEnum.USER"
+      :biz-type="InteractionBizTypeEnum.USER"
       :biz-id="String(talkerMid)"
       @submitted="onReportSubmitted"
     />
@@ -199,16 +207,20 @@
 import { computed, nextTick, onActivated, onDeactivated, onMounted, onUnmounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ArrowLeft, MoreFilled } from '@element-plus/icons-vue'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   fetchDmMessages,
   sendDm,
   ackDmSession,
+  recallDmMessage,
+  deleteDmMessages,
   DmMsgStatusEnum,
-  DmAuditStateEnum,
+  DmMsgTypeEnum,
+  ResourceAuditStatusEnum,
   type DmMessageItem
 } from '@/api/notify/message-api'
-import { ReportBizTypeEnum } from '@/api/notify/moment-api'
+import { InteractionBizTypeEnum, fetchUserSpaceInfo } from '@/api/notify/moment-api'
+import { useUserNavStore } from '@/stores/user_nav'
 import { BiliImg } from '@/assets/img/BiliImg.ts'
 import LoadingWrap from '@/components/message/LoadingWrap.vue'
 import EmptyState from '@/components/message/EmptyState.vue'
@@ -243,6 +255,9 @@ const emit = defineEmits<{
 }>()
 
 const { t } = useI18n()
+// 当前登录用户信息（取自己 mid 用于本地构造「我发送的消息」气泡，避免整段重拉）
+const userNavStore = useUserNavStore()
+const selfMid = computed(() => String(userNavStore.user_nav.uid || ''))
 
 const messages = ref<DmMessageItem[]>([])
 const loading = ref(false)
@@ -260,12 +275,87 @@ const isTop = ref(false)
 const isMuted = ref(false)
 const listContainerRef = ref<ChatListContainer | null>(null)
 
-// 轮询：在对应聊天界面激活时每 5s 拉取最新消息，实现轻量实时通信
-const POLL_INTERVAL = 5000
+// 轮询：在对应聊天界面激活时每 15s 增量查新一次（direction=forward 游标增量，开销恒定），
+// 实时性要求不高，降低请求频率减轻前后端负担
+const POLL_INTERVAL = 15000
 const pollLoading = ref(false)
 let pollTimer: ReturnType<typeof setInterval> | null = null
 
 const talkerMidStr = computed(() => String(props.talkerMid))
+
+// 展示用「对方资料」：优先用主动拉取到的真实资料（按 mid 走 /user/space/info），
+// 回退到布局透传的会话快照（昵称/头像），最后回落到「用户{mid}」+ 默认头像。
+// 不再依赖外部 deep link 带入的 ?name= 查询参数。
+const talkerInfo = ref<{ name?: string | null; face?: string | null } | null>(null)
+const displayName = computed(() => talkerInfo.value?.name || props.talkerName || `用户${talkerMidStr.value}`)
+const displayAvatar = computed(() => talkerInfo.value?.face || props.talkerAvatar || null)
+
+// 拉取对方资料时的加载态与「用户不存在/拉取失败」标记：
+// 命中时直接展示「暂无消息」默认页，不再渲染消息列表与输入框。
+const talkerLoading = ref(false)
+const talkerMissing = ref(false)
+// 与对方存在黑名单关系（我拉黑对方 / 被对方拉黑）：历史私信仍展示，但禁止再发送。
+const blockedWithTalker = ref(false)
+// 是否是我主动拉黑对方（决定顶部菜单显示「加入黑名单 / 解除拉黑」）
+const iBlocked = ref(false)
+
+// 撤回时间窗口（与后端 settings.dm_recall_window_seconds=120 对齐）
+const RECALL_WINDOW_MS = 120 * 1000
+
+/** 自己发送的消息是否仍可撤回：仅当是自己发送、状态正常、且未超时 */
+function canRecall(msg: DmMessageItem): boolean {
+  if (!msg.msgkey) return false
+  // 发送者判定与气泡归属（isSelf）语义一致：单聊中「非对方即自己」，
+  // 不依赖登录态（user_nav.uid）的加载时序——此前用 selfMid 精确比较，
+  // 登录态未就绪时撤回项会整体消失；selfMid 就绪后再做一次交叉校验。
+  if (!isSelf(msg)) return false
+  if (selfMid.value && String(msg.sender_uid) !== selfMid.value) return false
+  if (msg.msg_status !== DmMsgStatusEnum.NORMAL) return false
+  const ts = msg.msg_ts ?? 0
+  if (!ts) return false
+  return Date.now() - ts <= RECALL_WINDOW_MS
+}
+
+async function fetchTalker() {
+  const mid = Number(props.talkerMid)
+  if (!mid) {
+    talkerMissing.value = true
+    return
+  }
+  talkerLoading.value = true
+  try {
+    const res = await fetchUserSpaceInfo(mid)
+    if (res.code === 0 && res.data) {
+      // 正常用户：展示真实昵称 / 头像
+      talkerInfo.value = { name: res.data.name ?? null, face: res.data.face ?? null }
+      blockedWithTalker.value = false
+      talkerMissing.value = false
+    } else if (res.code === 403) {
+      // 黑名单互访（403）：不影响阅读已存在的历史私信，仅禁止再发送。
+      // 不置 talkerMissing，保留聊天窗，展示历史消息；对方资料回落到会话快照 / 占位。
+      blockedWithTalker.value = true
+      talkerMissing.value = false
+      talkerInfo.value = { name: props.talkerName || `用户${talkerMidStr.value}`, face: props.talkerAvatar || null }
+      // 判定方向：是否我主动拉黑了对方（用于顶部「解除拉黑」入口）
+      try {
+        const r = await userApi.BlocklistCheck(mid)
+        iBlocked.value = r?.success ? Boolean(r.data?.i_blocked) : false
+      } catch {
+        iBlocked.value = false
+      }
+    } else {
+      // 用户不存在 / 拉取失败：无可聊对象，展示「暂无消息」默认页
+      blockedWithTalker.value = false
+      talkerMissing.value = true
+    }
+  } catch {
+    // 网络异常等：同样视为「无此用户」，展示空默认页
+    blockedWithTalker.value = false
+    talkerMissing.value = true
+  } finally {
+    talkerLoading.value = false
+  }
+}
 
 function isSelf(msg: DmMessageItem): boolean {
   return String(msg.sender_uid) !== talkerMidStr.value
@@ -319,7 +409,7 @@ async function load() {
     // 后端按 msgkey 倒序返回（最新消息在前），聊天展示需要最早在上、最新在底部
     messages.value = [...(res.items ?? [])].reverse()
     cursor.value = res.cursor ?? null
-    hasMore.value = res.has_more
+    hasMore.value = res.has_more ?? false
     // 打开会话即标记已读：把该会话未读清零并抬高已读水位，后端红点随之消失。
     // 失败不影响消息展示，静默忽略（下次打开或轮询仍会再同步）。
     try {
@@ -358,7 +448,7 @@ async function loadOlder() {
       messages.value = [...filtered, ...messages.value]
     }
     cursor.value = res.cursor ?? null
-    hasMore.value = res.has_more
+    hasMore.value = res.has_more ?? false
     // 补偿：在顶部插入新内容后，把滚动条下移相同高度，保持原消息视觉位置不动
     await nextTick(() => {
       const target = listContainerRef.value?.getScrollEl()
@@ -382,28 +472,52 @@ function isNearBottom(): boolean {
   return el.scrollHeight - el.scrollTop - el.clientHeight < 80
 }
 
-// 增量轮询：拉取最新一页并按 msgkey 去重合并，仅追加真正的新消息，
-// 不打断用户翻阅历史（仅当用户贴近底部时才自动滚动到最新）。
+// 已加载消息中的最大 msgkey（msgkey 为 64 位雪花 ID，用 BigInt 比较避免精度问题），
+// 作为轮询「增量查新」的正向游标：direction=forward 只拉比它新的消息。
+const newestMsgkey = computed<string | null>(() => {
+  let max: string | null = null
+  for (const m of messages.value) {
+    if (!m.msgkey) continue
+    if (max === null || BigInt(m.msgkey) > BigInt(max)) max = m.msgkey
+  }
+  return max
+})
+
+// 增量轮询查新：带「已见最大 msgkey」作为 cursor、direction=forward，
+// 服务端只返回增量新消息（升序，可直接追加），无新消息时返回空列表，
+// 开销恒定、不再整页重拉。仅当贴近底部时自动滚动到最新，不打断翻阅历史。
 async function pollLoad() {
   if (!props.talkerMid || pollLoading.value) return
   pollLoading.value = true
   try {
-    const res = await fetchDmMessages({ talker_mid: talkerMidStr.value, size: 10 })
-    const fetched = [...(res.items ?? [])].reverse()
-    const existingKeys = new Set(messages.value.map((m) => m.msgkey))
-    let added = 0
-    const merged = messages.value.slice()
-    for (const m of fetched) {
-      if (!existingKeys.has(m.msgkey)) {
-        merged.push(m)
-        added++
+    if (newestMsgkey.value) {
+      const res = await fetchDmMessages({
+        talker_mid: talkerMidStr.value,
+        cursor: newestMsgkey.value,
+        size: 10,
+        direction: 'forward'
+      })
+      const fresh = res.items ?? []
+      if (fresh.length) {
+        const existingKeys = new Set(messages.value.map((m) => m.msgkey))
+        const added = fresh.filter((m) => !existingKeys.has(m.msgkey))
+        if (added.length) {
+          messages.value = [...messages.value, ...added]
+          if (isNearBottom()) {
+            await nextTick(() => scrollToBottom())
+          }
+        }
       }
-    }
-    if (added > 0) {
+    } else {
+      // 尚无已加载消息（异常兜底）：回落拉最新一页
+      const res = await fetchDmMessages({ talker_mid: talkerMidStr.value, size: 10 })
+      const fetched = [...(res.items ?? [])].reverse()
+      const existingKeys = new Set(messages.value.map((m) => m.msgkey))
+      const merged = messages.value.slice()
+      for (const m of fetched) {
+        if (!existingKeys.has(m.msgkey)) merged.push(m)
+      }
       messages.value = merged
-      if (isNearBottom()) {
-        await nextTick(() => scrollToBottom())
-      }
     }
   } catch {
     // 轮询失败静默处理：不弹错误、不阻塞交互，下次周期再试
@@ -429,22 +543,76 @@ async function onSend() {
   if (!text || sending.value) return
   sending.value = true
   try {
-    const ok = await sendDm({ receiver_mid: talkerMidStr.value, content: text })
-    if (ok) {
+    const resp = await sendDm({ receiver_mid: talkerMidStr.value, content: text })
+    if (resp) {
+      // 发送成功：直接按发送回执本地构造并追加这条消息，不再整段重拉聊天记录
+      //（避免触发 loading 骨架屏闪动、丢失浏览位置）。真实 msgkey 与轮询 / 历史
+      // 同源，后续 pollLoad / 翻页按 msgkey 去重，不会出现重复气泡。
       draft.value = ''
-      await load()
+      const ts = resp.msg_ts || Date.now()
+      const localMsg: DmMessageItem = {
+        msgkey: resp.msgkey,
+        sender_uid: Number(selfMid.value) || 0,
+        sender_uidStr: selfMid.value || null,
+        msg_type: DmMsgTypeEnum.TEXT,
+        msg_status: DmMsgStatusEnum.NORMAL,
+        content: text,
+        content_ready: true,
+        msg_ts: ts,
+        created_at: new Date(ts).toISOString(),
+        audit_state: ResourceAuditStatusEnum.NORMAL
+      }
+      if (!messages.value.some((m) => m.msgkey === resp.msgkey)) {
+        messages.value = [...messages.value, localMsg]
+      }
+      await nextTick(() => scrollToBottom())
     }
   } finally {
     sending.value = false
   }
 }
 
-function onImage() {
-  ElMessage.info('图片发送功能开发中')
-}
-
-function onEmoji() {
-  ElMessage.info('表情功能开发中')
+/** 消息右键菜单：撤回 / 删除（成功后仅更新本地对应气泡，不整段重拉） */
+async function onMessageCommand(msg: DmMessageItem, command: string) {
+  if (!msg?.msgkey) return
+  if (command === 'recall') {
+    if (!canRecall(msg)) {
+      ElMessage.warning('消息发送已超过可撤回时间')
+      return
+    }
+    try {
+      await ElMessageBox.confirm('撤回后对方也将无法看到该消息，确定撤回？', '撤回消息', {
+        confirmButtonText: '撤回',
+        cancelButtonText: '取消',
+        type: 'warning'
+      })
+    } catch {
+      return // 用户取消
+    }
+    const ok = await recallDmMessage(msg.msgkey)
+    if (!ok) return // 失败已由 request 弹错（含后端超时拒绝）
+    // 本地标记为已撤回，展示「XX 撤回了一条消息」样式
+    messages.value = messages.value.map((m) =>
+      m.msgkey === msg.msgkey
+        ? { ...m, msg_status: DmMsgStatusEnum.RECALLED, content: null, content_ready: true }
+        : m
+    )
+    return
+  }
+  if (command === 'delete') {
+    try {
+      await ElMessageBox.confirm('删除后仅自己不可见，对方仍可看到。确定删除？', '删除消息', {
+        confirmButtonText: '删除',
+        cancelButtonText: '取消',
+        type: 'warning'
+      })
+    } catch {
+      return // 用户取消
+    }
+    const ok = await deleteDmMessages([msg.msgkey])
+    if (!ok) return
+    messages.value = messages.value.filter((m) => m.msgkey !== msg.msgkey)
+  }
 }
 
 async function onMenuCommand(command: string) {
@@ -460,9 +628,21 @@ async function onMenuCommand(command: string) {
     case 'block': {
       const mid = Number(props.talkerMid)
       if (!mid) return
-      const res = await userApi.BlocklistAdd(mid)
-      if (res?.success) {
-        ElMessage.success('已加入黑名单')
+      if (iBlocked.value) {
+        // 已拉黑对方 → 解除：恢复发送能力
+        const res = await userApi.BlocklistRemove(mid)
+        if (res?.success) {
+          ElMessage.success('已解除拉黑')
+          iBlocked.value = false
+          blockedWithTalker.value = false
+        }
+      } else {
+        const res = await userApi.BlocklistAdd(mid)
+        if (res?.success) {
+          ElMessage.success('已加入黑名单')
+          iBlocked.value = true
+          blockedWithTalker.value = true
+        }
       }
       break
     }
@@ -478,7 +658,13 @@ function onReportSubmitted() {
 
 // 每个用户的会话仅首次挂载时完整拉取一次消息，之后由 keep-alive 按 talkerId 缓存实例，
 // 切换用户再切回时直接复用缓存（保留消息、滚动位置与草稿），不再整页重新加载。
-onMounted(load)
+// 先按 mid 拉取对方资料：用户不存在/拉取失败时直接展示「暂无消息」默认页，不再拉消息。
+onMounted(async () => {
+  await fetchTalker()
+  if (!talkerMissing.value) {
+    load()
+  }
+})
 // 进入对应聊天界面仅启动 5s 轮询；切走或缓存被回收时停止轮询。
 // 注意：激活时不做立即刷新，避免每次切换页面都额外发一次请求——
 // 实时性由轮询间隔（首轮在 5s 后触发）保证，而非在切换瞬间拉取。

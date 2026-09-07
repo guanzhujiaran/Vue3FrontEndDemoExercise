@@ -23,7 +23,7 @@
     <MomentFavoriteDialog
       v-model="favDialogVisible"
       :dyn-id="bizId"
-      :biz-type="bizType"
+      :biz-type="bizTypeNum"
       :biz-id="bizId"
       @changed="onFavChanged"
     />
@@ -34,12 +34,13 @@
 import { onMounted, ref } from 'vue'
 import { CaretTop, Star, StarFilled } from '@element-plus/icons-vue'
 import { thumbMoment, fetchInteractionStatus, fetchInteractionStatusOne } from '@/api/notify/moment-api'
-import type { InteractionBizTypeEnum } from '@/api/notify/moment-api'
+import { InteractionBizTypeEnum } from '@/api/notify/moment-api'
 import MomentFavoriteDialog from '@/components/moment/MomentFavoriteDialog.vue'
 import biliMessage from '@/utils/message'
 
 const props = defineProps<{
-  bizType: InteractionBizTypeEnum
+  /** 支持数字枚举（LOTTERY 页）或字符串（如 "rpa_workflow"，RPA 资源页） */
+  bizType: InteractionBizTypeEnum | string
   bizId: string
   /** detail 页场景：走单资源接口（后端投递 MQ 累计浏览）；默认 false（列表等场景不累计浏览） */
   countView?: boolean
@@ -52,12 +53,23 @@ const favoriteCount = ref(0)
 const thumbLoading = ref(false)
 const favDialogVisible = ref(false)
 
+/** 把 bizType 字符串（如 "rpa_workflow"）归一为数字枚举（RPA_WORKFLOW=4），后端契约用数字 */
+function toBizTypeNum(v: InteractionBizTypeEnum | string): InteractionBizTypeEnum {
+  if (typeof v === 'number') return v
+  const num = InteractionBizTypeEnum[
+    String(v).toUpperCase() as keyof typeof InteractionBizTypeEnum
+  ]
+  return typeof num === 'number' ? (num as InteractionBizTypeEnum) : InteractionBizTypeEnum.DYNAMIC
+}
+
+const bizTypeNum = computed(() => toBizTypeNum(props.bizType))
+
 async function loadStatus() {
   try {
     // detail 场景（countView=true）走单资源接口（累计浏览）；否则走批量接口（列表不累计浏览）
     const item = props.countView
-      ? await fetchInteractionStatusOne(props.bizType, props.bizId)
-      : (await fetchInteractionStatus(props.bizType, [props.bizId]))?.items?.[0]
+      ? await fetchInteractionStatusOne(bizTypeNum.value, props.bizId)
+      : (await fetchInteractionStatus(bizTypeNum.value, [props.bizId]))?.items?.[0]
     if (item) {
       isLiked.value = item.isLike ?? false
       isFavorite.value = item.isFavorite ?? false
@@ -79,7 +91,7 @@ async function handleThumb() {
   isLiked.value = !prevLike
   likeCount.value = Math.max(0, prevCount + (targetUp === 1 ? 1 : -1))
   try {
-    const resp = await thumbMoment(props.bizId, targetUp, { bizType: props.bizType })
+    const resp = await thumbMoment(props.bizId, targetUp, { bizType: bizTypeNum.value })
     if (resp) {
       likeCount.value = resp.likeCount ?? 0
       isLiked.value = resp.isLike ?? false

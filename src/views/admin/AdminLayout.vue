@@ -6,7 +6,7 @@
 
 <script setup lang="ts">
 import { computed, type Component } from 'vue'
-import { Setting, Bell, ChatDotRound, Comment, Key, Checked, Collection, Avatar, Flag } from '@element-plus/icons-vue'
+import { Bell, ChatDotRound, Comment, Key, Checked, Collection, Avatar, Flag, Stamp, Warning, Document, Medal, CollectionTag, User } from '@element-plus/icons-vue'
 import icShoucang from '@/assets/svgs/audit/shoucang.svg?component'
 import { useRpaAdminStore } from '@/stores/rpa_admin'
 import { useMessageAdminStore } from '@/stores/message_admin'
@@ -22,6 +22,7 @@ if (!messageAdminStore.loaded) messageAdminStore.fetchStatus()
 const isRpaAdmin = computed(() =>
   Boolean(rpaAdminStore.status?.is_admin || rpaAdminStore.status?.is_root)
 )
+const isRoot = computed(() => Boolean(rpaAdminStore.status?.is_root))
 const isMessageRoot = computed(() => Boolean(messageAdminStore.status?.is_root))
 
 interface NavItem {
@@ -38,10 +39,17 @@ interface NavGroup {
 const navGroups = computed<NavGroup[]>(() => {
   const groups: NavGroup[] = []
   if (isRpaAdmin.value) {
-    groups.push({
-      title: 'RPA 管理',
-      items: [{ name: 'ADMIN_RPA', title: 'RPA 管理后台', icon: Setting }]
-    })
+    const rpaItems: NavItem[] = [
+      { name: 'ADMIN_RPA_APPROVAL', title: '操作审批', icon: Stamp },
+      { name: 'ADMIN_RPA_REPORT', title: '社区举报', icon: Warning },
+      { name: 'ADMIN_RPA_AUDIT', title: '操作审计', icon: Document },
+      { name: 'ADMIN_RPA_CERT', title: '官方认证', icon: Medal },
+      { name: 'ADMIN_RPA_TAG', title: '标签管理', icon: CollectionTag }
+    ]
+    if (isRoot.value) {
+      rpaItems.push({ name: 'ADMIN_RPA_ROLE', title: '管理员权限', icon: User })
+    }
+    groups.push({ title: 'RPA 管理', items: rpaItems })
   }
   const messageItems: NavItem[] = []
   if (isRpaAdmin.value) {

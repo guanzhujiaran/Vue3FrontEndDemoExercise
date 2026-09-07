@@ -3,7 +3,7 @@
 import type { RequestResult } from '../client';
 import { client } from '../client.gen';
 import type { Options } from '../sdk.gen';
-import type { AttachTagApiAdminRpaTagAttachPostData, AttachTagApiAdminRpaTagAttachPostErrors, AttachTagApiAdminRpaTagAttachPostResponses, BanUserApiAdminRpaBanCreatePostData, BanUserApiAdminRpaBanCreatePostErrors, BanUserApiAdminRpaBanCreatePostResponses, CertifyApiAdminRpaCertificationCertifyPostData, CertifyApiAdminRpaCertificationCertifyPostErrors, CertifyApiAdminRpaCertificationCertifyPostResponses, CreateTagApiAdminRpaTagCreatePostData, CreateTagApiAdminRpaTagCreatePostErrors, CreateTagApiAdminRpaTagCreatePostResponses, DeleteTagApiAdminRpaTagDeletePostData, DeleteTagApiAdminRpaTagDeletePostErrors, DeleteTagApiAdminRpaTagDeletePostResponses, DetachTagApiAdminRpaTagDetachPostData, DetachTagApiAdminRpaTagDetachPostErrors, DetachTagApiAdminRpaTagDetachPostResponses, GetAllSessionsApiAdminRpaSessionsAllPostData, GetAllSessionsApiAdminRpaSessionsAllPostResponses, GetBanStatusApiAdminRpaBanStatusPostData, GetBanStatusApiAdminRpaBanStatusPostErrors, GetBanStatusApiAdminRpaBanStatusPostResponses, GetBrowserSessionConfigApiAdminRpaConfigBrowserSessionGetData, GetBrowserSessionConfigApiAdminRpaConfigBrowserSessionGetResponses, GetPermissionsApiAdminRpaPermissionsGetPostData, GetPermissionsApiAdminRpaPermissionsGetPostResponses, GrantAdminApiAdminRpaRoleGrantPostData, GrantAdminApiAdminRpaRoleGrantPostErrors, GrantAdminApiAdminRpaRoleGrantPostResponses, LiftUserBanApiAdminRpaBanLiftPostData, LiftUserBanApiAdminRpaBanLiftPostErrors, LiftUserBanApiAdminRpaBanLiftPostResponses, ListAdminsApiAdminRpaRoleListPostData, ListAdminsApiAdminRpaRoleListPostErrors, ListAdminsApiAdminRpaRoleListPostResponses, ListApprovalsApiAdminRpaApprovalListPostData, ListApprovalsApiAdminRpaApprovalListPostErrors, ListApprovalsApiAdminRpaApprovalListPostResponses, ListAuditApiAdminRpaAuditListPostData, ListAuditApiAdminRpaAuditListPostErrors, ListAuditApiAdminRpaAuditListPostResponses, ListBansApiAdminRpaBanListPostData, ListBansApiAdminRpaBanListPostErrors, ListBansApiAdminRpaBanListPostResponses, ListCertificationsApiAdminRpaCertificationListPostData, ListCertificationsApiAdminRpaCertificationListPostErrors, ListCertificationsApiAdminRpaCertificationListPostResponses, ListReportsApiAdminRpaReportsListPostData, ListReportsApiAdminRpaReportsListPostErrors, ListReportsApiAdminRpaReportsListPostResponses, ListTagsApiAdminRpaTagListPostData, ListTagsApiAdminRpaTagListPostErrors, ListTagsApiAdminRpaTagListPostResponses, ListTagsByTargetApiAdminRpaTagListByTargetPostData, ListTagsByTargetApiAdminRpaTagListByTargetPostErrors, ListTagsByTargetApiAdminRpaTagListByTargetPostResponses, MarkReportInvalidApiAdminRpaReportsMarkInvalidPostData, MarkReportInvalidApiAdminRpaReportsMarkInvalidPostErrors, MarkReportInvalidApiAdminRpaReportsMarkInvalidPostResponses, ResetPermissionsApiAdminRpaPermissionsResetPostData, ResetPermissionsApiAdminRpaPermissionsResetPostResponses, ReviewApprovalApiAdminRpaApprovalReviewPostData, ReviewApprovalApiAdminRpaApprovalReviewPostErrors, ReviewApprovalApiAdminRpaApprovalReviewPostResponses, ReviewReportApiAdminRpaReportsReviewPostData, ReviewReportApiAdminRpaReportsReviewPostErrors, ReviewReportApiAdminRpaReportsReviewPostResponses, RevokeAdminApiAdminRpaRoleRevokePostData, RevokeAdminApiAdminRpaRoleRevokePostErrors, RevokeAdminApiAdminRpaRoleRevokePostResponses, RevokeCertificationApiAdminRpaCertificationRevokePostData, RevokeCertificationApiAdminRpaCertificationRevokePostErrors, RevokeCertificationApiAdminRpaCertificationRevokePostResponses, RoleMeApiAdminRpaRoleMePostData, RoleMeApiAdminRpaRoleMePostErrors, RoleMeApiAdminRpaRoleMePostResponses, SubmitApprovalApiAdminRpaApprovalSubmitPostData, SubmitApprovalApiAdminRpaApprovalSubmitPostErrors, SubmitApprovalApiAdminRpaApprovalSubmitPostResponses, UpdateBrowserSessionConfigApiAdminRpaConfigBrowserSessionPostData, UpdateBrowserSessionConfigApiAdminRpaConfigBrowserSessionPostErrors, UpdateBrowserSessionConfigApiAdminRpaConfigBrowserSessionPostResponses, UpdatePermissionsApiAdminRpaPermissionsUpdatePostData, UpdatePermissionsApiAdminRpaPermissionsUpdatePostErrors, UpdatePermissionsApiAdminRpaPermissionsUpdatePostResponses, UpdateTagApiAdminRpaTagUpdatePostData, UpdateTagApiAdminRpaTagUpdatePostErrors, UpdateTagApiAdminRpaTagUpdatePostResponses } from '../types.gen';
+import type { AttachTagApiAdminRpaTagAttachPostData, AttachTagApiAdminRpaTagAttachPostErrors, AttachTagApiAdminRpaTagAttachPostResponses, BanUserApiAdminRpaBanCreatePostData, BanUserApiAdminRpaBanCreatePostErrors, BanUserApiAdminRpaBanCreatePostResponses, CertifyApiAdminRpaCertificationCertifyPostData, CertifyApiAdminRpaCertificationCertifyPostErrors, CertifyApiAdminRpaCertificationCertifyPostResponses, CreateTagApiAdminRpaTagCreatePostData, CreateTagApiAdminRpaTagCreatePostErrors, CreateTagApiAdminRpaTagCreatePostResponses, DeleteTagApiAdminRpaTagDeletePostData, DeleteTagApiAdminRpaTagDeletePostErrors, DeleteTagApiAdminRpaTagDeletePostResponses, DetachTagApiAdminRpaTagDetachPostData, DetachTagApiAdminRpaTagDetachPostErrors, DetachTagApiAdminRpaTagDetachPostResponses, GetAllSessionsApiAdminRpaSessionsAllPostData, GetAllSessionsApiAdminRpaSessionsAllPostResponses, GetBanStatusApiAdminRpaBanStatusPostData, GetBanStatusApiAdminRpaBanStatusPostErrors, GetBanStatusApiAdminRpaBanStatusPostResponses, GetBrowserSessionConfigApiAdminRpaConfigBrowserSessionGetData, GetBrowserSessionConfigApiAdminRpaConfigBrowserSessionGetResponses, GetPermissionsApiAdminRpaPermissionsGetPostData, GetPermissionsApiAdminRpaPermissionsGetPostResponses, GrantAdminApiAdminRpaRoleGrantPostData, GrantAdminApiAdminRpaRoleGrantPostErrors, GrantAdminApiAdminRpaRoleGrantPostResponses, LiftUserBanApiAdminRpaBanLiftPostData, LiftUserBanApiAdminRpaBanLiftPostErrors, LiftUserBanApiAdminRpaBanLiftPostResponses, ListAdminsApiAdminRpaRoleListPostData, ListAdminsApiAdminRpaRoleListPostErrors, ListAdminsApiAdminRpaRoleListPostResponses, ListApprovalsApiAdminRpaApprovalListPostData, ListApprovalsApiAdminRpaApprovalListPostErrors, ListApprovalsApiAdminRpaApprovalListPostResponses, ListAuditApiAdminRpaAuditListPostData, ListAuditApiAdminRpaAuditListPostErrors, ListAuditApiAdminRpaAuditListPostResponses, ListBansApiAdminRpaBanListPostData, ListBansApiAdminRpaBanListPostErrors, ListBansApiAdminRpaBanListPostResponses, ListCertificationsApiAdminRpaCertificationListPostData, ListCertificationsApiAdminRpaCertificationListPostErrors, ListCertificationsApiAdminRpaCertificationListPostResponses, ListTagsApiAdminRpaTagListPostData, ListTagsApiAdminRpaTagListPostErrors, ListTagsApiAdminRpaTagListPostResponses, ListTagsByTargetApiAdminRpaTagListByTargetPostData, ListTagsByTargetApiAdminRpaTagListByTargetPostErrors, ListTagsByTargetApiAdminRpaTagListByTargetPostResponses, ResetPermissionsApiAdminRpaPermissionsResetPostData, ResetPermissionsApiAdminRpaPermissionsResetPostResponses, ReviewApprovalApiAdminRpaApprovalReviewPostData, ReviewApprovalApiAdminRpaApprovalReviewPostErrors, ReviewApprovalApiAdminRpaApprovalReviewPostResponses, RevokeAdminApiAdminRpaRoleRevokePostData, RevokeAdminApiAdminRpaRoleRevokePostErrors, RevokeAdminApiAdminRpaRoleRevokePostResponses, RevokeCertificationApiAdminRpaCertificationRevokePostData, RevokeCertificationApiAdminRpaCertificationRevokePostErrors, RevokeCertificationApiAdminRpaCertificationRevokePostResponses, RoleMeApiAdminRpaRoleMePostData, RoleMeApiAdminRpaRoleMePostErrors, RoleMeApiAdminRpaRoleMePostResponses, SubmitApprovalApiAdminRpaApprovalSubmitPostData, SubmitApprovalApiAdminRpaApprovalSubmitPostErrors, SubmitApprovalApiAdminRpaApprovalSubmitPostResponses, UpdateBrowserSessionConfigApiAdminRpaConfigBrowserSessionPostData, UpdateBrowserSessionConfigApiAdminRpaConfigBrowserSessionPostErrors, UpdateBrowserSessionConfigApiAdminRpaConfigBrowserSessionPostResponses, UpdatePermissionsApiAdminRpaPermissionsUpdatePostData, UpdatePermissionsApiAdminRpaPermissionsUpdatePostErrors, UpdatePermissionsApiAdminRpaPermissionsUpdatePostResponses, UpdateTagApiAdminRpaTagUpdatePostData, UpdateTagApiAdminRpaTagUpdatePostErrors, UpdateTagApiAdminRpaTagUpdatePostResponses } from '../types.gen';
 
 export class 管理员管理Service {
     /**
@@ -181,140 +181,6 @@ export class 管理员管理Service {
             responseStyle: 'data',
             url: '/api/admin/rpa/permissions/reset',
             ...options
-        });
-    }
-    
-    /**
-     * 获取举报列表
-     *
-     * 获取举报列表（仅管理员/root）
-     *
-     * Args:
-     * request: {
-     * "page": 页码（默认1）,
-     * "per_page": 每页数量（默认50）,
-     * "is_valid": 是否有效（None=全部, True=未处理, False=已处理）,
-     * "resource_type": 资源类型筛选（可选）
-     * }
-     */
-    public static listReportsApiAdminRpaReportsListPost<ThrowOnError extends boolean = false>(options?: Options<ListReportsApiAdminRpaReportsListPostData, ThrowOnError>): RequestResult<ListReportsApiAdminRpaReportsListPostResponses, ListReportsApiAdminRpaReportsListPostErrors, ThrowOnError, 'data'> {
-        return (options?.client ?? client).post<ListReportsApiAdminRpaReportsListPostResponses, ListReportsApiAdminRpaReportsListPostErrors, ThrowOnError, 'data'>({
-            responseStyle: 'data',
-            url: '/api/admin/rpa/reports/list',
-            ...options,
-            headers: {
-                'Content-Type': 'application/json',
-                ...options?.headers
-            }
-        });
-    }
-    
-    /**
-     * 获取举报列表
-     *
-     * 获取举报列表（仅管理员/root）
-     *
-     * Args:
-     * request: {
-     * "page": 页码（默认1）,
-     * "per_page": 每页数量（默认50）,
-     * "is_valid": 是否有效（None=全部, True=未处理, False=已处理）,
-     * "resource_type": 资源类型筛选（可选）
-     * }
-     */
-    public static listReportsApiAdminRpaReportsListPost2<ThrowOnError extends boolean = false>(options?: Options<ListReportsApiAdminRpaReportsListPostData, ThrowOnError>): RequestResult<ListReportsApiAdminRpaReportsListPostResponses, ListReportsApiAdminRpaReportsListPostErrors, ThrowOnError, 'data'> {
-        return (options?.client ?? client).post<ListReportsApiAdminRpaReportsListPostResponses, ListReportsApiAdminRpaReportsListPostErrors, ThrowOnError, 'data'>({
-            responseStyle: 'data',
-            url: '/api/admin/rpa/reports/list',
-            ...options,
-            headers: {
-                'Content-Type': 'application/json',
-                ...options?.headers
-            }
-        });
-    }
-    
-    /**
-     * 审核举报
-     *
-     * 审核举报（仅管理员/root）
-     *
-     * decision:
-     * - ignore:   标记无效，资源保持不变
-     * - warn:     警告被举报人（通知待私信系统建成后接入）
-     * - takedown: 下架资源（设为非公开，从社区隐藏）
-     */
-    public static reviewReportApiAdminRpaReportsReviewPost<ThrowOnError extends boolean = false>(options: Options<ReviewReportApiAdminRpaReportsReviewPostData, ThrowOnError>): RequestResult<ReviewReportApiAdminRpaReportsReviewPostResponses, ReviewReportApiAdminRpaReportsReviewPostErrors, ThrowOnError, 'data'> {
-        return (options.client ?? client).post<ReviewReportApiAdminRpaReportsReviewPostResponses, ReviewReportApiAdminRpaReportsReviewPostErrors, ThrowOnError, 'data'>({
-            responseStyle: 'data',
-            url: '/api/admin/rpa/reports/review',
-            ...options,
-            headers: {
-                'Content-Type': 'application/json',
-                ...options.headers
-            }
-        });
-    }
-    
-    /**
-     * 审核举报
-     *
-     * 审核举报（仅管理员/root）
-     *
-     * decision:
-     * - ignore:   标记无效，资源保持不变
-     * - warn:     警告被举报人（通知待私信系统建成后接入）
-     * - takedown: 下架资源（设为非公开，从社区隐藏）
-     */
-    public static reviewReportApiAdminRpaReportsReviewPost2<ThrowOnError extends boolean = false>(options: Options<ReviewReportApiAdminRpaReportsReviewPostData, ThrowOnError>): RequestResult<ReviewReportApiAdminRpaReportsReviewPostResponses, ReviewReportApiAdminRpaReportsReviewPostErrors, ThrowOnError, 'data'> {
-        return (options.client ?? client).post<ReviewReportApiAdminRpaReportsReviewPostResponses, ReviewReportApiAdminRpaReportsReviewPostErrors, ThrowOnError, 'data'>({
-            responseStyle: 'data',
-            url: '/api/admin/rpa/reports/review',
-            ...options,
-            headers: {
-                'Content-Type': 'application/json',
-                ...options.headers
-            }
-        });
-    }
-    
-    /**
-     * 标记举报为无效
-     *
-     * 管理员标记举报为无效（等价于 ignore 决策）
-     *
-     * Args:
-     * request: {"report_id": <举报记录ID>, "review_note": <可选备注>}
-     */
-    public static markReportInvalidApiAdminRpaReportsMarkInvalidPost<ThrowOnError extends boolean = false>(options: Options<MarkReportInvalidApiAdminRpaReportsMarkInvalidPostData, ThrowOnError>): RequestResult<MarkReportInvalidApiAdminRpaReportsMarkInvalidPostResponses, MarkReportInvalidApiAdminRpaReportsMarkInvalidPostErrors, ThrowOnError, 'data'> {
-        return (options.client ?? client).post<MarkReportInvalidApiAdminRpaReportsMarkInvalidPostResponses, MarkReportInvalidApiAdminRpaReportsMarkInvalidPostErrors, ThrowOnError, 'data'>({
-            responseStyle: 'data',
-            url: '/api/admin/rpa/reports/mark-invalid',
-            ...options,
-            headers: {
-                'Content-Type': 'application/json',
-                ...options.headers
-            }
-        });
-    }
-    
-    /**
-     * 标记举报为无效
-     *
-     * 管理员标记举报为无效（等价于 ignore 决策）
-     *
-     * Args:
-     * request: {"report_id": <举报记录ID>, "review_note": <可选备注>}
-     */
-    public static markReportInvalidApiAdminRpaReportsMarkInvalidPost2<ThrowOnError extends boolean = false>(options: Options<MarkReportInvalidApiAdminRpaReportsMarkInvalidPostData, ThrowOnError>): RequestResult<MarkReportInvalidApiAdminRpaReportsMarkInvalidPostResponses, MarkReportInvalidApiAdminRpaReportsMarkInvalidPostErrors, ThrowOnError, 'data'> {
-        return (options.client ?? client).post<MarkReportInvalidApiAdminRpaReportsMarkInvalidPostResponses, MarkReportInvalidApiAdminRpaReportsMarkInvalidPostErrors, ThrowOnError, 'data'>({
-            responseStyle: 'data',
-            url: '/api/admin/rpa/reports/mark-invalid',
-            ...options,
-            headers: {
-                'Content-Type': 'application/json',
-                ...options.headers
-            }
         });
     }
     

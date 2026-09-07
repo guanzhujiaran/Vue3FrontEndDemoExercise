@@ -1,6 +1,7 @@
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import type { ApiError } from './error_handler'
+import { navigateNoReferrer } from '@/utils/PageOpen/linkPolicy'
 
 interface RedirectOnErrorOptions {
   /** 需要检查的 URL 路径（支持部分匹配） */
@@ -117,7 +118,7 @@ class ApiRedirectHandler {
     if (this.router) {
       this.router.push(path)
     } else {
-      window.location.href = path
+      navigateNoReferrer(path)
     }
 
     callback?.()

@@ -159,7 +159,9 @@ function onChildRefreshUnread() {
   emit('refreshUnread')
 }
 
-// 选中会话：按 B 站 whisper 风格跳转到 /app/message/whisper/:talkerId，右侧渲染具体聊天
+// 选中会话：站内 SPA 导航到 /app/message/whisper/:talkerId，仅右侧聊天窗口按 talkerId 切换。
+// 左侧会话列表常驻，配合 layout 内 keep-alive（按 fullPath 缓存各聊天窗口），
+// 切走再切回保留消息与草稿，不再整页重新加载（不再新开标签页）。
 function selectSession(session: DmSessionItem) {
   router.push({
     name: 'MESSAGE_WHISPER_CHAT',

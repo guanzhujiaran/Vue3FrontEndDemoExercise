@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, type PropType, ref, watch } from 'vue'
 import type { SpuInfoType } from '@/gql/samsclub/graphql.ts'
+import { LINK_REL, LINK_REFERRER_POLICY } from '@/utils/PageOpen/linkPolicy'
 import SpuBasicInfo from './items/SpuBasicInfo.vue'
 import SpuPriceInfo from './items/SpuPriceInfo.vue'
 import SpuHeaderInfo from './items/SpuHeaderInfo.vue'
@@ -81,6 +82,8 @@ watch(
           title="点击跳转app"
           :href="`sams://goods_detail?spuId=${props.spuInfo.spuId}`"
           target="_self"
+          :rel="LINK_REL"
+          :referrerpolicy="LINK_REFERRER_POLICY"
         >
           <el-tag size="small" effect="plain">SpuId: {{ props.spuInfo.spuId }}</el-tag>
         </el-link>

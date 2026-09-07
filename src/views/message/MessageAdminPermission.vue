@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue'
-import { ElMessage, ElMessageBox, type Column } from 'element-plus'
+import { ElMessage, ElMessageBox, TableV2FixedDir, type Column } from 'element-plus'
 import { useI18n } from 'vue-i18n'
 import { Plus, Search, Refresh } from '@element-plus/icons-vue'
 import { BiliImg } from '@/assets/img/BiliImg.ts'
@@ -41,7 +41,7 @@ const permColumns: Column<MessageAdminItem>[] = [
   { key: 'permissions', title: t('message.permLabel'), width: 320, minWidth: 260, flexGrow: 1 },
   { key: 'note', title: t('message.colNote'), width: 200, minWidth: 160, dataKey: 'note' },
   { key: 'created_at', title: t('message.colCreatedAt'), width: 200, minWidth: 180, dataKey: 'created_at' },
-  { key: 'action', title: t('message.colAction'), width: 110, fixed: 'right' }
+  { key: 'action', title: t('message.colAction'), width: 110, fixed: TableV2FixedDir.RIGHT }
 ]
 
 const searchKeyword = ref('')
@@ -64,10 +64,10 @@ async function onSearchUser() {
   hasMore.value = true
   selectedSearchUser.value = null
   try {
-    const { items, has_more } = await searchPptrUser(kw, 0, SEARCH_PAGE_SIZE)
+    const { items = [], has_more } = await searchPptrUser(kw, 0, SEARCH_PAGE_SIZE)
     searchResults.value = items
     searchOffset.value = items.length
-    hasMore.value = has_more
+    hasMore.value = has_more ?? false
   } catch (e: any) {
     ElMessage.error(t('message.findUserFailed') + (e?.message || e))
     searchResults.value = []
@@ -82,10 +82,10 @@ async function loadMoreUsers() {
   if (!kw || loadingMore.value || !hasMore.value) return
   loadingMore.value = true
   try {
-    const { items, has_more } = await searchPptrUser(kw, searchOffset.value, SEARCH_PAGE_SIZE)
+    const { items = [], has_more } = await searchPptrUser(kw, searchOffset.value, SEARCH_PAGE_SIZE)
     searchResults.value.push(...items)
     searchOffset.value += items.length
-    hasMore.value = has_more
+    hasMore.value = has_more ?? false
   } catch (e: any) {
     ElMessage.error(t('message.loadMoreFailed') + (e?.message || e))
   } finally {
@@ -181,7 +181,7 @@ function openGrant() {
 
 async function onGrant() {
   const mid = grantForm.mid
-  if (!mid || mid <= 0) {
+  if (!mid || Number(mid) <= 0) {
     ElMessage.warning(t('message.invalidMid'))
     return
   }

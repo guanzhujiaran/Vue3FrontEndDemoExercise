@@ -33,8 +33,8 @@ const props = withDefaults(
 const route = useRoute()
 
 const talkerMid = computed(() => String(route.params.talkerId))
-const talkerName = computed(
-  () => props.talkerName || (route.query.name ? String(route.query.name) : null)
-)
+// 昵称/头像优先用布局透传的会话快照（即时展示），缺失时由 DmChatPanel 按 mid 主动拉取，
+// 不再依赖 deep link 的 ?name= 查询参数。
+const talkerName = computed(() => props.talkerName)
 const talkerAvatar = computed(() => props.talkerAvatar || null)
 </script>

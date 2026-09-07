@@ -69,7 +69,7 @@ export type AuditSourceInfo = {
     /**
      * Biz Type
      *
-     * 业务类型：评论为 CommentTypeEnum，私信固定为 dm
+     * 业务类型：评论为 InteractionBizTypeEnum，私信固定为 dm
      */
     biz_type: string;
     /**
@@ -175,7 +175,7 @@ export type AvatarAuditItem = {
     /**
      * Auditstatus
      *
-     * 审核状态：pending/approved/rejected
+     * 审核状态（统一枚举 .name）：AUDITING=待审 / NORMAL=已通过 / REJECTED=已驳回
      */
     auditStatus: string;
     /**
@@ -243,13 +243,13 @@ export type AvatarAuditMineResp = {
     /**
      * Auditstatus
      *
-     * 审核状态：pending/approved/rejected
+     * 审核状态（统一枚举 .name）：AUDITING=待审 / NORMAL=已通过 / REJECTED=已驳回
      */
     auditStatus: string;
     /**
      * Auditreason
      *
-     * 驳回原因（rejected 时有值）
+     * 驳回原因（REJECTED 时有值）
      */
     auditReason?: string | null;
     /**
@@ -646,7 +646,7 @@ export type CommentAddReq = {
     /**
      * 业务实体类型
      */
-    type: CommentTypeEnum;
+    type: InteractionBizTypeEnum;
     /**
      * Root
      *
@@ -719,7 +719,7 @@ export type CommentAddResp = {
      * Parent
      */
     parent?: string;
-    state?: CommentStateEnum;
+    state?: ResourceAuditStatusEnum;
     /**
      * Need Audit
      *
@@ -728,70 +728,8 @@ export type CommentAddResp = {
     need_audit?: boolean;
 };
 
-/**
- * CommentAuditItem
- *
- * 审核队列中的一条评论。
- */
 export type CommentAuditItem = {
-    /**
-     * Rpid
-     */
-    rpid: string;
-    /**
-     * Oid
-     */
-    oid: string;
-    type: CommentTypeEnum;
-    /**
-     * Mid
-     */
-    mid: number;
-    /**
-     * Message
-     */
-    message: string;
-    state: CommentStateEnum;
-    /**
-     * Like Count
-     */
-    like_count?: number;
-    /**
-     * Ctime
-     */
-    ctime: string;
-    /**
-     * Ip V4
-     */
-    ip_v4?: string | null;
-    /**
-     * Ip V6
-     */
-    ip_v6?: string | null;
-    /**
-     * Plat
-     *
-     * 来源平台
-     */
-    plat?: string | null;
-    /**
-     * Device
-     *
-     * 来源设备
-     */
-    device?: string | null;
-    /**
-     * 内容来源，管理端可点击直达原始评论区
-     */
-    source?: AuditSourceInfo | null;
-    /**
-     * 发布者信息，装配时直连 pptr 只读取回
-     */
-    member?: CommentUserBrief | null;
-    /**
-     * Midstr
-     */
-    readonly midStr: string | null;
+    [key: string]: unknown;
 };
 
 /**
@@ -819,7 +757,7 @@ export type CommentAuditListResp = {
      *
      * 本次实际生效的状态过滤（非 root 恒为待审核）
      */
-    states?: Array<CommentStateEnum>;
+    states?: Array<ResourceAuditStatusEnum>;
     /**
      * Can View All States
      *
@@ -924,7 +862,7 @@ export type CommentCountResp = {
      * Oid
      */
     oid: string;
-    type: CommentTypeEnum;
+    type: InteractionBizTypeEnum;
     /**
      * Root Count
      */
@@ -966,7 +904,7 @@ export type CommentItem = {
      * 所属业务实体id（字符串）
      */
     oid: string;
-    type: CommentTypeEnum;
+    type: InteractionBizTypeEnum;
     /**
      * Mid
      *
@@ -1075,7 +1013,7 @@ export type CommentItem = {
      * 当前登录用户的互动态：0无/1赞/2踩
      */
     action?: CommentActionEnum;
-    state?: CommentStateEnum;
+    state?: ResourceAuditStatusEnum;
     /**
      * Is Top
      */
@@ -1210,7 +1148,7 @@ export type CommentReportReq = {
     /**
      * 举报原因类型（复用 MomentReportReasonEnum）
      */
-    reasonType: MomentReportReasonEnum;
+    reasonType: ReportReasonEnum;
     /**
      * Reasondesc
      *
@@ -1287,7 +1225,7 @@ export type CommentSourceResp = {
      * Parent
      */
     parent?: string;
-    state?: CommentStateEnum;
+    state?: ResourceAuditStatusEnum;
     source: AuditSourceInfo;
     /**
      * 所属评论区状态；评论区不存在时为 null
@@ -1306,51 +1244,6 @@ export type CommentSourceResp = {
      */
     all_count?: number;
 };
-
-/**
- * CommentStateEnum
- *
- * 枚举选项：
- * - NORMAL: 1
- * - AUDITING: 2
- * - REJECTED: 3
- * - HIDDEN: 4
- * - DELETED: 5
- */
-export const CommentStateEnum = {
-    /**
-     * NORMAL
-     */
-    NORMAL: 1,
-    /**
-     * AUDITING
-     */
-    AUDITING: 2,
-    /**
-     * REJECTED
-     */
-    REJECTED: 3,
-    /**
-     * HIDDEN
-     */
-    HIDDEN: 4,
-    /**
-     * DELETED
-     */
-    DELETED: 5
-} as const;
-
-/**
- * CommentStateEnum
- *
- * 枚举选项：
- * - NORMAL: 1
- * - AUDITING: 2
- * - REJECTED: 3
- * - HIDDEN: 4
- * - DELETED: 5
- */
-export type CommentStateEnum = typeof CommentStateEnum[keyof typeof CommentStateEnum];
 
 /**
  * CommentStatsResp
@@ -1377,7 +1270,7 @@ export type CommentStatsResp = {
     /**
      * Top Authors
      */
-    top_authors?: Array<CommentUserBrief>;
+    top_authors?: Array<UserBriefOut>;
     /**
      * State Counts
      */
@@ -1457,7 +1350,7 @@ export type CommentTopReq = {
     /**
      * 业务实体类型
      */
-    type: CommentTypeEnum;
+    type: InteractionBizTypeEnum;
     /**
      * Rpid
      *
@@ -1488,141 +1381,8 @@ export type CommentTopResp = {
     success?: boolean;
 };
 
-/**
- * CommentTypeEnum
- *
- * 枚举选项：
- * - DYNAMIC: 1
- * - ARTICLE: 2
- * - LOTTERY: 3
- * - FEEDBACK: 4
- * - OTHER: 5
- */
-export const CommentTypeEnum = {
-    /**
-     * DYNAMIC
-     */
-    DYNAMIC: 1,
-    /**
-     * ARTICLE
-     */
-    ARTICLE: 2,
-    /**
-     * LOTTERY
-     */
-    LOTTERY: 3,
-    /**
-     * FEEDBACK
-     */
-    FEEDBACK: 4,
-    /**
-     * OTHER
-     */
-    OTHER: 5
-} as const;
-
-/**
- * CommentTypeEnum
- *
- * 枚举选项：
- * - DYNAMIC: 1
- * - ARTICLE: 2
- * - LOTTERY: 3
- * - FEEDBACK: 4
- * - OTHER: 5
- */
-export type CommentTypeEnum = typeof CommentTypeEnum[keyof typeof CommentTypeEnum];
-
-/**
- * CommentUserBrief
- *
- * 评论卡片上展示的用户信息（直连 pptr Postgres 只读取得，本服务不冗余）。
- *
- * 仅使用 pptr 现有四张表（TUserInfo / TUserDetail / TUserVip / TUserLevel）中**实际存在**
- * 的字段，**不新增任何表结构或表外字段**。参考 B 站 member 的展示结构，把数据库里
- * 已有但此前未返回的字段（大会员到期时间、经验值、角色、脱敏邮箱）一并补齐。
- */
 export type CommentUserBrief = {
-    /**
-     * Mid
-     */
-    mid: number;
-    /**
-     * Uname
-     */
-    uname?: string | null;
-    /**
-     * Avatar
-     */
-    avatar?: string | null;
-    /**
-     * Level
-     */
-    level?: number;
-    /**
-     * Vip Status
-     */
-    vip_status?: string | null;
-    /**
-     * Vip Type
-     */
-    vip_type?: number;
-    /**
-     * Vip Due Date
-     */
-    vip_due_date?: number | null;
-    /**
-     * Sex
-     */
-    sex?: string | null;
-    /**
-     * Sign
-     */
-    sign?: string | null;
-    /**
-     * Exp
-     */
-    exp?: number | null;
-    /**
-     * Role
-     */
-    role?: string | null;
-    /**
-     * Email
-     */
-    email?: string | null;
-    /**
-     * Follower Count
-     */
-    follower_count?: number;
-    /**
-     * Following Count
-     */
-    following_count?: number;
-    /**
-     * Like Count
-     */
-    like_count?: number;
-    /**
-     * Nameplate Name
-     */
-    nameplate_name?: string | null;
-    /**
-     * Nameplate Image
-     */
-    nameplate_image?: string | null;
-    /**
-     * Nameplate Level
-     */
-    nameplate_level?: string | null;
-    /**
-     * Official Title
-     */
-    official_title?: string | null;
-    /**
-     * Midstr
-     */
-    readonly midStr: string | null;
+    [key: string]: unknown;
 };
 
 /**
@@ -1682,7 +1442,7 @@ export type DmAuditItem = {
      */
     message?: string;
     msg_type?: DmMsgTypeEnum;
-    audit_state?: DmAuditStateEnum;
+    audit_state?: ResourceAuditStatusEnum;
     /**
      * Msg Ts
      *
@@ -1704,9 +1464,9 @@ export type DmAuditItem = {
      */
     source?: AuditSourceInfo | null;
     /**
-     * 发送者信息，装配时直连 pptr 只读取回
+     * 发送者信息（管理端：含私有字段），装配时直连 pptr 只读取回
      */
-    sender?: CommentUserBrief | null;
+    sender?: UserBriefOut | null;
     /**
      * Sender Midstr
      */
@@ -1742,7 +1502,7 @@ export type DmAuditListResp = {
      *
      * 本次实际生效的状态过滤（非 root 恒为待审核）
      */
-    states?: Array<DmAuditStateEnum>;
+    states?: Array<ResourceAuditStatusEnum>;
     /**
      * Can View All States
      *
@@ -1776,45 +1536,6 @@ export type DmAuditReq = {
      */
     note?: string | null;
 };
-
-/**
- * DmAuditStateEnum
- *
- * 枚举选项：
- * - NORMAL: 1
- * - AUDITING: 2
- * - REJECTED: 3
- * - HIDDEN: 4
- */
-export const DmAuditStateEnum = {
-    /**
-     * NORMAL
-     */
-    NORMAL: 1,
-    /**
-     * AUDITING
-     */
-    AUDITING: 2,
-    /**
-     * REJECTED
-     */
-    REJECTED: 3,
-    /**
-     * HIDDEN
-     */
-    HIDDEN: 4
-} as const;
-
-/**
- * DmAuditStateEnum
- *
- * 枚举选项：
- * - NORMAL: 1
- * - AUDITING: 2
- * - REJECTED: 3
- * - HIDDEN: 4
- */
-export type DmAuditStateEnum = typeof DmAuditStateEnum[keyof typeof DmAuditStateEnum];
 
 /**
  * DmBulkAuditReq
@@ -1926,7 +1647,7 @@ export type DmMessageItem = {
      * Created At
      */
     created_at?: string | null;
-    audit_state?: DmAuditStateEnum;
+    audit_state?: ResourceAuditStatusEnum;
     /**
      * Recalled At
      *
@@ -2266,8 +1987,16 @@ export type DmSessionItem = {
     relation?: DmRelationEnum;
     /**
      * Is Top
+     *
+     * 是否置顶（= top_ts != 0，兼容 flag 用法）
      */
     is_top?: boolean;
+    /**
+     * Top Ts
+     *
+     * 置顶时间戳(毫秒)，0=未置顶；置顶唯一真相源
+     */
+    top_ts?: number;
     /**
      * Is Muted
      */
@@ -2341,6 +2070,62 @@ export type DmStatsResp = {
 };
 
 /**
+ * DmTopReq
+ *
+ * 会话置顶 / 取消置顶（2.59.0）。
+ */
+export type DmTopReq = {
+    /**
+     * Talker Mid
+     *
+     * 对话方mid（雪花 ID，StrInt 兼容前端 str 传参）
+     */
+    talker_mid: number | string;
+    /**
+     * Top
+     *
+     * true=置顶（top_ts=now）；false=取消置顶（top_ts=0）
+     */
+    top: boolean;
+};
+
+/**
+ * DmTopResp
+ *
+ * 置顶操作结果。
+ */
+export type DmTopResp = {
+    /**
+     * Talker Mid
+     *
+     * 被置顶/取消的会话对方 mid
+     */
+    talker_mid?: number;
+    /**
+     * Top Ts
+     *
+     * 置顶时间戳(毫秒)；0=未置顶
+     */
+    top_ts?: number;
+    /**
+     * Is Top
+     *
+     * = top_ts != 0
+     */
+    is_top?: boolean;
+    /**
+     * Affected
+     *
+     * 受影响会话行数（0=会话不存在或幂等无操作）
+     */
+    affected?: number;
+    /**
+     * Talker Midstr
+     */
+    readonly talker_midStr: string | null;
+};
+
+/**
  * EventAggregateItem
  *
  * 按 source_type + source_id 聚合后的一张卡片。
@@ -2349,8 +2134,8 @@ export type DmStatsResp = {
  * 对应 count=12、actors 取最近 3 位、latest_* 取最新一条。
  */
 export type EventAggregateItem = {
-    event_type: EventTypeEnum;
-    source_type: SourceTypeEnum;
+    event_type: InteractionActionTypeEnum;
+    source_type: InteractionBizTypeEnum;
     /**
      * Source Id
      */
@@ -2369,6 +2154,14 @@ export type EventAggregateItem = {
      * Image
      */
     image?: string | null;
+    /**
+     * Jump Target
+     */
+    jump_target?: string;
+    /**
+     * Resource Deleted
+     */
+    resource_deleted?: boolean;
     /**
      * Count
      *
@@ -2439,10 +2232,29 @@ export type EventAggregateResp = {
  * EventListResp
  *
  * 消息中心列表响应：latest 为最新一条，total 为完整分页。
+ *
+ * `total_count` / `unread_count` 用于**对账**——列表按「来源实体」聚合，单页只返回
+ * `page_size` 张卡片（每张卡片聚合了 N 个用户的同类互动），因此本页 `items` 长度
+ * 天然小于「未读事件数」。这两个字段给出真实总量，避免前端把「单页 20 张」误判为
+ * 「全部只有 20 条 / 已结束」：
+ * - `total_count`：当前筛选条件下聚合卡片（分组）总数，决定总页数；
+ * - `unread_count`：当前 `event_type` 下未读事件总数，与 `GET /unread` 的对应字段一致。
  */
 export type EventListResp = {
     latest: EventMsgfeedSection;
     total: EventMsgfeedSection;
+    /**
+     * Total Count
+     *
+     * 当前筛选条件下聚合卡片（分组）总数（与单页 items 长度无关）
+     */
+    total_count?: number;
+    /**
+     * Unread Count
+     *
+     * 当前 event_type 下未读事件总数，对齐 GET /unread 的对应字段
+     */
+    unread_count?: number;
 };
 
 /**
@@ -2451,8 +2263,10 @@ export type EventListResp = {
  * 聚合条目中的内容实体（对齐 B 站 msgfeed 的 item）。
  *
  * 评论层级关系（root_id / source_id / target_id）与正文（source_content /
- * target_content）读取时按 source_id（rpid）实时回捞评论表补全（见 Phase L2），
- * 不冗余存储，仅靠 resource_id + resource_type 唯一定位原资源。
+ * target_content）、作者（source_mid / target_mid）读取时按 source_id（rpid）
+ * 实时回捞评论补全（见 Phase L2 / §5.12），不冗余存储，仅靠
+ * resource_id + resource_type 唯一定位原资源；正文与作者统一经
+ * `CommentBiz.batch_get_resources` 批量回捞（对齐 §5.11 的 Biz 体系）。
  *
  * `title` / `desc` / `image` 同样读取时按 source_type + source_id 实时回捞
  * 原资源补全，不冗余存储快照。
@@ -2515,9 +2329,33 @@ export type EventMsgfeedContent = {
      */
     target_content?: string;
     /**
+     * Source Mid
+     */
+    source_mid?: number;
+    /**
+     * Target Mid
+     */
+    target_mid?: number;
+    /**
+     * Source Name
+     */
+    source_name?: string;
+    /**
+     * Target Name
+     */
+    target_name?: string;
+    /**
      * Comment Deleted
      */
     comment_deleted?: boolean;
+    /**
+     * Jump Target
+     */
+    jump_target?: string;
+    /**
+     * Resource Deleted
+     */
+    resource_deleted?: boolean;
     /**
      * Ctime
      */
@@ -2535,6 +2373,14 @@ export type EventMsgfeedContent = {
      * Item Idstr
      */
     readonly item_idStr: string | null;
+    /**
+     * Source Midstr
+     */
+    readonly source_midStr: string | null;
+    /**
+     * Target Midstr
+     */
+    readonly target_midStr: string | null;
 };
 
 /**
@@ -2598,19 +2444,31 @@ export type EventMsgfeedSection = {
 /**
  * EventReadReq
  *
- * 已读请求（支持 id / 类型 / 聚合分组三种粒度）。
+ * 已读请求（支持 id / 类型 / 聚合分组 / 时间戳四种粒度）。
+ *
+ * - ``event_ids``：精确已读；
+ * - ``event_type`` + 可选 ``source_type`` + ``source_id``：按类型 / 聚合分组一键已读；
+ * - ``read_before``：把该时间戳（含）之前、归属当前用户的互动提醒全部置为已读，
+ * 用于「打开列表即自动已读」——前端在拉取列表后携带调用时刻调用，
+ * 即可把本次请求之前的点赞 / 回复 / @ 消息全部标记已读，无需手动「全部已读」按钮。
  */
 export type EventReadReq = {
     /**
      * Event Ids
      */
     event_ids?: Array<number>;
-    event_type?: EventTypeEnum | null;
-    source_type?: SourceTypeEnum | null;
+    event_type?: InteractionActionTypeEnum | null;
+    source_type?: InteractionBizTypeEnum | null;
     /**
      * Source Id
      */
     source_id?: string | null;
+    /**
+     * Read Before
+     *
+     * 标记该时间戳（含）之前的全部消息为已读；不传则按其它条件标记
+     */
+    read_before?: string | null;
 };
 
 /**
@@ -2650,11 +2508,11 @@ export type EventReportReq = {
     /**
      * 事件类型：like / reply / at
      */
-    event_type: EventTypeEnum;
+    event_type: InteractionActionTypeEnum;
     /**
-     * 来源实体类型
+     * 来源实体类型（必填：无对应资源时禁止落库）
      */
-    source_type?: SourceTypeEnum;
+    source_type: InteractionBizTypeEnum;
     /**
      * Source Id
      *
@@ -2704,63 +2562,6 @@ export type EventReportResp = {
      */
     readonly event_idStr: string | null;
 };
-
-/**
- * EventTypeEnum
- *
- * 枚举选项：
- * - LIKE: 1
- * - REPLY: 2
- * - AT: 3
- * - AUDIT_REJECT: 4
- * - HIDE: 5
- * - REPORT_REJECT: 6
- * - REPORT_RESOLVED: 7
- */
-export const EventTypeEnum = {
-    /**
-     * LIKE
-     */
-    LIKE: 1,
-    /**
-     * REPLY
-     */
-    REPLY: 2,
-    /**
-     * AT
-     */
-    AT: 3,
-    /**
-     * AUDIT_REJECT
-     */
-    AUDIT_REJECT: 4,
-    /**
-     * HIDE
-     */
-    HIDE: 5,
-    /**
-     * REPORT_REJECT
-     */
-    REPORT_REJECT: 6,
-    /**
-     * REPORT_RESOLVED
-     */
-    REPORT_RESOLVED: 7
-} as const;
-
-/**
- * EventTypeEnum
- *
- * 枚举选项：
- * - LIKE: 1
- * - REPLY: 2
- * - AT: 3
- * - AUDIT_REJECT: 4
- * - HIDE: 5
- * - REPORT_REJECT: 6
- * - REPORT_RESOLVED: 7
- */
-export type EventTypeEnum = typeof EventTypeEnum[keyof typeof EventTypeEnum];
 
 /**
  * EventUnreadResp
@@ -2843,10 +2644,10 @@ export type EventUserBrief = {
 /**
  * FavoriteAddReq
  *
- * 收藏资源到收藏夹（2.17.0 泛化支持多业务资源）。
+ * 收藏资源到收藏夹（2.55.0 全面通用化）。
  *
- * `bizType` 默认 `dynamic`，此时 `bizId` 等价 `dynId`（二者任传其一）；
- * `bizType≠dynamic` 时 `bizId` 必填、`dynId` 忽略。
+ * `bizType` 默认 `dynamic`，此时 `bizId` = `dynId`（**单一字段，无 `dynId` 兼容字段**）；
+ * `bizType≠dynamic` 时 `bizId` 必填。
  */
 export type FavoriteAddReq = {
     /**
@@ -2856,15 +2657,9 @@ export type FavoriteAddReq = {
     /**
      * Bizid
      *
-     * 资源id（字符串；动态时=动态id）
+     * 资源id（字符串；动态时=动态id，雪花ID）
      */
-    bizId?: string | null;
-    /**
-     * Dynid
-     *
-     * [兼容]动态id（字符串，雪花ID；等价 bizId=bizType=dynamic）
-     */
-    dynId?: string | null;
+    bizId: string;
     /**
      * Folderid
      *
@@ -2876,7 +2671,7 @@ export type FavoriteAddReq = {
 /**
  * FavoriteAddResp
  *
- * 收藏响应（2.17.0 泛化）。
+ * 收藏响应（2.55.0 全面通用化）。
  */
 export type FavoriteAddResp = {
     /**
@@ -2889,12 +2684,6 @@ export type FavoriteAddResp = {
      * 资源id（字符串）
      */
     bizId: string;
-    /**
-     * Dynid
-     *
-     * [兼容]动态id（动态资源时返回）
-     */
-    dynId?: string | null;
     /**
      * Folderid
      *
@@ -2918,7 +2707,7 @@ export type FavoriteAddResp = {
 /**
  * FavoriteDynFoldersResp
  *
- * 某资源被当前用户收藏在哪些收藏夹（2.17.0 泛化）。
+ * 某资源被当前用户收藏在哪些收藏夹（2.55.0 全面通用化）。
  */
 export type FavoriteDynFoldersResp = {
     /**
@@ -2931,12 +2720,6 @@ export type FavoriteDynFoldersResp = {
      * 资源id（字符串）
      */
     bizId: string;
-    /**
-     * Dynid
-     *
-     * [兼容]动态id（动态资源时返回）
-     */
-    dynId?: string | null;
     /**
      * Folderids
      *
@@ -3114,7 +2897,9 @@ export type FavoriteListItem = {
 /**
  * FavoriteListResp
  *
- * 某收藏夹下资源列表（2.17.0 泛化：bizType+bizId 对）。
+ * 某收藏夹下资源列表（2.55.0 全面通用化：bizType+bizId 对）。
+ *
+ * 不再提供 `dynIds` 兼容字段——前端按 `items` 自行过滤 `bizType=dynamic` 项。
  */
 export type FavoriteListResp = {
     /**
@@ -3130,12 +2915,6 @@ export type FavoriteListResp = {
      */
     total?: number;
     /**
-     * Dynids
-     *
-     * [兼容]当前页动态id列表（仅 bizType=dynamic 时有值）
-     */
-    dynIds?: Array<string>;
-    /**
      * Items
      *
      * 当前页资源明细（bizType+bizId 对）
@@ -3146,7 +2925,7 @@ export type FavoriteListResp = {
 /**
  * FavoriteRemoveReq
  *
- * 从收藏夹取消收藏（2.17.0 泛化）。
+ * 从收藏夹取消收藏（2.55.0 全面通用化）。
  */
 export type FavoriteRemoveReq = {
     /**
@@ -3156,15 +2935,9 @@ export type FavoriteRemoveReq = {
     /**
      * Bizid
      *
-     * 资源id（字符串）
+     * 资源id（字符串；动态时=动态id）
      */
-    bizId?: string | null;
-    /**
-     * Dynid
-     *
-     * [兼容]动态id（字符串，雪花ID）
-     */
-    dynId?: string | null;
+    bizId: string;
     /**
      * Folderid
      *
@@ -3290,7 +3063,7 @@ export type FolderCoverAuditItem = {
     /**
      * Auditstatus
      *
-     * 审核状态：pending/approved/rejected
+     * 审核状态（统一枚举 .name）：AUDITING=待审 / NORMAL=已通过 / REJECTED=已驳回
      */
     auditStatus: string;
     /**
@@ -3364,13 +3137,13 @@ export type FolderCoverAuditMineResp = {
     /**
      * Auditstatus
      *
-     * 审核状态：pending/approved/rejected
+     * 审核状态（统一枚举 .name）：AUDITING=待审 / NORMAL=已通过 / REJECTED=已驳回
      */
     auditStatus: string;
     /**
      * Auditreason
      *
-     * 驳回原因（rejected 时有值）
+     * 驳回原因（REJECTED 时有值）
      */
     auditReason?: string | null;
     /**
@@ -3471,6 +3244,10 @@ export type FollowListItem = {
      * 是否互相关注
      */
     mutual?: boolean;
+    /**
+     * 对方公开展示信息（他人可见字段；注销或回查失败时为 null）
+     */
+    user?: UserBriefOut | null;
     /**
      * Midstr
      */
@@ -3682,6 +3459,105 @@ export type HttpValidationError = {
 };
 
 /**
+ * InteractionActionTypeEnum
+ *
+ * 枚举选项：
+ * - LIKE: 1
+ * - REPLY: 2
+ * - AT: 3
+ * - AUDIT_REJECT: 4
+ * - HIDE: 5
+ * - REPORT_REJECT: 6
+ * - REPORT_RESOLVED: 7
+ * - DISLIKE: 8
+ * - FAVORITE: 9
+ * - SHARE: 10
+ * - REPOST: 11
+ * - VIEW: 12
+ * - REPORT: 13
+ * - AUDIT_APPROVE: 14
+ */
+export const InteractionActionTypeEnum = {
+    /**
+     * LIKE
+     */
+    LIKE: 1,
+    /**
+     * REPLY
+     */
+    REPLY: 2,
+    /**
+     * AT
+     */
+    AT: 3,
+    /**
+     * AUDIT_REJECT
+     */
+    AUDIT_REJECT: 4,
+    /**
+     * HIDE
+     */
+    HIDE: 5,
+    /**
+     * REPORT_REJECT
+     */
+    REPORT_REJECT: 6,
+    /**
+     * REPORT_RESOLVED
+     */
+    REPORT_RESOLVED: 7,
+    /**
+     * DISLIKE
+     */
+    DISLIKE: 8,
+    /**
+     * FAVORITE
+     */
+    FAVORITE: 9,
+    /**
+     * SHARE
+     */
+    SHARE: 10,
+    /**
+     * REPOST
+     */
+    REPOST: 11,
+    /**
+     * VIEW
+     */
+    VIEW: 12,
+    /**
+     * REPORT
+     */
+    REPORT: 13,
+    /**
+     * AUDIT_APPROVE
+     */
+    AUDIT_APPROVE: 14
+} as const;
+
+/**
+ * InteractionActionTypeEnum
+ *
+ * 枚举选项：
+ * - LIKE: 1
+ * - REPLY: 2
+ * - AT: 3
+ * - AUDIT_REJECT: 4
+ * - HIDE: 5
+ * - REPORT_REJECT: 6
+ * - REPORT_RESOLVED: 7
+ * - DISLIKE: 8
+ * - FAVORITE: 9
+ * - SHARE: 10
+ * - REPOST: 11
+ * - VIEW: 12
+ * - REPORT: 13
+ * - AUDIT_APPROVE: 14
+ */
+export type InteractionActionTypeEnum = typeof InteractionActionTypeEnum[keyof typeof InteractionActionTypeEnum];
+
+/**
  * InteractionBizTypeEnum
  *
  * 枚举选项：
@@ -3691,6 +3567,8 @@ export type HttpValidationError = {
  * - RPA_WORKFLOW: 4
  * - RPA_BROWSER: 5
  * - RPA_PLUGIN: 6
+ * - COMMENT: 7
+ * - USER: 8
  */
 export const InteractionBizTypeEnum = {
     /**
@@ -3716,7 +3594,15 @@ export const InteractionBizTypeEnum = {
     /**
      * RPA_PLUGIN
      */
-    RPA_PLUGIN: 6
+    RPA_PLUGIN: 6,
+    /**
+     * COMMENT
+     */
+    COMMENT: 7,
+    /**
+     * USER
+     */
+    USER: 8
 } as const;
 
 /**
@@ -3729,13 +3615,90 @@ export const InteractionBizTypeEnum = {
  * - RPA_WORKFLOW: 4
  * - RPA_BROWSER: 5
  * - RPA_PLUGIN: 6
+ * - COMMENT: 7
+ * - USER: 8
  */
 export type InteractionBizTypeEnum = typeof InteractionBizTypeEnum[keyof typeof InteractionBizTypeEnum];
 
 /**
+ * InteractionResource
+ *
+ * 互动目标资源的**统一表示**（2.47.0；非 DB 表）。
+ *
+ * 各互动操作子类的 ``get_resource()`` 统一返回本模型，把具体资源
+ * （`TMoment` / RPC 详情等）折叠成统一字段，供基类统一做
+ * 存在性（``exists``）/ 可互动性（``interactable``）/ 作者关系
+ * （``author_mid``，关注 / 黑名单校验）判断，以及 ``after_execute`` hook
+ * 取作者 / 内容。
+ */
+export type InteractionResource = {
+    /**
+     * 资源类型
+     */
+    bizType: InteractionBizTypeEnum;
+    /**
+     * Bizid
+     *
+     * 资源 id（动态时 = dynId）
+     */
+    bizId: number;
+    /**
+     * Authormid
+     *
+     * 资源作者 mid（未知/非动态资源可为空）
+     */
+    authorMid?: number | null;
+    /**
+     * Ownermid
+     *
+     * 资源所有者 mid（DAC `OWNER_ONLY` 校验依据；未知时经 RPC/子类覆盖判断）
+     */
+    ownerMid?: number | null;
+    /**
+     * Exists
+     *
+     * 资源是否存在
+     */
+    exists?: boolean;
+    /**
+     * Interactable
+     *
+     * 是否可互动（如动态需 normal 未软删；收藏语义允许 auditing）
+     */
+    interactable?: boolean;
+    /**
+     * Title
+     *
+     * 附加展示字段（可选，通知等使用）
+     */
+    title?: string | null;
+    /**
+     * Content
+     *
+     * 内容摘要（可选，通知等使用）
+     */
+    content?: string | null;
+    /**
+     * Cover
+     *
+     * 封面图（动态首图 / 资源卡封面，可选）
+     */
+    cover?: string | null;
+    /**
+     * Jumptarget
+     *
+     * 后端下发的跳转目标 route:{name}?{query}（事件提醒等读取侧随资源返回；见计划书 §2.10 / §5.11）
+     */
+    jumpTarget?: string | null;
+};
+
+/**
  * InteractionStatusItem
  *
- * 某资源当前用户交互态（收藏 + 点赞 + 计数）。
+ * 某资源当前用户交互态（收藏 + 点赞 + 点踩 + 计数）。
+ *
+ * 2.62.0（计划书 §5.20）：新增 ``isDislike``，供动态卡片渲染点踩态（匿名观众 ``mid=0`` 恒 false）。
+ * **点踩计数不外露**：``dislikeCount`` 仍在 ``TInteractionStat`` 内供 EdgeRank 全局降权使用，但不出参。
  */
 export type InteractionStatusItem = {
     /**
@@ -3760,6 +3723,12 @@ export type InteractionStatusItem = {
      * 当前用户是否已收藏
      */
     isFavorite?: boolean;
+    /**
+     * Isdislike
+     *
+     * 当前用户是否已点踩（2.62.0；匿名恒 false）
+     */
+    isDislike?: boolean;
     /**
      * Likecount
      *
@@ -4175,80 +4144,8 @@ export type MomentAuditListResp = {
     page_size?: number;
 };
 
-/**
- * MomentAuditLogItem
- *
- * 单条审核流转记录（管理后台流水）。
- */
 export type MomentAuditLogItem = {
-    /**
-     * Pk
-     *
-     * 记录主键
-     */
-    pk: number;
-    /**
-     * Dynid
-     *
-     * 被审核动态 ID
-     */
-    dynId: number;
-    /**
-     * Operatormid
-     *
-     * 操作人 MID
-     */
-    operatorMid: number;
-    /**
-     * Operatorrole
-     *
-     * 操作人角色：author/admin
-     */
-    operatorRole: string;
-    /**
-     * Fromstatus
-     *
-     * 流转前状态
-     */
-    fromStatus?: string | null;
-    /**
-     * Tostatus
-     *
-     * 流转后状态
-     */
-    toStatus: string;
-    /**
-     * Actiontype
-     *
-     * 操作类型：create/edit/approve/reject/resubmit/delete
-     */
-    actionType: string;
-    /**
-     * Rejectreason
-     *
-     * 驳回原因（仅 reject）
-     */
-    rejectReason?: string | null;
-    /**
-     * Remark
-     *
-     * 其他备注
-     */
-    remark?: string | null;
-    /**
-     * Createdtime
-     *
-     * 操作时间（ISO）
-     */
-    createdTime?: string | null;
-    /**
-     * Dynidstr
-     */
-    readonly dynIdStr: string | null;
-    /**
-     * Operatormidstr
-     */
-    readonly operatorMidStr: string | null;
+    [key: string]: unknown;
 };
 
 /**
@@ -4328,45 +4225,6 @@ export type MomentAuditStatisticsResp = {
      */
     total?: number;
 };
-
-/**
- * MomentAuditStatusEnum
- *
- * 枚举选项：
- * - AUDITING: 1
- * - NORMAL: 2
- * - REJECTED: 3
- * - HIDDEN: 4
- */
-export const MomentAuditStatusEnum = {
-    /**
-     * AUDITING
-     */
-    AUDITING: 1,
-    /**
-     * NORMAL
-     */
-    NORMAL: 2,
-    /**
-     * REJECTED
-     */
-    REJECTED: 3,
-    /**
-     * HIDDEN
-     */
-    HIDDEN: 4
-} as const;
-
-/**
- * MomentAuditStatusEnum
- *
- * 枚举选项：
- * - AUDITING: 1
- * - NORMAL: 2
- * - REJECTED: 3
- * - HIDDEN: 4
- */
-export type MomentAuditStatusEnum = typeof MomentAuditStatusEnum[keyof typeof MomentAuditStatusEnum];
 
 /**
  * MomentAuditTypeStat
@@ -4718,14 +4576,13 @@ export type MomentDetailsReq = {
 /**
  * MomentDislikeReq
  *
- * 点踩 / 取消点踩请求（2.35.0）。
+ * 点踩 / 取消点踩请求（2.35.0；2.56.0 支持全部资源；去除 dynId 别名）。
  *
- * 对齐点赞：`bizType` 默认 `dynamic`，此时 `bizId` 等价 `dynId`（二者任传其一）。
- * 当前 MVP 仅支持动态资源（非动态 400）。
+ * `bizType` 默认 `dynamic`，资源一律以 `bizId` 定位（不再接受 `dynId` 别名）。
  */
 export type MomentDislikeReq = {
     /**
-     * 资源类型（当前仅支持 dynamic）
+     * 资源类型（InteractionBizTypeEnum 值）
      */
     bizType?: InteractionBizTypeEnum;
     /**
@@ -4734,12 +4591,6 @@ export type MomentDislikeReq = {
      * 资源 ID（int|str；动态时=动态 ID，兼容前端 str 传参）
      */
     bizId?: number | string | null;
-    /**
-     * Dynid
-     *
-     * [兼容]动态 ID（int|str，兼容前端 str 传参）
-     */
-    dynId?: number | string | null;
     /**
      * Up
      *
@@ -4771,18 +4622,6 @@ export type MomentDislikeResp = {
      */
     bizIdStr: string;
     /**
-     * Dynid
-     *
-     * [兼容]动态 ID
-     */
-    dynId?: number | null;
-    /**
-     * Dynidstr
-     *
-     * [兼容]动态 ID（字符串）
-     */
-    dynIdStr?: string | null;
-    /**
      * Isdislike
      *
      * 操作后当前用户是否已点踩
@@ -4794,82 +4633,6 @@ export type MomentDislikeResp = {
      * 操作后点踩数
      */
     dislikeCount?: number;
-};
-
-/**
- * MomentEditReq
- *
- * 编辑动态请求（rejected / auditing 编辑后自动回 auditing）。
- */
-export type MomentEditReq = {
-    /**
-     * Dynid
-     *
-     * 动态 ID（int，兼容前端 str 传参）
-     */
-    dynId: number | string;
-    /**
-     * Scene
-     *
-     * 动态场景：WORD / FORWARD
-     */
-    scene: string;
-    /**
-     * Content
-     *
-     * 富文本正文节点列表
-     */
-    content: Array<MomentContentNode>;
-    /**
-     * 附加卡资源引用（2.21.0）
-     */
-    attach?: MomentAttachRef | null;
-    /**
-     * Topics
-     *
-     * 多话题（2.22.0）：最多 5 个，去重，仅可关联已过审话题
-     */
-    topics?: Array<MomentTopicRefInput> | null;
-    /**
-     * [兼容]单话题引用（2.22.0 起与 topics 合并去重）
-     */
-    topic?: MomentTopicRefInput | null;
-    /**
-     * 发布选项
-     */
-    option?: MomentCreateOption | null;
-};
-
-/**
- * MomentEditResp
- *
- * 编辑动态响应。
- */
-export type MomentEditResp = {
-    /**
-     * Dynid
-     *
-     * 动态 ID（int）
-     */
-    dynId: number;
-    /**
-     * Dynidstr
-     *
-     * 动态 ID（字符串，避免精度丢失）
-     */
-    dynIdStr: string;
-    /**
-     * Auditstatus
-     *
-     * 审核状态成员名字符串：AUDITING/NORMAL/REJECTED/HIDDEN
-     */
-    auditStatus: string;
-    /**
-     * Dyntype
-     *
-     * 动态类型字符串：WORD/FORWARD
-     */
-    dynType: string;
 };
 
 /**
@@ -5136,7 +4899,7 @@ export type MomentLikerItem = {
     /**
      * Like Time
      *
-     * 点赞时间（ISO8601；服务端从 TMomentLike.created_at 取）
+     * 点赞时间（ISO8601；服务端从 TResourceLike.created_at 取）
      */
     like_time?: string | null;
     /**
@@ -5400,68 +5163,23 @@ export type MomentRemoveResp = {
 };
 
 /**
- * MomentReportReasonEnum
- *
- * 枚举选项：
- * - FAKE_INFO: 1
- * - ILLEGAL: 2
- * - PERSONAL_ATTACK: 3
- * - PORN: 4
- * - FRAUD: 5
- * - OTHER: 6
- */
-export const MomentReportReasonEnum = {
-    /**
-     * FAKE_INFO
-     */
-    FAKE_INFO: 1,
-    /**
-     * ILLEGAL
-     */
-    ILLEGAL: 2,
-    /**
-     * PERSONAL_ATTACK
-     */
-    PERSONAL_ATTACK: 3,
-    /**
-     * PORN
-     */
-    PORN: 4,
-    /**
-     * FRAUD
-     */
-    FRAUD: 5,
-    /**
-     * OTHER
-     */
-    OTHER: 6
-} as const;
-
-/**
- * MomentReportReasonEnum
- *
- * 枚举选项：
- * - FAKE_INFO: 1
- * - ILLEGAL: 2
- * - PERSONAL_ATTACK: 3
- * - PORN: 4
- * - FRAUD: 5
- * - OTHER: 6
- */
-export type MomentReportReasonEnum = typeof MomentReportReasonEnum[keyof typeof MomentReportReasonEnum];
-
-/**
  * MomentReportReq
  *
- * 举报动态请求。
+ * 举报资源请求（2.56.0 通用化；去除 dynId 别名）。
+ *
+ * `bizType` 默认 `dynamic`，资源一律以 `bizId` 定位（不再接受 `dynId` 别名）。
  */
 export type MomentReportReq = {
     /**
-     * Dynid
-     *
-     * 被举报动态 ID（int，兼容前端 str 传参）
+     * 资源类型（InteractionBizTypeEnum 值）
      */
-    dynId: number | string;
+    bizType?: InteractionBizTypeEnum;
+    /**
+     * Bizid
+     *
+     * 资源 ID（int|str；动态时=动态 ID，兼容前端 str 传参）
+     */
+    bizId?: number | string | null;
     /**
      * Reasontype
      *
@@ -5479,21 +5197,25 @@ export type MomentReportReq = {
 /**
  * MomentReportResp
  *
- * 举报响应。
+ * 举报响应（2.56.0 通用化）。
  */
 export type MomentReportResp = {
     /**
-     * Dynid
-     *
-     * 被举报动态 ID（int）
+     * 资源类型（InteractionBizTypeEnum 值）
      */
-    dynId: number;
+    bizType?: InteractionBizTypeEnum;
     /**
-     * Dynidstr
+     * Bizid
      *
-     * 动态 ID（字符串）
+     * 资源 ID（int）
      */
-    dynIdStr: string;
+    bizId: number;
+    /**
+     * Bizidstr
+     *
+     * 资源 ID（字符串，避免精度丢失）
+     */
+    bizIdStr: string;
     /**
      * Success
      */
@@ -5569,35 +5291,45 @@ export type MomentRepostSrc = {
 /**
  * MomentShareReq
  *
- * 分享上报请求（2.35.0）。
+ * 分享上报请求（2.35.0；2.56.0 通用化；去除 dynId 别名）。
+ *
+ * `bizType` 默认 `dynamic`，资源一律以 `bizId` 定位（不再接受 `dynId` 别名）。
  */
 export type MomentShareReq = {
     /**
-     * Dynid
-     *
-     * 被分享动态 ID（int，兼容前端 str 传参）
+     * 资源类型（InteractionBizTypeEnum 值）
      */
-    dynId: number | string;
+    bizType?: InteractionBizTypeEnum;
+    /**
+     * Bizid
+     *
+     * 资源 ID（int|str；动态时=动态 ID，兼容前端 str 传参）
+     */
+    bizId?: number | string | null;
 };
 
 /**
  * MomentShareResp
  *
- * 分享上报响应（2.35.0）。
+ * 分享上报响应（2.35.0；2.56.0 通用化）。
  */
 export type MomentShareResp = {
     /**
-     * Dynid
-     *
-     * 动态 ID（int）
+     * 资源类型（InteractionBizTypeEnum 值）
      */
-    dynId: number;
+    bizType?: InteractionBizTypeEnum;
     /**
-     * Dynidstr
+     * Bizid
      *
-     * 动态 ID（字符串，避免精度丢失）
+     * 资源 ID（int）
      */
-    dynIdStr: string;
+    bizId: number;
+    /**
+     * Bizidstr
+     *
+     * 资源 ID（字符串，避免精度丢失）
+     */
+    bizIdStr: string;
     /**
      * Sharecount
      *
@@ -5609,10 +5341,9 @@ export type MomentShareResp = {
 /**
  * MomentThumbReq
  *
- * 点赞 / 取消点赞请求（2.17.0 泛化支持多业务资源）。
+ * 点赞 / 取消点赞请求（2.17.0 泛化支持多业务资源；2.56.0 去除 dynId 别名）。
  *
- * `bizType` 默认 `dynamic`，此时 `bizId` 等价 `dynId`（二者任传其一）；
- * `bizType≠dynamic` 时 `bizId` 必填、`dynId` 忽略。
+ * `bizType` 默认 `dynamic`，资源一律以 `bizId` 定位（不再接受 `dynId` 别名）。
  */
 export type MomentThumbReq = {
     /**
@@ -5625,12 +5356,6 @@ export type MomentThumbReq = {
      * 资源 ID（int|str；动态时=动态 ID，兼容前端 str 传参）
      */
     bizId?: number | string | null;
-    /**
-     * Dynid
-     *
-     * [兼容]动态 ID（int|str，兼容前端 str 传参）
-     */
-    dynId?: number | string | null;
     /**
      * Up
      *
@@ -5661,18 +5386,6 @@ export type MomentThumbResp = {
      * 资源 ID（字符串，避免精度丢失）
      */
     bizIdStr: string;
-    /**
-     * Dynid
-     *
-     * [兼容]动态 ID（动态资源时返回）
-     */
-    dynId?: number | null;
-    /**
-     * Dynidstr
-     *
-     * [兼容]动态 ID（字符串）
-     */
-    dynIdStr?: string | null;
     /**
      * Islike
      *
@@ -6215,7 +5928,12 @@ export type MomentTopicRefOutput = {
 /**
  * MomentTopicSquareResp
  *
- * 话题广场列表响应。
+ * 话题广场列表响应（推荐流模式，对齐动态广场 ``MomentFeedResp`` 包络）。
+ *
+ * 2.46.0 起改为推荐流：无 page/offset 游标语义，以 ``last_showlist``（客户端已展示
+ * topicId 列表）为去重依据，排除后按 EdgeRank 分倒序取前 ``page_size`` 条；
+ * ``hasMore`` = 排除后候选是否仍有剩余；``updateBaseline``/``historyOffset``/``updateNum``
+ * 置空（无游标语义，与 feed 推荐模式一致）。
  */
 export type MomentTopicSquareResp = {
     /**
@@ -6227,9 +5945,27 @@ export type MomentTopicSquareResp = {
     /**
      * Hasmore
      *
-     * 是否还有下一页
+     * 是否还有更多（排除已展示 last_showlist 后候选仍有剩余）
      */
     hasMore?: boolean;
+    /**
+     * Updatebaseline
+     *
+     * 刷新基线（推荐流模式置空，对齐 feed）
+     */
+    updateBaseline?: number | null;
+    /**
+     * Historyoffset
+     *
+     * 历史偏移（推荐流模式置空，对齐 feed）
+     */
+    historyOffset?: number | null;
+    /**
+     * Updatenum
+     *
+     * 相对基线新增条数（推荐流模式恒 0，对齐 feed）
+     */
+    updateNum?: number;
 };
 
 /**
@@ -7368,64 +7104,21 @@ export type PushMessage = {
 };
 
 /**
- * ReportBizTypeEnum
- *
- * 枚举选项：
- * - DYNAMIC: 1
- * - COMMENT: 2
- * - USER: 3
- * - RESOURCE: 4
- */
-export const ReportBizTypeEnum = {
-    /**
-     * DYNAMIC
-     */
-    DYNAMIC: 1,
-    /**
-     * COMMENT
-     */
-    COMMENT: 2,
-    /**
-     * USER
-     */
-    USER: 3,
-    /**
-     * RESOURCE
-     */
-    RESOURCE: 4
-} as const;
-
-/**
- * ReportBizTypeEnum
- *
- * 枚举选项：
- * - DYNAMIC: 1
- * - COMMENT: 2
- * - USER: 3
- * - RESOURCE: 4
- */
-export type ReportBizTypeEnum = typeof ReportBizTypeEnum[keyof typeof ReportBizTypeEnum];
-
-/**
  * ReportCreateReq
  *
  * 统一举报请求（评论 / 动态 / 用户空间 / RPA 资源）。
  */
 export type ReportCreateReq = {
     /**
-     * 举报来源类型（ReportBizTypeEnum 值）
+     * 举报来源类型（InteractionBizTypeEnum 值，即业务资源类型：dynamic/lottery/rpa_*comment/user）
      */
-    bizType: ReportBizTypeEnum;
+    bizType: InteractionBizTypeEnum;
     /**
      * Bizid
      *
-     * 被举报对象 id：dynamic→dynId，comment→rpid，user→mid（雪花 ID，StrInt 兼容前端 str 传参）
+     * 被举报对象 id：dynamic→dynId，comment→rpid，user→mid，lottery/rpa_*→各自资源 id（雪花 ID，StrInt 兼容前端 str 传参）
      */
     bizId: number | string;
-    /**
-     * 被举报对象所属资源类型（InteractionBizTypeEnum 值，2.37.0）：dynamic 举报可不传（默认 1）；lottery/rpa_* 等资源举报必传
-     */
-    resourceType?: InteractionBizTypeEnum | null;
     /**
      * Reasontype
      *
@@ -7456,7 +7149,7 @@ export type ReportItem = {
      * Pk
      */
     pk: number;
-    bizType: ReportBizTypeEnum;
+    bizType: InteractionBizTypeEnum;
     /**
      * Bizid
      */
@@ -7510,6 +7203,34 @@ export type ReportItem = {
      */
     reportPeopleCount?: number;
     /**
+     * Reportername
+     *
+     * 举报人昵称
+     */
+    reporterName?: string | null;
+    /**
+     * Reporterface
+     *
+     * 举报人头像
+     */
+    reporterFace?: string | null;
+    /**
+     * Accusedname
+     *
+     * 被举报人昵称
+     */
+    accusedName?: string | null;
+    /**
+     * Accusedface
+     *
+     * 被举报人头像
+     */
+    accusedFace?: string | null;
+    /**
+     * 被举报资源快照（标题 / 封面 / 跳转目标；exists=false 表示内容已删除或不可见）
+     */
+    resource?: InteractionResource | null;
+    /**
      * Bizidstr
      */
     readonly bizIdStr: string | null;
@@ -7552,6 +7273,81 @@ export type ReportListResp = {
 };
 
 /**
+ * ReportReasonEnum
+ *
+ * 枚举选项：
+ * - FAKE_INFO: 1
+ * - ILLEGAL: 2
+ * - PERSONAL_ATTACK: 3
+ * - PORN: 4
+ * - FRAUD: 5
+ * - OTHER: 6
+ * - AD: 7
+ * - FLAME: 8
+ * - POLITICAL_RUMOR: 9
+ * - ILLEGAL_LINK: 10
+ */
+export const ReportReasonEnum = {
+    /**
+     * FAKE_INFO
+     */
+    FAKE_INFO: 1,
+    /**
+     * ILLEGAL
+     */
+    ILLEGAL: 2,
+    /**
+     * PERSONAL_ATTACK
+     */
+    PERSONAL_ATTACK: 3,
+    /**
+     * PORN
+     */
+    PORN: 4,
+    /**
+     * FRAUD
+     */
+    FRAUD: 5,
+    /**
+     * OTHER
+     */
+    OTHER: 6,
+    /**
+     * AD
+     */
+    AD: 7,
+    /**
+     * FLAME
+     */
+    FLAME: 8,
+    /**
+     * POLITICAL_RUMOR
+     */
+    POLITICAL_RUMOR: 9,
+    /**
+     * ILLEGAL_LINK
+     */
+    ILLEGAL_LINK: 10
+} as const;
+
+/**
+ * ReportReasonEnum
+ *
+ * 枚举选项：
+ * - FAKE_INFO: 1
+ * - ILLEGAL: 2
+ * - PERSONAL_ATTACK: 3
+ * - PORN: 4
+ * - FRAUD: 5
+ * - OTHER: 6
+ * - AD: 7
+ * - FLAME: 8
+ * - POLITICAL_RUMOR: 9
+ * - ILLEGAL_LINK: 10
+ */
+export type ReportReasonEnum = typeof ReportReasonEnum[keyof typeof ReportReasonEnum];
+
+/**
  * ReportReviewReq
  *
  * 统一举报管理端审核请求。
@@ -7582,6 +7378,51 @@ export type ReportReviewReq = {
      */
     remark?: string | null;
 };
+
+/**
+ * ResourceAuditStatusEnum
+ *
+ * 枚举选项：
+ * - NORMAL: 1
+ * - AUDITING: 2
+ * - REJECTED: 3
+ * - HIDDEN: 4
+ * - DELETED: 5
+ */
+export const ResourceAuditStatusEnum = {
+    /**
+     * NORMAL
+     */
+    NORMAL: 1,
+    /**
+     * AUDITING
+     */
+    AUDITING: 2,
+    /**
+     * REJECTED
+     */
+    REJECTED: 3,
+    /**
+     * HIDDEN
+     */
+    HIDDEN: 4,
+    /**
+     * DELETED
+     */
+    DELETED: 5
+} as const;
+
+/**
+ * ResourceAuditStatusEnum
+ *
+ * 枚举选项：
+ * - NORMAL: 1
+ * - AUDITING: 2
+ * - REJECTED: 3
+ * - HIDDEN: 4
+ * - DELETED: 5
+ */
+export type ResourceAuditStatusEnum = typeof ResourceAuditStatusEnum[keyof typeof ResourceAuditStatusEnum];
 
 /**
  * ResourceDetail
@@ -7646,57 +7487,6 @@ export type RevokeAdminReq = {
      */
     mid: number | string;
 };
-
-/**
- * SourceTypeEnum
- *
- * 枚举选项：
- * - VIDEO: 1
- * - DYNAMIC: 2
- * - ARTICLE: 3
- * - COMMENT: 4
- * - LOTTERY: 5
- * - OTHER: 6
- */
-export const SourceTypeEnum = {
-    /**
-     * VIDEO
-     */
-    VIDEO: 1,
-    /**
-     * DYNAMIC
-     */
-    DYNAMIC: 2,
-    /**
-     * ARTICLE
-     */
-    ARTICLE: 3,
-    /**
-     * COMMENT
-     */
-    COMMENT: 4,
-    /**
-     * LOTTERY
-     */
-    LOTTERY: 5,
-    /**
-     * OTHER
-     */
-    OTHER: 6
-} as const;
-
-/**
- * SourceTypeEnum
- *
- * 枚举选项：
- * - VIDEO: 1
- * - DYNAMIC: 2
- * - ARTICLE: 3
- * - COMMENT: 4
- * - LOTTERY: 5
- * - OTHER: 6
- */
-export type SourceTypeEnum = typeof SourceTypeEnum[keyof typeof SourceTypeEnum];
 
 /**
  * SpaceFollowStat
@@ -8335,6 +8125,21 @@ export type StandardResponseDmStatsResp = {
 };
 
 /**
+ * StandardResponse[DmTopResp]
+ */
+export type StandardResponseDmTopResp = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: DmTopResp | null;
+};
+
+/**
  * StandardResponse[EventAggregateResp]
  */
 export type StandardResponseEventAggregateResp = {
@@ -8767,21 +8572,6 @@ export type StandardResponseMomentDislikeResp = {
      */
     msg?: string;
     data?: MomentDislikeResp | null;
-};
-
-/**
- * StandardResponse[MomentEditResp]
- */
-export type StandardResponseMomentEditResp = {
-    /**
-     * Code
-     */
-    code?: number;
-    /**
-     * Msg
-     */
-    msg?: string;
-    data?: MomentEditResp | null;
 };
 
 /**
@@ -9369,24 +9159,6 @@ export type StandardResponseInt = {
 };
 
 /**
- * StandardResponse[list[CommentUserBrief]]
- */
-export type StandardResponseListCommentUserBrief = {
-    /**
-     * Code
-     */
-    code?: number;
-    /**
-     * Msg
-     */
-    msg?: string;
-    /**
-     * Data
-     */
-    data?: Array<CommentUserBrief> | null;
-};
-
-/**
  * StandardResponse[list[FavoriteFolderResp]]
  */
 export type StandardResponseListFavoriteFolderResp = {
@@ -9420,6 +9192,24 @@ export type StandardResponseListMomentDetailResp = {
      * Data
      */
     data?: Array<MomentDetailResp> | null;
+};
+
+/**
+ * StandardResponse[list[UserBriefOut]]
+ */
+export type StandardResponseListUserBriefOut = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    /**
+     * Data
+     */
+    data?: Array<UserBriefOut> | null;
 };
 
 /**
@@ -9678,6 +9468,10 @@ export type UserActivityResp = {
     readonly midStr: string | null;
 };
 
+export type UserBriefOut = {
+    [key: string]: unknown;
+};
+
 /**
  * UserDeactivateReq
  *
@@ -9813,7 +9607,7 @@ export type AuditSourceInfoWritable = {
     /**
      * Biz Type
      *
-     * 业务类型：评论为 CommentTypeEnum，私信固定为 dm
+     * 业务类型：评论为 InteractionBizTypeEnum，私信固定为 dm
      */
     biz_type: string;
     /**
@@ -9895,7 +9689,7 @@ export type AvatarAuditItemWritable = {
     /**
      * Auditstatus
      *
-     * 审核状态：pending/approved/rejected
+     * 审核状态（统一枚举 .name）：AUDITING=待审 / NORMAL=已通过 / REJECTED=已驳回
      */
     auditStatus: string;
     /**
@@ -10060,102 +9854,6 @@ export type BanStatusRespWritable = {
 };
 
 /**
- * CommentAuditItem
- *
- * 审核队列中的一条评论。
- */
-export type CommentAuditItemWritable = {
-    /**
-     * Rpid
-     */
-    rpid: string;
-    /**
-     * Oid
-     */
-    oid: string;
-    type: CommentTypeEnum;
-    /**
-     * Mid
-     */
-    mid: number;
-    /**
-     * Message
-     */
-    message: string;
-    state: CommentStateEnum;
-    /**
-     * Like Count
-     */
-    like_count?: number;
-    /**
-     * Ctime
-     */
-    ctime: string;
-    /**
-     * Ip V4
-     */
-    ip_v4?: string | null;
-    /**
-     * Ip V6
-     */
-    ip_v6?: string | null;
-    /**
-     * Plat
-     *
-     * 来源平台
-     */
-    plat?: string | null;
-    /**
-     * Device
-     *
-     * 来源设备
-     */
-    device?: string | null;
-    /**
-     * 内容来源，管理端可点击直达原始评论区
-     */
-    source?: AuditSourceInfoWritable | null;
-    /**
-     * 发布者信息，装配时直连 pptr 只读取回
-     */
-    member?: CommentUserBriefWritable | null;
-};
-
-/**
- * CommentAuditListResp
- */
-export type CommentAuditListRespWritable = {
-    /**
-     * Items
-     */
-    items?: Array<CommentAuditItemWritable>;
-    /**
-     * Total
-     */
-    total?: number;
-    /**
-     * Page Num
-     */
-    page_num?: number;
-    /**
-     * Page Size
-     */
-    page_size?: number;
-    /**
-     * States
-     *
-     * 本次实际生效的状态过滤（非 root 恒为待审核）
-     */
-    states?: Array<CommentStateEnum>;
-    /**
-     * Can View All States
-     *
-     * 当前管理员是否可查看全部状态（仅 root 为 True）
-     */
-    can_view_all_states?: boolean;
-};
-
-/**
  * CommentItem
  *
  * 一条评论的完整视图模型。
@@ -10173,7 +9871,7 @@ export type CommentItemWritable = {
      * 所属业务实体id（字符串）
      */
     oid: string;
-    type: CommentTypeEnum;
+    type: InteractionBizTypeEnum;
     /**
      * Mid
      *
@@ -10183,7 +9881,7 @@ export type CommentItemWritable = {
     /**
      * 发布者信息快照，快照缺失时为 null
      */
-    member?: CommentUserBriefWritable | null;
+    member?: CommentUserBrief | null;
     /**
      * Root
      *
@@ -10211,7 +9909,7 @@ export type CommentItemWritable = {
     /**
      * 被回复者，楼中楼展示「回复 @xxx」
      */
-    reply_to?: CommentUserBriefWritable | null;
+    reply_to?: CommentUserBrief | null;
     /**
      * Message
      *
@@ -10229,7 +9927,7 @@ export type CommentItemWritable = {
      *
      * 被@用户信息数组（对齐 B 站 content.members）
      */
-    at_users?: Array<CommentUserBriefWritable>;
+    at_users?: Array<CommentUserBrief>;
     /**
      * At Name To Mid
      *
@@ -10282,7 +9980,7 @@ export type CommentItemWritable = {
      * 当前登录用户的互动态：0无/1赞/2踩
      */
     action?: CommentActionEnum;
-    state?: CommentStateEnum;
+    state?: ResourceAuditStatusEnum;
     /**
      * Is Top
      */
@@ -10402,7 +10100,7 @@ export type CommentSourceRespWritable = {
      * Parent
      */
     parent?: string;
-    state?: CommentStateEnum;
+    state?: ResourceAuditStatusEnum;
     source: AuditSourceInfoWritable;
     /**
      * 所属评论区状态；评论区不存在时为 null
@@ -10420,40 +10118,6 @@ export type CommentSourceRespWritable = {
      * 评论区评论总数（含楼中楼）
      */
     all_count?: number;
-};
-
-/**
- * CommentStatsResp
- *
- * 评论区全局统计（管理端）。
- */
-export type CommentStatsRespWritable = {
-    /**
-     * Total Comments
-     */
-    total_comments?: number;
-    /**
-     * Total Root
-     */
-    total_root?: number;
-    /**
-     * Total Subjects
-     */
-    total_subjects?: number;
-    /**
-     * Today New
-     */
-    today_new?: number;
-    /**
-     * Top Authors
-     */
-    top_authors?: Array<CommentUserBriefWritable>;
-    /**
-     * State Counts
-     */
-    state_counts?: {
-        [key: string]: number;
-    };
 };
 
 /**
@@ -10486,94 +10150,6 @@ export type CommentSubListRespWritable = {
      * Page Size
      */
     page_size?: number;
-};
-
-/**
- * CommentUserBrief
- *
- * 评论卡片上展示的用户信息（直连 pptr Postgres 只读取得，本服务不冗余）。
- *
- * 仅使用 pptr 现有四张表（TUserInfo / TUserDetail / TUserVip / TUserLevel）中**实际存在**
- * 的字段，**不新增任何表结构或表外字段**。参考 B 站 member 的展示结构，把数据库里
- * 已有但此前未返回的字段（大会员到期时间、经验值、角色、脱敏邮箱）一并补齐。
- */
-export type CommentUserBriefWritable = {
-    /**
-     * Mid
-     */
-    mid: number;
-    /**
-     * Uname
-     */
-    uname?: string | null;
-    /**
-     * Avatar
-     */
-    avatar?: string | null;
-    /**
-     * Level
-     */
-    level?: number;
-    /**
-     * Vip Status
-     */
-    vip_status?: string | null;
-    /**
-     * Vip Type
-     */
-    vip_type?: number;
-    /**
-     * Vip Due Date
-     */
-    vip_due_date?: number | null;
-    /**
-     * Sex
-     */
-    sex?: string | null;
-    /**
-     * Sign
-     */
-    sign?: string | null;
-    /**
-     * Exp
-     */
-    exp?: number | null;
-    /**
-     * Role
-     */
-    role?: string | null;
-    /**
-     * Email
-     */
-    email?: string | null;
-    /**
-     * Follower Count
-     */
-    follower_count?: number;
-    /**
-     * Following Count
-     */
-    following_count?: number;
-    /**
-     * Like Count
-     */
-    like_count?: number;
-    /**
-     * Nameplate Name
-     */
-    nameplate_name?: string | null;
-    /**
-     * Nameplate Image
-     */
-    nameplate_image?: string | null;
-    /**
-     * Nameplate Level
-     */
-    nameplate_level?: string | null;
-    /**
-     * Official Title
-     */
-    official_title?: string | null;
 };
 
 /**
@@ -10613,7 +10189,7 @@ export type DmAuditItemWritable = {
      */
     message?: string;
     msg_type?: DmMsgTypeEnum;
-    audit_state?: DmAuditStateEnum;
+    audit_state?: ResourceAuditStatusEnum;
     /**
      * Msg Ts
      *
@@ -10635,9 +10211,9 @@ export type DmAuditItemWritable = {
      */
     source?: AuditSourceInfoWritable | null;
     /**
-     * 发送者信息，装配时直连 pptr 只读取回
+     * 发送者信息（管理端：含私有字段），装配时直连 pptr 只读取回
      */
-    sender?: CommentUserBriefWritable | null;
+    sender?: UserBriefOut | null;
 };
 
 /**
@@ -10665,7 +10241,7 @@ export type DmAuditListRespWritable = {
      *
      * 本次实际生效的状态过滤（非 root 恒为待审核）
      */
-    states?: Array<DmAuditStateEnum>;
+    states?: Array<ResourceAuditStatusEnum>;
     /**
      * Can View All States
      *
@@ -10710,7 +10286,7 @@ export type DmMessageItemWritable = {
      * Created At
      */
     created_at?: string | null;
-    audit_state?: DmAuditStateEnum;
+    audit_state?: ResourceAuditStatusEnum;
     /**
      * Recalled At
      *
@@ -10838,8 +10414,16 @@ export type DmSessionItemWritable = {
     relation?: DmRelationEnum;
     /**
      * Is Top
+     *
+     * 是否置顶（= top_ts != 0，兼容 flag 用法）
      */
     is_top?: boolean;
+    /**
+     * Top Ts
+     *
+     * 置顶时间戳(毫秒)，0=未置顶；置顶唯一真相源
+     */
+    top_ts?: number;
     /**
      * Is Muted
      */
@@ -10877,6 +10461,38 @@ export type DmSessionListRespWritable = {
 };
 
 /**
+ * DmTopResp
+ *
+ * 置顶操作结果。
+ */
+export type DmTopRespWritable = {
+    /**
+     * Talker Mid
+     *
+     * 被置顶/取消的会话对方 mid
+     */
+    talker_mid?: number;
+    /**
+     * Top Ts
+     *
+     * 置顶时间戳(毫秒)；0=未置顶
+     */
+    top_ts?: number;
+    /**
+     * Is Top
+     *
+     * = top_ts != 0
+     */
+    is_top?: boolean;
+    /**
+     * Affected
+     *
+     * 受影响会话行数（0=会话不存在或幂等无操作）
+     */
+    affected?: number;
+};
+
+/**
  * EventAggregateItem
  *
  * 按 source_type + source_id 聚合后的一张卡片。
@@ -10885,8 +10501,8 @@ export type DmSessionListRespWritable = {
  * 对应 count=12、actors 取最近 3 位、latest_* 取最新一条。
  */
 export type EventAggregateItemWritable = {
-    event_type: EventTypeEnum;
-    source_type: SourceTypeEnum;
+    event_type: InteractionActionTypeEnum;
+    source_type: InteractionBizTypeEnum;
     /**
      * Source Id
      */
@@ -10905,6 +10521,14 @@ export type EventAggregateItemWritable = {
      * Image
      */
     image?: string | null;
+    /**
+     * Jump Target
+     */
+    jump_target?: string;
+    /**
+     * Resource Deleted
+     */
+    resource_deleted?: boolean;
     /**
      * Count
      *
@@ -10971,10 +10595,29 @@ export type EventAggregateRespWritable = {
  * EventListResp
  *
  * 消息中心列表响应：latest 为最新一条，total 为完整分页。
+ *
+ * `total_count` / `unread_count` 用于**对账**——列表按「来源实体」聚合，单页只返回
+ * `page_size` 张卡片（每张卡片聚合了 N 个用户的同类互动），因此本页 `items` 长度
+ * 天然小于「未读事件数」。这两个字段给出真实总量，避免前端把「单页 20 张」误判为
+ * 「全部只有 20 条 / 已结束」：
+ * - `total_count`：当前筛选条件下聚合卡片（分组）总数，决定总页数；
+ * - `unread_count`：当前 `event_type` 下未读事件总数，与 `GET /unread` 的对应字段一致。
  */
 export type EventListRespWritable = {
     latest: EventMsgfeedSectionWritable;
     total: EventMsgfeedSectionWritable;
+    /**
+     * Total Count
+     *
+     * 当前筛选条件下聚合卡片（分组）总数（与单页 items 长度无关）
+     */
+    total_count?: number;
+    /**
+     * Unread Count
+     *
+     * 当前 event_type 下未读事件总数，对齐 GET /unread 的对应字段
+     */
+    unread_count?: number;
 };
 
 /**
@@ -10983,8 +10626,10 @@ export type EventListRespWritable = {
  * 聚合条目中的内容实体（对齐 B 站 msgfeed 的 item）。
  *
  * 评论层级关系（root_id / source_id / target_id）与正文（source_content /
- * target_content）读取时按 source_id（rpid）实时回捞评论表补全（见 Phase L2），
- * 不冗余存储，仅靠 resource_id + resource_type 唯一定位原资源。
+ * target_content）、作者（source_mid / target_mid）读取时按 source_id（rpid）
+ * 实时回捞评论补全（见 Phase L2 / §5.12），不冗余存储，仅靠
+ * resource_id + resource_type 唯一定位原资源；正文与作者统一经
+ * `CommentBiz.batch_get_resources` 批量回捞（对齐 §5.11 的 Biz 体系）。
  *
  * `title` / `desc` / `image` 同样读取时按 source_type + source_id 实时回捞
  * 原资源补全，不冗余存储快照。
@@ -11047,9 +10692,33 @@ export type EventMsgfeedContentWritable = {
      */
     target_content?: string;
     /**
+     * Source Mid
+     */
+    source_mid?: number;
+    /**
+     * Target Mid
+     */
+    target_mid?: number;
+    /**
+     * Source Name
+     */
+    source_name?: string;
+    /**
+     * Target Name
+     */
+    target_name?: string;
+    /**
      * Comment Deleted
      */
     comment_deleted?: boolean;
+    /**
+     * Jump Target
+     */
+    jump_target?: string;
+    /**
+     * Resource Deleted
+     */
+    resource_deleted?: boolean;
     /**
      * Ctime
      */
@@ -11159,7 +10828,7 @@ export type FolderCoverAuditItemWritable = {
     /**
      * Auditstatus
      *
-     * 审核状态：pending/approved/rejected
+     * 审核状态（统一枚举 .name）：AUDITING=待审 / NORMAL=已通过 / REJECTED=已驳回
      */
     auditStatus: string;
     /**
@@ -11250,6 +10919,10 @@ export type FollowListItemWritable = {
      * 是否互相关注
      */
     mutual?: boolean;
+    /**
+     * 对方公开展示信息（他人可见字段；注销或回查失败时为 null）
+     */
+    user?: UserBriefOut | null;
 };
 
 /**
@@ -11503,7 +11176,7 @@ export type MomentAuditDetailRespWritable = {
      *
      * 审核流转历史
      */
-    logs?: Array<MomentAuditLogItemWritable>;
+    logs?: Array<MomentAuditLogItem>;
 };
 
 /**
@@ -11600,98 +11273,6 @@ export type MomentAuditListRespWritable = {
      * Total
      *
      * 符合条件的总数
-     */
-    total?: number;
-    /**
-     * Page Num
-     */
-    page_num?: number;
-    /**
-     * Page Size
-     */
-    page_size?: number;
-};
-
-/**
- * MomentAuditLogItem
- *
- * 单条审核流转记录（管理后台流水）。
- */
-export type MomentAuditLogItemWritable = {
-    /**
-     * Pk
-     *
-     * 记录主键
-     */
-    pk: number;
-    /**
-     * Dynid
-     *
-     * 被审核动态 ID
-     */
-    dynId: number;
-    /**
-     * Operatormid
-     *
-     * 操作人 MID
-     */
-    operatorMid: number;
-    /**
-     * Operatorrole
-     *
-     * 操作人角色：author/admin
-     */
-    operatorRole: string;
-    /**
-     * Fromstatus
-     *
-     * 流转前状态
-     */
-    fromStatus?: string | null;
-    /**
-     * Tostatus
-     *
-     * 流转后状态
-     */
-    toStatus: string;
-    /**
-     * Actiontype
-     *
-     * 操作类型：create/edit/approve/reject/resubmit/delete
-     */
-    actionType: string;
-    /**
-     * Rejectreason
-     *
-     * 驳回原因（仅 reject）
-     */
-    rejectReason?: string | null;
-    /**
-     * Remark
-     *
-     * 其他备注
-     */
-    remark?: string | null;
-    /**
-     * Createdtime
-     *
-     * 操作时间（ISO）
-     */
-    createdTime?: string | null;
-};
-
-/**
- * MomentAuditLogListResp
- *
- * 审核记录流水响应。
- */
-export type MomentAuditLogListRespWritable = {
-    /**
-     * Items
-     */
-    items?: Array<MomentAuditLogItemWritable>;
-    /**
-     * Total
      */
     total?: number;
     /**
@@ -12013,7 +11594,7 @@ export type MomentLikerItemWritable = {
     /**
      * Like Time
      *
-     * 点赞时间（ISO8601；服务端从 TMomentLike.created_at 取）
+     * 点赞时间（ISO8601；服务端从 TResourceLike.created_at 取）
      */
     like_time?: string | null;
 };
@@ -12473,7 +12054,12 @@ export type MomentTopicRefOutputWritable = {
 /**
  * MomentTopicSquareResp
  *
- * 话题广场列表响应。
+ * 话题广场列表响应（推荐流模式，对齐动态广场 ``MomentFeedResp`` 包络）。
+ *
+ * 2.46.0 起改为推荐流：无 page/offset 游标语义，以 ``last_showlist``（客户端已展示
+ * topicId 列表）为去重依据，排除后按 EdgeRank 分倒序取前 ``page_size`` 条；
+ * ``hasMore`` = 排除后候选是否仍有剩余；``updateBaseline``/``historyOffset``/``updateNum``
+ * 置空（无游标语义，与 feed 推荐模式一致）。
  */
 export type MomentTopicSquareRespWritable = {
     /**
@@ -12485,9 +12071,27 @@ export type MomentTopicSquareRespWritable = {
     /**
      * Hasmore
      *
-     * 是否还有下一页
+     * 是否还有更多（排除已展示 last_showlist 后候选仍有剩余）
      */
     hasMore?: boolean;
+    /**
+     * Updatebaseline
+     *
+     * 刷新基线（推荐流模式置空，对齐 feed）
+     */
+    updateBaseline?: number | null;
+    /**
+     * Historyoffset
+     *
+     * 历史偏移（推荐流模式置空，对齐 feed）
+     */
+    historyOffset?: number | null;
+    /**
+     * Updatenum
+     *
+     * 相对基线新增条数（推荐流模式恒 0，对齐 feed）
+     */
+    updateNum?: number;
 };
 
 /**
@@ -12575,7 +12179,7 @@ export type ReportItemWritable = {
      * Pk
      */
     pk: number;
-    bizType: ReportBizTypeEnum;
+    bizType: InteractionBizTypeEnum;
     /**
      * Bizid
      */
@@ -12628,6 +12232,34 @@ export type ReportItemWritable = {
      * 举报人数（去重，COUNT(DISTINCT reportMid)）
      */
     reportPeopleCount?: number;
+    /**
+     * Reportername
+     *
+     * 举报人昵称
+     */
+    reporterName?: string | null;
+    /**
+     * Reporterface
+     *
+     * 举报人头像
+     */
+    reporterFace?: string | null;
+    /**
+     * Accusedname
+     *
+     * 被举报人昵称
+     */
+    accusedName?: string | null;
+    /**
+     * Accusedface
+     *
+     * 被举报人头像
+     */
+    accusedFace?: string | null;
+    /**
+     * 被举报资源快照（标题 / 封面 / 跳转目标；exists=false 表示内容已删除或不可见）
+     */
+    resource?: InteractionResource | null;
 };
 
 /**
@@ -12784,36 +12416,6 @@ export type StandardResponseBanStatusRespWritable = {
 };
 
 /**
- * StandardResponse[CommentAuditItem]
- */
-export type StandardResponseCommentAuditItemWritable = {
-    /**
-     * Code
-     */
-    code?: number;
-    /**
-     * Msg
-     */
-    msg?: string;
-    data?: CommentAuditItemWritable | null;
-};
-
-/**
- * StandardResponse[CommentAuditListResp]
- */
-export type StandardResponseCommentAuditListRespWritable = {
-    /**
-     * Code
-     */
-    code?: number;
-    /**
-     * Msg
-     */
-    msg?: string;
-    data?: CommentAuditListRespWritable | null;
-};
-
-/**
  * StandardResponse[CommentItem]
  */
 export type StandardResponseCommentItemWritable = {
@@ -12856,21 +12458,6 @@ export type StandardResponseCommentSourceRespWritable = {
      */
     msg?: string;
     data?: CommentSourceRespWritable | null;
-};
-
-/**
- * StandardResponse[CommentStatsResp]
- */
-export type StandardResponseCommentStatsRespWritable = {
-    /**
-     * Code
-     */
-    code?: number;
-    /**
-     * Msg
-     */
-    msg?: string;
-    data?: CommentStatsRespWritable | null;
 };
 
 /**
@@ -12961,6 +12548,21 @@ export type StandardResponseDmSessionListRespWritable = {
      */
     msg?: string;
     data?: DmSessionListRespWritable | null;
+};
+
+/**
+ * StandardResponse[DmTopResp]
+ */
+export type StandardResponseDmTopRespWritable = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: DmTopRespWritable | null;
 };
 
 /**
@@ -13156,21 +12758,6 @@ export type StandardResponseMomentAuditListRespWritable = {
      */
     msg?: string;
     data?: MomentAuditListRespWritable | null;
-};
-
-/**
- * StandardResponse[MomentAuditLogListResp]
- */
-export type StandardResponseMomentAuditLogListRespWritable = {
-    /**
-     * Code
-     */
-    code?: number;
-    /**
-     * Msg
-     */
-    msg?: string;
-    data?: MomentAuditLogListRespWritable | null;
 };
 
 /**
@@ -13381,24 +12968,6 @@ export type StandardResponseUserActivityRespWritable = {
      */
     msg?: string;
     data?: UserActivityRespWritable | null;
-};
-
-/**
- * StandardResponse[list[CommentUserBrief]]
- */
-export type StandardResponseListCommentUserBriefWritable = {
-    /**
-     * Code
-     */
-    code?: number;
-    /**
-     * Msg
-     */
-    msg?: string;
-    /**
-     * Data
-     */
-    data?: Array<CommentUserBriefWritable> | null;
 };
 
 /**
@@ -13791,7 +13360,7 @@ export type ListMainApiV1CommentMainGetData = {
         /**
          * 业务实体类型
          */
-        type: CommentTypeEnum;
+        type: InteractionBizTypeEnum;
         /**
          * 排序：hot 热度 / time 时间
          */
@@ -13885,7 +13454,7 @@ export type CommentCountApiV1CommentCountGetData = {
         /**
          * 业务实体类型
          */
-        type: CommentTypeEnum;
+        type: InteractionBizTypeEnum;
     };
     url: '/api/v1/comment/count';
 };
@@ -13933,7 +13502,7 @@ export type ReplyListApiV1CommentReplyGetData = {
         /**
          * 业务实体类型
          */
-        type: CommentTypeEnum;
+        type: InteractionBizTypeEnum;
         /**
          * Page Num
          *
@@ -14201,7 +13770,7 @@ export type AtSearchApiV1CommentAtSearchGetResponses = {
     /**
      * Successful Response
      */
-    200: StandardResponseListCommentUserBrief;
+    200: StandardResponseListUserBriefOut;
 };
 
 export type AtSearchApiV1CommentAtSearchGetResponse = AtSearchApiV1CommentAtSearchGetResponses[keyof AtSearchApiV1CommentAtSearchGetResponses];
@@ -14834,85 +14403,6 @@ export type CreateDynamicApiV1CommunityCreatePostResponses = {
 };
 
 export type CreateDynamicApiV1CommunityCreatePostResponse = CreateDynamicApiV1CommunityCreatePostResponses[keyof CreateDynamicApiV1CommunityCreatePostResponses];
-
-export type EditDynamicApiV1CommunityEditPostData = {
-    body: MomentEditReq;
-    headers?: {
-        /**
-         * User-Agent
-         */
-        'user-agent'?: string | null;
-        /**
-         * X-Bili-Mid
-         */
-        'x-bili-mid'?: string | null;
-        /**
-         * X-Bili-Jwt
-         */
-        'x-bili-jwt'?: string | null;
-        /**
-         * X-Bili-Level
-         */
-        'x-bili-level'?: string | null;
-        /**
-         * X-Bili-Role
-         */
-        'x-bili-role'?: string;
-        /**
-         * X-Bili-Permissions
-         */
-        'x-bili-permissions'?: string | null;
-        /**
-         * X-Bili-User-Name
-         */
-        'x-bili-user-name'?: string | null;
-        /**
-         * X-Bili-Uname
-         */
-        'x-bili-uname'?: string | null;
-        /**
-         * X-Bili-Sign
-         */
-        'x-bili-sign'?: string | null;
-        /**
-         * X-Bili-Sex
-         */
-        'x-bili-sex'?: string | null;
-        /**
-         * X-Bili-Email
-         */
-        'x-bili-email'?: string | null;
-        /**
-         * X-Bili-Vip-Status
-         */
-        'x-bili-vip-status'?: string | null;
-        /**
-         * X-Bili-Vip-Type
-         */
-        'x-bili-vip-type'?: string | null;
-    };
-    path?: never;
-    query?: never;
-    url: '/api/v1/community/edit';
-};
-
-export type EditDynamicApiV1CommunityEditPostErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type EditDynamicApiV1CommunityEditPostError = EditDynamicApiV1CommunityEditPostErrors[keyof EditDynamicApiV1CommunityEditPostErrors];
-
-export type EditDynamicApiV1CommunityEditPostResponses = {
-    /**
-     * Successful Response
-     */
-    200: StandardResponseMomentEditResp;
-};
-
-export type EditDynamicApiV1CommunityEditPostResponse = EditDynamicApiV1CommunityEditPostResponses[keyof EditDynamicApiV1CommunityEditPostResponses];
 
 export type RemoveDynamicApiV1CommunityRemovePostData = {
     body: MomentRemoveReq;
@@ -15902,13 +15392,29 @@ export type TopicSquareApiV1CommunityTopicSquareGetData = {
     path?: never;
     query?: {
         /**
-         * Page
-         */
-        page?: number;
-        /**
          * Page Size
+         *
+         * 单页条数（推荐流，对齐 feed ps）
          */
         page_size?: number;
+        /**
+         * Last Showlist
+         *
+         * 已展示的 topicId 列表（逗号分隔，服务端去重，上限 100）
+         */
+        last_showlist?: string | null;
+        /**
+         * Keyword
+         *
+         * 话题名关键词搜索（模糊匹配 topicName）
+         */
+        keyword?: string | null;
+        /**
+         * Hot Only
+         *
+         * 仅返回热门话题（isHot=1），对齐 /topic/hot-search
+         */
+        hot_only?: boolean;
     };
     url: '/api/v1/community/topic/square';
 };
@@ -15993,6 +15499,12 @@ export type TopicHotSearchApiV1CommunityTopicHotSearchGetData = {
          * Page Size
          */
         page_size?: number;
+        /**
+         * Last Showlist
+         *
+         * 已展示 topicId 列表（逗号分隔，去重）
+         */
+        last_showlist?: string | null;
     };
     url: '/api/v1/community/topic/hot-search';
 };
@@ -16157,13 +15669,9 @@ export type TopicFeedApiV1CommunityTopicFeedTopicIdGetData = {
         /**
          * Sort
          *
-         * 排序：hot=热门（互动数倒序）/ time=最新（发布时间倒序）
+         * 排序：recommend=EdgeRank 推荐流（默认，last_showlist 去重）/ time=最新（pubTime 倒序 + historyOffset 游标）/ hot=recommend 兼容别名
          */
         sort?: string;
-        /**
-         * History Offset
-         */
-        history_offset?: number | null;
         /**
          * Page
          */
@@ -16172,6 +15680,28 @@ export type TopicFeedApiV1CommunityTopicFeedTopicIdGetData = {
          * Page Size
          */
         page_size?: number;
+        /**
+         * History Offset
+         */
+        history_offset?: number | null;
+        /**
+         * Last Showlist
+         *
+         * 已展示的 dynId 列表（逗号分隔，recommend 去重，上限 100）
+         */
+        last_showlist?: string | null;
+        /**
+         * Last Clicklist
+         *
+         * 已互动的 dynId 列表（逗号分隔，个性化反馈预留，当前不参与排序）
+         */
+        last_clicklist?: string | null;
+        /**
+         * Uniq Id
+         *
+         * 客户端唯一 ID（匿名随机排序种子）
+         */
+        uniq_id?: string | null;
     };
     url: '/api/v1/community/topic/feed/{topicId}';
 };
@@ -17156,7 +16686,7 @@ export type AuditListApiV1CommunityAuditListGetData = {
         /**
          * 审核状态筛选：auditing（默认，待审核）/normal（已过审）/rejected（已驳回）/hidden（已下架）
          */
-        auditStatus?: MomentAuditStatusEnum;
+        auditStatus?: ResourceAuditStatusEnum;
         /**
          * Page Num
          */
@@ -18529,23 +18059,17 @@ export type DynFoldersApiV1FavoriteDynFoldersGetData = {
         'x-bili-vip-type'?: string | null;
     };
     path?: never;
-    query?: {
+    query: {
         /**
          * Bizid
          *
          * 资源id（字符串）
          */
-        bizId?: string | null;
+        bizId: string;
         /**
          * 资源类型（InteractionBizTypeEnum 值）
          */
         bizType?: InteractionBizTypeEnum;
-        /**
-         * Dynid
-         *
-         * [兼容]动态id（字符串）
-         */
-        dynId?: string | null;
     };
     url: '/api/v1/favorite/dyn/folders';
 };
@@ -19609,7 +19133,7 @@ export type AggregateEventApiV1MessageEventAggregateGetData = {
          *
          * 按类型筛选
          */
-        event_type?: EventTypeEnum | null;
+        event_type?: InteractionActionTypeEnum | null;
         /**
          * Page Num
          */
@@ -19701,7 +19225,7 @@ export type ListEventApiV1MessageEventListGetData = {
         /**
          * Event Type
          */
-        event_type?: EventTypeEnum | null;
+        event_type?: InteractionActionTypeEnum | null;
         /**
          * Cursor Id
          *
@@ -20203,6 +19727,81 @@ export type DeleteSessionApiV1MessageDmSessionDeletePostResponses = {
 
 export type DeleteSessionApiV1MessageDmSessionDeletePostResponse = DeleteSessionApiV1MessageDmSessionDeletePostResponses[keyof DeleteSessionApiV1MessageDmSessionDeletePostResponses];
 
+export type TopSessionApiV1MessageDmSessionTopPostData = {
+    body: DmTopReq;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Jwt
+         */
+        'x-bili-jwt'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string | null;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string | null;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string | null;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string | null;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string | null;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string | null;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string | null;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/message/dm/session/top';
+};
+
+export type TopSessionApiV1MessageDmSessionTopPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type TopSessionApiV1MessageDmSessionTopPostError = TopSessionApiV1MessageDmSessionTopPostErrors[keyof TopSessionApiV1MessageDmSessionTopPostErrors];
+
+export type TopSessionApiV1MessageDmSessionTopPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseDmTopResp;
+};
+
+export type TopSessionApiV1MessageDmSessionTopPostResponse = TopSessionApiV1MessageDmSessionTopPostResponses[keyof TopSessionApiV1MessageDmSessionTopPostResponses];
+
 export type ListMessagesApiV1MessageDmMessagesGetData = {
     body?: never;
     headers?: {
@@ -20266,13 +19865,19 @@ export type ListMessagesApiV1MessageDmMessagesGetData = {
         /**
          * Cursor
          *
-         * 上一页返回的 cursor（本页最小 msgkey），首屏不传
+         * 游标 msgkey：back=本页最小（往更旧翻）；forward=已见最大（增量查新）。首屏不传
          */
         cursor?: string | null;
         /**
          * Page Size
          */
         page_size?: number;
+        /**
+         * Direction
+         *
+         * 翻页方向：back 向旧翻页（默认）；forward 增量查新（只返回比 cursor 新的消息，升序）
+         */
+        direction?: 'back' | 'forward';
     };
     url: '/api/v1/message/dm/messages';
 };
@@ -22552,7 +22157,7 @@ export type BatchUserInfoApiV1MessageAdminUserBatchGetResponses = {
     /**
      * Successful Response
      */
-    200: StandardResponseListCommentUserBrief;
+    200: StandardResponseListUserBriefOut;
 };
 
 export type BatchUserInfoApiV1MessageAdminUserBatchGetResponse = BatchUserInfoApiV1MessageAdminUserBatchGetResponses[keyof BatchUserInfoApiV1MessageAdminUserBatchGetResponses];
@@ -23008,9 +22613,9 @@ export type ListReportsApiV1ReportAdminListGetData = {
         /**
          * Biz Type
          *
-         * 按来源过滤（ReportBizTypeEnum 值）
+         * 按来源过滤（InteractionBizTypeEnum 值）
          */
-        biz_type?: ReportBizTypeEnum | null;
+        biz_type?: InteractionBizTypeEnum | null;
         /**
          * Status
          *

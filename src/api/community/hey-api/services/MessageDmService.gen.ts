@@ -3,7 +3,7 @@
 import type { RequestResult } from '../client';
 import { client } from '../client.gen';
 import type { Options } from '../sdk.gen';
-import type { AckSessionApiV1MessageDmAckPostData, AckSessionApiV1MessageDmAckPostErrors, AckSessionApiV1MessageDmAckPostResponses, DeleteMessagesApiV1MessageDmDeletePostData, DeleteMessagesApiV1MessageDmDeletePostErrors, DeleteMessagesApiV1MessageDmDeletePostResponses, DeleteSessionApiV1MessageDmSessionDeletePostData, DeleteSessionApiV1MessageDmSessionDeletePostErrors, DeleteSessionApiV1MessageDmSessionDeletePostResponses, ListMessagesApiV1MessageDmMessagesGetData, ListMessagesApiV1MessageDmMessagesGetErrors, ListMessagesApiV1MessageDmMessagesGetResponses, ListSessionsApiV1MessageDmSessionsGetData, ListSessionsApiV1MessageDmSessionsGetErrors, ListSessionsApiV1MessageDmSessionsGetResponses, RecallMessageApiV1MessageDmRecallPostData, RecallMessageApiV1MessageDmRecallPostErrors, RecallMessageApiV1MessageDmRecallPostResponses, SendDmApiV1MessageDmSendPostData, SendDmApiV1MessageDmSendPostErrors, SendDmApiV1MessageDmSendPostResponses, UnreadDmApiV1MessageDmUnreadGetData, UnreadDmApiV1MessageDmUnreadGetErrors, UnreadDmApiV1MessageDmUnreadGetResponses } from '../types.gen';
+import type { AckSessionApiV1MessageDmAckPostData, AckSessionApiV1MessageDmAckPostErrors, AckSessionApiV1MessageDmAckPostResponses, DeleteMessagesApiV1MessageDmDeletePostData, DeleteMessagesApiV1MessageDmDeletePostErrors, DeleteMessagesApiV1MessageDmDeletePostResponses, DeleteSessionApiV1MessageDmSessionDeletePostData, DeleteSessionApiV1MessageDmSessionDeletePostErrors, DeleteSessionApiV1MessageDmSessionDeletePostResponses, ListMessagesApiV1MessageDmMessagesGetData, ListMessagesApiV1MessageDmMessagesGetErrors, ListMessagesApiV1MessageDmMessagesGetResponses, ListSessionsApiV1MessageDmSessionsGetData, ListSessionsApiV1MessageDmSessionsGetErrors, ListSessionsApiV1MessageDmSessionsGetResponses, RecallMessageApiV1MessageDmRecallPostData, RecallMessageApiV1MessageDmRecallPostErrors, RecallMessageApiV1MessageDmRecallPostResponses, SendDmApiV1MessageDmSendPostData, SendDmApiV1MessageDmSendPostErrors, SendDmApiV1MessageDmSendPostResponses, TopSessionApiV1MessageDmSessionTopPostData, TopSessionApiV1MessageDmSessionTopPostErrors, TopSessionApiV1MessageDmSessionTopPostResponses, UnreadDmApiV1MessageDmUnreadGetData, UnreadDmApiV1MessageDmUnreadGetErrors, UnreadDmApiV1MessageDmUnreadGetResponses } from '../types.gen';
 
 export class MessageDmService {
     /**
@@ -16,6 +16,9 @@ export class MessageDmService {
      * 响应里的 `content_async=False` 表示 MQ 不可用，已降级为同步落库。
      *
      * 若对方关闭了陌生人私信，返回 `filtered=True`：消息只保留在发送方视角。
+     *
+     * 发送限制（2.57.0）：命中每日上限返回业务码 `4001`，命中陌生人单条闸门
+     * （对方未关注我且未回过我时仅可发一条）返回 `4002`，两类情况消息均不落库。
      */
     public static sendDmApiV1MessageDmSendPost<ThrowOnError extends boolean = false>(options: Options<SendDmApiV1MessageDmSendPostData, ThrowOnError>): RequestResult<SendDmApiV1MessageDmSendPostResponses, SendDmApiV1MessageDmSendPostErrors, ThrowOnError, 'data'> {
         return (options.client ?? client).post<SendDmApiV1MessageDmSendPostResponses, SendDmApiV1MessageDmSendPostErrors, ThrowOnError, 'data'>({
@@ -56,12 +59,34 @@ export class MessageDmService {
     }
     
     /**
+     * 会话置顶/取消置顶
+     *
+     * 置顶 / 取消置顶某会话（仅自己视角）。
+     *
+     * 置顶写 `top_ts=now`，取消置顶写 `top_ts=0`；可多会话同时置顶（各自独立）。
+     */
+    public static topSessionApiV1MessageDmSessionTopPost<ThrowOnError extends boolean = false>(options: Options<TopSessionApiV1MessageDmSessionTopPostData, ThrowOnError>): RequestResult<TopSessionApiV1MessageDmSessionTopPostResponses, TopSessionApiV1MessageDmSessionTopPostErrors, ThrowOnError, 'data'> {
+        return (options.client ?? client).post<TopSessionApiV1MessageDmSessionTopPostResponses, TopSessionApiV1MessageDmSessionTopPostErrors, ThrowOnError, 'data'>({
+            responseStyle: 'data',
+            url: '/api/v1/message/dm/session/top',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    /**
      * 拉取聊天记录
      *
-     * 按 msgkey 游标倒序翻页拉取聊天记录。
+     * 按 msgkey 游标翻页拉取聊天记录（back 查旧 / forward 查新）。
      *
      * 正文按 msgkey 批量回捞分片；若异步落库尚未完成，
      * 会回落到索引行冗余的摘要（`content_ready=False`），保证会话流始终可读。
+     *
+     * 前端轮询查新建议：每次带上「已加载的最大 msgkey」作为 cursor、direction=forward，
+     * 服务端只返回增量新消息（升序），无新消息时返回空列表，开销恒定。
      */
     public static listMessagesApiV1MessageDmMessagesGet<ThrowOnError extends boolean = false>(options: Options<ListMessagesApiV1MessageDmMessagesGetData, ThrowOnError>): RequestResult<ListMessagesApiV1MessageDmMessagesGetResponses, ListMessagesApiV1MessageDmMessagesGetErrors, ThrowOnError, 'data'> {
         return (options.client ?? client).get<ListMessagesApiV1MessageDmMessagesGetResponses, ListMessagesApiV1MessageDmMessagesGetErrors, ThrowOnError, 'data'>({

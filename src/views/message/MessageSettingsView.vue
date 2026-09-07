@@ -6,7 +6,11 @@
           {{ t('message.settingsNotify') }}
           <span class="message-settings__tip text-text-placeholder">{{ t('message.settingsNotifyTip') }}</span>
         </div>
-        <el-radio-group v-model="form.recv_notify" size="default" @change="update('recv_notify', $event)">
+        <el-radio-group
+          :model-value="form.recv_notify === true"
+          @update:model-value="update('recv_notify', $event === true)"
+          size="default"
+        >
           <el-radio :label="true">{{ t('message.on') }}</el-radio>
           <el-radio :label="false">{{ t('message.off') }}</el-radio>
         </el-radio-group>
@@ -17,9 +21,14 @@
           {{ t('message.settingsStrangerDm') }}
           <span class="message-settings__tip text-text-placeholder">{{ t('message.settingsStrangerDmTip') }}</span>
         </div>
-        <el-radio-group v-model="form.recv_stranger_dm" size="default" @change="update('recv_stranger_dm', $event)">
-          <el-radio :label="false">{{ t('message.on') }}</el-radio>
-          <el-radio :label="true">{{ t('message.off') }}</el-radio>
+        <!-- recv_stranger_dm=true 表示“接收陌生人私信”；而 UI 是“智能拦截”开关（开启=不接收=字段 false），故开关方向与字段相反 -->
+        <el-radio-group
+          :model-value="form.recv_stranger_dm === false"
+          @update:model-value="update('recv_stranger_dm', $event !== true)"
+          size="default"
+        >
+          <el-radio :label="true">{{ t('message.on') }}</el-radio>
+          <el-radio :label="false">{{ t('message.off') }}</el-radio>
         </el-radio-group>
       </div>
 
@@ -30,10 +39,14 @@
           {{ t('message.settingsReply') }}
           <span class="message-settings__tip text-text-placeholder">{{ t('message.settingsReplyTip') }}</span>
         </div>
-        <el-radio-group v-model="form.recv_reply" size="default" @change="update('recv_reply', $event)">
-          <el-radio :label="true">{{ t('message.allPeople') }}</el-radio>
-          <el-radio :label="null">{{ t('message.followedPeople') }}</el-radio>
-          <el-radio :label="false">{{ t('message.noReceive') }}</el-radio>
+        <!-- 后端 recv_reply 为纯布尔二态（接收/不接收），无“仅关注”第三态；null 会被后端当作“不改动”丢弃 -->
+        <el-radio-group
+          :model-value="form.recv_reply === true"
+          @update:model-value="update('recv_reply', $event === true)"
+          size="default"
+        >
+          <el-radio :label="true">{{ t('message.on') }}</el-radio>
+          <el-radio :label="false">{{ t('message.off') }}</el-radio>
         </el-radio-group>
       </div>
 
@@ -42,10 +55,14 @@
           {{ t('message.settingsAt') }}
           <span class="message-settings__tip text-text-placeholder">{{ t('message.settingsAtTip') }}</span>
         </div>
-        <el-radio-group v-model="form.recv_at" size="default" @change="update('recv_at', $event)">
-          <el-radio :label="true">{{ t('message.allPeople') }}</el-radio>
-          <el-radio :label="null">{{ t('message.followedPeople') }}</el-radio>
-          <el-radio :label="false">{{ t('message.noReceive') }}</el-radio>
+        <!-- 后端 recv_at 同为纯布尔二态（接收/不接收），无“仅关注”第三态 -->
+        <el-radio-group
+          :model-value="form.recv_at === true"
+          @update:model-value="update('recv_at', $event === true)"
+          size="default"
+        >
+          <el-radio :label="true">{{ t('message.on') }}</el-radio>
+          <el-radio :label="false">{{ t('message.off') }}</el-radio>
         </el-radio-group>
       </div>
 
@@ -53,7 +70,11 @@
         <div class="message-settings__label mb-2 text-sm font-medium text-text-primary">
           {{ t('message.settingsLike') }}
         </div>
-        <el-radio-group v-model="form.recv_like" size="default" @change="update('recv_like', $event)">
+        <el-radio-group
+          :model-value="form.recv_like === true"
+          @update:model-value="update('recv_like', $event === true)"
+          size="default"
+        >
           <el-radio :label="true">{{ t('message.on') }}</el-radio>
           <el-radio :label="false">{{ t('message.off') }}</el-radio>
         </el-radio-group>

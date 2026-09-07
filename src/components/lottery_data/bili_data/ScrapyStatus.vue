@@ -143,7 +143,8 @@ const data = ref<ScrapyStatusResp>({
     start_time: 0,
     start_time_str: '',
     succ_count: 0,
-    total_run_duration: 0
+    total_run_duration: 0,
+    health_status: ''
   },
   official_scrapy_status: {
     succ_count: 0,
@@ -365,9 +366,9 @@ onBeforeUnmount(() => {
                 <div
                   v-if="!isOfficialType(scrapy_data)"
                   class="flex items-center px-3 py-1 rounded-full text-sm font-medium"
-                  :class="getHealthStatusMeta(scrapy_data.health_status).class"
+                  :class="getHealthStatusMeta((scrapy_data as any).health_status).class"
                 >
-                  <span>{{ getHealthStatusMeta(scrapy_data.health_status).text }}</span>
+                  <span>{{ getHealthStatusMeta((scrapy_data as any).health_status).text }}</span>
                 </div>
               </div>
             </div>
@@ -444,10 +445,10 @@ onBeforeUnmount(() => {
                   <div class="font-medium text-text-regular">{{ getKeyName(key) }}</div>
                   <el-popover placement="top" :width="300" trigger="hover">
                     <template #reference>
-                      <span class="text-primary hover:underline cursor-pointer text-sm">{{ formatValue(key, scrapy_data[key]) }}</span>
+                      <span class="text-primary hover:underline cursor-pointer text-sm">{{ formatValue(key, (scrapy_data as any)[key]) }}</span>
                     </template>
                     <div class="params-detail-scroll p-3 rounded border border-border-light bg-bg max-h-60 overflow-auto">
-                      <pre class="text-sm text-text-regular m-0 whitespace-pre-wrap break-all">{{ JSON.stringify(scrapy_data[key], null, 2) }}</pre>
+                      <pre class="text-sm text-text-regular m-0 whitespace-pre-wrap break-all">{{ JSON.stringify((scrapy_data as any)[key], null, 2) }}</pre>
                     </div>
                   </el-popover>
                 </div>
@@ -458,7 +459,7 @@ onBeforeUnmount(() => {
           <div class="p-4 border-t border-border-light bg-bg-page">
             <div class="flex items-center text-sm text-text-secondary">
               <Clock class="mr-2 w-4 h-4 text-text-placeholder" />
-              <span v-if="!isOfficialType(scrapy_data)">持续运行：{{ formatValue('total_run_duration', scrapy_data.total_run_duration) }}</span>
+              <span v-if="!isOfficialType(scrapy_data)">持续运行：{{ formatValue('total_run_duration', (scrapy_data as any).total_run_duration) }}</span>
               <span v-else>更新时间：{{ updateStr(scrapy_data) }}</span>
             </div>
           </div>

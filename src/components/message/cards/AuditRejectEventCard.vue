@@ -9,9 +9,9 @@
 
 <script setup lang="ts">
 /**
- * 审核驳回通知卡片（EventTypeEnum.AUDIT_REJECT = 4）。
+ * 审核驳回通知卡片（InteractionActionTypeEnum.AUDIT_REJECT = 4）。
  *
- * 继承 `SystemEventCardBase`：动作文案由基类按 EventTypeEnum 查表
+ * 继承 `SystemEventCardBase`：动作文案由基类按 InteractionActionTypeEnum 查表
  * （「驳回了你的{yyy}」，yyy 由 `resource_type` 推导），
  * 本类只声明处置说明的语义图标与语义色（danger）。
  */

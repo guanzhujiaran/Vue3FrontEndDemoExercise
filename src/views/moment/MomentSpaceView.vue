@@ -83,7 +83,9 @@
                 <template #dropdown>
                   <el-dropdown-menu class="moment-space__actions-menu">
                     <el-dropdown-item @click="handleReport">举报</el-dropdown-item>
-                    <el-dropdown-item @click="handleBlacklist">拉黑</el-dropdown-item>
+                    <el-dropdown-item @click="handleBlacklist">
+                      {{ iBlocked ? '解除拉黑' : '拉黑' }}
+                    </el-dropdown-item>
                   </el-dropdown-menu>
                 </template>
               </el-dropdown>
@@ -141,10 +143,21 @@
           <el-icon class="moment-space__blocked-icon text-5xl text-text-placeholder" :size="48">
             <Lock />
           </el-icon>
-          <p class="moment-space__blocked-text mt-4 text-base text-text-primary font-medium">
-            对方已将你加入黑名单，无法访问其空间
-          </p>
-          <p class="moment-space__blocked-sub mt-2 text-sm text-text-placeholder">如需解除，请通过其他方式联系对方</p>
+          <template v-if="iBlocked">
+            <!-- 主动拉黑对方：在空间页「更多 → 解除拉黑」可恢复访问 -->
+            <p class="moment-space__blocked-text mt-4 text-base text-text-primary font-medium">
+              你已将对方加入黑名单，无法查看其空间
+            </p>
+            <p class="moment-space__blocked-sub mt-2 text-sm text-text-placeholder">
+              如要恢复访问，可在右上角「更多」中解除拉黑
+            </p>
+          </template>
+          <template v-else>
+            <p class="moment-space__blocked-text mt-4 text-base text-text-primary font-medium">
+              对方已将你加入黑名单，无法访问其空间
+            </p>
+            <p class="moment-space__blocked-sub mt-2 text-sm text-text-placeholder">如需解除，请通过其他方式联系对方</p>
+          </template>
         </div>
       </div>
       <!-- 主页 Tab（仅自己显示） -->
@@ -272,7 +285,7 @@
     />
 
     <!-- 统一举报弹窗（用户空间） -->
-    <ReportDialog v-model="reportDialogVisible" :biz-type="ReportBizTypeEnum.USER" :biz-id="reportSpaceMid" />
+    <ReportDialog v-model="reportDialogVisible" :biz-type="InteractionBizTypeEnum.USER" :biz-id="reportSpaceMid" />
   </div>
 </template>
 
@@ -301,8 +314,7 @@ import {
   fetchUserFavoriteDynIds,
   fetchInteractionStatus,
   InteractionBizTypeEnum,
-  ReportBizTypeEnum,
-} from '@/api/notify/moment-api'
+  } from '@/api/notify/moment-api'
 import type { FavoriteFolderResp } from '@/api/notify/moment-api'
 import type {
   MomentFeedItem,
@@ -319,6 +331,7 @@ import { buildMomentContentNodes, type MomentAttachResource } from '@/utils/mome
 import { useUserNavStore } from '@/stores/user_nav'
 import { BiliImg } from '@/assets/img/BiliImg'
 import biliMessage from '@/utils/message'
+import userApi from '@/api/user/user_api.ts'
 
 const route = useRoute()
 const router = useRouter()
@@ -340,12 +353,14 @@ const resolvedActiveTab = computed(() =>
 )
 
 // 空间主人信息（完整空间资料，对标 B 站 acc/info）
-const targetUser = ref<SpaceInfoResp>({ mid: 0, name: '加载中...' })
+const targetUser = ref<SpaceInfoResp>({ mid: 0, midStr: null, name: '加载中...' })
 const userBanner = ref<string | undefined>(undefined)
 const userBio = ref<string>('')
 const isFollowed = ref(false)
 // 黑名单互访拒绝状态：true 时空间页显示受限提示、不加载内容（P9-T4）
 const blocked = ref(false)
+// 受限方向标记：是否是我主动拉黑了对方（决定受限文案与「拉黑 / 解除拉黑」菜单）
+const iBlocked = ref(false)
 
 // 统计（2.32.0：全部随 /user/space/info 一次返回，不再并发 follow/stat + upstat）
 const stats = ref({ following: 0, followers: 0, liked: 0, dynamicCount: 0 })
@@ -409,7 +424,7 @@ const tabs = computed(() => {
   }
   // 他人空间且主人公开了收藏 → 追加收藏 tab
   if (!isOwnSpace.value && !base.some((t) => t.name === 'favorites')) {
-    return [...base, { name: 'favorites', title: '收藏', icon: SpaceFavoriteIcon }]
+    return [...base, { name: 'favorites', title: '收藏', icon: SpaceFavoriteIcon } as SpaceTab]
   }
   return base
 })
@@ -495,7 +510,9 @@ async function loadFirst() {
     // 黑名单互访拒绝：已拉黑对方或被对方拉黑，均不可访问其空间
     blocked.value = true
     loading.value = false
-    targetUser.value = { mid, name: `用户 ${mid}` }
+    targetUser.value = { mid: Number(mid) || 0, midStr: mid, name: `用户 ${mid}` }
+    // 判定受限方向（主动拉黑 / 被对方拉黑），决定受限文案与菜单项行为
+    void resolveBlockedDirection()
     return
   }
   if (space.data) {
@@ -506,7 +523,8 @@ async function loadFirst() {
   } else if (space.code !== 0) {
     // 用户不存在等：降级展示
     targetUser.value = {
-      mid,
+      mid: Number(mid) || 0,
+      midStr: mid,
       name: isOwnSpace.value ? userNavStore.user_nav.user_name : `用户 ${mid}`,
       face: userNavStore.user_nav.face || undefined,
     }
@@ -588,7 +606,10 @@ async function loadFavoriteDyns(folderId: string, reset = false) {
       favHasMore.value = false
       return
     }
-    const newIds = res.dynIds || []
+    // 2.55.0 后端收藏夹通用化：返回 items（bizType+bizId 对），本空间仅展示动态资源
+    const newIds = (res.items ?? [])
+      .filter((it) => it.bizType === InteractionBizTypeEnum.DYNAMIC)
+      .map((it) => it.bizId)
     favDynIds.value = reset ? newIds : [...favDynIds.value, ...newIds]
     favHasMore.value = favPage * 20 < (res.total || 0)
     // 逐个拉取收藏动态详情（用于 MomentCard 渲染）
@@ -683,8 +704,50 @@ function handleReport() {
   reportDialogVisible.value = true
 }
 
-function handleBlacklist() {
-  biliMessage.info('拉黑功能开发中')
+/**
+ * 受限态下确认方向：我拉黑了对方（iBlocked=true）还是被对方拉黑。
+ * 空间信息接口只回 403 不回方向，需查一次关系。
+ */
+async function resolveBlockedDirection() {
+  const mid = Number(spaceMid.value)
+  if (!mid || mid <= 0) {
+    iBlocked.value = false
+    return
+  }
+  try {
+    const r = await userApi.BlocklistCheck(mid)
+    iBlocked.value = r.success ? Boolean(r.data?.i_blocked) : false
+  } catch {
+    iBlocked.value = false
+  }
+}
+
+/** 拉黑 / 解除拉黑（空间页「更多」菜单，仅他人空间可用） */
+async function handleBlacklist() {
+  const mid = Number(spaceMid.value)
+  if (!mid || mid <= 0 || isOwnSpace.value) return
+
+  if (iBlocked.value) {
+    // 已拉黑对方 → 解除
+    const r = await userApi.BlocklistRemove(mid)
+    if (!r.success) return
+    biliMessage.success('已解除拉黑')
+    blocked.value = false
+    iBlocked.value = false
+    items.value = []
+    await loadFirst()
+    return
+  }
+
+  // 拉黑对方
+  const r = await userApi.BlocklistAdd(mid)
+  if (!r.success) return
+  biliMessage.success('已将对方加入黑名单')
+  isFollowed.value = false
+  // 后端对任一向黑名单关系都会拒绝空间访问：拉黑后空间即转为受限态
+  iBlocked.value = true
+  blocked.value = true
+  items.value = []
 }
 
 async function handleThumb(item: MomentFeedItem) {

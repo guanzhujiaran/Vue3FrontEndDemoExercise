@@ -26,6 +26,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import biliMessage from '@/utils/message'
+import { navigateNoReferrer } from '@/utils/PageOpen/linkPolicy'
 import { useCasdoor } from 'casdoor-vue-sdk'
 
 const emit = defineEmits(['login-success'])
@@ -38,7 +39,7 @@ const handleCasdoorLogin = () => {
   try {
     loading.value = true
     // 使用 SDK 获取登录 URL 并跳转
-    window.location.href = getSigninUrl()
+    navigateNoReferrer(getSigninUrl())
   } catch (error) {
     console.error('第三方登录失败:', error)
     biliMessage.error(`第三方登录失败: ${(error as Error).message}`)

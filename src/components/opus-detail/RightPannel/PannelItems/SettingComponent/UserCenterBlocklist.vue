@@ -7,22 +7,24 @@
       </p>
     </header>
 
-    <section class="bili-blocklist__toolbar flex items-center gap-3">
-      <el-input
-        v-model="newMid"
-        class="bili-blocklist__input w-64"
-        placeholder="输入要拉黑的用户 mid"
-        clearable
-        @keyup.enter="onAdd"
-      />
-      <el-button type="danger" :disabled="!isValidMid" @click="onAdd">
-        加入黑名单
-      </el-button>
-    </section>
-
     <section class="bili-blocklist__table">
       <el-table v-loading="loading" :data="list" empty-text="暂无被拉黑的用户">
-        <el-table-column prop="mid" label="用户 mid" min-width="140" />
+        <el-table-column label="用户" min-width="240">
+          <template #default="{ row }">
+            <div class="flex items-center gap-2">
+              <el-avatar :size="32" :src="row.user?.avatar || BiliImg.face.noface" />
+              <div class="min-w-0 leading-tight">
+                <div
+                  class="truncate"
+                  :class="row.user ? 'text-text-primary' : 'text-text-placeholder'"
+                >
+                  {{ row.user?.uname || '账号已注销' }}
+                </div>
+                <div class="text-xs text-text-placeholder">mid：{{ row.mid }}</div>
+              </div>
+            </div>
+          </template>
+        </el-table-column>
         <el-table-column label="拉黑时间" min-width="200">
           <template #default="{ row }">
             {{ formatTime(row.created_at) }}
@@ -51,9 +53,10 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import userApi from '@/api/user/user_api.ts'
+import { BiliImg } from '@/assets/img/BiliImg'
 import type { FollowListItem } from '@/models/user/blocklist_model.ts'
 
 defineOptions({ name: 'UserCenterBlocklist' })
@@ -63,9 +66,6 @@ const list = ref<FollowListItem[]>([])
 const total = ref(0)
 const pageNum = ref(1)
 const pageSize = ref(20)
-const newMid = ref('')
-
-const isValidMid = computed(() => /^\d+$/.test(newMid.value.trim()))
 
 function formatTime(value: string): string {
   if (!value) return '-'
@@ -78,7 +78,7 @@ async function loadList() {
   loading.value = true
   try {
     const res = await userApi.BlocklistList(pageNum.value, pageSize.value)
-    if (res.code === 0 && res.data) {
+    if (res.success && res.data) {
       list.value = res.data.items ?? []
       total.value = res.data.total ?? 0
       pageNum.value = res.data.page_num ?? pageNum.value
@@ -92,22 +92,9 @@ async function loadList() {
   }
 }
 
-async function onAdd() {
-  if (!isValidMid.value) {
-    ElMessage.warning('请输入有效的用户 mid（纯数字）')
-    return
-  }
-  const res = await userApi.BlocklistAdd(Number(newMid.value.trim()))
-  if (res.code === 0) {
-    ElMessage.success('已加入黑名单')
-    newMid.value = ''
-    await loadList()
-  }
-}
-
 async function onRemove(mid: number) {
   const res = await userApi.BlocklistRemove(mid)
-  if (res.code === 0) {
+  if (res.success) {
     ElMessage.success('已解除拉黑')
     await loadList()
   }

@@ -2,11 +2,11 @@
     <flex-container class="bili-side-nav-layout">
         <!-- 需要在这里设置高度才能让里面元素滚动 -->
         <el-container class="bili-side-nav-layout__body items-stretch gap-3 p-3" :style="{ height: layoutHeight }">
-            <el-aside width="auto">
-                <el-scrollbar view-class="h-full">
+            <el-aside width="auto" class="bili-side-nav-layout__aside h-full overflow-hidden">
+                <el-scrollbar class="bili-side-nav-layout__nav-scroll h-full" view-class="h-full">
                     <el-menu :default-active="activeIndex" :collapse="collapsed" :collapse-transition="false"
                         :popper-class="collapsed ? 'bili-side-nav-layout__popper--hidden' : ''"
-                        class="bili-side-nav-layout__nav h-full overflow-x-hidden border-r bg-bg/50 rounded-lg! py-4 origin-left will-change-[width,transform] transition-[width] duration-420 ease-[cubic-bezier(0.34,1.56,0.64,1)]"
+                        class="bili-side-nav-layout__nav min-h-full overflow-x-hidden border-r bg-bg/50 rounded-lg! py-4 origin-left will-change-[width,transform] transition-[width] duration-420 ease-[cubic-bezier(0.34,1.56,0.64,1)]"
                         :class="[
                             collapsed ? 'w-16' : 'w-52',
                             { 'animate-sidenav-jelly': isCollapsing }
@@ -35,9 +35,15 @@
                                 :class="collapsed
                                     ? 'bili-side-nav-layout__nav-item--collapsed flex-col justify-center'
                                     : 'bili-side-nav-layout__nav-item--expanded h-7 text-lg'">
-                                <el-icon>
-                                    <component :is="item.icon" />
-                                </el-icon>
+                                <!-- 折叠态（小图标模式）悬浮显示菜单项完整标题；展开态禁用 tooltip（标题已横排展示）。
+                                    注意：el-tooltip 只包裹图标，不能包裹 el-menu-item 本身——后者渲染为 <li>，
+                                    被 el-tooltip 的 <span> 包裹会导致浏览器把 <li> 移出触发器，破坏菜单结构。 -->
+                                <el-tooltip :content="item.title" placement="right" :disabled="!collapsed"
+                                    :show-after="150" popper-class="bili-side-nav-layout__tooltip">
+                                    <el-icon>
+                                        <component :is="item.icon" />
+                                    </el-icon>
+                                </el-tooltip>
                                 <template #title>
                                     <div v-if="!collapsed" class="flex w-full items-center">
                                         <span class="bili-side-nav-layout__nav-text flex-1 truncate text-lg">{{
@@ -126,7 +132,16 @@ function calcLayoutHeight() {
     layoutHeight.value = `${Math.max(h, 300)}px`
 }
 
+// 窄屏阈值：低于该宽度视为窄屏，侧边栏默认收起（w-52 展开态会挤压内容区）
+const NARROW_SCREEN_WIDTH = 1080
+
+function isNarrowScreen() {
+    return window.innerWidth < NARROW_SCREEN_WIDTH
+}
+
 onMounted(() => {
+    // 窄屏首屏直接收起侧边栏（初始化不走果冻动画，避免入场抖动）
+    collapsed.value = props.collapsible && isNarrowScreen()
     calcLayoutHeight()
     window.addEventListener('resize', calcLayoutHeight)
 })

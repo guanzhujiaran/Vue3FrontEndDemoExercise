@@ -66,14 +66,14 @@
           <div class="flex flex-nowrap justify-between items-center gap-2">
             <!-- 查看详情按钮 -->
 
-            <el-link v-if="sourceLink" type="primary" size="default" :href="sourceLink" target="_blank" rel="noreferrer"
+            <el-link v-if="sourceLink" type="primary" size="default" :href="sourceLink" target="_blank" :rel="LINK_REL" :referrerpolicy="LINK_REFERRER_POLICY"
               @click="handleLinkClick" link icon="link" underline="never" class="whitespace-nowrap">
               查看源动态
             </el-link>
             <el-button icon="link" v-else type="info" size="default" disabled class="whitespace-nowrap">
               暂无源动态
             </el-button>
-            <el-link v-if="resultLink" type="primary" size="default" :href="resultLink" target="_blank" rel="noreferrer"
+            <el-link v-if="resultLink" type="primary" size="default" :href="resultLink" target="_blank" :rel="LINK_REL" :referrerpolicy="LINK_REFERRER_POLICY"
               @click="handleLinkClick" link icon="link" underline="never" class="whitespace-nowrap">
               查看h5抽奖详情
             </el-link>
@@ -133,7 +133,7 @@
             <div>
               <el-link v-if="item.link" :href="item.link" target="_blank" type="primary" underline="never"
                 class="mt-2 w-fit font-semibold text-sm sm:text-base text-left no-underline leading-relaxed"
-                rel="noreferrer" referrerpolicy="no-referrer" @click="handleLinkClick">
+                :rel="LINK_REL" :referrerpolicy="LINK_REFERRER_POLICY" @click="handleLinkClick">
                 {{ item.value }}
               </el-link>
               <div v-else
@@ -239,7 +239,7 @@
           <div class="flex flex-wrap gap-2 mt-3">
             <template v-for="(req, index) in normalizedData.requirements" :key="`${req.type}-${index}`">
               <el-link v-if="req.link" :href="req.link" target="_blank" type="primary" underline="never"
-                class="no-underline" rel="noreferrer" referrerpolicy="no-referrer" @click="handleLinkClick">
+                class="no-underline" :rel="LINK_REL" :referrerpolicy="LINK_REFERRER_POLICY" @click="handleLinkClick">
                 <el-tag :type="getRequirementTagType(req.type)" size="default" effect="plain" round>
                   {{ req.text }}
                 </el-tag>
@@ -405,6 +405,7 @@ import type {
 } from '@/models/api/lottery/lottery_card.ts'
 import { normalizeLotteryData } from '@/utils/lotteryNormalization.ts'
 import { getBiliUserSpaceUrl } from '@/utils/PageOpen/BiliJump.ts'
+import { LINK_REL, LINK_REFERRER_POLICY } from '@/utils/PageOpen/linkPolicy'
 import { isMobileDevice } from '@/utils/Browser/useDeviceDetect.ts'
 import { BiliCommTxt } from '@/assets/text/BiliCommTxt.ts'
 import { handleLotteryLinkClick, setLotteryParticipation, isLotteryParticipated } from '@/utils/lotteryParticipation'

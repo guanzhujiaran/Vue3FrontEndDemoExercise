@@ -51,27 +51,29 @@
                   v-if="seg.url"
                   :href="seg.url"
                   target="_blank"
-                  rel="noopener"
+                  :rel="LINK_REL"
+                  :referrerpolicy="LINK_REFERRER_POLICY"
                   class="notify-list__inline-link font-medium text-primary hover:underline"
                   @click="onInlineLink($event, seg.url)"
                 >{{ seg.text }}</a>
                 <template v-else>{{ seg.text }}</template>
               </template>
+              <el-link
+                v-if="item.jump_url && !hasNotifyInlineLink(item.content)"
+                type="primary"
+                class="notify-list__jump-link ml-1"
+                :href="item.jump_url ?? undefined"
+                :rel="LINK_REL"
+                :referrerpolicy="LINK_REFERRER_POLICY"
+                :underline="false"
+                @click="openJump($event, item.jump_url)"
+              >
+                {{ t('message.viewLink') }}
+              </el-link>
             </p>
             <div class="notify-list__meta mt-2 flex items-center gap-4 text-xs text-text-placeholder">
               <TimeText :time="item.publish_at" />
             </div>
-          </div>
-          <div class="notify-list__actions flex shrink-0 flex-col items-end justify-between gap-2">
-            <el-button
-              v-if="item.jump_url && !hasNotifyInlineLink(item.content)"
-              type="primary"
-              size="default"
-              class="notify-list__jump-btn"
-              @click="openJump(item)"
-            >
-              {{ t('message.viewOriginal') }}
-            </el-button>
           </div>
         </li>
         </ul>
@@ -85,6 +87,8 @@ import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { hasNotifyInlineLink, isExternalUrl, renderNotifySegments } from '@/utils/notifyContent'
+import { LINK_REL, LINK_REFERRER_POLICY } from '@/utils/PageOpen/linkPolicy'
+import { jumpToTarget } from '@/utils/routeJump'
 import {
   fetchNotifyList,
   NotifyLevelEnum,
@@ -157,22 +161,20 @@ function onRefresh() {
   handleLoad()
 }
 
-/** 点「查看原文」：站内路径走路由，外链（B 站动态 / 专栏）新开标签页。 */
-function openJump(item: NotifyItem) {
-  if (!item.jump_url) return
-  if (/^https?:\/\//.test(item.jump_url)) {
-    window.open(item.jump_url, '_blank', 'noopener')
-  } else {
-    router.push(item.jump_url)
-  }
+/** 点「查看链接」：按后端下发的跳转目标走路由名 / 路径 / 外链。 */
+function openJump(ev: MouseEvent, url: string | null | undefined) {
+  if (!url) return
+  // 站内目标交给 SPA 路由，避免 href 触发整页刷新
+  ev.preventDefault()
+  jumpToTarget(router, url)
 }
 
-/** 正文中点击内联链接：站内路径走路由，外链交给浏览器新开标签。 */
+/** 正文中点击内联链接：站内目标走路由，外链交给浏览器新开标签。 */
 function onInlineLink(ev: MouseEvent, url: string) {
   // 让原生 href 仍然兜底（防止 JS 异常时无响应），但站内跳转走 SPA 路由更顺滑
   if (!isExternalUrl(url)) {
     ev.preventDefault()
-    router.push(url)
+    jumpToTarget(router, url)
   }
 }
 

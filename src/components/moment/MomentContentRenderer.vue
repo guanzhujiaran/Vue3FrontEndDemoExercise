@@ -28,6 +28,8 @@
         type="primary"
         underline="never"
         :href="node.jumpUrl || '#'"
+        :rel="LINK_REL"
+        :referrerpolicy="LINK_REFERRER_POLICY"
         @click.stop
       >
         #{{ node.name }}#
@@ -40,6 +42,8 @@
         type="primary"
         underline="never"
         :href="node.jumpUrl || '#'"
+        :rel="LINK_REL"
+        :referrerpolicy="LINK_REFERRER_POLICY"
         @click.stop
       >
         {{ node.text }}
@@ -75,6 +79,7 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
 import UserBriefCell from '@/components/message/UserBriefCell.vue'
+import { LINK_REL, LINK_REFERRER_POLICY, openExternalLink } from '@/utils/PageOpen/linkPolicy'
 import type { MomentContentNode } from '@/api/notify/moment-api'
 import { InteractionBizTypeEnum } from '@/api/notify/moment-api'
 
@@ -119,7 +124,7 @@ function handleResourceClick(node: MomentContentNode): void {
       router.push({ name: 'MOMENT_DETAIL', params: { momentId: bizId } })
       break
     default:
-      if (node.jumpUrl) window.open(node.jumpUrl, '_blank')
+      if (node.jumpUrl) openExternalLink(node.jumpUrl)
   }
 }
 

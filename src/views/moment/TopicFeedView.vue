@@ -70,14 +70,14 @@
         </div>
       </template>
     </LoadingMoreContainer>
-    <ReportDialog v-model="reportDialogVisible" :biz-type="ReportBizTypeEnum.DYNAMIC" :biz-id="reportDynId" />
+    <ReportDialog v-model="reportDialogVisible" :biz-type="InteractionBizTypeEnum.DYNAMIC" :biz-id="reportDynId" />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, watch, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { fetchTopicFeed, fetchTopicDetail, fetchInteractionStatus, InteractionBizTypeEnum, ReportBizTypeEnum, thumbMoment } from '@/api/notify/moment-api'
+import { fetchTopicFeed, fetchTopicDetail, fetchInteractionStatus, InteractionBizTypeEnum, thumbMoment } from '@/api/notify/moment-api'
 import type { MomentFeedItem, MomentTopicDetailResp, InteractionStatusItem } from '@/api/notify/moment-api'
 import LoadingMoreContainer from '@/components/CommonCompo/Bili-Container-Compo/LoadingMoreContainer.vue'
 import EmptyState from '@/components/message/EmptyState.vue'

@@ -5,10 +5,12 @@ import { ElMessageBox } from 'element-plus'
 import BiliPageHeader from '@/components/CommonCompo/Bili-Container-Compo/BiliPageHeader.vue'
 import FlexContainer from '@/components/CommonCompo/Bili-Container-Compo/FlexContainer.vue'
 import CenteredContainer from '@/components/CommonCompo/Bili-Container-Compo/CenteredContainer.vue'
-import { 工作流管理Service, 插件挂载管理Service, 社区互动管理Service, 自定义操作管理Service } from '@/api/browser/hey-api'
+import { 工作流管理Service, 插件挂载管理Service, 自定义操作管理Service } from '@/api/browser/hey-api'
 import { useUserNavStore } from '@/stores/user_nav'
 import biliMessage from '@/utils/message'
 import ResourceInteractionBar from '@/components/interaction/ResourceInteractionBar.vue'
+import ReportDialog from '@/components/moment/ReportDialog.vue'
+import { InteractionBizTypeEnum } from '@/api/notify/moment-api'
 import type { FilterType, SortBy, SortOrder } from '@/api/browser/hey-api'
 
 type TabType = 'actions' | 'plugins' | 'workflows'
@@ -40,7 +42,7 @@ const sortOptions = [
 const loadActionsList = async () => {
   loading.value = true
   try {
-    const response = await 社区互动管理Service.listCommunityActionsApiV1RpaBrowserControlCommunityActionsListPost({
+    const response = await 自定义操作管理Service.listCustomActionsApiV1RpaBrowserControlCustomActionsListPost({
       body: {
         page: currentPage.value,
         per_page: pageSize.value,
@@ -69,7 +71,7 @@ const loadActionsList = async () => {
 const loadPluginsList = async () => {
   loading.value = true
   try {
-    const response = await 社区互动管理Service.listCommunityPluginsApiV1RpaBrowserControlCommunityPluginsListPost({
+    const response = await 插件挂载管理Service.listPluginsApiV1RpaBrowserControlPluginsListPost({
       body: {
         page: currentPage.value,
         per_page: pageSize.value,
@@ -98,7 +100,7 @@ const loadPluginsList = async () => {
 const loadWorkflowsList = async () => {
   loading.value = true
   try {
-    const response = await 社区互动管理Service.listCommunityWorkflowsApiV1RpaBrowserControlCommunityWorkflowsListPost({
+    const response = await 工作流管理Service.listWorkflowsApiV1RpaBrowserControlWorkflowsListPost({
       body: {
         page: currentPage.value,
         per_page: pageSize.value,
@@ -138,7 +140,7 @@ const loadData = async () => {
   }
 }
 
-const handleForkAction = async (actionId: number) => {
+const handleForkAction = async (actionId: string) => {
   try {
     await ElMessageBox.confirm('确定要Fork这个动作吗？', '提示', {
       confirmButtonText: '确定',
@@ -147,7 +149,7 @@ const handleForkAction = async (actionId: number) => {
     })
 
     const response = await 自定义操作管理Service.forkCustomActionApiV1RpaBrowserControlCustomActionsForkPost({
-      body: { id: actionId },
+      body: { action_id: actionId },
       headers: {
         'x-bili-mid': userNavStore.user_nav.uid,
         'x-bili-level': userNavStore.user_nav.level_info.current_level
@@ -225,16 +227,33 @@ const handleForkWorkflow = async (workflowId: number) => {
   }
 }
 
-const handleReport = async (item: unknown, type: string) => {
-  try {
-    await ElMessageBox.prompt('请输入举报原因', '举报', {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
-      type: 'warning'
-    })
-    biliMessage.info('举报功能开发中')
-  } catch (error) {
+/** 统一举报：打开 be-message 统一举报弹窗（rpa_action / rpa_plugin / rpa_workflow） */
+const reportDialogVisible = ref(false)
+const reportTarget = ref<{ bizType: InteractionBizTypeEnum; bizId: string }>({
+  bizType: InteractionBizTypeEnum.RPA_ACTION,
+  bizId: '',
+})
+
+const handleReport = (item: unknown, type: 'action' | 'plugin' | 'workflow') => {
+  const obj = item as { action_id?: string; id?: number | string }
+  let bizType: InteractionBizTypeEnum
+  let bizId = ''
+  if (type === 'action') {
+    bizType = InteractionBizTypeEnum.RPA_ACTION
+    bizId = String(obj.action_id ?? '')
+  } else if (type === 'plugin') {
+    bizType = InteractionBizTypeEnum.RPA_PLUGIN
+    bizId = String(obj.id ?? '')
+  } else {
+    bizType = InteractionBizTypeEnum.RPA_WORKFLOW
+    bizId = String(obj.id ?? '')
   }
+  if (!bizId) {
+    biliMessage.error('举报资源信息缺失，无法举报')
+    return
+  }
+  reportTarget.value = { bizType, bizId }
+  reportDialogVisible.value = true
 }
 
 const handlePageChange = (page: number) => {
@@ -291,7 +310,7 @@ onMounted(() => {
 
       <div v-else-if="activeTab === 'actions' && actionsList.length > 0" class="w-full">
         <div class="grid gap-4" style="grid-template-columns: repeat(auto-fill, minmax(350px, 1fr))">
-          <div v-for="item in actionsList" :key="item.id"
+          <div v-for="item in actionsList" :key="item.action_id"
             class="rounded-xl  p-5 border border-[var(--el-border-color-light)] hover:border-[var(--el-color-primary)] transition-all duration-300">
             <div class="flex flex-col gap-3">
               <div class="flex items-center justify-between">
@@ -304,7 +323,7 @@ onMounted(() => {
               </el-text>
 
               <div class="flex items-center gap-4 text-sm text-text-secondary">
-                <ResourceInteractionBar biz-type="rpa_action" :biz-id="String(item.id)" />
+                <ResourceInteractionBar biz-type="rpa_action" :biz-id="item.action_id" />
                 <div class="flex items-center gap-1">
                   <el-icon><ForkSpoon /></el-icon>
                   <span>{{ item.forks_count || 0 }}</span>
@@ -314,7 +333,7 @@ onMounted(() => {
               </div>
 
               <div class="flex items-center gap-2 mt-2">
-                <el-button size="small" type="primary" @click="handleForkAction(item.id)">Fork</el-button>
+                <el-button size="small" type="primary" @click="handleForkAction(item.action_id)">Fork</el-button>
                 <el-button size="small" type="warning" @click="handleReport(item, 'action')">举报</el-button>
               </div>
             </div>
@@ -404,5 +423,11 @@ onMounted(() => {
         />
       </div>
     </FlexContainer>
+
+    <ReportDialog
+      v-model="reportDialogVisible"
+      :biz-type="reportTarget.bizType"
+      :biz-id="reportTarget.bizId"
+    />
   </FlexContainer>
 </template>

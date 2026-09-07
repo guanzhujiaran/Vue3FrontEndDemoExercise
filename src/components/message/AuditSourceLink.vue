@@ -19,7 +19,8 @@
         underline="never"
         :href="source.external_url"
         target="_blank"
-        rel="noopener noreferrer"
+        :rel="LINK_REL"
+        :referrerpolicy="LINK_REFERRER_POLICY"
       >
         {{ source.label }}
         <el-icon class="audit-source-link__external-icon ml-1"><TopRight /></el-icon>
@@ -41,6 +42,8 @@
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { TopRight } from '@element-plus/icons-vue'
+import { LINK_REL, LINK_REFERRER_POLICY } from '@/utils/PageOpen/linkPolicy'
+import { jumpToTarget } from '@/utils/routeJump'
 import type { AuditSourceInfo } from '@/api/community/hey-api'
 
 const { t } = useI18n()
@@ -60,6 +63,7 @@ function onNavigate() {
   if (!src) return
   emit('navigate', src)
   if (props.interceptNavigate || !src.url) return
-  router.push(src.url)
+  // src.url 是后端下发的跳转目标（route:{路由名}?{query} 或存量 /app 路径）
+  jumpToTarget(router, src.url)
 }
 </script>

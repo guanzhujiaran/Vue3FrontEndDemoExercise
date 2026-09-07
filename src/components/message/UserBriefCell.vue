@@ -22,6 +22,7 @@
     <UserCard
       :card="cardForPopover"
       :show-actions="showActions"
+      :open-in-new-tab="openInNewTab"
       @follow="handleFollow"
       @unfollow="handleUnfollow"
     />
@@ -36,6 +37,7 @@ import UserCard, { type UserCardData } from '@/components/message/UserCard.vue'
 import { useUserBrief } from '@/composables/useUserBrief'
 import { useUserCardCache } from '@/composables/useUserCardCache'
 import { followUser, unfollowUser } from '@/api/notify/moment-api'
+import { openRouteInNewTab } from '@/utils/PageOpen/linkPolicy'
 
 const { t } = useI18n()
 
@@ -61,6 +63,8 @@ const props = withDefaults(
     showAfter?: number
     /** 是否显示关注/私信操作按钮（默认开启；不需要的场景可显式传 false） */
     showActions?: boolean
+    /** 点击跳用户空间时在新标签页打开（消息页使用，避免离开消息列表） */
+    openInNewTab?: boolean
   }>(),
   {
     mid: null,
@@ -68,6 +72,7 @@ const props = withDefaults(
     toSpace: false,
     showAfter: 0,
     showActions: true,
+    openInNewTab: false,
   }
 )
 
@@ -124,7 +129,9 @@ function ensureBrief(): void {
 function handleClick(): void {
   const mid = midNumber.value
   if (!props.toSpace || !mid) return
-  router.push({ name: 'MOMENT_USER_SPACE', params: { mid: String(mid) } })
+  const to = { name: 'MOMENT_USER_SPACE', params: { mid: String(mid) } }
+  if (props.openInNewTab) openRouteInNewTab(router, to)
+  else router.push(to)
 }
 
 /**

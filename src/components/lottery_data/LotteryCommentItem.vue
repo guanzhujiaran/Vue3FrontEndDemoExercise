@@ -2,12 +2,14 @@
 import { inject, ref, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { Pointer, ChatDotRound, Delete, Bottom, ArrowDown, MoreFilled } from '@element-plus/icons-vue'
+import { LINK_REL, LINK_REFERRER_POLICY } from '@/utils/PageOpen/linkPolicy'
 import type { CommentItem } from '@/api/lottery_comment.ts'
-import { CommentHandlersKey, CommentStateEnum } from '@/api/lottery_comment.ts'
+import { CommentHandlersKey, ResourceAuditStatusEnum } from '@/api/lottery_comment.ts'
 import { BiliImg } from '@/assets/img/BiliImg.ts'
-import { blockUser, ReportBizTypeEnum } from '@/api/notify/moment-api'
+import { blockUser, InteractionBizTypeEnum } from '@/api/notify/moment-api'
 import ReportDialog from '@/components/moment/ReportDialog.vue'
 import LotteryCommentMention from '@/components/lottery_data/LotteryCommentMention.vue'
+import UserBriefCell from '@/components/message/UserBriefCell.vue'
 import biliMessage from '@/utils/message'
 
 const props = defineProps<{
@@ -108,13 +110,6 @@ function goUserSpace() {
   }
 }
 
-/** 点击「回复 @被回复用户名」跳转其用户空间 */
-function goReplyToSpace() {
-  if (props.item.reply_to?.mid) {
-    router.push({ name: 'MOMENT_USER_SPACE', params: { mid: String(props.item.reply_to.mid) } })
-  }
-}
-
 /** 复制评论链接（带锚点）到剪贴板 */
 async function onCopyLink() {
   const url = `${window.location.origin}${window.location.pathname}#comment-${props.item.rpid}`
@@ -151,7 +146,7 @@ const replyMentionRef = ref<InstanceType<typeof LotteryCommentMention> | null>(n
 const submitReply = () => {
   const msg = replyContent.value.trim()
   if (!msg) return
-  const root = props.item.root === '0' ? props.item.rpid : props.item.root
+  const root = props.item.root === '0' ? props.item.rpid : (props.item.root || props.item.rpid)
   const atMap = replyMentionRef.value?.buildAtNameToMid(msg) || {}
   handlers.reply({
     root,
@@ -257,7 +252,7 @@ watch(
         </span>
         <el-tag v-if="isUp" type="primary" size="small" effect="plain" round>UP</el-tag>
         <el-tag
-          v-if="item.state === CommentStateEnum.AUDITING"
+          v-if="item.state === ResourceAuditStatusEnum.AUDITING"
           type="warning"
           size="small"
           effect="light"
@@ -274,31 +269,36 @@ watch(
       <p class="lottery-comment-item__content mt-1 text-sm leading-relaxed text-text-regular break-words whitespace-pre-wrap">
         <template v-if="item.reply_to">
           <span class="text-primary">回复 </span>
-          <el-link
+          <UserBriefCell
+            v-if="item.reply_to.mid"
             class="lottery-comment-item__reply-at-link align-baseline"
-            type="primary"
-            underline="never"
-            @click="goReplyToSpace"
+            :mid="item.reply_to.mid"
+            to-space
+            :show-after="300"
           >
-            @{{ item.reply_to.uname }}
-          </el-link>
+            <span class="text-primary">@{{ item.reply_to.uname }}</span>
+          </UserBriefCell>
+          <span v-else class="text-primary">@{{ item.reply_to.uname }}</span>
           <span class="text-primary">：</span>
         </template>
         <template v-for="(seg, idx) in renderedSegments" :key="idx">
-          <el-link
+          <UserBriefCell
             v-if="seg.kind === 'at' && seg.mid"
             class="lottery-comment-item__at-link align-baseline"
-            type="primary"
-            :href="`/app/space/${seg.mid}`"
+            :mid="seg.mid"
+            to-space
+            :show-after="300"
           >
-            {{ seg.text }}
-          </el-link>
+            <span class="text-primary">{{ seg.text }}</span>
+          </UserBriefCell>
           <el-link
             v-else-if="seg.kind === 'topic'"
             class="lottery-comment-item__topic-link align-baseline"
             type="primary"
             :href="seg.uri || `#`"
             target="_blank"
+            :rel="LINK_REL"
+            :referrerpolicy="LINK_REFERRER_POLICY"
           >
             {{ seg.text }}
           </el-link>
@@ -436,6 +436,6 @@ watch(
         </div>
       </div>
     </div>
-    <ReportDialog v-model="reportDialogVisible" :biz-type="ReportBizTypeEnum.COMMENT" :biz-id="reportCommentRpid" />
+    <ReportDialog v-model="reportDialogVisible" :biz-type="InteractionBizTypeEnum.COMMENT" :biz-id="reportCommentRpid" />
   </div>
 </template>

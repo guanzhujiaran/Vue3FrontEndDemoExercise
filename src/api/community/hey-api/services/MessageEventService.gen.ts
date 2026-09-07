@@ -49,8 +49,14 @@ export class MessageEventService {
      * 按内容聚合的互动提醒列表，对齐 B 站 x/msgfeed* 结构。
      *
      * - `data.latest`：最新一条聚合记录；
-     * - `data.total.items`：本页聚合条目（每条含完整 users[] + item + counts）；
-     * - `data.total.cursor`：翻页游标（is_end / id / time）。
+     * - `data.total.items`：本页聚合条目（每条含完整 users[] + item + counts），长度 = min(page_size, 卡片数)；
+     * - `data.total.cursor`：翻页游标（is_end / id / time）；
+     * - `data.total_count`：当前筛选条件下聚合卡片（分组）总数，决定总页数；
+     * - `data.unread_count`：当前 event_type 下未读事件总数，**与 GET /unread 对应字段一致**。
+     *
+     * 注意：列表按「来源实体」聚合，一张卡片可能聚合 N 个用户的同类互动，故本页
+     * `items` 长度天然小于 `unread_count`；以 `total_count` / `unread_count` 对账，
+     * 不要仅凭单页 items 长度判断「是否已全部返回」。
      */
     public static listEventApiV1MessageEventListGet<ThrowOnError extends boolean = false>(options?: Options<ListEventApiV1MessageEventListGetData, ThrowOnError>): RequestResult<ListEventApiV1MessageEventListGetResponses, ListEventApiV1MessageEventListGetErrors, ThrowOnError, 'data'> {
         return (options?.client ?? client).get<ListEventApiV1MessageEventListGetResponses, ListEventApiV1MessageEventListGetErrors, ThrowOnError, 'data'>({
@@ -67,7 +73,9 @@ export class MessageEventService {
      *
      * - 传 `event_ids` → 精确已读；
      * - 传 `event_type` → 该类型一键已读；
-     * - 再加 `source_type + source_id` → 只清掉某一张聚合卡片。
+     * - 再加 `source_type + source_id` → 只清掉某一张聚合卡片；
+     * - 传 `read_before`（datetime）→ 把该时间戳（含）之前、归属当前用户的互动提醒
+     * 全部置为已读，用于「打开列表即自动已读」（前端拉取列表后携带调用时刻调用）。
      */
     public static readEventApiV1MessageEventReadPost<ThrowOnError extends boolean = false>(options: Options<ReadEventApiV1MessageEventReadPostData, ThrowOnError>): RequestResult<ReadEventApiV1MessageEventReadPostResponses, ReadEventApiV1MessageEventReadPostErrors, ThrowOnError, 'data'> {
         return (options.client ?? client).post<ReadEventApiV1MessageEventReadPostResponses, ReadEventApiV1MessageEventReadPostErrors, ThrowOnError, 'data'>({

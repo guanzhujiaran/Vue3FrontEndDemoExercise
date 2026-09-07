@@ -18,7 +18,7 @@ class FeedbackCommentApi {
       url: '/api/v1/feedback/comment/add',
       body: { oid, type, root, parent, content },
       headers: { 'Content-Type': 'application/json' },
-    }) as Promise<RootObject<ReplyItem>>
+    }) as unknown as Promise<RootObject<ReplyItem>>
   }
 
   reply_main(
@@ -31,7 +31,7 @@ class FeedbackCommentApi {
     return client.get({
       url: '/api/v1/feedback/comment/reply/main',
       query: { oid, type, page_size, page_num, order_by },
-    }) as Promise<RootObject<ReplyMainResp>>
+    }) as unknown as Promise<RootObject<ReplyMainResp>>
   }
 
   reply_reply(
@@ -44,7 +44,7 @@ class FeedbackCommentApi {
     return client.get({
       url: '/api/v1/feedback/comment/reply/reply',
       query: { oid, type, root, page_size, page_num },
-    }) as Promise<RootObject<ReplyReplyResp>>
+    }) as unknown as Promise<RootObject<ReplyReplyResp>>
   }
 
   action(rpid: number | string, action: 0 | 1 | 2): Promise<RootObject<null>> {
@@ -52,7 +52,7 @@ class FeedbackCommentApi {
       url: '/api/v1/feedback/comment/action',
       body: { rpid, action },
       headers: { 'Content-Type': 'application/json' },
-    }) as Promise<RootObject<null>>
+    }) as unknown as Promise<RootObject<null>>
   }
 
   del(oid: number | string, type: number | string, rpid: number | string) {

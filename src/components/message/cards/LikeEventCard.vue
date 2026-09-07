@@ -2,12 +2,12 @@
   <EventCardBase :item="item" :action-text="actionText" @open="emit('open', item)">
     <template #body>
       <el-text
-        v-if="content"
+        v-if="displayContent"
         class="like-event-card__content text-text-regular block text-sm md:hidden"
         :line-clamp="2"
         tag="p"
       >
-        {{ content }}
+        {{ displayContent }}
       </el-text>
     </template>
     <template #meta>
@@ -24,9 +24,9 @@
 
 <script setup lang="ts">
 /**
- * 点赞通知卡片（EventTypeEnum.LIKE = 1）。
+ * 点赞通知卡片（InteractionActionTypeEnum.LIKE = 1）。
  *
- * 继承 `EventCardBase`：正文显示被赞的原资源标题，底部显示来源业务；
+ * 继承 `EventCardBase`：正文显示被赞内容 `source_content`（被赞的评论 / 动态正文），缺省回落原资源标题，底部显示来源业务；
  * 差异仅在多人聚合时把总人数并入动作文案（「等总计N人赞了我的{yyy}」）。
  */
 import { computed } from 'vue'
@@ -41,7 +41,10 @@ const { t } = useI18n()
 const props = defineProps<{ item: EventFeedItem }>()
 const emit = defineEmits<{ open: [EventFeedItem] }>()
 
-const { totalCount, targetName, content, sourceText } = useEventCard(props)
+const { totalCount, targetName, sourceContent, title, sourceText } = useEventCard(props)
+
+/** 卡片正文：优先被互动内容 source_content（被赞的评论 / 动态正文），缺省回落原资源标题 */
+const displayContent = computed(() => sourceContent.value || title.value)
 
 /**
  * 动作文案：单人「赞了我的{yyy}」；

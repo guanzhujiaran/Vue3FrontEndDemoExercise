@@ -6,9 +6,9 @@
       <div class="moment-audit-list__toolbar-right flex items-center gap-3">
         <!-- 状态筛选 Tab：待审核 / 已过审（可驳回撤回）/ 已驳回（可通过恢复） -->
         <el-radio-group v-model="statusTab" size="default" @change="onStatusChange">
-          <el-radio-button value="auditing">待审核</el-radio-button>
-          <el-radio-button value="normal">已过审</el-radio-button>
-          <el-radio-button value="rejected">已驳回</el-radio-button>
+          <el-radio-button :value="ResourceAuditStatusEnum.AUDITING">待审核</el-radio-button>
+          <el-radio-button :value="ResourceAuditStatusEnum.NORMAL">已过审</el-radio-button>
+          <el-radio-button :value="ResourceAuditStatusEnum.REJECTED">已驳回</el-radio-button>
         </el-radio-group>
         <el-button
           class="moment-audit-list__refresh-btn"
@@ -104,7 +104,7 @@
                 <template v-else-if="column.key === 'action'">
                   <div class="flex gap-2">
                     <el-button
-                      v-if="rowData.auditStatus !== 'normal'"
+                      v-if="stateKey(rowData.auditStatus) !== 'NORMAL'"
                       size="default"
                       type="primary"
                       :loading="approvingId === rowData.dynIdStr"
@@ -113,7 +113,7 @@
                       通过
                     </el-button>
                     <el-button
-                      v-if="rowData.auditStatus !== 'rejected'"
+                      v-if="stateKey(rowData.auditStatus) !== 'REJECTED'"
                       size="default"
                       type="danger"
                       :loading="rejectingId === rowData.dynIdStr"
@@ -157,8 +157,8 @@
 import { ref, computed, onMounted } from 'vue'
 import { TableV2FixedDir, type Column } from 'element-plus'
 import { Refresh } from '@element-plus/icons-vue'
-import { fetchAuditList, auditApprove, auditReject, fetchAuditStatistics } from '@/api/notify/moment-api'
-import type { MomentAuditItem, MomentAuditStatusEnum, MomentAuditStatisticsResp } from '@/api/notify/moment-api'
+import { fetchAuditList, auditApprove, auditReject, fetchAuditStatistics, ResourceAuditStatusEnum } from '@/api/notify/moment-api'
+import type { MomentAuditItem, MomentAuditStatisticsResp } from '@/api/notify/moment-api'
 import LoadingWrap from '@/components/message/LoadingWrap.vue'
 import EmptyState from '@/components/message/EmptyState.vue'
 import PaginationBar from '@/components/message/PaginationBar.vue'
@@ -173,34 +173,40 @@ const page = ref(1)
 const pageSize = 20
 const approvingId = ref<string | null>(null)
 const rejectingId = ref<string | null>(null)
-// 状态筛选 Tab：auditing（默认，待审核）/ normal（已过审，可驳回撤回）/ rejected（已驳回，可通过恢复）
-const statusTab = ref<MomentAuditStatusEnum>('auditing')
+// 状态筛选 Tab：AUDITING（默认，待审核）/ NORMAL（已过审，可驳回撤回）/ REJECTED（已驳回，可通过恢复）
+// 取值必须是 SDK 的数字枚举（后端 IntEnum 校验只接受 1/2/3/4），不能传 'auditing' 这类字符串
+const statusTab = ref<ResourceAuditStatusEnum>(ResourceAuditStatusEnum.AUDITING)
 
 // 审核总览统计（按类型 + 按状态分组）
 const statistics = ref<MomentAuditStatisticsResp>({ byType: [], byStatus: {}, total: 0 })
 const loadingStat = ref(false)
 
-// 审核状态 → 标签文案/类型映射（对齐后端 MomentAuditStatusEnum 字符串值）
+// 审核状态 → 标签文案/类型映射（后端返回的是枚举成员名 AUDITING/NORMAL/REJECTED/HIDDEN）
 const AUDIT_STATE_MAP: Record<string, { text: string; type: 'warning' | 'success' | 'danger' | 'info' }> = {
-  auditing: { text: '待审核', type: 'warning' },
-  normal: { text: '已过审', type: 'success' },
-  rejected: { text: '已驳回', type: 'danger' },
-  hidden: { text: '已下架', type: 'info' },
+  AUDITING: { text: '待审核', type: 'warning' },
+  NORMAL: { text: '已过审', type: 'success' },
+  REJECTED: { text: '已驳回', type: 'danger' },
+  HIDDEN: { text: '已下架', type: 'info' },
+}
+
+// 状态字符串归一化：大小写不敏感，兼容 'AUDITING' / 'auditing'
+function stateKey(status: string): string {
+  return String(status ?? '').toUpperCase()
 }
 
 function stateTagText(status: string): string {
-  return AUDIT_STATE_MAP[status]?.text ?? status
+  return AUDIT_STATE_MAP[stateKey(status)]?.text ?? status
 }
 
 function stateTagType(status: string): 'warning' | 'success' | 'danger' | 'info' {
-  return AUDIT_STATE_MAP[status]?.type ?? 'info'
+  return AUDIT_STATE_MAP[stateKey(status)]?.type ?? 'info'
 }
 
 const emptyText = computed(() => {
-  const map: Record<string, string> = {
-    auditing: '暂无待审核动态',
-    normal: '暂无已过审动态',
-    rejected: '暂无已驳回动态',
+  const map: Record<number, string> = {
+    [ResourceAuditStatusEnum.AUDITING]: '暂无待审核动态',
+    [ResourceAuditStatusEnum.NORMAL]: '暂无已过审动态',
+    [ResourceAuditStatusEnum.REJECTED]: '暂无已驳回动态',
   }
   return map[statusTab.value] ?? '暂无数据'
 })

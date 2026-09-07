@@ -1,4 +1,4 @@
-import { CommentService, CommentTypeEnum, CommentSortEnum, CommentStateEnum } from '@/api/community/hey-api'
+import { CommentService, InteractionBizTypeEnum, CommentSortEnum, ResourceAuditStatusEnum } from '@/api/community/hey-api'
 import type { BusinessHandlerResult } from '@/utils/businessHandler'
 import type {
   CommentUserBrief,
@@ -13,15 +13,15 @@ import type { InjectionKey } from 'vue'
 
 /**
  * 评论区业务类型 / 排序 / 状态，直接使用 SDK 生成的数值枚举，不再手写字符串镜像：
- * - CommentTypeEnum：DYNAMIC=1 / ARTICLE=2 / LOTTERY=3 / FEEDBACK=4 / OTHER=5
+ * - InteractionBizTypeEnum（评论区 type）：DYNAMIC=1 / LOTTERY=2（白名单仅收录二者）
  * - CommentSortEnum：HOT=1 / TIME=2
- * - CommentStateEnum：NORMAL=1 / AUDITING=2 / REJECTED=3 / HIDDEN=4 / DELETED=5
+ * - ResourceAuditStatusEnum：NORMAL=1 / AUDITING=2 / REJECTED=3 / HIDDEN=4 / DELETED=5
  * 与后端 be-message-service `app.models.enums.*` 严格对齐，保证前后端取值永远一致。
  */
-export { CommentTypeEnum, CommentSortEnum, CommentStateEnum }
+export { InteractionBizTypeEnum, CommentSortEnum, ResourceAuditStatusEnum }
 
-/** 后端合法的评论区 type 类型，等价于 SDK 生成的 CommentTypeEnum */
-export type CommentType = CommentTypeEnum
+/** 后端合法的评论区 type 类型，等价于 SDK 生成的 InteractionBizTypeEnum */
+export type CommentType = InteractionBizTypeEnum
 
 // 以下类型直接从 SDK re-export，单一数据源，消除重复定义
 export type {

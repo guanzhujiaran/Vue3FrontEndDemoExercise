@@ -74,7 +74,7 @@ const VIP_TYPE_LABEL: Record<number, string> = {
  */
 export function vipLabel(vip?: PptrUserVipInfo | null): string {
   if (!vip || vip.vip_status !== 1) return ''
-  return VIP_TYPE_LABEL[vip.vip_type] ?? 'message.vipGeneric'
+  return VIP_TYPE_LABEL[vip.vip_type ?? -1] ?? 'message.vipGeneric'
 }
 
 /** 大会员到期时间（本地日期字符串）；无有效到期时间返回空字符串 */

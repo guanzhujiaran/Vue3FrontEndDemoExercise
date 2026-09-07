@@ -13,7 +13,7 @@
         <!-- 类型 + 状态 小标识 -->
         <div class="mb-2 flex flex-wrap items-center gap-2">
           <span class="inline-flex items-center gap-1 bg-fill-lighter px-2 py-0.5 border border-border-light rounded-full font-medium text-text-secondary text-xs">
-            <BiliStatusIcon :icon="item.normalized.statusType" :popover_text="item.normalized.statusText" />
+            <BiliStatusIcon :icon="item.normalized.statusType ?? 'info'" :popover_text="item.normalized.statusText" />
             {{ item.normalized.displayType }}
           </span>
           <span
@@ -53,7 +53,8 @@
             type="primary"
             :href="item.normalized.sourceLink"
             target="_blank"
-            rel="noreferrer"
+            :rel="LINK_REL"
+            :referrerpolicy="LINK_REFERRER_POLICY"
             underline="never"
             icon="link"
             class="text-xs!"
@@ -66,7 +67,8 @@
             type="primary"
             :href="item.normalized.resultLink"
             target="_blank"
-            rel="noreferrer"
+            :rel="LINK_REL"
+            :referrerpolicy="LINK_REFERRER_POLICY"
             underline="never"
             icon="link"
             class="text-xs!"
@@ -142,6 +144,7 @@
 <script setup lang="ts">
 import { computed, ref, reactive, watch } from 'vue'
 import BiliLotteryCard from '@/components/lottery_data/bili_data/BiliLotteryCard.vue'
+import { LINK_REL, LINK_REFERRER_POLICY } from '@/utils/PageOpen/linkPolicy'
 import BiliStatusIcon from '@/components/CommonCompo/Bili-Status-Compo/BiliStatusIcon.vue'
 import { normalizeLotteryData } from '@/utils/lotteryNormalization.ts'
 import { handleLotteryLinkClick, isLotteryParticipated } from '@/utils/lotteryParticipation'

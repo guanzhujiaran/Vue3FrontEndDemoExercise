@@ -33,12 +33,12 @@
 /**
  * 系统处置类通知卡片「二级基类」。
  *
- * 覆盖 EventTypeEnum.AUDIT_REJECT / HIDE / REPORT_REJECT / REPORT_RESOLVED
+ * 覆盖 InteractionActionTypeEnum.AUDIT_REJECT / HIDE / REPORT_REJECT / REPORT_RESOLVED
  * 这四类**无互动按钮、以处置说明为核心**的通知：它们结构完全一致，
  * 仅在「语义图标 / 语义色」上不同，因此再抽一层基类，继承者只声明这两个属性即可
  * （对齐后端「基类 → 中间基类 → 具体子类」的继承链）。
  *
- * 动作文案沿用基类按 EventTypeEnum 查表的 `defaultActionText`
+ * 动作文案沿用基类按 InteractionActionTypeEnum 查表的 `defaultActionText`
  * （yyy 由基类按 `resource_type` 推导），继承者无需重复声明。
  *
  * 处置说明取 `item.desc`（后端事件正文，如审核驳回原因 / 下架说明 / 举报结论），
@@ -51,9 +51,9 @@ import type { EventFeedItem } from '@/api/notify/message-api'
 
 const props = defineProps<{
   item: EventFeedItem
-  /** 语义图标（由继承者按 EventTypeEnum 声明，取自 `src/assets/svgs/`） */
+  /** 语义图标（由继承者按 InteractionActionTypeEnum 声明，取自 `src/assets/svgs/`） */
   icon: Component
-  /** 语义色 class（由继承者按 EventTypeEnum 声明，如 `text-danger`） */
+  /** 语义色 class（由继承者按 InteractionActionTypeEnum 声明，如 `text-danger`） */
   toneClass?: string
 }>()
 const emit = defineEmits<{ open: [EventFeedItem] }>()

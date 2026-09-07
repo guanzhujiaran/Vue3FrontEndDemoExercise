@@ -9,9 +9,9 @@
 
 <script setup lang="ts">
 /**
- * 举报未通过通知卡片（EventTypeEnum.REPORT_REJECT = 6）。
+ * 举报未通过通知卡片（InteractionActionTypeEnum.REPORT_REJECT = 6）。
  *
- * 继承 `SystemEventCardBase`：动作文案由基类按 EventTypeEnum 查表
+ * 继承 `SystemEventCardBase`：动作文案由基类按 InteractionActionTypeEnum 查表
  * （针对举报本身，不含资源名），本类只声明语义图标与语义色（中性）。
  */
 import SystemEventCardBase from './SystemEventCardBase.vue'
