@@ -152,6 +152,15 @@ const res = await listNotifyApiV1MessageNotifyListGet({ query: { page: 1, size: 
   - 动态：动态广场/话题广场 + 管理员「审核队列」入口 + header「发布动态」按钮 + Feed keep-alive；
   - 审核：按 `isRpaAdmin`/`isMessageRoot` 权限分组的导航（RPA 管理/消息管理端/动态管理端/用户管理端），子页 `router-view` 直接渲染。
 
+### Phase 9 — 抽奖卡片详情页按 id 拉取详情（`/app/lot-data/card-detail`）
+
+- [x] **卡片数据改为接口拉取**：`LotteryCardDetailView.vue` 进入页面按 `route.query.id`（规范互动资源 ID = `lotdata.lottery_id`）调用爬虫新接口 `POST /api/v1/lottery_database/bili/GetLotteryDetail`（薄封装：`lottery_database_bili_api.ts#getLotteryDetailById`），返回 Lotdata 原始行 + `extra_info`，经 `normalizeLotteryData` 渲染完整卡片。**不再依赖 localStorage 旧缓存传参**：`lottery-detail` store 降级为 id 一致性兜底（缓存卡片的规范化 id 与 URL id 一致才使用），接口成功后回写 store 使旧缓存自愈。
+- [x] **空态收敛**：加载中显示骨架屏；加载失败显示「卡片详情加载失败」错误态（`BiliError` 可重试）；仅 URL 无 id 时不渲染卡片。避免「请通过抽奖列表中的「评论区」按钮进入本页面以查看完整卡片…」在正常路径出现。
+- [x] **互动 ID 口径**：详情页互动/评论/转发一律使用 URL 中的 lottery_id；缺失 `lottery_id` 的旧缓存数据（预约 sid / 天选 lot_id / 第三方 dynId）由 `BiliLotteryCard.vue` 的 `canInteract` 守卫禁用互动（含头部 ID 徽标隐藏）。
+- [x] **hey-api SDK**：SDK 已重新生成，封装层 `getLotteryDetailById` 已切换为 `V1BiliService.getLotteryDetailApiV1LotteryDatabaseBiliGetLotteryDetailPost`（类型 `LotteryDetailResp` / `StandardResponseLotteryDetailResp`），不再 `client` 直连。
+- [x] **首页「最新评论」改版**：`HomeView.vue` 将 `<HomeLatestComments />` 移至「功能导航区」上方（hero 之下）；`HomeLatestComments.vue` **保留按资源类型分组的分区框**，展示改为 **el-carousel 轮播**——每页一个资源类型分区框（5s 自动轮播 + hover 箭头 + 底部指示条），框内评论列表超高可滚动，点击跳转对应资源评论区的逻辑不变。
+- [x] **最新评论未登录可访问**：be-gateway `JwtModule.js` jwtAuth `unless` 白名单补充 `GET /api/v1/comment/latest`（与 comment/main、/comment/detail、/comment/sub 同口径）；be-message 侧本就经 `resolve_optional_viewer` 允许匿名（匿名仅不回填点赞态），评论写接口仍走 jwtAuth + 上游 RequiredUser。
+
 ---
 
 ## 四、实现规范（必须遵守，与项目既有规则一致）

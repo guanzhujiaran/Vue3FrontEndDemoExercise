@@ -46,7 +46,8 @@
               <span>{{ viewCount }}</span>
             </span>
             <span
-              class="inline-flex items-center bg-bg-page px-3 py-1 border border-border-light rounded-full font-medium text-text-secondary text-xs">
+              v-if="normalizedData.id"
+              class="lottery-card__id-badge inline-flex items-center bg-bg-page px-3 py-1 border border-border-light rounded-full font-medium text-text-secondary text-xs">
               ID: {{ normalizedData.id }}
             </span>
           </div>
@@ -256,6 +257,7 @@
     <template #footer>
       <!-- 互动栏：参考 B 站动态页脚（icon + 数字 / 无数量时显示中文）。数量走 props.status 接口统一展示 -->
       <div class="lottery-card__interaction-bar flex items-center justify-around gap-3 bg-fill-lighter mb-3 py-3 border-border-light border-t px-3">
+        <template v-if="canInteract">
         <!-- 评论 -->
         <button
           class="lottery-card__action-comment inline-flex items-center gap-1.5 text-text-secondary hover:text-text-primary text-sm cursor-pointer transition-colors"
@@ -308,6 +310,11 @@
             <span>转发</span>
           </template>
         </button>
+        </template>
+        <!-- 缺失规范互动 ID（lottery_id）的旧数据：禁止互动/转发，避免后端 400 资源不存在 -->
+        <el-text v-else class="lottery-card__interaction-disabled text-sm" type="info">
+          卡片数据已过期，暂不支持互动
+        </el-text>
       </div>
 
       <!-- 评论区（卡片内就地展开，首次点击懒加载；对标 B 站动态信息流） -->
@@ -426,7 +433,9 @@ const handleLinkClick = () => {
 const is_mobile = isMobileDevice()
 
 // ============ 点赞 / 收藏 / 转发到动态（2.20.0）============
-const lotteryId = computed(() => String(normalizedData.value.id))
+const lotteryId = computed(() => String(normalizedData.value.id ?? ''))
+/** 互动可用性：旧缓存数据可能缺失规范互动 ID（lottery_id），此时禁用全部互动入口 */
+const canInteract = computed(() => Boolean(normalizedData.value.id))
 const interactLoading = ref(false)
 // 互动状态由容器层批量拉取后经 status prop 下发，卡片只读派生（单向数据流）
 const likeActive = computed(() => Boolean(props.status?.isLike))
@@ -441,7 +450,7 @@ const viewCount = computed(() => Number((props.status as InteractionStatusItem |
 
 /** 点赞 / 取消点赞 */
 async function handleLike() {
-  if (interactLoading.value) return
+  if (interactLoading.value || !canInteract.value) return
   interactLoading.value = true
   const nextActive = !likeActive.value
   const res = await thumbMoment(lotteryId.value, nextActive ? 1 : 2, {
@@ -463,6 +472,7 @@ async function handleLike() {
 /** 评论：卡片内就地展开评论区（对标 B 站动态信息流，首次点击懒加载） */
 const commentsVisible = ref(false)
 function handleComment() {
+  if (!canInteract.value) return
   commentsVisible.value = !commentsVisible.value
 }
 
@@ -474,6 +484,7 @@ function handleCommentCountChange(count: number) {
 /** 收藏：弹出收藏夹选择弹窗（多夹），选择/新建收藏夹后收藏 */
 const favDialogVisible = ref(false)
 function handleFavorite() {
+  if (!canInteract.value) return
   favDialogVisible.value = true
 }
 
@@ -494,6 +505,7 @@ async function handleFavChanged() {
 const forwardVisible = ref(false)
 
 function handleForward() {
+  if (!canInteract.value) return
   forwardVisible.value = true
 }
 

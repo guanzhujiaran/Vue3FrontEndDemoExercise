@@ -20,6 +20,7 @@ import type {
   OthersLotDynSortOrderEnum,
   TimePresetEnum,
   CommonLotExtraInfoResp,
+  LotteryDetailResp,
   ScrapyTypeEnum,
 } from '@/api/bili_lottery_data/hey-api'
 import type { OthersLotPrizeInfo } from '@/models/api/lottery/lottery_card'
@@ -281,6 +282,21 @@ class LotteryDataBaseApi {
         pub_time_start,
         pub_time_end,
       },
+    })
+    return res as any
+  }
+
+  /**
+   * 按 lottery_id 获取单个抽奖卡片详情（后端 GetLotteryDetail，计划书 Phase 9）。
+   *
+   * 响应 `{ raw: LotdataResp, extra_info }` 与 GetOfficialLottery 列表项形态一致，
+   * 可直接交 `normalizeLotteryData` 渲染完整卡片；资源不存在时 `code !== 0`。
+   */
+  async getLotteryDetailById(
+    lottery_id: string | number
+  ): Promise<RootObject<LotteryDetailResp | null>> {
+    const res = await V1BiliService.getLotteryDetailApiV1LotteryDatabaseBiliGetLotteryDetailPost({
+      body: { lottery_id: Number(lottery_id) },
     })
     return res as any
   }

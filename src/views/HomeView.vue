@@ -5,6 +5,7 @@ import { useJwtStore } from '@/stores/jwt_token'
 import biliMessage, { ElMessageBox } from '@/utils/message'
 import { CoffeeCup } from '@element-plus/icons-vue'
 import SubmitFeedbackModal from '@/components/lottery_data/bili_data/SubmitFeedbackModal.vue'
+import HomeLatestComments from '@/components/home/HomeLatestComments.vue'
 import { processRoutesForHome } from '@/utils/routeUtils'
 import { openGlobalLoginModalKey } from '@/models/inject/inject_type.ts'
 import { KeysEnum, useInject } from '@/models/base/provide_model.ts'
@@ -140,6 +141,9 @@ const handleCardClick = (path: string | undefined, requiresLogin = false) => {
     </section>
 
     <div class="mt-8 flex justify-center gap-10" v-if="isLoggedIn"></div>
+
+    <!-- 最新评论（扁平多行多列网格，置于功能导航区上方） -->
+    <HomeLatestComments />
 
     <!-- 功能导航区 -->
     <section class="mx-5 py-10 lg:mx-10 sm:px-0 sm:mx-0">

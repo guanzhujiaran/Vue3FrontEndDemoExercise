@@ -1065,6 +1065,38 @@ export type CommentItem = {
 };
 
 /**
+ * CommentLatestGroup
+ *
+ * 某资源类型下的最新根评论分组（首页「最新评论」用）。
+ */
+export type CommentLatestGroup = {
+    /**
+     * 资源类型（dynamic / lottery / rpa_action ...）
+     */
+    type: InteractionBizTypeEnum;
+    /**
+     * Comments
+     *
+     * 该类型最新根评论（只含根评论，不含楼中楼子评论）
+     */
+    comments?: Array<CommentItem>;
+};
+
+/**
+ * CommentLatestResp
+ *
+ * 首页最新评论（按资源类型分组展示）。
+ */
+export type CommentLatestResp = {
+    /**
+     * Groups
+     *
+     * 各资源类型下的最新根评论分组，仅有数据的类型才会出现
+     */
+    groups?: Array<CommentLatestGroup>;
+};
+
+/**
  * CommentListResp
  *
  * 一级评论列表。
@@ -7925,6 +7957,21 @@ export type StandardResponseCommentItem = {
 };
 
 /**
+ * StandardResponse[CommentLatestResp]
+ */
+export type StandardResponseCommentLatestResp = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: CommentLatestResp | null;
+};
+
+/**
  * StandardResponse[CommentListResp]
  */
 export type StandardResponseCommentListResp = {
@@ -10065,6 +10112,38 @@ export type CommentItemWritable = {
      * 楼中楼预览（一级评论下最多 N 条）
      */
     replies?: Array<CommentItemWritable>;
+};
+
+/**
+ * CommentLatestGroup
+ *
+ * 某资源类型下的最新根评论分组（首页「最新评论」用）。
+ */
+export type CommentLatestGroupWritable = {
+    /**
+     * 资源类型（dynamic / lottery / rpa_action ...）
+     */
+    type: InteractionBizTypeEnum;
+    /**
+     * Comments
+     *
+     * 该类型最新根评论（只含根评论，不含楼中楼子评论）
+     */
+    comments?: Array<CommentItemWritable>;
+};
+
+/**
+ * CommentLatestResp
+ *
+ * 首页最新评论（按资源类型分组展示）。
+ */
+export type CommentLatestRespWritable = {
+    /**
+     * Groups
+     *
+     * 各资源类型下的最新根评论分组，仅有数据的类型才会出现
+     */
+    groups?: Array<CommentLatestGroupWritable>;
 };
 
 /**
@@ -12487,6 +12566,21 @@ export type StandardResponseCommentItemWritable = {
 };
 
 /**
+ * StandardResponse[CommentLatestResp]
+ */
+export type StandardResponseCommentLatestRespWritable = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: CommentLatestRespWritable | null;
+};
+
+/**
  * StandardResponse[CommentListResp]
  */
 export type StandardResponseCommentListRespWritable = {
@@ -13532,6 +13626,50 @@ export type CommentCountApiV1CommentCountGetResponses = {
 };
 
 export type CommentCountApiV1CommentCountGetResponse = CommentCountApiV1CommentCountGetResponses[keyof CommentCountApiV1CommentCountGetResponses];
+
+export type CommentLatestApiV1CommentLatestGetData = {
+    body?: never;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+    };
+    path?: never;
+    query?: {
+        /**
+         * Types
+         *
+         * 逗号分隔的资源类型文字（dynamic/lottery/rpa_action/rpa_workflow/rpa_browser/rpa_plugin），缺省返回全部可挂评论的类型
+         */
+        types?: string | null;
+        /**
+         * Limit
+         *
+         * 每个资源类型取最新根评论条数
+         */
+        limit?: number;
+    };
+    url: '/api/v1/comment/latest';
+};
+
+export type CommentLatestApiV1CommentLatestGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type CommentLatestApiV1CommentLatestGetError = CommentLatestApiV1CommentLatestGetErrors[keyof CommentLatestApiV1CommentLatestGetErrors];
+
+export type CommentLatestApiV1CommentLatestGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseCommentLatestResp;
+};
+
+export type CommentLatestApiV1CommentLatestGetResponse = CommentLatestApiV1CommentLatestGetResponses[keyof CommentLatestApiV1CommentLatestGetResponses];
 
 export type ReplyListApiV1CommentReplyGetData = {
     body?: never;

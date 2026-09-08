@@ -29,7 +29,16 @@ export const generated = {
       logoutTitle: '提示',
       logoutSuccess: '已成功退出登录',
       loginNeeded: '该功能需要登录才能使用，是否立即登录?',
-      loginNeededTitle: '提示'
+      loginNeededTitle: '提示',
+      latestCommentsTitle: '最新评论',
+      latestCommentsDesc: '按资源分区，展示最新发布的评论',
+      latestCommentsEmpty: '暂无可展示的评论',
+      typeDynamic: '动态',
+      typeLottery: '抽奖',
+      typeRpaAction: 'RPA动作',
+      typeRpaWorkflow: 'RPA流程',
+      typeRpaBrowser: 'RPA浏览器',
+      typeRpaPlugin: 'RPA插件'
     },
     network: {
       title: '网络连接诊断',
@@ -85,7 +94,16 @@ export const generated = {
       logoutTitle: 'Notice',
       logoutSuccess: 'Logged out successfully',
       loginNeeded: 'This feature requires login. Log in now?',
-      loginNeededTitle: 'Notice'
+      loginNeededTitle: 'Notice',
+      latestCommentsTitle: 'Latest Comments',
+      latestCommentsDesc: 'Latest comments grouped by resource',
+      latestCommentsEmpty: 'No comments to show',
+      typeDynamic: 'Dynamic',
+      typeLottery: 'Lottery',
+      typeRpaAction: 'RPA Action',
+      typeRpaWorkflow: 'RPA Workflow',
+      typeRpaBrowser: 'RPA Browser',
+      typeRpaPlugin: 'RPA Plugin'
     },
     network: {
       title: 'Network Connection Diagnostics',
@@ -141,7 +159,16 @@ export const generated = {
       logoutTitle: '提示',
       logoutSuccess: '已成功登出',
       loginNeeded: '該功能需要登入才能使用，是否立即登入?',
-      loginNeededTitle: '提示'
+      loginNeededTitle: '提示',
+      latestCommentsTitle: '最新評論',
+      latestCommentsDesc: '按資源分區，展示最新發布的評論',
+      latestCommentsEmpty: '暫無可展示的評論',
+      typeDynamic: '動態',
+      typeLottery: '抽獎',
+      typeRpaAction: 'RPA動作',
+      typeRpaWorkflow: 'RPA流程',
+      typeRpaBrowser: 'RPA瀏覽器',
+      typeRpaPlugin: 'RPA外掛'
     },
     network: {
       title: '網路連線診斷',
@@ -196,7 +223,16 @@ export const generated = {
       logoutTitle: 'ヒント',
       logoutSuccess: 'ログアウトしました',
       loginNeeded: 'この機能はログインが必要です。今すぐログインしますか?',
-      loginNeededTitle: 'ヒント'
+      loginNeededTitle: 'ヒント',
+      latestCommentsTitle: '最新コメント',
+      latestCommentsDesc: 'リソース別に最新のコメントを表示',
+      latestCommentsEmpty: '表示できるコメントはありません',
+      typeDynamic: 'ダイナミック',
+      typeLottery: '抽選',
+      typeRpaAction: 'RPA動作',
+      typeRpaWorkflow: 'RPAフロー',
+      typeRpaBrowser: 'RPAブラウザ',
+      typeRpaPlugin: 'RPAプラグイン'
     },
     network: {
       title: 'ネットワーク接続診断',
@@ -252,7 +288,16 @@ export const generated = {
       logoutTitle: '알림',
       logoutSuccess: '로그아웃되었습니다',
       loginNeeded: '이 기능은 로그인이 필요합니다. 지금 로그인하시겠습니까?',
-      loginNeededTitle: '알림'
+      loginNeededTitle: '알림',
+      latestCommentsTitle: '최신 댓글',
+      latestCommentsDesc: '리소스별 최신 댓글 표시',
+      latestCommentsEmpty: '표시할 댓글이 없습니다',
+      typeDynamic: '다이내믹',
+      typeLottery: '추첨',
+      typeRpaAction: 'RPA 액션',
+      typeRpaWorkflow: 'RPA 흐름',
+      typeRpaBrowser: 'RPA 브라우저',
+      typeRpaPlugin: 'RPA 플러그인'
     },
     network: {
       title: '네트워크 연결 진단',

@@ -61,8 +61,10 @@ const normalizeFlatReserveInfo = (
 
   const normalized: Partial<NormalizedLottery> = {
     originalData,
-    // 预约抽奖对外互动资源 ID 统一为 lottery_id；旧数据缺失时兜底 reserve_sid
-    id: resData.lottery_id ?? resData.reserve_sid,
+    // 预约抽奖对外互动资源 ID 必须是 lotdata 主键 lottery_id（后端互动/转发均按
+    // lottery_id 经 RPC 校验资源存在）；缺失（旧缓存数据）时置空并禁用互动，
+    // 禁止兜底 reserve_sid——sid 不是合法互动资源 ID，用它会被后端判 400「资源不存在」
+    id: resData.lottery_id ?? null,
     type: 'RESERVATION',
     displayType: '预约抽奖',
     title: buildReserveTitle(resData.lottery_prize_info, resData.reserve_sid, prizes),
@@ -352,7 +354,9 @@ export const normalizeLotteryData = (data: AnyLotteryData): NormalizedLottery =>
     }
   } else if ('ids' in actualData && 'stime' in actualData) {
     const resData = actualData as ReservationLotteryData
-    normalized.id = resData.ids
+    // 老结构预约数据（ids/sid 均为预约 sid，非 lotdata 主键）没有 lottery_id：
+    // 互动资源 ID 置空（上层禁用互动），禁止把 sid 当 lottery 资源 ID 传给后端
+    normalized.id = null
     normalized.type = 'RESERVATION'
     normalized.displayType = '预约抽奖'
     normalized.title = resData.name || `预约 #${resData.ids}`

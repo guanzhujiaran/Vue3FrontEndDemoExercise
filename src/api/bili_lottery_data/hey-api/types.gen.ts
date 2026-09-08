@@ -881,6 +881,20 @@ export type FilterParamMeta = {
 };
 
 /**
+ * GetLotteryDetailReq
+ *
+ * 按 lottery_id 获取单个抽奖卡片详情的请求体。
+ */
+export type GetLotteryDetailReq = {
+    /**
+     * Lottery Id
+     *
+     * lotdata 主键 lottery_id（对外互动资源 ID）
+     */
+    lottery_id: number;
+};
+
+/**
  * GlobalSchedulerStatusModel
  *
  * 全局调度器完整状态
@@ -1265,6 +1279,24 @@ export const LotteryDataSortEnum = {
  * - created_at: created_at
  */
 export type LotteryDataSortEnum = typeof LotteryDataSortEnum[keyof typeof LotteryDataSortEnum];
+
+/**
+ * LotteryDetailResp
+ *
+ * 单条抽奖卡片详情响应（前端卡片详情页按 lottery_id 拉取完整卡片数据）。
+ *
+ * raw 为 lotdata 原始行（LotdataResp 形态，与 GetOfficialLottery 列表项的 raw 一致），
+ * extra_info 为 t_lot_extra_info 附加信息；前端 normalizeLotteryData 解包 raw 渲染完整卡片。
+ * 注意：不直接从 Lotdata ORM 行构建本模型——ORM 同名 `extra_info` 关系会触发懒加载
+ * （DetachedInstanceError），因此 raw 单独经 LotdataResp.model_validate(行) 映射列字段。
+ */
+export type LotteryDetailResp = {
+    raw: LotdataResp;
+    /**
+     * 抽奖附加信息（对应 t_lot_extra_info 表）
+     */
+    extra_info?: OfficialLotExtraInfoResp | null;
+};
 
 /**
  * LotteryFilterParamsResp
@@ -2117,6 +2149,21 @@ export type StandardResponseLotteryArticleResp = {
      */
     msg?: string;
     data?: LotteryArticleResp | null;
+};
+
+/**
+ * StandardResponse[LotteryDetailResp]
+ */
+export type StandardResponseLotteryDetailResp = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: LotteryDetailResp | null;
 };
 
 /**
@@ -3505,6 +3552,24 @@ export type LotteryArticleRespWritable = {
 };
 
 /**
+ * LotteryDetailResp
+ *
+ * 单条抽奖卡片详情响应（前端卡片详情页按 lottery_id 拉取完整卡片数据）。
+ *
+ * raw 为 lotdata 原始行（LotdataResp 形态，与 GetOfficialLottery 列表项的 raw 一致），
+ * extra_info 为 t_lot_extra_info 附加信息；前端 normalizeLotteryData 解包 raw 渲染完整卡片。
+ * 注意：不直接从 Lotdata ORM 行构建本模型——ORM 同名 `extra_info` 关系会触发懒加载
+ * （DetachedInstanceError），因此 raw 单独经 LotdataResp.model_validate(行) 映射列字段。
+ */
+export type LotteryDetailRespWritable = {
+    raw: LotdataRespWritable;
+    /**
+     * 抽奖附加信息（对应 t_lot_extra_info 表）
+     */
+    extra_info?: OfficialLotExtraInfoRespWritable | null;
+};
+
+/**
  * LotteryFilterParamsResp
  *
  * 抽奖查询筛选参数响应
@@ -3872,6 +3937,21 @@ export type StandardResponseLotteryArticleRespWritable = {
      */
     msg?: string;
     data?: LotteryArticleRespWritable | null;
+};
+
+/**
+ * StandardResponse[LotteryDetailResp]
+ */
+export type StandardResponseLotteryDetailRespWritable = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: LotteryDetailRespWritable | null;
 };
 
 /**
@@ -4666,6 +4746,31 @@ export type GetLotteryFilterParamsApiV1LotteryDatabaseBiliGetLotteryFilterParams
 };
 
 export type GetLotteryFilterParamsApiV1LotteryDatabaseBiliGetLotteryFilterParamsGetResponse = GetLotteryFilterParamsApiV1LotteryDatabaseBiliGetLotteryFilterParamsGetResponses[keyof GetLotteryFilterParamsApiV1LotteryDatabaseBiliGetLotteryFilterParamsGetResponses];
+
+export type GetLotteryDetailApiV1LotteryDatabaseBiliGetLotteryDetailPostData = {
+    body: GetLotteryDetailReq;
+    path?: never;
+    query?: never;
+    url: '/api/v1/lottery_database/bili/GetLotteryDetail';
+};
+
+export type GetLotteryDetailApiV1LotteryDatabaseBiliGetLotteryDetailPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetLotteryDetailApiV1LotteryDatabaseBiliGetLotteryDetailPostError = GetLotteryDetailApiV1LotteryDatabaseBiliGetLotteryDetailPostErrors[keyof GetLotteryDetailApiV1LotteryDatabaseBiliGetLotteryDetailPostErrors];
+
+export type GetLotteryDetailApiV1LotteryDatabaseBiliGetLotteryDetailPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseLotteryDetailResp;
+};
+
+export type GetLotteryDetailApiV1LotteryDatabaseBiliGetLotteryDetailPostResponse = GetLotteryDetailApiV1LotteryDatabaseBiliGetLotteryDetailPostResponses[keyof GetLotteryDetailApiV1LotteryDatabaseBiliGetLotteryDetailPostResponses];
 
 export type LotteryHofApiV1LotteryDatabaseBiliLotteryHofLotTypeGetData = {
     body?: never;

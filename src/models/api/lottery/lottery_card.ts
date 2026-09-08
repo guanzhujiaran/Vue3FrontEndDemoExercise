@@ -9,7 +9,8 @@ export interface LotteryPrize {
 }
 
 export interface BaseNormalizedLottery {
-  id: number | string
+  /** 互动资源 ID：lottery 必须是 lotdata 主键 lottery_id；缺失（旧数据无 lottery_id）时为 null，上层应禁用互动 */
+  id: number | string | null
   type: 'DYNAMIC' | 'CHARGING' | 'RESERVATION' | 'TOPIC' | 'ANCHOR' | 'RED_PACKET' | 'THIRD_PARTY' | 'UNKNOWN'
   displayType: string
   title: string

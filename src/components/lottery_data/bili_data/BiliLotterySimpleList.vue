@@ -44,7 +44,7 @@
           {{ item.normalized.title }}
         </p>
 
-        <div class="mt-2 text-xs text-text-placeholder">ID: {{ item.normalized.id }}</div>
+        <div v-if="item.normalized.id" class="lottery-simple-list__id mt-2 text-xs text-text-placeholder">ID: {{ item.normalized.id }}</div>
 
         <!-- 跳转连接（点击链接不触发卡片弹窗） -->
         <div class="mt-3 flex flex-wrap items-center gap-3" @click.stop>

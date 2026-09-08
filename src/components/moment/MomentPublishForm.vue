@@ -395,6 +395,13 @@ async function handleSubmit() {
     // attach 资源模式：发布新动态（scene=WORD），attach 卡经 MomentCreateReq.attach 独立提交
     // （2.21.0：只存 bizType+bizId，不再写入正文 RESOURCE 节点），内部提交并 emit success
     if (props.attachResource) {
+      // 资源唯一键为 bizType+bizId：bizId 必须是正整数字符串（空 / 'undefined' / 'N/A'
+      // 等一律拦截），避免后端 400「资源不存在」
+      const attachBizId = String(props.attachResource.bizId ?? '')
+      if (!/^\d+$/.test(attachBizId) || attachBizId === '0') {
+        biliMessage.warning('附加卡资源 ID 无效，无法发布')
+        return
+      }
       const nodes = buildMomentContentNodes(payload)
       const body: MomentCreateReq = {
         scene: 'WORD',

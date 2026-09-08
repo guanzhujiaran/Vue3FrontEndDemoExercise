@@ -3,7 +3,7 @@
 import type { RequestResult } from '../client';
 import { client } from '../client.gen';
 import type { Options } from '../sdk.gen';
-import type { AddCommentApiV1CommentAddPostData, AddCommentApiV1CommentAddPostErrors, AddCommentApiV1CommentAddPostResponses, AtSearchApiV1CommentAtSearchGetData, AtSearchApiV1CommentAtSearchGetErrors, AtSearchApiV1CommentAtSearchGetResponses, CommentActionApiV1CommentActionPostData, CommentActionApiV1CommentActionPostErrors, CommentActionApiV1CommentActionPostResponses, CommentCountApiV1CommentCountGetData, CommentCountApiV1CommentCountGetErrors, CommentCountApiV1CommentCountGetResponses, CommentDetailApiV1CommentDetailRpidGetData, CommentDetailApiV1CommentDetailRpidGetErrors, CommentDetailApiV1CommentDetailRpidGetResponses, CommentTopApiV1CommentTopPostData, CommentTopApiV1CommentTopPostErrors, CommentTopApiV1CommentTopPostResponses, DeleteCommentApiV1CommentDelPostData, DeleteCommentApiV1CommentDelPostErrors, DeleteCommentApiV1CommentDelPostResponses, ListMainApiV1CommentMainGetData, ListMainApiV1CommentMainGetErrors, ListMainApiV1CommentMainGetResponses, ReplyListApiV1CommentReplyGetData, ReplyListApiV1CommentReplyGetErrors, ReplyListApiV1CommentReplyGetResponses, ReportCommentApiV1CommentReportPostData, ReportCommentApiV1CommentReportPostErrors, ReportCommentApiV1CommentReportPostResponses } from '../types.gen';
+import type { AddCommentApiV1CommentAddPostData, AddCommentApiV1CommentAddPostErrors, AddCommentApiV1CommentAddPostResponses, AtSearchApiV1CommentAtSearchGetData, AtSearchApiV1CommentAtSearchGetErrors, AtSearchApiV1CommentAtSearchGetResponses, CommentActionApiV1CommentActionPostData, CommentActionApiV1CommentActionPostErrors, CommentActionApiV1CommentActionPostResponses, CommentCountApiV1CommentCountGetData, CommentCountApiV1CommentCountGetErrors, CommentCountApiV1CommentCountGetResponses, CommentDetailApiV1CommentDetailRpidGetData, CommentDetailApiV1CommentDetailRpidGetErrors, CommentDetailApiV1CommentDetailRpidGetResponses, CommentLatestApiV1CommentLatestGetData, CommentLatestApiV1CommentLatestGetErrors, CommentLatestApiV1CommentLatestGetResponses, CommentTopApiV1CommentTopPostData, CommentTopApiV1CommentTopPostErrors, CommentTopApiV1CommentTopPostResponses, DeleteCommentApiV1CommentDelPostData, DeleteCommentApiV1CommentDelPostErrors, DeleteCommentApiV1CommentDelPostResponses, ListMainApiV1CommentMainGetData, ListMainApiV1CommentMainGetErrors, ListMainApiV1CommentMainGetResponses, ReplyListApiV1CommentReplyGetData, ReplyListApiV1CommentReplyGetErrors, ReplyListApiV1CommentReplyGetResponses, ReportCommentApiV1CommentReportPostData, ReportCommentApiV1CommentReportPostErrors, ReportCommentApiV1CommentReportPostResponses } from '../types.gen';
 
 export class CommentService {
     /**
@@ -86,6 +86,22 @@ export class CommentService {
         return (options.client ?? client).get<CommentCountApiV1CommentCountGetResponses, CommentCountApiV1CommentCountGetErrors, ThrowOnError, 'data'>({
             responseStyle: 'data',
             url: '/api/v1/comment/count',
+            ...options
+        });
+    }
+    
+    /**
+     * 首页最新评论（按资源类型分组）
+     *
+     * 首页「最新评论」：按资源类型分组，仅返回各类型最新 N 条根评论。
+     *
+     * - 只展示根评论，楼中楼子评论不返回；
+     * - 未登录 / 登录均可访问，`x-bili-mid` 存在时仅影响「我的点赞态」回填。
+     */
+    public static commentLatestApiV1CommentLatestGet<ThrowOnError extends boolean = false>(options?: Options<CommentLatestApiV1CommentLatestGetData, ThrowOnError>): RequestResult<CommentLatestApiV1CommentLatestGetResponses, CommentLatestApiV1CommentLatestGetErrors, ThrowOnError, 'data'> {
+        return (options?.client ?? client).get<CommentLatestApiV1CommentLatestGetResponses, CommentLatestApiV1CommentLatestGetErrors, ThrowOnError, 'data'>({
+            responseStyle: 'data',
+            url: '/api/v1/comment/latest',
             ...options
         });
     }

@@ -3,6 +3,8 @@ import type { BusinessHandlerResult } from '@/utils/businessHandler'
 import type {
   CommentUserBrief,
   CommentItem,
+  CommentLatestGroup,
+  CommentLatestResp,
   CommentListResp,
   CommentSubListResp,
   CommentAddResp,
@@ -27,6 +29,8 @@ export type CommentType = InteractionBizTypeEnum
 export type {
   CommentUserBrief,
   CommentItem,
+  CommentLatestGroup,
+  CommentLatestResp,
   CommentListResp,
   CommentSubListResp,
   CommentAddResp,
@@ -87,6 +91,24 @@ const commentApi = {
       query: { root: String(root), oid: String(oid), type, page_num, page_size }
     }).then(
       (r) => (r ?? { code: -1, msg: '回复加载失败', data: {} }) as unknown as RootObject<CommentSubListResp>
+    )
+  },
+
+  /**
+   * 首页「最新评论」：按资源类型分组，仅返回各类型最新 N 条根评论（不含楼中楼）。
+   * 认证头（x-bili-mid 等）由 SDK 客户端 runtime 配置统一注入。
+   */
+  latest(
+    types?: string[],
+    limit = 5
+  ): Promise<RootObject<CommentLatestResp>> {
+    return CommentService.commentLatestApiV1CommentLatestGet({
+      query: {
+        ...(types && types.length ? { types: types.join(',') } : {}),
+        limit
+      }
+    }).then(
+      (r) => (r ?? { code: -1, msg: '最新评论加载失败', data: {} }) as unknown as RootObject<CommentLatestResp>
     )
   },
 
