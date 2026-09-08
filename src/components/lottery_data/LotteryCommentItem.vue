@@ -342,7 +342,7 @@ watch(
             class="lottery-comment-item__more-btn inline-flex items-center justify-center text-text-placeholder hover:text-primary transition-colors cursor-pointer border-none bg-transparent p-1"
             :aria-label="'更多操作'"
           >
-            <el-icon :size="18" class="rotate-90"><MoreFilled /></el-icon>
+            <el-icon :size="14" class="rotate-90"><MoreFilled /></el-icon>
           </button>
           <template #dropdown>
             <el-dropdown-menu class="lottery-comment-item__more-menu">

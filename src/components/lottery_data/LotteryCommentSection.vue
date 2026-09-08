@@ -75,7 +75,8 @@ function collectMentionUsers() {
   const seen = new Set<number>()
   const list: Array<{ value: string; avatar?: string; mid?: number }> = []
   const collect = (item: CommentItem) => {
-    const m = item.member
+    // SDK 重新生成后 CommentUserBrief 为松散索引类型（[key: string]: unknown），此处显式收窄
+    const m = item.member as { mid?: number; uname?: string; avatar?: string } | null | undefined
     if (m?.mid != null && !seen.has(m.mid)) {
       seen.add(m.mid)
       list.push({ value: m.uname || `用户${m.mid}`, avatar: m.avatar || undefined, mid: m.mid })
@@ -334,16 +335,29 @@ watch(allCount, (v) => emit('count-change', v))
 
 onMounted(loadMain)
 
-// 加载完成后把定位目标滚动到屏幕中间并高亮（若后端命中了 focus）
+// 加载完成后把定位目标滚动到屏幕中间并高亮（若后端命中了 focus）。
+// 用标准 scrollIntoView：无论滚动容器是 window 还是内层容器都能正确滚动，
+// 且自动遵循元素上的 scroll-mt-24（顶部吸顶偏移）。
+// 不用 el-anchor：那是「锚点目录导航」组件（渲染可点击目录），不适合程序化定位；
+// 本页评论列表也不在 el-scrollbar 内（无暴露的 scrollTo 可调）。
 const scrollToFocus = () => {
   const target = focusTargetRpid.value
   if (!target) return
   const el = document.getElementById(`comment-${target}`)
   if (!el) return
-  // 计算目标元素相对视口的位置，使其落在屏幕垂直中部
-  const rect = el.getBoundingClientRect()
-  const top = rect.top + window.scrollY - window.innerHeight / 2 + rect.height / 2
-  window.scrollTo({ top, behavior: 'smooth' })
+  el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  // 头像 / 楼中楼图片异步加载会让布局后移：短轮询复校准，确保最终停在目标附近
+  let retries = 0
+  const timer = window.setInterval(() => {
+    retries += 1
+    const rect = el.getBoundingClientRect()
+    const drift = Math.abs(rect.top + rect.height / 2 - window.innerHeight / 2)
+    if (drift < 80 || retries >= 5) {
+      window.clearInterval(timer)
+      return
+    }
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  }, 300)
   // 高亮由 focusRpid 驱动，持续保持，不自动淡出
 }
 </script>
