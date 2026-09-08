@@ -47,6 +47,7 @@ const isLoggedIn = computed(() => !!biliUser.value.uid)
 // 聊天页 DmListView 按 talkerMid 动态切换、管理后台页各有独立状态，均不缓存。
 const messagePageCacheNames = [
   'DmWhisperLayout',
+  'DmStrangerListView',
   'ReplyListView',
   'AtListView',
   'LikeListView',

@@ -457,12 +457,11 @@ const routes: CustomRouteRecordRaw[] = [
       {
         path: 'approval-center',
         name: 'RPA_BROWSER_APPROVAL_CENTER',
-        component: () => import('@/views/rpa-browser/ApprovalCenter.vue'),
+        component: () => import('@/views/admin/ApprovalCenter.vue'),
         meta: {
           title: '审批中心',
-          titleI18nKey: 'nav.approvalCenter',
           icon: IconConnection,
-          description: '提交公开审批申请并查看我的申请',
+          description: '提交公开审批申请并查看我的审批进度',
           order: 9,
           showInHome: false,
           isHeaderShow: true
@@ -526,6 +525,13 @@ const routes: CustomRouteRecordRaw[] = [
             name: 'MESSAGE_WHISPER_HOME',
             component: () => import('@/views/message/MessageEmptyView.vue'),
             meta: { title: '我的消息' }
+          },
+          {
+            // 陌生人私信分类子页：与普通 DM 共用聊天视图，仅列表查询参数不同
+            path: 'stranger',
+            name: 'MESSAGE_WHISPER_STRANGER',
+            component: () => import('@/views/message/DmStrangerListView.vue'),
+            meta: { title: '陌生人私信' }
           },
           {
             path: ':talkerId',
@@ -677,6 +683,16 @@ const routes: CustomRouteRecordRaw[] = [
         name: 'ADMIN_RPA_APPROVAL',
         component: () => import('@/views/rpa-browser/admin/ApprovalAdmin.vue'),
         meta: { title: '操作审批', requiresAdmin: true, hidden: true }
+      },
+      {
+        path: 'rpa/approval-center',
+        name: 'ADMIN_APPROVAL_CENTER',
+        component: () => import('@/views/admin/ApprovalCenter.vue'),
+        meta: {
+          title: '审批中心',
+          requiresAdmin: true,
+          hidden: true
+        }
       },
       {
         path: 'rpa/report',

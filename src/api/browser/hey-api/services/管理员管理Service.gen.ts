@@ -3,7 +3,7 @@
 import type { RequestResult } from '../client';
 import { client } from '../client.gen';
 import type { Options } from '../sdk.gen';
-import type { AttachTagApiAdminRpaTagAttachPostData, AttachTagApiAdminRpaTagAttachPostErrors, AttachTagApiAdminRpaTagAttachPostResponses, BanUserApiAdminRpaBanCreatePostData, BanUserApiAdminRpaBanCreatePostErrors, BanUserApiAdminRpaBanCreatePostResponses, CertifyApiAdminRpaCertificationCertifyPostData, CertifyApiAdminRpaCertificationCertifyPostErrors, CertifyApiAdminRpaCertificationCertifyPostResponses, CreateTagApiAdminRpaTagCreatePostData, CreateTagApiAdminRpaTagCreatePostErrors, CreateTagApiAdminRpaTagCreatePostResponses, DeleteTagApiAdminRpaTagDeletePostData, DeleteTagApiAdminRpaTagDeletePostErrors, DeleteTagApiAdminRpaTagDeletePostResponses, DetachTagApiAdminRpaTagDetachPostData, DetachTagApiAdminRpaTagDetachPostErrors, DetachTagApiAdminRpaTagDetachPostResponses, GetAllSessionsApiAdminRpaSessionsAllPostData, GetAllSessionsApiAdminRpaSessionsAllPostResponses, GetBanStatusApiAdminRpaBanStatusPostData, GetBanStatusApiAdminRpaBanStatusPostErrors, GetBanStatusApiAdminRpaBanStatusPostResponses, GetBrowserSessionConfigApiAdminRpaConfigBrowserSessionGetData, GetBrowserSessionConfigApiAdminRpaConfigBrowserSessionGetResponses, GetPermissionsApiAdminRpaPermissionsGetPostData, GetPermissionsApiAdminRpaPermissionsGetPostResponses, GrantAdminApiAdminRpaRoleGrantPostData, GrantAdminApiAdminRpaRoleGrantPostErrors, GrantAdminApiAdminRpaRoleGrantPostResponses, LiftUserBanApiAdminRpaBanLiftPostData, LiftUserBanApiAdminRpaBanLiftPostErrors, LiftUserBanApiAdminRpaBanLiftPostResponses, ListAdminsApiAdminRpaRoleListPostData, ListAdminsApiAdminRpaRoleListPostErrors, ListAdminsApiAdminRpaRoleListPostResponses, ListApprovalsApiAdminRpaApprovalListPostData, ListApprovalsApiAdminRpaApprovalListPostErrors, ListApprovalsApiAdminRpaApprovalListPostResponses, ListAuditApiAdminRpaAuditListPostData, ListAuditApiAdminRpaAuditListPostErrors, ListAuditApiAdminRpaAuditListPostResponses, ListBansApiAdminRpaBanListPostData, ListBansApiAdminRpaBanListPostErrors, ListBansApiAdminRpaBanListPostResponses, ListCertificationsApiAdminRpaCertificationListPostData, ListCertificationsApiAdminRpaCertificationListPostErrors, ListCertificationsApiAdminRpaCertificationListPostResponses, ListTagsApiAdminRpaTagListPostData, ListTagsApiAdminRpaTagListPostErrors, ListTagsApiAdminRpaTagListPostResponses, ListTagsByTargetApiAdminRpaTagListByTargetPostData, ListTagsByTargetApiAdminRpaTagListByTargetPostErrors, ListTagsByTargetApiAdminRpaTagListByTargetPostResponses, ResetPermissionsApiAdminRpaPermissionsResetPostData, ResetPermissionsApiAdminRpaPermissionsResetPostResponses, ReviewApprovalApiAdminRpaApprovalReviewPostData, ReviewApprovalApiAdminRpaApprovalReviewPostErrors, ReviewApprovalApiAdminRpaApprovalReviewPostResponses, RevokeAdminApiAdminRpaRoleRevokePostData, RevokeAdminApiAdminRpaRoleRevokePostErrors, RevokeAdminApiAdminRpaRoleRevokePostResponses, RevokeCertificationApiAdminRpaCertificationRevokePostData, RevokeCertificationApiAdminRpaCertificationRevokePostErrors, RevokeCertificationApiAdminRpaCertificationRevokePostResponses, RoleMeApiAdminRpaRoleMePostData, RoleMeApiAdminRpaRoleMePostErrors, RoleMeApiAdminRpaRoleMePostResponses, SubmitApprovalApiAdminRpaApprovalSubmitPostData, SubmitApprovalApiAdminRpaApprovalSubmitPostErrors, SubmitApprovalApiAdminRpaApprovalSubmitPostResponses, UpdateBrowserSessionConfigApiAdminRpaConfigBrowserSessionPostData, UpdateBrowserSessionConfigApiAdminRpaConfigBrowserSessionPostErrors, UpdateBrowserSessionConfigApiAdminRpaConfigBrowserSessionPostResponses, UpdatePermissionsApiAdminRpaPermissionsUpdatePostData, UpdatePermissionsApiAdminRpaPermissionsUpdatePostErrors, UpdatePermissionsApiAdminRpaPermissionsUpdatePostResponses, UpdateTagApiAdminRpaTagUpdatePostData, UpdateTagApiAdminRpaTagUpdatePostErrors, UpdateTagApiAdminRpaTagUpdatePostResponses } from '../types.gen';
+import type { AttachTagApiAdminRpaTagAttachPostData, AttachTagApiAdminRpaTagAttachPostErrors, AttachTagApiAdminRpaTagAttachPostResponses, BanUserApiAdminRpaBanCreatePostData, BanUserApiAdminRpaBanCreatePostErrors, BanUserApiAdminRpaBanCreatePostResponses, CancelApprovalApiAdminRpaApprovalCancelPostData, CancelApprovalApiAdminRpaApprovalCancelPostErrors, CancelApprovalApiAdminRpaApprovalCancelPostResponses, CertifyApiAdminRpaCertificationCertifyPostData, CertifyApiAdminRpaCertificationCertifyPostErrors, CertifyApiAdminRpaCertificationCertifyPostResponses, CreateTagApiAdminRpaTagCreatePostData, CreateTagApiAdminRpaTagCreatePostErrors, CreateTagApiAdminRpaTagCreatePostResponses, DeleteApprovalApiAdminRpaApprovalDeletePostData, DeleteApprovalApiAdminRpaApprovalDeletePostErrors, DeleteApprovalApiAdminRpaApprovalDeletePostResponses, DeleteTagApiAdminRpaTagDeletePostData, DeleteTagApiAdminRpaTagDeletePostErrors, DeleteTagApiAdminRpaTagDeletePostResponses, DetachTagApiAdminRpaTagDetachPostData, DetachTagApiAdminRpaTagDetachPostErrors, DetachTagApiAdminRpaTagDetachPostResponses, GetAllSessionsApiAdminRpaSessionsAllPostData, GetAllSessionsApiAdminRpaSessionsAllPostResponses, GetBanStatusApiAdminRpaBanStatusPostData, GetBanStatusApiAdminRpaBanStatusPostErrors, GetBanStatusApiAdminRpaBanStatusPostResponses, GetBrowserSessionConfigApiAdminRpaConfigBrowserSessionGetData, GetBrowserSessionConfigApiAdminRpaConfigBrowserSessionGetResponses, GetPermissionsApiAdminRpaPermissionsGetPostData, GetPermissionsApiAdminRpaPermissionsGetPostResponses, GrantAdminApiAdminRpaRoleGrantPostData, GrantAdminApiAdminRpaRoleGrantPostErrors, GrantAdminApiAdminRpaRoleGrantPostResponses, LiftUserBanApiAdminRpaBanLiftPostData, LiftUserBanApiAdminRpaBanLiftPostErrors, LiftUserBanApiAdminRpaBanLiftPostResponses, ListAdminsApiAdminRpaRoleListPostData, ListAdminsApiAdminRpaRoleListPostErrors, ListAdminsApiAdminRpaRoleListPostResponses, ListApprovalsApiAdminRpaApprovalListPostData, ListApprovalsApiAdminRpaApprovalListPostErrors, ListApprovalsApiAdminRpaApprovalListPostResponses, ListAuditApiAdminRpaAuditListPostData, ListAuditApiAdminRpaAuditListPostErrors, ListAuditApiAdminRpaAuditListPostResponses, ListBansApiAdminRpaBanListPostData, ListBansApiAdminRpaBanListPostErrors, ListBansApiAdminRpaBanListPostResponses, ListCertificationsApiAdminRpaCertificationListPostData, ListCertificationsApiAdminRpaCertificationListPostErrors, ListCertificationsApiAdminRpaCertificationListPostResponses, ListTagsApiAdminRpaTagListPostData, ListTagsApiAdminRpaTagListPostErrors, ListTagsApiAdminRpaTagListPostResponses, ListTagsByTargetApiAdminRpaTagListByTargetPostData, ListTagsByTargetApiAdminRpaTagListByTargetPostErrors, ListTagsByTargetApiAdminRpaTagListByTargetPostResponses, ResetPermissionsApiAdminRpaPermissionsResetPostData, ResetPermissionsApiAdminRpaPermissionsResetPostResponses, ReviewApprovalApiAdminRpaApprovalReviewPostData, ReviewApprovalApiAdminRpaApprovalReviewPostErrors, ReviewApprovalApiAdminRpaApprovalReviewPostResponses, RevokeAdminApiAdminRpaRoleRevokePostData, RevokeAdminApiAdminRpaRoleRevokePostErrors, RevokeAdminApiAdminRpaRoleRevokePostResponses, RevokeCertificationApiAdminRpaCertificationRevokePostData, RevokeCertificationApiAdminRpaCertificationRevokePostErrors, RevokeCertificationApiAdminRpaCertificationRevokePostResponses, RoleMeApiAdminRpaRoleMePostData, RoleMeApiAdminRpaRoleMePostErrors, RoleMeApiAdminRpaRoleMePostResponses, SearchResourcesApiAdminRpaApprovalResourcesPostData, SearchResourcesApiAdminRpaApprovalResourcesPostErrors, SearchResourcesApiAdminRpaApprovalResourcesPostResponses, SubmitApprovalApiAdminRpaApprovalSubmitPostData, SubmitApprovalApiAdminRpaApprovalSubmitPostErrors, SubmitApprovalApiAdminRpaApprovalSubmitPostResponses, UpdateBrowserSessionConfigApiAdminRpaConfigBrowserSessionPostData, UpdateBrowserSessionConfigApiAdminRpaConfigBrowserSessionPostErrors, UpdateBrowserSessionConfigApiAdminRpaConfigBrowserSessionPostResponses, UpdatePermissionsApiAdminRpaPermissionsUpdatePostData, UpdatePermissionsApiAdminRpaPermissionsUpdatePostErrors, UpdatePermissionsApiAdminRpaPermissionsUpdatePostResponses, UpdateTagApiAdminRpaTagUpdatePostData, UpdateTagApiAdminRpaTagUpdatePostErrors, UpdateTagApiAdminRpaTagUpdatePostResponses } from '../types.gen';
 
 export class 管理员管理Service {
     /**
@@ -410,6 +410,108 @@ export class 管理员管理Service {
         return (options.client ?? client).post<ReviewApprovalApiAdminRpaApprovalReviewPostResponses, ReviewApprovalApiAdminRpaApprovalReviewPostErrors, ThrowOnError, 'data'>({
             responseStyle: 'data',
             url: '/api/admin/rpa/approval/review',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    /**
+     * Cancel Approval
+     *
+     * 撤回审批（仅可撤回自己提交且仍为待审核的审批）
+     */
+    public static cancelApprovalApiAdminRpaApprovalCancelPost<ThrowOnError extends boolean = false>(options: Options<CancelApprovalApiAdminRpaApprovalCancelPostData, ThrowOnError>): RequestResult<CancelApprovalApiAdminRpaApprovalCancelPostResponses, CancelApprovalApiAdminRpaApprovalCancelPostErrors, ThrowOnError, 'data'> {
+        return (options.client ?? client).post<CancelApprovalApiAdminRpaApprovalCancelPostResponses, CancelApprovalApiAdminRpaApprovalCancelPostErrors, ThrowOnError, 'data'>({
+            responseStyle: 'data',
+            url: '/api/admin/rpa/approval/cancel',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    /**
+     * Cancel Approval
+     *
+     * 撤回审批（仅可撤回自己提交且仍为待审核的审批）
+     */
+    public static cancelApprovalApiAdminRpaApprovalCancelPost2<ThrowOnError extends boolean = false>(options: Options<CancelApprovalApiAdminRpaApprovalCancelPostData, ThrowOnError>): RequestResult<CancelApprovalApiAdminRpaApprovalCancelPostResponses, CancelApprovalApiAdminRpaApprovalCancelPostErrors, ThrowOnError, 'data'> {
+        return (options.client ?? client).post<CancelApprovalApiAdminRpaApprovalCancelPostResponses, CancelApprovalApiAdminRpaApprovalCancelPostErrors, ThrowOnError, 'data'>({
+            responseStyle: 'data',
+            url: '/api/admin/rpa/approval/cancel',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    /**
+     * Delete Approval
+     *
+     * 删除自己的审批记录（待审核、已通过、已驳回均可删除）
+     */
+    public static deleteApprovalApiAdminRpaApprovalDeletePost<ThrowOnError extends boolean = false>(options: Options<DeleteApprovalApiAdminRpaApprovalDeletePostData, ThrowOnError>): RequestResult<DeleteApprovalApiAdminRpaApprovalDeletePostResponses, DeleteApprovalApiAdminRpaApprovalDeletePostErrors, ThrowOnError, 'data'> {
+        return (options.client ?? client).post<DeleteApprovalApiAdminRpaApprovalDeletePostResponses, DeleteApprovalApiAdminRpaApprovalDeletePostErrors, ThrowOnError, 'data'>({
+            responseStyle: 'data',
+            url: '/api/admin/rpa/approval/delete',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    /**
+     * Delete Approval
+     *
+     * 删除自己的审批记录（待审核、已通过、已驳回均可删除）
+     */
+    public static deleteApprovalApiAdminRpaApprovalDeletePost2<ThrowOnError extends boolean = false>(options: Options<DeleteApprovalApiAdminRpaApprovalDeletePostData, ThrowOnError>): RequestResult<DeleteApprovalApiAdminRpaApprovalDeletePostResponses, DeleteApprovalApiAdminRpaApprovalDeletePostErrors, ThrowOnError, 'data'> {
+        return (options.client ?? client).post<DeleteApprovalApiAdminRpaApprovalDeletePostResponses, DeleteApprovalApiAdminRpaApprovalDeletePostErrors, ThrowOnError, 'data'>({
+            responseStyle: 'data',
+            url: '/api/admin/rpa/approval/delete',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    /**
+     * Search Resources
+     *
+     * 按名称搜索当前用户自己的资源，用于审批提交时的下拉选择
+     */
+    public static searchResourcesApiAdminRpaApprovalResourcesPost<ThrowOnError extends boolean = false>(options: Options<SearchResourcesApiAdminRpaApprovalResourcesPostData, ThrowOnError>): RequestResult<SearchResourcesApiAdminRpaApprovalResourcesPostResponses, SearchResourcesApiAdminRpaApprovalResourcesPostErrors, ThrowOnError, 'data'> {
+        return (options.client ?? client).post<SearchResourcesApiAdminRpaApprovalResourcesPostResponses, SearchResourcesApiAdminRpaApprovalResourcesPostErrors, ThrowOnError, 'data'>({
+            responseStyle: 'data',
+            url: '/api/admin/rpa/approval/resources',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    /**
+     * Search Resources
+     *
+     * 按名称搜索当前用户自己的资源，用于审批提交时的下拉选择
+     */
+    public static searchResourcesApiAdminRpaApprovalResourcesPost2<ThrowOnError extends boolean = false>(options: Options<SearchResourcesApiAdminRpaApprovalResourcesPostData, ThrowOnError>): RequestResult<SearchResourcesApiAdminRpaApprovalResourcesPostResponses, SearchResourcesApiAdminRpaApprovalResourcesPostErrors, ThrowOnError, 'data'> {
+        return (options.client ?? client).post<SearchResourcesApiAdminRpaApprovalResourcesPostResponses, SearchResourcesApiAdminRpaApprovalResourcesPostErrors, ThrowOnError, 'data'>({
+            responseStyle: 'data',
+            url: '/api/admin/rpa/approval/resources',
             ...options,
             headers: {
                 'Content-Type': 'application/json',

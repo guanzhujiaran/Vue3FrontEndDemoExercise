@@ -1986,6 +1986,10 @@ export type DmSessionItem = {
     unread_count?: number;
     relation?: DmRelationEnum;
     /**
+     * 会话类型：SINGLE=普通 DM；STRANGER=陌生人私信分类
+     */
+    session_type?: DmSessionTypeEnum;
+    /**
      * Is Top
      *
      * 是否置顶（= top_ts != 0，兼容 flag 用法）
@@ -2030,16 +2034,52 @@ export type DmSessionListResp = {
     /**
      * Unread Total
      *
-     * 全部会话未读数之和
+     * 主列表（SINGLE）未读数之和
      */
     unread_total?: number;
     /**
      * Stranger Unread
      *
-     * 陌生人会话未读数之和
+     * 陌生人分类（STRANGER）未读数之和
      */
     stranger_unread?: number;
+    /**
+     * Stranger Total
+     *
+     * 陌生人分类（STRANGER）会话总数（用于聚合条 [N 条] 副标题）
+     */
+    stranger_total?: number;
+    /**
+     * Stranger Dm Intercept Enabled
+     *
+     * 当前用户是否开启了「陌生人私信拦截」（recv_stranger_dm=false）
+     */
+    stranger_dm_intercept_enabled?: boolean;
 };
+
+/**
+ * DmSessionTypeEnum
+ *
+ * 枚举选项：
+ * - SINGLE: 1
+ * - STRANGER: 2
+ */
+export const DmSessionTypeEnum = { /**
+     * SINGLE
+     */
+    SINGLE: 1, /**
+     * STRANGER
+     */
+    STRANGER: 2 } as const;
+
+/**
+ * DmSessionTypeEnum
+ *
+ * 枚举选项：
+ * - SINGLE: 1
+ * - STRANGER: 2
+ */
+export type DmSessionTypeEnum = typeof DmSessionTypeEnum[keyof typeof DmSessionTypeEnum];
 
 /**
  * DmStatsResp
@@ -10413,6 +10453,10 @@ export type DmSessionItemWritable = {
     unread_count?: number;
     relation?: DmRelationEnum;
     /**
+     * 会话类型：SINGLE=普通 DM；STRANGER=陌生人私信分类
+     */
+    session_type?: DmSessionTypeEnum;
+    /**
      * Is Top
      *
      * 是否置顶（= top_ts != 0，兼容 flag 用法）
@@ -10449,15 +10493,27 @@ export type DmSessionListRespWritable = {
     /**
      * Unread Total
      *
-     * 全部会话未读数之和
+     * 主列表（SINGLE）未读数之和
      */
     unread_total?: number;
     /**
      * Stranger Unread
      *
-     * 陌生人会话未读数之和
+     * 陌生人分类（STRANGER）未读数之和
      */
     stranger_unread?: number;
+    /**
+     * Stranger Total
+     *
+     * 陌生人分类（STRANGER）会话总数（用于聚合条 [N 条] 副标题）
+     */
+    stranger_total?: number;
+    /**
+     * Stranger Dm Intercept Enabled
+     *
+     * 当前用户是否开启了「陌生人私信拦截」（recv_stranger_dm=false）
+     */
+    stranger_dm_intercept_enabled?: boolean;
 };
 
 /**
@@ -19622,6 +19678,12 @@ export type ListSessionsApiV1MessageDmSessionsGetData = {
          * normal=主列表；stranger=陌生人分组；不传=全部
          */
         relation?: DmRelationEnum | null;
+        /**
+         * Session Type
+         *
+         * single=主 DM 列表；stranger=陌生人分类（被拦截消息归此处）；不传=按 relation 过滤
+         */
+        session_type?: DmSessionTypeEnum | null;
         /**
          * Page Num
          */

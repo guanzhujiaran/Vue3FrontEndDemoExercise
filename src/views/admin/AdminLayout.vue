@@ -6,7 +6,7 @@
 
 <script setup lang="ts">
 import { computed, type Component } from 'vue'
-import { Bell, ChatDotRound, Comment, Key, Checked, Collection, Avatar, Flag, Stamp, Warning, Document, Medal, CollectionTag, User } from '@element-plus/icons-vue'
+import { Bell, ChatDotRound, Comment, Key, Checked, Collection, Avatar, Flag, Stamp, Warning, Document, Medal, CollectionTag, User, Promotion } from '@element-plus/icons-vue'
 import icShoucang from '@/assets/svgs/audit/shoucang.svg?component'
 import { useRpaAdminStore } from '@/stores/rpa_admin'
 import { useMessageAdminStore } from '@/stores/message_admin'
@@ -40,6 +40,7 @@ const navGroups = computed<NavGroup[]>(() => {
   const groups: NavGroup[] = []
   if (isRpaAdmin.value) {
     const rpaItems: NavItem[] = [
+      { name: 'ADMIN_APPROVAL_CENTER', title: '审批中心', icon: Promotion },
       { name: 'ADMIN_RPA_APPROVAL', title: '操作审批', icon: Stamp },
       { name: 'ADMIN_RPA_REPORT', title: '社区举报', icon: Warning },
       { name: 'ADMIN_RPA_AUDIT', title: '操作审计', icon: Document },

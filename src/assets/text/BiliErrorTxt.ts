@@ -22,6 +22,7 @@ type BiliErrorRouteToType = {
   not_found: BiliErrorDetailType
   unauthorized: BiliErrorDetailType
   not_logged_in: BiliErrorDetailType
+  space_login_required: BiliErrorDetailType
   others_lot_dyn_login_required: BiliErrorDetailType
   rpa_browser_login_required: BiliErrorDetailType
   message_login_required: BiliErrorDetailType
@@ -54,6 +55,15 @@ export const BiliErrorRouteToTxt: BiliErrorRouteToType = {
     error_description: '抱歉，您还未登录，请先登录后再访问用户中心',
     btn_text: '立即登录',
     action: 'login'
+  },
+  space_login_required: {
+    error_img_src: BiliImg.error.un_authorized,
+    error_msg: '未登录',
+    error_description: '抱歉，您还未登录，请先登录后再访问个人空间',
+    btn_text: '返回首页',
+    route_link: {
+      name: RouteName.HOME
+    }
   },
   others_lot_dyn_login_required: {
     error_img_src: BiliImg.error.un_authorized,

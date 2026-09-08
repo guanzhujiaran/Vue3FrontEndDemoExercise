@@ -2,6 +2,42 @@
   <div class="dm-whisper-layout flex h-full overflow-hidden rounded-lg bg-bg">
     <!-- 左侧：最近消息列表（常驻，不受右侧路由切换影响）。直接用 LoadingMoreContainer 承载滚动与无限加载 -->
     <div class="dm-whisper-layout__sidebar flex w-50 flex-col border-r border-border-lighter bg-bg">
+      <!-- 陌生人私信聚合条：参考 B 站「我的应援团」等集合分类——主列表之上常驻一行
+           「陌生人私信」，点击进入专门的陌生人子列表（whisper/stranger）。
+           红点与 [N条] 副标题取自主列表响应里的 stranger_unread / stranger_total，
+           本身不触发额外请求，符合「点开之后再加载具体内容」的懒加载语义。 -->
+      <div
+        class="dm-whisper-layout__stranger-aggregate flex cursor-pointer items-center gap-3 border-b border-border-lighter px-4 py-3 transition-colors"
+        :class="{ 'bg-fill-light': isStrangerView }"
+        @click="enterStrangerList"
+        v-if="showStrangerAggregate"
+      >
+        <div class="relative shrink-0">
+          <div class="dm-whisper-layout__stranger-icon flex h-12 w-12 items-center justify-center rounded-full bg-bg-overlay text-text-secondary">
+            <el-icon :size="22"><ChatLineRound /></el-icon>
+          </div>
+          <span
+            v-if="strangerUnread > 0"
+            class="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-msg-pink px-1 text-xs text-white"
+          >
+            {{ strangerUnread > 99 ? '99+' : strangerUnread }}
+          </span>
+        </div>
+        <div class="min-w-0 flex-1">
+          <div class="mb-1 flex items-center justify-between gap-2">
+            <span class="truncate text-sm font-medium text-text-primary">
+              {{ t('message.strangerDmAggregate') }}
+            </span>
+          </div>
+          <p class="line-clamp-1 text-xs text-text-secondary">
+            {{
+              strangerUnread > 0
+                ? t('message.strangerDmNewMessages', { count: strangerUnread })
+                : ' '
+            }}
+          </p>
+        </div>
+      </div>
       <LoadingMoreContainer
         class="dm-whisper-layout__list"
         fill-parent
@@ -82,7 +118,8 @@
 import { computed, onActivated, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { fetchDmSessions, type DmSessionItem } from '@/api/notify/message-api'
+import { ChatLineRound } from '@element-plus/icons-vue'
+import { fetchDmSessions, DmSessionType, type DmSessionItem } from '@/api/notify/message-api'
 import { BiliImg } from '@/assets/img/BiliImg.ts'
 import LoadingMoreContainer from '@/components/CommonCompo/Bili-Container-Compo/LoadingMoreContainer.vue'
 import EmptyState from '@/components/message/EmptyState.vue'
@@ -107,12 +144,22 @@ const isMore = ref(true)
 const isError = ref(false)
 const total = ref(0)
 const page = ref(1)
+// 陌生人分类聚合：取自最近一次主列表响应（与列表分页无关，list_sessions 单次返回全局）
+const strangerUnread = ref(0)
+const strangerTotal = ref(0)
+// 拦截开关（recv_stranger_dm=false）。聚合条展示条件：开关已开启 且 确有 STRANGER 会话
+const strangerInterceptEnabled = ref(false)
+const showStrangerAggregate = computed(
+  () => strangerInterceptEnabled.value && strangerTotal.value > 0
+)
 
 // 当前路由选中的 talker（用于左侧高亮 + 给右侧聊天页传递昵称/头像）
 const selectedTalkerId = computed(() => String(route.params.talkerId ?? ''))
 const currentTalker = computed(() =>
   items.value.find((s) => String(s.talker_mid) === selectedTalkerId.value)
 )
+// 当前是否处于「陌生人私信」子页（用于聚合条高亮）
+const isStrangerView = computed(() => route.name === 'MESSAGE_WHISPER_STRANGER')
 
 function resetList() {
   items.value = []
@@ -127,17 +174,31 @@ async function handleLoad() {
   isLoading.value = true
   isError.value = false
   try {
-    const list = await fetchDmSessions({ page: page.value, size: PAGE_SIZE })
+    // 主侧栏只展示 SINGLE 类型的会话；STRANGER 由聚合条 + whisper/stranger 子页承载。
+    const list = await fetchDmSessions({
+      page: page.value,
+      size: PAGE_SIZE,
+      session_type: DmSessionType.SINGLE
+    })
     const pageItems = list.items ?? []
     items.value = page.value === 1 ? pageItems : [...items.value, ...pageItems]
     total.value = list.total ?? 0
     page.value += 1
     isMore.value = pageItems.length > 0 && items.value.length < total.value
+    // 每次拉取都带回聚合统计与拦截开关状态；非首页分页不重复取（服务端每次都返回，浪费不大）
+    strangerUnread.value = list.stranger_unread ?? 0
+    strangerTotal.value = list.stranger_total ?? 0
+    strangerInterceptEnabled.value = list.stranger_dm_intercept_enabled ?? false
   } catch {
     isError.value = true
   } finally {
     isLoading.value = false
   }
+}
+
+// 点击聚合条：进入陌生人分类子页（whisper/stranger），由其独立请求 STRANGER 会话
+function enterStrangerList() {
+  router.push({ name: 'MESSAGE_WHISPER_STRANGER' })
 }
 
 function onRetry() {
@@ -186,7 +247,8 @@ onActivated(() => {
   background: var(--color-border-light);
   border-radius: 3px;
 }
-.dm-whisper-layout__item:hover {
+.dm-whisper-layout__item:hover,
+.dm-whisper-layout__stranger-aggregate:hover {
   background: var(--color-fill-lighter);
 }
 </style>

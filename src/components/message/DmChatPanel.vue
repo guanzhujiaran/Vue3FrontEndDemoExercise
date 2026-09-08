@@ -96,10 +96,11 @@
                   trigger="contextmenu"
                   :show-timeout="0"
                   :hide-timeout="100"
+                  class="dm-chat-panel__msg-main min-w-0 max-w-[70%]"
                   @command="(cmd: string) => onMessageCommand(msg, cmd)"
                 >
                   <div
-                    class="flex max-w-[70%] flex-col"
+                    class="dm-chat-panel__msg-body flex min-w-0 flex-col"
                     :class="isSelf(msg) ? 'items-end' : 'items-start'"
                   >
                     <!-- 对方昵称 -->
@@ -113,19 +114,19 @@
                     <!-- 气泡 -->
                     <div
                       v-if="msg.audit_state === ResourceAuditStatusEnum.REJECTED || msg.audit_state === ResourceAuditStatusEnum.HIDDEN"
-                      class="dm-chat-panel__bubble dm-chat-panel__bubble--system rounded-lg px-4 py-2.5 text-sm"
+                      class="dm-chat-panel__bubble dm-chat-panel__bubble--system max-w-full break-words rounded-lg px-4 py-2.5 text-sm"
                     >
                       {{ msg.audit_state === ResourceAuditStatusEnum.HIDDEN ? t('message.dmHidden') : t('message.dmRejected') }}
                     </div>
                     <div
                       v-else-if="msg.msg_status === DmMsgStatusEnum.RECALLED"
-                      class="dm-chat-panel__bubble dm-chat-panel__bubble--system rounded-lg px-4 py-2.5 text-sm"
+                      class="dm-chat-panel__bubble dm-chat-panel__bubble--system max-w-full break-words rounded-lg px-4 py-2.5 text-sm"
                     >
                       {{ t('message.dmRecalled') }}
                     </div>
                     <div
                       v-else
-                      class="dm-chat-panel__bubble rounded-lg px-4 py-2.5 text-sm leading-relaxed"
+                      class="dm-chat-panel__bubble max-w-full break-words rounded-lg px-4 py-2.5 text-sm leading-relaxed"
                       :class="
                         isSelf(msg)
                           ? 'bg-primary text-white'
@@ -682,10 +683,6 @@ defineExpose({ load })
 .dm-chat-panel__body::-webkit-scrollbar-thumb {
   background: var(--color-border-light);
   border-radius: 3px;
-}
-.dm-chat-panel__bubble {
-  max-width: 100%;
-  word-break: break-word;
 }
 .dm-chat-panel__bubble--system {
   background: var(--color-bg-overlay);

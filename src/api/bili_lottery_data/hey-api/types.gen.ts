@@ -2379,7 +2379,7 @@ export type StatsPlugin = {
      */
     readonly init_params: WorkerModel | null;
     /**
-     * 最后的参数
+     * 最后一个任务（WorkerModel，含参数与最终状态）
      */
     readonly end_params: WorkerModel | null;
     /**
@@ -2405,9 +2405,39 @@ export type StatsPlugin = {
     /**
      * Processed Items Count
      *
-     * 已处理的任务数量
+     * 已处理的尝试次数（含失败重试，非去重任务数）
      */
     readonly processed_items_count: number;
+    /**
+     * Attempt Count
+     *
+     * 尝试次数，与 processed_items_count 相同，语义更明确
+     */
+    readonly attempt_count: number;
+    /**
+     * Requeued Count
+     *
+     * 失败/超时后被重新入队重试的次数（这些任务后续可能重试成功）
+     */
+    readonly requeued_count: number;
+    /**
+     * Fail Count
+     *
+     * 最终失败次数（不再重试），不含已重排重试的任务
+     */
+    readonly fail_count: number;
+    /**
+     * Fail Attempt Count
+     *
+     * 失败的尝试次数 = 最终失败 + 重排重试
+     */
+    readonly fail_attempt_count: number;
+    /**
+     * Valid Count
+     *
+     * 有效数据数 = 成功数 - 空数据数
+     */
+    readonly valid_count: number;
     /**
      * Start Time
      *

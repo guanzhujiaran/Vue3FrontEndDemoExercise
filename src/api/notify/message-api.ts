@@ -311,24 +311,62 @@ export async function deleteEvent(ids: number[]): Promise<number> {
 // ---------------------------------------------------------------------------
 // 私信会话
 // ---------------------------------------------------------------------------
+/** 后端 `DmSessionTypeEnum` 数值（SDK 尚未生成此枚举，前端以字面量传入） */
+export const DmSessionType = {
+  SINGLE: 1,
+  STRANGER: 2
+} as const
+export type DmSessionTypeValue = (typeof DmSessionType)[keyof typeof DmSessionType]
+
+/**
+ * `DmSessionListResp` 的本地扩展：本次私信改造新增的陌生人分类字段
+ * （`stranger_unread` 已有，SDK 重新生成后即可去掉本扩展改用 SDK 类型）。
+ * hey-api 的 types.gen.ts 为生成代码，禁止手改，故在此以交叉类型补齐。
+ */
+export type DmSessionListWithStranger = DmSessionListResp & {
+  /** 陌生人分类（STRANGER）会话总数 */
+  stranger_total?: number
+  /** 当前用户是否开启「陌生人私信拦截」（recv_stranger_dm=false） */
+  stranger_dm_intercept_enabled?: boolean
+}
+
 export async function fetchDmSessions(
   params: {
     page?: number
     size?: number
     /** 会话关系筛选：直接传 `DmRelationEnum.NORMAL` / `DmRelationEnum.STRANGER` */
     relation?: DmRelation
+    /**
+     * 会话类型筛选：`SINGLE`=主 DM 列表；`STRANGER`=陌生人分类（被「陌生人私信拦截」
+     * 开关拦下的会话）。主侧栏应传 SINGLE，陌生人分类页传 STRANGER。
+     * SDK 尚未收录该参数（后端新增，hey-api 重新生成前以 Record 透传，参见 fetchDmMessages 中 direction 的处理）。
+     */
+    session_type?: DmSessionTypeValue
   } = {}
-): Promise<DmSessionListResp> {
-  return request<DmSessionListResp>(
+): Promise<DmSessionListWithStranger> {
+  // query 以 Record 承载以便透传 SDK 尚未收录的 session_type 参数
+  const query: Record<string, unknown> = {
+    relation: params.relation ?? null,
+    page_num: params.page ?? 1,
+    page_size: params.size ?? 20
+  }
+  if (params.session_type !== undefined) {
+    query.session_type = params.session_type
+  }
+  return request<DmSessionListWithStranger>(
     () =>
       MessageDmService.listSessionsApiV1MessageDmSessionsGet({
-        query: {
-          relation: params.relation ?? null,
-          page_num: params.page ?? 1,
-          page_size: params.size ?? 20
-        }
-      }),
-    { items: [], total: 0, unread_total: 0, stranger_unread: 0 }
+        query
+      } as Parameters<typeof MessageDmService.listSessionsApiV1MessageDmSessionsGet>[0]),
+    // 默认值补全陌生人分类聚合字段，前端按需取用
+    {
+      items: [],
+      total: 0,
+      unread_total: 0,
+      stranger_unread: 0,
+      stranger_total: 0,
+      stranger_dm_intercept_enabled: false
+    }
   )
 }
 

@@ -21,7 +21,9 @@
           {{ t('message.settingsStrangerDm') }}
           <span class="message-settings__tip text-text-placeholder">{{ t('message.settingsStrangerDmTip') }}</span>
         </div>
-        <!-- recv_stranger_dm=true 表示“接收陌生人私信”；而 UI 是“智能拦截”开关（开启=不接收=字段 false），故开关方向与字段相反 -->
+        <!-- recv_stranger_dm=true 表示“接收陌生人私信”；而 UI 是“智能拦截”开关（开启=不接收=字段 false），故开关方向与字段相反
+             后端口径：仅「陌生人」会被过滤——与你没有普通关系会话、且你从未主动给对方发过消息的用户；
+             命中后该消息只写入发送方视角，接收方不落索引、不建会话、不增未读。 -->
         <el-radio-group
           :model-value="form.recv_stranger_dm === false"
           @update:model-value="update('recv_stranger_dm', $event !== true)"
@@ -97,7 +99,8 @@ const form = reactive<MessageSettingPartial>({
   recv_like: true,
   recv_reply: true,
   recv_at: true,
-  recv_stranger_dm: false,
+  // 后端默认接收陌生人私信（拦截关闭），此处保持同默认，避免加载完成前开关显示成“已开启”
+  recv_stranger_dm: true,
   recv_notify: true,
   push_enabled: true,
   dnd_start_hour: null,

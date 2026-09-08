@@ -939,6 +939,34 @@ export type AdminStatusResponse = {
 };
 
 /**
+ * ApprovalCancelRequest
+ *
+ * 撤回审批请求：仅可撤回自己提交且仍处于待审核状态的审批
+ */
+export type ApprovalCancelRequest = {
+    /**
+     * Approval Id
+     *
+     * 审批单 ID
+     */
+    approval_id: number;
+};
+
+/**
+ * ApprovalDeleteRequest
+ *
+ * 删除审批请求：删除自己提交的审批记录
+ */
+export type ApprovalDeleteRequest = {
+    /**
+     * Approval Id
+     *
+     * 审批单 ID
+     */
+    approval_id: number;
+};
+
+/**
  * ApprovalItemResp
  *
  * 审批单响应
@@ -1022,6 +1050,12 @@ export type ApprovalListRequest = {
      * 按资源类型过滤
      */
     resource_type?: string | null;
+    /**
+     * Only Mine
+     *
+     * 仅查看当前请求用户自己的申请（优先级高于管理员可看全部），用于「我的申请」
+     */
+    only_mine?: boolean;
 };
 
 /**
@@ -4501,6 +4535,76 @@ export type PluginUpdateRequest = {
 };
 
 /**
+ * ResourceSearchItemResp
+ *
+ * 资源搜索结果项
+ */
+export type ResourceSearchItemResp = {
+    /**
+     * Resource Type
+     *
+     * 资源类型：action / workflow / plugin
+     */
+    resource_type: string;
+    /**
+     * Resource Id
+     *
+     * 资源业务 ID（提交审批时作为 resource_id）
+     */
+    resource_id: string;
+    /**
+     * Name
+     *
+     * 资源名称
+     */
+    name?: string;
+    /**
+     * Created At
+     *
+     * 资源创建时间
+     */
+    created_at?: string | null;
+};
+
+/**
+ * ResourceSearchRequest
+ *
+ * 按名称搜索当前用户自己的资源，用于审批提交时的下拉选择
+ */
+export type ResourceSearchRequest = {
+    /**
+     * Resource Type
+     *
+     * 资源类型：action / workflow / plugin
+     */
+    resource_type: string;
+    /**
+     * Keyword
+     *
+     * 按资源名称模糊搜索（可为空，返回自己的全部资源）
+     */
+    keyword?: string;
+    /**
+     * Per Page
+     *
+     * 最多返回条数
+     */
+    per_page?: number;
+};
+
+/**
+ * ResourceSearchResponse
+ *
+ * 资源搜索结果
+ */
+export type ResourceSearchResponse = {
+    /**
+     * Items
+     */
+    items?: Array<ResourceSearchItemResp>;
+};
+
+/**
  * ReviewApprovalRequest
  *
  * 审核审批请求（仅管理员/root）
@@ -5353,6 +5457,21 @@ export type StandardResponsePluginForkResponse = {
      */
     msg?: string;
     data?: PluginForkResponse | null;
+};
+
+/**
+ * StandardResponse[ResourceSearchResponse]
+ */
+export type StandardResponseResourceSearchResponse = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: ResourceSearchResponse | null;
 };
 
 /**
@@ -13221,6 +13340,219 @@ export type ReviewApprovalApiAdminRpaApprovalReviewPostResponses = {
 };
 
 export type ReviewApprovalApiAdminRpaApprovalReviewPostResponse = ReviewApprovalApiAdminRpaApprovalReviewPostResponses[keyof ReviewApprovalApiAdminRpaApprovalReviewPostResponses];
+
+export type CancelApprovalApiAdminRpaApprovalCancelPostData = {
+    body: ApprovalCancelRequest;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/admin/rpa/approval/cancel';
+};
+
+export type CancelApprovalApiAdminRpaApprovalCancelPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type CancelApprovalApiAdminRpaApprovalCancelPostError = CancelApprovalApiAdminRpaApprovalCancelPostErrors[keyof CancelApprovalApiAdminRpaApprovalCancelPostErrors];
+
+export type CancelApprovalApiAdminRpaApprovalCancelPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseApprovalItemResp;
+};
+
+export type CancelApprovalApiAdminRpaApprovalCancelPostResponse = CancelApprovalApiAdminRpaApprovalCancelPostResponses[keyof CancelApprovalApiAdminRpaApprovalCancelPostResponses];
+
+export type DeleteApprovalApiAdminRpaApprovalDeletePostData = {
+    body: ApprovalDeleteRequest;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/admin/rpa/approval/delete';
+};
+
+export type DeleteApprovalApiAdminRpaApprovalDeletePostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type DeleteApprovalApiAdminRpaApprovalDeletePostError = DeleteApprovalApiAdminRpaApprovalDeletePostErrors[keyof DeleteApprovalApiAdminRpaApprovalDeletePostErrors];
+
+export type DeleteApprovalApiAdminRpaApprovalDeletePostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseApprovalItemResp;
+};
+
+export type DeleteApprovalApiAdminRpaApprovalDeletePostResponse = DeleteApprovalApiAdminRpaApprovalDeletePostResponses[keyof DeleteApprovalApiAdminRpaApprovalDeletePostResponses];
+
+export type SearchResourcesApiAdminRpaApprovalResourcesPostData = {
+    body: ResourceSearchRequest;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/admin/rpa/approval/resources';
+};
+
+export type SearchResourcesApiAdminRpaApprovalResourcesPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type SearchResourcesApiAdminRpaApprovalResourcesPostError = SearchResourcesApiAdminRpaApprovalResourcesPostErrors[keyof SearchResourcesApiAdminRpaApprovalResourcesPostErrors];
+
+export type SearchResourcesApiAdminRpaApprovalResourcesPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseResourceSearchResponse;
+};
+
+export type SearchResourcesApiAdminRpaApprovalResourcesPostResponse = SearchResourcesApiAdminRpaApprovalResourcesPostResponses[keyof SearchResourcesApiAdminRpaApprovalResourcesPostResponses];
 
 export type CreateTagApiAdminRpaTagCreatePostData = {
     body: CreateTagRequest;

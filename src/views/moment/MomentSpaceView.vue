@@ -1,5 +1,14 @@
 <template>
-  <div class="moment-space flex-1 h-full flex flex-col bg-bg-page text-text-primary">
+  <!-- 未登录：BiliErrorRouteTo 提示未登录，倒计时/按钮返回首页 -->
+  <BiliErrorRouteTo
+    v-if="loginRequired"
+    class="moment-space__login-required"
+    :detail="BiliErrorRouteToTxt.space_login_required"
+  />
+  <div
+    v-else
+    class="moment-space flex-1 h-full flex flex-col bg-bg-page text-text-primary"
+  >
     <!-- 顶部横幅 + 头像信息 -->
     <section class="moment-space__header relative">
       <!-- 横幅背景 -->
@@ -332,6 +341,9 @@ import { useUserNavStore } from '@/stores/user_nav'
 import { BiliImg } from '@/assets/img/BiliImg'
 import biliMessage from '@/utils/message'
 import userApi from '@/api/user/user_api.ts'
+import { isLogin } from '@/api/user/utils.ts'
+import BiliErrorRouteTo from '@/components/CommonCompo/Bili-Feedback-Compo/BiliErrorRouteTo.vue'
+import { BiliErrorRouteToTxt } from '@/assets/text/BiliErrorTxt.ts'
 
 const route = useRoute()
 const router = useRouter()
@@ -346,6 +358,8 @@ const spaceMid = computed(() => routeMid.value ?? currentMid.value)
 const isOwnSpace = computed(() => routeMid.value === null || routeMid.value === currentMid.value)
 
 const publishVisible = ref(false)
+// `/app/space`（无 mid）且确认未登录：展示 BiliErrorRouteTo 未登录提示页
+const loginRequired = ref(false)
 const activeTab = ref<string>('')
 /** 2.25.0：登录态异步加载，activeTab 默认值改为响应式兜底（就绪后再定） */
 const resolvedActiveTab = computed(() =>
@@ -474,28 +488,42 @@ const visibleFavItems = computed(() =>
   favDynIds.value.map((id) => favItemsMap.value[id]).filter((x): x is MomentFeedItem => Boolean(x))
 )
 
-onMounted(loadFirst)
-
 /**
- * 2.25.0：等待登录态就绪后加载。
+ * 2.56.0：`/app/space`（无 mid，自身空间入口）登录态处理。
  * App.vue 的 checkLoginStatus 是 onMounted 异步的（nav 请求），空间页 setup 时
- * user_nav.uid 可能尚为空；自己空间（无 mid）若立即 loadFirst 会误报「请先登录」。
- * 因此：自己空间且 uid 未就绪 → 等待 uid 到达（watch 触发）后再 loadFirst。
+ * user_nav.uid 可能尚为空，不能以同步快照判定登录态：
+ * - `/app/space/:mid`（他人空间）→ 直接加载
+ * - `/app/space` 且 uid 已就绪（store 持久化）→ 302 到 `/app/space/{uid}`
+ * - `/app/space` 且 uid 未就绪 → 主动调 isLogin() 确认：
+ *   已登录（isLogin 内部会 save_user_nav）→ 跳转 uid 页；未登录 → 提示并引导返回首页
  */
 onMounted(() => {
-  if (!routeMid.value && !currentMid.value) {
-    // 自己空间但登录态未就绪：等 uid 就绪后再加载（不误报请先登录）
-    watch(
-      () => currentMid.value,
-      (v) => {
-        if (v) loadFirst()
-      },
-      { once: true }
-    )
-  } else {
+  if (routeMid.value) {
     loadFirst()
+    return
   }
+  if (currentMid.value) {
+    enterOwnSpace()
+    return
+  }
+  void confirmLoginAndEnter()
 })
+
+/** 登录态就绪后把 URL 归位到带 uid 的空间页（`/app/space/{uid}`，组件复用不重挂载） */
+function enterOwnSpace() {
+  router.replace({ name: 'MOMENT_USER_SPACE', params: { mid: currentMid.value } })
+  loadFirst()
+}
+
+/** uid 未就绪：主动确认登录态；未登录 → BiliErrorRouteTo 提示未登录并返回首页 */
+async function confirmLoginAndEnter() {
+  const [loggedIn, , user_nav] = await isLogin()
+  if (loggedIn && user_nav?.uid) {
+    enterOwnSpace()
+  } else {
+    loginRequired.value = true
+  }
+}
 
 async function loadFirst() {
   const mid = spaceMid.value
