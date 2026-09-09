@@ -1,12 +1,17 @@
 <template>
   <BiliSideNavLayout :nav-groups="navGroups">
-    <router-view />
+    <!-- 右侧主区缓存：切换左侧菜单 / 返回已访问页面时不重新挂载、不重新拉数据 -->
+    <router-view v-slot="{ Component, route }">
+      <keep-alive :max="12">
+        <component :is="Component" :key="String(route.name)" />
+      </keep-alive>
+    </router-view>
   </BiliSideNavLayout>
 </template>
 
 <script setup lang="ts">
 import { computed, type Component } from 'vue'
-import { Bell, ChatDotRound, Comment, Key, Checked, Collection, Avatar, Flag, Stamp, Warning, Document, Medal, CollectionTag, User, Promotion } from '@element-plus/icons-vue'
+import { Bell, ChatDotRound, Comment, Key, Checked, Collection, Avatar, Flag, Stamp, Warning, Document, Medal, CollectionTag, User } from '@element-plus/icons-vue'
 import icShoucang from '@/assets/svgs/audit/shoucang.svg?component'
 import { useRpaAdminStore } from '@/stores/rpa_admin'
 import { useMessageAdminStore } from '@/stores/message_admin'
@@ -40,7 +45,6 @@ const navGroups = computed<NavGroup[]>(() => {
   const groups: NavGroup[] = []
   if (isRpaAdmin.value) {
     const rpaItems: NavItem[] = [
-      { name: 'ADMIN_APPROVAL_CENTER', title: '审批中心', icon: Promotion },
       { name: 'ADMIN_RPA_APPROVAL', title: '操作审批', icon: Stamp },
       { name: 'ADMIN_RPA_REPORT', title: '社区举报', icon: Warning },
       { name: 'ADMIN_RPA_AUDIT', title: '操作审计', icon: Document },
@@ -58,18 +62,24 @@ const navGroups = computed<NavGroup[]>(() => {
     messageItems.push({ name: 'ADMIN_MESSAGE_DM', title: '私信审核', icon: ChatDotRound })
     messageItems.push({ name: 'ADMIN_MESSAGE_COMMENT', title: '评论审核', icon: Comment })
   }
-  if (isMessageRoot.value) {
-    messageItems.push({ name: 'ADMIN_MESSAGE_PERMISSION', title: '管理端权限', icon: Key })
-  }
   if (messageItems.length) {
     groups.push({ title: '消息管理端', shortTitle: '消息', items: messageItems })
   }
+  if (isMessageRoot.value) {
+    groups.push({
+      title: '权限设置',
+      items: [{ name: 'ADMIN_PERMISSION', title: '管理端权限', icon: Key }]
+    })
+  }
   if (isRpaAdmin.value) {
+    groups.push({
+      title: '举报审核',
+      items: [{ name: 'ADMIN_REPORT', title: '举报审核', icon: Flag }]
+    })
     groups.push({
       title: '动态管理端',
       shortTitle: '动态',
       items: [
-        { name: 'ADMIN_REPORT', title: '举报审核', icon: Flag },
         { name: 'ADMIN_MOMENT_AUDIT', title: '动态审核', icon: Checked },
         { name: 'ADMIN_MOMENT_TOPIC_AUDIT', title: '话题审核', icon: Collection }
       ]

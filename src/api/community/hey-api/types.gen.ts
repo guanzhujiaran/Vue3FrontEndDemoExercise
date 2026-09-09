@@ -17,9 +17,11 @@ export type AdminItem = {
      */
     granted_by: number;
     /**
-     * Permissions
+     * Biz Perms
      */
-    permissions: Array<string>;
+    biz_perms: {
+        [key: string]: number;
+    };
     /**
      * Note
      */
@@ -45,13 +47,94 @@ export type AdminStatusResponse = {
      */
     is_admin?: boolean;
     /**
-     * Permissions
+     * Biz Perms
      */
-    permissions?: Array<string>;
+    biz_perms?: {
+        [key: string]: number;
+    };
     /**
      * Mid
      */
     mid?: number;
+};
+
+/**
+ * AuditActionResp
+ *
+ * 通用审核动作响应：回显定位键，操作结果细节由各资源自行返回。
+ */
+export type AuditActionResp = {
+    bizType: InteractionBizTypeEnum;
+    /**
+     * Bizid
+     */
+    bizId: number;
+    /**
+     * Data
+     *
+     * 资源类返回的审核结果（各资源形态不同）
+     */
+    data?: {
+        [key: string]: unknown;
+    } | null;
+    /**
+     * Bizidstr
+     */
+    readonly bizIdStr: string | null;
+};
+
+/**
+ * AuditApproveReq
+ *
+ * 通用审核通过请求（计划书 §5.13）：按 `bizType` + `bizId` 定位资源。
+ */
+export type AuditApproveReq = {
+    /**
+     * 资源类型（InteractionBizTypeEnum 值）
+     */
+    bizType: InteractionBizTypeEnum;
+    /**
+     * Bizid
+     *
+     * 资源 ID（字符串，避免 19 位雪花 ID 精度丢失）
+     */
+    bizId: string;
+    /**
+     * Remark
+     *
+     * 审核备注
+     */
+    remark?: string | null;
+};
+
+/**
+ * AuditRejectReq
+ *
+ * 通用审核驳回请求（计划书 §5.13）：按 `bizType` + `bizId` 定位资源。
+ */
+export type AuditRejectReq = {
+    /**
+     * 资源类型（InteractionBizTypeEnum 值）
+     */
+    bizType: InteractionBizTypeEnum;
+    /**
+     * Bizid
+     *
+     * 资源 ID（字符串，避免 19 位雪花 ID 精度丢失）
+     */
+    bizId: string;
+    /**
+     * Rejectreason
+     *
+     * 驳回原因（通知作者）
+     */
+    rejectReason: string;
+    /**
+     * Remark
+     *
+     * 审核备注
+     */
+    remark?: string | null;
 };
 
 /**
@@ -114,6 +197,98 @@ export type AuditSourceInfo = {
      * Up Midstr
      */
     readonly up_midStr: string | null;
+};
+
+/**
+ * AuditStatisticsResp
+ *
+ * 通用审核统计响应（计划书 §5.13）：按业务域聚合的审核概览。
+ *
+ * - `byStatus` 键为各域状态名小写（与 AuditTypeCountRow 状态列同名）；
+ * - `byType` 仅在域有资源子类型维度时返回（动态 / 评论 / 举报），
+ * 话题 / 头像 / 封面 / 私信无子类型，响应中省略该字段（只有 status 维度）。
+ */
+export type AuditStatisticsResp = {
+    /**
+     * Total
+     */
+    total?: number;
+    /**
+     * Bystatus
+     */
+    byStatus?: {
+        [key: string]: number;
+    };
+    /**
+     * Bytype
+     *
+     * 按子类型分组明细；无子类型维度的域为 None（响应中省略）
+     */
+    byType?: Array<AuditTypeCountRow> | null;
+};
+
+/**
+ * AuditTypeCountRow
+ *
+ * byType 明细行：`type`/`total` 为公共列，状态列随域填充。
+ *
+ * 各域只写自己的状态列（资源审核 auditing/normal/rejected/hidden，
+ * 举报 pending/resolved/rejected），未涉及的列保持 None——
+ * 路由配 `response_model_exclude_none=True` 后 None 列不出现在响应里。
+ */
+export type AuditTypeCountRow = {
+    /**
+     * Type
+     *
+     * 子类型名（无子类型的域该行为空行/不产出）
+     */
+    type?: string;
+    /**
+     * Total
+     */
+    total?: number;
+    /**
+     * Auditing
+     *
+     * 审核中（资源审核域）
+     */
+    auditing?: number | null;
+    /**
+     * Normal
+     *
+     * 已过审（资源审核域）
+     */
+    normal?: number | null;
+    /**
+     * Rejected
+     *
+     * 已驳回（资源审核域 / 举报驳回）
+     */
+    rejected?: number | null;
+    /**
+     * Hidden
+     *
+     * 已下架（资源审核域）
+     */
+    hidden?: number | null;
+    /**
+     * Deleted
+     *
+     * 软删（当前仅评论域表达）
+     */
+    deleted?: number | null;
+    /**
+     * Pending
+     *
+     * 待处理（举报域）
+     */
+    pending?: number | null;
+    /**
+     * Resolved
+     *
+     * 已成立（举报域）
+     */
+    resolved?: number | null;
 };
 
 /**
@@ -3511,9 +3686,11 @@ export type GrantAdminReq = {
      */
     mid: number | string;
     /**
-     * Permissions
+     * Biz Perms
      */
-    permissions?: Array<string>;
+    biz_perms?: {
+        [key: string]: number;
+    };
     /**
      * Note
      */
@@ -3641,6 +3818,11 @@ export type InteractionActionTypeEnum = typeof InteractionActionTypeEnum[keyof t
  * - RPA_PLUGIN: 6
  * - COMMENT: 7
  * - USER: 8
+ * - TOPIC: 9
+ * - DM: 10
+ * - AVATAR: 11
+ * - FOLDER_COVER: 12
+ * - REPORT: 13
  */
 export const InteractionBizTypeEnum = {
     /**
@@ -3674,7 +3856,27 @@ export const InteractionBizTypeEnum = {
     /**
      * USER
      */
-    USER: 8
+    USER: 8,
+    /**
+     * TOPIC
+     */
+    TOPIC: 9,
+    /**
+     * DM
+     */
+    DM: 10,
+    /**
+     * AVATAR
+     */
+    AVATAR: 11,
+    /**
+     * FOLDER_COVER
+     */
+    FOLDER_COVER: 12,
+    /**
+     * REPORT
+     */
+    REPORT: 13
 } as const;
 
 /**
@@ -3689,6 +3891,11 @@ export const InteractionBizTypeEnum = {
  * - RPA_PLUGIN: 6
  * - COMMENT: 7
  * - USER: 8
+ * - TOPIC: 9
+ * - DM: 10
+ * - AVATAR: 11
+ * - FOLDER_COVER: 12
+ * - REPORT: 13
  */
 export type InteractionBizTypeEnum = typeof InteractionBizTypeEnum[keyof typeof InteractionBizTypeEnum];
 
@@ -4268,78 +4475,6 @@ export type MomentAuditRejectReq = {
      * 审核备注（选填）
      */
     remark?: string | null;
-};
-
-/**
- * MomentAuditStatisticsResp
- *
- * 动态审核总统计：各类型明细 + 全局状态汇总。
- */
-export type MomentAuditStatisticsResp = {
-    /**
-     * Bytype
-     *
-     * 各动态类型明细（含各状态计数）
-     */
-    byType?: Array<MomentAuditTypeStat>;
-    /**
-     * Bystatus
-     *
-     * 全局按审核状态汇总（auditing/normal/rejected/hidden）
-     */
-    byStatus?: {
-        [key: string]: number;
-    };
-    /**
-     * Total
-     *
-     * 动态总数
-     */
-    total?: number;
-};
-
-/**
- * MomentAuditTypeStat
- *
- * 单个动态类型的审核状态计数。
- */
-export type MomentAuditTypeStat = {
-    /**
-     * Dyntype
-     *
-     * 动态类型：WORD/FORWARD
-     */
-    dynType: string;
-    /**
-     * Auditing
-     *
-     * 审核中数量
-     */
-    auditing?: number;
-    /**
-     * Normal
-     *
-     * 已过审数量
-     */
-    normal?: number;
-    /**
-     * Rejected
-     *
-     * 已驳回数量
-     */
-    rejected?: number;
-    /**
-     * Hidden
-     *
-     * 已下架数量
-     */
-    hidden?: number;
-    /**
-     * Total
-     *
-     * 该类型合计
-     */
-    total?: number;
 };
 
 /**
@@ -6039,6 +6174,30 @@ export type MomentTopicSquareResp = {
      */
     updateNum?: number;
 };
+
+/**
+ * MomentTypeEnum
+ *
+ * 枚举选项：
+ * - FORWARD: 1
+ * - WORD: 6
+ */
+export const MomentTypeEnum = { /**
+     * FORWARD
+     */
+    FORWARD: 1, /**
+     * WORD
+     */
+    WORD: 6 } as const;
+
+/**
+ * MomentTypeEnum
+ *
+ * 枚举选项：
+ * - FORWARD: 1
+ * - WORD: 6
+ */
+export type MomentTypeEnum = typeof MomentTypeEnum[keyof typeof MomentTypeEnum];
 
 /**
  * MomentVisibleScopeEnum
@@ -7807,6 +7966,36 @@ export type StandardResponseAdminStatusResponse = {
 };
 
 /**
+ * StandardResponse[AuditActionResp]
+ */
+export type StandardResponseAuditActionResp = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: AuditActionResp | null;
+};
+
+/**
+ * StandardResponse[AuditStatisticsResp]
+ */
+export type StandardResponseAuditStatisticsResp = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: AuditStatisticsResp | null;
+};
+
+/**
  * StandardResponse[AvatarAuditListResp]
  */
 export type StandardResponseAvatarAuditListResp = {
@@ -8584,21 +8773,6 @@ export type StandardResponseMomentAuditLogListResp = {
      */
     msg?: string;
     data?: MomentAuditLogListResp | null;
-};
-
-/**
- * StandardResponse[MomentAuditStatisticsResp]
- */
-export type StandardResponseMomentAuditStatisticsResp = {
-    /**
-     * Code
-     */
-    code?: number;
-    /**
-     * Msg
-     */
-    msg?: string;
-    data?: MomentAuditStatisticsResp | null;
 };
 
 /**
@@ -9677,6 +9851,27 @@ export type UnbanRes = {
      * Lifted Count
      */
     lifted_count?: number;
+};
+
+/**
+ * AuditActionResp
+ *
+ * 通用审核动作响应：回显定位键，操作结果细节由各资源自行返回。
+ */
+export type AuditActionRespWritable = {
+    bizType: InteractionBizTypeEnum;
+    /**
+     * Bizid
+     */
+    bizId: number;
+    /**
+     * Data
+     *
+     * 资源类返回的审核结果（各资源形态不同）
+     */
+    data?: {
+        [key: string]: unknown;
+    } | null;
 };
 
 /**
@@ -12506,6 +12701,21 @@ export type SpaceInfoRespWritable = {
 };
 
 /**
+ * StandardResponse[AuditActionResp]
+ */
+export type StandardResponseAuditActionRespWritable = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: AuditActionRespWritable | null;
+};
+
+/**
  * StandardResponse[AvatarAuditListResp]
  */
 export type StandardResponseAvatarAuditListRespWritable = {
@@ -14101,9 +14311,15 @@ export type AuditQueueApiV1CommentAdminAuditGetData = {
         /**
          * State
          *
-         * 按状态过滤，如 normal / auditing / rejected / hidden / deleted，可多选；仅 root 可用
+         * 按状态过滤（状态数值：1=normal / 2=auditing / 3=rejected / 4=hidden / 5=deleted，可多选；仅 root 可用）
          */
-        state?: Array<string> | null;
+        state?: Array<number | string> | null;
+        /**
+         * Biztype
+         *
+         * 按评论区资源类型筛选（DYNAMIC/LOTTERY/…），缺省不过滤——各 admin list 接口统一参数名
+         */
+        bizType?: InteractionBizTypeEnum | null;
         /**
          * Page Num
          */
@@ -16882,6 +17098,12 @@ export type AuditListApiV1CommunityAuditListGetData = {
          */
         auditStatus?: ResourceAuditStatusEnum;
         /**
+         * Biztype
+         *
+         * 按资源子类型筛选（动态类型：WORD/FORWARD/…），缺省不过滤——各 admin list 接口统一参数名
+         */
+        bizType?: MomentTypeEnum | null;
+        /**
          * Page Num
          */
         page_num?: number;
@@ -16964,7 +17186,12 @@ export type AuditStatisticsApiV1CommunityAuditStatisticsGetData = {
         'x-bili-vip-type'?: string | null;
     };
     path?: never;
-    query?: never;
+    query?: {
+        /**
+         * 统计业务域（InteractionBizTypeEnum 值：1=dynamic … 13=report），缺省 dynamic（向后兼容）
+         */
+        bizType?: InteractionBizTypeEnum;
+    };
     url: '/api/v1/community/audit/statistics';
 };
 
@@ -16981,7 +17208,7 @@ export type AuditStatisticsApiV1CommunityAuditStatisticsGetResponses = {
     /**
      * Successful Response
      */
-    200: StandardResponseMomentAuditStatisticsResp;
+    200: StandardResponseAuditStatisticsResp;
 };
 
 export type AuditStatisticsApiV1CommunityAuditStatisticsGetResponse = AuditStatisticsApiV1CommunityAuditStatisticsGetResponses[keyof AuditStatisticsApiV1CommunityAuditStatisticsGetResponses];
@@ -17324,6 +17551,156 @@ export type AuditDetailApiV1CommunityAuditDynIdGetResponses = {
 
 export type AuditDetailApiV1CommunityAuditDynIdGetResponse = AuditDetailApiV1CommunityAuditDynIdGetResponses[keyof AuditDetailApiV1CommunityAuditDynIdGetResponses];
 
+export type AuditApproveApiV1AuditApprovePostData = {
+    body: AuditApproveReq;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Jwt
+         */
+        'x-bili-jwt'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string | null;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string | null;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string | null;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string | null;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string | null;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string | null;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string | null;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/audit/approve';
+};
+
+export type AuditApproveApiV1AuditApprovePostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type AuditApproveApiV1AuditApprovePostError = AuditApproveApiV1AuditApprovePostErrors[keyof AuditApproveApiV1AuditApprovePostErrors];
+
+export type AuditApproveApiV1AuditApprovePostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseAuditActionResp;
+};
+
+export type AuditApproveApiV1AuditApprovePostResponse = AuditApproveApiV1AuditApprovePostResponses[keyof AuditApproveApiV1AuditApprovePostResponses];
+
+export type AuditRejectApiV1AuditRejectPostData = {
+    body: AuditRejectReq;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Jwt
+         */
+        'x-bili-jwt'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string | null;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string | null;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string | null;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string | null;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string | null;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string | null;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string | null;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/audit/reject';
+};
+
+export type AuditRejectApiV1AuditRejectPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type AuditRejectApiV1AuditRejectPostError = AuditRejectApiV1AuditRejectPostErrors[keyof AuditRejectApiV1AuditRejectPostErrors];
+
+export type AuditRejectApiV1AuditRejectPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseAuditActionResp;
+};
+
+export type AuditRejectApiV1AuditRejectPostResponse = AuditRejectApiV1AuditRejectPostResponses[keyof AuditRejectApiV1AuditRejectPostResponses];
+
 export type TopicAuditListApiV1CommunityTopicAuditListGetData = {
     body?: never;
     headers?: {
@@ -17378,6 +17755,10 @@ export type TopicAuditListApiV1CommunityTopicAuditListGetData = {
     };
     path?: never;
     query?: {
+        /**
+         * 审核状态筛选：auditing（默认）/normal/rejected/hidden
+         */
+        auditStatus?: ResourceAuditStatusEnum;
         /**
          * Page Num
          */
@@ -20457,9 +20838,9 @@ export type AuditQueueApiV1MessageDmAdminAuditGetData = {
         /**
          * State
          *
-         * 按状态过滤，如 normal / auditing / rejected / hidden，可多选；仅 root 可用
+         * 按状态过滤（状态数值：1=normal / 2=auditing / 3=rejected / 4=hidden / 5=deleted，可多选；仅 root 可用）
          */
-        state?: Array<string> | null;
+        state?: Array<number | string> | null;
         /**
          * Page Num
          */
@@ -24457,6 +24838,10 @@ export type AvatarAuditListApiV1UserAvatarAuditListGetData = {
     path?: never;
     query?: {
         /**
+         * 审核状态筛选：auditing（默认）/normal/rejected/hidden
+         */
+        auditStatus?: ResourceAuditStatusEnum;
+        /**
          * Page Num
          */
         page_num?: number;
@@ -24772,6 +25157,10 @@ export type FolderCoverAuditListApiV1FavoriteFolderCoverAuditListGetData = {
     };
     path?: never;
     query?: {
+        /**
+         * 审核状态筛选：auditing（默认）/normal/rejected/hidden
+         */
+        auditStatus?: ResourceAuditStatusEnum;
         /**
          * Page Num
          */

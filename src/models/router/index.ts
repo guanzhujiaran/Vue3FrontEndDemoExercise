@@ -73,7 +73,7 @@ export enum RouteName {
   ADMIN_MESSAGE_NOTIFY = '通知管理',
   ADMIN_MESSAGE_DM = '私信审核',
   ADMIN_MESSAGE_COMMENT = '评论审核',
-  ADMIN_MESSAGE_PERMISSION = '管理端权限',
+  ADMIN_PERMISSION = '管理端权限',
   // 消息中心管理端
   MESSAGE_DM_ADMIN = '私信审核',
   MESSAGE_COMMENT_ADMIN = '评论审核',

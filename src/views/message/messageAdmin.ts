@@ -19,45 +19,58 @@ export interface MessageAdminListResp {
   page_size: number
 }
 
-export interface MessagePermissionMeta {
-  /** 与后端 UserPermission 枚举值一致 */
-  value: string
+/** 审核域行（授权矩阵的行，与 bili_common.deps.permissions.AUDIT_BIZ_KEYS 对齐） */
+export interface AuditBizRow {
+  /** 资源域文本（与后端 InteractionBizTypeEnum.to_text() 一致） */
+  biz: string
   label: string
-  desc: string
-  /** 是否可由 root 授予他人 */
-  grantable: boolean
 }
 
-/**
- * 消息管理端权限元数据，与 bili_common.deps.permissions.UserPermission 保持一致。
- * grantable=false 的权限为 root 专属，不可授予他人（后端会自动剔除）。
- */
-// label / desc 使用 i18n key（模板中以 t() 渲染），确保多语言支持
-export const MESSAGE_ADMIN_PERMISSIONS: MessagePermissionMeta[] = [
-  { value: 'comment:view-queue', label: 'message.permCommentViewQueue', desc: 'message.permCommentViewQueueDesc', grantable: true },
-  { value: 'dm:view-queue', label: 'message.permDmViewQueue', desc: 'message.permDmViewQueueDesc', grantable: true },
-  { value: 'user:ban', label: 'message.permUserBan', desc: 'message.permUserBanDesc', grantable: true },
-  { value: 'comment:ban', label: 'message.permCommentBan', desc: 'message.permCommentBanDesc', grantable: true },
-  { value: 'dm:ban', label: 'message.permDmBan', desc: 'message.permDmBanDesc', grantable: true },
-  { value: 'user:ban-view', label: 'message.permUserBanView', desc: 'message.permUserBanViewDesc', grantable: true },
-  { value: 'comment:view-content', label: 'message.permCommentViewContent', desc: 'message.permCommentViewContentDesc', grantable: false },
-  { value: 'comment:audit', label: 'message.permCommentAudit', desc: 'message.permCommentAuditDesc', grantable: false },
-  { value: 'dm:view-content', label: 'message.permDmViewContent', desc: 'message.permDmViewContentDesc', grantable: false },
-  { value: 'dm:audit', label: 'message.permDmAudit', desc: 'message.permDmAuditDesc', grantable: false }
+/** 资源域行（授权 UI 的行序） */
+export const AUDIT_BIZ_ROWS: AuditBizRow[] = [
+  { biz: 'dynamic', label: '动态' },
+  { biz: 'topic', label: '话题' },
+  { biz: 'comment', label: '评论' },
+  { biz: 'dm', label: '私信' },
+  { biz: 'avatar', label: '头像' },
+  { biz: 'folder_cover', label: '收藏夹封面' },
+  { biz: 'report', label: '举报' },
+  { biz: 'user', label: '用户' }
 ]
 
-const PERMISSION_MAP = new Map(MESSAGE_ADMIN_PERMISSIONS.map((p) => [p.value, p]))
+/** 操作位（Linux rwx 数值语义）：处置(x=1) / 审核(w=2) / 查看(r=4) */
+export const BIZ_PERM_OPS = [
+  { op: 4, label: '查看', short: 'r' },
+  { op: 2, label: '审核', short: 'w' },
+  { op: 1, label: '封禁', short: 'x' }
+] as const
 
-export function getPermissionMeta(value: string): MessagePermissionMeta | undefined {
-  return PERMISSION_MAP.get(value)
+/** 全部操作位（rwx = 7） */
+export const ALL_OPS = 7
+
+/** 权限字 → 可读字母串（7 → rwx、4 → r--、0 → ---） */
+export function opsText(mask: number | undefined): string {
+  const m = Number(mask ?? 0) & ALL_OPS
+  return BIZ_PERM_OPS.map((o) => (m & o.op ? o.short : '-')).join('')
 }
 
-export function permissionLabel(value: string): string {
-  return PERMISSION_MAP.get(value)?.label ?? value
+/** 按位检查：某资源域是否持有某操作位 */
+export function hasBizPerm(
+  bizPerms: Record<string, number> | undefined,
+  biz: string,
+  op: number
+): boolean {
+  return ((Number(bizPerms?.[biz] ?? 0) & op) !== 0)
 }
 
-/** 可由 root 授予他人的权限（用于授权弹窗的勾选项） */
-export const GRANTABLE_PERMISSIONS = MESSAGE_ADMIN_PERMISSIONS.filter((p) => p.grantable)
+/** 掩码 dict → 展示文本（仅列有权限的域，如 "dm:rwx · comment:r--"） */
+export function bizPermsText(bizPerms: Record<string, number> | undefined): string {
+  if (!bizPerms) return ''
+  return Object.entries(bizPerms)
+    .filter(([, m]) => Number(m) > 0)
+    .map(([biz, m]) => `${biz}:${opsText(m)}`)
+    .join(' · ')
+}
 
 export type { PptrUserSearchItem, PptrUserLevelInfo, PptrUserVipInfo, PptrUserRoleInfo }
 

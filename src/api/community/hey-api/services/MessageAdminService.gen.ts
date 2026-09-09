@@ -9,10 +9,10 @@ export class MessageAdminService {
     /**
      * 授予消息管理端权限（仅 root）
      *
-     * 授予 / 更新某用户的消息管理端权限。
+     * 授予 / 更新某用户的消息管理端权限（per-biz 位掩码权限字，仅 root 调用）。
      *
-     * 仅 root 可调用；root 专属权限（查看内容明文 / 设置过审没过审）会被自动剔除，
-     * 不会落入 `msg_admin` 表。
+     * biz_perms 键为资源域文本（dynamic/comment/…），值为权限字 0~7（rwx 位掩码）；
+     * 落库前经 normalize_biz_perms 清洗（非法键丢弃、值截断到 3 位）。
      */
     public static grantAdminApiV1MessageAdminGrantPost<ThrowOnError extends boolean = false>(options: Options<GrantAdminApiV1MessageAdminGrantPostData, ThrowOnError>): RequestResult<GrantAdminApiV1MessageAdminGrantPostResponses, GrantAdminApiV1MessageAdminGrantPostErrors, ThrowOnError, 'data'> {
         return (options.client ?? client).post<GrantAdminApiV1MessageAdminGrantPostResponses, GrantAdminApiV1MessageAdminGrantPostErrors, ThrowOnError, 'data'>({

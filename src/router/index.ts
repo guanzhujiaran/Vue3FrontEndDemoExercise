@@ -755,9 +755,9 @@ const routes: CustomRouteRecordRaw[] = [
         }
       },
       {
-        path: 'message-permission',
-        name: 'ADMIN_MESSAGE_PERMISSION',
-        component: () => import('@/views/message/MessageAdminPermission.vue'),
+        path: 'permission',
+        name: 'ADMIN_PERMISSION',
+        component: () => import('@/views/admin/AdminPermissionView.vue'),
         meta: {
           title: '管理端权限',
           requiresMessageRoot: true,

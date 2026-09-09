@@ -1,9 +1,5 @@
 <template>
   <div class="dm-admin flex flex-col gap-4">
-    <div class="dm-admin__header flex items-center justify-between">
-      <h2 class="text-lg font-bold text-text-primary">{{ t('message.dmAuditTitle') }}</h2>
-      <el-button size="default" @click="load">{{ t('message.refresh') }}</el-button>
-    </div>
 
     <div class="dm-admin__stats grid grid-cols-2 gap-3 md:grid-cols-5">
       <div class="dm-admin__stat-card rounded-lg bg-bg-overlay p-4">
@@ -28,23 +24,16 @@
       </div>
     </div>
 
-    <div v-if="canViewAllStates" class="dm-admin__filter flex items-center gap-3">
-      <span class="text-sm text-text-placeholder">{{ t('message.statusFilter') }}</span>
-      <el-select
-        v-model="stateFilter"
-        multiple
-        clearable
-        collapse-tags
-        size="default"
-        :placeholder="t('message.filterAllStatus')"
-        class="dm-admin__filter-select w-72"
-        @change="onFilterChange"
-      >
-        <el-option :label="t('message.stateAuditing')" value="auditing" />
-        <el-option :label="t('message.stateRejected')" value="rejected" />
-        <el-option :label="t('message.stateHidden')" value="hidden" />
-      </el-select>
-    </div>
+    <!-- 审核状态分布总览（通用组件） -->
+    <AuditOverviewCard :statistics="auditStats" />
+
+    <AdminAuditTabs
+      v-model="activeTab"
+      title="私信审核队列"
+      :tabs="visibleTabs"
+      :loading="loading"
+      @refresh="load"
+    />
 
     <div
       v-loading="auditPending"
@@ -101,18 +90,6 @@
           {{ t('message.unbanUser') }}
         </el-button>
       </template>
-    </div>
-
-    <div class="dm-admin__table-bar mb-2 flex items-center justify-end">
-      <el-button
-        class="dm-admin__refresh-btn"
-        size="default"
-        :icon="Refresh"
-        :loading="loading"
-        @click="load"
-      >
-        {{ t('message.refresh') }}
-      </el-button>
     </div>
 
     <LoadingWrap :loading="loading" :rows="6">
@@ -192,6 +169,22 @@
                 <!-- 接收方 -->
                 <template v-else-if="column.key === 'talker'">
                   <span class="text-sm text-text-primary">{{ rowData.talker_mid }}</span>
+                </template>
+
+                <!-- 操作：状态机决定（待审核=通过/驳回；已过审=驳回撤回；已驳回=通过恢复；已下架=恢复） -->
+                <template v-else-if="column.key === 'action'">
+                  <div class="flex h-full items-center gap-2">
+                    <el-button
+                      v-for="op in rowOps(rowData.audit_state)"
+                      :key="op"
+                      size="small"
+                      :type="op === 'pass' ? 'success' : op === 'reject' ? 'warning' : 'default'"
+                      :disabled="auditPending"
+                      @click="singleAudit(rowData, op)"
+                    >
+                      {{ op === 'pass' ? '通过' : op === 'reject' ? '驳回' : '恢复' }}
+                    </el-button>
+                  </div>
                 </template>
 
                 <!-- 时间 -->
@@ -290,11 +283,13 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref } from 'vue'
-import type { Column } from 'element-plus'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
+import AuditOverviewCard from '@/components/admin/AuditOverviewCard.vue'
+import AdminAuditTabs from '@/components/admin/AdminAuditTabs.vue'
+import { fetchAuditStatisticsByBiz, type AuditStatisticsData, AuditBizType } from '@/api/notify/moment-api'
+import { TableV2FixedDir, type Column } from 'element-plus'
 import { useDebounceFn } from '@vueuse/core'
 import { useI18n } from 'vue-i18n'
-import { Refresh } from '@element-plus/icons-vue'
 import biliMessage from '@/utils/message'
 import { businessHandler, type BusinessResponse } from '@/utils/businessHandler'
 
@@ -314,6 +309,7 @@ import BanUserDialog from '@/components/message/BanUserDialog.vue'
 import AuditReasonDialog from '@/components/message/AuditReasonDialog.vue'
 import UserBriefCell from '@/components/message/UserBriefCell.vue'
 import { useMessageAdminStore } from '@/stores/message_admin'
+import { hasBizPerm } from './messageAdmin'
 
 const items = ref<DmAuditRow[]>([])
 const loading = ref(false)
@@ -321,9 +317,22 @@ const total = ref(0)
 const page = ref(1)
 const pageSize = ref(20)
 const pageSizes = [10, 20, 50, 100]
-// 默认筛选「审核中」（与评论审核一致：审核员进入页面最关心待审队列）
-const stateFilter = ref<string[]>(['auditing'])
+// 状态 Tab（与 MomentAuditListView 同构：单选 Tabs；非 root 仅可见「待审核」）
+const activeTab = ref('AUDITING')
 const canViewAllStates = ref(false)
+const DM_TABS: Array<{ name: string; label: string }> = [
+  { name: 'AUDITING', label: '待审核' },
+  { name: 'NORMAL', label: '已过审' },
+  { name: 'REJECTED', label: '已驳回' },
+  { name: 'HIDDEN', label: '已下架' }
+]
+const visibleTabs = computed(() =>
+  canViewAllStates.value ? DM_TABS : DM_TABS.filter((tb) => tb.name === 'AUDITING')
+)
+watch(activeTab, () => {
+  page.value = 1
+  load()
+})
 const sessionDrawerVisible = ref(false)
 const sessionLoading = ref(false)
 const sessionContext = ref<DmSessionContextResp | null>(null)
@@ -348,16 +357,16 @@ const reasonDialogVisible = ref(false)
 const banFromReasonVisible = ref(false)
 const banFromReasonMids = ref<number[]>([])
 const pendingOp = ref<'' | 'pass' | 'reject' | 'hidden' | 'restore'>('')
+// 本次待审核行（批量 = 选中行；行内单条 = 该行），原因弹窗确认后执行
+const pendingRows = ref<DmAuditRow[]>([])
 const reasonDialogLabel = ref('驳回')
 // 弹窗内逐条列出的待审核条目
 const reasonDialogItems = ref<
   { id: string; preview?: string; mid?: number | null; brief?: DmAuditRow['sender'] }[]
 >([])
-// 私信封禁 / 解封权限（dm:ban）
+// 私信封禁 / 解封权限：dm 域处置位（BAN=1；root 恒有）
 const canBan = computed(
-  () =>
-    adminStore.status.is_root ||
-    adminStore.status.permissions.includes('dm:ban')
+  () => adminStore.status.is_root || hasBizPerm(adminStore.status.biz_perms, 'dm', 1)
 )
 const selectedMids = computed(() =>
   selectedRows.value.map((r) => r.sender_mid).filter((m): m is number => Boolean(m))
@@ -374,7 +383,9 @@ const dmColumns: Column<DmAuditRow>[] = [
   { key: 'type', title: t('message.colType'), width: 90 },
   { key: 'talker', title: t('message.colReceiver'), width: 110 },
   { key: 'ctime', title: t('message.colTime'), width: 180 },
-  { key: 'msgkey', title: t('message.colMsgkey'), width: 160, dataKey: 'msgkey' }
+  { key: 'msgkey', title: t('message.colMsgkey'), width: 160, dataKey: 'msgkey' },
+  // 行内操作列（与 MomentAuditListView 同构）：状态机决定可用动作
+  { key: 'action', title: '操作', width: 180, fixed: TableV2FixedDir.RIGHT }
 ]
 
 function toggleRow(row: DmAuditRow, val: unknown) {
@@ -434,7 +445,10 @@ async function load() {
   const [list, st] = await Promise.all([
     MessageDmAdminService.auditQueueApiV1MessageDmAdminAuditGet({
       query: {
-        state: stateFilter.value.length ? stateFilter.value : undefined,
+        // state 仅接受状态数值（StrInt）：Tab 名 → ResourceAuditStatusEnum 取值
+        state: canViewAllStates.value
+          ? [ResourceAuditStatusEnum[activeTab.value as keyof typeof ResourceAuditStatusEnum]]
+          : undefined,
         page_num: page.value,
         page_size: pageSize.value
       }
@@ -481,16 +495,36 @@ function onPageSizeChange(size: number) {
   load()
 }
 
-function onFilterChange() {
-  page.value = 1
-  load()
-}
-
 // 驳回 / 下架属于处罚性操作，必须填原因：原因会写进给作者的系统通知
 // 注意：此处传入 AuditReasonDialog 的 actionLabel 需为中文 key（组件内再做 i18n 映射）
 const DM_OP_REASON_LABEL: Partial<Record<string, string>> = {
   reject: '驳回',
   hidden: '下架'
+}
+
+/** 行内可用操作（与 MomentAuditListView 状态机一致） */
+function rowOps(s?: ResourceAuditStatusEnum): Array<'pass' | 'reject' | 'restore'> {
+  if (s === ResourceAuditStatusEnum.AUDITING) return ['pass', 'reject']
+  if (s === ResourceAuditStatusEnum.NORMAL) return ['reject'] // 驳回 = 撤回已过审
+  if (s === ResourceAuditStatusEnum.REJECTED) return ['pass'] // 通过 = 恢复已驳回
+  if (s === ResourceAuditStatusEnum.HIDDEN) return ['restore']
+  return []
+}
+
+/** 行内单条审核：无原因操作直接执行；驳回需先选原因（复用批量原因弹窗，单条入列） */
+function singleAudit(row: DmAuditRow, op: 'pass' | 'reject' | 'restore') {
+  if (auditPending.value) return
+  if (DM_OP_REASON_LABEL[op]) {
+    pendingOp.value = op
+    reasonDialogLabel.value = DM_OP_REASON_LABEL[op] ?? '驳回'
+    pendingRows.value = [row]
+    reasonDialogItems.value = [
+      { id: row.msgkey, preview: row.message, mid: row.sender_mid, brief: row.sender }
+    ]
+    reasonDialogVisible.value = true
+    return
+  }
+  void doAudit([row], op, null)
 }
 
 async function batchAudit(op: 'pass' | 'reject' | 'hidden' | 'restore') {
@@ -502,6 +536,7 @@ async function batchAudit(op: 'pass' | 'reject' | 'hidden' | 'restore') {
     // 暂存操作，弹窗内逐条列出条目并各自选择原因，确认后再逐条执行
     pendingOp.value = op
     reasonDialogLabel.value = DM_OP_REASON_LABEL[op] ?? '驳回'
+    pendingRows.value = rows
     reasonDialogItems.value = rows.map((r) => ({
       id: r.msgkey,
       preview: r.message,
@@ -524,9 +559,11 @@ function onReasonBan(mids: number[]) {
 // 弹窗确认：reasons 为 { [msgkey]: 该条原因 }
 async function onReasonConfirm(reasons: Record<string, string>) {
   const op = pendingOp.value
+  const rows = pendingRows.value
   pendingOp.value = ''
-  if (!op) return
-  await doAudit(selectedRows.value, op, reasons)
+  pendingRows.value = []
+  if (!op || !rows.length) return
+  await doAudit(rows, op, reasons)
 }
 
 // 通过 / 恢复：notes 为 null；驳回 / 下架：逐条带上各自的原因
@@ -603,7 +640,15 @@ function stateText(s?: ResourceAuditStatusEnum): string {
   return t('message.stateHidden')
 }
 
+
+// 审核状态分布总览（通用统计接口，bizType=dm）
+const auditStats = ref<AuditStatisticsData | null>(null)
+async function loadAuditStats() {
+  auditStats.value = await fetchAuditStatisticsByBiz(AuditBizType.DM)
+}
+
 onMounted(async () => {
+  void loadAuditStats()
   await adminStore.fetchStatus()
   await load()
 })

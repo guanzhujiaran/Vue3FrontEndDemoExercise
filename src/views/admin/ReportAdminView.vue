@@ -1,49 +1,48 @@
 <template>
   <div class="report-admin flex flex-col gap-4">
+    <!-- 审核总览说明 -->
     <div class="report-admin__header flex items-center justify-between">
       <h2 class="text-lg font-bold text-text-primary">举报审核</h2>
       <span class="text-sm text-text-placeholder">举报达阈值仅入审核队列，下架由管理员审核时决定</span>
     </div>
 
-    <div class="report-admin__filter flex flex-wrap items-center gap-3">
-      <el-select
-        v-model="bizTypeFilter"
-        clearable
-        size="default"
-        placeholder="来源类型"
-        class="report-admin__filter-biz w-36"
-        @change="onFilterChange"
-      >
-        <el-option label="动态" :value="InteractionBizTypeEnum.DYNAMIC" />
-        <el-option label="评论" :value="InteractionBizTypeEnum.COMMENT" />
-        <el-option label="用户" :value="InteractionBizTypeEnum.USER" />
-        <el-option label="抽奖" :value="InteractionBizTypeEnum.LOTTERY" />
-        <el-option label="RPA 动作" :value="InteractionBizTypeEnum.RPA_ACTION" />
-        <el-option label="RPA 工作流" :value="InteractionBizTypeEnum.RPA_WORKFLOW" />
-        <el-option label="RPA 浏览器" :value="InteractionBizTypeEnum.RPA_BROWSER" />
-        <el-option label="RPA 插件" :value="InteractionBizTypeEnum.RPA_PLUGIN" />
-      </el-select>
-      <el-select
-        v-model="statusFilter"
-        clearable
-        size="default"
-        placeholder="审核状态"
-        class="report-admin__filter-status w-36"
-        @change="onFilterChange"
-      >
-        <el-option label="待处理" value="pending" />
-        <el-option label="已成立" value="resolved" />
-        <el-option label="已驳回" value="rejected" />
-      </el-select>
-      <el-button size="default" @click="loadReports">刷新</el-button>
-    </div>
+    <!-- 审核总览统计（通用组件） -->
+    <AuditOverviewCard
+      :statistics="statistics"
+      total-label="举报总数"
+      :statusLabels="{ pending: '待处理', resolved: '已成立', rejected: '已驳回' }"
+      typeLabel="来源类型"
+    />
 
-    <el-table
-      v-loading="loading"
-      :data="reportList"
-      class="report-admin__table"
-      size="large"
+    <!-- 状态 Tab 工具行（通用组件）+ 来源类型筛选 -->
+    <AdminAuditTabs
+      v-model="activeTab"
+      title="举报审核队列"
+      :tabs="STATUS_TABS"
+      :loading="loading"
+      @refresh="load(true)"
     >
+      <template #extra>
+        <el-select
+          v-model="bizTypeFilter"
+          clearable
+          size="default"
+          placeholder="来源类型"
+          class="report-admin__filter-biz w-36"
+        >
+          <el-option label="动态" :value="InteractionBizTypeEnum.DYNAMIC" />
+          <el-option label="评论" :value="InteractionBizTypeEnum.COMMENT" />
+          <el-option label="用户" :value="InteractionBizTypeEnum.USER" />
+          <el-option label="抽奖" :value="InteractionBizTypeEnum.LOTTERY" />
+          <el-option label="RPA 动作" :value="InteractionBizTypeEnum.RPA_ACTION" />
+          <el-option label="RPA 工作流" :value="InteractionBizTypeEnum.RPA_WORKFLOW" />
+          <el-option label="RPA 浏览器" :value="InteractionBizTypeEnum.RPA_BROWSER" />
+          <el-option label="RPA 插件" :value="InteractionBizTypeEnum.RPA_PLUGIN" />
+        </el-select>
+      </template>
+    </AdminAuditTabs>
+
+    <el-table v-loading="loading" :data="reportList" class="report-admin__table" size="large">
       <el-table-column label="被举报对象" width="220">
         <template #default="{ row }">
           <div class="report-admin__target flex flex-col">
@@ -108,8 +107,8 @@
       </el-table-column>
       <el-table-column label="状态" width="100">
         <template #default="{ row }">
-          <el-tag :type="statusTagType(row.auditStatus)" effect="light" size="default">
-            {{ statusName(row.auditStatus) }}
+          <el-tag :type="auditStateTagType(row.auditStatus)" effect="light" size="default">
+            {{ auditStateText(row.auditStatus) }}
           </el-tag>
         </template>
       </el-table-column>
@@ -119,25 +118,24 @@
       <el-table-column label="操作" width="110" fixed="right">
         <template #default="{ row }">
           <el-button
-            v-if="row.auditStatus === 'pending'"
+            v-if="canApprove(row.auditStatus) || canReject(row.auditStatus)"
             size="default"
-            type="primary"
+            :type="row.auditStatus === 'pending' ? 'primary' : 'default'"
             @click="openReview(row as ReportItem)"
           >
-            审核
+            {{ row.auditStatus === 'pending' ? '审核' : '重新审核' }}
           </el-button>
-          <span v-else class="text-sm text-text-placeholder">已处理</span>
         </template>
       </el-table-column>
     </el-table>
 
-    <el-pagination
-      v-model:current-page="reportPage"
-      :page-size="pageSize"
-      :total="reportTotal"
-      layout="prev, pager, next, total"
+    <PaginationBar
       class="report-admin__pagination"
-      @current-change="loadReports"
+      :total="reportTotal"
+      :page-size="pageSize"
+      :current-page="reportPage"
+      @update:current-page="onPageChange"
+      @update:page-size="onPageSizeChange"
     />
 
     <!-- 审核弹窗 -->
@@ -182,13 +180,7 @@
             </el-checkbox>
           </el-form-item>
           <el-form-item label="审核备注">
-            <el-input
-              v-model="reviewForm.remark"
-              type="textarea"
-              :rows="2"
-              maxlength="500"
-              placeholder="选填"
-            />
+            <el-input v-model="reviewForm.remark" type="textarea" :rows="2" maxlength="500" placeholder="选填" />
           </el-form-item>
         </el-form>
       </div>
@@ -203,21 +195,39 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, reactive, ref } from 'vue'
+import { onMounted, reactive, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { fetchReportList, InteractionBizTypeEnum, reviewReport, type ReportItem } from '@/api/notify/report-api.ts'
+import {
+  fetchReportList,
+  InteractionBizTypeEnum,
+  reviewReport,
+  type ReportItem,
+} from '@/api/notify/report-api.ts'
 import { jumpToTarget } from '@/utils/routeJump'
+import { auditStateText, auditStateTagType, canApprove, canReject } from '@/utils/auditStateMachine'
+import { useAuditTabCache } from '@/composables/useAuditTabCache'
+import AdminAuditTabs from '@/components/admin/AdminAuditTabs.vue'
+import PaginationBar from '@/components/message/PaginationBar.vue'
+import AuditOverviewCard from '@/components/admin/AuditOverviewCard.vue'
+import { fetchAuditStatisticsByBiz, type AuditStatisticsData, AuditBizType } from '@/api/notify/moment-api'
 
-const loading = ref(false)
+// 状态 Tab：待处理 / 已成立 / 已驳回（状态机：已成立可改判不成立，已驳回可改判成立）
+const STATUS_TABS = [
+  { name: 'pending', label: '待处理' },
+  { name: 'resolved', label: '已成立' },
+  { name: 'rejected', label: '已驳回' },
+]
+
+// 审核总览统计（通用统计接口，按业务域聚合）
+const statistics = ref<AuditStatisticsData | null>(null)
+
+async function loadStatistics() {
+  statistics.value = await fetchAuditStatisticsByBiz(AuditBizType.REPORT)
+}
+
 const submitting = ref(false)
-const reportList = ref<ReportItem[]>([])
-const reportTotal = ref(0)
-const reportPage = ref(1)
-const pageSize = 20
-
 const bizTypeFilter = ref<InteractionBizTypeEnum | ''>('')
-const statusFilter = ref('')
 
 const reviewDialogVisible = ref(false)
 const reviewTarget = ref<ReportItem | null>(null)
@@ -245,10 +255,6 @@ const bizTypeName = (bt: InteractionBizTypeEnum) => {
       return String(bt)
   }
 }
-const statusName = (s: string) =>
-  ({ pending: '待处理', resolved: '已成立', rejected: '已驳回' })[s] ?? s
-const statusTagType = (s: string): 'warning' | 'success' | 'info' | 'danger' =>
-  ({ pending: 'warning', resolved: 'success', rejected: 'info' } as Record<string, 'warning' | 'success' | 'info' | 'danger'>)[s] ?? 'info'
 
 // 抽奖（LOTTERY）与用户（USER）不允许下架；动态/评论/RPA 资源允许
 const canHide = (row: ReportItem) =>
@@ -260,29 +266,35 @@ const formatTime = (t?: string | null) =>
 const router = useRouter()
 const openResource = (url?: string | null) => jumpToTarget(router, url)
 
-const onFilterChange = () => {
-  reportPage.value = 1
-  loadReports()
-}
-
-const loadReports = async () => {
-  loading.value = true
-  try {
-    const res = await fetchReportList({
+// 状态 Tab 缓存懒加载：fetcher 携带来源类型筛选
+const {
+  activeTab,
+  items: reportList,
+  total: reportTotal,
+  page: reportPage,
+  pageSize,
+  loading,
+  load,
+  onPageChange,
+  onPageSizeChange,
+  removeRow,
+  invalidateOthers,
+} = useAuditTabCache<ReportItem>(
+  (tab, page, size) =>
+    fetchReportList({
       biz_type: bizTypeFilter.value || undefined,
-      status: statusFilter.value || undefined,
-      page: reportPage.value,
-      page_size: pageSize,
-    })
-    reportList.value = res.items || []
-    reportTotal.value = res.total || 0
-  } catch (e) {
-    console.error('加载举报列表失败:', e)
-    ElMessage.error('加载举报列表失败')
-  } finally {
-    loading.value = false
-  }
-}
+      status: tab,
+      page,
+      page_size: size,
+    }),
+  { tabs: STATUS_TABS, defaultTab: 'pending' }
+)
+
+// 来源类型筛选变化：全部 Tab 缓存失效并重载当前 Tab
+watch(bizTypeFilter, () => {
+  invalidateOthers()
+  load(true)
+})
 
 const openReview = (row: ReportItem) => {
   reviewTarget.value = row
@@ -304,7 +316,9 @@ const submitReview = async () => {
     })
     ElMessage.success(reviewForm.decision === 'resolve' ? '举报已成立' : '举报已驳回')
     reviewDialogVisible.value = false
-    loadReports()
+    // 当前 Tab 移除该单；其它状态 Tab 缓存失效（该单可能出现在别的状态里）
+    removeRow((i) => i.pk === reviewTarget.value?.pk)
+    invalidateOthers()
   } catch (e) {
     console.error('审核举报失败:', e)
     ElMessage.error('审核失败')
@@ -313,5 +327,8 @@ const submitReview = async () => {
   }
 }
 
-onMounted(loadReports)
+onMounted(() => {
+  load()
+  loadStatistics()
+})
 </script>

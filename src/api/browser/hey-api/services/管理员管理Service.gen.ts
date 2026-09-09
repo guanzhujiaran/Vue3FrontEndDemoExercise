@@ -388,6 +388,11 @@ export class 管理员管理Service {
      * Review Approval
      *
      * 审核审批（仅管理员/root）
+     *
+     * 状态机（对齐 be-message 动态审核「撤回 / 恢复」语义）：
+     * - pending  → approved / rejected（首次审核）
+     * - approved → rejected（过审核准撤回）
+     * - rejected → approved（驳回恢复）
      */
     public static reviewApprovalApiAdminRpaApprovalReviewPost<ThrowOnError extends boolean = false>(options: Options<ReviewApprovalApiAdminRpaApprovalReviewPostData, ThrowOnError>): RequestResult<ReviewApprovalApiAdminRpaApprovalReviewPostResponses, ReviewApprovalApiAdminRpaApprovalReviewPostErrors, ThrowOnError, 'data'> {
         return (options.client ?? client).post<ReviewApprovalApiAdminRpaApprovalReviewPostResponses, ReviewApprovalApiAdminRpaApprovalReviewPostErrors, ThrowOnError, 'data'>({
@@ -405,6 +410,11 @@ export class 管理员管理Service {
      * Review Approval
      *
      * 审核审批（仅管理员/root）
+     *
+     * 状态机（对齐 be-message 动态审核「撤回 / 恢复」语义）：
+     * - pending  → approved / rejected（首次审核）
+     * - approved → rejected（过审核准撤回）
+     * - rejected → approved（驳回恢复）
      */
     public static reviewApprovalApiAdminRpaApprovalReviewPost2<ThrowOnError extends boolean = false>(options: Options<ReviewApprovalApiAdminRpaApprovalReviewPostData, ThrowOnError>): RequestResult<ReviewApprovalApiAdminRpaApprovalReviewPostResponses, ReviewApprovalApiAdminRpaApprovalReviewPostErrors, ThrowOnError, 'data'> {
         return (options.client ?? client).post<ReviewApprovalApiAdminRpaApprovalReviewPostResponses, ReviewApprovalApiAdminRpaApprovalReviewPostErrors, ThrowOnError, 'data'>({

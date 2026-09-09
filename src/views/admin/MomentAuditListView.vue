@@ -1,50 +1,35 @@
 <template>
   <div class="moment-audit-list flex flex-col gap-4">
-    <!-- 工具栏 -->
-    <div class="moment-audit-list__toolbar flex items-center justify-between">
-      <h2 class="moment-audit-list__title text-lg font-bold text-text-primary">动态审核队列</h2>
-      <div class="moment-audit-list__toolbar-right flex items-center gap-3">
-        <!-- 状态筛选 Tab：待审核 / 已过审（可驳回撤回）/ 已驳回（可通过恢复） -->
-        <el-radio-group v-model="statusTab" size="default" @change="onStatusChange">
-          <el-radio-button :value="ResourceAuditStatusEnum.AUDITING">待审核</el-radio-button>
-          <el-radio-button :value="ResourceAuditStatusEnum.NORMAL">已过审</el-radio-button>
-          <el-radio-button :value="ResourceAuditStatusEnum.REJECTED">已驳回</el-radio-button>
-        </el-radio-group>
-        <el-button
-          class="moment-audit-list__refresh-btn"
-          size="default"
-          :icon="Refresh"
-          :loading="loading"
-          @click="load"
-        >
-          刷新
-        </el-button>
-      </div>
-    </div>
+    <!-- 审核总览统计（通用组件） -->
+    <AuditOverviewCard :statistics="statistics" total-label="动态总数" />
 
-    <!-- 审核总览统计 -->
-    <el-card class="moment-audit-stat" shadow="never" :body-style="{ padding: '16px' }">
-      <template #header>
-        <div class="flex items-center justify-between">
-          <span class="font-bold">审核总览</span>
-          <span class="text-sm text-text-secondary">动态总数：{{ statistics.total }}</span>
-        </div>
-      </template>
-      <div class="flex flex-wrap gap-3 mb-3">
-        <el-tag type="warning" effect="light">审核中 {{ statistics.byStatus?.auditing || 0 }}</el-tag>
-        <el-tag type="success" effect="light">已过审 {{ statistics.byStatus?.normal || 0 }}</el-tag>
-        <el-tag type="danger" effect="light">已驳回 {{ statistics.byStatus?.rejected || 0 }}</el-tag>
-        <el-tag type="info" effect="light">已下架 {{ statistics.byStatus?.hidden || 0 }}</el-tag>
-      </div>
-      <el-table :data="statistics.byType" size="small" border>
-        <el-table-column prop="dynType" label="类型" width="120" />
-        <el-table-column prop="auditing" label="审核中" />
-        <el-table-column prop="normal" label="已过审" />
-        <el-table-column prop="rejected" label="已驳回" />
-        <el-table-column prop="hidden" label="已下架" />
-        <el-table-column prop="total" label="合计" />
-      </el-table>
-    </el-card>
+    <!-- 工具栏（通用组件：标题 + 状态 Tabs + 刷新） -->
+    <AdminAuditTabs
+      v-model="activeTab"
+      title="动态审核队列"
+      :tabs="AUDIT_TABS"
+      :loading="loading"
+      @refresh="load(true)"
+    />
+
+    <div class="flex items-center gap-3">
+      <span class="text-sm text-text-placeholder">类型</span>
+      <el-select
+        v-model="bizTypeFilter"
+        clearable
+        size="default"
+        placeholder="全部类型"
+        class="w-52"
+        @change="load(true)"
+      >
+        <el-option
+          v-for="t in statistics?.byType ?? []"
+          :key="String(t.type)"
+          :label="String(t.type)"
+          :value="String(t.type)"
+        />
+      </el-select>
+    </div>
 
     <LoadingWrap :loading="loading" :rows="6">
       <EmptyState v-if="!loading && items.length === 0" :text="emptyText" />
@@ -100,11 +85,11 @@
                   </el-tag>
                 </template>
 
-                <!-- 操作：auditing=通过/驳回；normal=仅驳回（失误过审撤回）；rejected=仅通过（恢复） -->
+                <!-- 操作：由审核状态机决定（待审核=通过/驳回；已过审=仅驳回撤回；已驳回=仅通过恢复） -->
                 <template v-else-if="column.key === 'action'">
                   <div class="flex gap-2">
                     <el-button
-                      v-if="stateKey(rowData.auditStatus) !== 'NORMAL'"
+                      v-if="canApprove(rowData.auditStatus)"
                       size="default"
                       type="primary"
                       :loading="approvingId === rowData.dynIdStr"
@@ -113,7 +98,7 @@
                       通过
                     </el-button>
                     <el-button
-                      v-if="stateKey(rowData.auditStatus) !== 'REJECTED'"
+                      v-if="canReject(rowData.auditStatus)"
                       size="default"
                       type="danger"
                       :loading="rejectingId === rowData.dynIdStr"
@@ -143,7 +128,8 @@
                   :page-size="pageSize"
                   :current-page="page"
                   @update:current-page="onPageChange"
-                />
+                  @update:page-size="onPageSizeChange"
+/>
               </template>
             </el-table-v2>
           </template>
@@ -157,8 +143,25 @@
 import { ref, computed, onMounted } from 'vue'
 import { TableV2FixedDir, type Column } from 'element-plus'
 import { Refresh } from '@element-plus/icons-vue'
-import { fetchAuditList, auditApprove, auditReject, fetchAuditStatistics, ResourceAuditStatusEnum } from '@/api/notify/moment-api'
-import type { MomentAuditItem, MomentAuditStatisticsResp } from '@/api/notify/moment-api'
+import {
+  fetchAuditList,
+  fetchAuditStatisticsByBiz,
+  auditApproveByBiz,
+  auditRejectByBiz,
+  InteractionBizTypeEnum,
+  ResourceAuditStatusEnum,
+  AuditBizType } from '@/api/notify/moment-api'
+import {
+  auditStateText,
+  auditStateTagType,
+  canApprove,
+  canReject,
+} from '@/utils/auditStateMachine'
+import { useAuditTabCache } from '@/composables/useAuditTabCache'
+import AdminAuditTabs from '@/components/admin/AdminAuditTabs.vue'
+import AuditOverviewCard from '@/components/admin/AuditOverviewCard.vue'
+import type { AuditStatisticsData } from '@/api/notify/moment-api'
+import type { MomentAuditItem } from '@/api/notify/moment-api'
 import LoadingWrap from '@/components/message/LoadingWrap.vue'
 import EmptyState from '@/components/message/EmptyState.vue'
 import PaginationBar from '@/components/message/PaginationBar.vue'
@@ -166,49 +169,61 @@ import TimeText from '@/components/message/TimeText.vue'
 import { BiliImg } from '@/assets/img/BiliImg'
 import biliMessage from '@/utils/message'
 
-const items = ref<MomentAuditItem[]>([])
-const loading = ref(false)
-const total = ref(0)
-const page = ref(1)
-const pageSize = 20
+// 状态 Tab：待审核 / 已过审（可驳回撤回）/ 已驳回（可通过恢复）
+// status 取值必须是 SDK 的数字枚举（后端 IntEnum 校验只接受 1/2/3/4），不能传 'auditing' 这类字符串
+const AUDIT_TABS: Array<{ name: string; label: string; status: ResourceAuditStatusEnum }> = [
+  { name: 'AUDITING', label: '待审核', status: ResourceAuditStatusEnum.AUDITING },
+  { name: 'NORMAL', label: '已过审', status: ResourceAuditStatusEnum.NORMAL },
+  { name: 'REJECTED', label: '已驳回', status: ResourceAuditStatusEnum.REJECTED },
+]
+const statusOf = (name: string) =>
+  AUDIT_TABS.find((t) => t.name === name)?.status ?? ResourceAuditStatusEnum.AUDITING
+
+const {
+  activeTab,
+  items,
+  total,
+  page,
+  pageSize,
+  loading,
+  load,
+  onPageChange,
+  onPageSizeChange,
+  removeRow,
+} = useAuditTabCache<MomentAuditItem>(
+  async (tab, pageNum, size) => {
+    const res = await fetchAuditList({
+      auditStatus: statusOf(tab),
+      bizType: bizTypeFilter.value || undefined,
+      page_num: pageNum,
+      page_size: size,
+    })
+    return { items: res.items || [], total: res.total || 0 }
+  },
+  { tabs: AUDIT_TABS, defaultTab: 'AUDITING' }
+)
+
 const approvingId = ref<string | null>(null)
 const rejectingId = ref<string | null>(null)
-// 状态筛选 Tab：AUDITING（默认，待审核）/ NORMAL（已过审，可驳回撤回）/ REJECTED（已驳回，可通过恢复）
-// 取值必须是 SDK 的数字枚举（后端 IntEnum 校验只接受 1/2/3/4），不能传 'auditing' 这类字符串
-const statusTab = ref<ResourceAuditStatusEnum>(ResourceAuditStatusEnum.AUDITING)
 
 // 审核总览统计（按类型 + 按状态分组）
-const statistics = ref<MomentAuditStatisticsResp>({ byType: [], byStatus: {}, total: 0 })
+const statistics = ref<AuditStatisticsData | null>({ byType: [], byStatus: {}, total: 0 })
+
+// 资源子类型筛选（动态类型，与统计 byType 对齐；各 admin list 接口统一 bizType 参数名）
+const bizTypeFilter = ref<string>()
 const loadingStat = ref(false)
 
-// 审核状态 → 标签文案/类型映射（后端返回的是枚举成员名 AUDITING/NORMAL/REJECTED/HIDDEN）
-const AUDIT_STATE_MAP: Record<string, { text: string; type: 'warning' | 'success' | 'danger' | 'info' }> = {
-  AUDITING: { text: '待审核', type: 'warning' },
-  NORMAL: { text: '已过审', type: 'success' },
-  REJECTED: { text: '已驳回', type: 'danger' },
-  HIDDEN: { text: '已下架', type: 'info' },
-}
-
-// 状态字符串归一化：大小写不敏感，兼容 'AUDITING' / 'auditing'
-function stateKey(status: string): string {
-  return String(status ?? '').toUpperCase()
-}
-
-function stateTagText(status: string): string {
-  return AUDIT_STATE_MAP[stateKey(status)]?.text ?? status
-}
-
-function stateTagType(status: string): 'warning' | 'success' | 'danger' | 'info' {
-  return AUDIT_STATE_MAP[stateKey(status)]?.type ?? 'info'
-}
+// 状态标签 / 动作显隐统一走审核状态机（utils/auditStateMachine）
+const stateTagText = (s: string) => auditStateText(s)
+const stateTagType = (s: string) => auditStateTagType(s)
 
 const emptyText = computed(() => {
-  const map: Record<number, string> = {
-    [ResourceAuditStatusEnum.AUDITING]: '暂无待审核动态',
-    [ResourceAuditStatusEnum.NORMAL]: '暂无已过审动态',
-    [ResourceAuditStatusEnum.REJECTED]: '暂无已驳回动态',
+  const map: Record<string, string> = {
+    AUDITING: '暂无待审核动态',
+    NORMAL: '暂无已过审动态',
+    REJECTED: '暂无已驳回动态',
   }
-  return map[statusTab.value] ?? '暂无数据'
+  return map[activeTab.value] ?? '暂无数据'
 })
 
 // el-table-v2 列定义（与 CommentAdminView 保持同构；无批量选择列，操作列固定右侧）
@@ -231,7 +246,7 @@ onMounted(async () => {
 async function loadStatistics() {
   loadingStat.value = true
   try {
-    statistics.value = await fetchAuditStatistics()
+    statistics.value = await fetchAuditStatisticsByBiz(AuditBizType.DYNAMIC)
   } finally {
     loadingStat.value = false
   }
@@ -242,40 +257,23 @@ const TABLE_HEADER_H = 44
 const TABLE_ROW_H = 72
 const TABLE_FOOTER_H = 64
 function fitTableHeight(avail: number): number {
-  const footerH = total.value > pageSize ? TABLE_FOOTER_H : 0
+  const footerH = total.value > pageSize.value ? TABLE_FOOTER_H : 0
   const contentH = TABLE_HEADER_H + items.value.length * TABLE_ROW_H + footerH
   return Math.min(avail, Math.max(contentH, TABLE_HEADER_H + TABLE_ROW_H + footerH))
 }
 
-async function load() {
-  loading.value = true
-  const res = await fetchAuditList({
-    auditStatus: statusTab.value,
-    page_num: page.value,
-    page_size: pageSize,
-  })
-  items.value = res.items || []
-  total.value = res.total || 0
-  loading.value = false
-}
-
-function onStatusChange() {
-  page.value = 1
-  load()
-}
-
-function onPageChange(p: number) {
-  page.value = p
-  load()
-}
-
+/** 拉取当前 Tab 数据；`force=true`（刷新按钮）时忽略已加载标记重新请求 */
 async function handleApprove(item: MomentAuditItem) {
   approvingId.value = item.dynIdStr
-  const res = await auditApprove(item.dynIdStr, '通过')
+  // 统一审核接口：按 bizType(dynamic) + bizId(dynId) 操作，驳回通知由后端资源方法承载
+  const res = await auditApproveByBiz(
+    InteractionBizTypeEnum.DYNAMIC,
+    item.dynIdStr,
+    '通过'
+  )
   approvingId.value = null
   if (res) {
-    items.value = items.value.filter((i) => i.dynIdStr !== item.dynIdStr)
-    total.value = Math.max(0, total.value - 1)
+    removeRow((i) => i.dynIdStr === item.dynIdStr)
     biliMessage.success('已通过')
   }
 }
@@ -287,11 +285,15 @@ async function handleReject(item: MomentAuditItem) {
     )
     if (reason) {
       rejectingId.value = item.dynIdStr
-      const res = await auditReject(item.dynIdStr, reason, '驳回')
+      const res = await auditRejectByBiz(
+        InteractionBizTypeEnum.DYNAMIC,
+        item.dynIdStr,
+        reason,
+        '驳回'
+      )
       rejectingId.value = null
       if (res) {
-        items.value = items.value.filter((i) => i.dynIdStr !== item.dynIdStr)
-        total.value = Math.max(0, total.value - 1)
+        removeRow((i) => i.dynIdStr === item.dynIdStr)
         biliMessage.success('已驳回')
       }
     }

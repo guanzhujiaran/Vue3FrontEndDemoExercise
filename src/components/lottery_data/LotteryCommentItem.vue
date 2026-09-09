@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { inject, ref, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { Pointer, ChatDotRound, Delete, Bottom, ArrowDown, MoreFilled } from '@element-plus/icons-vue'
+import { Pointer, ChatDotRound, Delete, Bottom, ArrowDown } from '@element-plus/icons-vue'
+import MoreIcon from '@/assets/svgs/more.svg?component'
 import { LINK_REL, LINK_REFERRER_POLICY } from '@/utils/PageOpen/linkPolicy'
 import type { CommentItem } from '@/api/lottery_comment.ts'
 import { CommentHandlersKey, ResourceAuditStatusEnum } from '@/api/lottery_comment.ts'
@@ -46,6 +47,26 @@ const isUp = computed(
 )
 /** 是否存在子回复（决定是否展示「共 N 条回复」折叠入口） */
 const hasMoreSub = computed(() => Number(props.item.rcount) > 0)
+
+// SDK 重新生成后 CommentUserBrief / reply_to 为松散索引类型（[key: string]: unknown），
+// 模板取值统一经此收窄，避免 {} 直接赋给 string / number
+const member = computed(
+  () => props.item.member as Record<string, unknown> | null | undefined
+)
+const memberAvatar = computed(() =>
+  typeof member.value?.avatar === 'string' ? member.value.avatar : ''
+)
+const memberUname = computed(() =>
+  typeof member.value?.uname === 'string' ? member.value.uname : ''
+)
+const memberLevel = computed(() =>
+  typeof member.value?.level === 'number' ? member.value.level : null
+)
+const replyToMid = computed(() => {
+  const r = props.item.reply_to as Record<string, unknown> | null | undefined
+  const mid = r?.mid
+  return typeof mid === 'string' || typeof mid === 'number' ? mid : undefined
+})
 /** 总页数：至少 1 页，避免 0 页导致分页器无页码可点 */
 const subTotalPages = computed(() => Math.max(1, Math.ceil(subTotal.value / subPageSize)))
 
@@ -236,9 +257,9 @@ watch(
       @click="goUserSpace"
     >
       <img
-        :src="item.member?.avatar || BiliImg.face.noface"
+        :src="memberAvatar || BiliImg.face.noface"
         referrerpolicy="no-referrer"
-        :alt="item.member?.uname || '头像'"
+        :alt="memberUname || '头像'"
       />
     </el-avatar>
 
@@ -248,7 +269,7 @@ watch(
           class="lottery-comment-item__name font-medium text-sm text-text-primary cursor-pointer hover:text-primary transition-colors"
           @click="goUserSpace"
         >
-          {{ item.member?.uname || '匿名用户' }}
+          {{ memberUname || '匿名用户' }}
         </span>
         <el-tag v-if="isUp" type="primary" size="small" effect="plain" round>UP</el-tag>
         <el-tag
@@ -270,9 +291,9 @@ watch(
         <template v-if="item.reply_to">
           <span class="text-primary">回复 </span>
           <UserBriefCell
-            v-if="item.reply_to.mid"
+            v-if="replyToMid"
             class="lottery-comment-item__reply-at-link align-baseline"
-            :mid="item.reply_to.mid"
+            :mid="replyToMid"
             to-space
             :show-after="300"
           >
@@ -342,7 +363,7 @@ watch(
             class="lottery-comment-item__more-btn inline-flex items-center justify-center text-text-placeholder hover:text-primary transition-colors cursor-pointer border-none bg-transparent p-1"
             :aria-label="'更多操作'"
           >
-            <el-icon :size="14" class="rotate-90"><MoreFilled /></el-icon>
+            <component :is="MoreIcon" class="w-3.5 h-3.5" />
           </button>
           <template #dropdown>
             <el-dropdown-menu class="lottery-comment-item__more-menu">

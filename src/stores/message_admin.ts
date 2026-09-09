@@ -5,13 +5,14 @@ import { MessageAdminService } from '@/api/community/hey-api'
 export interface MessageAdminMe {
   is_root: boolean
   is_admin: boolean
-  permissions: string[]
+  /** 各资源域权限字（per-biz 位掩码，值 0~7；root 恒 {"*": 7}） */
+  biz_perms: Record<string, number>
 }
 
 const DEFAULT_ME: MessageAdminMe = {
   is_root: false,
   is_admin: false,
-  permissions: []
+  biz_perms: {}
 }
 
 /**
@@ -32,7 +33,10 @@ export const useMessageAdminStore = defineStore('message-admin', () => {
         status.value = {
           is_root: Boolean(data.is_root),
           is_admin: Boolean(data.is_admin),
-          permissions: Array.isArray(data.permissions) ? (data.permissions as string[]) : []
+          biz_perms:
+            data.biz_perms && typeof data.biz_perms === 'object'
+              ? (data.biz_perms as Record<string, number>)
+              : {}
         }
       } else {
         status.value = { ...DEFAULT_ME }

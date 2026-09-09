@@ -3,12 +3,15 @@
  *
  * 仅在此处调用 hey-api 生成的 SDK，业务视图/组件统一调用本文件的封装函数。
  */
-import { AvatarAuditService, FavoriteService, FolderCoverAuditService, InteractionBizTypeEnum, MessageFollowService, MomentAuditService, ResourceAuditStatusEnum, MomentFeedService, MomentService, MomentTopicAuditService, PptrUserGatewayService, ReportService } from '@/api/community/hey-api'
+import { AuditService, AvatarAuditService, FavoriteService, FolderCoverAuditService, InteractionBizTypeEnum, MessageFollowService, MomentAuditService, ResourceAuditStatusEnum, MomentFeedService, MomentService, MomentTopicAuditService, PptrUserGatewayService, ReportService } from '@/api/community/hey-api'
 import { request, authHeaders, type RequestOptions } from '@/api/http'
 
 import type {
   MomentFeedResp,
   MomentFeedItem,
+  AuditApproveReq,
+  AuditRejectReq,
+  AuditActionResp,
   MomentDetailResp,
   MomentCreateReq,
   MomentCreateResp,
@@ -42,8 +45,6 @@ import type {
   MomentAuditActionReq,
   MomentAuditRejectReq,
   MomentAuditItem,
-  MomentAuditStatisticsResp,
-  MomentAuditTypeStat,
   AvatarAuditMineResp,
   AvatarAuditListResp,
   AvatarAuditApproveReq,
@@ -457,8 +458,9 @@ export async function fetchMyTopics(params: {
   )
 }
 
-/** 管理端话题待审核列表（root） */
+/** 管理端话题审核列表（root，按状态筛选；auditStatus 待 SDK 同步，先断言透传） */
 export async function fetchTopicAuditList(params: {
+  auditStatus?: ResourceAuditStatusEnum
   page_num?: number
   page_size?: number
 } = {}): Promise<MomentTopicAuditListResp> {
@@ -466,9 +468,10 @@ export async function fetchTopicAuditList(params: {
     () =>
       MomentTopicAuditService.topicAuditListApiV1CommunityTopicAuditListGet({
         query: {
+          ...(params.auditStatus != null ? { auditStatus: params.auditStatus } : {}),
           page_num: params.page_num ?? 1,
           page_size: params.page_size ?? 20,
-        },
+        } as never,
       }),
     { items: [], total: 0, page_num: 1, page_size: params.page_size ?? 20 }
   )
@@ -731,6 +734,8 @@ export async function fetchUserSpaceInfo(mid: number | string): Promise<Standard
 export async function fetchAuditList(params: {
   /** 审核状态筛选：auditing（默认，待审核）/ normal（已过审，可驳回撤回）/ rejected（已驳回，可通过恢复）/ hidden（已下架） */
   auditStatus?: ResourceAuditStatusEnum
+  /** 资源子类型筛选（动态类型 WORD/FORWARD/…，各 admin list 接口统一参数名；SDK 类型待同步先断言透传） */
+  bizType?: string
   page_num?: number
   page_size?: number
 } = {}): Promise<MomentAuditListResp> {
@@ -739,9 +744,10 @@ export async function fetchAuditList(params: {
       MomentAuditService.auditListApiV1CommunityAuditListGet({
         query: {
           auditStatus: params.auditStatus,
+          ...(params.bizType ? { bizType: params.bizType } : {}),
           page_num: params.page_num ?? 1,
           page_size: params.page_size ?? 20,
-        },
+        } as never,
       }),
     { items: [], total: 0, page_num: 1, page_size: params.page_size ?? 20 }
   )
@@ -798,6 +804,48 @@ export async function auditReject(
   )
 }
 
+// ==================== 通用审核（bizType + bizId，计划书 Phase 10 / 后端 §5.13）====================
+// 所有管理端审核页统一走这两个函数：后端按 bizType+bizId 经资源类执行审核，
+// 驳回通知由资源方法内部承载，前端不再区分 dynId / topicId / pk / rpid 等专用入参。
+
+export async function auditApproveByBiz(
+  bizType: InteractionBizTypeEnum,
+  bizId: string | number,
+  remark?: string
+): Promise<AuditActionResp | null> {
+  return request<AuditActionResp | null>(
+    () =>
+      AuditService.auditApproveApiV1AuditApprovePost({
+        body: {
+          bizType,
+          bizId: String(bizId),
+          remark,
+        } as AuditApproveReq,
+      }),
+    null
+  )
+}
+
+export async function auditRejectByBiz(
+  bizType: InteractionBizTypeEnum,
+  bizId: string | number,
+  rejectReason: string,
+  remark?: string
+): Promise<AuditActionResp | null> {
+  return request<AuditActionResp | null>(
+    () =>
+      AuditService.auditRejectApiV1AuditRejectPost({
+        body: {
+          bizType,
+          bizId: String(bizId),
+          rejectReason,
+          remark,
+        } as AuditRejectReq,
+      }),
+    null
+  )
+}
+
 export async function fetchAuditDetail(
   dynId: string
 ): Promise<MomentAuditDetailResp | null> {
@@ -824,6 +872,7 @@ export async function fetchAvatarAuditMine(): Promise<AvatarAuditMineResp | null
 
 /** 管理端待审核头像列表（RootUser） */
 export async function fetchAvatarAuditList(params: {
+  auditStatus?: ResourceAuditStatusEnum
   page_num?: number
   page_size?: number
 } = {}): Promise<AvatarAuditListResp> {
@@ -831,9 +880,10 @@ export async function fetchAvatarAuditList(params: {
     () =>
       AvatarAuditService.avatarAuditListApiV1UserAvatarAuditListGet({
         query: {
+          ...(params.auditStatus != null ? { auditStatus: params.auditStatus } : {}),
           page_num: params.page_num ?? 1,
           page_size: params.page_size ?? 20,
-        },
+        } as never,
       }),
     { items: [], total: 0, page_num: 1, page_size: params.page_size ?? 20 }
   )
@@ -872,6 +922,7 @@ export async function avatarAuditReject(
 
 /** 管理端待审核收藏夹封面列表（RootUser） */
 export async function fetchFolderCoverAuditList(params: {
+  auditStatus?: ResourceAuditStatusEnum
   page_num?: number
   page_size?: number
 } = {}): Promise<FolderCoverAuditListResp> {
@@ -879,9 +930,10 @@ export async function fetchFolderCoverAuditList(params: {
     () =>
       FolderCoverAuditService.folderCoverAuditListApiV1FavoriteFolderCoverAuditListGet({
         query: {
+          ...(params.auditStatus != null ? { auditStatus: params.auditStatus } : {}),
           page_num: params.page_num ?? 1,
           page_size: params.page_size ?? 20,
-        },
+        } as never,
       }),
     { items: [], total: 0, page_num: 1, page_size: params.page_size ?? 20 }
   )
@@ -1141,11 +1193,38 @@ export async function fetchUserFavoriteDynIds(
 }
 
 /** 动态审核总统计：按类型 + 按状态分组计数（role=root，与审核列表同守卫） */
-export async function fetchAuditStatistics(): Promise<MomentAuditStatisticsResp> {
-  return request<MomentAuditStatisticsResp>(
-    () => MomentAuditService.auditStatisticsApiV1CommunityAuditStatisticsGet(),
-    { byType: [], byStatus: {}, total: 0 }
-  );
+/** 通用审核统计响应（后端 /audit/statistics 统一结构，SDK 类型待同步先用本地契约） */
+export interface AuditStatisticsData {
+  total: number
+  byStatus: Record<string, number>
+  byType?: Array<Record<string, unknown>>
+}
+
+/**
+ * 审核统计业务域：直接复用 bili_common 收口的统一业务资源类型枚举
+ * （InteractionBizTypeEnum）。SDK 尚未同步后端新增的审核域成员（9~13），
+ * 先本地补充；SDK 重新生成后删除展开中的重复成员、直接用 SDK 导出。
+ */
+export const AuditBizType = {
+  ...InteractionBizTypeEnum,
+  TOPIC: 9,
+  DM: 10,
+  AVATAR: 11,
+  FOLDER_COVER: 12,
+  REPORT: 13,
+} as const
+
+/** 通用审核统计（按 bizType 业务域，传 InteractionBizTypeEnum 数值；SDK 类型待同步先断言透传） */
+export async function fetchAuditStatisticsByBiz(
+  bizType: number
+): Promise<AuditStatisticsData> {
+  return request<AuditStatisticsData>(
+    () =>
+      MomentAuditService.auditStatisticsApiV1CommunityAuditStatisticsGet({
+        query: { bizType } as never,
+      }),
+    { total: 0, byStatus: {}, byType: [] }
+  )
 }
 
 // ---- Re-export types for consumers ----
@@ -1176,8 +1255,6 @@ export type {
   MomentAuditDetailResp,
   MomentAuditLogListResp,
   MomentAuditItem,
-  MomentAuditStatisticsResp,
-  MomentAuditTypeStat,
   MomentContentNode,
   MomentModule,
   MomentTopicInfo,
@@ -1209,4 +1286,7 @@ export type {
   FolderCoverAuditItem,
   FolderCoverAuditApproveReq,
   FolderCoverAuditRejectReq,
+  AuditApproveReq,
+  AuditRejectReq,
+  AuditActionResp,
 } from '@/api/community/hey-api'

@@ -107,8 +107,8 @@ onMounted(load)
       <el-carousel
         v-if="groups.length"
         class="home-latest-comments__carousel"
-        height="22rem"
         :interval="5000"
+        height="25rem"
         arrow="hover"
         indicator-position="outside"
         type="card"

@@ -1,9 +1,5 @@
 <template>
   <div class="comment-admin flex flex-col gap-4">
-    <div class="comment-admin__header">
-      <h2 class="text-lg font-bold text-text-primary">{{ t('message.commentAuditTitle') }}</h2>
-    </div>
-
     <div class="comment-admin__stats grid grid-cols-2 gap-3 md:grid-cols-4">
       <div class="comment-admin__stat-card rounded-lg bg-bg-overlay p-4">
         <div class="text-sm text-text-placeholder">{{ t('message.statTotalComments') }}</div>
@@ -23,22 +19,33 @@
       </div>
     </div>
 
+    <!-- 审核状态分布总览（通用组件） -->
+    <AuditOverviewCard :statistics="auditStats" type-label="评论区类型" />
+
+    <AdminAuditTabs
+      v-model="activeTab"
+      title="评论审核队列"
+      :tabs="visibleTabs"
+      :loading="loading"
+      @refresh="onFilterChange"
+    />
+
     <div v-if="canViewAllStates" class="comment-admin__filter flex items-center gap-3">
-      <span class="text-sm text-text-placeholder">{{ t('message.statusFilter') }}</span>
+      <span class="text-sm text-text-placeholder">评论区类型</span>
       <el-select
-        v-model="stateFilter"
-        multiple
+        v-model="bizTypeFilter"
         clearable
-        collapse-tags
         size="default"
-        :placeholder="t('message.filterAllStatus')"
+        placeholder="全部类型"
         class="comment-admin__filter-select w-72"
         @change="onFilterChange"
       >
-        <el-option :label="t('message.stateAuditing')" value="auditing" />
-        <el-option :label="t('message.stateNormal')" value="normal" />
-        <el-option :label="t('message.stateRejected')" value="rejected" />
-        <el-option :label="t('message.stateHidden')" value="hidden" />
+        <el-option
+          v-for="row in auditStats?.byType ?? []"
+          :key="String(row.type)"
+          :label="String(row.type)"
+          :value="String(row.type)"
+        />
       </el-select>
     </div>
 
@@ -246,7 +253,10 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
+import AuditOverviewCard from '@/components/admin/AuditOverviewCard.vue'
+import AdminAuditTabs from '@/components/admin/AdminAuditTabs.vue'
+import { fetchAuditStatisticsByBiz, type AuditStatisticsData, AuditBizType } from '@/api/notify/moment-api'
 import type { Column } from 'element-plus'
 import { useDebounceFn } from '@vueuse/core'
 import { useI18n } from 'vue-i18n'
@@ -276,6 +286,7 @@ import BanUserDialog from '@/components/message/BanUserDialog.vue'
 import AuditReasonDialog from '@/components/message/AuditReasonDialog.vue'
 import UserBriefCell from '@/components/message/UserBriefCell.vue'
 import { useMessageAdminStore } from '@/stores/message_admin'
+import { hasBizPerm } from './messageAdmin'
 
 const items = ref<CommentAuditRow[]>([])
 const loading = ref(false)
@@ -284,8 +295,22 @@ const page = ref(1)
 const pageSize = ref(20)
 const pageSizes = [10, 20, 50, 100]
 // 默认筛选「审核中」（审核员进入页面最关心待审队列）
-const stateFilter = ref<string[]>(['auditing'])
+// 状态 Tab（与 MomentAuditListView 同构：单选 Tabs；非 root 仅「待审核」）
+const activeTab = ref('AUDITING')
 const canViewAllStates = ref(false)
+const COMMENT_TABS: Array<{ name: string; label: string }> = [
+  { name: 'AUDITING', label: '待审核' },
+  { name: 'NORMAL', label: '已过审' },
+  { name: 'REJECTED', label: '已驳回' },
+  { name: 'HIDDEN', label: '已下架' }
+]
+const visibleTabs = computed(() =>
+  canViewAllStates.value ? COMMENT_TABS : COMMENT_TABS.filter((tb) => tb.name === 'AUDITING')
+)
+watch(activeTab, () => {
+  page.value = 1
+  load()
+})
 const stats = reactive<CommentStatsData>({
   total_comments: 0,
   total_root: 0,
@@ -328,11 +353,9 @@ const pendingOp = ref<'' | 'pass' | 'reject' | 'hidden' | 'restore'>('')
 const reasonDialogItems = ref<
   { id: string; preview?: string; mid?: number | null; brief?: CommentAuditRow['member'] }[]
 >([])
-// 评论封禁 / 解封权限（comment:ban）
+// 评论封禁 / 解封权限：comment 域处置位（BAN=1；root 恒有）
 const canBan = computed(
-  () =>
-    adminStore.status.is_root ||
-    adminStore.status.permissions.includes('comment:ban')
+  () => adminStore.status.is_root || hasBizPerm(adminStore.status.biz_perms, 'comment', 1)
 )
 const selectedMids = computed(() =>
   selectedRows.value.map((r) => r.mid).filter((m): m is number => Boolean(m))
@@ -394,10 +417,14 @@ async function load() {
   const [list, st] = await Promise.all([
     CommentAdminService.auditQueueApiV1CommentAdminAuditGet({
       query: {
-        state: stateFilter.value.length ? stateFilter.value : undefined,
+        // state 仅接受状态数值（StrInt）：Tab 名 → ResourceAuditStatusEnum 取值
+        state: canViewAllStates.value
+          ? [ResourceAuditStatusEnum[activeTab.value as keyof typeof ResourceAuditStatusEnum]]
+          : undefined,
+        bizType: bizTypeFilter.value || undefined,
         page_num: page.value,
         page_size: pageSize.value
-      }
+      } as never
     }),
     CommentAdminService.adminStatsApiV1CommentAdminStatsGet()
   ])
@@ -538,7 +565,17 @@ function stateText(s: ResourceAuditStatusEnum): string {
   return t('message.stateDeleted')
 }
 
+
+// 审核状态分布总览（通用统计接口，bizType=comment）
+const auditStats = ref<AuditStatisticsData | null>(null)
+// 评论区资源类型筛选（与统计 byType 对齐；各 admin list 接口统一 bizType 参数名）
+const bizTypeFilter = ref<string>()
+async function loadAuditStats() {
+  auditStats.value = await fetchAuditStatisticsByBiz(AuditBizType.COMMENT)
+}
+
 onMounted(async () => {
+  void loadAuditStats()
   await adminStore.fetchStatus()
   await load()
 })

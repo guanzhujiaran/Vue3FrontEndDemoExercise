@@ -1,21 +1,19 @@
 <template>
   <div class="avatar-audit-list flex flex-col gap-4">
-    <!-- 工具栏 -->
-    <div class="avatar-audit-list__toolbar flex items-center justify-between">
-      <h2 class="avatar-audit-list__title text-lg font-bold text-text-primary">头像更换审核队列</h2>
-    </div>
+    <!-- 审核总览统计（通用组件） -->
+    <AuditOverviewCard
+      :statistics="statistics"
+      total-label="头像申请总数"
 
-    <div class="avatar-audit-list__table-bar mb-2 flex items-center justify-end">
-      <el-button
-        class="avatar-audit-list__refresh-btn"
-        size="default"
-        :icon="Refresh"
-        :loading="loading"
-        @click="load"
-      >
-        刷新
-      </el-button>
-    </div>
+    />
+    <!-- 工具栏（通用组件：标题 + 状态 Tabs + 刷新） -->
+    <AdminAuditTabs
+      v-model="activeTab"
+      title="头像更换审核队列"
+      :tabs="AUDIT_TABS"
+      :loading="loading"
+      @refresh="load(true)"
+    />
 
     <LoadingWrap :loading="loading" :rows="6">
       <EmptyState v-if="!loading && items.length === 0" text="暂无待审核头像" />
@@ -64,13 +62,16 @@
 
                 <!-- 状态 -->
                 <template v-else-if="column.key === 'state'">
-                  <el-tag size="default" effect="light" type="warning">待审核</el-tag>
+                  <el-tag size="default" effect="light" :type="stateTagType(rowData.auditStatus)">
+                    {{ stateTagText(rowData.auditStatus) }}
+                  </el-tag>
                 </template>
 
-                <!-- 操作 -->
+                <!-- 操作：auditing=通过/驳回；normal=仅驳回；rejected=仅通过 -->
                 <template v-else-if="column.key === 'action'">
                   <div class="flex gap-2">
                     <el-button
+                      v-if="canApprove(rowData.auditStatus)"
                       size="default"
                       type="primary"
                       :loading="approvingId === rowData.pk"
@@ -79,6 +80,7 @@
                       通过
                     </el-button>
                     <el-button
+                      v-if="canReject(rowData.auditStatus)"
                       size="default"
                       type="danger"
                       :loading="rejectingId === rowData.pk"
@@ -108,7 +110,8 @@
                   :page-size="pageSize"
                   :current-page="page"
                   @update:current-page="onPageChange"
-                />
+                  @update:page-size="onPageSizeChange"
+/>
               </template>
             </el-table-v2>
           </template>
@@ -119,14 +122,21 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { TableV2FixedDir, type Column } from 'element-plus'
 import { Refresh } from '@element-plus/icons-vue'
 import {
   fetchAvatarAuditList,
-  avatarAuditApprove,
-  avatarAuditReject,
-} from '@/api/notify/moment-api'
+  auditApproveByBiz,
+  auditRejectByBiz,
+  InteractionBizTypeEnum,
+  ResourceAuditStatusEnum,
+  AuditBizType } from '@/api/notify/moment-api'
+import { auditStateText, auditStateTagType, canApprove, canReject } from '@/utils/auditStateMachine'
+import { useAuditTabCache } from '@/composables/useAuditTabCache'
+import AdminAuditTabs from '@/components/admin/AdminAuditTabs.vue'
+import AuditOverviewCard from '@/components/admin/AuditOverviewCard.vue'
+import { fetchAuditStatisticsByBiz, type AuditStatisticsData } from '@/api/notify/moment-api'
 import type { AvatarAuditItem } from '@/api/notify/moment-api'
 import LoadingWrap from '@/components/message/LoadingWrap.vue'
 import EmptyState from '@/components/message/EmptyState.vue'
@@ -135,13 +145,51 @@ import TimeText from '@/components/message/TimeText.vue'
 import { BiliImg } from '@/assets/img/BiliImg'
 import biliMessage from '@/utils/message'
 
-const items = ref<AvatarAuditItem[]>([])
-const loading = ref(false)
-const total = ref(0)
-const page = ref(1)
-const pageSize = 20
+// 状态 Tab：待审核 / 已过审 / 已驳回；操作走统一审核接口（bizType=USER，bizId=mid）
+const AUDIT_TABS: Array<{ name: string; label: string; status: ResourceAuditStatusEnum }> = [
+  { name: 'AUDITING', label: '待审核', status: ResourceAuditStatusEnum.AUDITING },
+  { name: 'NORMAL', label: '已过审', status: ResourceAuditStatusEnum.NORMAL },
+  { name: 'REJECTED', label: '已驳回', status: ResourceAuditStatusEnum.REJECTED },
+]
+
+// 审核总览统计（通用统计接口，按业务域聚合）
+const statistics = ref<AuditStatisticsData | null>(null)
+
+async function loadStatistics() {
+  statistics.value = await fetchAuditStatisticsByBiz(AuditBizType.AVATAR)
+}
+const statusOf = (name: string) =>
+  AUDIT_TABS.find((t) => t.name === name)?.status ?? ResourceAuditStatusEnum.AUDITING
+
+const {
+  activeTab,
+  items,
+  total,
+  page,
+  pageSize,
+  loading,
+  load,
+  onPageChange,
+  onPageSizeChange,
+  removeRow,
+} = useAuditTabCache<AvatarAuditItem>(
+  async (tab, pageNum, size) => {
+    const res = await fetchAvatarAuditList({
+      auditStatus: statusOf(tab),
+      page_num: pageNum,
+      page_size: size,
+    })
+    return { items: res.items || [], total: res.total || 0 }
+  },
+  { tabs: AUDIT_TABS, defaultTab: 'AUDITING' }
+)
+
 const approvingId = ref<number | null>(null)
 const rejectingId = ref<number | null>(null)
+
+// 状态标签 / 动作显隐统一走审核状态机（utils/auditStateMachine）
+const stateTagText = (s: string) => auditStateText(s)
+const stateTagType = (s: string) => auditStateTagType(s)
 
 // el-table-v2 列定义（与 CommentAdminView 保持同构；操作列固定右侧）
 const auditColumns: Column<AvatarAuditItem>[] = [
@@ -154,38 +202,28 @@ const auditColumns: Column<AvatarAuditItem>[] = [
   { key: 'action', title: '操作', width: 200, fixed: TableV2FixedDir.RIGHT }
 ]
 
-onMounted(load)
+onMounted(() => {
+  load()
+  loadStatistics()
+})
 
 // 表格高度自适应：数据不满一屏时收缩到内容实际高度，底部滚动条紧跟最后一行数据
 const TABLE_HEADER_H = 44
 const TABLE_ROW_H = 72
 const TABLE_FOOTER_H = 64
 function fitTableHeight(avail: number): number {
-  const footerH = total.value > pageSize ? TABLE_FOOTER_H : 0
+  const footerH = total.value > pageSize.value ? TABLE_FOOTER_H : 0
   const contentH = TABLE_HEADER_H + items.value.length * TABLE_ROW_H + footerH
   return Math.min(avail, Math.max(contentH, TABLE_HEADER_H + TABLE_ROW_H + footerH))
 }
 
-async function load() {
-  loading.value = true
-  const res = await fetchAvatarAuditList({ page_num: page.value, page_size: pageSize })
-  items.value = res.items || []
-  total.value = res.total || 0
-  loading.value = false
-}
-
-function onPageChange(p: number) {
-  page.value = p
-  load()
-}
-
 async function handleApprove(item: AvatarAuditItem) {
   approvingId.value = item.pk
-  const res = await avatarAuditApprove(item.pk, '通过')
+  // 统一审核接口：bizType=USER，bizId=mid（资源类按 mid 反查待审记录）
+  const res = await auditApproveByBiz(InteractionBizTypeEnum.USER, item.mid, '通过')
   approvingId.value = null
   if (res) {
-    items.value = items.value.filter((i) => i.pk !== item.pk)
-    total.value = Math.max(0, total.value - 1)
+    removeRow((i) => i.pk === item.pk)
     biliMessage.success('已通过，新头像已公开显示')
   }
 }
@@ -197,11 +235,10 @@ async function handleReject(item: AvatarAuditItem) {
     )
     if (reason) {
       rejectingId.value = item.pk
-      const res = await avatarAuditReject(item.pk, reason, '驳回')
+      const res = await auditRejectByBiz(InteractionBizTypeEnum.USER, item.mid, reason, '驳回')
       rejectingId.value = null
       if (res) {
-        items.value = items.value.filter((i) => i.pk !== item.pk)
-        total.value = Math.max(0, total.value - 1)
+        removeRow((i) => i.pk === item.pk)
         biliMessage.success('已驳回')
       }
     }

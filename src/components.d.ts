@@ -15,7 +15,9 @@ declare module 'vue' {
     AccountStatusBoard: typeof import('./components/opus-detail/RightPannel/PannelItems/SettingComponent/AccountStatusBoard.vue')['default']
     ActionCard: typeof import('./components/rpa-browser/ActionCard.vue')['default']
     ActionParamsForm: typeof import('./components/rpa-browser/ActionParamsForm.vue')['default']
+    AdminAuditTabs: typeof import('./components/admin/AdminAuditTabs.vue')['default']
     AtEventCard: typeof import('./components/message/cards/AtEventCard.vue')['default']
+    AuditOverviewCard: typeof import('./components/admin/AuditOverviewCard.vue')['default']
     AuditReasonDialog: typeof import('./components/message/AuditReasonDialog.vue')['default']
     AuditRejectEventCard: typeof import('./components/message/cards/AuditRejectEventCard.vue')['default']
     AuditSourceLink: typeof import('./components/message/AuditSourceLink.vue')['default']
@@ -244,6 +246,7 @@ declare module 'vue' {
     UserCenterDeactivate: typeof import('./components/opus-detail/RightPannel/PannelItems/SettingComponent/UserCenterDeactivate.vue')['default']
     UserCenterDefaultPanel: typeof import('./components/opus-detail/RightPannel/PannelItems/SettingComponent/UserCenterDefaultPanel.vue')['default']
     UserCenterRecords: typeof import('./components/opus-detail/RightPannel/PannelItems/SettingComponent/UserCenterRecords.vue')['default']
+    UserSearchPicker: typeof import('./components/message/UserSearchPicker.vue')['default']
     WorkflowEditDialog: typeof import('./components/rpa-browser/WorkflowEditDialog.vue')['default']
   }
   export interface GlobalDirectives {
@@ -256,7 +259,9 @@ declare global {
   const AccountStatusBoard: typeof import('./components/opus-detail/RightPannel/PannelItems/SettingComponent/AccountStatusBoard.vue')['default']
   const ActionCard: typeof import('./components/rpa-browser/ActionCard.vue')['default']
   const ActionParamsForm: typeof import('./components/rpa-browser/ActionParamsForm.vue')['default']
+  const AdminAuditTabs: typeof import('./components/admin/AdminAuditTabs.vue')['default']
   const AtEventCard: typeof import('./components/message/cards/AtEventCard.vue')['default']
+  const AuditOverviewCard: typeof import('./components/admin/AuditOverviewCard.vue')['default']
   const AuditReasonDialog: typeof import('./components/message/AuditReasonDialog.vue')['default']
   const AuditRejectEventCard: typeof import('./components/message/cards/AuditRejectEventCard.vue')['default']
   const AuditSourceLink: typeof import('./components/message/AuditSourceLink.vue')['default']
@@ -485,5 +490,6 @@ declare global {
   const UserCenterDeactivate: typeof import('./components/opus-detail/RightPannel/PannelItems/SettingComponent/UserCenterDeactivate.vue')['default']
   const UserCenterDefaultPanel: typeof import('./components/opus-detail/RightPannel/PannelItems/SettingComponent/UserCenterDefaultPanel.vue')['default']
   const UserCenterRecords: typeof import('./components/opus-detail/RightPannel/PannelItems/SettingComponent/UserCenterRecords.vue')['default']
+  const UserSearchPicker: typeof import('./components/message/UserSearchPicker.vue')['default']
   const WorkflowEditDialog: typeof import('./components/rpa-browser/WorkflowEditDialog.vue')['default']
 }

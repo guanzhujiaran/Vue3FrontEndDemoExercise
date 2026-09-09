@@ -272,7 +272,7 @@ const handleCardClick = (path: string | undefined, requiresLogin = false) => {
       <div
         class="mt-10 flex flex-col items-center justify-between gap-3 border-t border-border-lighter pt-6 sm:flex-row">
         <el-text class="text-xs text-text-secondary" tag="p">&copy; 2025 BiliExplosion. All rights reserved.</el-text>
-        <el-text class="text-xs text-text-secondary" tag="p">Made with ❤ by 星瞳</el-text>
+        <el-text class="text-xs text-text-secondary" tag="p">Made with ❤ by 斯卡蒂天下第一T_T</el-text>
       </div>
     </div>
   </footer>

@@ -18,7 +18,7 @@ export class MomentAuditService {
     }
     
     /**
-     * 动态审核总统计（按类型 + 按状态）
+     * 审核总统计（按 bizType 业务域：dynamic/topic/comment/dm/avatar/folder_cover/report）
      */
     public static auditStatisticsApiV1CommunityAuditStatisticsGet<ThrowOnError extends boolean = false>(options?: Options<AuditStatisticsApiV1CommunityAuditStatisticsGetData, ThrowOnError>): RequestResult<AuditStatisticsApiV1CommunityAuditStatisticsGetResponses, AuditStatisticsApiV1CommunityAuditStatisticsGetErrors, ThrowOnError, 'data'> {
         return (options?.client ?? client).get<AuditStatisticsApiV1CommunityAuditStatisticsGetResponses, AuditStatisticsApiV1CommunityAuditStatisticsGetErrors, ThrowOnError, 'data'>({

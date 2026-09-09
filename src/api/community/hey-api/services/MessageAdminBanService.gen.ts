@@ -13,7 +13,7 @@ export class MessageAdminBanService {
      *
      * 按服务维度（comment / dm）封禁，给出理由与封禁时长
      * （temporary + duration_days 限时 / permanent 永久）。
-     * 按服务逐项鉴权：请求含 comment 需 comment:ban、含 dm 需 dm:ban。
+     * 按服务逐项鉴权：请求含 comment 需 comment 域 BAN 位、含 dm 需 dm 域 BAN 位。
      */
     public static banUsers<ThrowOnError extends boolean = false>(options: Options<BanUsersData, ThrowOnError>): RequestResult<BanUsersResponses, BanUsersErrors, ThrowOnError, 'data'> {
         return (options.client ?? client).post<BanUsersResponses, BanUsersErrors, ThrowOnError, 'data'>({
@@ -50,7 +50,7 @@ export class MessageAdminBanService {
     /**
      * 封禁记录列表
      *
-     * 分页查看封禁记录（root 或拥有 `user:ban-view` 权限的管理员）。
+     * 分页查看封禁记录（root 或持有用户域查看位的管理员）。
      */
     public static listBans<ThrowOnError extends boolean = false>(options?: Options<ListBansData, ThrowOnError>): RequestResult<ListBansResponses, ListBansErrors, ThrowOnError, 'data'> {
         return (options?.client ?? client).get<ListBansResponses, ListBansErrors, ThrowOnError, 'data'>({

@@ -161,6 +161,21 @@ const res = await listNotifyApiV1MessageNotifyListGet({ query: { page: 1, size: 
 - [x] **首页「最新评论」改版**：`HomeView.vue` 将 `<HomeLatestComments />` 移至「功能导航区」上方（hero 之下）；`HomeLatestComments.vue` **保留按资源类型分组的分区框**，展示改为 **el-carousel 轮播**——每页一个资源类型分区框（5s 自动轮播 + hover 箭头 + 底部指示条），框内评论列表超高可滚动，点击跳转对应资源评论区的逻辑不变。
 - [x] **最新评论未登录可访问**：be-gateway `JwtModule.js` jwtAuth `unless` 白名单补充 `GET /api/v1/comment/latest`（与 comment/main、/comment/detail、/comment/sub 同口径）；be-message 侧本就经 `resolve_optional_viewer` 允许匿名（匿名仅不回填点赞态），评论写接口仍走 jwtAuth + 上游 RequiredUser。
 
+### Phase 10 — 管理端审核界面统一（bizType + bizId 通用审核）
+
+- [x] **统一审核操作接口**：`moment-api.ts` 新增 `auditApproveByBiz / auditRejectByBiz(bizType, bizId, ...)`，调用后端 `POST /api/v1/audit/approve` / `/reject`；动态、评论、头像审核页已接入；话题 / 封面暂无 biz 资源类（`InteractionBizTypeEnum` 无 topic / favorite），暂沿用专用接口，后续纳入 BaseBiz 后切换。
+- [x] **审核页 UI 统一（对齐 `MomentAuditListView.vue`）**：`AvatarAuditListView.vue` / `TopicAuditListView.vue` / `FolderCoverAuditListView.vue` 均改为「标题 + 状态 Tabs + 刷新按钮」工具行 + 审核表格 + 空态/加载态；状态列动态映射，操作列「通过 / 驳回」按当前状态显隐（已过审只可驳回撤回，已驳回只可通过恢复）。后端话题 / 头像 / 封面三个列表接口已支持 `auditStatus` 筛选参数。
+- [x] **状态切换改为 `el-tabs` 懒加载**：待审核 / 已过审 / 已驳回三个 tab（`lazy` pane），**按 Tab 独立缓存数据**：首次激活才请求、切回复用已有数据、翻页 / 刷新按 Tab 维度执行（`tabCache: Record<tab, {items,total,page,loaded}>`）。评论审核页（消息管理端风格）已有等价的状态筛选与单条 / 批量审核，保留现状。
+- [x] **管理主界面缓存**：`AdminLayout.vue` 右侧主区用 `<keep-alive :max="12">`（按 `route.name` 作 key）缓存子路由组件，切换左侧菜单 / 返回已访问页面不重新挂载、不重新拉数据。
+- [x] **通用审核状态机**：新增 `src/utils/auditStateMachine.ts`——状态 → 允许动作矩阵（待审核=通过/驳回、已过审=仅驳回撤回、已驳回=仅通过恢复、已下架=不可操作）+ Tab 配置 + 标签文案 / 颜色映射；动态 / 头像 / 封面审核页与操作审批页统一接入，按钮显隐不再各自手写判断。RPA-Browser 审批审核（`approval_router.py`）同步放宽为状态机流转（pending→approved/rejected、approved→rejected 撤回、rejected→approved 恢复），支持「撤回 / 恢复」。
+- [x] **操作审批页改版**：状态筛选由下拉改为 `el-tabs` 三态（待审核/已通过/已驳回，懒加载 + 按 Tab 缓存）；新增固定右侧「操作」列（按状态机显示通过 / 驳回），原「审核」列拆为纯「审核意见」列；管理后台菜单移除「审批中心」入口（路由保留，直链仍可达）。
+- [x] **举报审核页统一 + 通用组件提取**：
+  - `src/composables/useAuditTabCache.ts`：通用「状态 Tab 缓存懒加载」组合式函数（每 Tab 独立 items/total/page/loaded，首次激活才请求、切回复用、翻页/刷新按 Tab 维度、`removeRow`/`invalidateOthers` 供审核动作后同步）；
+  - `src/components/admin/AdminAuditTabs.vue`：通用工具行组件（标题 + 状态 Tabs + 刷新按钮，`#extra` 插槽放附加筛选）；
+  - `ReportAdminView.vue` 重构为统一布局：el-tabs 三态（待处理/已成立/已驳回）+ 来源类型筛选（变化即失效全部 Tab 缓存）+ 状态列走状态机 + 操作列「审核 / 重新审核」（已成立可改判不成立、已驳回可改判成立，后端 review 无状态限制）；
+  - 动态 / 话题 / 头像 / 封面四页全部迁移至 `useAuditTabCache` + `AdminAuditTabs`，删除各自重复的 TabState/ensureTab/load 样板代码。
+- [x] **审核总览统计（全部审核页）**：后端 `/api/v1/community/audit/statistics` 扩展 `bizType` 参数（dynamic/topic/comment/dm/avatar/folder_cover/report，缺省 dynamic），返回统一结构 `{total, byStatus, byType}`（byType 行键统一 `type`）；`moment-api.ts` 新增 `fetchAuditStatisticsByBiz`。动态/话题/头像/封面/举报/评论审核/私信审核七个管理页顶部统一加「审核总览」卡片（状态 tags 按各域状态键渲染 + byType 明细表），卡片置于队列标题上方。
+
 ---
 
 ## 四、实现规范（必须遵守，与项目既有规则一致）

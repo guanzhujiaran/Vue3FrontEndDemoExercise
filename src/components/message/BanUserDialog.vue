@@ -91,6 +91,7 @@ import { useI18n } from 'vue-i18n'
 import biliMessage from '@/utils/message'
 import { MessageAdminBanService, BanDurationTypeEnum } from '@/api/community/hey-api'
 import { useMessageAdminStore } from '@/stores/message_admin'
+import { hasBizPerm } from '@/views/message/messageAdmin'
 
 const { t } = useI18n()
 
@@ -106,15 +107,15 @@ const emit = defineEmits<{
 
 const adminStore = useMessageAdminStore()
 
-// 按当前用户权限过滤可选封禁服务：评论需 comment:ban，私信需 dm:ban
+// 按当前用户权限过滤可选封禁服务：评论需 comment 域 BAN 位，私信需 dm 域 BAN 位
 const availableServices = computed<{ label: string; value: string }[]>(() => {
-  const perms = adminStore.status.permissions
   const isRoot = adminStore.status.is_root
+  const perms = adminStore.status.biz_perms
   const list: { label: string; value: string }[] = []
-  if (isRoot || perms.includes('comment:ban')) {
+  if (isRoot || hasBizPerm(perms, 'comment', 1)) {
     list.push({ label: t('message.banServiceComment'), value: 'comment' })
   }
-  if (isRoot || perms.includes('dm:ban')) {
+  if (isRoot || hasBizPerm(perms, 'dm', 1)) {
     list.push({ label: t('message.banServiceDm'), value: 'dm' })
   }
   return list
