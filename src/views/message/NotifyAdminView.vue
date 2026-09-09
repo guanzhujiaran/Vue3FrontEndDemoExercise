@@ -19,6 +19,19 @@
       </el-button>
     </div>
 
+    <!-- 类型筛选：区分全局系统通知与单独的用户通知 -->
+    <div class="flex items-center gap-3">
+      <span class="text-sm text-text-placeholder">通知类型</span>
+      <el-select v-model="targetTypeFilter" clearable size="default" placeholder="全部" class="w-56" @change="onFilterChange">
+        <el-option label="全部" value="" />
+        <el-option label="系统通知（全员）" :value="NotifyTargetTypeEnum.ALL" />
+        <el-option label="系统通知（按角色）" :value="NotifyTargetTypeEnum.ROLE" />
+        <el-option label="系统通知（按等级）" :value="NotifyTargetTypeEnum.LEVEL" />
+        <el-option label="系统通知（按大会员）" :value="NotifyTargetTypeEnum.VIP" />
+        <el-option label="用户通知（指定用户）" :value="NotifyTargetTypeEnum.CUSTOM" />
+      </el-select>
+    </div>
+
     <LoadingWrap :loading="loading" :rows="6">
       <EmptyState v-if="items.length === 0" :text="t('message.noNotifyRecord')" />
       <!-- 父容器固定高度，由 AutoResizer 自动测量并传给表格 width/height；滚动条落在表格内部，不依赖外侧布局滚动 -->
@@ -61,9 +74,19 @@
                   </el-tag>
                 </template>
 
-                <!-- 目标 -->
+                <!-- 目标：全局系统通知 / 单独的用户通知 用 tag 区分 -->
                 <template v-else-if="column.key === 'target'">
-                  <span class="text-sm text-text-placeholder">{{ targetText(rowData) }}</span>
+                  <div class="flex items-center gap-2">
+                    <el-tag
+                      :type="rowData.target_type === NotifyTargetTypeEnum.CUSTOM ? 'warning' : 'success'"
+                      size="small"
+                      effect="light"
+                      disable-transitions
+                    >
+                      {{ rowData.target_type === NotifyTargetTypeEnum.CUSTOM ? '用户通知' : '系统通知' }}
+                    </el-tag>
+                    <span class="text-sm text-text-placeholder">{{ targetText(rowData) }}</span>
+                  </div>
                 </template>
 
                 <!-- 发布时间 -->
@@ -135,7 +158,15 @@
           </el-select>
         </el-form-item>
         <el-form-item :label="t('message.notifyFormTargetValue')">
-          <el-input v-model="form.target_value" size="default"
+          <!-- 指定用户：搜索点选（可多选），合成逗号分隔 mid；其它类型填目标值 -->
+          <UserSearchPicker
+            v-if="form.target_type === NotifyTargetTypeEnum.CUSTOM"
+            v-model="selectedMids"
+            multiple
+            :disabled="submitting"
+            style="width: 100%"
+          />
+          <el-input v-else v-model="form.target_value" size="default"
             :placeholder="t('message.notifyTargetValuePlaceholder')" />
         </el-form-item>
         <el-form-item :label="t('message.notifyFormJumpUrl')">
@@ -212,6 +243,9 @@ const notifyColumns: Column<NotifyAdminItem>[] = [
 const dialogVisible = ref(false)
 const submitting = ref(false)
 const editingId = ref<number | null>(null)
+// 指定用户通知：搜索点选的用户 mid 列表（提交时合成逗号分隔 target_value）
+const selectedMids = ref<string[]>([])
+
 const form = reactive<CreateNotifyPayload & { target_type: NotifyTargetType }>({
   title: '',
   content: '',
@@ -233,9 +267,21 @@ function fitTableHeight(avail: number): number {
   return Math.min(avail, Math.max(contentH, TABLE_HEADER_H + TABLE_ROW_H + footerH))
 }
 
+// 通知类型筛选（undefined=全部；CUSTOM=单独的用户通知）
+const targetTypeFilter = ref<NotifyTargetTypeEnum | ''>('')
+
+function onFilterChange() {
+  page.value = 1
+  load()
+}
+
 async function load() {
   loading.value = true
-  const list = await fetchAdminNotifyList({ page: page.value, size: pageSize })
+  const list = await fetchAdminNotifyList({
+    page: page.value,
+    size: pageSize,
+    targetType: targetTypeFilter.value === '' ? undefined : targetTypeFilter.value
+  })
   items.value = list.items ?? []
   total.value = list.total ?? 0
   loading.value = false
@@ -254,6 +300,7 @@ function resetForm() {
   form.target_value = ''
   form.level = NotifyLevelEnum.NORMAL
   form.publish_now = true
+  selectedMids.value = []
 }
 
 function openCreate() {
@@ -269,6 +316,11 @@ function openEdit(row: NotifyAdminItem) {
   form.jump_url = row.jump_url ?? null
   form.target_type = row.target_type
   form.target_value = row.target_value ?? ''
+  // 定向用户通知：回填已选 mid（逗号分隔 → 数组）
+  selectedMids.value =
+    row.target_type === NotifyTargetTypeEnum.CUSTOM
+      ? (row.target_value ?? '').split(',').map((x) => x.trim()).filter(Boolean)
+      : []
   form.level = row.level
   form.publish_now = row.status === NotifyStatusEnum.PUBLISHED
   dialogVisible.value = true
@@ -285,7 +337,11 @@ async function submit() {
     content: form.content.trim(),
     jump_url: form.jump_url || null,
     target_type: form.target_type,
-    target_value: form.target_value || null,
+    // 指定用户：点选的 mid 列表合成逗号分隔串（后端 custom 按 mid 列表投递）
+    target_value:
+      form.target_type === NotifyTargetTypeEnum.CUSTOM
+        ? selectedMids.value.join(',') || null
+        : form.target_value || null,
     level: form.level,
     publish_now: form.publish_now
   }

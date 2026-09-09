@@ -161,12 +161,18 @@ export async function fetchAdminNotifyList(
   params: {
     page?: number
     size?: number
+    /** 按目标类型筛选（1=全员 / 2=角色 / 3=等级 / 4=大会员 / 5=指定用户）；缺省全部 */
+    targetType?: number
   } = {}
 ): Promise<NotifyAdminListResp> {
   return request<NotifyAdminListResp>(
     () =>
       MessageNotifyService.adminListNotifyApiV1MessageNotifyAdminListGet({
-        query: { page_num: params.page ?? 1, page_size: params.size ?? 20 }
+        query: {
+          page_num: params.page ?? 1,
+          page_size: params.size ?? 20,
+          target_type: params.targetType
+        } as never,
       }),
     { items: [], total: 0, page_num: 1, page_size: params.size ?? 20 }
   )

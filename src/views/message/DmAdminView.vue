@@ -446,9 +446,9 @@ async function load() {
     MessageDmAdminService.auditQueueApiV1MessageDmAdminAuditGet({
       query: {
         // state 仅接受状态数值（StrInt）：Tab 名 → ResourceAuditStatusEnum 取值
-        state: canViewAllStates.value
-          ? [ResourceAuditStatusEnum[activeTab.value as keyof typeof ResourceAuditStatusEnum]]
-          : undefined,
+        // state 恒按当前 Tab 传状态数值（首次加载 canViewAllStates 尚未就绪也不能漏传；
+        // 非 root 传 AUDITING 本身不会触发越权 403，其他状态由后端拒绝）
+        state: [ResourceAuditStatusEnum[activeTab.value as keyof typeof ResourceAuditStatusEnum]],
         page_num: page.value,
         page_size: pageSize.value
       }
