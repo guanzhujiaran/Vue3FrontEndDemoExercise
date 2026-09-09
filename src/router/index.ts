@@ -28,7 +28,6 @@ import {
   Connection as IconConnection
 } from '@element-plus/icons-vue'
 import emitter from '@/utils/mitt.ts'
-import { useRpaAdminStore } from '@/stores/rpa_admin.ts'
 import { useMessageAdminStore } from '@/stores/message_admin.ts'
 import { type CustomRouteRecordRaw, RouteName } from '@/models/router/index.ts'
 const user_center_routes = [
@@ -695,12 +694,6 @@ const routes: CustomRouteRecordRaw[] = [
         }
       },
       {
-        path: 'rpa/report',
-        name: 'ADMIN_RPA_REPORT',
-        component: () => import('@/views/rpa-browser/admin/CommunityReportAdmin.vue'),
-        meta: { title: '社区举报', requiresAdmin: true, hidden: true }
-      },
-      {
         path: 'rpa/audit',
         name: 'ADMIN_RPA_AUDIT',
         component: () => import('@/views/rpa-browser/admin/AuditLogAdmin.vue'),
@@ -717,12 +710,6 @@ const routes: CustomRouteRecordRaw[] = [
         name: 'ADMIN_RPA_TAG',
         component: () => import('@/views/rpa-browser/admin/TagAdmin.vue'),
         meta: { title: '标签管理', requiresAdmin: true, hidden: true }
-      },
-      {
-        path: 'rpa/role',
-        name: 'ADMIN_RPA_ROLE',
-        component: () => import('@/views/rpa-browser/admin/AdminRoleAdmin.vue'),
-        meta: { title: '管理员权限', requiresAdmin: true, hidden: true }
       },
       {
         path: 'message-notify',
@@ -832,8 +819,9 @@ const router = createRouter({
 router.beforeEach(async (to, from) => {
   // 管理员专属页面（管理后台入口及其子页面）：未登录或非管理员时，
   // 不展示入口也不提示，直接假装页面不存在（前端仅做拦截，后端仍会强制校验）
+  // 管理员身份统一由 be-message /me 裁决（RPA 旧 role/me 接口已下线）
   if (to.meta?.adminOnly || to.meta?.requiresAdmin) {
-    const adminStore = useRpaAdminStore()
+    const adminStore = useMessageAdminStore()
     if (!adminStore.loaded) {
       await adminStore.fetchStatus()
     }

@@ -1,6 +1,5 @@
 ---
-alwaysApply: false
-description: 修改了后端之后需要修改前端时
+alwaysApply: true
 ---
 前端 hey-api 生成的 SDK（位于 `src/api/**/hey-api/` 目录下）属于自动生成代码，结构如下：
 

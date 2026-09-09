@@ -357,7 +357,7 @@ import { InteractionBizTypeEnum } from '@/api/lottery_comment'
 import LotteryCommentSection from '@/components/lottery_data/LotteryCommentSection.vue'
 import { BiliImg } from '@/assets/img/BiliImg'
 import { useUserNavStore } from '@/stores/user_nav'
-import { useRpaAdminStore } from '@/stores/rpa_admin'
+import { useMessageAdminStore } from '@/stores/message_admin'
 import biliMessage from '@/utils/message'
 
 const props = withDefaults(
@@ -400,7 +400,7 @@ const isDisliked = computed(() => isMomentDisliked(props.item.dynIdStr, props.st
 const userNavStore = useUserNavStore()
 const currentMid = computed(() => Number(userNavStore.user_nav?.uid) || 0)
 
-const adminStore = useRpaAdminStore()
+const adminStore = useMessageAdminStore()
 /** 管理员（root）可删除任意动态（2.22.1）：入口对所有动态可见，走 adminRemoveMoment */
 const isAdmin = computed(() => adminStore.status.is_root)
 

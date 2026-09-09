@@ -35,7 +35,11 @@ export const AUDIT_BIZ_ROWS: AuditBizRow[] = [
   { biz: 'avatar', label: '头像' },
   { biz: 'folder_cover', label: '收藏夹封面' },
   { biz: 'report', label: '举报' },
-  { biz: 'user', label: '用户' }
+  { biz: 'user', label: '用户' },
+  { biz: 'rpa_action', label: 'RPA 动作' },
+  { biz: 'rpa_workflow', label: 'RPA 工作流' },
+  { biz: 'rpa_plugin', label: 'RPA 插件' },
+  { biz: 'rpa_browser', label: 'RPA 浏览器' }
 ]
 
 /** 操作位（Linux rwx 数值语义）：处置(x=1) / 审核(w=2) / 查看(r=4) */
@@ -61,6 +65,27 @@ export function hasBizPerm(
   op: number
 ): boolean {
   return ((Number(bizPerms?.[biz] ?? 0) & op) !== 0)
+}
+
+/** RPA 资源域（rpa_* 管理端页面的权限域，与 bili_common AUDIT_BIZ_KEYS 对齐） */
+export const RPA_BIZ_KEYS = ['rpa_action', 'rpa_workflow', 'rpa_plugin', 'rpa_browser'] as const
+
+/** 是否持有 RPA 管理权限：root 恒真；否则任一 RPA 资源域有 查看(r=4)/审核(w=2) 位 */
+export function hasRpaAdminPerm(
+  bizPerms: Record<string, number> | undefined,
+  isRoot = false
+): boolean {
+  if (isRoot) return true
+  return RPA_BIZ_KEYS.some((biz) => hasBizPerm(bizPerms, biz, 4) || hasBizPerm(bizPerms, biz, 2))
+}
+
+/** 是否持有举报域管理权限：root 恒真；否则 report 域有 查看(r=4)/审核(w=2) 位 */
+export function hasReportAdminPerm(
+  bizPerms: Record<string, number> | undefined,
+  isRoot = false
+): boolean {
+  if (isRoot) return true
+  return hasBizPerm(bizPerms, 'report', 4) || hasBizPerm(bizPerms, 'report', 2)
 }
 
 /** 掩码 dict → 展示文本（仅列有权限的域，如 "dm:rwx · comment:r--"） */

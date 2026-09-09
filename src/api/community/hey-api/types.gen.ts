@@ -19602,6 +19602,12 @@ export type AdminListNotifyApiV1MessageNotifyAdminListGetData = {
          * 按状态筛选
          */
         status?: NotifyStatusEnum | null;
+        /**
+         * Target Type
+         *
+         * 按目标类型筛选：1=全员（全局）/ 2=角色 / 3=等级 / 4=大会员 / 5=指定用户
+         */
+        target_type?: NotifyTargetTypeEnum | null;
     };
     url: '/api/v1/message/notify/admin/list';
 };

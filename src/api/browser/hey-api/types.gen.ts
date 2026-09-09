@@ -791,66 +791,6 @@ export type AdminAllSessionsResponse = {
 };
 
 /**
- * AdminListRequest
- *
- * 管理员列表请求（仅 root）
- */
-export type AdminListRequest = {
-    /**
-     * Page
-     */
-    page?: number;
-    /**
-     * Per Page
-     */
-    per_page?: number;
-};
-
-/**
- * AdminListResponse
- *
- * 管理员列表响应
- */
-export type AdminListResponse = {
-    /**
-     * Page
-     */
-    page?: number;
-    /**
-     * Per Page
-     */
-    per_page?: number;
-    /**
-     * Total
-     */
-    total?: number;
-    /**
-     * Items
-     */
-    items?: Array<unknown>;
-    /**
-     * Pages
-     */
-    readonly pages: number;
-    /**
-     * Has Next
-     */
-    readonly has_next: boolean;
-    /**
-     * Has Prev
-     */
-    readonly has_prev: boolean;
-    /**
-     * Next Page
-     */
-    readonly next_page: number;
-    /**
-     * Prev Page
-     */
-    readonly prev_page: number;
-};
-
-/**
  * AdminSessionInfo
  *
  * 管理员会话信息
@@ -912,30 +852,6 @@ export type AdminSessionInfo = {
     cleanup_policy: {
         [key: string]: unknown;
     };
-};
-
-/**
- * AdminStatusResponse
- *
- * 当前登录用户的角色/权限状态（任意登录用户可查）。
- */
-export type AdminStatusResponse = {
-    /**
-     * Is Root
-     */
-    is_root?: boolean;
-    /**
-     * Is Admin
-     */
-    is_admin?: boolean;
-    /**
-     * Permissions
-     */
-    permissions?: Array<string>;
-    /**
-     * Mid
-     */
-    mid?: number;
 };
 
 /**
@@ -3249,32 +3165,6 @@ export type GetSettingsRequest = {
 };
 
 /**
- * GrantAdminRequest
- *
- * 授予管理员请求（仅 root）
- */
-export type GrantAdminRequest = {
-    /**
-     * Mid
-     *
-     * 目标用户 mid
-     */
-    mid: number;
-    /**
-     * Note
-     *
-     * 备注
-     */
-    note?: string;
-    /**
-     * Permissions
-     *
-     * 权限列表
-     */
-    permissions?: Array<string>;
-};
-
-/**
  * HTTPValidationError
  */
 export type HttpValidationError = {
@@ -4210,52 +4100,6 @@ export type ParamsCondition = {
 };
 
 /**
- * PermissionConfigList
- *
- * 权限配置列表
- */
-export type PermissionConfigList = {
-    /**
-     * Levels
-     *
-     * 所有等级的配置
-     */
-    levels: Array<PermissionLevelConfig>;
-};
-
-/**
- * PermissionLevelConfig
- *
- * 权限等级配置
- */
-export type PermissionLevelConfig = {
-    /**
-     * Level Name
-     *
-     * 等级名称，如 level0, level1, root
-     */
-    level_name: string;
-    /**
-     * Level Value
-     *
-     * 等级数值
-     */
-    level_value: number;
-    /**
-     * Permissions
-     *
-     * 该等级拥有的权限列表
-     */
-    permissions: Array<number>;
-    /**
-     * Max Fingerprints
-     *
-     * 该等级允许创建的最大浏览器指纹数量
-     */
-    max_fingerprints?: number;
-};
-
-/**
  * PlatformEnum
  *
  * 枚举选项：
@@ -4631,56 +4475,6 @@ export type ReviewApprovalRequest = {
 };
 
 /**
- * RevokeAdminRequest
- *
- * 撤销管理员请求（仅 root）
- */
-export type RevokeAdminRequest = {
-    /**
-     * Mid
-     *
-     * 目标用户 mid
-     */
-    mid: number;
-};
-
-/**
- * RpaAdminItemResp
- *
- * 管理员信息响应
- */
-export type RpaAdminItemResp = {
-    /**
-     * Id
-     */
-    id: number;
-    /**
-     * Mid
-     */
-    mid: number;
-    /**
-     * Role
-     */
-    role: string;
-    /**
-     * Granted By
-     */
-    granted_by: number;
-    /**
-     * Permissions
-     */
-    permissions?: Array<string>;
-    /**
-     * Note
-     */
-    note?: string;
-    /**
-     * Created At
-     */
-    created_at?: string | null;
-};
-
-/**
  * RpcMethodInfoResponse
  *
  * RPC 业务方法响应（供前端展示）
@@ -4920,36 +4714,6 @@ export type StandardResponseAdminAllSessionsResponse = {
      */
     msg?: string;
     data?: AdminAllSessionsResponse | null;
-};
-
-/**
- * StandardResponse[AdminListResponse]
- */
-export type StandardResponseAdminListResponse = {
-    /**
-     * Code
-     */
-    code?: number;
-    /**
-     * Msg
-     */
-    msg?: string;
-    data?: AdminListResponse | null;
-};
-
-/**
- * StandardResponse[AdminStatusResponse]
- */
-export type StandardResponseAdminStatusResponse = {
-    /**
-     * Code
-     */
-    code?: number;
-    /**
-     * Msg
-     */
-    msg?: string;
-    data?: AdminStatusResponse | null;
 };
 
 /**
@@ -5415,21 +5179,6 @@ export type StandardResponsePagesListResponse = {
 };
 
 /**
- * StandardResponse[PermissionConfigList]
- */
-export type StandardResponsePermissionConfigList = {
-    /**
-     * Code
-     */
-    code?: number;
-    /**
-     * Msg
-     */
-    msg?: string;
-    data?: PermissionConfigList | null;
-};
-
-/**
  * StandardResponse[PluginDetailResponse]
  */
 export type StandardResponsePluginDetailResponse = {
@@ -5472,21 +5221,6 @@ export type StandardResponseResourceSearchResponse = {
      */
     msg?: string;
     data?: ResourceSearchResponse | null;
-};
-
-/**
- * StandardResponse[RpaAdminItemResp]
- */
-export type StandardResponseRpaAdminItemResp = {
-    /**
-     * Code
-     */
-    code?: number;
-    /**
-     * Msg
-     */
-    msg?: string;
-    data?: RpaAdminItemResp | null;
 };
 
 /**
@@ -7016,30 +6750,6 @@ export type WorkflowUpdateRequest = {
 };
 
 /**
- * AdminListResponse
- *
- * 管理员列表响应
- */
-export type AdminListResponseWritable = {
-    /**
-     * Page
-     */
-    page?: number;
-    /**
-     * Per Page
-     */
-    per_page?: number;
-    /**
-     * Total
-     */
-    total?: number;
-    /**
-     * Items
-     */
-    items?: Array<unknown>;
-};
-
-/**
  * ApprovalListResponse
  *
  * 审批列表响应
@@ -7538,21 +7248,6 @@ export type PagesListResponseWritable = {
      * 页面列表
      */
     pages?: Array<PageInfo>;
-};
-
-/**
- * StandardResponse[AdminListResponse]
- */
-export type StandardResponseAdminListResponseWritable = {
-    /**
-     * Code
-     */
-    code?: number;
-    /**
-     * Msg
-     */
-    msg?: string;
-    data?: AdminListResponseWritable | null;
 };
 
 /**
@@ -12786,347 +12481,6 @@ export type UpdateBrowserSessionConfigApiAdminRpaConfigBrowserSessionPostRespons
 };
 
 export type UpdateBrowserSessionConfigApiAdminRpaConfigBrowserSessionPostResponse = UpdateBrowserSessionConfigApiAdminRpaConfigBrowserSessionPostResponses[keyof UpdateBrowserSessionConfigApiAdminRpaConfigBrowserSessionPostResponses];
-
-export type GetPermissionsApiAdminRpaPermissionsGetPostData = {
-    body?: never;
-    path?: never;
-    query?: never;
-    url: '/api/admin/rpa/permissions/get';
-};
-
-export type GetPermissionsApiAdminRpaPermissionsGetPostResponses = {
-    /**
-     * Successful Response
-     */
-    200: StandardResponsePermissionConfigList;
-};
-
-export type GetPermissionsApiAdminRpaPermissionsGetPostResponse = GetPermissionsApiAdminRpaPermissionsGetPostResponses[keyof GetPermissionsApiAdminRpaPermissionsGetPostResponses];
-
-export type UpdatePermissionsApiAdminRpaPermissionsUpdatePostData = {
-    body: PermissionConfigList;
-    path?: never;
-    query?: never;
-    url: '/api/admin/rpa/permissions/update';
-};
-
-export type UpdatePermissionsApiAdminRpaPermissionsUpdatePostErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type UpdatePermissionsApiAdminRpaPermissionsUpdatePostError = UpdatePermissionsApiAdminRpaPermissionsUpdatePostErrors[keyof UpdatePermissionsApiAdminRpaPermissionsUpdatePostErrors];
-
-export type UpdatePermissionsApiAdminRpaPermissionsUpdatePostResponses = {
-    /**
-     * Successful Response
-     */
-    200: StandardResponseDict;
-};
-
-export type UpdatePermissionsApiAdminRpaPermissionsUpdatePostResponse = UpdatePermissionsApiAdminRpaPermissionsUpdatePostResponses[keyof UpdatePermissionsApiAdminRpaPermissionsUpdatePostResponses];
-
-export type ResetPermissionsApiAdminRpaPermissionsResetPostData = {
-    body?: never;
-    path?: never;
-    query?: never;
-    url: '/api/admin/rpa/permissions/reset';
-};
-
-export type ResetPermissionsApiAdminRpaPermissionsResetPostResponses = {
-    /**
-     * Successful Response
-     */
-    200: StandardResponseDict;
-};
-
-export type ResetPermissionsApiAdminRpaPermissionsResetPostResponse = ResetPermissionsApiAdminRpaPermissionsResetPostResponses[keyof ResetPermissionsApiAdminRpaPermissionsResetPostResponses];
-
-export type GrantAdminApiAdminRpaRoleGrantPostData = {
-    body: GrantAdminRequest;
-    headers?: {
-        /**
-         * X-Bili-Mid
-         */
-        'x-bili-mid'?: string | null;
-        /**
-         * X-Bili-Level
-         */
-        'x-bili-level'?: string | null;
-        /**
-         * X-Bili-Role
-         */
-        'x-bili-role'?: string;
-        /**
-         * X-Bili-Permissions
-         */
-        'x-bili-permissions'?: string | null;
-        /**
-         * X-Bili-User-Name
-         */
-        'x-bili-user-name'?: string;
-        /**
-         * X-Bili-Uname
-         */
-        'x-bili-uname'?: string;
-        /**
-         * X-Bili-Sign
-         */
-        'x-bili-sign'?: string;
-        /**
-         * X-Bili-Sex
-         */
-        'x-bili-sex'?: string;
-        /**
-         * X-Bili-Email
-         */
-        'x-bili-email'?: string;
-        /**
-         * X-Bili-Vip-Status
-         */
-        'x-bili-vip-status'?: string;
-        /**
-         * X-Bili-Vip-Type
-         */
-        'x-bili-vip-type'?: string;
-    };
-    path?: never;
-    query?: never;
-    url: '/api/admin/rpa/role/grant';
-};
-
-export type GrantAdminApiAdminRpaRoleGrantPostErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type GrantAdminApiAdminRpaRoleGrantPostError = GrantAdminApiAdminRpaRoleGrantPostErrors[keyof GrantAdminApiAdminRpaRoleGrantPostErrors];
-
-export type GrantAdminApiAdminRpaRoleGrantPostResponses = {
-    /**
-     * Successful Response
-     */
-    200: StandardResponseRpaAdminItemResp;
-};
-
-export type GrantAdminApiAdminRpaRoleGrantPostResponse = GrantAdminApiAdminRpaRoleGrantPostResponses[keyof GrantAdminApiAdminRpaRoleGrantPostResponses];
-
-export type RevokeAdminApiAdminRpaRoleRevokePostData = {
-    body: RevokeAdminRequest;
-    headers?: {
-        /**
-         * X-Bili-Mid
-         */
-        'x-bili-mid'?: string | null;
-        /**
-         * X-Bili-Level
-         */
-        'x-bili-level'?: string | null;
-        /**
-         * X-Bili-Role
-         */
-        'x-bili-role'?: string;
-        /**
-         * X-Bili-Permissions
-         */
-        'x-bili-permissions'?: string | null;
-        /**
-         * X-Bili-User-Name
-         */
-        'x-bili-user-name'?: string;
-        /**
-         * X-Bili-Uname
-         */
-        'x-bili-uname'?: string;
-        /**
-         * X-Bili-Sign
-         */
-        'x-bili-sign'?: string;
-        /**
-         * X-Bili-Sex
-         */
-        'x-bili-sex'?: string;
-        /**
-         * X-Bili-Email
-         */
-        'x-bili-email'?: string;
-        /**
-         * X-Bili-Vip-Status
-         */
-        'x-bili-vip-status'?: string;
-        /**
-         * X-Bili-Vip-Type
-         */
-        'x-bili-vip-type'?: string;
-    };
-    path?: never;
-    query?: never;
-    url: '/api/admin/rpa/role/revoke';
-};
-
-export type RevokeAdminApiAdminRpaRoleRevokePostErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type RevokeAdminApiAdminRpaRoleRevokePostError = RevokeAdminApiAdminRpaRoleRevokePostErrors[keyof RevokeAdminApiAdminRpaRoleRevokePostErrors];
-
-export type RevokeAdminApiAdminRpaRoleRevokePostResponses = {
-    /**
-     * Successful Response
-     */
-    200: StandardResponseDict;
-};
-
-export type RevokeAdminApiAdminRpaRoleRevokePostResponse = RevokeAdminApiAdminRpaRoleRevokePostResponses[keyof RevokeAdminApiAdminRpaRoleRevokePostResponses];
-
-export type ListAdminsApiAdminRpaRoleListPostData = {
-    body: AdminListRequest;
-    headers?: {
-        /**
-         * X-Bili-Mid
-         */
-        'x-bili-mid'?: string | null;
-        /**
-         * X-Bili-Level
-         */
-        'x-bili-level'?: string | null;
-        /**
-         * X-Bili-Role
-         */
-        'x-bili-role'?: string;
-        /**
-         * X-Bili-Permissions
-         */
-        'x-bili-permissions'?: string | null;
-        /**
-         * X-Bili-User-Name
-         */
-        'x-bili-user-name'?: string;
-        /**
-         * X-Bili-Uname
-         */
-        'x-bili-uname'?: string;
-        /**
-         * X-Bili-Sign
-         */
-        'x-bili-sign'?: string;
-        /**
-         * X-Bili-Sex
-         */
-        'x-bili-sex'?: string;
-        /**
-         * X-Bili-Email
-         */
-        'x-bili-email'?: string;
-        /**
-         * X-Bili-Vip-Status
-         */
-        'x-bili-vip-status'?: string;
-        /**
-         * X-Bili-Vip-Type
-         */
-        'x-bili-vip-type'?: string;
-    };
-    path?: never;
-    query?: never;
-    url: '/api/admin/rpa/role/list';
-};
-
-export type ListAdminsApiAdminRpaRoleListPostErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type ListAdminsApiAdminRpaRoleListPostError = ListAdminsApiAdminRpaRoleListPostErrors[keyof ListAdminsApiAdminRpaRoleListPostErrors];
-
-export type ListAdminsApiAdminRpaRoleListPostResponses = {
-    /**
-     * Successful Response
-     */
-    200: StandardResponseAdminListResponse;
-};
-
-export type ListAdminsApiAdminRpaRoleListPostResponse = ListAdminsApiAdminRpaRoleListPostResponses[keyof ListAdminsApiAdminRpaRoleListPostResponses];
-
-export type RoleMeApiAdminRpaRoleMePostData = {
-    body?: never;
-    headers?: {
-        /**
-         * X-Bili-Mid
-         */
-        'x-bili-mid'?: string | null;
-        /**
-         * X-Bili-Level
-         */
-        'x-bili-level'?: string | null;
-        /**
-         * X-Bili-Role
-         */
-        'x-bili-role'?: string;
-        /**
-         * X-Bili-Permissions
-         */
-        'x-bili-permissions'?: string | null;
-        /**
-         * X-Bili-User-Name
-         */
-        'x-bili-user-name'?: string;
-        /**
-         * X-Bili-Uname
-         */
-        'x-bili-uname'?: string;
-        /**
-         * X-Bili-Sign
-         */
-        'x-bili-sign'?: string;
-        /**
-         * X-Bili-Sex
-         */
-        'x-bili-sex'?: string;
-        /**
-         * X-Bili-Email
-         */
-        'x-bili-email'?: string;
-        /**
-         * X-Bili-Vip-Status
-         */
-        'x-bili-vip-status'?: string;
-        /**
-         * X-Bili-Vip-Type
-         */
-        'x-bili-vip-type'?: string;
-    };
-    path?: never;
-    query?: never;
-    url: '/api/admin/rpa/role/me';
-};
-
-export type RoleMeApiAdminRpaRoleMePostErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type RoleMeApiAdminRpaRoleMePostError = RoleMeApiAdminRpaRoleMePostErrors[keyof RoleMeApiAdminRpaRoleMePostErrors];
-
-export type RoleMeApiAdminRpaRoleMePostResponses = {
-    /**
-     * Successful Response
-     */
-    200: StandardResponseAdminStatusResponse;
-};
-
-export type RoleMeApiAdminRpaRoleMePostResponse = RoleMeApiAdminRpaRoleMePostResponses[keyof RoleMeApiAdminRpaRoleMePostResponses];
 
 export type SubmitApprovalApiAdminRpaApprovalSubmitPostData = {
     body: SubmitApprovalRequest;

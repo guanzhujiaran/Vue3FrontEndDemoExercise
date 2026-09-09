@@ -1,10 +1,21 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
-import { Document } from '@element-plus/icons-vue'
-import { useRpaAdminStore } from '@/stores/rpa_admin.ts'
-import { useUserNavStore } from '@/stores/user_nav.ts'
-import { businessHandler } from '@/utils/businessHandler'
-import { client } from '@/api/browser/hey-api/client.gen'
+import { ref, computed, onMounted } from 'vue'
+import { TableV2FixedDir, type Column } from 'element-plus'
+import { useMessageAdminStore } from '@/stores/message_admin'
+import { hasRpaAdminPerm } from '@/views/message/messageAdmin'
+import { useAuditTabCache } from '@/composables/useAuditTabCache'
+import { businessHandler, type BusinessResponse } from '@/utils/businessHandler'
+import { 管理员管理Service } from '@/api/browser/hey-api'
+import AdminAuditTabs from '@/components/admin/AdminAuditTabs.vue'
+import LoadingWrap from '@/components/message/LoadingWrap.vue'
+import EmptyState from '@/components/message/EmptyState.vue'
+import PaginationBar from '@/components/message/PaginationBar.vue'
+
+const adminStore = useMessageAdminStore()
+// RPA 资源域管理员：root 或任一 rpa_* 域持有 查看/审核 位（后端仍强制校验）
+const isAdmin = computed(() =>
+  hasRpaAdminPerm(adminStore.status.biz_perms, adminStore.status.is_root)
+)
 
 interface AuditItem {
   id: number
@@ -16,109 +27,175 @@ interface AuditItem {
   created_at: string
 }
 
-const adminStore = useRpaAdminStore()
-const userNavStore = useUserNavStore()
-const isAdmin = computed(() => adminStore.status.is_admin || adminStore.status.is_root)
+// 单 Tab 列表（后端无状态维度，统一「全部」+ 操作类型筛选）
+const AUDIT_TABS: Array<{ name: string; label: string }> = [{ name: 'all', label: '全部' }]
 
-const loading = ref(false)
-const auditList = ref<AuditItem[]>([])
-const auditTotal = ref(0)
-const auditPage = ref(1)
 const auditActionFilter = ref('')
+
+const {
+  activeTab,
+  items,
+  total,
+  page,
+  pageSize,
+  loading,
+  load,
+  onPageChange,
+  onPageSizeChange,
+} = useAuditTabCache<AuditItem>(
+  async (_tab, pageNum, size) => {
+    const res = await businessHandler(
+      管理员管理Service.listAuditApiAdminRpaAuditListPost({
+        body: {
+          page: pageNum,
+          per_page: size,
+          action: auditActionFilter.value || undefined,
+        },
+      }) as unknown as Promise<BusinessResponse<{ items?: AuditItem[]; total?: number } | null | undefined>>,
+      { showSuccessToast: false, errorMessage: '获取审计日志失败' }
+    )
+    return { items: res.data?.items || [], total: res.data?.total || 0 }
+  },
+  { tabs: AUDIT_TABS, defaultTab: 'all', pageSize: 50 }
+)
+
+const onActionFilterChange = () => {
+  // 重置全部 Tab 缓存后重载（单 Tab 场景等价于回到第 1 页）
+  onPageChange(1)
+}
 
 const auditActionName = (a: string) => {
   return (
     {
-      'role:grant': '授予管理员',
-      'role:revoke': '撤销管理员',
       'cert:certify': '官方认证',
       'cert:revoke': '撤销认证',
       'tag:create': '创建标签',
       'tag:update': '更新标签',
       'tag:delete': '删除标签',
       'approval:review': '审批审核',
-      'report:review': '举报审核',
-      'report:mark_invalid': '举报标记无效',
     } as Record<string, string>
   )[a] ?? a
 }
 
-const loadAudit = async () => {
-  loading.value = true
-  const res = await businessHandler(
-    client.post({
-      url: '/api/admin/rpa/audit/list',
-      body: {
-        page: auditPage.value,
-        per_page: 50,
-        action: auditActionFilter.value || undefined,
-      },
-      headers: { ...userNavStore.user_header },
-    }) as unknown as Promise<{ code: number; data?: { items: AuditItem[]; total: number }; msg?: string }>,
-    { showSuccessToast: false, errorMessage: '获取审计日志失败' }
-  )
-  if (res.success && res.data) {
-    auditList.value = res.data.items || []
-    auditTotal.value = res.data.total || 0
-  }
-  loading.value = false
+// el-table-v2 列定义（与 MomentAuditListView 保持同构）
+const TABLE_HEADER_H = 44
+const TABLE_ROW_H = 56
+const TABLE_FOOTER_H = 64
+function fitTableHeight(avail: number): number {
+  const footerH = total.value > pageSize.value ? TABLE_FOOTER_H : 0
+  const contentH = TABLE_HEADER_H + items.value.length * TABLE_ROW_H + footerH
+  return Math.min(avail, Math.max(contentH, TABLE_HEADER_H + TABLE_ROW_H + footerH))
 }
+
+const columns: Column<AuditItem>[] = [
+  { key: 'id', title: 'ID', width: 70 },
+  { key: 'admin_mid', title: '管理员mid', width: 120 },
+  { key: 'action', title: '操作', width: 130 },
+  { key: 'target_type', title: '目标类型', width: 110 },
+  { key: 'target_id', title: '目标ID', width: 130 },
+  { key: 'detail', title: '详情', width: 240, minWidth: 160, flexGrow: 1 },
+  { key: 'created_at', title: '时间', width: 180, fixed: TableV2FixedDir.RIGHT },
+]
 
 onMounted(async () => {
   await adminStore.fetchStatus()
-  if (isAdmin.value) loadAudit()
+  if (isAdmin.value) load()
 })
 </script>
 
 <template>
-  <div class="rpa-audit-admin">
-    <h2 class="mb-4 text-lg font-bold text-text-primary">操作审计</h2>
-
+  <div class="rpa-audit-admin flex flex-col gap-4">
     <el-empty v-if="!isAdmin" description="无权限访问，需要 RPA 管理员或 root 权限" />
 
-    <el-card v-else class="rpa-admin-card" shadow="never">
-      <template #header>
-        <div class="flex items-center justify-between">
-          <div class="flex items-center gap-2 text-base font-bold">
-            <el-icon><Document /></el-icon>
-            <span>操作审计日志</span>
-          </div>
-          <el-select v-model="auditActionFilter" class="w-44" placeholder="全部操作" @change="auditPage = 1; loadAudit()">
+    <template v-else>
+      <AdminAuditTabs
+        v-model="activeTab"
+        title="操作审计"
+        :tabs="AUDIT_TABS"
+        :loading="loading"
+        @refresh="load(true)"
+      >
+        <template #extra>
+          <el-select
+            v-model="auditActionFilter"
+            class="w-44"
+            placeholder="全部操作"
+            clearable
+            @change="onActionFilterChange"
+          >
             <el-option label="全部操作" value="" />
-            <el-option label="授予管理员" value="role:grant" />
-            <el-option label="撤销管理员" value="role:revoke" />
             <el-option label="官方认证" value="cert:certify" />
             <el-option label="撤销认证" value="cert:revoke" />
             <el-option label="创建标签" value="tag:create" />
             <el-option label="更新标签" value="tag:update" />
             <el-option label="删除标签" value="tag:delete" />
             <el-option label="审批审核" value="approval:review" />
-            <el-option label="举报审核" value="report:review" />
-            <el-option label="举报标记无效" value="report:mark_invalid" />
           </el-select>
+        </template>
+      </AdminAuditTabs>
+
+      <LoadingWrap :loading="loading" :rows="6">
+        <EmptyState v-if="!loading && items.length === 0" :text="auditActionFilter ? '暂无该操作类型的审计记录' : '暂无审计记录'" />
+        <!-- 父容器固定高度，由 AutoResizer 自动测量并传给表格 width/height -->
+        <div v-else class="rpa-audit-admin__table h-[calc(100vh-320px)] min-h-105">
+          <el-auto-resizer>
+            <template #default="{ height, width }">
+              <el-table-v2
+                :columns="columns"
+                :data="items"
+                :width="width"
+                :height="fitTableHeight(height)"
+                :row-height="TABLE_ROW_H"
+                :header-height="TABLE_HEADER_H"
+                :footer-height="total > pageSize ? TABLE_FOOTER_H : 0"
+                row-key="id"
+                fixed
+              >
+                <template #header-cell="{ column }">
+                  <span class="text-sm font-medium text-text-secondary">{{ column.title }}</span>
+                </template>
+
+                <template #cell="{ column, rowData }">
+                  <!-- 操作（动作 → 中文文案） -->
+                  <template v-if="column.key === 'action'">
+                    <span class="text-sm text-text-primary">{{ auditActionName(rowData.action) }}</span>
+                  </template>
+
+                  <!-- 详情 -->
+                  <template v-else-if="column.key === 'detail'">
+                    <span class="block truncate text-sm text-text-secondary">{{ rowData.detail }}</span>
+                  </template>
+
+                  <!-- 其余默认列 -->
+                  <template v-else>
+                    <span class="text-sm text-text-primary">
+                      {{ rowData[column.key as keyof AuditItem] }}
+                    </span>
+                  </template>
+                </template>
+
+                <template #empty>
+                  <div class="flex h-full items-center justify-center">
+                    <el-empty description="暂无数据" :image-size="80" />
+                  </div>
+                </template>
+
+                <template #footer>
+                  <PaginationBar
+                    class="rpa-audit-admin__pagination"
+                    :total="total"
+                    :page-size="pageSize"
+                    :page-sizes="[20, 50, 100]"
+                    :current-page="page"
+                    @update:current-page="onPageChange"
+                    @update:page-size="onPageSizeChange"
+                  />
+                </template>
+              </el-table-v2>
+            </template>
+          </el-auto-resizer>
         </div>
-      </template>
-      <el-table :data="auditList" v-loading="loading" class="rpa-admin-table" size="large">
-        <el-table-column prop="id" label="ID" width="70" />
-        <el-table-column prop="admin_mid" label="管理员mid" width="120" />
-        <el-table-column label="操作" min-width="120">
-          <template #default="{ row }">
-            {{ auditActionName(row.action) }}
-          </template>
-        </el-table-column>
-        <el-table-column prop="target_type" label="目标类型" width="110" />
-        <el-table-column prop="target_id" label="目标ID" min-width="120" />
-        <el-table-column prop="detail" label="详情" min-width="200" show-overflow-tooltip />
-        <el-table-column prop="created_at" label="时间" min-width="170" />
-      </el-table>
-      <el-pagination
-        v-model:current-page="auditPage"
-        :page-size="50"
-        :total="auditTotal"
-        layout="prev, pager, next, total"
-        class="mt-3"
-        @current-change="loadAudit"
-      />
-    </el-card>
+      </LoadingWrap>
+    </template>
   </div>
 </template>

@@ -11,23 +11,19 @@
 
 <script setup lang="ts">
 import { computed, type Component } from 'vue'
-import { Bell, ChatDotRound, Comment, Key, Checked, Collection, Avatar, Flag, Stamp, Warning, Document, Medal, CollectionTag, User } from '@element-plus/icons-vue'
+import { Bell, ChatDotRound, Comment, Key, Checked, Collection, Avatar, Flag, Stamp, Document, Medal, CollectionTag } from '@element-plus/icons-vue'
 import icShoucang from '@/assets/svgs/audit/shoucang.svg?component'
-import { useRpaAdminStore } from '@/stores/rpa_admin'
 import { useMessageAdminStore } from '@/stores/message_admin'
 import BiliSideNavLayout from '@/components/CommonCompo/Bili-Container-Compo/BiliSideNavLayout.vue'
 
-const rpaAdminStore = useRpaAdminStore()
 const messageAdminStore = useMessageAdminStore()
 
 // 主动拉取管理端身份，确保侧边栏在直接进入 /app/admin 时也能正确填充
-if (!rpaAdminStore.loaded) rpaAdminStore.fetchStatus()
 if (!messageAdminStore.loaded) messageAdminStore.fetchStatus()
 
 const isRpaAdmin = computed(() =>
-  Boolean(rpaAdminStore.status?.is_admin || rpaAdminStore.status?.is_root)
+  Boolean(messageAdminStore.status?.is_admin || messageAdminStore.status?.is_root)
 )
-const isRoot = computed(() => Boolean(rpaAdminStore.status?.is_root))
 const isMessageRoot = computed(() => Boolean(messageAdminStore.status?.is_root))
 
 interface NavItem {
@@ -46,14 +42,10 @@ const navGroups = computed<NavGroup[]>(() => {
   if (isRpaAdmin.value) {
     const rpaItems: NavItem[] = [
       { name: 'ADMIN_RPA_APPROVAL', title: '操作审批', icon: Stamp },
-      { name: 'ADMIN_RPA_REPORT', title: '社区举报', icon: Warning },
       { name: 'ADMIN_RPA_AUDIT', title: '操作审计', icon: Document },
       { name: 'ADMIN_RPA_CERT', title: '官方认证', icon: Medal },
       { name: 'ADMIN_RPA_TAG', title: '标签管理', icon: CollectionTag }
     ]
-    if (isRoot.value) {
-      rpaItems.push({ name: 'ADMIN_RPA_ROLE', title: '管理员权限', icon: User })
-    }
     groups.push({ title: 'RPA 管理', items: rpaItems })
   }
   const messageItems: NavItem[] = []

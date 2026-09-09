@@ -24,14 +24,12 @@
 <script setup lang="ts">
 import { computed, type Component } from 'vue'
 import { Setting, Bell, ChatDotRound, Comment, Key } from '@element-plus/icons-vue'
-import { useRpaAdminStore } from '@/stores/rpa_admin'
 import { useMessageAdminStore } from '@/stores/message_admin'
 
-const rpaAdminStore = useRpaAdminStore()
 const messageAdminStore = useMessageAdminStore()
 
 const isRpaAdmin = computed(() =>
-  Boolean(rpaAdminStore.status?.is_admin || rpaAdminStore.status?.is_root)
+  Boolean(messageAdminStore.status?.is_admin || messageAdminStore.status?.is_root)
 )
 const isMessageRoot = computed(() => Boolean(messageAdminStore.status?.is_root))
 
@@ -45,7 +43,7 @@ interface OverviewItem {
 const items = computed<OverviewItem[]>(() => {
   const list: OverviewItem[] = []
   if (isRpaAdmin.value) {
-    list.push({ name: 'ADMIN_RPA', title: 'RPA 管理后台', desc: '审批、官方认证、标签与管理员权限', icon: Setting })
+    list.push({ name: 'ADMIN_RPA', title: 'RPA 管理后台', desc: '操作审批、官方认证、标签与操作审计', icon: Setting })
     list.push({ name: 'ADMIN_MESSAGE_NOTIFY', title: '通知管理', desc: '系统通知的发布与管理', icon: Bell })
     list.push({ name: 'ADMIN_MESSAGE_DM', title: '私信审核', desc: '审核用户私信内容', icon: ChatDotRound })
     list.push({ name: 'ADMIN_MESSAGE_COMMENT', title: '评论审核', desc: '审核用户评论内容', icon: Comment })

@@ -44,6 +44,7 @@ export function toAuditStateName(status: string | number | null | undefined): Au
   const raw = String(status ?? '').trim()
   const alias: Record<string, AuditStateName> = {
     pending: 'AUDITING',
+    approved: 'NORMAL',
   }
   const key = (alias[raw.toLowerCase()] ?? raw).toUpperCase()
   return (key in AUDIT_STATE_META ? key : 'AUDITING') as AuditStateName

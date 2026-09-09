@@ -3,7 +3,7 @@
 import type { RequestResult } from '../client';
 import { client } from '../client.gen';
 import type { Options } from '../sdk.gen';
-import type { AttachTagApiAdminRpaTagAttachPostData, AttachTagApiAdminRpaTagAttachPostErrors, AttachTagApiAdminRpaTagAttachPostResponses, BanUserApiAdminRpaBanCreatePostData, BanUserApiAdminRpaBanCreatePostErrors, BanUserApiAdminRpaBanCreatePostResponses, CancelApprovalApiAdminRpaApprovalCancelPostData, CancelApprovalApiAdminRpaApprovalCancelPostErrors, CancelApprovalApiAdminRpaApprovalCancelPostResponses, CertifyApiAdminRpaCertificationCertifyPostData, CertifyApiAdminRpaCertificationCertifyPostErrors, CertifyApiAdminRpaCertificationCertifyPostResponses, CreateTagApiAdminRpaTagCreatePostData, CreateTagApiAdminRpaTagCreatePostErrors, CreateTagApiAdminRpaTagCreatePostResponses, DeleteApprovalApiAdminRpaApprovalDeletePostData, DeleteApprovalApiAdminRpaApprovalDeletePostErrors, DeleteApprovalApiAdminRpaApprovalDeletePostResponses, DeleteTagApiAdminRpaTagDeletePostData, DeleteTagApiAdminRpaTagDeletePostErrors, DeleteTagApiAdminRpaTagDeletePostResponses, DetachTagApiAdminRpaTagDetachPostData, DetachTagApiAdminRpaTagDetachPostErrors, DetachTagApiAdminRpaTagDetachPostResponses, GetAllSessionsApiAdminRpaSessionsAllPostData, GetAllSessionsApiAdminRpaSessionsAllPostResponses, GetBanStatusApiAdminRpaBanStatusPostData, GetBanStatusApiAdminRpaBanStatusPostErrors, GetBanStatusApiAdminRpaBanStatusPostResponses, GetBrowserSessionConfigApiAdminRpaConfigBrowserSessionGetData, GetBrowserSessionConfigApiAdminRpaConfigBrowserSessionGetResponses, GetPermissionsApiAdminRpaPermissionsGetPostData, GetPermissionsApiAdminRpaPermissionsGetPostResponses, GrantAdminApiAdminRpaRoleGrantPostData, GrantAdminApiAdminRpaRoleGrantPostErrors, GrantAdminApiAdminRpaRoleGrantPostResponses, LiftUserBanApiAdminRpaBanLiftPostData, LiftUserBanApiAdminRpaBanLiftPostErrors, LiftUserBanApiAdminRpaBanLiftPostResponses, ListAdminsApiAdminRpaRoleListPostData, ListAdminsApiAdminRpaRoleListPostErrors, ListAdminsApiAdminRpaRoleListPostResponses, ListApprovalsApiAdminRpaApprovalListPostData, ListApprovalsApiAdminRpaApprovalListPostErrors, ListApprovalsApiAdminRpaApprovalListPostResponses, ListAuditApiAdminRpaAuditListPostData, ListAuditApiAdminRpaAuditListPostErrors, ListAuditApiAdminRpaAuditListPostResponses, ListBansApiAdminRpaBanListPostData, ListBansApiAdminRpaBanListPostErrors, ListBansApiAdminRpaBanListPostResponses, ListCertificationsApiAdminRpaCertificationListPostData, ListCertificationsApiAdminRpaCertificationListPostErrors, ListCertificationsApiAdminRpaCertificationListPostResponses, ListTagsApiAdminRpaTagListPostData, ListTagsApiAdminRpaTagListPostErrors, ListTagsApiAdminRpaTagListPostResponses, ListTagsByTargetApiAdminRpaTagListByTargetPostData, ListTagsByTargetApiAdminRpaTagListByTargetPostErrors, ListTagsByTargetApiAdminRpaTagListByTargetPostResponses, ResetPermissionsApiAdminRpaPermissionsResetPostData, ResetPermissionsApiAdminRpaPermissionsResetPostResponses, ReviewApprovalApiAdminRpaApprovalReviewPostData, ReviewApprovalApiAdminRpaApprovalReviewPostErrors, ReviewApprovalApiAdminRpaApprovalReviewPostResponses, RevokeAdminApiAdminRpaRoleRevokePostData, RevokeAdminApiAdminRpaRoleRevokePostErrors, RevokeAdminApiAdminRpaRoleRevokePostResponses, RevokeCertificationApiAdminRpaCertificationRevokePostData, RevokeCertificationApiAdminRpaCertificationRevokePostErrors, RevokeCertificationApiAdminRpaCertificationRevokePostResponses, RoleMeApiAdminRpaRoleMePostData, RoleMeApiAdminRpaRoleMePostErrors, RoleMeApiAdminRpaRoleMePostResponses, SearchResourcesApiAdminRpaApprovalResourcesPostData, SearchResourcesApiAdminRpaApprovalResourcesPostErrors, SearchResourcesApiAdminRpaApprovalResourcesPostResponses, SubmitApprovalApiAdminRpaApprovalSubmitPostData, SubmitApprovalApiAdminRpaApprovalSubmitPostErrors, SubmitApprovalApiAdminRpaApprovalSubmitPostResponses, UpdateBrowserSessionConfigApiAdminRpaConfigBrowserSessionPostData, UpdateBrowserSessionConfigApiAdminRpaConfigBrowserSessionPostErrors, UpdateBrowserSessionConfigApiAdminRpaConfigBrowserSessionPostResponses, UpdatePermissionsApiAdminRpaPermissionsUpdatePostData, UpdatePermissionsApiAdminRpaPermissionsUpdatePostErrors, UpdatePermissionsApiAdminRpaPermissionsUpdatePostResponses, UpdateTagApiAdminRpaTagUpdatePostData, UpdateTagApiAdminRpaTagUpdatePostErrors, UpdateTagApiAdminRpaTagUpdatePostResponses } from '../types.gen';
+import type { AttachTagApiAdminRpaTagAttachPostData, AttachTagApiAdminRpaTagAttachPostErrors, AttachTagApiAdminRpaTagAttachPostResponses, BanUserApiAdminRpaBanCreatePostData, BanUserApiAdminRpaBanCreatePostErrors, BanUserApiAdminRpaBanCreatePostResponses, CancelApprovalApiAdminRpaApprovalCancelPostData, CancelApprovalApiAdminRpaApprovalCancelPostErrors, CancelApprovalApiAdminRpaApprovalCancelPostResponses, CertifyApiAdminRpaCertificationCertifyPostData, CertifyApiAdminRpaCertificationCertifyPostErrors, CertifyApiAdminRpaCertificationCertifyPostResponses, CreateTagApiAdminRpaTagCreatePostData, CreateTagApiAdminRpaTagCreatePostErrors, CreateTagApiAdminRpaTagCreatePostResponses, DeleteApprovalApiAdminRpaApprovalDeletePostData, DeleteApprovalApiAdminRpaApprovalDeletePostErrors, DeleteApprovalApiAdminRpaApprovalDeletePostResponses, DeleteTagApiAdminRpaTagDeletePostData, DeleteTagApiAdminRpaTagDeletePostErrors, DeleteTagApiAdminRpaTagDeletePostResponses, DetachTagApiAdminRpaTagDetachPostData, DetachTagApiAdminRpaTagDetachPostErrors, DetachTagApiAdminRpaTagDetachPostResponses, GetAllSessionsApiAdminRpaSessionsAllPostData, GetAllSessionsApiAdminRpaSessionsAllPostResponses, GetBanStatusApiAdminRpaBanStatusPostData, GetBanStatusApiAdminRpaBanStatusPostErrors, GetBanStatusApiAdminRpaBanStatusPostResponses, GetBrowserSessionConfigApiAdminRpaConfigBrowserSessionGetData, GetBrowserSessionConfigApiAdminRpaConfigBrowserSessionGetResponses, LiftUserBanApiAdminRpaBanLiftPostData, LiftUserBanApiAdminRpaBanLiftPostErrors, LiftUserBanApiAdminRpaBanLiftPostResponses, ListApprovalsApiAdminRpaApprovalListPostData, ListApprovalsApiAdminRpaApprovalListPostErrors, ListApprovalsApiAdminRpaApprovalListPostResponses, ListAuditApiAdminRpaAuditListPostData, ListAuditApiAdminRpaAuditListPostErrors, ListAuditApiAdminRpaAuditListPostResponses, ListBansApiAdminRpaBanListPostData, ListBansApiAdminRpaBanListPostErrors, ListBansApiAdminRpaBanListPostResponses, ListCertificationsApiAdminRpaCertificationListPostData, ListCertificationsApiAdminRpaCertificationListPostErrors, ListCertificationsApiAdminRpaCertificationListPostResponses, ListTagsApiAdminRpaTagListPostData, ListTagsApiAdminRpaTagListPostErrors, ListTagsApiAdminRpaTagListPostResponses, ListTagsByTargetApiAdminRpaTagListByTargetPostData, ListTagsByTargetApiAdminRpaTagListByTargetPostErrors, ListTagsByTargetApiAdminRpaTagListByTargetPostResponses, ReviewApprovalApiAdminRpaApprovalReviewPostData, ReviewApprovalApiAdminRpaApprovalReviewPostErrors, ReviewApprovalApiAdminRpaApprovalReviewPostResponses, RevokeCertificationApiAdminRpaCertificationRevokePostData, RevokeCertificationApiAdminRpaCertificationRevokePostErrors, RevokeCertificationApiAdminRpaCertificationRevokePostResponses, SearchResourcesApiAdminRpaApprovalResourcesPostData, SearchResourcesApiAdminRpaApprovalResourcesPostErrors, SearchResourcesApiAdminRpaApprovalResourcesPostResponses, SubmitApprovalApiAdminRpaApprovalSubmitPostData, SubmitApprovalApiAdminRpaApprovalSubmitPostErrors, SubmitApprovalApiAdminRpaApprovalSubmitPostResponses, UpdateBrowserSessionConfigApiAdminRpaConfigBrowserSessionPostData, UpdateBrowserSessionConfigApiAdminRpaConfigBrowserSessionPostErrors, UpdateBrowserSessionConfigApiAdminRpaConfigBrowserSessionPostResponses, UpdateTagApiAdminRpaTagUpdatePostData, UpdateTagApiAdminRpaTagUpdatePostErrors, UpdateTagApiAdminRpaTagUpdatePostResponses } from '../types.gen';
 
 export class 管理员管理Service {
     /**
@@ -20,37 +20,11 @@ export class 管理员管理Service {
     }
     
     /**
-     * Get All Sessions
-     *
-     * 获取所有浏览器会话信息（管理员）
-     */
-    public static getAllSessionsApiAdminRpaSessionsAllPost2<ThrowOnError extends boolean = false>(options?: Options<GetAllSessionsApiAdminRpaSessionsAllPostData, ThrowOnError>): RequestResult<GetAllSessionsApiAdminRpaSessionsAllPostResponses, unknown, ThrowOnError, 'data'> {
-        return (options?.client ?? client).post<GetAllSessionsApiAdminRpaSessionsAllPostResponses, unknown, ThrowOnError, 'data'>({
-            responseStyle: 'data',
-            url: '/api/admin/rpa/sessions/all',
-            ...options
-        });
-    }
-    
-    /**
      * Get Browser Session Config
      *
      * 获取浏览器会话配置（管理员）
      */
     public static getBrowserSessionConfigApiAdminRpaConfigBrowserSessionGet<ThrowOnError extends boolean = false>(options?: Options<GetBrowserSessionConfigApiAdminRpaConfigBrowserSessionGetData, ThrowOnError>): RequestResult<GetBrowserSessionConfigApiAdminRpaConfigBrowserSessionGetResponses, unknown, ThrowOnError, 'data'> {
-        return (options?.client ?? client).get<GetBrowserSessionConfigApiAdminRpaConfigBrowserSessionGetResponses, unknown, ThrowOnError, 'data'>({
-            responseStyle: 'data',
-            url: '/api/admin/rpa/config/browser-session',
-            ...options
-        });
-    }
-    
-    /**
-     * Get Browser Session Config
-     *
-     * 获取浏览器会话配置（管理员）
-     */
-    public static getBrowserSessionConfigApiAdminRpaConfigBrowserSessionGet2<ThrowOnError extends boolean = false>(options?: Options<GetBrowserSessionConfigApiAdminRpaConfigBrowserSessionGetData, ThrowOnError>): RequestResult<GetBrowserSessionConfigApiAdminRpaConfigBrowserSessionGetResponses, unknown, ThrowOnError, 'data'> {
         return (options?.client ?? client).get<GetBrowserSessionConfigApiAdminRpaConfigBrowserSessionGetResponses, unknown, ThrowOnError, 'data'>({
             responseStyle: 'data',
             url: '/api/admin/rpa/config/browser-session',
@@ -79,262 +53,11 @@ export class 管理员管理Service {
     }
     
     /**
-     * Update Browser Session Config
-     *
-     * 更新浏览器会话配置（管理员）
-     *
-     * 注意：此修改仅在内存中生效，重启服务后会恢复为环境变量中的配置。
-     * 如需永久修改，请更新 .env 文件或环境变量。
-     */
-    public static updateBrowserSessionConfigApiAdminRpaConfigBrowserSessionPost2<ThrowOnError extends boolean = false>(options: Options<UpdateBrowserSessionConfigApiAdminRpaConfigBrowserSessionPostData, ThrowOnError>): RequestResult<UpdateBrowserSessionConfigApiAdminRpaConfigBrowserSessionPostResponses, UpdateBrowserSessionConfigApiAdminRpaConfigBrowserSessionPostErrors, ThrowOnError, 'data'> {
-        return (options.client ?? client).post<UpdateBrowserSessionConfigApiAdminRpaConfigBrowserSessionPostResponses, UpdateBrowserSessionConfigApiAdminRpaConfigBrowserSessionPostErrors, ThrowOnError, 'data'>({
-            responseStyle: 'data',
-            url: '/api/admin/rpa/config/browser-session',
-            ...options,
-            headers: {
-                'Content-Type': 'application/json',
-                ...options.headers
-            }
-        });
-    }
-    
-    /**
-     * Get Permissions
-     *
-     * 获取权限配置（管理员）
-     */
-    public static getPermissionsApiAdminRpaPermissionsGetPost<ThrowOnError extends boolean = false>(options?: Options<GetPermissionsApiAdminRpaPermissionsGetPostData, ThrowOnError>): RequestResult<GetPermissionsApiAdminRpaPermissionsGetPostResponses, unknown, ThrowOnError, 'data'> {
-        return (options?.client ?? client).post<GetPermissionsApiAdminRpaPermissionsGetPostResponses, unknown, ThrowOnError, 'data'>({
-            responseStyle: 'data',
-            url: '/api/admin/rpa/permissions/get',
-            ...options
-        });
-    }
-    
-    /**
-     * Get Permissions
-     *
-     * 获取权限配置（管理员）
-     */
-    public static getPermissionsApiAdminRpaPermissionsGetPost2<ThrowOnError extends boolean = false>(options?: Options<GetPermissionsApiAdminRpaPermissionsGetPostData, ThrowOnError>): RequestResult<GetPermissionsApiAdminRpaPermissionsGetPostResponses, unknown, ThrowOnError, 'data'> {
-        return (options?.client ?? client).post<GetPermissionsApiAdminRpaPermissionsGetPostResponses, unknown, ThrowOnError, 'data'>({
-            responseStyle: 'data',
-            url: '/api/admin/rpa/permissions/get',
-            ...options
-        });
-    }
-    
-    /**
-     * Update Permissions
-     *
-     * 更新权限配置（管理员）
-     */
-    public static updatePermissionsApiAdminRpaPermissionsUpdatePost<ThrowOnError extends boolean = false>(options: Options<UpdatePermissionsApiAdminRpaPermissionsUpdatePostData, ThrowOnError>): RequestResult<UpdatePermissionsApiAdminRpaPermissionsUpdatePostResponses, UpdatePermissionsApiAdminRpaPermissionsUpdatePostErrors, ThrowOnError, 'data'> {
-        return (options.client ?? client).post<UpdatePermissionsApiAdminRpaPermissionsUpdatePostResponses, UpdatePermissionsApiAdminRpaPermissionsUpdatePostErrors, ThrowOnError, 'data'>({
-            responseStyle: 'data',
-            url: '/api/admin/rpa/permissions/update',
-            ...options,
-            headers: {
-                'Content-Type': 'application/json',
-                ...options.headers
-            }
-        });
-    }
-    
-    /**
-     * Update Permissions
-     *
-     * 更新权限配置（管理员）
-     */
-    public static updatePermissionsApiAdminRpaPermissionsUpdatePost2<ThrowOnError extends boolean = false>(options: Options<UpdatePermissionsApiAdminRpaPermissionsUpdatePostData, ThrowOnError>): RequestResult<UpdatePermissionsApiAdminRpaPermissionsUpdatePostResponses, UpdatePermissionsApiAdminRpaPermissionsUpdatePostErrors, ThrowOnError, 'data'> {
-        return (options.client ?? client).post<UpdatePermissionsApiAdminRpaPermissionsUpdatePostResponses, UpdatePermissionsApiAdminRpaPermissionsUpdatePostErrors, ThrowOnError, 'data'>({
-            responseStyle: 'data',
-            url: '/api/admin/rpa/permissions/update',
-            ...options,
-            headers: {
-                'Content-Type': 'application/json',
-                ...options.headers
-            }
-        });
-    }
-    
-    /**
-     * Reset Permissions
-     *
-     * 重置权限配置为默认值（管理员）
-     */
-    public static resetPermissionsApiAdminRpaPermissionsResetPost<ThrowOnError extends boolean = false>(options?: Options<ResetPermissionsApiAdminRpaPermissionsResetPostData, ThrowOnError>): RequestResult<ResetPermissionsApiAdminRpaPermissionsResetPostResponses, unknown, ThrowOnError, 'data'> {
-        return (options?.client ?? client).post<ResetPermissionsApiAdminRpaPermissionsResetPostResponses, unknown, ThrowOnError, 'data'>({
-            responseStyle: 'data',
-            url: '/api/admin/rpa/permissions/reset',
-            ...options
-        });
-    }
-    
-    /**
-     * Reset Permissions
-     *
-     * 重置权限配置为默认值（管理员）
-     */
-    public static resetPermissionsApiAdminRpaPermissionsResetPost2<ThrowOnError extends boolean = false>(options?: Options<ResetPermissionsApiAdminRpaPermissionsResetPostData, ThrowOnError>): RequestResult<ResetPermissionsApiAdminRpaPermissionsResetPostResponses, unknown, ThrowOnError, 'data'> {
-        return (options?.client ?? client).post<ResetPermissionsApiAdminRpaPermissionsResetPostResponses, unknown, ThrowOnError, 'data'>({
-            responseStyle: 'data',
-            url: '/api/admin/rpa/permissions/reset',
-            ...options
-        });
-    }
-    
-    /**
-     * Grant Admin
-     *
-     * 授予用户 RPA 管理员身份（仅 root）
-     */
-    public static grantAdminApiAdminRpaRoleGrantPost<ThrowOnError extends boolean = false>(options: Options<GrantAdminApiAdminRpaRoleGrantPostData, ThrowOnError>): RequestResult<GrantAdminApiAdminRpaRoleGrantPostResponses, GrantAdminApiAdminRpaRoleGrantPostErrors, ThrowOnError, 'data'> {
-        return (options.client ?? client).post<GrantAdminApiAdminRpaRoleGrantPostResponses, GrantAdminApiAdminRpaRoleGrantPostErrors, ThrowOnError, 'data'>({
-            responseStyle: 'data',
-            url: '/api/admin/rpa/role/grant',
-            ...options,
-            headers: {
-                'Content-Type': 'application/json',
-                ...options.headers
-            }
-        });
-    }
-    
-    /**
-     * Grant Admin
-     *
-     * 授予用户 RPA 管理员身份（仅 root）
-     */
-    public static grantAdminApiAdminRpaRoleGrantPost2<ThrowOnError extends boolean = false>(options: Options<GrantAdminApiAdminRpaRoleGrantPostData, ThrowOnError>): RequestResult<GrantAdminApiAdminRpaRoleGrantPostResponses, GrantAdminApiAdminRpaRoleGrantPostErrors, ThrowOnError, 'data'> {
-        return (options.client ?? client).post<GrantAdminApiAdminRpaRoleGrantPostResponses, GrantAdminApiAdminRpaRoleGrantPostErrors, ThrowOnError, 'data'>({
-            responseStyle: 'data',
-            url: '/api/admin/rpa/role/grant',
-            ...options,
-            headers: {
-                'Content-Type': 'application/json',
-                ...options.headers
-            }
-        });
-    }
-    
-    /**
-     * Revoke Admin
-     *
-     * 撤销用户 RPA 管理员身份（仅 root）
-     */
-    public static revokeAdminApiAdminRpaRoleRevokePost<ThrowOnError extends boolean = false>(options: Options<RevokeAdminApiAdminRpaRoleRevokePostData, ThrowOnError>): RequestResult<RevokeAdminApiAdminRpaRoleRevokePostResponses, RevokeAdminApiAdminRpaRoleRevokePostErrors, ThrowOnError, 'data'> {
-        return (options.client ?? client).post<RevokeAdminApiAdminRpaRoleRevokePostResponses, RevokeAdminApiAdminRpaRoleRevokePostErrors, ThrowOnError, 'data'>({
-            responseStyle: 'data',
-            url: '/api/admin/rpa/role/revoke',
-            ...options,
-            headers: {
-                'Content-Type': 'application/json',
-                ...options.headers
-            }
-        });
-    }
-    
-    /**
-     * Revoke Admin
-     *
-     * 撤销用户 RPA 管理员身份（仅 root）
-     */
-    public static revokeAdminApiAdminRpaRoleRevokePost2<ThrowOnError extends boolean = false>(options: Options<RevokeAdminApiAdminRpaRoleRevokePostData, ThrowOnError>): RequestResult<RevokeAdminApiAdminRpaRoleRevokePostResponses, RevokeAdminApiAdminRpaRoleRevokePostErrors, ThrowOnError, 'data'> {
-        return (options.client ?? client).post<RevokeAdminApiAdminRpaRoleRevokePostResponses, RevokeAdminApiAdminRpaRoleRevokePostErrors, ThrowOnError, 'data'>({
-            responseStyle: 'data',
-            url: '/api/admin/rpa/role/revoke',
-            ...options,
-            headers: {
-                'Content-Type': 'application/json',
-                ...options.headers
-            }
-        });
-    }
-    
-    /**
-     * List Admins
-     *
-     * 列出所有 RPA 管理员（仅 root）
-     */
-    public static listAdminsApiAdminRpaRoleListPost<ThrowOnError extends boolean = false>(options: Options<ListAdminsApiAdminRpaRoleListPostData, ThrowOnError>): RequestResult<ListAdminsApiAdminRpaRoleListPostResponses, ListAdminsApiAdminRpaRoleListPostErrors, ThrowOnError, 'data'> {
-        return (options.client ?? client).post<ListAdminsApiAdminRpaRoleListPostResponses, ListAdminsApiAdminRpaRoleListPostErrors, ThrowOnError, 'data'>({
-            responseStyle: 'data',
-            url: '/api/admin/rpa/role/list',
-            ...options,
-            headers: {
-                'Content-Type': 'application/json',
-                ...options.headers
-            }
-        });
-    }
-    
-    /**
-     * List Admins
-     *
-     * 列出所有 RPA 管理员（仅 root）
-     */
-    public static listAdminsApiAdminRpaRoleListPost2<ThrowOnError extends boolean = false>(options: Options<ListAdminsApiAdminRpaRoleListPostData, ThrowOnError>): RequestResult<ListAdminsApiAdminRpaRoleListPostResponses, ListAdminsApiAdminRpaRoleListPostErrors, ThrowOnError, 'data'> {
-        return (options.client ?? client).post<ListAdminsApiAdminRpaRoleListPostResponses, ListAdminsApiAdminRpaRoleListPostErrors, ThrowOnError, 'data'>({
-            responseStyle: 'data',
-            url: '/api/admin/rpa/role/list',
-            ...options,
-            headers: {
-                'Content-Type': 'application/json',
-                ...options.headers
-            }
-        });
-    }
-    
-    /**
-     * Role Me
-     *
-     * 查询当前用户的角色状态（任意登录用户可访问，用于前端界面显隐）
-     */
-    public static roleMeApiAdminRpaRoleMePost<ThrowOnError extends boolean = false>(options?: Options<RoleMeApiAdminRpaRoleMePostData, ThrowOnError>): RequestResult<RoleMeApiAdminRpaRoleMePostResponses, RoleMeApiAdminRpaRoleMePostErrors, ThrowOnError, 'data'> {
-        return (options?.client ?? client).post<RoleMeApiAdminRpaRoleMePostResponses, RoleMeApiAdminRpaRoleMePostErrors, ThrowOnError, 'data'>({
-            responseStyle: 'data',
-            url: '/api/admin/rpa/role/me',
-            ...options
-        });
-    }
-    
-    /**
-     * Role Me
-     *
-     * 查询当前用户的角色状态（任意登录用户可访问，用于前端界面显隐）
-     */
-    public static roleMeApiAdminRpaRoleMePost2<ThrowOnError extends boolean = false>(options?: Options<RoleMeApiAdminRpaRoleMePostData, ThrowOnError>): RequestResult<RoleMeApiAdminRpaRoleMePostResponses, RoleMeApiAdminRpaRoleMePostErrors, ThrowOnError, 'data'> {
-        return (options?.client ?? client).post<RoleMeApiAdminRpaRoleMePostResponses, RoleMeApiAdminRpaRoleMePostErrors, ThrowOnError, 'data'>({
-            responseStyle: 'data',
-            url: '/api/admin/rpa/role/me',
-            ...options
-        });
-    }
-    
-    /**
      * Submit Approval
      *
      * 提交 RPA 操作审批申请（任意登录用户）
      */
     public static submitApprovalApiAdminRpaApprovalSubmitPost<ThrowOnError extends boolean = false>(options: Options<SubmitApprovalApiAdminRpaApprovalSubmitPostData, ThrowOnError>): RequestResult<SubmitApprovalApiAdminRpaApprovalSubmitPostResponses, SubmitApprovalApiAdminRpaApprovalSubmitPostErrors, ThrowOnError, 'data'> {
-        return (options.client ?? client).post<SubmitApprovalApiAdminRpaApprovalSubmitPostResponses, SubmitApprovalApiAdminRpaApprovalSubmitPostErrors, ThrowOnError, 'data'>({
-            responseStyle: 'data',
-            url: '/api/admin/rpa/approval/submit',
-            ...options,
-            headers: {
-                'Content-Type': 'application/json',
-                ...options.headers
-            }
-        });
-    }
-    
-    /**
-     * Submit Approval
-     *
-     * 提交 RPA 操作审批申请（任意登录用户）
-     */
-    public static submitApprovalApiAdminRpaApprovalSubmitPost2<ThrowOnError extends boolean = false>(options: Options<SubmitApprovalApiAdminRpaApprovalSubmitPostData, ThrowOnError>): RequestResult<SubmitApprovalApiAdminRpaApprovalSubmitPostResponses, SubmitApprovalApiAdminRpaApprovalSubmitPostErrors, ThrowOnError, 'data'> {
         return (options.client ?? client).post<SubmitApprovalApiAdminRpaApprovalSubmitPostResponses, SubmitApprovalApiAdminRpaApprovalSubmitPostErrors, ThrowOnError, 'data'>({
             responseStyle: 'data',
             url: '/api/admin/rpa/approval/submit',
@@ -354,25 +77,6 @@ export class 管理员管理Service {
      * 管理员/root 查看全部；普通用户仅查看自己提交的（防止越权看到他人数据）。
      */
     public static listApprovalsApiAdminRpaApprovalListPost<ThrowOnError extends boolean = false>(options: Options<ListApprovalsApiAdminRpaApprovalListPostData, ThrowOnError>): RequestResult<ListApprovalsApiAdminRpaApprovalListPostResponses, ListApprovalsApiAdminRpaApprovalListPostErrors, ThrowOnError, 'data'> {
-        return (options.client ?? client).post<ListApprovalsApiAdminRpaApprovalListPostResponses, ListApprovalsApiAdminRpaApprovalListPostErrors, ThrowOnError, 'data'>({
-            responseStyle: 'data',
-            url: '/api/admin/rpa/approval/list',
-            ...options,
-            headers: {
-                'Content-Type': 'application/json',
-                ...options.headers
-            }
-        });
-    }
-    
-    /**
-     * List Approvals
-     *
-     * 查看审批列表
-     *
-     * 管理员/root 查看全部；普通用户仅查看自己提交的（防止越权看到他人数据）。
-     */
-    public static listApprovalsApiAdminRpaApprovalListPost2<ThrowOnError extends boolean = false>(options: Options<ListApprovalsApiAdminRpaApprovalListPostData, ThrowOnError>): RequestResult<ListApprovalsApiAdminRpaApprovalListPostResponses, ListApprovalsApiAdminRpaApprovalListPostErrors, ThrowOnError, 'data'> {
         return (options.client ?? client).post<ListApprovalsApiAdminRpaApprovalListPostResponses, ListApprovalsApiAdminRpaApprovalListPostErrors, ThrowOnError, 'data'>({
             responseStyle: 'data',
             url: '/api/admin/rpa/approval/list',
@@ -407,50 +111,11 @@ export class 管理员管理Service {
     }
     
     /**
-     * Review Approval
-     *
-     * 审核审批（仅管理员/root）
-     *
-     * 状态机（对齐 be-message 动态审核「撤回 / 恢复」语义）：
-     * - pending  → approved / rejected（首次审核）
-     * - approved → rejected（过审核准撤回）
-     * - rejected → approved（驳回恢复）
-     */
-    public static reviewApprovalApiAdminRpaApprovalReviewPost2<ThrowOnError extends boolean = false>(options: Options<ReviewApprovalApiAdminRpaApprovalReviewPostData, ThrowOnError>): RequestResult<ReviewApprovalApiAdminRpaApprovalReviewPostResponses, ReviewApprovalApiAdminRpaApprovalReviewPostErrors, ThrowOnError, 'data'> {
-        return (options.client ?? client).post<ReviewApprovalApiAdminRpaApprovalReviewPostResponses, ReviewApprovalApiAdminRpaApprovalReviewPostErrors, ThrowOnError, 'data'>({
-            responseStyle: 'data',
-            url: '/api/admin/rpa/approval/review',
-            ...options,
-            headers: {
-                'Content-Type': 'application/json',
-                ...options.headers
-            }
-        });
-    }
-    
-    /**
      * Cancel Approval
      *
      * 撤回审批（仅可撤回自己提交且仍为待审核的审批）
      */
     public static cancelApprovalApiAdminRpaApprovalCancelPost<ThrowOnError extends boolean = false>(options: Options<CancelApprovalApiAdminRpaApprovalCancelPostData, ThrowOnError>): RequestResult<CancelApprovalApiAdminRpaApprovalCancelPostResponses, CancelApprovalApiAdminRpaApprovalCancelPostErrors, ThrowOnError, 'data'> {
-        return (options.client ?? client).post<CancelApprovalApiAdminRpaApprovalCancelPostResponses, CancelApprovalApiAdminRpaApprovalCancelPostErrors, ThrowOnError, 'data'>({
-            responseStyle: 'data',
-            url: '/api/admin/rpa/approval/cancel',
-            ...options,
-            headers: {
-                'Content-Type': 'application/json',
-                ...options.headers
-            }
-        });
-    }
-    
-    /**
-     * Cancel Approval
-     *
-     * 撤回审批（仅可撤回自己提交且仍为待审核的审批）
-     */
-    public static cancelApprovalApiAdminRpaApprovalCancelPost2<ThrowOnError extends boolean = false>(options: Options<CancelApprovalApiAdminRpaApprovalCancelPostData, ThrowOnError>): RequestResult<CancelApprovalApiAdminRpaApprovalCancelPostResponses, CancelApprovalApiAdminRpaApprovalCancelPostErrors, ThrowOnError, 'data'> {
         return (options.client ?? client).post<CancelApprovalApiAdminRpaApprovalCancelPostResponses, CancelApprovalApiAdminRpaApprovalCancelPostErrors, ThrowOnError, 'data'>({
             responseStyle: 'data',
             url: '/api/admin/rpa/approval/cancel',
@@ -480,45 +145,11 @@ export class 管理员管理Service {
     }
     
     /**
-     * Delete Approval
-     *
-     * 删除自己的审批记录（待审核、已通过、已驳回均可删除）
-     */
-    public static deleteApprovalApiAdminRpaApprovalDeletePost2<ThrowOnError extends boolean = false>(options: Options<DeleteApprovalApiAdminRpaApprovalDeletePostData, ThrowOnError>): RequestResult<DeleteApprovalApiAdminRpaApprovalDeletePostResponses, DeleteApprovalApiAdminRpaApprovalDeletePostErrors, ThrowOnError, 'data'> {
-        return (options.client ?? client).post<DeleteApprovalApiAdminRpaApprovalDeletePostResponses, DeleteApprovalApiAdminRpaApprovalDeletePostErrors, ThrowOnError, 'data'>({
-            responseStyle: 'data',
-            url: '/api/admin/rpa/approval/delete',
-            ...options,
-            headers: {
-                'Content-Type': 'application/json',
-                ...options.headers
-            }
-        });
-    }
-    
-    /**
      * Search Resources
      *
      * 按名称搜索当前用户自己的资源，用于审批提交时的下拉选择
      */
     public static searchResourcesApiAdminRpaApprovalResourcesPost<ThrowOnError extends boolean = false>(options: Options<SearchResourcesApiAdminRpaApprovalResourcesPostData, ThrowOnError>): RequestResult<SearchResourcesApiAdminRpaApprovalResourcesPostResponses, SearchResourcesApiAdminRpaApprovalResourcesPostErrors, ThrowOnError, 'data'> {
-        return (options.client ?? client).post<SearchResourcesApiAdminRpaApprovalResourcesPostResponses, SearchResourcesApiAdminRpaApprovalResourcesPostErrors, ThrowOnError, 'data'>({
-            responseStyle: 'data',
-            url: '/api/admin/rpa/approval/resources',
-            ...options,
-            headers: {
-                'Content-Type': 'application/json',
-                ...options.headers
-            }
-        });
-    }
-    
-    /**
-     * Search Resources
-     *
-     * 按名称搜索当前用户自己的资源，用于审批提交时的下拉选择
-     */
-    public static searchResourcesApiAdminRpaApprovalResourcesPost2<ThrowOnError extends boolean = false>(options: Options<SearchResourcesApiAdminRpaApprovalResourcesPostData, ThrowOnError>): RequestResult<SearchResourcesApiAdminRpaApprovalResourcesPostResponses, SearchResourcesApiAdminRpaApprovalResourcesPostErrors, ThrowOnError, 'data'> {
         return (options.client ?? client).post<SearchResourcesApiAdminRpaApprovalResourcesPostResponses, SearchResourcesApiAdminRpaApprovalResourcesPostErrors, ThrowOnError, 'data'>({
             responseStyle: 'data',
             url: '/api/admin/rpa/approval/resources',
@@ -548,45 +179,11 @@ export class 管理员管理Service {
     }
     
     /**
-     * Create Tag
-     *
-     * 创建标签（仅管理员）
-     */
-    public static createTagApiAdminRpaTagCreatePost2<ThrowOnError extends boolean = false>(options: Options<CreateTagApiAdminRpaTagCreatePostData, ThrowOnError>): RequestResult<CreateTagApiAdminRpaTagCreatePostResponses, CreateTagApiAdminRpaTagCreatePostErrors, ThrowOnError, 'data'> {
-        return (options.client ?? client).post<CreateTagApiAdminRpaTagCreatePostResponses, CreateTagApiAdminRpaTagCreatePostErrors, ThrowOnError, 'data'>({
-            responseStyle: 'data',
-            url: '/api/admin/rpa/tag/create',
-            ...options,
-            headers: {
-                'Content-Type': 'application/json',
-                ...options.headers
-            }
-        });
-    }
-    
-    /**
      * Update Tag
      *
      * 更新标签（仅管理员）
      */
     public static updateTagApiAdminRpaTagUpdatePost<ThrowOnError extends boolean = false>(options: Options<UpdateTagApiAdminRpaTagUpdatePostData, ThrowOnError>): RequestResult<UpdateTagApiAdminRpaTagUpdatePostResponses, UpdateTagApiAdminRpaTagUpdatePostErrors, ThrowOnError, 'data'> {
-        return (options.client ?? client).post<UpdateTagApiAdminRpaTagUpdatePostResponses, UpdateTagApiAdminRpaTagUpdatePostErrors, ThrowOnError, 'data'>({
-            responseStyle: 'data',
-            url: '/api/admin/rpa/tag/update',
-            ...options,
-            headers: {
-                'Content-Type': 'application/json',
-                ...options.headers
-            }
-        });
-    }
-    
-    /**
-     * Update Tag
-     *
-     * 更新标签（仅管理员）
-     */
-    public static updateTagApiAdminRpaTagUpdatePost2<ThrowOnError extends boolean = false>(options: Options<UpdateTagApiAdminRpaTagUpdatePostData, ThrowOnError>): RequestResult<UpdateTagApiAdminRpaTagUpdatePostResponses, UpdateTagApiAdminRpaTagUpdatePostErrors, ThrowOnError, 'data'> {
         return (options.client ?? client).post<UpdateTagApiAdminRpaTagUpdatePostResponses, UpdateTagApiAdminRpaTagUpdatePostErrors, ThrowOnError, 'data'>({
             responseStyle: 'data',
             url: '/api/admin/rpa/tag/update',
@@ -616,45 +213,11 @@ export class 管理员管理Service {
     }
     
     /**
-     * Delete Tag
-     *
-     * 删除标签（仅管理员），同时清理关联
-     */
-    public static deleteTagApiAdminRpaTagDeletePost2<ThrowOnError extends boolean = false>(options: Options<DeleteTagApiAdminRpaTagDeletePostData, ThrowOnError>): RequestResult<DeleteTagApiAdminRpaTagDeletePostResponses, DeleteTagApiAdminRpaTagDeletePostErrors, ThrowOnError, 'data'> {
-        return (options.client ?? client).post<DeleteTagApiAdminRpaTagDeletePostResponses, DeleteTagApiAdminRpaTagDeletePostErrors, ThrowOnError, 'data'>({
-            responseStyle: 'data',
-            url: '/api/admin/rpa/tag/delete',
-            ...options,
-            headers: {
-                'Content-Type': 'application/json',
-                ...options.headers
-            }
-        });
-    }
-    
-    /**
      * List Tags
      *
      * 列出标签（任意登录用户可读）
      */
     public static listTagsApiAdminRpaTagListPost<ThrowOnError extends boolean = false>(options: Options<ListTagsApiAdminRpaTagListPostData, ThrowOnError>): RequestResult<ListTagsApiAdminRpaTagListPostResponses, ListTagsApiAdminRpaTagListPostErrors, ThrowOnError, 'data'> {
-        return (options.client ?? client).post<ListTagsApiAdminRpaTagListPostResponses, ListTagsApiAdminRpaTagListPostErrors, ThrowOnError, 'data'>({
-            responseStyle: 'data',
-            url: '/api/admin/rpa/tag/list',
-            ...options,
-            headers: {
-                'Content-Type': 'application/json',
-                ...options.headers
-            }
-        });
-    }
-    
-    /**
-     * List Tags
-     *
-     * 列出标签（任意登录用户可读）
-     */
-    public static listTagsApiAdminRpaTagListPost2<ThrowOnError extends boolean = false>(options: Options<ListTagsApiAdminRpaTagListPostData, ThrowOnError>): RequestResult<ListTagsApiAdminRpaTagListPostResponses, ListTagsApiAdminRpaTagListPostErrors, ThrowOnError, 'data'> {
         return (options.client ?? client).post<ListTagsApiAdminRpaTagListPostResponses, ListTagsApiAdminRpaTagListPostErrors, ThrowOnError, 'data'>({
             responseStyle: 'data',
             url: '/api/admin/rpa/tag/list',
@@ -684,45 +247,11 @@ export class 管理员管理Service {
     }
     
     /**
-     * Attach Tag
-     *
-     * 为资源关联标签（仅管理员）
-     */
-    public static attachTagApiAdminRpaTagAttachPost2<ThrowOnError extends boolean = false>(options: Options<AttachTagApiAdminRpaTagAttachPostData, ThrowOnError>): RequestResult<AttachTagApiAdminRpaTagAttachPostResponses, AttachTagApiAdminRpaTagAttachPostErrors, ThrowOnError, 'data'> {
-        return (options.client ?? client).post<AttachTagApiAdminRpaTagAttachPostResponses, AttachTagApiAdminRpaTagAttachPostErrors, ThrowOnError, 'data'>({
-            responseStyle: 'data',
-            url: '/api/admin/rpa/tag/attach',
-            ...options,
-            headers: {
-                'Content-Type': 'application/json',
-                ...options.headers
-            }
-        });
-    }
-    
-    /**
      * Detach Tag
      *
      * 移除资源上的标签（仅管理员）
      */
     public static detachTagApiAdminRpaTagDetachPost<ThrowOnError extends boolean = false>(options: Options<DetachTagApiAdminRpaTagDetachPostData, ThrowOnError>): RequestResult<DetachTagApiAdminRpaTagDetachPostResponses, DetachTagApiAdminRpaTagDetachPostErrors, ThrowOnError, 'data'> {
-        return (options.client ?? client).post<DetachTagApiAdminRpaTagDetachPostResponses, DetachTagApiAdminRpaTagDetachPostErrors, ThrowOnError, 'data'>({
-            responseStyle: 'data',
-            url: '/api/admin/rpa/tag/detach',
-            ...options,
-            headers: {
-                'Content-Type': 'application/json',
-                ...options.headers
-            }
-        });
-    }
-    
-    /**
-     * Detach Tag
-     *
-     * 移除资源上的标签（仅管理员）
-     */
-    public static detachTagApiAdminRpaTagDetachPost2<ThrowOnError extends boolean = false>(options: Options<DetachTagApiAdminRpaTagDetachPostData, ThrowOnError>): RequestResult<DetachTagApiAdminRpaTagDetachPostResponses, DetachTagApiAdminRpaTagDetachPostErrors, ThrowOnError, 'data'> {
         return (options.client ?? client).post<DetachTagApiAdminRpaTagDetachPostResponses, DetachTagApiAdminRpaTagDetachPostErrors, ThrowOnError, 'data'>({
             responseStyle: 'data',
             url: '/api/admin/rpa/tag/detach',
@@ -752,45 +281,11 @@ export class 管理员管理Service {
     }
     
     /**
-     * List Tags By Target
-     *
-     * 查询某资源关联的标签（任意登录用户可读）
-     */
-    public static listTagsByTargetApiAdminRpaTagListByTargetPost2<ThrowOnError extends boolean = false>(options: Options<ListTagsByTargetApiAdminRpaTagListByTargetPostData, ThrowOnError>): RequestResult<ListTagsByTargetApiAdminRpaTagListByTargetPostResponses, ListTagsByTargetApiAdminRpaTagListByTargetPostErrors, ThrowOnError, 'data'> {
-        return (options.client ?? client).post<ListTagsByTargetApiAdminRpaTagListByTargetPostResponses, ListTagsByTargetApiAdminRpaTagListByTargetPostErrors, ThrowOnError, 'data'>({
-            responseStyle: 'data',
-            url: '/api/admin/rpa/tag/list-by-target',
-            ...options,
-            headers: {
-                'Content-Type': 'application/json',
-                ...options.headers
-            }
-        });
-    }
-    
-    /**
      * Certify
      *
      * 标注资源为官方认证（仅管理员），已认证则更新
      */
     public static certifyApiAdminRpaCertificationCertifyPost<ThrowOnError extends boolean = false>(options: Options<CertifyApiAdminRpaCertificationCertifyPostData, ThrowOnError>): RequestResult<CertifyApiAdminRpaCertificationCertifyPostResponses, CertifyApiAdminRpaCertificationCertifyPostErrors, ThrowOnError, 'data'> {
-        return (options.client ?? client).post<CertifyApiAdminRpaCertificationCertifyPostResponses, CertifyApiAdminRpaCertificationCertifyPostErrors, ThrowOnError, 'data'>({
-            responseStyle: 'data',
-            url: '/api/admin/rpa/certification/certify',
-            ...options,
-            headers: {
-                'Content-Type': 'application/json',
-                ...options.headers
-            }
-        });
-    }
-    
-    /**
-     * Certify
-     *
-     * 标注资源为官方认证（仅管理员），已认证则更新
-     */
-    public static certifyApiAdminRpaCertificationCertifyPost2<ThrowOnError extends boolean = false>(options: Options<CertifyApiAdminRpaCertificationCertifyPostData, ThrowOnError>): RequestResult<CertifyApiAdminRpaCertificationCertifyPostResponses, CertifyApiAdminRpaCertificationCertifyPostErrors, ThrowOnError, 'data'> {
         return (options.client ?? client).post<CertifyApiAdminRpaCertificationCertifyPostResponses, CertifyApiAdminRpaCertificationCertifyPostErrors, ThrowOnError, 'data'>({
             responseStyle: 'data',
             url: '/api/admin/rpa/certification/certify',
@@ -820,45 +315,11 @@ export class 管理员管理Service {
     }
     
     /**
-     * Revoke Certification
-     *
-     * 撤销官方认证（仅管理员）
-     */
-    public static revokeCertificationApiAdminRpaCertificationRevokePost2<ThrowOnError extends boolean = false>(options: Options<RevokeCertificationApiAdminRpaCertificationRevokePostData, ThrowOnError>): RequestResult<RevokeCertificationApiAdminRpaCertificationRevokePostResponses, RevokeCertificationApiAdminRpaCertificationRevokePostErrors, ThrowOnError, 'data'> {
-        return (options.client ?? client).post<RevokeCertificationApiAdminRpaCertificationRevokePostResponses, RevokeCertificationApiAdminRpaCertificationRevokePostErrors, ThrowOnError, 'data'>({
-            responseStyle: 'data',
-            url: '/api/admin/rpa/certification/revoke',
-            ...options,
-            headers: {
-                'Content-Type': 'application/json',
-                ...options.headers
-            }
-        });
-    }
-    
-    /**
      * List Certifications
      *
      * 查询官方认证列表（任意登录用户可读）
      */
     public static listCertificationsApiAdminRpaCertificationListPost<ThrowOnError extends boolean = false>(options: Options<ListCertificationsApiAdminRpaCertificationListPostData, ThrowOnError>): RequestResult<ListCertificationsApiAdminRpaCertificationListPostResponses, ListCertificationsApiAdminRpaCertificationListPostErrors, ThrowOnError, 'data'> {
-        return (options.client ?? client).post<ListCertificationsApiAdminRpaCertificationListPostResponses, ListCertificationsApiAdminRpaCertificationListPostErrors, ThrowOnError, 'data'>({
-            responseStyle: 'data',
-            url: '/api/admin/rpa/certification/list',
-            ...options,
-            headers: {
-                'Content-Type': 'application/json',
-                ...options.headers
-            }
-        });
-    }
-    
-    /**
-     * List Certifications
-     *
-     * 查询官方认证列表（任意登录用户可读）
-     */
-    public static listCertificationsApiAdminRpaCertificationListPost2<ThrowOnError extends boolean = false>(options: Options<ListCertificationsApiAdminRpaCertificationListPostData, ThrowOnError>): RequestResult<ListCertificationsApiAdminRpaCertificationListPostResponses, ListCertificationsApiAdminRpaCertificationListPostErrors, ThrowOnError, 'data'> {
         return (options.client ?? client).post<ListCertificationsApiAdminRpaCertificationListPostResponses, ListCertificationsApiAdminRpaCertificationListPostErrors, ThrowOnError, 'data'>({
             responseStyle: 'data',
             url: '/api/admin/rpa/certification/list',
@@ -897,35 +358,9 @@ export class 管理员管理Service {
     }
     
     /**
-     * 获取操作审计列表
-     *
-     * 获取管理员操作审计列表（仅管理员/root）
-     *
-     * Args:
-     * request: {
-     * "page": 页码（默认1）,
-     * "per_page": 每页数量（默认50）,
-     * "action": 操作类型过滤（可选，如 role:grant）,
-     * "target_type": 目标类型过滤（可选）,
-     * "admin_mid": 管理员 mid 过滤（可选）
-     * }
-     */
-    public static listAuditApiAdminRpaAuditListPost2<ThrowOnError extends boolean = false>(options?: Options<ListAuditApiAdminRpaAuditListPostData, ThrowOnError>): RequestResult<ListAuditApiAdminRpaAuditListPostResponses, ListAuditApiAdminRpaAuditListPostErrors, ThrowOnError, 'data'> {
-        return (options?.client ?? client).post<ListAuditApiAdminRpaAuditListPostResponses, ListAuditApiAdminRpaAuditListPostErrors, ThrowOnError, 'data'>({
-            responseStyle: 'data',
-            url: '/api/admin/rpa/audit/list',
-            ...options,
-            headers: {
-                'Content-Type': 'application/json',
-                ...options?.headers
-            }
-        });
-    }
-    
-    /**
      * Ban User
      *
-     * 封禁用户（永久 / 临时），需 root 或 user:ban 权限
+     * 封禁用户（永久 / 临时），需 root 或 user 资源域 BAN 权限
      */
     public static banUserApiAdminRpaBanCreatePost<ThrowOnError extends boolean = false>(options: Options<BanUserApiAdminRpaBanCreatePostData, ThrowOnError>): RequestResult<BanUserApiAdminRpaBanCreatePostResponses, BanUserApiAdminRpaBanCreatePostErrors, ThrowOnError, 'data'> {
         return (options.client ?? client).post<BanUserApiAdminRpaBanCreatePostResponses, BanUserApiAdminRpaBanCreatePostErrors, ThrowOnError, 'data'>({
@@ -940,26 +375,9 @@ export class 管理员管理Service {
     }
     
     /**
-     * Ban User
-     *
-     * 封禁用户（永久 / 临时），需 root 或 user:ban 权限
-     */
-    public static banUserApiAdminRpaBanCreatePost2<ThrowOnError extends boolean = false>(options: Options<BanUserApiAdminRpaBanCreatePostData, ThrowOnError>): RequestResult<BanUserApiAdminRpaBanCreatePostResponses, BanUserApiAdminRpaBanCreatePostErrors, ThrowOnError, 'data'> {
-        return (options.client ?? client).post<BanUserApiAdminRpaBanCreatePostResponses, BanUserApiAdminRpaBanCreatePostErrors, ThrowOnError, 'data'>({
-            responseStyle: 'data',
-            url: '/api/admin/rpa/ban/create',
-            ...options,
-            headers: {
-                'Content-Type': 'application/json',
-                ...options.headers
-            }
-        });
-    }
-    
-    /**
      * Lift User Ban
      *
-     * 解封用户，需 root 或 user:ban 权限
+     * 解封用户，需 root 或 user 资源域 BAN 权限
      */
     public static liftUserBanApiAdminRpaBanLiftPost<ThrowOnError extends boolean = false>(options: Options<LiftUserBanApiAdminRpaBanLiftPostData, ThrowOnError>): RequestResult<LiftUserBanApiAdminRpaBanLiftPostResponses, LiftUserBanApiAdminRpaBanLiftPostErrors, ThrowOnError, 'data'> {
         return (options.client ?? client).post<LiftUserBanApiAdminRpaBanLiftPostResponses, LiftUserBanApiAdminRpaBanLiftPostErrors, ThrowOnError, 'data'>({
@@ -974,45 +392,11 @@ export class 管理员管理Service {
     }
     
     /**
-     * Lift User Ban
-     *
-     * 解封用户，需 root 或 user:ban 权限
-     */
-    public static liftUserBanApiAdminRpaBanLiftPost2<ThrowOnError extends boolean = false>(options: Options<LiftUserBanApiAdminRpaBanLiftPostData, ThrowOnError>): RequestResult<LiftUserBanApiAdminRpaBanLiftPostResponses, LiftUserBanApiAdminRpaBanLiftPostErrors, ThrowOnError, 'data'> {
-        return (options.client ?? client).post<LiftUserBanApiAdminRpaBanLiftPostResponses, LiftUserBanApiAdminRpaBanLiftPostErrors, ThrowOnError, 'data'>({
-            responseStyle: 'data',
-            url: '/api/admin/rpa/ban/lift',
-            ...options,
-            headers: {
-                'Content-Type': 'application/json',
-                ...options.headers
-            }
-        });
-    }
-    
-    /**
      * List Bans
      *
-     * 分页查询封禁记录，需 root 或 user:ban / user:ban-view 权限
+     * 分页查询封禁记录，需 root 或 user 资源域 BAN / VIEW 权限
      */
     public static listBansApiAdminRpaBanListPost<ThrowOnError extends boolean = false>(options: Options<ListBansApiAdminRpaBanListPostData, ThrowOnError>): RequestResult<ListBansApiAdminRpaBanListPostResponses, ListBansApiAdminRpaBanListPostErrors, ThrowOnError, 'data'> {
-        return (options.client ?? client).post<ListBansApiAdminRpaBanListPostResponses, ListBansApiAdminRpaBanListPostErrors, ThrowOnError, 'data'>({
-            responseStyle: 'data',
-            url: '/api/admin/rpa/ban/list',
-            ...options,
-            headers: {
-                'Content-Type': 'application/json',
-                ...options.headers
-            }
-        });
-    }
-    
-    /**
-     * List Bans
-     *
-     * 分页查询封禁记录，需 root 或 user:ban / user:ban-view 权限
-     */
-    public static listBansApiAdminRpaBanListPost2<ThrowOnError extends boolean = false>(options: Options<ListBansApiAdminRpaBanListPostData, ThrowOnError>): RequestResult<ListBansApiAdminRpaBanListPostResponses, ListBansApiAdminRpaBanListPostErrors, ThrowOnError, 'data'> {
         return (options.client ?? client).post<ListBansApiAdminRpaBanListPostResponses, ListBansApiAdminRpaBanListPostErrors, ThrowOnError, 'data'>({
             responseStyle: 'data',
             url: '/api/admin/rpa/ban/list',
@@ -1030,23 +414,6 @@ export class 管理员管理Service {
      * 查询指定用户当前封禁状态（临时封禁到期会自动置为失效）
      */
     public static getBanStatusApiAdminRpaBanStatusPost<ThrowOnError extends boolean = false>(options: Options<GetBanStatusApiAdminRpaBanStatusPostData, ThrowOnError>): RequestResult<GetBanStatusApiAdminRpaBanStatusPostResponses, GetBanStatusApiAdminRpaBanStatusPostErrors, ThrowOnError, 'data'> {
-        return (options.client ?? client).post<GetBanStatusApiAdminRpaBanStatusPostResponses, GetBanStatusApiAdminRpaBanStatusPostErrors, ThrowOnError, 'data'>({
-            responseStyle: 'data',
-            url: '/api/admin/rpa/ban/status',
-            ...options,
-            headers: {
-                'Content-Type': 'application/json',
-                ...options.headers
-            }
-        });
-    }
-    
-    /**
-     * Get Ban Status
-     *
-     * 查询指定用户当前封禁状态（临时封禁到期会自动置为失效）
-     */
-    public static getBanStatusApiAdminRpaBanStatusPost2<ThrowOnError extends boolean = false>(options: Options<GetBanStatusApiAdminRpaBanStatusPostData, ThrowOnError>): RequestResult<GetBanStatusApiAdminRpaBanStatusPostResponses, GetBanStatusApiAdminRpaBanStatusPostErrors, ThrowOnError, 'data'> {
         return (options.client ?? client).post<GetBanStatusApiAdminRpaBanStatusPostResponses, GetBanStatusApiAdminRpaBanStatusPostErrors, ThrowOnError, 'data'>({
             responseStyle: 'data',
             url: '/api/admin/rpa/ban/status',

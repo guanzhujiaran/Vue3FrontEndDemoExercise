@@ -50,14 +50,14 @@ import MomentPublishForm from '@/components/moment/MomentPublishForm.vue'
 import BiliSideNavLayout from '@/components/CommonCompo/Bili-Container-Compo/BiliSideNavLayout.vue'
 import { createMoment, type MomentCreateReq } from '@/api/notify/moment-api'
 import { buildMomentContentNodes, type MomentAttachResource } from '@/utils/momentContent'
-import { useRpaAdminStore } from '@/stores/rpa_admin'
+import { useMessageAdminStore } from '@/stores/message_admin'
 
 // 必须有 name，App.vue 的外层 keep-alive 才能缓存本布局；
 // 否则从详情页返回时布局被销毁重建，内部 Feed 子页会重新加载（丢失进度）
 defineOptions({ name: 'MomentLayout' })
 
 const route = useRoute()
-const adminStore = useRpaAdminStore()
+const adminStore = useMessageAdminStore()
 
 const publishVisible = ref(false)
 const refreshKey = ref(0)
