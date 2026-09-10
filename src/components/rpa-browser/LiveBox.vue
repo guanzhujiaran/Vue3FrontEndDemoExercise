@@ -52,7 +52,9 @@ interface PageInfo {
   [key: string]: unknown
 }
 
-// 调用 get_page_info API 获取页面信息
+// 调用 get_page_info API 获取页面信息。
+// 属后台刷新（初始化 / 操作后同步标签页），失败只记录日志，不弹提示——
+// 调用方（新建页面 / 关闭页面等）已各自给出成功/失败提示，避免一次操作弹两条。
 const fetchPagesList = async (): Promise<PageInfo | null> => {
   try {
     const response = await 自动化控制Service.getPageInfoApiV1RpaBrowserControlOperationGetPageInfoPost({
@@ -60,22 +62,22 @@ const fetchPagesList = async (): Promise<PageInfo | null> => {
       body: {}
     })
     if (response?.code === 0) {
-      console.log('获取页面信息成功:', response?.data)
       return response?.data as PageInfo | null
-    } else {
-      const errorCode = response?.code
-      if (errorCode !== 404) {
-        biliMessage.error(response?.msg || t('rpa.getPageInfoFailed'))
-      }
-      return null
     }
+    // 404：浏览器尚未打开任何页面，属正常态，不提示
+    if (response?.code !== 404) {
+      console.warn('[LiveBox] 获取页面信息失败:', response?.msg)
+    }
+    return null
   } catch (e) {
-    console.warn('获取页面信息异常:', e)
+    console.warn('[LiveBox] 获取页面信息异常:', e)
     return null
   }
 }
 
-const closeWebRtcStream = async () => {
+// 关闭后端 WebRTC 流。
+// silent=true 用于「切换页面 / 离开页面」这类连带动作：只记录日志，不打扰用户。
+const closeWebRtcStream = async (silent = false) => {
   try {
     const response = await WebRtc视频流Service.closeWebrtcStreamApiV1RpaBrowserControlWebrtcClosePost({
       query: { browser_id: props.browserId },
@@ -83,13 +85,14 @@ const closeWebRtcStream = async () => {
     })
 
     if (response?.code === 0) {
-      biliMessage.success(t('rpa.closeWebrtcSuccess'))
+      if (!silent) biliMessage.success(t('rpa.closeWebrtcSuccess'))
     } else {
-      biliMessage.error(response?.msg || t('rpa.closeWebrtcFailed'))
+      if (!silent) biliMessage.error(response?.msg || t('rpa.closeWebrtcFailed'))
+      else console.warn('[LiveBox] 关闭 WebRTC 流失败:', response)
     }
   } catch (error) {
     console.error('Failed to close WebRTC stream:', error)
-    biliMessage.error('关闭 WebRTC 流失败')
+    if (!silent) biliMessage.error(t('rpa.closeWebrtcFailed'))
   }
 }
 
@@ -162,8 +165,9 @@ const loadPagesList = async () => {
   }
 }
 
-const initWebRTC = async () => {
-  if (!videoRef.value) return
+// 建立 WebRTC 连接。返回是否成功，供调用方决定是否提示 / 启动网速采集。
+const initWebRTC = async (): Promise<boolean> => {
+  if (!videoRef.value) return false
 
   webrtcStatus.value = 'connecting'
 
@@ -251,14 +255,40 @@ const initWebRTC = async () => {
       if (answerResponse?.code === 0) {
         console.log('WebRTC answer sent successfully')
       }
+      return true
     }
+
+    // 后端未返回可用的 offer（浏览器会话未就绪 / 页面不存在等）
+    console.warn('[LiveBox] WebRTC offer 响应异常:', offerResponse)
+    webrtcStatus.value = 'disconnected'
+    isStreaming.value = false
+    return false
   } catch (error) {
     console.error('Failed to initialize WebRTC:', error)
     webrtcStatus.value = 'disconnected'
     isStreaming.value = false
+    return false
   }
 }
 
+// 启动直播的核心流程（建流 + 采集网速），不含确认框与成功提示，
+// 供「用户点击启动」与「切换页面后自动重连」两条路径复用。
+const startStreamCore = async (): Promise<boolean> => {
+  isStreaming.value = true
+  const connected = await initWebRTC()
+  if (!connected) {
+    isStreaming.value = false
+    webrtcStatus.value = 'disconnected'
+    stopStatsMonitor()
+    return false
+  }
+  startStatsMonitor()
+  emit('toggle-stream')
+  await loadWebrtcStatus()
+  return true
+}
+
+// 用户主动启动：先确认（提示流量消耗），成功静默（画面即反馈），失败必须提示
 const handleStartStream = async () => {
   if (isStartingStream.value) return
   isStartingStream.value = true
@@ -269,19 +299,24 @@ const handleStartStream = async () => {
       cancelButtonText: t('common.cancel'),
       type: 'warning'
     })
-    isStreaming.value = true
-    await initWebRTC()
-    startStatsMonitor()
-    emit('toggle-stream')
-    loadWebrtcStatus()
   } catch {
-    // 用户取消
+    // 用户取消：不提示
+    isStartingStream.value = false
+    return
+  }
+
+  try {
+    const connected = await startStreamCore()
+    if (!connected) {
+      biliMessage.error(t('rpa.startStreamFailed'))
+    }
   } finally {
     isStartingStream.value = false
   }
 }
 
-const handleStopStream = async () => {
+// silent=true 用于「切换页面 / 离开页面」等连带动作，关闭流的提示不打扰用户
+const handleStopStream = async (silent = false) => {
   stopStatsMonitor()
   isStreaming.value = false
   webrtcStatus.value = 'disconnected'
@@ -297,7 +332,7 @@ const handleStopStream = async () => {
     videoRef.value.srcObject = null
   }
   if (streamKey.value) {
-    await closeWebRtcStream()
+    await closeWebRtcStream(silent)
     streamKey.value = ''
   }
 }
@@ -375,11 +410,15 @@ const handleSwitchPage = async (index: number) => {
       currentPageIndex.value = index
       await loadPagesList()
 
-      // 如果正在直播，切换到新页面后需要重新建立 WebRTC 连接
+      // 如果正在直播，切换到新页面后需要重新建立 WebRTC 连接。
+      // 这是切页的连带动作：不弹确认框、关旧流静默，只有重连失败才提示。
       if (wasStreaming) {
-        await handleStopStream()
-        setTimeout(() => {
-          handleStartStream()
+        await handleStopStream(true)
+        setTimeout(async () => {
+          const connected = await startStreamCore()
+          if (!connected) {
+            biliMessage.error(t('rpa.startStreamFailed'))
+          }
         }, 500)
       }
     } else {
@@ -390,6 +429,13 @@ const handleSwitchPage = async (index: number) => {
     biliMessage.error(t('rpa.networkError'))
   }
 }
+
+// 页面挂载时会话尚未启动，页面列表拿不到；会话变为「已连接」后重新拉取标签页
+watch(isSessionConnected, (connected) => {
+  if (connected) {
+    loadPagesList()
+  }
+})
 
 watch(webrtcStatus, (newVal) => {
   emit('webrtc-status-change', newVal)
@@ -480,7 +526,8 @@ onMounted(() => {
 
 onUnmounted(() => {
   stopStatsMonitor()
-  handleStopStream()
+  // 离开页面时静默断开，避免在下一个页面弹出「关闭 WebRTC 流成功」
+  handleStopStream(true)
 })
 </script>
 
@@ -489,7 +536,7 @@ onUnmounted(() => {
     class="flex h-full flex-col overflow-hidden border border-border "
   >
     <div
-      class="flex items-center gap-2 border-b border-border bg-[var(--el-fill-color-light)] px-4 py-2"
+      class="flex items-center gap-2 border-b border-border bg-fill-light px-4 py-2"
     >
       <div
         class="flex-1 scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-transparent overflow-x-auto overflow-y-hidden"
@@ -514,7 +561,7 @@ onUnmounted(() => {
                   size="large"
                   circle
                   :icon="Close"
-                  class="!p-1"
+                  class="p-1!"
                   @click.stop="handleClosePage(tab.index)"
                 />
               </div>
@@ -543,7 +590,7 @@ onUnmounted(() => {
         >
           {{ t('rpa.startLive') }}
         </el-button>
-        <el-button v-else size="large" type="danger" :icon="VideoPause" @click="handleStopStream">
+        <el-button v-else size="large" type="danger" :icon="VideoPause" @click="handleStopStream()">
           {{ t('rpa.stopLive') }}
         </el-button>
       </div>
@@ -554,7 +601,7 @@ onUnmounted(() => {
 
       <div
         v-if="isStreaming"
-        class="absolute right-0 bottom-0 left-0 bg-gradient-to-t from-black/80 via-black/50 to-transparent p-4"
+        class="absolute right-0 bottom-0 left-0 bg-linear-to-t from-black/80 via-black/50 to-transparent p-4"
       >
         <div class="flex items-center justify-between">
           <!-- 右侧信息 -->

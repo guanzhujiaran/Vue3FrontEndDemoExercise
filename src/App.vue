@@ -187,6 +187,10 @@ localeStore.init()
               :style="{ overflow: 'visible' }"
             >
               <RouterView v-slot="{ Component, route }">
+                <!-- 注意：本 transition 的 mode="out-in" 依赖「子组件单根元素」。
+                     顶层路由组件若为多根（fragment）组件，会把 keep-alive 缓存的布局 vnode
+                     弄丢/残留（例如从 /app/rpa-browser 切回 /app/admin 时侧边栏整体消失）。
+                     因此所有被本 RouterView 渲染的顶层路由组件必须是单根组件。 -->
                 <transition name="slide-fade" mode="out-in">
                   <keep-alive
                     :max="30"

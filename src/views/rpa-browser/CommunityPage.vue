@@ -302,7 +302,7 @@ onMounted(() => {
     <FlexContainer class="mt-4 bg-bg rounded-2xl p-4">
       <div v-if="loading" class="w-full">
         <div class="grid gap-4" style="grid-template-columns: repeat(auto-fill, minmax(350px, 1fr))">
-          <div v-for="i in 6" :key="i" class="rounded-xl  p-5 border border-[var(--el-border-color-light)]">
+          <div v-for="i in 6" :key="i" class="rounded-xl  p-5 border border-border-light">
             <el-skeleton :rows="4" animated></el-skeleton>
           </div>
         </div>
@@ -311,7 +311,7 @@ onMounted(() => {
       <div v-else-if="activeTab === 'actions' && actionsList.length > 0" class="w-full">
         <div class="grid gap-4" style="grid-template-columns: repeat(auto-fill, minmax(350px, 1fr))">
           <div v-for="item in actionsList" :key="item.action_id"
-            class="rounded-xl  p-5 border border-[var(--el-border-color-light)] hover:border-[var(--el-color-primary)] transition-all duration-300">
+            class="rounded-xl  p-5 border border-border-light hover:border-primary transition-all duration-300">
             <div class="flex flex-col gap-3">
               <div class="flex items-center justify-between">
                 <el-text class="text-lg font-semibold truncate flex-1 mr-2">{{ item.name }}</el-text>
@@ -344,7 +344,7 @@ onMounted(() => {
       <div v-else-if="activeTab === 'plugins' && pluginsList.length > 0" class="w-full">
         <div class="grid gap-4" style="grid-template-columns: repeat(auto-fill, minmax(350px, 1fr))">
           <div v-for="item in pluginsList" :key="item.id"
-            class="rounded-xl  p-5 border border-[var(--el-border-color-light)] hover:border-[var(--el-color-primary)] transition-all duration-300">
+            class="rounded-xl  p-5 border border-border-light hover:border-primary transition-all duration-300">
             <div class="flex flex-col gap-3">
               <div class="flex items-center justify-between">
                 <el-text class="text-lg font-semibold truncate flex-1 mr-2">{{ item.name }}</el-text>
@@ -377,7 +377,7 @@ onMounted(() => {
       <div v-else-if="activeTab === 'workflows' && workflowsList.length > 0" class="w-full">
         <div class="grid gap-4" style="grid-template-columns: repeat(auto-fill, minmax(350px, 1fr))">
           <div v-for="item in workflowsList" :key="item.id"
-            class="rounded-xl  p-5 border border-[var(--el-border-color-light)] hover:border-[var(--el-color-primary)] transition-all duration-300">
+            class="rounded-xl  p-5 border border-border-light hover:border-primary transition-all duration-300">
             <div class="flex flex-col gap-3">
               <div class="flex items-center justify-between">
                 <el-text class="text-lg font-semibold truncate flex-1 mr-2">{{ item.name }}</el-text>

@@ -475,6 +475,33 @@
       transform: rotate(7deg) scale(1.05);
     }
   }
+
+  /* 右侧主内容区布丁弹性：与左侧菜单果冻「反相」（左胀右缩 → 左缩右胀），形成两个面板相互挤压的回弹感。
+     注意：主区宽度远大于侧边栏（~1200px vs ~200px），故 scaleX 幅度按宽度比例等比缩小到 ±0.7%，
+     才能在视觉上得到与左侧相当的位移量；幅度再大会让文字/表格出现可感知的横向拉伸。
+     配合组件上的 origin-right，右边缘锚定不动，形变只发生在与侧边栏相邻的一侧，避免溢出或右侧露底。 */
+  --animate-sidenav-content-jelly: bili-sidenav-content-jelly 0.55s cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  @keyframes bili-sidenav-content-jelly {
+    0% {
+      transform: scaleX(1);
+    }
+    15% {
+      transform: scaleX(0.993);
+    }
+    35% {
+      transform: scaleX(1.007);
+    }
+    55% {
+      transform: scaleX(0.996);
+    }
+    75% {
+      transform: scaleX(1.002);
+    }
+    100% {
+      transform: scaleX(1);
+    }
+  }
 }
 
 /* ==================== RPA Browser Stream 动画 ==================== */

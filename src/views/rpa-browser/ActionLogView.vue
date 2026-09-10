@@ -338,7 +338,7 @@ onMounted(() => {
 
 <template>
   <FlexContainer>
-    <BiliPageHeader title="操作日志" description="查看浏览器操作的执行历史与详情" tag="日志查询">
+    <BiliPageHeader title="操作日志" description="查看浏览器操作的执行历史与详情" tag-text="日志查询">
       <template #extra>
         <div class="action-log-view__actions flex items-center gap-2">
           <el-button :icon="Refresh" @click="handleRefresh">刷新</el-button>
@@ -412,7 +412,7 @@ onMounted(() => {
 
       <!-- 加载骨架 -->
       <div v-if="loading" class="w-full">
-        <div v-for="i in 5" :key="i" class="rounded-xl p-4 border border-[var(--el-border-color-light)] mb-3">
+        <div v-for="i in 5" :key="i" class="rounded-xl p-4 border border-border-light mb-3">
           <el-skeleton :rows="2" animated />
         </div>
       </div>
@@ -424,7 +424,7 @@ onMounted(() => {
 
       <!-- 日志列表（滚动容器） -->
       <div v-else class="log-list overflow-auto" style="max-height: calc(100vh - 380px)" @scroll="handleScroll">
-        <div v-for="item in logList" :key="item.log_id" class="log-item rounded-xl p-4 border border-[var(--el-border-color-light)] mb-3 hover:border-[var(--el-color-primary)] transition-colors">
+        <div v-for="item in logList" :key="item.log_id" class="log-item rounded-xl p-4 border border-border-light mb-3 hover:border-primary transition-colors">
           <div class="flex items-start gap-4">
             <!-- 复选框 -->
             <el-checkbox
@@ -462,7 +462,7 @@ onMounted(() => {
               </div>
 
               <!-- 错误信息（仅失败时显示） -->
-              <div v-if="item.error_message" class="log-item__error text-xs text-[var(--el-color-danger)] bg-[var(--el-color-danger-light-9)] rounded-lg px-2.5 py-1.5 mt-1 line-clamp-2">
+              <div v-if="item.error_message" class="log-item__error text-xs text-danger bg-danger-light-9 rounded-lg px-2.5 py-1.5 mt-1 line-clamp-2">
                 {{ item.error_message }}
               </div>
             </div>
@@ -522,35 +522,35 @@ onMounted(() => {
 
         <!-- 错误信息 -->
         <div v-if="detailRecord.error_message">
-          <div class="text-sm font-semibold mb-1 text-[var(--el-color-danger)]">错误信息</div>
-          <pre class="text-xs bg-[var(--el-color-danger-light-9)] text-[var(--el-color-danger)] rounded-lg p-3 overflow-auto whitespace-pre-wrap" style="max-height: 200px">{{ detailRecord.error_message }}</pre>
+          <div class="text-sm font-semibold mb-1 text-danger">错误信息</div>
+          <pre class="text-xs bg-danger-light-9 text-danger rounded-lg p-3 overflow-auto whitespace-pre-wrap" style="max-height: 200px">{{ detailRecord.error_message }}</pre>
         </div>
 
         <!-- 入参 -->
         <el-collapse v-if="detailRecord.params">
           <el-collapse-item title="调用参数" name="params">
-            <pre class="text-xs bg-[var(--el-fill-color-light)] rounded-lg p-3 overflow-auto" style="max-height: 300px">{{ formatJson(detailRecord.params) }}</pre>
+            <pre class="text-xs bg-fill-light rounded-lg p-3 overflow-auto" style="max-height: 300px">{{ formatJson(detailRecord.params) }}</pre>
           </el-collapse-item>
         </el-collapse>
 
         <!-- 执行结果 -->
         <el-collapse v-if="detailRecord.result_data">
           <el-collapse-item title="执行结果" name="result">
-            <pre class="text-xs bg-[var(--el-fill-color-light)] rounded-lg p-3 overflow-auto" style="max-height: 300px">{{ formatJson(detailRecord.result_data) }}</pre>
+            <pre class="text-xs bg-fill-light rounded-lg p-3 overflow-auto" style="max-height: 300px">{{ formatJson(detailRecord.result_data) }}</pre>
           </el-collapse-item>
         </el-collapse>
 
         <!-- 变量快照 -->
         <el-collapse v-if="detailRecord.variables">
           <el-collapse-item title="变量池快照" name="variables">
-            <pre class="text-xs bg-[var(--el-fill-color-light)] rounded-lg p-3 overflow-auto" style="max-height: 300px">{{ formatJson(detailRecord.variables) }}</pre>
+            <pre class="text-xs bg-fill-light rounded-lg p-3 overflow-auto" style="max-height: 300px">{{ formatJson(detailRecord.variables) }}</pre>
           </el-collapse-item>
         </el-collapse>
 
         <!-- 执行过程日志 -->
         <el-collapse v-if="detailRecord.logs?.length">
           <el-collapse-item :title="`执行过程日志 (${detailRecord.logs.length})`" name="processLogs">
-            <div class="text-xs bg-[var(--el-fill-color-light)] rounded-lg p-3 overflow-auto" style="max-height: 300px">
+            <div class="text-xs bg-fill-light rounded-lg p-3 overflow-auto" style="max-height: 300px">
               <div v-for="(line, idx) in detailRecord.logs" :key="idx" class="py-0.5">{{ line }}</div>
             </div>
           </el-collapse-item>
@@ -563,9 +563,9 @@ onMounted(() => {
             <div
               v-for="(link, idx) in detailExecutionLogs"
               :key="link.log_id"
-              class="execution-chain__step flex items-center gap-3 rounded-lg p-3 border border-[var(--el-border-color-lighter)]"
+              class="execution-chain__step flex items-center gap-3 rounded-lg p-3 border border-border-lighter"
               :class="{
-                'bg-[var(--el-color-primary-light-9)] border-[var(--el-color-primary-light-5)]': link.log_id === detailRecord.log_id,
+                'bg-primary-light-9 border-primary-light-5': link.log_id === detailRecord.log_id,
               }"
             >
               <el-icon :size="18" :color="link.success ? 'var(--el-color-success)' : 'var(--el-color-danger)'">

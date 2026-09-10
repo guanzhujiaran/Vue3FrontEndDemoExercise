@@ -319,7 +319,7 @@ onMounted(() => {
       <!-- 加载骨架 -->
       <div v-if="loading" class="w-full">
         <div class="grid gap-4" style="grid-template-columns: repeat(auto-fill, minmax(340px, 1fr))">
-          <div v-for="i in 6" :key="i" class="rounded-xl p-5 border border-[var(--el-border-color-light)]">
+          <div v-for="i in 6" :key="i" class="rounded-xl p-5 border border-border-light">
             <el-skeleton :rows="4" animated />
           </div>
         </div>
@@ -339,7 +339,7 @@ onMounted(() => {
             :effect="getTooltipEffect(item)" raw-content placement="top" :show-after="500"
             popper-class="toolbox-tooltip">
             <div
-              class="workflow-card rounded-xl p-5 border border-[var(--el-border-color-light)] hover:border-[var(--el-color-primary)] transition-colors flex flex-col gap-3">
+              class="workflow-card rounded-xl p-5 border border-border-light hover:border-primary transition-colors flex flex-col gap-3">
               <!-- 名称行 -->
               <div class="flex items-start justify-between gap-2">
                 <div class="flex-1 min-w-0">
@@ -367,7 +367,7 @@ onMounted(() => {
 
               <!-- 操作栏 -->
               <div
-                class="workflow-card__actions flex items-center gap-2 pt-2 border-t border-[var(--el-border-color-lighter)]">
+                class="workflow-card__actions flex items-center gap-2 pt-2 border-t border-border-lighter">
                 <el-button size="small" :icon="Edit" :loading="editDialogLoading"
                   @click="handleEdit(item)">编辑</el-button>
                 <el-button size="small" :icon="CopyDocument" @click="handleDuplicate(item)">复制</el-button>

@@ -150,19 +150,19 @@ const detailBadges = computed(() => {
   <div :class="[
     'rounded-lg border cursor-pointer transition-all duration-200',
     selected
-      ? 'border-[var(--el-color-primary)] shadow-md'
-      : 'border-border hover:border-[var(--el-color-primary)] hover:shadow-sm'
+      ? 'border-primary shadow-md'
+      : 'border-border hover:border-primary hover:shadow-sm'
   ]">
     <div class="p-3">
       <div class="flex items-start gap-3">
         <div class="flex items-center justify-center w-8 h-8 rounded-lg shrink-0">
-          <el-icon class="text-lg text-[var(--el-text-color-primary)]">
+          <el-icon class="text-lg text-text-primary">
             <component :is="actionIcon" />
           </el-icon>
         </div>
         <div class="flex-1 min-w-0">
           <div class="flex items-center gap-2 mb-1">
-            <span class="font-medium text-sm text-[var(--el-text-color-primary)]">{{ actionTitle }}</span>
+            <span class="font-medium text-sm text-text-primary">{{ actionTitle }}</span>
             <span class="text-xs text-text-secondary font-mono">{{ action.action_id }}</span>
           </div>
           <div v-if="actionDescription" class="text-xs text-text-secondary leading-relaxed line-clamp-2 mb-1">{{ actionDescription }}</div>
@@ -173,14 +173,14 @@ const detailBadges = computed(() => {
             <span
               v-for="badge in detailBadges"
               :key="badge"
-              class="text-xs px-1.5 py-0.5 rounded bg-[var(--el-color-primary-light-9)] text-[var(--el-color-primary)]"
+              class="text-xs px-1.5 py-0.5 rounded bg-primary-light-9 text-primary"
             >{{ badge }}</span>
           </div>
         </div>
       </div>
       
       <!-- 插件配置参数 -->
-      <div v-if="configParamsEntries.length > 0" class="mt-2 pt-2 border-t border-[var(--el-border-color-light)] space-y-1">
+      <div v-if="configParamsEntries.length > 0" class="mt-2 pt-2 border-t border-border-light space-y-1">
         <div 
           v-for="param in configParamsEntries" 
           :key="param.key"

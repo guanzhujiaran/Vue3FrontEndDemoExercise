@@ -292,7 +292,7 @@ onMounted(() => {
 
 <template>
   <FlexContainer>
-    <BiliPageHeader title="动作管理" description="管理你的自定义动作" tag="私有动作">
+    <BiliPageHeader title="动作管理" description="管理你的自定义动作" tag-text="私有动作">
       <template #extra>
         <el-button :icon="SetUp" @click="goApprovalCenter">审批中心</el-button>
         <el-button :icon="Refresh" @click="handleRefresh">刷新</el-button>
@@ -326,7 +326,7 @@ onMounted(() => {
       <!-- 加载骨架 -->
       <div v-if="loading" class="w-full">
         <div class="grid gap-4" style="grid-template-columns: repeat(auto-fill, minmax(340px, 1fr))">
-          <div v-for="i in 6" :key="i" class="rounded-xl p-5 border border-[var(--el-border-color-light)]">
+          <div v-for="i in 6" :key="i" class="rounded-xl p-5 border border-border-light">
             <el-skeleton :rows="4" animated />
           </div>
         </div>
@@ -351,7 +351,7 @@ onMounted(() => {
             popper-class="toolbox-tooltip"
           >
             <div
-              class="rounded-xl p-5 border border-[var(--el-border-color-light)] hover:border-[var(--el-color-primary)] transition-colors flex flex-col gap-3"
+              class="rounded-xl p-5 border border-border-light hover:border-primary transition-colors flex flex-col gap-3"
             >
               <!-- 名称行 -->
               <div class="flex items-start justify-between gap-2">
@@ -391,7 +391,7 @@ onMounted(() => {
               </div>
 
               <!-- 操作栏 -->
-              <div class="flex items-center gap-2 pt-2 border-t border-[var(--el-border-color-lighter)]">
+              <div class="flex items-center gap-2 pt-2 border-t border-border-lighter">
                 <el-button size="small" :icon="Edit" @click="handleRename(item)">重命名</el-button>
                 <el-button size="small" :icon="PriceTag" @click="openTagDialog(item)">标签</el-button>
                 <el-button v-if="!item.is_public" size="small" type="primary" plain :icon="Promotion"

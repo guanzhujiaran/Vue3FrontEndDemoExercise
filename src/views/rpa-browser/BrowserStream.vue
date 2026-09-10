@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, provide } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { VideoPlay, VideoPause, Refresh, Camera, ArrowLeft, Tools, Minus } from '@element-plus/icons-vue'
+import { VideoPlay, VideoPause, Refresh, Camera, ArrowLeft, Tools, Minus, Close } from '@element-plus/icons-vue'
 import { useDebounceFn } from '@vueuse/core'
 import { ElMessageBox, ElDialog } from 'element-plus'
 import BiliPageHeader from '@/components/CommonCompo/Bili-Container-Compo/BiliPageHeader.vue'
 import FlexContainer from '@/components/CommonCompo/Bili-Container-Compo/FlexContainer.vue'
-import { WebRtc视频流Service, 执行引擎Service, 浏览器会话控制Service, 浏览器指纹管理Service, 自动化控制Service } from '@/api/browser/hey-api'
+import { WebRtc视频流Service, 执行引擎Service, 浏览器会话控制Service, 浏览器指纹管理Service } from '@/api/browser/hey-api'
 import { useUserNavStore } from '@/stores/user_nav'
 import biliMessage from '@/utils/message'
 import { businessHandler } from '@/utils/businessHandler'
@@ -18,10 +18,12 @@ import MinimizeBar from '@/components/rpa-browser/MinimizeBar.vue'
 import ResourceInteractionBar from '@/components/interaction/ResourceInteractionBar.vue'
 import { RouteName } from '@/models/router/index.ts'
 import { useBrowserSessionState } from '@/composables/useBrowserSessionState'
+import { useI18n } from 'vue-i18n'
 
 const route = useRoute()
 const router = useRouter()
 const userNavStore = useUserNavStore()
+const { t } = useI18n()
 
 interface BrowserInfo {
   browser_id: number
@@ -107,7 +109,7 @@ const loadBrowserInfo = async () => {
   
   if (!userNavStore.user_nav.uid) {
     console.warn('User uid is empty, please login first')
-    biliMessage.warning('请先登录')
+    biliMessage.warning(t('rpa.pleaseLogin'))
     router.push({ name: RouteName.HOME })
     isLoadingInfo.value = false
     return
@@ -117,7 +119,7 @@ const loadBrowserInfo = async () => {
     浏览器指纹管理Service.readFingerprintRouterApiV1RpaBrowserReadFingerprintPost({
       query: { browser_id: browserId },
           }) as any,
-    { successMessage: '', errorMessage: '获取指纹信息失败', showSuccessToast: false }
+    { successMessage: '', errorMessage: t('rpa.getFingerprintFailed'), showSuccessToast: false }
   )
 
   if (result.success && result.data) {
@@ -143,23 +145,18 @@ const handleStartSession = async () => {
       const data = response.data
 
       if (data.browser_started) {
-        biliMessage.info(data.message || '会话已存在，返回现有会话信息')
+        biliMessage.info(data.message || t('rpa.sessionExists'))
       } else {
-        biliMessage.success('浏览器启动成功')
+        biliMessage.success(t('rpa.sessionStartSuccess'))
       }
       onSessionCreated(data)
-
-      // 创建浏览器后获取页面列表
-      if (isConnected.value) {
-        await fetchPagesList()
-      }
     } else {
-      const msg = response?.msg || '创建会话失败'
+      const msg = response?.msg || t('rpa.sessionStartFailed')
       biliMessage.error(msg)
       onSessionStartFailed(msg)
     }
   } catch (error) {
-    const msg = '网络异常，请稍后重试'
+    const msg = t('rpa.networkError')
     biliMessage.error(msg)
     onSessionStartFailed(msg)
   } finally {
@@ -169,9 +166,9 @@ const handleStartSession = async () => {
 
 const handleStopSession = async () => {
   try {
-    await ElMessageBox.confirm('确定要关闭浏览器会话吗？', '提示', {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
+    await ElMessageBox.confirm(t('rpa.sessionCloseConfirm'), t('rpa.sessionCloseTitle'), {
+      confirmButtonText: t('common.sure'),
+      cancelButtonText: t('common.cancel'),
       type: 'warning'
     })
 
@@ -180,18 +177,18 @@ const handleStopSession = async () => {
           }) as any  // responseStyle='data' → 直接返回 {code, data, msg}
 
     if (response?.code === 0) {
-      biliMessage.success('会话已关闭')
+      biliMessage.success(t('rpa.sessionClosed'))
       isStreaming.value = false
       onSessionStopped()
     } else {
-      const msg = response?.msg || '关闭会话失败'
+      const msg = response?.msg || t('rpa.sessionCloseFailed')
       const code = response?.code ?? 0
       biliMessage.error(msg)
       onSessionStopFailed(msg, code)
     }
   } catch (error: unknown) {
     if (error !== 'cancel') {
-      const msg = '关闭会话失败'
+      const msg = t('rpa.sessionCloseFailed')
       biliMessage.error(msg)
       onSessionStopFailed(msg, 0)
     }
@@ -209,19 +206,15 @@ const loadBrowserSessionStatus = async () => {
           })
 
     onStatusResponse(response)
-
-    // 如果浏览器已连接，获取页面列表
-    if (isConnected.value) {
-      await fetchPagesList()
-    }
   } catch (error) {
     console.error('Failed to load browser session status', error)
     // 网络异常视为可能断连，尝试过渡到 error 状态
-    onSessionStopFailed('网络异常，无法获取会话状态', 0)
+    onSessionStopFailed(t('rpa.sessionStatusUnknown'), 0)
   }
 }
 
-const loadWebrtcStatus = async () => {
+// 拉取 WebRTC 状态（静默，返回最新状态供调用方决定是否提示）
+const loadWebrtcStatus = async (): Promise<'disconnected' | 'connecting' | 'connected'> => {
   try {
     const response: any = await WebRtc视频流Service.getWebrtcStatusApiV1RpaBrowserControlWebrtcStatusPost({
       query: { browser_id: browserId },
@@ -241,7 +234,18 @@ const loadWebrtcStatus = async () => {
     console.error('Failed to load webrtc status', error)
     webrtcStatus.value = 'disconnected'
   }
+  return webrtcStatus.value
 }
+
+// 用户点击「刷新WebRTC状态」：必须给出反馈（此前点击后无任何提示）
+const handleRefreshWebrtcStatus = useDebounceFn(async () => {
+  const status = await loadWebrtcStatus()
+  if (status === 'connected') {
+    biliMessage.success(t('rpa.webrtcConnected'))
+  } else {
+    biliMessage.info(t('rpa.webrtcDisconnected'))
+  }
+}, 500)
 
 const handleWebrtcStatusChange = (status: 'disconnected' | 'connecting' | 'connected') => {
   webrtcStatus.value = status
@@ -250,73 +254,11 @@ const handleWebrtcStatusChange = (status: 'disconnected' | 'connecting' | 'conne
 const handleRefreshStatus = useDebounceFn(async () => {
   await loadBrowserSessionStatus()
   if (hasError.value) {
-    biliMessage.warning(errorMessage.value || '状态刷新异常')
+    biliMessage.warning(errorMessage.value || t('rpa.refreshStatusFailed'))
   } else {
-    biliMessage.success('状态刷新成功')
+    biliMessage.success(t('rpa.refreshStatusSuccess'))
   }
 }, 500)
-
-const getHeaders = () => ({
-  'x-bili-mid': userNavStore.user_nav.uid,
-  'x-bili-level': String(userNavStore.user_nav.level_info.current_level)
-})
-
-// 调用 get_page_info API 获取页面信息
-const fetchPagesList = async () => {
-  try {
-    const response: any = await 自动化控制Service.getPageInfoApiV1RpaBrowserControlOperationGetPageInfoPost({
-      query: { browser_id: browserId },
-      body: {}
-    })  // responseStyle='data' → 直接返回 {code, data, msg}
-
-    if (response?.code === 0) {
-      console.log('获取页面信息成功:', response?.data)
-      return response?.data
-    } else {
-      const errorCode = response?.code
-      if (errorCode !== 404) {
-        biliMessage.error(response?.msg || '获取页面信息失败')
-      }
-      return null
-    }
-  } catch (e) {
-    console.warn('获取页面信息异常:', e)
-    return null
-  }
-}
-
-const executeAction = async (actionId: string, params: Record<string, unknown> = {}, pageIndex?: number) => {
-  try {
-    const response: any = await 执行引擎Service.executeActionApiV1RpaBrowserControlActionsExecutePost({
-      query: { browser_id: browserId },
-      body: {
-        action_id: actionId,
-        params,
-        page_index: pageIndex
-      }
-    })  // responseStyle='data' → 直接返回 {code, data, msg}
-
-    // 检查操作执行结果，如果失败则显示错误提示
-    if (response?.code === 0 && response?.data) {
-      const result = response.data
-      if (result.success === false) {
-        biliMessage.error(result.error || '操作执行失败')
-      }
-    } else if (response?.code !== 0) {
-      // API 级别错误（如浏览器未运行、页面不存在等）
-      biliMessage.error(response?.msg || '操作执行失败')
-    }
-
-    // 执行操作后刷新页面列表状态
-    await fetchPagesList()
-
-    return response
-  } catch (error) {
-    console.error('Failed to execute action:', error)
-    biliMessage.error('网络异常，操作执行失败')
-    throw error
-  }
-}
 
 interface EditDialogInstance {
   id: number
@@ -371,16 +313,16 @@ const handleScreenshot = async () => {
           size: screenshotData.size || 0,
           timestamp: Date.now()
         })
-        biliMessage.success('截图成功')
+        biliMessage.success(t('rpa.screenshotSuccess'))
       } else {
-        biliMessage.error(typeof result.error === 'string' ? result.error : '截图失败')
+        biliMessage.error(typeof result.error === 'string' ? result.error : t('rpa.screenshotFailed'))
       }
     } else {
-      biliMessage.error(response?.msg || '截图请求失败')
+      biliMessage.error(response?.msg || t('rpa.screenshotFailed'))
     }
   } catch (error) {
     console.error('截图失败:', error)
-    biliMessage.error('网络异常，截图失败')
+    biliMessage.error(t('rpa.screenshotNetworkError'))
   } finally {
     executingScreenshot.value = false
   }
@@ -406,9 +348,9 @@ onMounted(() => {
 <template>
   <FlexContainer class="flex flex-col h-full">
     <BiliPageHeader 
-      :title="isLoadingInfo ? '加载中...' : (browserInfo?.custom_name || `指纹 ${browserId}`)" 
-      description="浏览器控制台"
-      tag="浏览器"
+      :title="isLoadingInfo ? t('common.loading') : (browserInfo?.custom_name || t('rpa.pageTitleFallback', { id: browserId }))" 
+      :description="t('rpa.consoleDesc')"
+      :tag-text="t('rpa.browserTag')"
     >
       <template #extra>
         <div class="flex flex-wrap items-center gap-4">
@@ -416,7 +358,7 @@ onMounted(() => {
           <ResourceInteractionBar biz-type="rpa_browser" :biz-id="browserId" />
 
           <div class="flex items-center gap-2">
-            <span >浏览器:</span>
+            <span>{{ t('rpa.browserLabel') }}:</span>
             <el-tag :type="isConnected ? 'success' : isConnecting ? 'warning' : 'info'">
               <span class="flex items-center gap-1">
                 <span
@@ -435,16 +377,16 @@ onMounted(() => {
 
           <el-button-group>
             <el-button v-if="!isConnected" type="primary" :icon="VideoPlay" :loading="isLoading" @click="handleStartSession">
-              启动会话
+              {{ t('rpa.sessionStart') }}
             </el-button>
             <el-button v-else type="danger" :icon="VideoPause" @click="handleStopSession">
-              停止会话
+              {{ t('rpa.sessionStop') }}
             </el-button>
           </el-button-group>
 
-          <el-button :icon="Refresh" @click="handleRefreshStatus">刷新浏览器状态</el-button>
+          <el-button :icon="Refresh" @click="handleRefreshStatus">{{ t('rpa.refreshSessionStatus') }}</el-button>
 
-          <el-button :icon="ArrowLeft" @click="handleBack">返回</el-button>
+          <el-button :icon="ArrowLeft" @click="handleBack">{{ t('common.back') }}</el-button>
         </div>
       </template>
     </BiliPageHeader>
@@ -454,35 +396,35 @@ onMounted(() => {
         <el-icon class="animate-spin" size="40" style="color: var(--el-color-primary)">
           <VideoPause />
         </el-icon>
-        <div class="mt-4 text-text-secondary">加载中...</div>
+        <div class="mt-4 text-text-secondary">{{ t('common.loading') }}</div>
       </div>
     </div>
 
     <div v-else class="flex-1 flex flex-col min-h-[70vh] overflow-hidden bg-bg rounded-2xl p-4">
-      <div class="flex items-center justify-between px-4 py-2 border-t border-border bg-[var(--el-fill-color-light)]">
+      <div class="flex items-center justify-between px-4 py-2 border-t border-border bg-fill-light">
         <div class="flex items-center gap-4">
           <div class="flex items-center gap-2">
             <span>WebRTC:</span>
             <el-tag :type="webrtcStatus === 'connected' ? 'success' : webrtcStatus === 'connecting' ? 'warning' : 'info'">
               <span class="flex items-center gap-1">
                 <span :class="['w-2 h-2 rounded-full', webrtcStatus === 'connected' ? 'bg-green-500 animate-pulse' : webrtcStatus === 'connecting' ? 'bg-yellow-500 animate-pulse' : 'bg-gray-400']"></span>
-                {{ webrtcStatus === 'connected' ? '已连接' : webrtcStatus === 'connecting' ? '连接中' : '未连接' }}
+                {{ webrtcStatus === 'connected' ? t('rpa.statusConnected') : webrtcStatus === 'connecting' ? t('rpa.statusConnecting') : t('rpa.statusDisconnected') }}
               </span>
             </el-tag>
           </div>
 
-          <el-button size="large" :icon="Refresh" @click="loadWebrtcStatus">刷新WebRTC状态</el-button>
+          <el-button size="large" :icon="Refresh" @click="handleRefreshWebrtcStatus">{{ t('rpa.refreshWebrtcStatus') }}</el-button>
 
           <div v-if="isStreaming" class="flex items-center gap-2 text-sm">
-            <span class="text-text-secondary">网速:</span>
+            <span class="text-text-secondary">{{ t('rpa.networkSpeed') }}:</span>
             <span class="text-green-500">↑ {{ uploadSpeed }}/s</span>
             <span class="text-blue-500">↓ {{ downloadSpeed }}/s</span>
           </div>
         </div>
 
         <div class="flex items-center gap-2">
-          <el-button size="large" :icon="Camera" :loading="executingScreenshot" @click="handleScreenshot">截图</el-button>
-          <el-button size="large" type="primary" :icon="Tools" @click="openToolbox">工具箱</el-button>
+          <el-button size="large" :icon="Camera" :loading="executingScreenshot" @click="handleScreenshot">{{ t('rpa.screenshotBtn') }}</el-button>
+          <el-button size="large" type="primary" :icon="Tools" @click="openToolbox">{{ t('rpa.toolbox') }}</el-button>
         </div>
       </div>
 
@@ -496,9 +438,9 @@ onMounted(() => {
       </el-splitter>
     </div>
 
-    <div v-if="screenshots.length > 0" class="mx-4 mb-4 rounded-lg border border-border bg-[var(--el-fill-color-light)]">
+    <div v-if="screenshots.length > 0" class="mx-4 mb-4 rounded-lg border border-border bg-fill-light">
       <div class="flex items-center justify-between px-4 py-2 border-b border-border">
-        <span class="text-sm font-medium text-[var(--el-text-color-primary)]">截图历史 ({{ screenshots.length }})</span>
+        <span class="text-sm font-medium text-text-primary">{{ t('rpa.screenshotHistory') }} ({{ screenshots.length }})</span>
       </div>
       <div class="flex gap-3 overflow-x-auto p-3">
         <div
@@ -544,10 +486,10 @@ onMounted(() => {
     >
       <template #header>
         <div class="flex">
-          <span class="text-2xl">工具箱</span>
+          <span class="text-2xl">{{ t('rpa.toolbox') }}</span>
           <button
             class="ml-auto mr-3 cursor-pointer hover:text-color-secondary"
-            title="最小化"
+            :title="t('rpa.minimize')"
             @click="handleToolboxMinimize"
           >
             <el-icon :size="14"><Minus /></el-icon>
@@ -560,7 +502,7 @@ onMounted(() => {
     <!-- 工具箱最小化浮动标签 -->
     <MinimizeBar
       v-if="toolboxMinimized && toolboxVisible"
-      title="工具箱"
+      :title="t('rpa.toolbox')"
       @restore="handleToolboxRestore"
       @close="handleToolboxClose"
     />

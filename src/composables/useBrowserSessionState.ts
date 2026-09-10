@@ -1,4 +1,5 @@
 import { ref, computed, type Ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { SessionLifecycleState, getSessionLifecycleStateLabel } from '@/models/rpa_browser/session_state'
 
 /**
@@ -17,10 +18,12 @@ const ALLOWED_TRANSITIONS: Record<UISessionState, readonly UISessionState[]> = {
 }
 
 /**
- * 错误码 → 状态与中文消息映射
+ * 错误码 → 状态与默认文案的 i18n key 映射
+ *
+ * 只存 key，实际文案在状态机内部用 t() 翻译（模块级常量无法访问 setup 上下文）。
  */
-const ERROR_CODE_HANDLERS: Record<number, { state: UISessionState; lifecycle: SessionLifecycleState; label: string }> = {
-  3001: { state: 'disconnected', lifecycle: SessionLifecycleState.TERMINATED, label: '会话已终止' },
+const ERROR_CODE_HANDLERS: Record<number, { state: UISessionState; lifecycle: SessionLifecycleState; labelKey: string }> = {
+  3001: { state: 'disconnected', lifecycle: SessionLifecycleState.TERMINATED, labelKey: 'rpa.sessionTerminated' },
   // 可扩展更多后端错误码
 }
 
@@ -31,6 +34,9 @@ const ERROR_CODE_HANDLERS: Record<number, { state: UISessionState; lifecycle: Se
  * 对外暴露和旧代码兼容的 browserSessionStatus（Ref<string>）。
  */
 export function useBrowserSessionState() {
+  // 文案统一走 i18n（本 composable 只在 setup 上下文中调用）
+  const { t } = useI18n()
+
   // ========== 内部状态 ==========
   const _uiState = ref<UISessionState>('disconnected')
   const _lifecycle = ref<SessionLifecycleState | null>(null)
@@ -46,15 +52,15 @@ export function useBrowserSessionState() {
   const hasError = computed(() => _uiState.value === 'error')
 
   const lifecycleLabel = computed(() =>
-    _lifecycle.value ? getSessionLifecycleStateLabel(_lifecycle.value) : ''
+    _lifecycle.value ? getSessionLifecycleStateLabel(_lifecycle.value, t) : ''
   )
 
   const statusLabel = computed((): string => {
     const labels: Record<UISessionState, string> = {
-      disconnected: '未启动',
-      connecting: '连接中',
-      connected: '运行中',
-      error: '异常',
+      disconnected: t('rpa.sessionStatusDisconnected'),
+      connecting: t('rpa.sessionStatusConnecting'),
+      connected: t('rpa.sessionStatusConnected'),
+      error: t('rpa.sessionStatusError'),
     }
     return labels[_uiState.value]
   })
@@ -114,7 +120,7 @@ export function useBrowserSessionState() {
   function onSessionStopFailed(msg: string, code: number) {
     const handler = ERROR_CODE_HANDLERS[code]
     if (handler) {
-      transition(handler.state, handler.lifecycle, msg || handler.label)
+      transition(handler.state, handler.lifecycle, msg || t(handler.labelKey))
     } else {
       transition('error', null, msg)
     }
@@ -129,7 +135,7 @@ export function useBrowserSessionState() {
       const code = (data?.code as number) ?? 0
       const handler = ERROR_CODE_HANDLERS[code]
       if (handler) {
-        transition(handler.state, handler.lifecycle, (data?.msg as string) || handler.label)
+        transition(handler.state, handler.lifecycle, (data?.msg as string) || t(handler.labelKey))
       } else if (!data?.data) {
         // 会话不存在等场景
         transition('disconnected', SessionLifecycleState.TERMINATED, (data?.msg as string) || '会话状态未知')

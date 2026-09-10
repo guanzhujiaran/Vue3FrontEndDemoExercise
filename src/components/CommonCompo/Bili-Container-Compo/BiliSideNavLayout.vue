@@ -60,7 +60,11 @@
             </el-aside>
 
 
-            <el-container class="bili-side-nav-layout__main bg-bg rounded-lg ">
+            <!-- 右侧主区：与左侧菜单同步做「布丁」弹性动画（origin-right 锚定右边缘，形变只发生在靠侧边栏的一侧） -->
+            <el-container
+                class="bili-side-nav-layout__main bg-bg rounded-lg origin-right will-change-transform"
+                :class="{ 'animate-sidenav-content-jelly': isContentSettling }"
+                @animationend="onContentJellyEnd">
                 <el-header
                     class="bili-side-nav-layout__header flex items-center justify-between rounded-lg px-6 py-0 shrink-0">
                     <h1 class="bili-side-nav-layout__title text-base font-bold">{{ pageTitle }}</h1>
@@ -113,6 +117,8 @@ const collapsed = ref(false)
 // 布丁弹性动画触发标记：折叠/展开时侧边栏果冻摇摆、按钮图标摇晃
 const isCollapsing = ref(false)
 const isWobbling = ref(false)
+// 右侧主区布丁弹性联动标记（与左侧果冻同一时机触发、同一时长）
+const isContentSettling = ref(false)
 
 const activeIndex = computed(() => (route.name ? String(route.name) : ''))
 const pageTitle = computed(() => String(route.meta?.title ?? ''))
@@ -168,11 +174,19 @@ function toggleCollapse() {
     collapsed.value = !collapsed.value
     isCollapsing.value = true
     isWobbling.value = true
+    isContentSettling.value = true
 }
 
 function onJellyEnd(e: AnimationEvent) {
     if ((e.target as HTMLElement)?.classList?.contains('bili-side-nav-layout__nav')) {
         isCollapsing.value = false
+    }
+}
+
+// 右侧主区弹性结束：单独清理，避免与左侧果冻的 animationend 互相提前打断
+function onContentJellyEnd(e: AnimationEvent) {
+    if ((e.target as HTMLElement)?.classList?.contains('bili-side-nav-layout__main')) {
+        isContentSettling.value = false
     }
 }
 

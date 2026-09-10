@@ -3,7 +3,7 @@
 import type { RequestResult } from '../client';
 import { client } from '../client.gen';
 import type { Options } from '../sdk.gen';
-import type { AttachTagApiAdminRpaTagAttachPostData, AttachTagApiAdminRpaTagAttachPostErrors, AttachTagApiAdminRpaTagAttachPostResponses, BanUserApiAdminRpaBanCreatePostData, BanUserApiAdminRpaBanCreatePostErrors, BanUserApiAdminRpaBanCreatePostResponses, CancelApprovalApiAdminRpaApprovalCancelPostData, CancelApprovalApiAdminRpaApprovalCancelPostErrors, CancelApprovalApiAdminRpaApprovalCancelPostResponses, CertifyApiAdminRpaCertificationCertifyPostData, CertifyApiAdminRpaCertificationCertifyPostErrors, CertifyApiAdminRpaCertificationCertifyPostResponses, CreateTagApiAdminRpaTagCreatePostData, CreateTagApiAdminRpaTagCreatePostErrors, CreateTagApiAdminRpaTagCreatePostResponses, DeleteApprovalApiAdminRpaApprovalDeletePostData, DeleteApprovalApiAdminRpaApprovalDeletePostErrors, DeleteApprovalApiAdminRpaApprovalDeletePostResponses, DeleteTagApiAdminRpaTagDeletePostData, DeleteTagApiAdminRpaTagDeletePostErrors, DeleteTagApiAdminRpaTagDeletePostResponses, DetachTagApiAdminRpaTagDetachPostData, DetachTagApiAdminRpaTagDetachPostErrors, DetachTagApiAdminRpaTagDetachPostResponses, GetAllSessionsApiAdminRpaSessionsAllPostData, GetAllSessionsApiAdminRpaSessionsAllPostResponses, GetBanStatusApiAdminRpaBanStatusPostData, GetBanStatusApiAdminRpaBanStatusPostErrors, GetBanStatusApiAdminRpaBanStatusPostResponses, GetBrowserSessionConfigApiAdminRpaConfigBrowserSessionGetData, GetBrowserSessionConfigApiAdminRpaConfigBrowserSessionGetResponses, LiftUserBanApiAdminRpaBanLiftPostData, LiftUserBanApiAdminRpaBanLiftPostErrors, LiftUserBanApiAdminRpaBanLiftPostResponses, ListApprovalsApiAdminRpaApprovalListPostData, ListApprovalsApiAdminRpaApprovalListPostErrors, ListApprovalsApiAdminRpaApprovalListPostResponses, ListAuditApiAdminRpaAuditListPostData, ListAuditApiAdminRpaAuditListPostErrors, ListAuditApiAdminRpaAuditListPostResponses, ListBansApiAdminRpaBanListPostData, ListBansApiAdminRpaBanListPostErrors, ListBansApiAdminRpaBanListPostResponses, ListCertificationsApiAdminRpaCertificationListPostData, ListCertificationsApiAdminRpaCertificationListPostErrors, ListCertificationsApiAdminRpaCertificationListPostResponses, ListTagsApiAdminRpaTagListPostData, ListTagsApiAdminRpaTagListPostErrors, ListTagsApiAdminRpaTagListPostResponses, ListTagsByTargetApiAdminRpaTagListByTargetPostData, ListTagsByTargetApiAdminRpaTagListByTargetPostErrors, ListTagsByTargetApiAdminRpaTagListByTargetPostResponses, ReviewApprovalApiAdminRpaApprovalReviewPostData, ReviewApprovalApiAdminRpaApprovalReviewPostErrors, ReviewApprovalApiAdminRpaApprovalReviewPostResponses, RevokeCertificationApiAdminRpaCertificationRevokePostData, RevokeCertificationApiAdminRpaCertificationRevokePostErrors, RevokeCertificationApiAdminRpaCertificationRevokePostResponses, SearchResourcesApiAdminRpaApprovalResourcesPostData, SearchResourcesApiAdminRpaApprovalResourcesPostErrors, SearchResourcesApiAdminRpaApprovalResourcesPostResponses, SubmitApprovalApiAdminRpaApprovalSubmitPostData, SubmitApprovalApiAdminRpaApprovalSubmitPostErrors, SubmitApprovalApiAdminRpaApprovalSubmitPostResponses, UpdateBrowserSessionConfigApiAdminRpaConfigBrowserSessionPostData, UpdateBrowserSessionConfigApiAdminRpaConfigBrowserSessionPostErrors, UpdateBrowserSessionConfigApiAdminRpaConfigBrowserSessionPostResponses, UpdateTagApiAdminRpaTagUpdatePostData, UpdateTagApiAdminRpaTagUpdatePostErrors, UpdateTagApiAdminRpaTagUpdatePostResponses } from '../types.gen';
+import type { BanUserApiAdminRpaBanCreatePostData, BanUserApiAdminRpaBanCreatePostErrors, BanUserApiAdminRpaBanCreatePostResponses, CancelApprovalApiAdminRpaApprovalCancelPostData, CancelApprovalApiAdminRpaApprovalCancelPostErrors, CancelApprovalApiAdminRpaApprovalCancelPostResponses, CertifyApiAdminRpaCertificationCertifyPostData, CertifyApiAdminRpaCertificationCertifyPostErrors, CertifyApiAdminRpaCertificationCertifyPostResponses, DeleteApprovalApiAdminRpaApprovalDeletePostData, DeleteApprovalApiAdminRpaApprovalDeletePostErrors, DeleteApprovalApiAdminRpaApprovalDeletePostResponses, DeleteTagApiAdminRpaTagDeletePostData, DeleteTagApiAdminRpaTagDeletePostErrors, DeleteTagApiAdminRpaTagDeletePostResponses, GetAllSessionsApiAdminRpaSessionsAllPostData, GetAllSessionsApiAdminRpaSessionsAllPostResponses, GetBanStatusApiAdminRpaBanStatusPostData, GetBanStatusApiAdminRpaBanStatusPostErrors, GetBanStatusApiAdminRpaBanStatusPostResponses, GetBrowserSessionConfigApiAdminRpaConfigBrowserSessionGetData, GetBrowserSessionConfigApiAdminRpaConfigBrowserSessionGetResponses, LiftUserBanApiAdminRpaBanLiftPostData, LiftUserBanApiAdminRpaBanLiftPostErrors, LiftUserBanApiAdminRpaBanLiftPostResponses, ListApprovalsApiAdminRpaApprovalListPostData, ListApprovalsApiAdminRpaApprovalListPostErrors, ListApprovalsApiAdminRpaApprovalListPostResponses, ListAuditApiAdminRpaAuditListPostData, ListAuditApiAdminRpaAuditListPostErrors, ListAuditApiAdminRpaAuditListPostResponses, ListBansApiAdminRpaBanListPostData, ListBansApiAdminRpaBanListPostErrors, ListBansApiAdminRpaBanListPostResponses, ListCertificationsApiAdminRpaCertificationListPostData, ListCertificationsApiAdminRpaCertificationListPostErrors, ListCertificationsApiAdminRpaCertificationListPostResponses, ReviewApprovalApiAdminRpaApprovalReviewPostData, ReviewApprovalApiAdminRpaApprovalReviewPostErrors, ReviewApprovalApiAdminRpaApprovalReviewPostResponses, RevokeCertificationApiAdminRpaCertificationRevokePostData, RevokeCertificationApiAdminRpaCertificationRevokePostErrors, RevokeCertificationApiAdminRpaCertificationRevokePostResponses, SearchResourcesApiAdminRpaApprovalResourcesPostData, SearchResourcesApiAdminRpaApprovalResourcesPostErrors, SearchResourcesApiAdminRpaApprovalResourcesPostResponses, SubmitApprovalApiAdminRpaApprovalSubmitPostData, SubmitApprovalApiAdminRpaApprovalSubmitPostErrors, SubmitApprovalApiAdminRpaApprovalSubmitPostResponses, UpdateBrowserSessionConfigApiAdminRpaConfigBrowserSessionPostData, UpdateBrowserSessionConfigApiAdminRpaConfigBrowserSessionPostErrors, UpdateBrowserSessionConfigApiAdminRpaConfigBrowserSessionPostResponses, UpdateTagApiAdminRpaTagUpdatePostData, UpdateTagApiAdminRpaTagUpdatePostErrors, UpdateTagApiAdminRpaTagUpdatePostResponses } from '../types.gen';
 
 export class 管理员管理Service {
     /**
@@ -162,26 +162,9 @@ export class 管理员管理Service {
     }
     
     /**
-     * Create Tag
-     *
-     * 创建标签（仅管理员）
-     */
-    public static createTagApiAdminRpaTagCreatePost<ThrowOnError extends boolean = false>(options: Options<CreateTagApiAdminRpaTagCreatePostData, ThrowOnError>): RequestResult<CreateTagApiAdminRpaTagCreatePostResponses, CreateTagApiAdminRpaTagCreatePostErrors, ThrowOnError, 'data'> {
-        return (options.client ?? client).post<CreateTagApiAdminRpaTagCreatePostResponses, CreateTagApiAdminRpaTagCreatePostErrors, ThrowOnError, 'data'>({
-            responseStyle: 'data',
-            url: '/api/admin/rpa/tag/create',
-            ...options,
-            headers: {
-                'Content-Type': 'application/json',
-                ...options.headers
-            }
-        });
-    }
-    
-    /**
      * Update Tag
      *
-     * 更新标签（仅管理员）
+     * 更新标签（仅管理员；审核通过后仍可改名，将重新进入待审由 be-message 复核）
      */
     public static updateTagApiAdminRpaTagUpdatePost<ThrowOnError extends boolean = false>(options: Options<UpdateTagApiAdminRpaTagUpdatePostData, ThrowOnError>): RequestResult<UpdateTagApiAdminRpaTagUpdatePostResponses, UpdateTagApiAdminRpaTagUpdatePostErrors, ThrowOnError, 'data'> {
         return (options.client ?? client).post<UpdateTagApiAdminRpaTagUpdatePostResponses, UpdateTagApiAdminRpaTagUpdatePostErrors, ThrowOnError, 'data'>({
@@ -204,74 +187,6 @@ export class 管理员管理Service {
         return (options.client ?? client).post<DeleteTagApiAdminRpaTagDeletePostResponses, DeleteTagApiAdminRpaTagDeletePostErrors, ThrowOnError, 'data'>({
             responseStyle: 'data',
             url: '/api/admin/rpa/tag/delete',
-            ...options,
-            headers: {
-                'Content-Type': 'application/json',
-                ...options.headers
-            }
-        });
-    }
-    
-    /**
-     * List Tags
-     *
-     * 列出标签（任意登录用户可读）
-     */
-    public static listTagsApiAdminRpaTagListPost<ThrowOnError extends boolean = false>(options: Options<ListTagsApiAdminRpaTagListPostData, ThrowOnError>): RequestResult<ListTagsApiAdminRpaTagListPostResponses, ListTagsApiAdminRpaTagListPostErrors, ThrowOnError, 'data'> {
-        return (options.client ?? client).post<ListTagsApiAdminRpaTagListPostResponses, ListTagsApiAdminRpaTagListPostErrors, ThrowOnError, 'data'>({
-            responseStyle: 'data',
-            url: '/api/admin/rpa/tag/list',
-            ...options,
-            headers: {
-                'Content-Type': 'application/json',
-                ...options.headers
-            }
-        });
-    }
-    
-    /**
-     * Attach Tag
-     *
-     * 为资源关联标签（仅管理员）
-     */
-    public static attachTagApiAdminRpaTagAttachPost<ThrowOnError extends boolean = false>(options: Options<AttachTagApiAdminRpaTagAttachPostData, ThrowOnError>): RequestResult<AttachTagApiAdminRpaTagAttachPostResponses, AttachTagApiAdminRpaTagAttachPostErrors, ThrowOnError, 'data'> {
-        return (options.client ?? client).post<AttachTagApiAdminRpaTagAttachPostResponses, AttachTagApiAdminRpaTagAttachPostErrors, ThrowOnError, 'data'>({
-            responseStyle: 'data',
-            url: '/api/admin/rpa/tag/attach',
-            ...options,
-            headers: {
-                'Content-Type': 'application/json',
-                ...options.headers
-            }
-        });
-    }
-    
-    /**
-     * Detach Tag
-     *
-     * 移除资源上的标签（仅管理员）
-     */
-    public static detachTagApiAdminRpaTagDetachPost<ThrowOnError extends boolean = false>(options: Options<DetachTagApiAdminRpaTagDetachPostData, ThrowOnError>): RequestResult<DetachTagApiAdminRpaTagDetachPostResponses, DetachTagApiAdminRpaTagDetachPostErrors, ThrowOnError, 'data'> {
-        return (options.client ?? client).post<DetachTagApiAdminRpaTagDetachPostResponses, DetachTagApiAdminRpaTagDetachPostErrors, ThrowOnError, 'data'>({
-            responseStyle: 'data',
-            url: '/api/admin/rpa/tag/detach',
-            ...options,
-            headers: {
-                'Content-Type': 'application/json',
-                ...options.headers
-            }
-        });
-    }
-    
-    /**
-     * List Tags By Target
-     *
-     * 查询某资源关联的标签（任意登录用户可读）
-     */
-    public static listTagsByTargetApiAdminRpaTagListByTargetPost<ThrowOnError extends boolean = false>(options: Options<ListTagsByTargetApiAdminRpaTagListByTargetPostData, ThrowOnError>): RequestResult<ListTagsByTargetApiAdminRpaTagListByTargetPostResponses, ListTagsByTargetApiAdminRpaTagListByTargetPostErrors, ThrowOnError, 'data'> {
-        return (options.client ?? client).post<ListTagsByTargetApiAdminRpaTagListByTargetPostResponses, ListTagsByTargetApiAdminRpaTagListByTargetPostErrors, ThrowOnError, 'data'>({
-            responseStyle: 'data',
-            url: '/api/admin/rpa/tag/list-by-target',
             ...options,
             headers: {
                 'Content-Type': 'application/json',

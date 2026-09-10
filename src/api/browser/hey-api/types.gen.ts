@@ -382,10 +382,14 @@ export type ActionLogItemResponse = {
 export type ActionLogListRequest = {
     /**
      * Page
+     *
+     * 页码，从 1 开始
      */
     page?: number;
     /**
      * Per Page
+     *
+     * 每页数量
      */
     per_page?: number;
     /**
@@ -948,10 +952,14 @@ export type ApprovalItemResp = {
 export type ApprovalListRequest = {
     /**
      * Page
+     *
+     * 页码，从 1 开始
      */
     page?: number;
     /**
      * Per Page
+     *
+     * 每页数量
      */
     per_page?: number;
     /**
@@ -982,18 +990,26 @@ export type ApprovalListRequest = {
 export type ApprovalListResponse = {
     /**
      * Page
+     *
+     * 页码
      */
     page?: number;
     /**
      * Per Page
+     *
+     * 每页数量
      */
     per_page?: number;
     /**
      * Total
+     *
+     * 总记录数
      */
     total?: number;
     /**
      * Items
+     *
+     * 当前页数据
      */
     items?: Array<unknown>;
     /**
@@ -1019,30 +1035,6 @@ export type ApprovalListResponse = {
 };
 
 /**
- * AttachTagRequest
- */
-export type AttachTagRequest = {
-    /**
-     * Tag Id
-     *
-     * 标签 ID
-     */
-    tag_id: number;
-    /**
-     * Target Type
-     *
-     * 目标资源类型
-     */
-    target_type: string;
-    /**
-     * Target Id
-     *
-     * 目标资源 ID
-     */
-    target_id: string;
-};
-
-/**
  * BanListRequest
  *
  * 封禁记录列表请求
@@ -1050,10 +1042,14 @@ export type AttachTagRequest = {
 export type BanListRequest = {
     /**
      * Page
+     *
+     * 页码，从 1 开始
      */
     page?: number;
     /**
      * Per Page
+     *
+     * 每页数量
      */
     per_page?: number;
     /**
@@ -1078,18 +1074,26 @@ export type BanListRequest = {
 export type BanListResponse = {
     /**
      * Page
+     *
+     * 页码
      */
     page?: number;
     /**
      * Per Page
+     *
+     * 每页数量
      */
     per_page?: number;
     /**
      * Total
+     *
+     * 总记录数
      */
     total?: number;
     /**
      * Items
+     *
+     * 当前页数据
      */
     items?: Array<unknown>;
     /**
@@ -1313,37 +1317,31 @@ export type BaseFingerprintBrowserInitParams = {
 };
 
 /**
- * BasePaginationReq
- */
-export type BasePaginationReq = {
-    /**
-     * Page
-     */
-    page?: number;
-    /**
-     * Per Page
-     */
-    per_page?: number;
-};
-
-/**
  * BasePaginationResp[ActionLogItemResponse]
  */
 export type BasePaginationRespActionLogItemResponse = {
     /**
      * Page
+     *
+     * 页码
      */
     page?: number;
     /**
      * Per Page
+     *
+     * 每页数量
      */
     per_page?: number;
     /**
      * Total
+     *
+     * 总记录数
      */
     total?: number;
     /**
      * Items
+     *
+     * 当前页数据
      */
     items?: Array<unknown>;
     /**
@@ -1374,18 +1372,26 @@ export type BasePaginationRespActionLogItemResponse = {
 export type BasePaginationRespAuditListItemResponse = {
     /**
      * Page
+     *
+     * 页码
      */
     page?: number;
     /**
      * Per Page
+     *
+     * 每页数量
      */
     per_page?: number;
     /**
      * Total
+     *
+     * 总记录数
      */
     total?: number;
     /**
      * Items
+     *
+     * 当前页数据
      */
     items?: Array<unknown>;
     /**
@@ -1416,18 +1422,26 @@ export type BasePaginationRespAuditListItemResponse = {
 export type BasePaginationRespCompositeActionListItemResponse = {
     /**
      * Page
+     *
+     * 页码
      */
     page?: number;
     /**
      * Per Page
+     *
+     * 每页数量
      */
     per_page?: number;
     /**
      * Total
+     *
+     * 总记录数
      */
     total?: number;
     /**
      * Items
+     *
+     * 当前页数据
      */
     items?: Array<unknown>;
     /**
@@ -1458,18 +1472,26 @@ export type BasePaginationRespCompositeActionListItemResponse = {
 export type BasePaginationRespPluginListItemResponse = {
     /**
      * Page
+     *
+     * 页码
      */
     page?: number;
     /**
      * Per Page
+     *
+     * 每页数量
      */
     per_page?: number;
     /**
      * Total
+     *
+     * 总记录数
      */
     total?: number;
     /**
      * Items
+     *
+     * 当前页数据
      */
     items?: Array<unknown>;
     /**
@@ -1500,18 +1522,26 @@ export type BasePaginationRespPluginListItemResponse = {
 export type BasePaginationRespUserBrowserInfo = {
     /**
      * Page
+     *
+     * 页码
      */
     page?: number;
     /**
      * Per Page
+     *
+     * 每页数量
      */
     per_page?: number;
     /**
      * Total
+     *
+     * 总记录数
      */
     total?: number;
     /**
      * Items
+     *
+     * 当前页数据
      */
     items?: Array<unknown>;
     /**
@@ -1542,18 +1572,26 @@ export type BasePaginationRespUserBrowserInfo = {
 export type BasePaginationRespWorkflowListItemResponse = {
     /**
      * Page
+     *
+     * 页码
      */
     page?: number;
     /**
      * Per Page
+     *
+     * 每页数量
      */
     per_page?: number;
     /**
      * Total
+     *
+     * 总记录数
      */
     total?: number;
     /**
      * Items
+     *
+     * 当前页数据
      */
     items?: Array<unknown>;
     /**
@@ -1693,10 +1731,14 @@ export type BrowserFingerprintDeleteResp = {
 export type BrowserFingerprintListParams = {
     /**
      * Page
+     *
+     * 页码，从 1 开始
      */
     page?: number;
     /**
      * Per Page
+     *
+     * 每页数量
      */
     per_page?: number;
 };
@@ -1800,10 +1842,14 @@ export type BrowserFingerprintQueryResp = {
     browser_id?: number;
     /**
      * Created At
+     *
+     * 创建时间
      */
     created_at?: string;
     /**
      * Updated At
+     *
+     * 更新时间
      */
     updated_at?: string;
     /**
@@ -2219,10 +2265,14 @@ export type CertificationItemResp = {
 export type CertificationListRequest = {
     /**
      * Page
+     *
+     * 页码，从 1 开始
      */
     page?: number;
     /**
      * Per Page
+     *
+     * 每页数量
      */
     per_page?: number;
     /**
@@ -2245,18 +2295,26 @@ export type CertificationListRequest = {
 export type CertificationListResponse = {
     /**
      * Page
+     *
+     * 页码
      */
     page?: number;
     /**
      * Per Page
+     *
+     * 每页数量
      */
     per_page?: number;
     /**
      * Total
+     *
+     * 总记录数
      */
     total?: number;
     /**
      * Items
+     *
+     * 当前页数据
      */
     items?: Array<unknown>;
     /**
@@ -2665,10 +2723,14 @@ export type CompositeActionGetRequest = {
 export type CompositeActionListRequest = {
     /**
      * Page
+     *
+     * 页码，从 1 开始
      */
     page?: number;
     /**
      * Per Page
+     *
+     * 每页数量
      */
     per_page?: number;
     /**
@@ -2971,24 +3033,6 @@ export type CreateSessionResponse = {
 };
 
 /**
- * CreateTagRequest
- */
-export type CreateTagRequest = {
-    /**
-     * Name
-     *
-     * 标签名称
-     */
-    name: string;
-    /**
-     * Color
-     *
-     * 标签颜色
-     */
-    color?: string;
-};
-
-/**
  * DeleteSettingsRequest
  *
  * 删除默认设置请求（占位符）
@@ -3007,30 +3051,6 @@ export type DeleteTagRequest = {
      * 标签 ID
      */
     id: number;
-};
-
-/**
- * DetachTagRequest
- */
-export type DetachTagRequest = {
-    /**
-     * Tag Id
-     *
-     * 标签 ID
-     */
-    tag_id: number;
-    /**
-     * Target Type
-     *
-     * 目标资源类型
-     */
-    target_type: string;
-    /**
-     * Target Id
-     *
-     * 目标资源 ID
-     */
-    target_id: string;
 };
 
 /**
@@ -3233,24 +3253,6 @@ export type LiftBanRequest = {
 };
 
 /**
- * ListTagByTargetRequest
- */
-export type ListTagByTargetRequest = {
-    /**
-     * Target Type
-     *
-     * 目标资源类型
-     */
-    target_type: string;
-    /**
-     * Target Id
-     *
-     * 目标资源 ID
-     */
-    target_id: string;
-};
-
-/**
  * LogicOperator
  *
  * 枚举选项：
@@ -3307,10 +3309,14 @@ export type NameSearchRequest = {
 export type NotificationConfig = {
     /**
      * Created At
+     *
+     * 创建时间
      */
     created_at?: string;
     /**
      * Updated At
+     *
+     * 更新时间
      */
     updated_at?: string;
     /**
@@ -3623,10 +3629,14 @@ export type NotificationConfig = {
 export type NotificationConfigCreate = {
     /**
      * Created At
+     *
+     * 创建时间
      */
     created_at?: string;
     /**
      * Updated At
+     *
+     * 更新时间
      */
     updated_at?: string;
     /**
@@ -4316,10 +4326,14 @@ export type PluginForkResponse = {
 export type PluginListRequest = {
     /**
      * Page
+     *
+     * 页码，从 1 开始
      */
     page?: number;
     /**
      * Per Page
+     *
+     * 每页数量
      */
     per_page?: number;
     /**
@@ -5239,21 +5253,6 @@ export type StandardResponseTagItemResp = {
 };
 
 /**
- * StandardResponse[TagListResponse]
- */
-export type StandardResponseTagListResponse = {
-    /**
-     * Code
-     */
-    code?: number;
-    /**
-     * Msg
-     */
-    msg?: string;
-    data?: TagListResponse | null;
-};
-
-/**
  * StandardResponse[TestNotificationResponse]
  */
 export type StandardResponseTestNotificationResponse = {
@@ -5523,24 +5522,6 @@ export type StandardResponseListRpcMethodInfoResponse = {
 };
 
 /**
- * StandardResponse[list[TagItemResp]]
- */
-export type StandardResponseListTagItemResp = {
-    /**
-     * Code
-     */
-    code?: number;
-    /**
-     * Msg
-     */
-    msg?: string;
-    /**
-     * Data
-     */
-    data?: Array<TagItemResp> | null;
-};
-
-/**
  * StandardResponse[str]
  */
 export type StandardResponseStr = {
@@ -5703,51 +5684,17 @@ export type TagItemResp = {
      */
     created_by: number;
     /**
+     * Audit Status
+     */
+    audit_status?: string;
+    /**
+     * Pub Time
+     */
+    pub_time?: string | null;
+    /**
      * Created At
      */
     created_at?: string | null;
-};
-
-/**
- * TagListResponse
- */
-export type TagListResponse = {
-    /**
-     * Page
-     */
-    page?: number;
-    /**
-     * Per Page
-     */
-    per_page?: number;
-    /**
-     * Total
-     */
-    total?: number;
-    /**
-     * Items
-     */
-    items?: Array<unknown>;
-    /**
-     * Pages
-     */
-    readonly pages: number;
-    /**
-     * Has Next
-     */
-    readonly has_next: boolean;
-    /**
-     * Has Prev
-     */
-    readonly has_prev: boolean;
-    /**
-     * Next Page
-     */
-    readonly next_page: number;
-    /**
-     * Prev Page
-     */
-    readonly prev_page: number;
 };
 
 /**
@@ -6490,10 +6437,14 @@ export type WorkflowForkResponse = {
 export type WorkflowListRequest = {
     /**
      * Page
+     *
+     * 页码，从 1 开始
      */
     page?: number;
     /**
      * Per Page
+     *
+     * 每页数量
      */
     per_page?: number;
     /**
@@ -6757,18 +6708,26 @@ export type WorkflowUpdateRequest = {
 export type ApprovalListResponseWritable = {
     /**
      * Page
+     *
+     * 页码
      */
     page?: number;
     /**
      * Per Page
+     *
+     * 每页数量
      */
     per_page?: number;
     /**
      * Total
+     *
+     * 总记录数
      */
     total?: number;
     /**
      * Items
+     *
+     * 当前页数据
      */
     items?: Array<unknown>;
 };
@@ -6781,18 +6740,26 @@ export type ApprovalListResponseWritable = {
 export type BanListResponseWritable = {
     /**
      * Page
+     *
+     * 页码
      */
     page?: number;
     /**
      * Per Page
+     *
+     * 每页数量
      */
     per_page?: number;
     /**
      * Total
+     *
+     * 总记录数
      */
     total?: number;
     /**
      * Items
+     *
+     * 当前页数据
      */
     items?: Array<unknown>;
 };
@@ -6899,18 +6866,26 @@ export type BaseFingerprintBrowserInitParamsWritable = {
 export type BasePaginationRespActionLogItemResponseWritable = {
     /**
      * Page
+     *
+     * 页码
      */
     page?: number;
     /**
      * Per Page
+     *
+     * 每页数量
      */
     per_page?: number;
     /**
      * Total
+     *
+     * 总记录数
      */
     total?: number;
     /**
      * Items
+     *
+     * 当前页数据
      */
     items?: Array<unknown>;
 };
@@ -6921,18 +6896,26 @@ export type BasePaginationRespActionLogItemResponseWritable = {
 export type BasePaginationRespAuditListItemResponseWritable = {
     /**
      * Page
+     *
+     * 页码
      */
     page?: number;
     /**
      * Per Page
+     *
+     * 每页数量
      */
     per_page?: number;
     /**
      * Total
+     *
+     * 总记录数
      */
     total?: number;
     /**
      * Items
+     *
+     * 当前页数据
      */
     items?: Array<unknown>;
 };
@@ -6943,18 +6926,26 @@ export type BasePaginationRespAuditListItemResponseWritable = {
 export type BasePaginationRespCompositeActionListItemResponseWritable = {
     /**
      * Page
+     *
+     * 页码
      */
     page?: number;
     /**
      * Per Page
+     *
+     * 每页数量
      */
     per_page?: number;
     /**
      * Total
+     *
+     * 总记录数
      */
     total?: number;
     /**
      * Items
+     *
+     * 当前页数据
      */
     items?: Array<unknown>;
 };
@@ -6965,18 +6956,26 @@ export type BasePaginationRespCompositeActionListItemResponseWritable = {
 export type BasePaginationRespPluginListItemResponseWritable = {
     /**
      * Page
+     *
+     * 页码
      */
     page?: number;
     /**
      * Per Page
+     *
+     * 每页数量
      */
     per_page?: number;
     /**
      * Total
+     *
+     * 总记录数
      */
     total?: number;
     /**
      * Items
+     *
+     * 当前页数据
      */
     items?: Array<unknown>;
 };
@@ -6987,18 +6986,26 @@ export type BasePaginationRespPluginListItemResponseWritable = {
 export type BasePaginationRespUserBrowserInfoWritable = {
     /**
      * Page
+     *
+     * 页码
      */
     page?: number;
     /**
      * Per Page
+     *
+     * 每页数量
      */
     per_page?: number;
     /**
      * Total
+     *
+     * 总记录数
      */
     total?: number;
     /**
      * Items
+     *
+     * 当前页数据
      */
     items?: Array<unknown>;
 };
@@ -7009,18 +7016,26 @@ export type BasePaginationRespUserBrowserInfoWritable = {
 export type BasePaginationRespWorkflowListItemResponseWritable = {
     /**
      * Page
+     *
+     * 页码
      */
     page?: number;
     /**
      * Per Page
+     *
+     * 每页数量
      */
     per_page?: number;
     /**
      * Total
+     *
+     * 总记录数
      */
     total?: number;
     /**
      * Items
+     *
+     * 当前页数据
      */
     items?: Array<unknown>;
 };
@@ -7160,10 +7175,14 @@ export type BrowserFingerprintQueryRespWritable = {
     browser_id?: number;
     /**
      * Created At
+     *
+     * 创建时间
      */
     created_at?: string;
     /**
      * Updated At
+     *
+     * 更新时间
      */
     updated_at?: string;
     /**
@@ -7202,18 +7221,26 @@ export type BrowserFingerprintRenameRespWritable = {
 export type CertificationListResponseWritable = {
     /**
      * Page
+     *
+     * 页码
      */
     page?: number;
     /**
      * Per Page
+     *
+     * 每页数量
      */
     per_page?: number;
     /**
      * Total
+     *
+     * 总记录数
      */
     total?: number;
     /**
      * Items
+     *
+     * 当前页数据
      */
     items?: Array<unknown>;
 };
@@ -7461,21 +7488,6 @@ export type StandardResponsePagesListResponseWritable = {
 };
 
 /**
- * StandardResponse[TagListResponse]
- */
-export type StandardResponseTagListResponseWritable = {
-    /**
-     * Code
-     */
-    code?: number;
-    /**
-     * Msg
-     */
-    msg?: string;
-    data?: TagListResponseWritable | null;
-};
-
-/**
  * StandardResponse[Union[BrowserFingerprintQueryResp, NoneType]]
  */
 export type StandardResponseUnionBrowserFingerprintQueryRespNoneTypeWritable = {
@@ -7488,28 +7500,6 @@ export type StandardResponseUnionBrowserFingerprintQueryRespNoneTypeWritable = {
      */
     msg?: string;
     data?: BrowserFingerprintQueryRespWritable | null;
-};
-
-/**
- * TagListResponse
- */
-export type TagListResponseWritable = {
-    /**
-     * Page
-     */
-    page?: number;
-    /**
-     * Per Page
-     */
-    per_page?: number;
-    /**
-     * Total
-     */
-    total?: number;
-    /**
-     * Items
-     */
-    items?: Array<unknown>;
 };
 
 export type GenRandFingerprintRouterApiV1RpaBrowserGenRandFingerprintPostData = {
@@ -12908,77 +12898,6 @@ export type SearchResourcesApiAdminRpaApprovalResourcesPostResponses = {
 
 export type SearchResourcesApiAdminRpaApprovalResourcesPostResponse = SearchResourcesApiAdminRpaApprovalResourcesPostResponses[keyof SearchResourcesApiAdminRpaApprovalResourcesPostResponses];
 
-export type CreateTagApiAdminRpaTagCreatePostData = {
-    body: CreateTagRequest;
-    headers?: {
-        /**
-         * X-Bili-Mid
-         */
-        'x-bili-mid'?: string | null;
-        /**
-         * X-Bili-Level
-         */
-        'x-bili-level'?: string | null;
-        /**
-         * X-Bili-Role
-         */
-        'x-bili-role'?: string;
-        /**
-         * X-Bili-Permissions
-         */
-        'x-bili-permissions'?: string | null;
-        /**
-         * X-Bili-User-Name
-         */
-        'x-bili-user-name'?: string;
-        /**
-         * X-Bili-Uname
-         */
-        'x-bili-uname'?: string;
-        /**
-         * X-Bili-Sign
-         */
-        'x-bili-sign'?: string;
-        /**
-         * X-Bili-Sex
-         */
-        'x-bili-sex'?: string;
-        /**
-         * X-Bili-Email
-         */
-        'x-bili-email'?: string;
-        /**
-         * X-Bili-Vip-Status
-         */
-        'x-bili-vip-status'?: string;
-        /**
-         * X-Bili-Vip-Type
-         */
-        'x-bili-vip-type'?: string;
-    };
-    path?: never;
-    query?: never;
-    url: '/api/admin/rpa/tag/create';
-};
-
-export type CreateTagApiAdminRpaTagCreatePostErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type CreateTagApiAdminRpaTagCreatePostError = CreateTagApiAdminRpaTagCreatePostErrors[keyof CreateTagApiAdminRpaTagCreatePostErrors];
-
-export type CreateTagApiAdminRpaTagCreatePostResponses = {
-    /**
-     * Successful Response
-     */
-    200: StandardResponseTagItemResp;
-};
-
-export type CreateTagApiAdminRpaTagCreatePostResponse = CreateTagApiAdminRpaTagCreatePostResponses[keyof CreateTagApiAdminRpaTagCreatePostResponses];
-
 export type UpdateTagApiAdminRpaTagUpdatePostData = {
     body: UpdateTagRequest;
     headers?: {
@@ -13120,290 +13039,6 @@ export type DeleteTagApiAdminRpaTagDeletePostResponses = {
 };
 
 export type DeleteTagApiAdminRpaTagDeletePostResponse = DeleteTagApiAdminRpaTagDeletePostResponses[keyof DeleteTagApiAdminRpaTagDeletePostResponses];
-
-export type ListTagsApiAdminRpaTagListPostData = {
-    body: BasePaginationReq;
-    headers?: {
-        /**
-         * X-Bili-Mid
-         */
-        'x-bili-mid'?: string | null;
-        /**
-         * X-Bili-Level
-         */
-        'x-bili-level'?: string | null;
-        /**
-         * X-Bili-Role
-         */
-        'x-bili-role'?: string;
-        /**
-         * X-Bili-Permissions
-         */
-        'x-bili-permissions'?: string | null;
-        /**
-         * X-Bili-User-Name
-         */
-        'x-bili-user-name'?: string;
-        /**
-         * X-Bili-Uname
-         */
-        'x-bili-uname'?: string;
-        /**
-         * X-Bili-Sign
-         */
-        'x-bili-sign'?: string;
-        /**
-         * X-Bili-Sex
-         */
-        'x-bili-sex'?: string;
-        /**
-         * X-Bili-Email
-         */
-        'x-bili-email'?: string;
-        /**
-         * X-Bili-Vip-Status
-         */
-        'x-bili-vip-status'?: string;
-        /**
-         * X-Bili-Vip-Type
-         */
-        'x-bili-vip-type'?: string;
-    };
-    path?: never;
-    query?: never;
-    url: '/api/admin/rpa/tag/list';
-};
-
-export type ListTagsApiAdminRpaTagListPostErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type ListTagsApiAdminRpaTagListPostError = ListTagsApiAdminRpaTagListPostErrors[keyof ListTagsApiAdminRpaTagListPostErrors];
-
-export type ListTagsApiAdminRpaTagListPostResponses = {
-    /**
-     * Successful Response
-     */
-    200: StandardResponseTagListResponse;
-};
-
-export type ListTagsApiAdminRpaTagListPostResponse = ListTagsApiAdminRpaTagListPostResponses[keyof ListTagsApiAdminRpaTagListPostResponses];
-
-export type AttachTagApiAdminRpaTagAttachPostData = {
-    body: AttachTagRequest;
-    headers?: {
-        /**
-         * X-Bili-Mid
-         */
-        'x-bili-mid'?: string | null;
-        /**
-         * X-Bili-Level
-         */
-        'x-bili-level'?: string | null;
-        /**
-         * X-Bili-Role
-         */
-        'x-bili-role'?: string;
-        /**
-         * X-Bili-Permissions
-         */
-        'x-bili-permissions'?: string | null;
-        /**
-         * X-Bili-User-Name
-         */
-        'x-bili-user-name'?: string;
-        /**
-         * X-Bili-Uname
-         */
-        'x-bili-uname'?: string;
-        /**
-         * X-Bili-Sign
-         */
-        'x-bili-sign'?: string;
-        /**
-         * X-Bili-Sex
-         */
-        'x-bili-sex'?: string;
-        /**
-         * X-Bili-Email
-         */
-        'x-bili-email'?: string;
-        /**
-         * X-Bili-Vip-Status
-         */
-        'x-bili-vip-status'?: string;
-        /**
-         * X-Bili-Vip-Type
-         */
-        'x-bili-vip-type'?: string;
-    };
-    path?: never;
-    query?: never;
-    url: '/api/admin/rpa/tag/attach';
-};
-
-export type AttachTagApiAdminRpaTagAttachPostErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type AttachTagApiAdminRpaTagAttachPostError = AttachTagApiAdminRpaTagAttachPostErrors[keyof AttachTagApiAdminRpaTagAttachPostErrors];
-
-export type AttachTagApiAdminRpaTagAttachPostResponses = {
-    /**
-     * Successful Response
-     */
-    200: StandardResponseDict;
-};
-
-export type AttachTagApiAdminRpaTagAttachPostResponse = AttachTagApiAdminRpaTagAttachPostResponses[keyof AttachTagApiAdminRpaTagAttachPostResponses];
-
-export type DetachTagApiAdminRpaTagDetachPostData = {
-    body: DetachTagRequest;
-    headers?: {
-        /**
-         * X-Bili-Mid
-         */
-        'x-bili-mid'?: string | null;
-        /**
-         * X-Bili-Level
-         */
-        'x-bili-level'?: string | null;
-        /**
-         * X-Bili-Role
-         */
-        'x-bili-role'?: string;
-        /**
-         * X-Bili-Permissions
-         */
-        'x-bili-permissions'?: string | null;
-        /**
-         * X-Bili-User-Name
-         */
-        'x-bili-user-name'?: string;
-        /**
-         * X-Bili-Uname
-         */
-        'x-bili-uname'?: string;
-        /**
-         * X-Bili-Sign
-         */
-        'x-bili-sign'?: string;
-        /**
-         * X-Bili-Sex
-         */
-        'x-bili-sex'?: string;
-        /**
-         * X-Bili-Email
-         */
-        'x-bili-email'?: string;
-        /**
-         * X-Bili-Vip-Status
-         */
-        'x-bili-vip-status'?: string;
-        /**
-         * X-Bili-Vip-Type
-         */
-        'x-bili-vip-type'?: string;
-    };
-    path?: never;
-    query?: never;
-    url: '/api/admin/rpa/tag/detach';
-};
-
-export type DetachTagApiAdminRpaTagDetachPostErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type DetachTagApiAdminRpaTagDetachPostError = DetachTagApiAdminRpaTagDetachPostErrors[keyof DetachTagApiAdminRpaTagDetachPostErrors];
-
-export type DetachTagApiAdminRpaTagDetachPostResponses = {
-    /**
-     * Successful Response
-     */
-    200: StandardResponseDict;
-};
-
-export type DetachTagApiAdminRpaTagDetachPostResponse = DetachTagApiAdminRpaTagDetachPostResponses[keyof DetachTagApiAdminRpaTagDetachPostResponses];
-
-export type ListTagsByTargetApiAdminRpaTagListByTargetPostData = {
-    body: ListTagByTargetRequest;
-    headers?: {
-        /**
-         * X-Bili-Mid
-         */
-        'x-bili-mid'?: string | null;
-        /**
-         * X-Bili-Level
-         */
-        'x-bili-level'?: string | null;
-        /**
-         * X-Bili-Role
-         */
-        'x-bili-role'?: string;
-        /**
-         * X-Bili-Permissions
-         */
-        'x-bili-permissions'?: string | null;
-        /**
-         * X-Bili-User-Name
-         */
-        'x-bili-user-name'?: string;
-        /**
-         * X-Bili-Uname
-         */
-        'x-bili-uname'?: string;
-        /**
-         * X-Bili-Sign
-         */
-        'x-bili-sign'?: string;
-        /**
-         * X-Bili-Sex
-         */
-        'x-bili-sex'?: string;
-        /**
-         * X-Bili-Email
-         */
-        'x-bili-email'?: string;
-        /**
-         * X-Bili-Vip-Status
-         */
-        'x-bili-vip-status'?: string;
-        /**
-         * X-Bili-Vip-Type
-         */
-        'x-bili-vip-type'?: string;
-    };
-    path?: never;
-    query?: never;
-    url: '/api/admin/rpa/tag/list-by-target';
-};
-
-export type ListTagsByTargetApiAdminRpaTagListByTargetPostErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type ListTagsByTargetApiAdminRpaTagListByTargetPostError = ListTagsByTargetApiAdminRpaTagListByTargetPostErrors[keyof ListTagsByTargetApiAdminRpaTagListByTargetPostErrors];
-
-export type ListTagsByTargetApiAdminRpaTagListByTargetPostResponses = {
-    /**
-     * Successful Response
-     */
-    200: StandardResponseListTagItemResp;
-};
-
-export type ListTagsByTargetApiAdminRpaTagListByTargetPostResponse = ListTagsByTargetApiAdminRpaTagListByTargetPostResponses[keyof ListTagsByTargetApiAdminRpaTagListByTargetPostResponses];
 
 export type CertifyApiAdminRpaCertificationCertifyPostData = {
     body: CertifyRequest;

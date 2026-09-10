@@ -512,17 +512,17 @@ const isJsonField = (key: string, prop: JsonSchemaNode): boolean => {
         <el-button :icon="Plus" @click="addInputVar" text>添加</el-button>
       </div>
       <div class="text-xs text-text-secondary">
-        传入外部变量值，在参数中通过 <code class="px-1 py-0.5 bg-[var(--el-fill-color)] rounded">&#123;&#123;变量名&#125;&#125;</code> 引用
+        传入外部变量值，在参数中通过 <code class="px-1 py-0.5 bg-fill rounded">&#123;&#123;变量名&#125;&#125;</code> 引用
       </div>
       
-      <div v-if="localInputVarKeys.length === 0" class="text-center py-3 text-sm text-text-secondary bg-[var(--el-fill-color-light)] rounded border border-dashed border-border">
+      <div v-if="localInputVarKeys.length === 0" class="text-center py-3 text-sm text-text-secondary bg-fill-light rounded border border-dashed border-border">
         暂无输入变量
       </div>
       
       <div 
         v-for="(key, index) in localInputVarKeys" 
         :key="index"
-        class="flex items-center gap-2 p-2 bg-[var(--el-fill-color-light)] rounded border border-border"
+        class="flex items-center gap-2 p-2 bg-fill-light rounded border border-border"
       >
         <el-input
           v-model="localInputVarKeys[index]"
@@ -548,17 +548,17 @@ const isJsonField = (key: string, prop: JsonSchemaNode): boolean => {
         <el-button :icon="Plus" @click="addOutputVar" text>添加</el-button>
       </div>
       <div class="text-xs text-text-secondary">
-        声明当前步骤执行后需要保存的变量名，后续步骤可通过 <code class="px-1 py-0.5 bg-[var(--el-fill-color)] rounded">&#123;&#123;变量名&#125;&#125;</code> 引用
+        声明当前步骤执行后需要保存的变量名，后续步骤可通过 <code class="px-1 py-0.5 bg-fill rounded">&#123;&#123;变量名&#125;&#125;</code> 引用
       </div>
       
-      <div v-if="localOutputVars.length === 0" class="text-center py-3 text-sm text-text-secondary bg-[var(--el-fill-color-light)] rounded border border-dashed border-border">
+      <div v-if="localOutputVars.length === 0" class="text-center py-3 text-sm text-text-secondary bg-fill-light rounded border border-dashed border-border">
         暂无输出变量
       </div>
       
       <div 
         v-for="(varName, index) in localOutputVars" 
         :key="index"
-        class="flex items-center gap-2 p-2 bg-[var(--el-fill-color-light)] rounded border border-border"
+        class="flex items-center gap-2 p-2 bg-fill-light rounded border border-border"
       >
         <span class="text-xs text-text-secondary shrink-0">变量{{ index + 1 }}</span>
         <el-input
@@ -579,7 +579,7 @@ const isJsonField = (key: string, prop: JsonSchemaNode): boolean => {
       <template v-for="(prop, key) in properties" :key="key">
       <div
         v-if="isFieldVisible(String(key))"
-        class="space-y-2 p-3 bg-[var(--el-fill-color-light)] rounded border border-border"
+        class="space-y-2 p-3 bg-fill-light rounded border border-border"
       >
         <div class="flex items-center gap-1">
           <span class="text-sm font-medium text-text-regular">{{ prop.title || key }}</span>
@@ -652,7 +652,7 @@ const isJsonField = (key: string, prop: JsonSchemaNode): boolean => {
 
         <!-- Dict 类型对象（additionalProperties）：键值对编辑器 -->
         <div v-else-if="prop.type === 'object' && prop.additionalProperties" class="action-params-form__kv-editor space-y-2">
-          <div v-if="getDictEntries(key).length === 0" class="text-center py-2 text-sm text-text-secondary bg-[var(--el-fill-color-light)] rounded border border-dashed border-border">
+          <div v-if="getDictEntries(key).length === 0" class="text-center py-2 text-sm text-text-secondary bg-fill-light rounded border border-dashed border-border">
             暂无键值对，点击下方按钮添加
           </div>
           <div
@@ -761,7 +761,7 @@ const isJsonField = (key: string, prop: JsonSchemaNode): boolean => {
       <div
         v-for="key in fallbackFormKeys"
         :key="key"
-        class="space-y-1 p-3 bg-[var(--el-fill-color-light)] rounded border border-border"
+        class="space-y-1 p-3 bg-fill-light rounded border border-border"
       >
         <span class="text-sm font-medium text-text-regular">{{ key }}</span>
         <el-switch

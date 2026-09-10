@@ -3818,6 +3818,7 @@ export type InteractionActionTypeEnum = typeof InteractionActionTypeEnum[keyof t
  * - RPA_PLUGIN: 6
  * - COMMENT: 7
  * - USER: 8
+ * - RPA_TAG: 14
  * - TOPIC: 9
  * - DM: 10
  * - AVATAR: 11
@@ -3858,6 +3859,10 @@ export const InteractionBizTypeEnum = {
      */
     USER: 8,
     /**
+     * RPA_TAG
+     */
+    RPA_TAG: 14,
+    /**
      * TOPIC
      */
     TOPIC: 9,
@@ -3891,6 +3896,7 @@ export const InteractionBizTypeEnum = {
  * - RPA_PLUGIN: 6
  * - COMMENT: 7
  * - USER: 8
+ * - RPA_TAG: 14
  * - TOPIC: 9
  * - DM: 10
  * - AVATAR: 11
@@ -7720,6 +7726,206 @@ export type RevokeAdminReq = {
 };
 
 /**
+ * RpaTagAttachReq
+ *
+ * 为资源关联标签请求（登录用户）；仅可关联 `normal` 标签。
+ */
+export type RpaTagAttachReq = {
+    /**
+     * Tagid
+     *
+     * 标签 id
+     */
+    tagId: number;
+    /**
+     * Targettype
+     *
+     * 目标资源类型：action / workflow / plugin
+     */
+    targetType: string;
+    /**
+     * Targetid
+     *
+     * 目标资源 id（字符串）
+     */
+    targetId: string;
+};
+
+/**
+ * RpaTagCreateReq
+ *
+ * 创建标签请求（登录用户）→ 进入待审核 `auditing`。
+ */
+export type RpaTagCreateReq = {
+    /**
+     * Name
+     *
+     * 标签名称（唯一）
+     */
+    name: string;
+    /**
+     * Color
+     *
+     * 标签颜色（十六进制）
+     */
+    color?: string;
+};
+
+/**
+ * RpaTagDetachReq
+ *
+ * 移除资源上的标签请求（登录用户）。
+ */
+export type RpaTagDetachReq = {
+    /**
+     * Tagid
+     *
+     * 标签 id
+     */
+    tagId: number;
+    /**
+     * Targettype
+     *
+     * 目标资源类型
+     */
+    targetType: string;
+    /**
+     * Targetid
+     *
+     * 目标资源 id（字符串）
+     */
+    targetId: string;
+};
+
+/**
+ * RpaTagItemResp
+ *
+ * 标签条目（供前端渲染）。pubTime / createdAt 序列化为 ISO 字符串或 None。
+ */
+export type RpaTagItemResp = {
+    /**
+     * Id
+     *
+     * 标签 id
+     */
+    id: number;
+    /**
+     * Name
+     *
+     * 标签名称
+     */
+    name: string;
+    /**
+     * Color
+     *
+     * 标签颜色
+     */
+    color?: string;
+    /**
+     * Createdby
+     *
+     * 创建者 mid
+     */
+    createdBy?: number | null;
+    /**
+     * Auditstatus
+     *
+     * 审核状态：auditing / normal / rejected
+     */
+    auditStatus: string;
+    /**
+     * Pubtime
+     *
+     * 审核通过上架时间（ISO）
+     */
+    pubTime?: string | null;
+    /**
+     * Createdat
+     *
+     * 创建时间（ISO）
+     */
+    createdAt?: string | null;
+};
+
+/**
+ * RpaTagListByTargetReq
+ *
+ * 查询某资源关联的标签请求（仅返回 `normal`）。
+ */
+export type RpaTagListByTargetReq = {
+    /**
+     * Targettype
+     *
+     * 目标资源类型
+     */
+    targetType: string;
+    /**
+     * Targetid
+     *
+     * 目标资源 id（字符串）
+     */
+    targetId: string;
+};
+
+/**
+ * RpaTagListReq
+ *
+ * 列出标签请求。普通用户仅 `normal`；root 可传 `auditing` / `rejected` / `all`。
+ */
+export type RpaTagListReq = {
+    /**
+     * Auditstatus
+     *
+     * 过滤状态；None→normal；root 可用 auditing/rejected/all
+     */
+    auditStatus?: string | null;
+    /**
+     * Page
+     *
+     * 页码
+     */
+    page?: number;
+    /**
+     * Perpage
+     *
+     * 每页条数
+     */
+    perPage?: number;
+};
+
+/**
+ * RpaTagListResp
+ *
+ * 列出标签响应。
+ */
+export type RpaTagListResp = {
+    /**
+     * Page
+     *
+     * 页码
+     */
+    page: number;
+    /**
+     * Perpage
+     *
+     * 每页条数
+     */
+    perPage: number;
+    /**
+     * Total
+     *
+     * 总数
+     */
+    total: number;
+    /**
+     * Items
+     *
+     * 标签列表
+     */
+    items?: Array<RpaTagItemResp>;
+};
+
+/**
  * SpaceFollowStat
  *
  * 关注 / 粉丝 / 互关计数（2.32.0：内联自 `GET /api/v1/message/follow/stat`）。
@@ -9211,6 +9417,36 @@ export type StandardResponseReportListResp = {
 };
 
 /**
+ * StandardResponse[RpaTagItemResp]
+ */
+export type StandardResponseRpaTagItemResp = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: RpaTagItemResp | null;
+};
+
+/**
+ * StandardResponse[RpaTagListResp]
+ */
+export type StandardResponseRpaTagListResp = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: RpaTagListResp | null;
+};
+
+/**
  * StandardResponse[SpaceInfoResp]
  */
 export type StandardResponseSpaceInfoResp = {
@@ -9453,6 +9689,24 @@ export type StandardResponseListMomentDetailResp = {
      * Data
      */
     data?: Array<MomentDetailResp> | null;
+};
+
+/**
+ * StandardResponse[list[RpaTagItemResp]]
+ */
+export type StandardResponseListRpaTagItemResp = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    /**
+     * Data
+     */
+    data?: Array<RpaTagItemResp> | null;
 };
 
 /**
@@ -23313,6 +23567,381 @@ export type ReviewApiV1ReportAdminReviewPostResponses = {
 };
 
 export type ReviewApiV1ReportAdminReviewPostResponse = ReviewApiV1ReportAdminReviewPostResponses[keyof ReviewApiV1ReportAdminReviewPostResponses];
+
+export type CreateTagApiV1RpaTagCreatePostData = {
+    body: RpaTagCreateReq;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Jwt
+         */
+        'x-bili-jwt'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string | null;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string | null;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string | null;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string | null;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string | null;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string | null;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string | null;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/rpa_tag/create';
+};
+
+export type CreateTagApiV1RpaTagCreatePostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type CreateTagApiV1RpaTagCreatePostError = CreateTagApiV1RpaTagCreatePostErrors[keyof CreateTagApiV1RpaTagCreatePostErrors];
+
+export type CreateTagApiV1RpaTagCreatePostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseRpaTagItemResp;
+};
+
+export type CreateTagApiV1RpaTagCreatePostResponse = CreateTagApiV1RpaTagCreatePostResponses[keyof CreateTagApiV1RpaTagCreatePostResponses];
+
+export type AttachTagApiV1RpaTagAttachPostData = {
+    body: RpaTagAttachReq;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Jwt
+         */
+        'x-bili-jwt'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string | null;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string | null;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string | null;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string | null;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string | null;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string | null;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string | null;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/rpa_tag/attach';
+};
+
+export type AttachTagApiV1RpaTagAttachPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type AttachTagApiV1RpaTagAttachPostError = AttachTagApiV1RpaTagAttachPostErrors[keyof AttachTagApiV1RpaTagAttachPostErrors];
+
+export type AttachTagApiV1RpaTagAttachPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponse;
+};
+
+export type AttachTagApiV1RpaTagAttachPostResponse = AttachTagApiV1RpaTagAttachPostResponses[keyof AttachTagApiV1RpaTagAttachPostResponses];
+
+export type DetachTagApiV1RpaTagDetachPostData = {
+    body: RpaTagDetachReq;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Jwt
+         */
+        'x-bili-jwt'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string | null;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string | null;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string | null;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string | null;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string | null;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string | null;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string | null;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/rpa_tag/detach';
+};
+
+export type DetachTagApiV1RpaTagDetachPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type DetachTagApiV1RpaTagDetachPostError = DetachTagApiV1RpaTagDetachPostErrors[keyof DetachTagApiV1RpaTagDetachPostErrors];
+
+export type DetachTagApiV1RpaTagDetachPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponse;
+};
+
+export type DetachTagApiV1RpaTagDetachPostResponse = DetachTagApiV1RpaTagDetachPostResponses[keyof DetachTagApiV1RpaTagDetachPostResponses];
+
+export type ListTagsApiV1RpaTagListPostData = {
+    body: RpaTagListReq;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Jwt
+         */
+        'x-bili-jwt'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string | null;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string | null;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string | null;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string | null;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string | null;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string | null;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string | null;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/rpa_tag/list';
+};
+
+export type ListTagsApiV1RpaTagListPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ListTagsApiV1RpaTagListPostError = ListTagsApiV1RpaTagListPostErrors[keyof ListTagsApiV1RpaTagListPostErrors];
+
+export type ListTagsApiV1RpaTagListPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseRpaTagListResp;
+};
+
+export type ListTagsApiV1RpaTagListPostResponse = ListTagsApiV1RpaTagListPostResponses[keyof ListTagsApiV1RpaTagListPostResponses];
+
+export type ListTagsByTargetApiV1RpaTagListByTargetPostData = {
+    body: RpaTagListByTargetReq;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Jwt
+         */
+        'x-bili-jwt'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string | null;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string | null;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string | null;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string | null;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string | null;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string | null;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string | null;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/rpa_tag/list-by-target';
+};
+
+export type ListTagsByTargetApiV1RpaTagListByTargetPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ListTagsByTargetApiV1RpaTagListByTargetPostError = ListTagsByTargetApiV1RpaTagListByTargetPostErrors[keyof ListTagsByTargetApiV1RpaTagListByTargetPostErrors];
+
+export type ListTagsByTargetApiV1RpaTagListByTargetPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseListRpaTagItemResp;
+};
+
+export type ListTagsByTargetApiV1RpaTagListByTargetPostResponse = ListTagsByTargetApiV1RpaTagListByTargetPostResponses[keyof ListTagsByTargetApiV1RpaTagListByTargetPostResponses];
 
 export type IdentifyUserApiV1UserIdentifyGetData = {
     body?: never;

@@ -269,7 +269,7 @@ onMounted(() => {
 
 <template>
   <FlexContainer>
-    <BiliPageHeader title="浏览器指纹管理" description="管理你的浏览器指纹列表" tag="浏览器指纹">
+    <BiliPageHeader title="浏览器指纹管理" description="管理你的浏览器指纹列表" tag-text="浏览器指纹">
       <template #extra>
         <div class="flex items-center gap-2">
           <el-button :icon="SetUp" @click="router.push({ name: RouteName.RPA_BROWSER_WORKFLOW_MANAGEMENT })">
@@ -285,7 +285,7 @@ onMounted(() => {
     <FlexContainer class="mt-4 bg-bg rounded-2xl p-4">
       <div v-if="loading" class="w-full">
         <div class="grid gap-4" style="grid-template-columns: repeat(auto-fill, minmax(350px, 1fr))">
-          <div v-for="i in 6" :key="i" class="rounded-xl  p-5 border border-[var(--el-border-color-light)]">
+          <div v-for="i in 6" :key="i" class="rounded-xl  p-5 border border-border-light">
             <el-skeleton :rows="4" animated></el-skeleton>
           </div>
         </div>
