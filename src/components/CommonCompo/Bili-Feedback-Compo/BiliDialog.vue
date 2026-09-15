@@ -14,6 +14,7 @@ const props = defineProps<{
       v-model="dialogVisible"
       :title="props.title"
       :draggable="true"
+      :lock-scroll="false"
     >
       <template #footer>
         <div class="dialog-content">

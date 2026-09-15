@@ -8,6 +8,7 @@
       title="提交抽奖动态"
       width="550px"
       :close-on-click-modal="true"
+      :lock-scroll="false"
     >
       <el-alert
         title="支持以下抽奖类型：官方转发抽奖、充电抽奖、预约抽奖"

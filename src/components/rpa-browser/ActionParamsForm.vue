@@ -2,35 +2,14 @@
 import { ref, computed, watch } from 'vue'
 import { Delete, Setting, Plus } from '@element-plus/icons-vue'
 import ActionCard from './ActionCard.vue'
+import type { JsonSchema, JsonSchemaNode } from './debugbox-types'
 
 defineOptions({
   name: 'ActionParamsForm'
 })
 
-interface JsonSchemaNode {
-  type?: string
-  description?: string
-  default?: unknown
-  title?: string
-  properties?: Record<string, JsonSchemaNode>
-  required?: string[]
-  $ref?: string
-  $defs?: Record<string, JsonSchemaNode>
-  anyOf?: JsonSchemaNode[]
-  enum?: unknown[]
-  maxLength?: number
-  minimum?: number
-  maximum?: number
-  additionalProperties?: JsonSchemaNode | boolean
-  [key: string]: unknown
-}
-
 interface Props {
-  jsonSchema?: {
-    properties?: Record<string, JsonSchemaNode>
-    required?: string[]
-    $defs?: Record<string, JsonSchemaNode>
-  }
+  jsonSchema?: JsonSchema
   inputVars?: Record<string, unknown>
   outputVars?: string[]
 }
@@ -205,7 +184,8 @@ const getEnumOptionLabel = (val: unknown): string => {
 }
 
 const initFormData = () => {
-  const data: Record<string, unknown> = { ...(formData.value || {}) }
+  const current = formData.value
+  const data: Record<string, unknown> = { ...(current || {}) }
   for (const [key, prop] of Object.entries(properties.value)) {
     if (data[key] === undefined || data[key] === null) {
       if (prop.type === 'object' && prop.properties) {
@@ -233,7 +213,23 @@ const initFormData = () => {
       }
     }
   }
-  formData.value = data
+  // 补齐缺失的默认值：必须「原地」写入父组件传入的对象。
+  //
+  // defineModel 的 setter 只负责 emit，getter 要等父组件 flush 后才会返回新值。
+  // 若此处直接 formData.value = data（整体替换），首屏渲染读到的仍是父组件的旧对象
+  // （缺默认值），等父组件回写后才被纠正 —— ElSwitch 就会在「挂载同一轮 flush」内
+  // 收到 modelValue 变化，触发 Element Plus 内部对尚未挂载的 input 取
+  // `input.value.checked`，报 Cannot read properties of null (reading 'nextSibling')
+  // 之类的级联错误（表现为展开/收起时整块调试面板崩坏）。
+  if (current && typeof current === 'object' && !Array.isArray(current)) {
+    const target = current as Record<string, unknown>
+    for (const [key, value] of Object.entries(data)) {
+      if (target[key] === undefined || target[key] === null) target[key] = value
+    }
+  } else {
+    // 父组件未传入对象（props.formData 为空）：只能整体替换并回写
+    formData.value = data
+  }
 }
 
 // ─── 键值对编辑辅助方法（Dict 类型对象） ───────────────

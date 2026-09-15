@@ -225,13 +225,15 @@ async function handleApprove(item: AvatarAuditItem) {
   if (res) {
     removeRow((i) => i.pk === item.pk)
     biliMessage.success('已通过，新头像已公开显示')
+    // 审核会改变各状态的数量，总览统计需同步刷新（否则卡片停留在审核前的数字）
+    await loadStatistics()
   }
 }
 
 async function handleReject(item: AvatarAuditItem) {
   try {
     const { value: reason } = await import('element-plus').then((m) =>
-      m.ElMessageBox.prompt('请输入驳回原因', '驳回头像', { inputType: 'textarea' })
+      m.ElMessageBox.prompt('请输入驳回原因', '驳回头像', { inputType: 'textarea', lockScroll: false })
     )
     if (reason) {
       rejectingId.value = item.pk
@@ -240,6 +242,8 @@ async function handleReject(item: AvatarAuditItem) {
       if (res) {
         removeRow((i) => i.pk === item.pk)
         biliMessage.success('已驳回')
+        // 审核会改变各状态的数量，总览统计需同步刷新
+        await loadStatistics()
       }
     }
   } catch {

@@ -176,6 +176,18 @@ const res = await listNotifyApiV1MessageNotifyListGet({ query: { page: 1, size: 
   - 动态 / 话题 / 头像 / 封面四页全部迁移至 `useAuditTabCache` + `AdminAuditTabs`，删除各自重复的 TabState/ensureTab/load 样板代码。
 - [x] **审核总览统计（全部审核页）**：后端 `/api/v1/community/audit/statistics` 扩展 `bizType` 参数（dynamic/topic/comment/dm/avatar/folder_cover/report，缺省 dynamic），返回统一结构 `{total, byStatus, byType}`（byType 行键统一 `type`）；`moment-api.ts` 新增 `fetchAuditStatisticsByBiz`。动态/话题/头像/封面/举报/评论审核/私信审核七个管理页顶部统一加「审核总览」卡片（状态 tags 按各域状态键渲染 + byType 明细表），卡片置于队列标题上方。
 
+### Phase 11 — RPA 浏览器闲置挂起 / 恢复 UX（后端三级软着陆联动）
+
+> 后端契约见 `docs/be-message-统一计划书.md` §5.15：以「真实操作」刷新活跃时间，闲置 2min 降质降帧 → 5min 关流保实例（`lifecycle_state=idle`）→ 30min 进入 60s 宽限期（`lifecycle_state=terminating`）后关实例。
+
+- [x] **生命周期轮询**：`LiveBox.vue` 新增会话生命周期轮询（20s，调 `浏览器会话控制Service.browserSessionStatus...`），仅在挂载期间运行（`onUnmounted` 清理）。该接口是只读的、**不刷新后端活跃时间**，因此轮询不会干扰闲置判定。
+- [x] **挂起提示 + 一键恢复**：`LiveBox.vue` 在 `lifecycle_state=idle` 且未推流时显示「长时间无操作，直播已暂停」浮层，按钮「恢复直播」调用既有 `startStreamCore()`（重新 offer → 后端 `ensure_webrtc_session` 会把会话 `touch` 回 ACTIVE）。
+- [x] **待关闭宽限提示**：`lifecycle_state=terminating` 时显示「长时间无操作，会话即将关闭」+ 按钮「继续使用」，同样走重连以刷新活跃时间。
+- [x] **优先级**：挂起 / 待关闭浮层优先于既有「直播已停止」「点击启动直播」空态，避免用户误以为出错。
+- [x] **i18n**：`rpa.streamSuspended` / `rpa.resumeStream` / `rpa.sessionClosingSoon` / `rpa.keepAlive` 五语言（zh-CN / en / zh-TW / ja / ko）。
+- [x] **闲置时长 / 倒计时 / pin 展示**：状态接口补齐 `idle_seconds` / `is_pinned` / `pending_termination_at`（**后端修正**：三字段补到**响应模型** `BrowserSessionStatus` 上——此前误加在内部 `BrowserSessionStatusData`，被 `response_model` 序列化时丢弃，故上一轮 SDK 再生也拿不到）；`LiveBox.vue` 显示「已闲置 N 秒」「将在 N 秒后关闭」（本地 1s tick 驱动倒计时）与「自动化任务运行中」标签。
+- **类型口径说明**：`LiveBox.vue` 沿用该文件既有的本地 `SessionStatusEnvelope` 接口读取响应字段（与同文件 `WebrtcStatusResponse` 等一致，不经生成类型），因此本项不阻塞于 SDK 再生；如需改为引用 `types.gen.ts` 生成类型，可在后端修复后再跑一次 SDK 生成并切换。
+
 ---
 
 ## 四、实现规范（必须遵守，与项目既有规则一致）

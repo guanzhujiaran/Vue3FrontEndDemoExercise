@@ -108,7 +108,7 @@
       <el-table-column label="状态" width="100">
         <template #default="{ row }">
           <el-tag :type="auditStateTagType(row.auditStatus)" effect="light" size="default">
-            {{ auditStateText(row.auditStatus) }}
+            {{ reportStateText(row.auditStatus) }}
           </el-tag>
         </template>
       </el-table-column>
@@ -139,7 +139,7 @@
     />
 
     <!-- 审核弹窗 -->
-    <el-dialog v-model="reviewDialogVisible" title="审核举报" width="520px">
+    <el-dialog v-model="reviewDialogVisible" title="审核举报" width="520px" :lock-scroll="false">
       <div v-if="reviewTarget" class="report-admin__dialog flex flex-col gap-4">
         <el-descriptions :column="2" border size="default">
           <el-descriptions-item label="被举报对象">
@@ -296,6 +296,22 @@ watch(bizTypeFilter, () => {
   load(true)
 })
 
+/**
+ * 举报状态文案（与页内 Tab、总览统计卡片口径一致）。
+ *
+ * 通用状态机 auditStateMachine 的文案是「待审核 / 已过审 / 已驳回」（动态、话题等业务域），
+ * 而举报域的业务词是「待处理 / 已成立 / 已驳回」（后端契约：pending / resolved / rejected）。
+ * 文案用举报域的说法，颜色与「可审核动作」仍复用通用状态机
+ * （已成立 = resolved → NORMAL = 绿色 success，且只允许改判驳回）。
+ */
+const REPORT_STATE_TEXT: Record<string, string> = {
+  pending: '待处理',
+  resolved: '已成立',
+  rejected: '已驳回',
+}
+const reportStateText = (status?: string | null): string =>
+  REPORT_STATE_TEXT[String(status ?? '').toLowerCase()] ?? auditStateText(status)
+
 const openReview = (row: ReportItem) => {
   reviewTarget.value = row
   reviewForm.decision = 'resolve'
@@ -308,17 +324,22 @@ const submitReview = async () => {
   if (!reviewTarget.value) return
   submitting.value = true
   try {
-    await reviewReport({
+    // reviewReport 返回「是否成功」：失败时不能提示成功、也不能把该行移除
+    // （错误提示由统一入口 businessHandler 弹出，弹窗保持打开便于重试）
+    const ok = await reviewReport({
       reportPk: reviewTarget.value.pk,
       decision: reviewForm.decision,
       resourceAction: reviewForm.hideResource ? 'hide' : undefined,
       remark: reviewForm.remark || undefined,
     })
+    if (!ok) return
     ElMessage.success(reviewForm.decision === 'resolve' ? '举报已成立' : '举报已驳回')
     reviewDialogVisible.value = false
     // 当前 Tab 移除该单；其它状态 Tab 缓存失效（该单可能出现在别的状态里）
     removeRow((i) => i.pk === reviewTarget.value?.pk)
     invalidateOthers()
+    // 审核会改变各状态的数量，总览统计需同步刷新，否则卡片显示的是审核前的过期数字
+    await loadStatistics()
   } catch (e) {
     console.error('审核举报失败:', e)
     ElMessage.error('审核失败')

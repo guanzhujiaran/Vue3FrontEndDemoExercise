@@ -1,5 +1,6 @@
 import { ref, watch, onMounted } from 'vue'
 import type { DroppedItem, BranchPathStep } from './debugbox-types'
+import { genItemId } from './debugbox-types'
 import { 自定义操作管理Service } from '@/api/browser/hey-api'
 import { useUserNavStore } from '@/stores/user_nav'
 
@@ -19,6 +20,28 @@ export function useDebugboxItems(browserId: string, editMode: boolean, initialSt
   const branchCollapseState = ref<Record<string, string[]>>({})
   /** if_else 激活 tab 以 item.id 为 key */
   const ifElseActiveTab = ref<Record<string, 'true' | 'false'>>({})
+
+  /**
+   * 规范化条目树：保证每个条目（含分支内嵌条目）都有全局唯一的 id。
+   *
+   * 历史 localStorage 暂存 / 外部传入的 initialSteps 可能缺 id 或 id 重复，
+   * 而 v-for 的 :key 重复会让 Vue 在 patch 时拿不到正确的 DOM 锚点，
+   * 典型报错：`Cannot read properties of null (reading 'nextSibling')`。
+   */
+  function normalizeItems(items: DroppedItem[], seen: Set<string> = new Set()): DroppedItem[] {
+    for (const item of items) {
+      if (!item) continue
+      if (typeof item.id !== 'string' || !item.id || seen.has(item.id)) {
+        item.id = genItemId(String(item.action_id || item.action_type || 'item'))
+      }
+      seen.add(item.id)
+      initBranchForItem(item)
+      if (item.trueBranch) normalizeItems(item.trueBranch, seen)
+      if (item.falseBranch) normalizeItems(item.falseBranch, seen)
+      if (item.loopBody) normalizeItems(item.loopBody, seen)
+    }
+    return items
+  }
 
   // ── 初始化分支 ───────────────────────────────────────
   function initBranchForItem(item: DroppedItem) {
@@ -94,10 +117,9 @@ export function useDebugboxItems(browserId: string, editMode: boolean, initialSt
 
       // 工具箱新条目
       const item = parsed as DroppedItem
-      const baseId = item.id || item.action_id || item.action_type || 'item'
       const newItem: DroppedItem = {
         ...item,
-        id: `${baseId}-${Date.now()}`,
+        id: genItemId(String(item.action_id || item.action_type || 'item')),
         name: item.name || item.label || item.json_schema?.title || item.action_id || item.action_type || '未命名',
         action_id: item.action_id || item.action_type || 'custom',
         action_type: item.action_type || item.action_id || 'custom',
@@ -108,6 +130,9 @@ export function useDebugboxItems(browserId: string, editMode: boolean, initialSt
         input_vars: item.input_vars,
         output_vars: item.output_vars,
         step_children: item.step_children,
+        // 展示图标（内置操作由后端分配；不参与步骤序列化，仅供渲染）
+        icon_series: item.icon_series,
+        icon_id: item.icon_id,
         formData: { ...(item.formData || {}) },
       }
       initBranchForItem(newItem)
@@ -247,11 +272,10 @@ export function useDebugboxItems(browserId: string, editMode: boolean, initialSt
 
       // 工具箱新条目
       const draggedItem = parsed as DroppedItem
-      const baseId = draggedItem.id || draggedItem.action_id || draggedItem.action_type || 'item'
       const at = insertIndex ?? targetBranch.length
       targetBranch.splice(at, 0, {
         ...draggedItem,
-        id: `${baseId}-${Date.now()}`,
+        id: genItemId(String(draggedItem.action_id || draggedItem.action_type || 'item')),
         name: draggedItem.name || draggedItem.label || draggedItem.json_schema?.title || draggedItem.action_id || draggedItem.action_type || '未命名',
         action_id: draggedItem.action_id || draggedItem.action_type || 'custom',
         action_type: draggedItem.action_type || draggedItem.action_id || 'custom',
@@ -261,6 +285,8 @@ export function useDebugboxItems(browserId: string, editMode: boolean, initialSt
         config_params: draggedItem.config_params,
         input_vars: draggedItem.input_vars,
         output_vars: draggedItem.output_vars,
+        icon_series: draggedItem.icon_series,
+        icon_id: draggedItem.icon_id,
         formData: { ...(draggedItem.formData || {}) },
       })
     } catch (error) {
@@ -490,13 +516,13 @@ export function useDebugboxItems(browserId: string, editMode: boolean, initialSt
   // ── 生命周期 ─────────────────────────────────────────
   onMounted(() => {
     if (initialSteps && initialSteps.length > 0) {
-      droppedItems.value = [...initialSteps]
-      droppedItems.value.forEach(item => initBranchForItem(item))
+      droppedItems.value = normalizeItems(initialSteps.map(item => ({ ...item })))
       return
     }
     const draft = loadDraft()
     if (draft) {
-      droppedItems.value = draft
+      // 规范化：修复历史暂存里缺失 / 重复的 id，避免 v-for key 冲突
+      droppedItems.value = normalizeItems(draft)
       void refreshRegisteredSchemas(droppedItems.value)
     }
   })

@@ -585,7 +585,8 @@ async function onMessageCommand(msg: DmMessageItem, command: string) {
       await ElMessageBox.confirm('撤回后对方也将无法看到该消息，确定撤回？', '撤回消息', {
         confirmButtonText: '撤回',
         cancelButtonText: '取消',
-        type: 'warning'
+        type: 'warning',
+        lockScroll: false
       })
     } catch {
       return // 用户取消
@@ -605,7 +606,8 @@ async function onMessageCommand(msg: DmMessageItem, command: string) {
       await ElMessageBox.confirm('删除后仅自己不可见，对方仍可看到。确定删除？', '删除消息', {
         confirmButtonText: '删除',
         cancelButtonText: '取消',
-        type: 'warning'
+        type: 'warning',
+        lockScroll: false
       })
     } catch {
       return // 用户取消
@@ -703,6 +705,4 @@ defineExpose({ load })
 .dm-chat-panel__send-btn.is-disabled {
   background: var(--color-fill) !important;
   border-color: var(--color-fill) !important;
-  color: var(--color-text-placeholder) !important;
-}
-</style>
+  color: var(--color-text-placehold

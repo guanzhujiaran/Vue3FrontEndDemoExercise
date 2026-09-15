@@ -57,7 +57,7 @@ async function onDeactivate() {
     await ElMessageBox.confirm(
       '注销后账户与数据将不可恢复，确定要提交注销申请吗？',
       '二次确认',
-      { type: 'warning', confirmButtonText: '确定注销', cancelButtonText: '再想想' },
+      { type: 'warning', confirmButtonText: '确定注销', cancelButtonText: '再想想', lockScroll: false },
     )
   } catch {
     return

@@ -250,6 +250,7 @@ const handleClearAll = async () => {
         confirmButtonText: '确定清空',
         cancelButtonText: '取消',
         type: 'warning',
+        lockScroll: false,
       },
     )
   } catch {
@@ -491,7 +492,7 @@ onMounted(() => {
     </FlexContainer>
 
     <!-- 详情弹窗 -->
-    <el-dialog v-model="detailVisible" title="日志详情" width="720px" class="log-detail-dialog">
+    <el-dialog v-model="detailVisible" title="日志详情" width="720px" class="log-detail-dialog" :lock-scroll="false">
       <div v-if="detailRecord" class="flex flex-col gap-4">
         <!-- 基本信息 -->
         <div class="grid grid-cols-2 gap-3 text-sm">

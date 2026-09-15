@@ -2,6 +2,7 @@
 import { ref, computed, inject, type Ref } from 'vue'
 import { Delete, Rank, ArrowDown, ArrowUp, VideoPlay, FolderAdd, View, Check, Close } from '@element-plus/icons-vue'
 import ActionCard from './ActionCard.vue'
+import ActionIconPicker from './ActionIconPicker.vue'
 import ActionParamsForm from './ActionParamsForm.vue'
 import ConditionEditor from './ConditionEditor.vue'
 import LoopEditor from './LoopEditor.vue'
@@ -148,63 +149,74 @@ defineExpose({ droppedItems, getSteps })
 </script>
 
 <template>
-  <div
-    class="debug-box-wrapper bg-bg/70 h-full flex flex-col"
-    @dragover.prevent
-    @drop="handleDrop"
-  >
-    <div class="flex-0 p-3 border-b border-border text-(--el-text-color-primary)">
+  <div class="debug-box-wrapper bg-bg/70 flex-1 flex flex-col" @dragover.prevent @drop="handleDrop">
+    <div class="flex-0 shrink-0 p-3 border-b border-border text-(--el-text-color-primary)">
       <h3 class="font-medium text-sm">{{ props.editMode ? '步骤列表' : '调试面板' }}</h3>
       <p class="text-xs text-color-secondary mt-1">
         {{ props.editMode ? '拖拽动作到此处调整步骤' : '从工具箱拖拽动作到此处，构建工作流' }}
       </p>
     </div>
 
-    <el-scrollbar class="debug-box-content p-3 h-full">
+    <el-scrollbar class="debug-box-content p-3">
       <div v-if="totalCount === 0" class="flex-1 flex flex-col items-center justify-center text-text-secondary">
-        <el-icon size="48" class="mb-2 opacity-30"><Rank /></el-icon>
+        <el-icon size="48" class="mb-2 opacity-30">
+          <Rank />
+        </el-icon>
         <p class="text-sm">拖拽动作到此处</p>
         <p class="text-xs mt-1">从右侧工具箱选择动作插件</p>
       </div>
 
       <div v-else class="space-y-3" @dragover.prevent>
         <!-- 批量执行总览横幅 -->
-        <div v-if="operationFeedback['__batch__']" class="p-3 rounded border text-xs" :class="(operationFeedback['__batch__'] as any).success ? 'border-(--el-color-primary) bg-(--el-color-primary-light-9)' : 'border-(--el-color-warning) bg-(--el-color-warning-light-9)'">
+        <div v-if="operationFeedback['__batch__']" class="p-3 rounded border text-xs"
+          :class="(operationFeedback['__batch__'] as any).success ? 'border-(--el-color-primary) bg-(--el-color-primary-light-9)' : 'border-(--el-color-warning) bg-(--el-color-warning-light-9)'">
           <div class="flex items-center gap-2">
-            <span :class="(operationFeedback['__batch__'] as any).success ? 'text-(--el-color-primary)' : 'text-(--el-color-warning)'">{{ (operationFeedback['__batch__'] as any).success ? '✓' : '⚠' }}</span>
+            <span
+              :class="(operationFeedback['__batch__'] as any).success ? 'text-(--el-color-primary)' : 'text-(--el-color-warning)'">{{
+                (operationFeedback['__batch__'] as any).success ? '✓' : '⚠' }}</span>
             <span class="font-medium">{{ (operationFeedback['__batch__'] as any).summary }}</span>
-            <button class="ml-auto p-0.5 rounded hover:bg-(--el-fill-color) transition-colors" @click="delete operationFeedback['__batch__']"><el-icon class="text-text-secondary text-xs"><Close /></el-icon></button>
+            <button class="ml-auto p-0.5 rounded hover:bg-(--el-fill-color) transition-colors"
+              @click="delete operationFeedback['__batch__']"><el-icon class="text-text-secondary text-xs">
+                <Close />
+              </el-icon></button>
           </div>
         </div>
 
-        <div
-          v-for="(item, index) in droppedItems"
-          :key="item.id"
-          data-drag-item
-          class="group relative"
+        <div v-for="(item, index) in droppedItems" :key="item.id" data-drag-item class="group relative"
           :class="{ 'opacity-50': dragOverIndex === index }"
           @dragenter="(e: DragEvent) => handleItemDragEnter(e, index)"
-          @drop="(e: DragEvent) => handleItemDrop(e, index)"
-        >
-          <div class="flex items-start gap-2 p-1 rounded border border-border hover:border-(--el-color-primary) transition-colors">
+          @drop="(e: DragEvent) => handleItemDrop(e, index)">
+          <div
+            class="flex items-start gap-2 p-1 rounded border border-border hover:border-(--el-color-primary) transition-colors">
             <div v-if="!props.editMode" class="mt-1.5 shrink-0">
               <input type="checkbox" :checked="selectedIds.has(item.id)" @change="toggleSelect(index)"
                 class="w-4 h-4 rounded border-gray-300 text-(--el-color-primary) cursor-pointer focus:ring-2 focus:ring-(--el-color-primary-light-5)" />
             </div>
-            <div class="mt-2 cursor-move drag-handle" draggable="true" @dragstart="(e: DragEvent) => handleItemDragStart(e, index)" @dragend="handleItemDragEnd" @mousedown.stop>
-              <el-icon class="text-gray-400"><Rank /></el-icon>
+            <div class="mt-2 cursor-move drag-handle" draggable="true"
+              @dragstart="(e: DragEvent) => handleItemDragStart(e, index)" @dragend="handleItemDragEnd" @mousedown.stop>
+              <el-icon class="text-gray-400">
+                <Rank />
+              </el-icon>
             </div>
 
             <div class="flex-1 min-w-0">
               <div class="flex items-start gap-3">
                 <div class="flex-1 min-w-0">
-                  <ActionCard :action="{ action_id: item.action_type || item.action_id, json_schema: item.json_schema, name: item.name, description: item.description }" :config-params="item.config_params" />
+                  <ActionCard
+                    :action="{ action_id: item.action_type || item.action_id, json_schema: item.json_schema, name: item.name, description: item.description, icon_series: item.icon_series, icon_id: item.icon_id }"
+                    :config-params="item.config_params" />
                 </div>
                 <div class="grid grid-cols-2 gap-3 shrink-0 py-1 button-stack">
-                  <el-button size="small" :icon="VideoPlay" type="primary" :loading="operatingId === item.id && operatingKind === 'execute'" @click="executeAction(index)" class="execute-btn w-20">执行</el-button>
-                  <el-button size="small" :icon="View" :loading="operatingId === item.id && operatingKind === 'preview'" @click="previewAction(index)" class="preview-btn w-20 ml-0">预览</el-button>
-                  <el-button size="small" :icon="Check" :loading="operatingId === item.id && operatingKind === 'validate'" @click="validateAction(index)" class="validate-btn w-20 ml-0">验证</el-button>
-                  <el-button size="small" :icon="FolderAdd" @click="openSaveDialog(index)" class="save-btn w-20 ml-0">另存为</el-button>
+                  <el-button size="small" :icon="VideoPlay" type="primary"
+                    :loading="operatingId === item.id && operatingKind === 'execute'" @click="executeAction(index)"
+                    class="execute-btn w-20">执行</el-button>
+                  <el-button size="small" :icon="View" :loading="operatingId === item.id && operatingKind === 'preview'"
+                    @click="previewAction(index)" class="preview-btn w-20 ml-0">预览</el-button>
+                  <el-button size="small" :icon="Check"
+                    :loading="operatingId === item.id && operatingKind === 'validate'" @click="validateAction(index)"
+                    class="validate-btn w-20 ml-0">验证</el-button>
+                  <el-button size="small" :icon="FolderAdd" @click="openSaveDialog(index)"
+                    class="save-btn w-20 ml-0">另存为</el-button>
                 </div>
               </div>
 
@@ -220,13 +232,19 @@ defineExpose({ droppedItems, getSteps })
                       <span class="text-sm font-semibold text-(--el-text-color-primary)">分支操作</span>
                       <span class="text-xs text-text-secondary">拖拽动作到对应分支中</span>
                     </div>
-                    <el-alert class="mb-2" type="info" :effect="themeStore.themeEffectString" :closable="true" show-icon>
-                      <template #title><span class="text-xs"><b>执行规则</b>：未设条件 → 走 <b>False 分支</b>；命中分支为空 → <b>跳过</b>并视为成功；分支有步骤 → <b>顺序执行</b></span></template>
+                    <el-alert class="mb-2" type="info" :effect="themeStore.themeEffectString" :closable="true"
+                      show-icon>
+                      <template #title><span class="text-xs"><b>执行规则</b>：未设条件 → 走 <b>False 分支</b>；命中分支为空 →
+                          <b>跳过</b>并视为成功；分支有步骤 → <b>顺序执行</b></span></template>
                     </el-alert>
-                    <el-tabs :model-value="ifElseActiveTab[item.id] ?? 'true'" type="border-card" class="if-else-branch-tabs"
+                    <el-tabs :model-value="ifElseActiveTab[item.id] ?? 'true'" type="border-card"
+                      class="if-else-branch-tabs"
                       @update:model-value="ifElseActiveTab[item.id] = $event as 'true' | 'false'">
                       <el-tab-pane name="true">
-                        <template #label><span class="text-xs font-medium text-(--el-color-success)">True 分支<span v-if="item.trueBranch && item.trueBranch.length > 0" class="text-text-placeholder ml-1">({{ item.trueBranch.length }} 步)</span></span></template>
+                        <template #label><span class="text-xs font-medium text-(--el-color-success)">True 分支<span
+                              v-if="item.trueBranch && item.trueBranch.length > 0"
+                              class="text-text-placeholder ml-1">({{ item.trueBranch.length }}
+                              步)</span></span></template>
                         <div class="p-2 overflow-auto">
                           <BranchContainer branch="true" :items="item.trueBranch || []" :parent-index="index"
                             :selected-items="getBranchSelected(index, 'true')" :expanded-items="expandedItems"
@@ -247,7 +265,10 @@ defineExpose({ droppedItems, getSteps })
                         </div>
                       </el-tab-pane>
                       <el-tab-pane name="false">
-                        <template #label><span class="text-xs font-medium text-(--el-color-danger)">False 分支<span v-if="item.falseBranch && item.falseBranch.length > 0" class="text-text-placeholder ml-1">({{ item.falseBranch.length }} 步)</span></span></template>
+                        <template #label><span class="text-xs font-medium text-(--el-color-danger)">False 分支<span
+                              v-if="item.falseBranch && item.falseBranch.length > 0"
+                              class="text-text-placeholder ml-1">({{ item.falseBranch.length }}
+                              步)</span></span></template>
                         <div class="p-2 overflow-auto">
                           <BranchContainer branch="false" :items="item.falseBranch || []" :parent-index="index"
                             :selected-items="getBranchSelected(index, 'false')" :expanded-items="expandedItems"
@@ -274,17 +295,16 @@ defineExpose({ droppedItems, getSteps })
                 <!-- loop 类型 -->
                 <template v-else-if="item.action_type === 'loop' || item.action_id === 'loop'">
                   <div class="pb-3 border-b border-(--el-border-color-lighter)">
-                    <LoopEditor
-                      :model-value="ensureLoopConfig(item)"
-                      @update:model-value="val => { item.loopConfig = val }"
-                    />
+                    <LoopEditor :model-value="ensureLoopConfig(item)"
+                      @update:model-value="val => { item.loopConfig = val }" />
                   </div>
                   <div>
                     <el-card shadow="never" body-style="padding: 12px;">
                       <div class="flex items-center gap-2 mb-2">
                         <span class="text-sm font-semibold text-(--el-text-color-primary)">循环体</span>
                         <span class="text-xs text-text-secondary">拖拽动作到此处</span>
-                        <el-tag size="small" type="primary" effect="plain" v-if="item.loopBody && item.loopBody.length > 0">{{ item.loopBody.length }} 步</el-tag>
+                        <el-tag size="small" type="primary" effect="plain"
+                          v-if="item.loopBody && item.loopBody.length > 0">{{ item.loopBody.length }} 步</el-tag>
                       </div>
                       <BranchContainer branch="loop" :items="item.loopBody || []" :parent-index="index"
                         :selected-items="getBranchSelected(index, 'loop')" :expanded-items="expandedItems"
@@ -310,32 +330,34 @@ defineExpose({ droppedItems, getSteps })
                 <template v-else>
                   <ActionParamsForm v-model:form-data="item.formData" :json-schema="item.json_schema"
                     :input-vars="item.input_vars" :output-vars="item.output_vars"
-                    @update:input-vars="item.input_vars = $event"
-                    @update:output-vars="item.output_vars = $event" />
+                    @update:input-vars="item.input_vars = $event" @update:output-vars="item.output_vars = $event" />
                 </template>
               </div>
 
               <!-- 操作反馈面板 -->
               <div v-if="operationFeedback[item.id]" class="mt-2">
                 <OperationFeedbackPanel :feedback="operationFeedback[item.id] as any"
-                  :exec-steps="execResultSteps(item.id)"
-                  :preview-replaced-params="previewReplacedParams(item.id)"
-                  :preview-found-params="previewFoundParams(item.id)"
-                  :preview-variables="previewVariables(item.id)"
+                  :exec-steps="execResultSteps(item.id)" :preview-replaced-params="previewReplacedParams(item.id)"
+                  :preview-found-params="previewFoundParams(item.id)" :preview-variables="previewVariables(item.id)"
                   :preview-nested-tree="nestedPreviewTree(item.id)"
                   :validate-missing-params="validateMissingParams(item.id)"
-                  :validate-invalid-params="validateInvalidParams(item.id)"
-                  :validate-errors="validateErrors(item.id)"
+                  :validate-invalid-params="validateInvalidParams(item.id)" :validate-errors="validateErrors(item.id)"
                   @close="closeOperationFeedback(item.id)" />
               </div>
             </div>
 
             <div class="flex flex-col gap-1 mt-2">
-              <button class="expand-more-params-btn p-1 rounded hover:bg-(--el-fill-color) transition-colors" @click.stop="toggleExpand(index)">
-                <el-icon class="text-(--el-text-color-primary)"><component :is="expandedItems.has(item.id) ? ArrowUp : ArrowDown" /></el-icon>
+              <button class="expand-more-params-btn p-1 rounded hover:bg-(--el-fill-color) transition-colors"
+                @click.stop="toggleExpand(index)">
+                <el-icon class="text-(--el-text-color-primary)">
+                  <component :is="expandedItems.has(item.id) ? ArrowUp : ArrowDown" />
+                </el-icon>
               </button>
-              <button class="p-1 rounded hover:bg-(--el-color-danger-light) transition-colors" @click.stop="handleRemoveItem(index)">
-                <el-icon class="text-red-500"><Delete /></el-icon>
+              <button class="p-1 rounded hover:bg-(--el-color-danger-light) transition-colors"
+                @click.stop="handleRemoveItem(index)">
+                <el-icon class="text-red-500">
+                  <Delete />
+                </el-icon>
               </button>
             </div>
           </div>
@@ -347,15 +369,15 @@ defineExpose({ droppedItems, getSteps })
     </el-scrollbar>
 
     <!-- 底部工具栏 -->
-    <div v-if="!props.editMode && totalCount > 0" class="flex-0 p-3 border-t border-border bg-(--el-fill-color-light)">
+    <div v-if="!props.editMode && totalCount > 0"
+      class="flex-0 shrink-0 p-3 border-t border-border bg-(--el-fill-color-light)">
       <div class="flex items-center justify-between">
         <div class="flex items-center gap-2">
           <el-button size="small" :icon="expandedItems.size === 0 ? ArrowDown : ArrowUp" @click="toggleExpandAll">
             {{ expandedItems.size === 0 ? '展开全部' : '收起全部' }}
           </el-button>
           <input type="checkbox" :checked="selectedCount === totalCount && totalCount > 0"
-            :indeterminate="selectedCount > 0 && selectedCount < totalCount"
-            @change="toggleSelectAll"
+            :indeterminate="selectedCount > 0 && selectedCount < totalCount" @change="toggleSelectAll"
             class="w-4 h-4 rounded border-gray-300 text-(--el-color-primary) cursor-pointer focus:ring-2 focus:ring-(--el-color-primary-light-5)" />
           <span class="text-xs text-color-secondary">
             {{ selectedCount > 0 ? `已选 ${selectedCount} / ${totalCount} 个动作` : `共 ${totalCount} 个动作` }}
@@ -365,28 +387,35 @@ defineExpose({ droppedItems, getSteps })
           <el-button size="small" @click="handleSaveMulti">保存为动作</el-button>
           <el-button size="small" type="primary" :loading="executingSelected"
             :disabled="selectedCount === 0 || !isSessionConnected" @click="handleExecuteSelected">
-            {{ selectedCount === totalCount && totalCount > 0 ? `执行全部（${selectedCount}）` : selectedCount > 0 ? `执行选中（${selectedCount}）` : '执行选中' }}
+            {{ selectedCount === totalCount && totalCount > 0 ? `执行全部（${selectedCount}）` : selectedCount > 0 ?
+              `执行选中（${selectedCount}）` : '执行选中' }}
           </el-button>
         </div>
       </div>
     </div>
 
     <!-- 保存对话框 -->
-    <el-dialog v-model="saveDialogVisible"
-      :title="saveMultiItems.length > 1 ? '保存为自定义动作' : '另存为自定义操作'"
-      width="500px" :close-on-click-modal="false" :modal="false" :lock-scroll="false" :draggable="true" :modal-penetrable="true">
+    <el-dialog v-model="saveDialogVisible" :title="saveMultiItems.length > 1 ? '保存为自定义动作' : '另存为自定义操作'" width="500px"
+      :close-on-click-modal="false" :modal="false" :lock-scroll="false" :draggable="true" :modal-penetrable="true">
       <el-form :model="saveDialogForm" label-width="100px" label-position="left">
         <el-form-item label="操作名称" required>
           <el-input v-model="saveDialogForm.name" placeholder="请输入自定义操作名称" maxlength="200" show-word-limit />
         </el-form-item>
         <el-form-item label="操作描述">
-          <el-input v-model="saveDialogForm.description" type="textarea" :rows="3" placeholder="请输入操作描述（可选）" maxlength="500" show-word-limit />
+          <el-input v-model="saveDialogForm.description" type="textarea" :rows="3" placeholder="请输入操作描述（可选）"
+            maxlength="500" show-word-limit />
         </el-form-item>
         <el-form-item label="是否公开">
           <div class="flex flex-col">
             <el-switch v-model="saveDialogForm.isPublic" />
             <span class="text-xs text-text-secondary mt-1">公开后所有用户都可以使用此操作</span>
           </div>
+        </el-form-item>
+        <el-form-item label="动作图标">
+          <ActionIconPicker
+            v-model:series="saveDialogForm.iconSeries"
+            v-model:id="saveDialogForm.iconId"
+          />
         </el-form-item>
       </el-form>
       <template #footer>

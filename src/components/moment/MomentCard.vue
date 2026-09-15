@@ -765,10 +765,10 @@ async function handleRemove() {
       await ElMessageBox.confirm(
         `管理员删除动态「${descText || props.item.dynIdStr}」？删除后该动态将不再可见（软删，可追溯审计流水）。`,
         '管理员删除动态',
-        { type: 'warning', confirmButtonText: '删除', cancelButtonText: '取消' }
+        { type: 'warning', confirmButtonText: '删除', cancelButtonText: '取消', lockScroll: false }
       )
     } else {
-      await ElMessageBox.confirm('确定删除这条动态吗？', '确认删除', { type: 'warning' })
+      await ElMessageBox.confirm('确定删除这条动态吗？', '确认删除', { type: 'warning', lockScroll: false })
     }
     const res = isAdmin.value
       ? await adminRemoveMoment(props.item.dynIdStr, {
@@ -813,5 +813,5 @@ function handleRepostSuccess() {
 }
 
 /** 转发弹窗中展示的原动态正文摘要（desc 模块文本） */
-const repostSrcSummary = computed(() => descModule.value?.text || '')
+const repostSrcSummary = computed(() => descModule.value?.text ?? '')
 </script>

@@ -15,7 +15,6 @@ import DebugBox from '@/components/rpa-browser/DebugBox.vue'
 import ToolboxPanel from '@/components/rpa-browser/ToolboxPanel.vue'
 import EditCustomActionDialog from '@/components/rpa-browser/EditCustomActionDialog.vue'
 import MinimizeBar from '@/components/rpa-browser/MinimizeBar.vue'
-import ResourceInteractionBar from '@/components/interaction/ResourceInteractionBar.vue'
 import { RouteName } from '@/models/router/index.ts'
 import { useBrowserSessionState } from '@/composables/useBrowserSessionState'
 import { useI18n } from 'vue-i18n'
@@ -106,7 +105,7 @@ provide('downloadSpeed', downloadSpeed)
 
 const loadBrowserInfo = async () => {
   isLoadingInfo.value = true
-  
+
   if (!userNavStore.user_nav.uid) {
     console.warn('User uid is empty, please login first')
     biliMessage.warning(t('rpa.pleaseLogin'))
@@ -118,7 +117,7 @@ const loadBrowserInfo = async () => {
   const result = await businessHandler<BrowserInfo>(
     浏览器指纹管理Service.readFingerprintRouterApiV1RpaBrowserReadFingerprintPost({
       query: { browser_id: browserId },
-          }) as any,
+    }) as any,
     { successMessage: '', errorMessage: t('rpa.getFingerprintFailed'), showSuccessToast: false }
   )
 
@@ -127,14 +126,14 @@ const loadBrowserInfo = async () => {
   } else {
     router.push({ name: RouteName.RPA_BROWSER_FINGERPRINT_LIST })
   }
-  
+
   isLoadingInfo.value = false
 }
 
 const handleStartSession = async () => {
   isLoading.value = true
   onSessionStarting()
-  
+
   try {
     const response = await 浏览器会话控制Service.createBrowserSessionApiV1RpaBrowserControlCreatePost({
       query: { browser_id: browserId },
@@ -169,12 +168,13 @@ const handleStopSession = async () => {
     await ElMessageBox.confirm(t('rpa.sessionCloseConfirm'), t('rpa.sessionCloseTitle'), {
       confirmButtonText: t('common.sure'),
       cancelButtonText: t('common.cancel'),
-      type: 'warning'
+      type: 'warning',
+      lockScroll: false
     })
 
     const response = await 浏览器会话控制Service.closeBrowserSessionApiV1RpaBrowserControlClosePost({
       query: { browser_id: browserId },
-          }) as any  // responseStyle='data' → 直接返回 {code, data, msg}
+    }) as any  // responseStyle='data' → 直接返回 {code, data, msg}
 
     if (response?.code === 0) {
       biliMessage.success(t('rpa.sessionClosed'))
@@ -203,7 +203,7 @@ const loadBrowserSessionStatus = async () => {
   try {
     const response = await 浏览器会话控制Service.browserSessionStatusApiV1RpaBrowserControlStatusPost({
       query: { browser_id: browserId },
-          })
+    })
 
     onStatusResponse(response)
   } catch (error) {
@@ -218,7 +218,7 @@ const loadWebrtcStatus = async (): Promise<'disconnected' | 'connecting' | 'conn
   try {
     const response: any = await WebRtc视频流Service.getWebrtcStatusApiV1RpaBrowserControlWebrtcStatusPost({
       query: { browser_id: browserId },
-          })  // responseStyle='data' → 直接返回 {code, data, msg}
+    })  // responseStyle='data' → 直接返回 {code, data, msg}
 
     if (response?.code === 0 && response?.data) {
       const data = response.data
@@ -347,28 +347,20 @@ onMounted(() => {
 
 <template>
   <FlexContainer class="flex flex-col h-full">
-    <BiliPageHeader 
-      :title="isLoadingInfo ? t('common.loading') : (browserInfo?.custom_name || t('rpa.pageTitleFallback', { id: browserId }))" 
-      :description="t('rpa.consoleDesc')"
-      :tag-text="t('rpa.browserTag')"
-    >
+    <BiliPageHeader
+      :title="isLoadingInfo ? t('common.loading') : (browserInfo?.custom_name || t('rpa.pageTitleFallback', { id: browserId }))"
+      :description="t('rpa.consoleDesc')" :tag-text="t('rpa.browserTag')">
       <template #extra>
         <div class="flex flex-wrap items-center gap-4">
-          <!-- 收藏/点赞（2.17.0：RPA 浏览器走 be-message 通用互动） -->
-          <ResourceInteractionBar biz-type="rpa_browser" :biz-id="browserId" />
-
           <div class="flex items-center gap-2">
             <span>{{ t('rpa.browserLabel') }}:</span>
             <el-tag :type="isConnected ? 'success' : isConnecting ? 'warning' : 'info'">
               <span class="flex items-center gap-1">
-                <span
-                  :class="{
-                    'bg-green-500 animate-pulse': isConnected,
-                    'bg-yellow-500 animate-pulse': isConnecting,
-                    'bg-gray-400': !isConnected && !isConnecting
-                  }"
-                  class="w-2 h-2 rounded-full"
-                ></span>
+                <span :class="{
+                  'bg-green-500 animate-pulse': isConnected,
+                  'bg-yellow-500 animate-pulse': isConnecting,
+                  'bg-gray-400': !isConnected && !isConnecting
+                }" class="w-2 h-2 rounded-full"></span>
                 {{ statusLabel }}
               </span>
             </el-tag>
@@ -376,7 +368,8 @@ onMounted(() => {
           </div>
 
           <el-button-group>
-            <el-button v-if="!isConnected" type="primary" :icon="VideoPlay" :loading="isLoading" @click="handleStartSession">
+            <el-button v-if="!isConnected" type="primary" :icon="VideoPlay" :loading="isLoading"
+              @click="handleStartSession">
               {{ t('rpa.sessionStart') }}
             </el-button>
             <el-button v-else type="danger" :icon="VideoPause" @click="handleStopSession">
@@ -405,15 +398,19 @@ onMounted(() => {
         <div class="flex items-center gap-4">
           <div class="flex items-center gap-2">
             <span>WebRTC:</span>
-            <el-tag :type="webrtcStatus === 'connected' ? 'success' : webrtcStatus === 'connecting' ? 'warning' : 'info'">
+            <el-tag
+              :type="webrtcStatus === 'connected' ? 'success' : webrtcStatus === 'connecting' ? 'warning' : 'info'">
               <span class="flex items-center gap-1">
-                <span :class="['w-2 h-2 rounded-full', webrtcStatus === 'connected' ? 'bg-green-500 animate-pulse' : webrtcStatus === 'connecting' ? 'bg-yellow-500 animate-pulse' : 'bg-gray-400']"></span>
-                {{ webrtcStatus === 'connected' ? t('rpa.statusConnected') : webrtcStatus === 'connecting' ? t('rpa.statusConnecting') : t('rpa.statusDisconnected') }}
+                <span
+                  :class="['w-2 h-2 rounded-full', webrtcStatus === 'connected' ? 'bg-green-500 animate-pulse' : webrtcStatus === 'connecting' ? 'bg-yellow-500 animate-pulse' : 'bg-gray-400']"></span>
+                {{ webrtcStatus === 'connected' ? t('rpa.statusConnected') : webrtcStatus === 'connecting' ?
+                  t('rpa.statusConnecting') : t('rpa.statusDisconnected') }}
               </span>
             </el-tag>
           </div>
 
-          <el-button size="large" :icon="Refresh" @click="handleRefreshWebrtcStatus">{{ t('rpa.refreshWebrtcStatus') }}</el-button>
+          <el-button size="large" :icon="Refresh" @click="handleRefreshWebrtcStatus">{{ t('rpa.refreshWebrtcStatus')
+            }}</el-button>
 
           <div v-if="isStreaming" class="flex items-center gap-2 text-sm">
             <span class="text-text-secondary">{{ t('rpa.networkSpeed') }}:</span>
@@ -423,16 +420,18 @@ onMounted(() => {
         </div>
 
         <div class="flex items-center gap-2">
-          <el-button size="large" :icon="Camera" :loading="executingScreenshot" @click="handleScreenshot">{{ t('rpa.screenshotBtn') }}</el-button>
+          <el-button size="large" :icon="Camera" :loading="executingScreenshot" @click="handleScreenshot">{{
+            t('rpa.screenshotBtn') }}</el-button>
           <el-button size="large" type="primary" :icon="Tools" @click="openToolbox">{{ t('rpa.toolbox') }}</el-button>
         </div>
       </div>
 
-      <el-splitter v-model="splitterSize" class="stream-splitter flex-1">
+      <el-splitter v-model="splitterSize" class="stream-splitter flex-1 min-h-0">
         <el-splitter-panel class="live-box-container" collapsible size="40%" min="30%">
-          <LiveBox :browser-id="browserId" :is-streaming="isStreaming" @toggle-stream="handleToggleStream" @webrtc-status-change="handleWebrtcStatusChange"/>
+          <LiveBox :browser-id="browserId" :is-streaming="isStreaming" @toggle-stream="handleToggleStream"
+            @webrtc-status-change="handleWebrtcStatusChange" />
         </el-splitter-panel>
-        <el-splitter-panel class="debug-box-container overflow-hidden" collapsible min="30%">
+        <el-splitter-panel class="debug-box-container flex flex-1" collapsible min="30%">
           <DebugBox :browser-id="browserId" />
         </el-splitter-panel>
       </el-splitter>
@@ -440,59 +439,41 @@ onMounted(() => {
 
     <div v-if="screenshots.length > 0" class="mx-4 mb-4 rounded-lg border border-border bg-fill-light">
       <div class="flex items-center justify-between px-4 py-2 border-b border-border">
-        <span class="text-sm font-medium text-text-primary">{{ t('rpa.screenshotHistory') }} ({{ screenshots.length }})</span>
+        <span class="text-sm font-medium text-text-primary">{{ t('rpa.screenshotHistory') }} ({{ screenshots.length
+          }})</span>
       </div>
       <div class="flex gap-3 overflow-x-auto p-3">
-        <div
-          v-for="shot in screenshots"
-          :key="shot.id"
-          class="group relative shrink-0 w-48 rounded-lg border border-border bg-bg overflow-hidden"
-        >
-          <el-image
-            :src="shot.dataUrl"
-            :preview-src-list="[shot.dataUrl]"
-            fit="cover"
-            class="w-full h-32 cursor-pointer"
-            preview-teleported
-            :z-index="3000"
-          />
+        <div v-for="shot in screenshots" :key="shot.id"
+          class="group relative shrink-0 w-48 rounded-lg border border-border bg-bg overflow-hidden">
+          <el-image :src="shot.dataUrl" :preview-src-list="[shot.dataUrl]" fit="cover"
+            class="w-full h-32 cursor-pointer" preview-teleported :z-index="3000" />
           <div class="flex items-center justify-between px-2 py-1 text-xs text-text-secondary">
             <span>{{ new Date(shot.timestamp).toLocaleTimeString() }}</span>
             <span>{{ (shot.size / 1024).toFixed(0) }}KB</span>
           </div>
           <button
             class="absolute top-1 right-1 p-0.5 rounded-full bg-black/60 text-white opacity-0 group-hover:opacity-100 transition-opacity"
-            @click="handleDeleteScreenshot(shot.id)"
-          >
-            <el-icon :size="14"><Close /></el-icon>
+            @click="handleDeleteScreenshot(shot.id)">
+            <el-icon :size="14">
+              <Close />
+            </el-icon>
           </button>
         </div>
       </div>
     </div>
 
     <!-- 工具箱对话框 -->
-    <el-dialog
-      v-model="toolboxDialogVisible"
-      width="520px"
-      :modal-penetrable="true"
-      :modal="false"
-      :lock-scroll="false"
-      :draggable="true"
-      :close-on-click-modal="false"
-      :destroy-on-close="false"
-      :append-to-body="true"
-      modal-class="toolbox-overlay"
-      class="toolbox-dialog"
-    >
+    <el-dialog v-model="toolboxDialogVisible" width="520px" :modal-penetrable="true" :modal="false" :lock-scroll="false"
+      :draggable="true" :close-on-click-modal="false" :destroy-on-close="false" :append-to-body="true"
+      modal-class="toolbox-overlay" class="toolbox-dialog">
       <template #header>
         <div class="flex">
           <span class="text-2xl">{{ t('rpa.toolbox') }}</span>
-          <button
-            class="ml-auto mr-3 cursor-pointer hover:text-color-secondary"
-            :title="t('rpa.minimize')"
-            @click="handleToolboxMinimize"
-          >
-            <el-icon :size="14"><Minus /></el-icon>
+          <button class="ml-auto mr-3 cursor-pointer hover:text-color-secondary" :title="t('rpa.minimize')"
+            @click="handleToolboxMinimize">
+            <el-icon :size="14">
+              <Minus />
+            </el-icon>
           </button>
         </div>
       </template>
@@ -500,21 +481,12 @@ onMounted(() => {
     </el-dialog>
 
     <!-- 工具箱最小化浮动标签 -->
-    <MinimizeBar
-      v-if="toolboxMinimized && toolboxVisible"
-      :title="t('rpa.toolbox')"
-      @restore="handleToolboxRestore"
-      @close="handleToolboxClose"
-    />
+    <MinimizeBar v-if="toolboxMinimized && toolboxVisible" :title="t('rpa.toolbox')" @restore="handleToolboxRestore"
+      @close="handleToolboxClose" />
 
     <!-- 编辑自定义操作弹窗（支持同时开启多个，独立于调试面板） -->
-    <EditCustomActionDialog
-      v-for="dialog in editDialogs"
-      :key="dialog.id"
-      :model-value="true"
-      :action-detail="dialog.actionDetail"
-      :browser-id="browserId"
-      @update:model-value="(val: boolean) => { if (!val) handleEditDialogClose(dialog.id) }"
-    />
+    <EditCustomActionDialog v-for="dialog in editDialogs" :key="dialog.id" :model-value="true"
+      :action-detail="dialog.actionDetail" :browser-id="browserId"
+      @update:model-value="(val: boolean) => { if (!val) handleEditDialogClose(dialog.id) }" />
   </FlexContainer>
 </template>

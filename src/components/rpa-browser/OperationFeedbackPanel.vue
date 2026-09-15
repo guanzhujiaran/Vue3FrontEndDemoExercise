@@ -2,28 +2,13 @@
 import { computed, ref } from 'vue'
 import { Close } from '@element-plus/icons-vue'
 import { useThemeStore } from '@/stores/theme'
+import type { NestedPreviewNode, StepResultItem } from './debugbox-types'
 
 const themeStore = useThemeStore()
 
 /**
  * 操作结果反馈面板 —— 执行/预览/验证 的结果展示
  */
-
-export interface PreviewTreeItem {
-  type: 'step' | 'label'
-  level: number
-  variables?: { key: string; value: unknown }[]
-  branchLabel?: string
-  action_id?: string
-  [key: string]: unknown
-}
-
-export interface StepResultItem {
-  key: string
-  success: boolean
-  action_name?: string
-  execution_time?: number
-}
 
 interface Props {
   feedback: {
@@ -42,7 +27,7 @@ interface Props {
   /** 预览结果：模拟变量池 */
   previewVariables?: { key: string; value: unknown }[]
   /** 预览结果：嵌套步骤树 */
-  previewNestedTree?: PreviewTreeItem[]
+  previewNestedTree?: NestedPreviewNode[]
   /** 验证结果：缺失参数 */
   validateMissingParams?: string[]
   /** 验证结果：无效参数 */
@@ -96,6 +81,24 @@ const formatValue = (value: unknown): string => {
   if (typeof value === 'object') return JSON.stringify(value)
   return String(value)
 }
+
+/**
+ * 长文本换行约束（作用于元素自身，避免结果内容撑宽卡片导致外层容器横向滚动）：
+ * 返回的 JSON / base64 / URL 等无空格内容不会被默认折行，必须强制断词。
+ */
+const wrapTextClass = 'feedback-value break-all wrap-anywhere'
+
+/**
+ * el-descriptions 会渲染成原生 table，默认 auto 布局下长内容的 min-content 会撑破容器，
+ * 这里在描述组件根节点上用任意变体约束其内部 table/单元格：定宽布局 + 单元格断词换行。
+ */
+const descWrapClass = 'feedback-desc [&_table]:table-fixed [&_td]:break-all [&_td]:wrap-anywhere [&_.el-text]:whitespace-pre-wrap'
+
+/** 步骤详情 el-table：表头/单元格同样允许断词换行 */
+const tableWrapClass = 'feedback-table [&_td]:break-all [&_td]:wrap-anywhere [&_th]:break-all [&_th]:wrap-anywhere'
+
+/** 标签：长变量名/参数名允许换行，而不是撑破容器 */
+const wrapTagClass = 'feedback-tag h-auto min-h-6 whitespace-normal'
 </script>
 
 <template>
@@ -130,11 +133,13 @@ const formatValue = (value: unknown): string => {
         v-if="fb.kind === 'execute' && !fb.success && fb.detail?.error"
         type="error"
         :effect="themeStore.themeEffectString"
-        :title="String(fb.detail.error)"
         show-icon
         :closable="false"
         class="mb-3"
       >
+        <template #title>
+          <el-text :class="wrapTextClass">{{ String(fb.detail.error) }}</el-text>
+        </template>
         <template
           v-if="Array.isArray(fb.detail.errors) && fb.detail.errors.length"
           #default
@@ -143,8 +148,8 @@ const formatValue = (value: unknown): string => {
             v-for="(err, ei) in fb.detail.errors"
             :key="ei"
           >
-            <el-text size="small" class="font-medium">{{ err.name }}</el-text>
-            <el-text size="small">: {{ err.error }}</el-text>
+            <el-text size="small" :class="[wrapTextClass, 'font-medium']">{{ err.name }}</el-text>
+            <el-text size="small" :class="wrapTextClass">: {{ err.error }}</el-text>
           </div>
         </template>
       </el-alert>
@@ -161,7 +166,7 @@ const formatValue = (value: unknown): string => {
             <template #title>
               <el-text size="small" class="font-medium">返回数据</el-text>
             </template>
-            <el-descriptions :column="1" border size="small">
+            <el-descriptions :column="1" border size="small" label-width="28%" :class="descWrapClass">
               <template v-if="typeof fb.detail.data === 'object' && Object.keys(fb.detail.data as Record<string, unknown>).length > 0">
                 <el-descriptions-item
                   v-for="(val, key) in fb.detail.data as Record<string, unknown>"
@@ -187,7 +192,7 @@ const formatValue = (value: unknown): string => {
                 全局变量 ({{ Object.keys(fb.detail.variables as Record<string, unknown>).length }})
               </el-text>
             </template>
-            <el-descriptions :column="1" border size="small">
+            <el-descriptions :column="1" border size="small" label-width="28%" :class="descWrapClass">
               <el-descriptions-item
                 v-for="(val, key) in fb.detail.variables as Record<string, unknown>"
                 :key="String(key)"
@@ -208,7 +213,7 @@ const formatValue = (value: unknown): string => {
                 实际调用参数 ({{ Object.keys(fb.detail.replaced_params as Record<string, unknown>).length }})
               </el-text>
             </template>
-            <el-descriptions :column="1" border size="small">
+            <el-descriptions :column="1" border size="small" label-width="28%" :class="descWrapClass">
               <el-descriptions-item
                 v-for="(val, key) in fb.detail.replaced_params as Record<string, unknown>"
                 :key="String(key)"
@@ -229,17 +234,17 @@ const formatValue = (value: unknown): string => {
                 步骤详情 ({{ props.execSteps.length }})
               </el-text>
             </template>
-            <el-table :data="props.execSteps" size="small" stripe>
-              <el-table-column width="50">
+            <el-table :data="props.execSteps" size="small" stripe :class="['exec-steps-table', tableWrapClass]">
+              <el-table-column width="52" align="center">
                 <template #default="{ row }">
                   <el-tag :type="row.success ? 'primary' : 'danger'" size="small">
                     <el-text size="small">{{ row.success ? '✓' : '✗' }}</el-text>
                   </el-tag>
                 </template>
               </el-table-column>
-              <el-table-column prop="key" label="Key" min-width="120" />
-              <el-table-column prop="action_name" label="操作" min-width="120" />
-              <el-table-column label="耗时" width="100">
+              <el-table-column prop="key" label="Key" min-width="90" />
+              <el-table-column prop="action_name" label="操作" min-width="90" />
+              <el-table-column label="耗时" width="88">
                 <template #default="{ row }">
                   <el-text size="small">{{ row.execution_time != null ? row.execution_time.toFixed(3) + 's' : '-' }}</el-text>
                 </template>
@@ -260,7 +265,7 @@ const formatValue = (value: unknown): string => {
                 参数替换 ({{ props.previewReplacedParams.length }})
               </el-text>
             </template>
-            <el-descriptions :column="1" border size="small">
+            <el-descriptions :column="1" border size="small" label-width="28%" :class="descWrapClass">
               <el-descriptions-item
                 v-for="p in props.previewReplacedParams"
                 :key="p.key"
@@ -282,8 +287,8 @@ const formatValue = (value: unknown): string => {
               </el-text>
             </template>
             <div class="flex flex-wrap gap-1">
-              <el-tag v-for="fp in props.previewFoundParams" :key="fp" size="small">
-                <el-text size="small">{{ fp }}</el-text>
+              <el-tag v-for="fp in props.previewFoundParams" :key="fp" size="small" :class="wrapTagClass">
+                <el-text size="small" :class="wrapTextClass">{{ fp }}</el-text>
               </el-tag>
             </div>
           </el-collapse-item>
@@ -298,7 +303,7 @@ const formatValue = (value: unknown): string => {
                 模拟变量池 ({{ props.previewVariables.length }})
               </el-text>
             </template>
-            <el-descriptions :column="1" border size="small">
+            <el-descriptions :column="1" border size="small" label-width="28%" :class="descWrapClass">
               <el-descriptions-item
                 v-for="v in props.previewVariables"
                 :key="v.key"
@@ -337,19 +342,19 @@ const formatValue = (value: unknown): string => {
                 </template>
                 <template v-else>
                   <div class="flex items-center gap-2 flex-wrap">
-                    <el-tag size="small" type="info">
-                      <el-text size="small">{{ node.action_id }}</el-text>
+                    <el-tag size="small" type="info" :class="wrapTagClass">
+                      <el-text size="small" :class="wrapTextClass">{{ node.action_id }}</el-text>
                     </el-tag>
                     <template v-if="node.variables && node.variables.length > 0">
                       <span
                         v-for="v in node.variables"
                         :key="v.key"
-                        class="inline-flex items-center gap-1"
+                        class="feedback-nested-var inline-flex items-center gap-1 min-w-0"
                       >
-                        <el-tag size="small">
-                          <el-text size="small">{{ v.key }}</el-text>
+                        <el-tag size="small" :class="wrapTagClass">
+                          <el-text size="small" :class="wrapTextClass">{{ v.key }}</el-text>
                         </el-tag>
-                        <el-text size="small" type="info">= {{ formatValue(v.value) }}</el-text>
+                        <el-text size="small" type="info" :class="wrapTextClass">= {{ formatValue(v.value) }}</el-text>
                       </span>
                     </template>
                   </div>
@@ -389,8 +394,8 @@ const formatValue = (value: unknown): string => {
               </el-text>
             </template>
             <div class="flex flex-wrap gap-1">
-              <el-tag v-for="ip in props.validateInvalidParams" :key="ip" type="danger" size="small">
-                <el-text size="small">{{ ip }}</el-text>
+              <el-tag v-for="ip in props.validateInvalidParams" :key="ip" type="danger" size="small" :class="wrapTagClass">
+                <el-text size="small" :class="wrapTextClass">{{ ip }}</el-text>
               </el-tag>
             </div>
           </el-collapse-item>
@@ -426,13 +431,19 @@ const formatValue = (value: unknown): string => {
       <el-result
         v-if="fb.kind === 'execute' && fb.success && (fb.detail?.data === undefined || fb.detail?.data === null) && props.execSteps.length === 0"
         icon="success"
-        :title="fb.summary"
-      />
+      >
+        <template #title>
+          <el-text :class="wrapTextClass">{{ fb.summary }}</el-text>
+        </template>
+      </el-result>
       <el-result
         v-if="fb.kind === 'preview' && fb.success && props.previewReplacedParams.length === 0 && props.previewFoundParams.length === 0 && props.previewVariables.length === 0 && props.previewNestedTree.length === 0"
         icon="success"
-        :title="fb.summary"
-      />
+      >
+        <template #title>
+          <el-text :class="wrapTextClass">{{ fb.summary }}</el-text>
+        </template>
+      </el-result>
       <el-result
         v-if="fb.kind === 'validate' && fb.success && props.validateMissingParams.length === 0 && props.validateInvalidParams.length === 0 && props.validateErrors.length === 0"
         icon="success"

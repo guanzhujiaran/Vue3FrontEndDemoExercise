@@ -8,6 +8,7 @@
     title="反馈bug"
     width="500px"
     :close-on-click-modal="true"
+    :lock-scroll="false"
   >
     <el-alert
       title="反馈bug/提建议给服主，可以帮助我们改进系统，提供更好的体验！"

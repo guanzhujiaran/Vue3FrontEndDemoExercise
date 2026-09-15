@@ -145,7 +145,8 @@ const handleForkAction = async (actionId: string) => {
     await ElMessageBox.confirm('确定要Fork这个动作吗？', '提示', {
       confirmButtonText: '确定',
       cancelButtonText: '取消',
-      type: 'info'
+      type: 'info',
+      lockScroll: false
     })
 
     const response = await 自定义操作管理Service.forkCustomActionApiV1RpaBrowserControlCustomActionsForkPost({
@@ -174,7 +175,8 @@ const handleForkPlugin = async (pluginId: number) => {
     await ElMessageBox.confirm('确定要Fork这个插件吗？', '提示', {
       confirmButtonText: '确定',
       cancelButtonText: '取消',
-      type: 'info'
+      type: 'info',
+      lockScroll: false
     })
 
     const response = await 插件挂载管理Service.forkPluginApiV1RpaBrowserControlPluginsForkPost({
@@ -203,7 +205,8 @@ const handleForkWorkflow = async (workflowId: number) => {
     await ElMessageBox.confirm('确定要Fork这个工作流吗？', '提示', {
       confirmButtonText: '确定',
       cancelButtonText: '取消',
-      type: 'info'
+      type: 'info',
+      lockScroll: false
     })
 
     const response = await 工作流管理Service.forkWorkflowApiV1RpaBrowserControlWorkflowsForkPost({

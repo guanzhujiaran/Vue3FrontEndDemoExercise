@@ -85,6 +85,7 @@ const handleRevokeCert = async (item: CertificationItem) => {
       confirmButtonText: '确定',
       cancelButtonText: '取消',
       type: 'warning',
+      lockScroll: false,
     })
   } catch {
     return
@@ -213,7 +214,7 @@ onMounted(async () => {
       </LoadingWrap>
 
       <!-- 标注官方认证弹窗 -->
-      <el-dialog v-model="certDialogVisible" title="标注官方认证" width="420px">
+      <el-dialog v-model="certDialogVisible" title="标注官方认证" width="420px" :lock-scroll="false">
         <el-form label-position="top">
           <el-form-item label="资源类型">
             <el-select v-model="certForm.target_type" class="w-full">

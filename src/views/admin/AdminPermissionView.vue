@@ -129,15 +129,18 @@ async function fetchList() {
     const res = await MessageAdminService.listAdminsApiV1MessageAdminListGet({
       query: { page_num: page.value, page_size: pageSize.value }
     })
-    // SDK（ThrowOnError=false）返回 { data, error } 包装，列表在 res.data 里
-    const payload = res as unknown as { data?: MessageAdminListResp }
-    const data = payload?.data
-    if (data) {
-      admins.value = data.items ?? []
-      total.value = Number(data.total ?? 0)
+    // SDK 为 responseStyle:'data'：HTTP 2xx 直接返回后端响应体 { code, msg, data }，
+    // 非 2xx（401/403/5xx 等）返回 undefined。
+    // 必须显式判业务码：此前只看 res.data 是否存在，判定依据脆弱——失败响应一旦也带 data 就会误判成功。
+    const payload = res as unknown as
+      | { code?: number; msg?: string; data?: MessageAdminListResp }
+      | undefined
+    if (payload?.code === 0 && payload.data) {
+      admins.value = payload.data.items ?? []
+      total.value = Number(payload.data.total ?? 0)
       isError.value = false
     } else {
-      // 后端返回空响应：等同加载失败，交给 <BiliError> 特殊展示
+      // 业务失败 / HTTP 失败 / 后端返回空响应：等同加载失败，交给 <BiliError> 特殊展示
       isError.value = true
     }
   } catch {
@@ -184,7 +187,7 @@ async function onGrant() {
         note: grantForm.note || null
       }
     })
-    if (res) {
+    if (res?.code === 0) {
       ElMessage.success(t('message.grantSuccess'))
       grantVisible.value = false
       await fetchList()
@@ -203,7 +206,7 @@ async function onRevoke(row: MessageAdminItem) {
     await ElMessageBox.confirm(
       t('message.revokeConfirm', { mid: row.mid }),
       t('message.revokeConfirmTitle'),
-      { type: 'warning', confirmButtonText: t('message.revokePermission'), cancelButtonText: t('common.cancel') }
+      { type: 'warning', confirmButtonText: t('message.revokePermission'), cancelButtonText: t('common.cancel'), lockScroll: false }
     )
   } catch {
     return
@@ -211,7 +214,7 @@ async function onRevoke(row: MessageAdminItem) {
   submitting.value = true
   try {
     const res = await MessageAdminService.revokeAdminApiV1MessageAdminRevokePost({ body: { mid: row.mid } })
-    if (res) {
+    if (res?.code === 0) {
       ElMessage.success(t('message.revokeSuccess'))
       await fetchList()
     } else {
@@ -324,7 +327,7 @@ onMounted(() => {
       </div>
     </LoadingWrap>
 
-    <el-dialog v-model="grantVisible" :title="t('message.grantDialogTitle')" width="520px" :close-on-click-modal="false">
+    <el-dialog v-model="grantVisible" :title="t('message.grantDialogTitle')" width="520px" :close-on-click-modal="false" :lock-scroll="false">
       <el-form :model="grantForm" label-width="88px" @submit.prevent>
         <!-- 用户搜索选择（公共组件 el-select 远程搜索）：点选即设定被授权人 -->
         <el-form-item :label="t('userSearch.label')" required>

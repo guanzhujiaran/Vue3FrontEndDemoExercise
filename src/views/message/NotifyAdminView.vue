@@ -131,7 +131,7 @@
 
     <el-dialog v-model="dialogVisible"
       :title="editingId ? t('message.notifyDialogEdit') : t('message.notifyDialogCreate')" width="560px"
-      class="notify-admin__dialog">
+      class="notify-admin__dialog" :lock-scroll="false">
       <el-form :model="form" label-width="90px" class="notify-admin__form">
         <el-form-item :label="t('message.notifyFormTitle')" required>
           <el-input v-model="form.title" size="default" :placeholder="t('message.notifyFormTitle')" />

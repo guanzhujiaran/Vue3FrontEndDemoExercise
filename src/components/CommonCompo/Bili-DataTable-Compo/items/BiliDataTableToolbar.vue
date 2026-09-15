@@ -17,7 +17,7 @@ const onSubmit = () => {
 
 <template>
   <div class="data-table-toolbar">
-    <el-dialog v-model="isOpenSetting">
+    <el-dialog v-model="isOpenSetting" :lock-scroll="false">
       <el-form :from="form">
         <el-form-item label="最大保存记录抽奖次数">
           <el-slider

@@ -575,6 +575,18 @@ export type ActionMetadataResponse = {
      */
     name?: string;
     /**
+     * Icon Series
+     *
+     * 默认展示图标系列编号（0 表示前端内置图标兜底）
+     */
+    icon_series?: number;
+    /**
+     * Icon Id
+     *
+     * 默认展示图标在系列内的编号（0 表示前端内置图标兜底）
+     */
+    icon_id?: number;
+    /**
      * Json Schema
      *
      * 完整的 JSON Schema
@@ -1617,6 +1629,56 @@ export type BasePaginationRespWorkflowListItemResponse = {
 };
 
 /**
+ * BasePaginationResp[WorkflowRunLogItemResponse]
+ */
+export type BasePaginationRespWorkflowRunLogItemResponse = {
+    /**
+     * Page
+     *
+     * 页码
+     */
+    page?: number;
+    /**
+     * Per Page
+     *
+     * 每页数量
+     */
+    per_page?: number;
+    /**
+     * Total
+     *
+     * 总记录数
+     */
+    total?: number;
+    /**
+     * Items
+     *
+     * 当前页数据
+     */
+    items?: Array<unknown>;
+    /**
+     * Pages
+     */
+    readonly pages: number;
+    /**
+     * Has Next
+     */
+    readonly has_next: boolean;
+    /**
+     * Has Prev
+     */
+    readonly has_prev: boolean;
+    /**
+     * Next Page
+     */
+    readonly next_page: number;
+    /**
+     * Prev Page
+     */
+    readonly prev_page: number;
+};
+
+/**
  * BrowserEnum
  *
  * 枚举选项：
@@ -1925,10 +1987,6 @@ export type BrowserFingerprintRenameResp = {
  */
 export type BrowserFingerprintUpsertParams = {
     /**
-     * Browser Id
-     */
-    browser_id?: number | string | null;
-    /**
      * Fingerprint Int
      */
     fingerprint_int?: number | null;
@@ -1980,6 +2038,10 @@ export type BrowserFingerprintUpsertParams = {
      * Custom Name
      */
     custom_name?: string | null;
+    /**
+     * Browser Id
+     */
+    browser_id?: number | string | null;
 };
 
 /**
@@ -2030,6 +2092,310 @@ export type BrowserInfoResponse = {
      * User-Agent
      */
     user_agent?: string;
+};
+
+/**
+ * BrowserMonitorItem
+ *
+ * 监管列表项：运行中浏览器实例概览
+ */
+export type BrowserMonitorItem = {
+    /**
+     * Mid
+     *
+     * 所属用户 mid
+     */
+    mid: number;
+    /**
+     * Mid Str
+     *
+     * 所属用户 mid（字符串，避免精度丢失）
+     */
+    mid_str?: string;
+    /**
+     * Browser Id
+     *
+     * 浏览器实例 ID
+     */
+    browser_id: number;
+    /**
+     * Browser Id Str
+     *
+     * 浏览器实例 ID（字符串）
+     */
+    browser_id_str?: string;
+    /**
+     * Custom Name
+     *
+     * 用户自定义名称，未命名时为 None
+     */
+    custom_name?: string | null;
+    /**
+     * Platform
+     *
+     * 指纹操作系统平台
+     */
+    platform?: string | null;
+    /**
+     * Browser
+     *
+     * 指纹浏览器类型
+     */
+    browser?: string | null;
+    /**
+     * Started At
+     *
+     * 会话启动时间（秒级时间戳）
+     */
+    started_at?: number;
+    /**
+     * Last Activity At
+     *
+     * 最后操作时间（秒级时间戳）
+     */
+    last_activity_at?: number;
+    /**
+     * Page Count
+     *
+     * 标签页数量
+     */
+    page_count?: number;
+    /**
+     * Active Page Url
+     *
+     * 首个标签页 URL（概览）
+     */
+    active_page_url?: string;
+    /**
+     * Active Page Title
+     *
+     * 首个标签页标题（概览）
+     */
+    active_page_title?: string;
+    /**
+     * Webrtc Active Streams
+     *
+     * 活跃直播流数量
+     */
+    webrtc_active_streams?: number;
+    /**
+     * Is Closed
+     *
+     * 浏览器是否已关闭
+     */
+    is_closed?: boolean;
+};
+
+/**
+ * BrowserMonitorListRequest
+ *
+ * 监管列表请求
+ */
+export type BrowserMonitorListRequest = {
+    /**
+     * Mid
+     *
+     * 按用户 mid 过滤
+     */
+    mid?: number | string | null;
+    /**
+     * Browser Id
+     *
+     * 按浏览器实例 ID 过滤
+     */
+    browser_id?: number | string | null;
+    /**
+     * Page
+     *
+     * 页码
+     */
+    page?: number;
+    /**
+     * Per Page
+     *
+     * 每页条数
+     */
+    per_page?: number;
+};
+
+/**
+ * BrowserMonitorListResponse
+ *
+ * 监管列表响应
+ */
+export type BrowserMonitorListResponse = {
+    /**
+     * Total
+     *
+     * 总条数（过滤后）
+     */
+    total?: number;
+    /**
+     * Page
+     *
+     * 当前页码
+     */
+    page?: number;
+    /**
+     * Per Page
+     *
+     * 每页条数
+     */
+    per_page?: number;
+    /**
+     * Items
+     *
+     * 列表数据
+     */
+    items?: Array<BrowserMonitorItem>;
+};
+
+/**
+ * BrowserMonitorPageItem
+ *
+ * 监管用标签页信息（只读）
+ */
+export type BrowserMonitorPageItem = {
+    /**
+     * Index
+     *
+     * 页面索引（从 0 开始）
+     */
+    index: number;
+    /**
+     * Url
+     *
+     * 页面 URL
+     */
+    url?: string;
+    /**
+     * Title
+     *
+     * 页面标题
+     */
+    title?: string;
+};
+
+/**
+ * BrowserMonitorPagesRequest
+ *
+ * 监管标签页列表请求
+ */
+export type BrowserMonitorPagesRequest = {
+    /**
+     * Mid
+     *
+     * 用户 mid
+     */
+    mid: number | string;
+    /**
+     * Browser Id
+     *
+     * 浏览器实例 ID
+     */
+    browser_id: number | string;
+};
+
+/**
+ * BrowserMonitorPagesResponse
+ *
+ * 监管标签页列表响应（只读）
+ */
+export type BrowserMonitorPagesResponse = {
+    /**
+     * Mid
+     *
+     * 用户 mid
+     */
+    mid: number;
+    /**
+     * Mid Str
+     *
+     * 用户 mid（字符串）
+     */
+    mid_str?: string;
+    /**
+     * Browser Id
+     *
+     * 浏览器实例 ID
+     */
+    browser_id: number;
+    /**
+     * Browser Id Str
+     *
+     * 浏览器实例 ID（字符串）
+     */
+    browser_id_str?: string;
+    /**
+     * Total
+     *
+     * 标签页数量
+     */
+    total?: number;
+    /**
+     * Pages
+     *
+     * 标签页列表
+     */
+    pages?: Array<BrowserMonitorPageItem>;
+};
+
+/**
+ * BrowserMonitorStopRequest
+ *
+ * 强制停止浏览器会话请求
+ */
+export type BrowserMonitorStopRequest = {
+    /**
+     * Mid
+     *
+     * 用户 mid
+     */
+    mid: number | string;
+    /**
+     * Browser Id
+     *
+     * 浏览器实例 ID
+     */
+    browser_id: number | string;
+    /**
+     * Reason
+     *
+     * 处置原因（写入审计日志）
+     */
+    reason?: string;
+};
+
+/**
+ * BrowserMonitorStopResponse
+ *
+ * 强制停止浏览器会话响应
+ */
+export type BrowserMonitorStopResponse = {
+    /**
+     * Mid
+     *
+     * 用户 mid
+     */
+    mid: number;
+    /**
+     * Browser Id
+     *
+     * 浏览器实例 ID
+     */
+    browser_id: number;
+    /**
+     * Closed
+     *
+     * 是否已关闭
+     */
+    closed?: boolean;
+    /**
+     * Message
+     *
+     * 结果说明
+     */
+    message?: string;
 };
 
 /**
@@ -2116,6 +2482,24 @@ export type BrowserSessionStatus = {
      * 会话过期时间
      */
     expires_at?: number | null;
+    /**
+     * Idle Seconds
+     *
+     * 闲置时长（秒）
+     */
+    idle_seconds?: number;
+    /**
+     * Is Pinned
+     *
+     * 是否被自动化任务占用（pin，占用期间不回收）
+     */
+    is_pinned?: boolean;
+    /**
+     * Pending Termination At
+     *
+     * 待关闭的宽限截止时间戳（闲置超时进入宽限期后非空）
+     */
+    pending_termination_at?: number | null;
 };
 
 /**
@@ -2444,6 +2828,18 @@ export type CompositeActionCreateRequest = {
      */
     description?: string;
     /**
+     * Icon Series
+     *
+     * 图标系列编号（0 表示默认图标）
+     */
+    icon_series?: number;
+    /**
+     * Icon Id
+     *
+     * 图标在系列内的编号（0 表示默认图标）
+     */
+    icon_id?: number;
+    /**
      * Parameters Schema
      *
      * 参数定义JSON
@@ -2591,6 +2987,14 @@ export type CompositeActionDetailResponse = {
      * Description
      */
     description: string;
+    /**
+     * Icon Series
+     */
+    icon_series?: number;
+    /**
+     * Icon Id
+     */
+    icon_id?: number;
     /**
      * Mid
      */
@@ -2789,6 +3193,18 @@ export type CompositeActionUpdateRequest = {
      * 新描述
      */
     description?: string | null;
+    /**
+     * Icon Series
+     *
+     * 图标系列编号（不传表示不修改）
+     */
+    icon_series?: number | null;
+    /**
+     * Icon Id
+     *
+     * 图标在系列内的编号（不传表示不修改）
+     */
+    icon_id?: number | null;
     /**
      * Parameters Schema
      *
@@ -4896,6 +5312,21 @@ export type StandardResponseBasePaginationRespWorkflowListItemResponse = {
 };
 
 /**
+ * StandardResponse[BasePaginationResp[WorkflowRunLogItemResponse]]
+ */
+export type StandardResponseBasePaginationRespWorkflowRunLogItemResponse = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: BasePaginationRespWorkflowRunLogItemResponse | null;
+};
+
+/**
  * StandardResponse[BrowserFingerprintCreateResp]
  */
 export type StandardResponseBrowserFingerprintCreateResp = {
@@ -4953,6 +5384,51 @@ export type StandardResponseBrowserInfoResponse = {
      */
     msg?: string;
     data?: BrowserInfoResponse | null;
+};
+
+/**
+ * StandardResponse[BrowserMonitorListResponse]
+ */
+export type StandardResponseBrowserMonitorListResponse = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: BrowserMonitorListResponse | null;
+};
+
+/**
+ * StandardResponse[BrowserMonitorPagesResponse]
+ */
+export type StandardResponseBrowserMonitorPagesResponse = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: BrowserMonitorPagesResponse | null;
+};
+
+/**
+ * StandardResponse[BrowserMonitorStopResponse]
+ */
+export type StandardResponseBrowserMonitorStopResponse = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: BrowserMonitorStopResponse | null;
 };
 
 /**
@@ -5430,6 +5906,21 @@ export type StandardResponseWorkflowForkResponse = {
      */
     msg?: string;
     data?: WorkflowForkResponse | null;
+};
+
+/**
+ * StandardResponse[WorkflowRunLogDetailResponse]
+ */
+export type StandardResponseWorkflowRunLogDetailResponse = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: WorkflowRunLogDetailResponse | null;
 };
 
 /**
@@ -6090,7 +6581,7 @@ export type WebRtcOfferRequest = {
 /**
  * WorkflowCreateRequest
  *
- * 创建工作流请求
+ * 创建工作流请求 - 工作流是调度外壳，只引用已有动作
  */
 export type WorkflowCreateRequest = {
     /**
@@ -6102,7 +6593,7 @@ export type WorkflowCreateRequest = {
     /**
      * Custom Action Id
      *
-     * 要执行的自定义动作ID
+     * 要引用的自定义动作ID（多对一共享）
      */
     custom_action_id?: string | null;
     /**
@@ -6112,6 +6603,12 @@ export type WorkflowCreateRequest = {
      */
     description?: string;
     /**
+     * Browser Id
+     *
+     * 执行目标浏览器ID（定时触发必填）
+     */
+    browser_id?: number | null;
+    /**
      * Trigger Type
      *
      * 触发类型: manual/cron
@@ -6120,7 +6617,7 @@ export type WorkflowCreateRequest = {
     /**
      * Trigger Config
      *
-     * 触发配置
+     * 触发配置，cron 触发时为 {cron: 表达式}
      */
     trigger_config?: {
         [key: string]: unknown;
@@ -6192,6 +6689,10 @@ export type WorkflowDetailResponse = {
      */
     description: string;
     /**
+     * Browser Id
+     */
+    browser_id?: number | null;
+    /**
      * Trigger Type
      */
     trigger_type: string;
@@ -6229,6 +6730,18 @@ export type WorkflowDetailResponse = {
      * Forked From Id
      */
     forked_from_id?: number | null;
+    /**
+     * Last Run At
+     */
+    last_run_at?: string | null;
+    /**
+     * Last Run Status
+     */
+    last_run_status?: string | null;
+    /**
+     * Next Run At
+     */
+    next_run_at?: string | null;
     /**
      * Enabled Plugins
      *
@@ -6462,6 +6975,116 @@ export type WorkflowListRequest = {
 };
 
 /**
+ * WorkflowRunLogDetailResponse
+ *
+ * 工作流运行记录详情（携带 execution_id 供下钻步骤日志）
+ */
+export type WorkflowRunLogDetailResponse = {
+    /**
+     * Id
+     */
+    id: number;
+    /**
+     * Run Id
+     */
+    run_id: string;
+    /**
+     * Workflow Id
+     */
+    workflow_id: string;
+    /**
+     * Browser Id
+     */
+    browser_id?: string;
+    /**
+     * Trigger Source
+     */
+    trigger_source: string;
+    /**
+     * Status
+     */
+    status: string;
+    /**
+     * Total
+     */
+    total?: number;
+    /**
+     * Success Count
+     */
+    success_count?: number;
+    /**
+     * Failed Count
+     */
+    failed_count?: number;
+    /**
+     * Execution Id
+     */
+    execution_id?: string;
+    /**
+     * Error Message
+     */
+    error_message?: string | null;
+    /**
+     * Duration Ms
+     */
+    duration_ms?: number;
+    /**
+     * Started At
+     */
+    started_at?: string | null;
+    /**
+     * Finished At
+     */
+    finished_at?: string | null;
+};
+
+/**
+ * WorkflowRunLogListRequest
+ *
+ * 工作流运行记录列表请求
+ */
+export type WorkflowRunLogListRequest = {
+    /**
+     * Workflow Id
+     *
+     * 工作流ID
+     */
+    workflow_id: string;
+    /**
+     * Page
+     *
+     * 页码
+     */
+    page?: number;
+    /**
+     * Per Page
+     *
+     * 每页数量
+     */
+    per_page?: number;
+};
+
+/**
+ * WorkflowRunNowRequest
+ *
+ * 立即运行已保存的工作流请求
+ */
+export type WorkflowRunNowRequest = {
+    /**
+     * Id
+     *
+     * 工作流数据库ID
+     */
+    id: number;
+    /**
+     * Browser Id
+     *
+     * 运行目标浏览器ID，不传则使用工作流上配置的 browser_id
+     */
+    browser_id?: number | null;
+};
+
+/**
  * WorkflowStepExecuteRequest
  *
  * 单步执行工作流请求
@@ -6657,7 +7280,7 @@ export type WorkflowUpdateRequest = {
     /**
      * Custom Action Id
      *
-     * 要执行的自定义动作ID
+     * 要引用的自定义动作ID
      */
     custom_action_id?: string | null;
     /**
@@ -6666,6 +7289,12 @@ export type WorkflowUpdateRequest = {
      * 新描述
      */
     description?: string | null;
+    /**
+     * Browser Id
+     *
+     * 执行目标浏览器ID（不传表示不修改）
+     */
+    browser_id?: number | null;
     /**
      * Trigger Type
      *
@@ -7014,6 +7643,36 @@ export type BasePaginationRespUserBrowserInfoWritable = {
  * BasePaginationResp[WorkflowListItemResponse]
  */
 export type BasePaginationRespWorkflowListItemResponseWritable = {
+    /**
+     * Page
+     *
+     * 页码
+     */
+    page?: number;
+    /**
+     * Per Page
+     *
+     * 每页数量
+     */
+    per_page?: number;
+    /**
+     * Total
+     *
+     * 总记录数
+     */
+    total?: number;
+    /**
+     * Items
+     *
+     * 当前页数据
+     */
+    items?: Array<unknown>;
+};
+
+/**
+ * BasePaginationResp[WorkflowRunLogItemResponse]
+ */
+export type BasePaginationRespWorkflowRunLogItemResponseWritable = {
     /**
      * Page
      *
@@ -7413,6 +8072,21 @@ export type StandardResponseBasePaginationRespWorkflowListItemResponseWritable =
 };
 
 /**
+ * StandardResponse[BasePaginationResp[WorkflowRunLogItemResponse]]
+ */
+export type StandardResponseBasePaginationRespWorkflowRunLogItemResponseWritable = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: BasePaginationRespWorkflowRunLogItemResponseWritable | null;
+};
+
+/**
  * StandardResponse[BrowserFingerprintCreateResp]
  */
 export type StandardResponseBrowserFingerprintCreateRespWritable = {
@@ -7503,10 +8177,7 @@ export type StandardResponseUnionBrowserFingerprintQueryRespNoneTypeWritable = {
 };
 
 export type GenRandFingerprintRouterApiV1RpaBrowserGenRandFingerprintPostData = {
-    /**
-     * Params
-     */
-    body?: BrowserFingerprintCreateParams | null;
+    body?: BrowserFingerprintCreateParams;
     path?: never;
     query?: never;
     url: '/api/v1/rpa/browser/gen_rand_fingerprint';
@@ -10317,6 +10988,229 @@ export type ExecuteWorkflowStepApiV1RpaBrowserControlWorkflowsExecuteStepPostRes
 };
 
 export type ExecuteWorkflowStepApiV1RpaBrowserControlWorkflowsExecuteStepPostResponse = ExecuteWorkflowStepApiV1RpaBrowserControlWorkflowsExecuteStepPostResponses[keyof ExecuteWorkflowStepApiV1RpaBrowserControlWorkflowsExecuteStepPostResponses];
+
+export type RunSavedWorkflowApiV1RpaBrowserControlWorkflowsRunPostData = {
+    body: WorkflowRunNowRequest;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string;
+    };
+    path?: never;
+    query: {
+        /**
+         * Browser Id
+         */
+        browser_id: number | string;
+    };
+    url: '/api/v1/rpa/browser/control/workflows/run';
+};
+
+export type RunSavedWorkflowApiV1RpaBrowserControlWorkflowsRunPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type RunSavedWorkflowApiV1RpaBrowserControlWorkflowsRunPostError = RunSavedWorkflowApiV1RpaBrowserControlWorkflowsRunPostErrors[keyof RunSavedWorkflowApiV1RpaBrowserControlWorkflowsRunPostErrors];
+
+export type RunSavedWorkflowApiV1RpaBrowserControlWorkflowsRunPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseDict;
+};
+
+export type RunSavedWorkflowApiV1RpaBrowserControlWorkflowsRunPostResponse = RunSavedWorkflowApiV1RpaBrowserControlWorkflowsRunPostResponses[keyof RunSavedWorkflowApiV1RpaBrowserControlWorkflowsRunPostResponses];
+
+export type ListWorkflowRunsApiV1RpaBrowserControlWorkflowsRunsPostData = {
+    body: WorkflowRunLogListRequest;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/rpa/browser/control/workflows/runs';
+};
+
+export type ListWorkflowRunsApiV1RpaBrowserControlWorkflowsRunsPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ListWorkflowRunsApiV1RpaBrowserControlWorkflowsRunsPostError = ListWorkflowRunsApiV1RpaBrowserControlWorkflowsRunsPostErrors[keyof ListWorkflowRunsApiV1RpaBrowserControlWorkflowsRunsPostErrors];
+
+export type ListWorkflowRunsApiV1RpaBrowserControlWorkflowsRunsPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseBasePaginationRespWorkflowRunLogItemResponse;
+};
+
+export type ListWorkflowRunsApiV1RpaBrowserControlWorkflowsRunsPostResponse = ListWorkflowRunsApiV1RpaBrowserControlWorkflowsRunsPostResponses[keyof ListWorkflowRunsApiV1RpaBrowserControlWorkflowsRunsPostResponses];
+
+export type GetWorkflowRunApiV1RpaBrowserControlWorkflowsRunsGetPostData = {
+    /**
+     * Request
+     */
+    body: {
+        [key: string]: unknown;
+    };
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/rpa/browser/control/workflows/runs/get';
+};
+
+export type GetWorkflowRunApiV1RpaBrowserControlWorkflowsRunsGetPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetWorkflowRunApiV1RpaBrowserControlWorkflowsRunsGetPostError = GetWorkflowRunApiV1RpaBrowserControlWorkflowsRunsGetPostErrors[keyof GetWorkflowRunApiV1RpaBrowserControlWorkflowsRunsGetPostErrors];
+
+export type GetWorkflowRunApiV1RpaBrowserControlWorkflowsRunsGetPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseWorkflowRunLogDetailResponse;
+};
+
+export type GetWorkflowRunApiV1RpaBrowserControlWorkflowsRunsGetPostResponse = GetWorkflowRunApiV1RpaBrowserControlWorkflowsRunsGetPostResponses[keyof GetWorkflowRunApiV1RpaBrowserControlWorkflowsRunsGetPostResponses];
 
 export type ListPluginsApiV1RpaBrowserControlPluginsListPostData = {
     body: PluginListRequest;
@@ -13612,3 +14506,216 @@ export type GetBanStatusApiAdminRpaBanStatusPostResponses = {
 };
 
 export type GetBanStatusApiAdminRpaBanStatusPostResponse = GetBanStatusApiAdminRpaBanStatusPostResponses[keyof GetBanStatusApiAdminRpaBanStatusPostResponses];
+
+export type ListBrowserMonitorsApiAdminRpaBrowserMonitorsPostData = {
+    body: BrowserMonitorListRequest;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/admin/rpa/browser/monitors';
+};
+
+export type ListBrowserMonitorsApiAdminRpaBrowserMonitorsPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ListBrowserMonitorsApiAdminRpaBrowserMonitorsPostError = ListBrowserMonitorsApiAdminRpaBrowserMonitorsPostErrors[keyof ListBrowserMonitorsApiAdminRpaBrowserMonitorsPostErrors];
+
+export type ListBrowserMonitorsApiAdminRpaBrowserMonitorsPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseBrowserMonitorListResponse;
+};
+
+export type ListBrowserMonitorsApiAdminRpaBrowserMonitorsPostResponse = ListBrowserMonitorsApiAdminRpaBrowserMonitorsPostResponses[keyof ListBrowserMonitorsApiAdminRpaBrowserMonitorsPostResponses];
+
+export type GetBrowserMonitorPagesApiAdminRpaBrowserMonitorPagesPostData = {
+    body: BrowserMonitorPagesRequest;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/admin/rpa/browser/monitor/pages';
+};
+
+export type GetBrowserMonitorPagesApiAdminRpaBrowserMonitorPagesPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetBrowserMonitorPagesApiAdminRpaBrowserMonitorPagesPostError = GetBrowserMonitorPagesApiAdminRpaBrowserMonitorPagesPostErrors[keyof GetBrowserMonitorPagesApiAdminRpaBrowserMonitorPagesPostErrors];
+
+export type GetBrowserMonitorPagesApiAdminRpaBrowserMonitorPagesPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseBrowserMonitorPagesResponse;
+};
+
+export type GetBrowserMonitorPagesApiAdminRpaBrowserMonitorPagesPostResponse = GetBrowserMonitorPagesApiAdminRpaBrowserMonitorPagesPostResponses[keyof GetBrowserMonitorPagesApiAdminRpaBrowserMonitorPagesPostResponses];
+
+export type StopBrowserSessionApiAdminRpaBrowserSessionStopPostData = {
+    body: BrowserMonitorStopRequest;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/admin/rpa/browser/session/stop';
+};
+
+export type StopBrowserSessionApiAdminRpaBrowserSessionStopPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type StopBrowserSessionApiAdminRpaBrowserSessionStopPostError = StopBrowserSessionApiAdminRpaBrowserSessionStopPostErrors[keyof StopBrowserSessionApiAdminRpaBrowserSessionStopPostErrors];
+
+export type StopBrowserSessionApiAdminRpaBrowserSessionStopPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseBrowserMonitorStopResponse;
+};
+
+export type StopBrowserSessionApiAdminRpaBrowserSessionStopPostResponse = StopBrowserSessionApiAdminRpaBrowserSessionStopPostResponses[keyof StopBrowserSessionApiAdminRpaBrowserSessionStopPostResponses];

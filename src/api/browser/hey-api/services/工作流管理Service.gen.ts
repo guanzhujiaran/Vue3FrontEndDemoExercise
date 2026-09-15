@@ -3,7 +3,7 @@
 import type { RequestResult } from '../client';
 import { client } from '../client.gen';
 import type { Options } from '../sdk.gen';
-import type { CreateWorkflowApiV1RpaBrowserControlWorkflowsCreatePostData, CreateWorkflowApiV1RpaBrowserControlWorkflowsCreatePostErrors, CreateWorkflowApiV1RpaBrowserControlWorkflowsCreatePostResponses, DeleteWorkflowApiV1RpaBrowserControlWorkflowsDeletePostData, DeleteWorkflowApiV1RpaBrowserControlWorkflowsDeletePostErrors, DeleteWorkflowApiV1RpaBrowserControlWorkflowsDeletePostResponses, DuplicateWorkflowApiV1RpaBrowserControlWorkflowsDuplicatePostData, DuplicateWorkflowApiV1RpaBrowserControlWorkflowsDuplicatePostErrors, DuplicateWorkflowApiV1RpaBrowserControlWorkflowsDuplicatePostResponses, ExecuteWorkflowStepApiV1RpaBrowserControlWorkflowsExecuteStepPostData, ExecuteWorkflowStepApiV1RpaBrowserControlWorkflowsExecuteStepPostErrors, ExecuteWorkflowStepApiV1RpaBrowserControlWorkflowsExecuteStepPostResponses, ForkWorkflowApiV1RpaBrowserControlWorkflowsForkPostData, ForkWorkflowApiV1RpaBrowserControlWorkflowsForkPostErrors, ForkWorkflowApiV1RpaBrowserControlWorkflowsForkPostResponses, GetWorkflowDetailApiV1RpaBrowserControlWorkflowsGetPostData, GetWorkflowDetailApiV1RpaBrowserControlWorkflowsGetPostErrors, GetWorkflowDetailApiV1RpaBrowserControlWorkflowsGetPostResponses, GetWorkflowForksApiV1RpaBrowserControlWorkflowsIdForksGetData, GetWorkflowForksApiV1RpaBrowserControlWorkflowsIdForksGetErrors, GetWorkflowForksApiV1RpaBrowserControlWorkflowsIdForksGetResponses, ListWorkflowsApiV1RpaBrowserControlWorkflowsListPostData, ListWorkflowsApiV1RpaBrowserControlWorkflowsListPostErrors, ListWorkflowsApiV1RpaBrowserControlWorkflowsListPostResponses, UpdateWorkflowApiV1RpaBrowserControlWorkflowsUpdatePostData, UpdateWorkflowApiV1RpaBrowserControlWorkflowsUpdatePostErrors, UpdateWorkflowApiV1RpaBrowserControlWorkflowsUpdatePostResponses } from '../types.gen';
+import type { CreateWorkflowApiV1RpaBrowserControlWorkflowsCreatePostData, CreateWorkflowApiV1RpaBrowserControlWorkflowsCreatePostErrors, CreateWorkflowApiV1RpaBrowserControlWorkflowsCreatePostResponses, DeleteWorkflowApiV1RpaBrowserControlWorkflowsDeletePostData, DeleteWorkflowApiV1RpaBrowserControlWorkflowsDeletePostErrors, DeleteWorkflowApiV1RpaBrowserControlWorkflowsDeletePostResponses, DuplicateWorkflowApiV1RpaBrowserControlWorkflowsDuplicatePostData, DuplicateWorkflowApiV1RpaBrowserControlWorkflowsDuplicatePostErrors, DuplicateWorkflowApiV1RpaBrowserControlWorkflowsDuplicatePostResponses, ExecuteWorkflowStepApiV1RpaBrowserControlWorkflowsExecuteStepPostData, ExecuteWorkflowStepApiV1RpaBrowserControlWorkflowsExecuteStepPostErrors, ExecuteWorkflowStepApiV1RpaBrowserControlWorkflowsExecuteStepPostResponses, ForkWorkflowApiV1RpaBrowserControlWorkflowsForkPostData, ForkWorkflowApiV1RpaBrowserControlWorkflowsForkPostErrors, ForkWorkflowApiV1RpaBrowserControlWorkflowsForkPostResponses, GetWorkflowDetailApiV1RpaBrowserControlWorkflowsGetPostData, GetWorkflowDetailApiV1RpaBrowserControlWorkflowsGetPostErrors, GetWorkflowDetailApiV1RpaBrowserControlWorkflowsGetPostResponses, GetWorkflowForksApiV1RpaBrowserControlWorkflowsIdForksGetData, GetWorkflowForksApiV1RpaBrowserControlWorkflowsIdForksGetErrors, GetWorkflowForksApiV1RpaBrowserControlWorkflowsIdForksGetResponses, GetWorkflowRunApiV1RpaBrowserControlWorkflowsRunsGetPostData, GetWorkflowRunApiV1RpaBrowserControlWorkflowsRunsGetPostErrors, GetWorkflowRunApiV1RpaBrowserControlWorkflowsRunsGetPostResponses, ListWorkflowRunsApiV1RpaBrowserControlWorkflowsRunsPostData, ListWorkflowRunsApiV1RpaBrowserControlWorkflowsRunsPostErrors, ListWorkflowRunsApiV1RpaBrowserControlWorkflowsRunsPostResponses, ListWorkflowsApiV1RpaBrowserControlWorkflowsListPostData, ListWorkflowsApiV1RpaBrowserControlWorkflowsListPostErrors, ListWorkflowsApiV1RpaBrowserControlWorkflowsListPostResponses, RunSavedWorkflowApiV1RpaBrowserControlWorkflowsRunPostData, RunSavedWorkflowApiV1RpaBrowserControlWorkflowsRunPostErrors, RunSavedWorkflowApiV1RpaBrowserControlWorkflowsRunPostResponses, UpdateWorkflowApiV1RpaBrowserControlWorkflowsUpdatePostData, UpdateWorkflowApiV1RpaBrowserControlWorkflowsUpdatePostErrors, UpdateWorkflowApiV1RpaBrowserControlWorkflowsUpdatePostResponses } from '../types.gen';
 
 export class 工作流管理Service {
     /**
@@ -11,7 +11,8 @@ export class 工作流管理Service {
      *
      * 创建用户工作流
      *
-     * 工作流由多个步骤组成，可以包含操作、插件、控制流等
+     * 工作流是「调度外壳」：引用一个已存在的自定义动作（多对一共享），
+     * 并配置触发方式（manual/cron）与执行目标浏览器。步骤在动作侧调试，此处不编辑步骤。
      */
     public static createWorkflowApiV1RpaBrowserControlWorkflowsCreatePost<ThrowOnError extends boolean = false>(options: Options<CreateWorkflowApiV1RpaBrowserControlWorkflowsCreatePostData, ThrowOnError>): RequestResult<CreateWorkflowApiV1RpaBrowserControlWorkflowsCreatePostResponses, CreateWorkflowApiV1RpaBrowserControlWorkflowsCreatePostErrors, ThrowOnError, 'data'> {
         return (options.client ?? client).post<CreateWorkflowApiV1RpaBrowserControlWorkflowsCreatePostResponses, CreateWorkflowApiV1RpaBrowserControlWorkflowsCreatePostErrors, ThrowOnError, 'data'>({
@@ -168,6 +169,64 @@ export class 工作流管理Service {
         return (options.client ?? client).post<ExecuteWorkflowStepApiV1RpaBrowserControlWorkflowsExecuteStepPostResponses, ExecuteWorkflowStepApiV1RpaBrowserControlWorkflowsExecuteStepPostErrors, ThrowOnError, 'data'>({
             responseStyle: 'data',
             url: '/api/v1/rpa/browser/control/workflows/execute-step',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    /**
+     * 立即运行已保存的工作流
+     *
+     * 立即运行一次已保存的工作流
+     *
+     * 工作流是调度外壳：此处按工作流引用的动作顺序执行其步骤，并写入运行记录。
+     * 目标浏览器以 **query 的 browser_id 为准**（由 verify_browser_ownership 校验归属），
+     * body 中的 browser_id 仅作兼容保留、不参与决策；未指定浏览器时回落到工作流配置的 browser_id。
+     */
+    public static runSavedWorkflowApiV1RpaBrowserControlWorkflowsRunPost<ThrowOnError extends boolean = false>(options: Options<RunSavedWorkflowApiV1RpaBrowserControlWorkflowsRunPostData, ThrowOnError>): RequestResult<RunSavedWorkflowApiV1RpaBrowserControlWorkflowsRunPostResponses, RunSavedWorkflowApiV1RpaBrowserControlWorkflowsRunPostErrors, ThrowOnError, 'data'> {
+        return (options.client ?? client).post<RunSavedWorkflowApiV1RpaBrowserControlWorkflowsRunPostResponses, RunSavedWorkflowApiV1RpaBrowserControlWorkflowsRunPostErrors, ThrowOnError, 'data'>({
+            responseStyle: 'data',
+            url: '/api/v1/rpa/browser/control/workflows/run',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    /**
+     * 查询工作流运行记录
+     *
+     * 分页查询某工作流的运行记录（最新在前）
+     */
+    public static listWorkflowRunsApiV1RpaBrowserControlWorkflowsRunsPost<ThrowOnError extends boolean = false>(options: Options<ListWorkflowRunsApiV1RpaBrowserControlWorkflowsRunsPostData, ThrowOnError>): RequestResult<ListWorkflowRunsApiV1RpaBrowserControlWorkflowsRunsPostResponses, ListWorkflowRunsApiV1RpaBrowserControlWorkflowsRunsPostErrors, ThrowOnError, 'data'> {
+        return (options.client ?? client).post<ListWorkflowRunsApiV1RpaBrowserControlWorkflowsRunsPostResponses, ListWorkflowRunsApiV1RpaBrowserControlWorkflowsRunsPostErrors, ThrowOnError, 'data'>({
+            responseStyle: 'data',
+            url: '/api/v1/rpa/browser/control/workflows/runs',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    /**
+     * 获取工作流运行记录详情
+     *
+     * 按 run_id 获取运行记录详情
+     *
+     * Args:
+     * request: {"run_id": "<运行ID>"}
+     */
+    public static getWorkflowRunApiV1RpaBrowserControlWorkflowsRunsGetPost<ThrowOnError extends boolean = false>(options: Options<GetWorkflowRunApiV1RpaBrowserControlWorkflowsRunsGetPostData, ThrowOnError>): RequestResult<GetWorkflowRunApiV1RpaBrowserControlWorkflowsRunsGetPostResponses, GetWorkflowRunApiV1RpaBrowserControlWorkflowsRunsGetPostErrors, ThrowOnError, 'data'> {
+        return (options.client ?? client).post<GetWorkflowRunApiV1RpaBrowserControlWorkflowsRunsGetPostResponses, GetWorkflowRunApiV1RpaBrowserControlWorkflowsRunsGetPostErrors, ThrowOnError, 'data'>({
+            responseStyle: 'data',
+            url: '/api/v1/rpa/browser/control/workflows/runs/get',
             ...options,
             headers: {
                 'Content-Type': 'application/json',

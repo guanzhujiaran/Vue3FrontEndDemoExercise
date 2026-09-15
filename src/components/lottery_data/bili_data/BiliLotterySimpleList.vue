@@ -116,6 +116,7 @@
       class="lottery-detail-dialog"
       :title="selectedNormalized?.title"
       append-to-body
+      :lock-scroll="false"
     >
       <BiliLotteryCard v-if="selectedRaw" :lottery-data="selectedRaw" />
     </el-dialog>

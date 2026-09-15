@@ -5,6 +5,7 @@
     :title="dialogTitle"
     width="600px"
     :close-on-click-modal="false"
+    :lock-scroll="false"
     destroy-on-close
     @closed="resetForm"
   >
@@ -433,6 +434,7 @@ function showPublishSuccessBox(message: string) {
     confirmButtonText: '确定',
     closeOnClickModal: false,
     showClose: false,
+    lockScroll: false,
   })
   const timer = setTimeout(() => {
     ElMessageBox.close()

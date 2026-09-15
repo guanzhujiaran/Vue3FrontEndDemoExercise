@@ -8,6 +8,7 @@
     append-to-body
     :close-on-click-modal="false"
     :close-on-press-escape="false"
+    :lock-scroll="false"
   >
     <div class="report-dialog__body flex flex-col gap-4">
       <!-- 预设原因 -->

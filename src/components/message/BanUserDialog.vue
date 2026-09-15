@@ -6,6 +6,7 @@
     width="90%"
     append-to-body
     :close-on-click-modal="false"
+    :lock-scroll="false"
     @closed="onClosed"
   >
     <div class="ban-user-dialog__body flex flex-col gap-4">
@@ -177,12 +178,15 @@ async function submit() {
           form.duration_type === BanDurationTypeEnum.TEMPORARY ? form.duration_days : null
       }
     })
-    if (res) {
+    // SDK 为 responseStyle:'data'：HTTP 2xx 返回后端响应体 {code,msg,data}（业务失败也是 2xx），
+    // 非 2xx（401/403/5xx 等）返回 undefined。必须按业务码判定，不能只看对象是否存在，
+    // 否则「业务失败」会被误判为成功并弹出成功提示。
+    if (res?.code === 0) {
       biliMessage.success(t('message.banSuccess', { count: props.mids.length }))
       emit('success')
       visible.value = false
     } else {
-      biliMessage.error(t('message.banFailed'))
+      biliMessage.error(res?.msg || t('message.banFailed'))
     }
   } finally {
     submitting.value = false

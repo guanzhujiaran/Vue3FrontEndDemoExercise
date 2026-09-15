@@ -1,7 +1,8 @@
 <template>
     <flex-container class="bili-side-nav-layout">
-        <!-- 需要在这里设置高度才能让里面元素滚动 -->
-        <el-container class="bili-side-nav-layout__body items-stretch gap-3 p-3" :style="{ height: layoutHeight }">
+        <!-- 场景高度由公共组件统一计算（窗口高 - 顶部导航 - el-main 偏移），内部才能独立滚动 -->
+        <AutoHeightContainer
+            class="bili-side-nav-layout__body flex-auto flex min-w-0 items-stretch gap-3 p-3">
             <el-aside width="auto" class="bili-side-nav-layout__aside h-full overflow-hidden">
                 <el-scrollbar class="bili-side-nav-layout__nav-scroll h-full" view-class="h-full">
                     <el-menu :default-active="activeIndex" :collapse="collapsed" :collapse-transition="false"
@@ -78,14 +79,15 @@
                     </el-scrollbar>
                 </el-main>
             </el-container>
-        </el-container>
+        </AutoHeightContainer>
     </flex-container>
 </template>
 
 <script setup lang="ts">
-import { computed, ref, onMounted, onBeforeUnmount, type Component } from 'vue'
+import { computed, ref, onMounted, type Component } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Fold, Expand } from '@element-plus/icons-vue'
+import AutoHeightContainer from './AutoHeightContainer.vue'
 
 export interface BiliSideNavItem {
     name: string
@@ -123,21 +125,6 @@ const isContentSettling = ref(false)
 const activeIndex = computed(() => (route.name ? String(route.name) : ''))
 const pageTitle = computed(() => String(route.meta?.title ?? ''))
 
-// ===== 高度锚定：外层 el-scrollbar（视口高）+ el-header（顶部导航）会撑高页面，
-// 必须把本布局高度固定为「窗口高度 - header 高度 - el-main 顶部 margin 等偏移」，内部才能独立滚动 =====
-// 注意：不能用 ref 拿根元素 DOM（根是自定义 flex-container，keep-alive 下 ref 拿到组件实例），
-// 统一用 window + header 元素测量
-const layoutHeight = ref('100%')
-
-function calcLayoutHeight() {
-    // header 高度：优先取 .bili-header（App.vue 顶部导航），失败则回退 60px
-    const headerEl = document.querySelector<HTMLElement>('.bili-header')
-    const headerH = headerEl?.getBoundingClientRect().height ?? 60
-    // 视口高度 - header 高度 - el-main 顶部 margin（mt-3=12px）- 底部 padding 余量（pb-4=16px）
-    const h = window.innerHeight - headerH - 12 - 16
-    layoutHeight.value = `${Math.max(h, 300)}px`
-}
-
 // 窄屏阈值：低于该宽度视为窄屏，侧边栏默认收起（w-52 展开态会挤压内容区）
 const NARROW_SCREEN_WIDTH = 1080
 
@@ -148,11 +135,6 @@ function isNarrowScreen() {
 onMounted(() => {
     // 窄屏首屏直接收起侧边栏（初始化不走果冻动画，避免入场抖动）
     collapsed.value = props.collapsible && isNarrowScreen()
-    calcLayoutHeight()
-    window.addEventListener('resize', calcLayoutHeight)
-})
-onBeforeUnmount(() => {
-    window.removeEventListener('resize', calcLayoutHeight)
 })
 
 // ===== 内容区滚动：记录 el-scrollbar 的滚动位置，传给 ScrollButtons 控制按钮显隐 =====

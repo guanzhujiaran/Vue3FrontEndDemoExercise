@@ -110,6 +110,7 @@ const handleDeleteTag = async (tag: RpaTagItem) => {
       confirmButtonText: '确定',
       cancelButtonText: '取消',
       type: 'warning',
+      lockScroll: false,
     })
   } catch {
     return
@@ -145,6 +146,7 @@ const handleReject = async (tag: RpaTagItem) => {
         cancelButtonText: '取消',
         inputPlaceholder: '请输入驳回原因（将通知创建者）',
         inputValidator: (v) => (v ? true : '驳回原因不能为空'),
+        lockScroll: false,
       }
     )
     reason = value || ''
@@ -293,7 +295,7 @@ onMounted(async () => {
       </LoadingWrap>
 
       <!-- 标签新建/编辑弹窗 -->
-      <el-dialog v-model="tagDialogVisible" :title="tagForm.id ? '编辑标签' : '新建标签'" width="420px">
+      <el-dialog v-model="tagDialogVisible" :title="tagForm.id ? '编辑标签' : '新建标签'" width="420px" :lock-scroll="false">
         <el-form label-position="top">
           <el-form-item label="名称">
             <el-input v-model="tagForm.name" placeholder="标签名称" />

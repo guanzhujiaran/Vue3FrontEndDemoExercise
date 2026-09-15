@@ -13,6 +13,7 @@
 import { computed, type Component } from 'vue'
 import { Bell, ChatDotRound, Comment, Key, Checked, Collection, Avatar, Flag, Stamp, Document, Medal, CollectionTag } from '@element-plus/icons-vue'
 import icShoucang from '@/assets/svgs/audit/shoucang.svg?component'
+import icLiveCenter from '@/assets/svgs/audit/ic_Livecenter.svg?component'
 import { useMessageAdminStore } from '@/stores/message_admin'
 import BiliSideNavLayout from '@/components/CommonCompo/Bili-Container-Compo/BiliSideNavLayout.vue'
 
@@ -44,7 +45,8 @@ const navGroups = computed<NavGroup[]>(() => {
       { name: 'ADMIN_RPA_APPROVAL', title: '操作审批', icon: Stamp },
       { name: 'ADMIN_RPA_AUDIT', title: '操作审计', icon: Document },
       { name: 'ADMIN_RPA_CERT', title: '官方认证', icon: Medal },
-      { name: 'ADMIN_RPA_TAG', title: '标签管理', icon: CollectionTag }
+      { name: 'ADMIN_RPA_TAG', title: '标签管理', icon: CollectionTag },
+      { name: 'ADMIN_BROWSER_MONITOR', title: '浏览器监管', icon: icLiveCenter }
     ]
     groups.push({ title: 'RPA 管理', items: rpaItems })
   }

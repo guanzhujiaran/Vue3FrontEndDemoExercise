@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { ref, computed, shallowRef, onMounted } from 'vue'
-import { Search, Tools, Lock, Refresh, Bell, Edit, Folder } from '@element-plus/icons-vue'
+import { ref, computed, shallowRef, onMounted, onBeforeUnmount } from 'vue'
+import { Search, Tools, Lock, Refresh, Edit, Folder } from '@element-plus/icons-vue'
 import {
   ElAutocomplete, ElEmpty, ElTreeV2, ElButton, ElText,
   ElMessage, ElTooltip, ElSelect, ElOption, ElSegmented,
@@ -9,6 +9,8 @@ import { 自定义操作管理Service } from '@/api/browser/hey-api'
 import { client } from '@/api/browser/hey-api/client.gen'
 import type { FilterType, SortBy, SortOrder } from '@/api/browser/hey-api'
 import { useUserNavStore } from '@/stores/user_nav'
+import ActionIcon from './ActionIcon.vue'
+import { resolveActionTypeIcon } from '@/utils/rpa/actionTypeIcon'
 
 // ── 常量 ─────────────────────────────────────────────
 enum ToolboxTab {
@@ -341,6 +343,11 @@ const filteredRegistered = computed<unknown[]>(() => {
     children: [],
     action_id: a.action_id,
     action_type: a.action_id,
+    // 图标字段必须透传：后端为每个内置动作都下发了 (icon_series, icon_id)
+    // —— 现已指向现有系列 `FGO头像/s_1_saber` 的 `i_1~i_16`（见 action_params.BUILTIN_ACTION_ICON_SERIES）；
+    // 此前漏传导致 ActionIcon 拿不到 series/id，树节点永远走 fallback（图标全都一样）
+    icon_series: a.icon_series,
+    icon_id: a.icon_id,
     name: a.name || (a.json_schema as Record<string, unknown>)?.title || a.action_id,
     description: (a.json_schema as Record<string, unknown>)?.description,
     tags: a.tags || [],
@@ -380,11 +387,30 @@ async function handleEditCustomAction(nodeData: Record<string, unknown>) {
 // ── 配置 ─────────────────────────────────────────────
 
 const treeProps = { children: 'children', label: 'label' }
-const treeHeight = computed(() => Math.floor(window.innerHeight * 0.45))
+
+/** 基础操作树容器（flex-1 自适应高度） */
+const treeWrapRef = ref<HTMLElement | null>(null)
+/** 虚拟树需要显式高度，跟随容器实际高度同步 */
+const treeHeight = ref(320)
+let treeResizeObserver: ResizeObserver | null = null
+
+onMounted(() => {
+  if (!treeWrapRef.value) return
+  treeResizeObserver = new ResizeObserver(() => {
+    const h = treeWrapRef.value?.clientHeight ?? 0
+    if (h > 0) treeHeight.value = h
+  })
+  treeResizeObserver.observe(treeWrapRef.value)
+})
+
+onBeforeUnmount(() => {
+  treeResizeObserver?.disconnect()
+  treeResizeObserver = null
+})
 </script>
 
 <template>
-  <div class="toolbox-root h-full flex flex-col overflow-hidden">
+  <div class="toolbox-root h-[70vh] flex flex-col overflow-hidden">
     <!-- 分段控制 + 搜索/刷新/筛选内容区 -->
     <div class="p-3 border-b border-border space-y-2">
       <el-segmented
@@ -446,7 +472,7 @@ const treeHeight = computed(() => Math.floor(window.innerHeight * 0.45))
 
     <!-- 私有/公开列表（共享模板，v-show 保留 DOM） -->
     <LoadingMoreContainer
-    class="flex-1"
+      class="flex-1 min-h-0"
       v-show="isPrivateOrPublic"
       v-loading="loading"
       v-model:is-more="hasMore"
@@ -466,7 +492,18 @@ const treeHeight = computed(() => Math.floor(window.innerHeight * 0.45))
               @mousedown.stop @dragstart.stop
             >
               <span class="flex items-center gap-2 min-w-0 flex-1">
-                <el-icon><Bell class="w-4 h-4 shrink-0" /></el-icon>
+                <ActionIcon
+                  :series="(item as Record<string, unknown>).icon_series as number | undefined"
+                  :id="(item as Record<string, unknown>).icon_id as number | undefined"
+                  class="toolbox-item__icon w-4 h-4 shrink-0 text-text-primary"
+                >
+                  <template #fallback>
+                    <!-- 未选图标 / 图库无资源：按动作类型兜底（自定义动作 ca_* 回落默认问号图标） -->
+                    <el-icon class="w-4 h-4 shrink-0">
+                      <component :is="resolveActionTypeIcon((item as Record<string, unknown>).action_id as string)" />
+                    </el-icon>
+                  </template>
+                </ActionIcon>
                 <el-tooltip
                   :content="getTooltipContent(item as Record<string, unknown>)"
                   placement="right" :show-after="400"
@@ -503,7 +540,7 @@ const treeHeight = computed(() => Math.floor(window.innerHeight * 0.45))
     </LoadingMoreContainer>
 
     <!-- 基础操作树 -->
-    <div v-show="activeTab === ToolboxTab.BASIC" class="overflow-auto p-3" v-loading="loading">
+    <div v-show="activeTab === ToolboxTab.BASIC" ref="treeWrapRef" class="flex-1 min-h-0 overflow-auto p-3" v-loading="loading">
       <el-tree-v2
         v-if="filteredRegistered.length > 0"
         :data="filteredRegistered" :props="treeProps"
@@ -516,7 +553,18 @@ const treeHeight = computed(() => Math.floor(window.innerHeight * 0.45))
             @dragstart="handleDragStart($event, data)"
           >
             <span class="flex items-center gap-2 min-w-0 flex-1">
-              <el-icon><Tools class="w-4 h-4 shrink-0" /></el-icon>
+              <ActionIcon
+                :series="(data as Record<string, unknown>).icon_series as number | undefined"
+                :id="(data as Record<string, unknown>).icon_id as number | undefined"
+                class="toolbox-item__icon w-4 h-4 shrink-0 text-text-primary"
+              >
+                <template #fallback>
+                  <!-- 图库中无对应资源时按 action_id 取内置类型图标（点击/输入/导航…各不相同） -->
+                  <el-icon class="w-4 h-4 shrink-0">
+                    <component :is="resolveActionTypeIcon((data as Record<string, unknown>).action_id as string)" />
+                  </el-icon>
+                </template>
+              </ActionIcon>
               <el-tooltip
                 :content="getTooltipContent(data as Record<string, unknown>)"
                 placement="right" :show-after="400"

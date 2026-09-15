@@ -5,6 +5,7 @@ import { 自定义操作管理Service } from '@/api/browser/hey-api'
 import { useUserNavStore } from '@/stores/user_nav'
 import biliMessage from '@/utils/message'
 import DebugBox from './DebugBox.vue'
+import ActionIconPicker from './ActionIconPicker.vue'
 import MinimizeBar from './MinimizeBar.vue'
 import type { DroppedItem } from './debugbox-types'
 
@@ -26,6 +27,9 @@ const editItems = ref<DroppedItem[]>([])
 const editingName = ref('')
 const editingDescription = ref('')
 const editingTags = ref<string[]>([])
+/** 动作展示图标：系列 + 系列内编号，0/0 表示默认图标 */
+const editingIconSeries = ref(0)
+const editingIconId = ref(0)
 const tagInputValue = ref('')
 const saving = ref(false)
 /** 每次打开弹窗递增，强制 DebugBox 重新挂载以加载 initialSteps */
@@ -82,6 +86,8 @@ watch(() => props.modelValue, (visible) => {
     editingName.value = (props.actionDetail.name as string) || ''
     editingDescription.value = (props.actionDetail.description as string) || ''
     editingTags.value = Array.isArray(props.actionDetail.tags) ? [...(props.actionDetail.tags as string[])] : []
+    editingIconSeries.value = (props.actionDetail.icon_series as number) ?? 0
+    editingIconId.value = (props.actionDetail.icon_id as number) ?? 0
     tagInputValue.value = ''
     const steps = props.actionDetail.steps
     editItems.value = steps && Array.isArray(steps) ? convertStepsToItems(steps as Record<string, unknown>[]) : []
@@ -140,6 +146,8 @@ async function handleSave() {
         description: editingDescription.value || undefined,
         tags: editingTags.value,
         steps,
+        icon_series: editingIconSeries.value,
+        icon_id: editingIconId.value,
       },
       headers: userNavStore.user_header,
     })
@@ -222,6 +230,10 @@ async function handleSave() {
           maxlength="200"
           show-word-limit
         />
+      </div>
+      <div class="edit-custom-action__icon-section border border-border rounded p-3 flex flex-col gap-2">
+        <label class="text-xs text-color-secondary">动作图标</label>
+        <ActionIconPicker v-model:series="editingIconSeries" v-model:id="editingIconId" />
       </div>
       <div class="h-[60vh] border border-border rounded">
         <DebugBox

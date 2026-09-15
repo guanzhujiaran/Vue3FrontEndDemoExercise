@@ -9,6 +9,8 @@ import BiliPageHeader from '@/components/CommonCompo/Bili-Container-Compo/BiliPa
 import { 自定义操作管理Service, 管理员管理Service } from '@/api/browser/hey-api'
 import type { FilterType, SortBy, SortOrder } from '@/api/browser/hey-api'
 import { useUserNavStore } from '@/stores/user_nav'
+import ActionIcon from '@/components/rpa-browser/ActionIcon.vue'
+import { DEFAULT_ACTION_ICON } from '@/utils/rpa/actionTypeIcon'
 import { businessHandler } from '@/utils/businessHandler'
 import ResourceInteractionBar from '@/components/interaction/ResourceInteractionBar.vue'
 
@@ -19,6 +21,10 @@ interface ActionItem {
   name: string
   action_type: string
   description: string
+  /** 动作展示图标：系列编号（0 = 默认图标） */
+  icon_series?: number
+  /** 动作展示图标：系列内编号（0 = 默认图标） */
+  icon_id?: number
   steps_count: number
   tags: string[]
   is_enabled: boolean
@@ -130,6 +136,7 @@ const handleRename = async (item: ActionItem) => {
       inputValue: item.name,
       inputPattern: /\S+/,
       inputErrorMessage: '名称不能为空',
+      lockScroll: false,
     })
     newName = result.value
   } catch {
@@ -174,6 +181,7 @@ const handleApplyPublish = async (item: ActionItem) => {
         cancelButtonText: '取消',
         inputPlaceholder: '请输入申请说明（可选）',
         inputValue: '',
+        lockScroll: false,
       }
     )
     desc = result.value || ''
@@ -250,7 +258,7 @@ const handleDelete = async (item: ActionItem) => {
     await ElMessageBox.confirm(
       `确定要删除动作「${item.name}」吗？此操作不可恢复。`,
       '删除确认',
-      { confirmButtonText: '删除', cancelButtonText: '取消', type: 'warning' }
+      { confirmButtonText: '删除', cancelButtonText: '取消', type: 'warning', lockScroll: false }
     )
   } catch {
     return
@@ -356,7 +364,20 @@ onMounted(() => {
               <!-- 名称行 -->
               <div class="flex items-start justify-between gap-2">
                 <div class="flex-1 min-w-0">
-                  <h3 class="text-base font-semibold truncate" :title="item.name">{{ item.name }}</h3>
+                  <div class="action-card__title-row flex items-center gap-2">
+                    <ActionIcon
+                      :series="item.icon_series"
+                      :id="item.icon_id"
+                      class="action-card__icon w-5 h-5 shrink-0 text-text-primary"
+                    >
+                      <template #fallback>
+                        <el-icon class="text-lg text-text-primary">
+                          <component :is="DEFAULT_ACTION_ICON" />
+                        </el-icon>
+                      </template>
+                    </ActionIcon>
+                    <h3 class="text-base font-semibold truncate" :title="item.name">{{ item.name }}</h3>
+                  </div>
                   <p class="text-sm text-gray-400 mt-1 line-clamp-2" style="min-height: 2.5em">
                     {{ item.description || '暂无描述' }}
                   </p>
@@ -422,7 +443,7 @@ onMounted(() => {
     </FlexContainer>
 
     <!-- 标签编辑对话框 -->
-    <el-dialog v-model="tagDialogVisible" title="编辑标签" width="420px">
+    <el-dialog v-model="tagDialogVisible" title="编辑标签" width="420px" :lock-scroll="false">
       <div v-if="tagEditingItem" class="flex flex-col gap-4">
         <div class="text-sm text-gray-400">动作: {{ tagEditingItem.name }}</div>
         <div class="flex flex-wrap gap-2">

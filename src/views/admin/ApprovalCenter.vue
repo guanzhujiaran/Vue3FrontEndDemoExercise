@@ -149,7 +149,7 @@ const handleCancelApproval = async (row: any) => {
     await ElMessageBox.confirm(
       `确定撤回该审批申请（#${row.id}：${row.title || row.resource_id}）吗？`,
       '撤回审批',
-      { confirmButtonText: '撤回', cancelButtonText: '取消', type: 'warning' }
+      { confirmButtonText: '撤回', cancelButtonText: '取消', type: 'warning', lockScroll: false }
     )
   } catch {
     return
@@ -175,7 +175,7 @@ const handleDeleteApproval = async (row: any) => {
     await ElMessageBox.confirm(
       `确定删除该审批记录（#${row.id}：${row.title || row.resource_id}）吗？删除后不可恢复。`,
       '删除审批',
-      { confirmButtonText: '删除', cancelButtonText: '取消', type: 'warning' }
+      { confirmButtonText: '删除', cancelButtonText: '取消', type: 'warning', lockScroll: false }
     )
   } catch {
     return

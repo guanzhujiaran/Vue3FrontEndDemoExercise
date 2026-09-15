@@ -95,7 +95,8 @@ class ApiRedirectHandler {
         await ElMessageBox.confirm(opts.confirmMessage, opts.confirmTitle, {
           confirmButtonText: '返回首页',
           cancelButtonText: '留在当前页',
-          type: 'warning'
+          type: 'warning',
+          lockScroll: false
         })
 
         await this.doRedirect(opts.redirectPath, opts.afterRedirect)

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { RouterView, useRouter } from 'vue-router'
+import { RouterView, useRoute, useRouter } from 'vue-router'
 import SponsorNotification from '@/components/sponsor/sponsor-notification.vue'
 import { onMounted, onUnmounted, provide, ref, computed } from 'vue'
 import { useThemeStore } from '@/stores/theme'
@@ -31,6 +31,20 @@ useHead({
       content: 'B站官方抽奖信息集合 | 山姆会员店（上海）商品数据统计展示'
     }
   ]
+})
+
+const route = useRoute()
+/**
+ * 顶层 RouterView / keep-alive 的缓存 key：
+ * - 布局路由（带子路由，如 /app/moment、/app/message、/app/admin）：沿用父路由 path，
+ *   子路由切换时布局实例复用，不会重建侧边栏/导航（避免每次切 tab 都重挂载）。
+ * - 叶子路由（如 /app/space/:mid）：必须用完整 path。
+ *   若沿用父路由 path，/app/space/1 与 /app/space/2 会命中同一个缓存实例，
+ *   切换空间时组件不重新挂载、onMounted 不触发 → 数据不加载，页面停留在旧内容/空内容。
+ */
+const routeViewKey = computed(() => {
+  const parent = route.matched[0]
+  return parent && route.matched.length > 1 ? parent.path : route.path
 })
 
 const isInit = ref(false)
@@ -198,7 +212,7 @@ localeStore.init()
                   >
                     <component
                       :is="Component"
-                      :key="route.matched[0]?.path || route.path"
+                      :key="routeViewKey"
                       class="main-inner flex flex-col flex-1 box-border rounded"
                     />
                   </keep-alive>

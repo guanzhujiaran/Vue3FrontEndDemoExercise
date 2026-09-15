@@ -6,7 +6,7 @@
  */
 import { InteractionBizTypeEnum, ReportService } from '@/api/community/hey-api'
 import type { ReportItem, ReportListResp, ReportReviewReq } from '@/api/community/hey-api'
-import { request, authHeaders } from '@/api/http'
+import { request, requestOk, authHeaders } from '@/api/http'
 
 export { InteractionBizTypeEnum }
 export type { ReportItem, ReportListResp }
@@ -32,20 +32,26 @@ export async function fetchReportList(params: {
   )
 }
 
-/** 管理端审核举报：decision=resolve（成立）/ reject（驳回）；resourceAction=hide 可选下架 */
+/**
+ * 管理端审核举报：decision=resolve（成立）/ reject（驳回）；resourceAction=hide 可选下架。
+ *
+ * 返回「是否成功」：该接口没有业务返回体（`data` 为空），
+ * 用 `request<T>(call, fallback)` 时成功与失败的返回值都是 `undefined`，调用方无法区分
+ * （曾导致审核失败也提示「举报已成立」并移除该行）。故改用 `requestOk()` 直接取统一入口的成功标志。
+ */
 export async function reviewReport(req: {
   reportPk: number
   decision: 'resolve' | 'reject'
   resourceAction?: 'hide'
   remark?: string
-}): Promise<void> {
+}): Promise<boolean> {
   const body: ReportReviewReq = {
     reportPk: req.reportPk,
     decision: req.decision,
     resourceAction: req.resourceAction,
     remark: req.remark,
   }
-  return request<void>(
+  return requestOk(
     () =>
       ReportService.reviewApiV1ReportAdminReviewPost({
         body,

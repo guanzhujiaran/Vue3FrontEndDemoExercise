@@ -1,5 +1,4 @@
 <template>
-  <!-- 未登录：BiliErrorRouteTo 提示未登录，倒计时/按钮返回首页 -->
   <BiliErrorRouteTo
     v-if="loginRequired"
     class="moment-space__login-required"
@@ -358,13 +357,18 @@ const spaceMid = computed(() => routeMid.value ?? currentMid.value)
 const isOwnSpace = computed(() => routeMid.value === null || routeMid.value === currentMid.value)
 
 const publishVisible = ref(false)
-// `/app/space`（无 mid）且确认未登录：展示 BiliErrorRouteTo 未登录提示页
+// `/app/space`（无 mid）且确认未登录：展示 BiliErrorRouteTo 未登录提示页（倒计时/按钮返回首页）
 const loginRequired = ref(false)
 const activeTab = ref<string>('')
-/** 2.25.0：登录态异步加载，activeTab 默认值改为响应式兜底（就绪后再定） */
-const resolvedActiveTab = computed(() =>
-  activeTab.value ? activeTab.value : isOwnSpace.value ? 'home' : 'dynamic'
-)
+/**
+ * 2.57.0：默认 tab 统一为「动态」，不再随 isOwnSpace 变化。
+ * 原因：user_nav.uid 是异步就绪的（App.vue onMounted 后 nav 请求才返回），
+ * 在此之前 currentMid 为空 → isOwnSpace=false → 兜底为 dynamic（动态列表已加载，有内容）；
+ * uid 到达后 isOwnSpace 翻转为 true → 兜底变成 home，
+ * 而 home 目前只有「数据总览开发中」占位 → 表现为「先显示正常内容，随后内容区变空」。
+ * 统一兜底 dynamic 后归属切换不再影响默认 tab，home tab 仍可由用户手动点击切换。
+ */
+const resolvedActiveTab = computed(() => activeTab.value || 'dynamic')
 
 // 空间主人信息（完整空间资料，对标 B 站 acc/info）
 const targetUser = ref<SpaceInfoResp>({ mid: 0, midStr: null, name: '加载中...' })

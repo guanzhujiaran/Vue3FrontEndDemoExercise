@@ -246,7 +246,8 @@ const handlers: CommentHandlers = {
       await ElMessageBox.confirm('确定删除这条评论吗？删除后不可恢复', '提示', {
         type: 'warning',
         confirmButtonText: '删除',
-        cancelButtonText: '取消'
+        cancelButtonText: '取消',
+        lockScroll: false
       })
     } catch {
       return

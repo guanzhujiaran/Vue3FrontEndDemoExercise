@@ -60,7 +60,8 @@ const handleLogoutClick = () => {
   ElMessageBox.confirm(t('home.logoutConfirm'), t('home.logoutTitle'), {
     confirmButtonText: t('common.confirm'),
     cancelButtonText: t('common.cancel'),
-    type: 'warning'
+    type: 'warning',
+    lockScroll: false
   })
     .then(() => {
       jwtStore.delete_jwt_token()
@@ -88,7 +89,8 @@ const handleCardClick = (path: string | undefined, requiresLogin = false) => {
     ElMessageBox.confirm(t('home.loginNeeded'), t('home.loginNeededTitle'), {
       confirmButtonText: t('home.loginNow'),
       cancelButtonText: t('common.cancel'),
-      type: 'info'
+      type: 'info',
+      lockScroll: false
     })
       .then(() => {
         openGlobalLoginModal()

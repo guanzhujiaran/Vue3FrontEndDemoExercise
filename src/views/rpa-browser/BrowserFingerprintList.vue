@@ -1,38 +1,21 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { Delete, Edit, EditPen, VideoPlay, Plus, Monitor, Clock, Search, SetUp } from '@element-plus/icons-vue'
+import { Plus, SetUp } from '@element-plus/icons-vue'
 import { ElMessageBox } from 'element-plus'
 import FlexContainer from '@/components/CommonCompo/Bili-Container-Compo/FlexContainer.vue'
 import CenteredContainer from '@/components/CommonCompo/Bili-Container-Compo/CenteredContainer.vue'
 import BiliPageHeader from '@/components/CommonCompo/Bili-Container-Compo/BiliPageHeader.vue'
+import FingerprintCard from '@/components/rpa-browser/FingerprintCard.vue'
 import { 浏览器指纹管理Service } from '@/api/browser/hey-api'
 import { useUserNavStore } from '@/stores/user_nav'
 import { businessHandler } from '@/utils/businessHandler'
 import type { BrowserFingerprintListParams } from '@/api/browser/hey-api'
+import type { UserBrowserInfo } from '@/models/rpa_browser'
 import { RouteName } from '@/models/router/index.ts'
 
-interface UserBrowserInfo {
-  browser_id: string | number
-  browser_id_str: string | null
-  custom_name: string | null
-  created_at: string
-  updated_at: string
-  platform: string
-  browser: string
-  fingerprint_int: number | null
-  fingerprint_platform: string | null
-  fingerprint_platform_version: string | null
-  fingerprint_browser: string | null
-  fingerprint_brand_version: string | null
-  fingerprint_hardware_concurrency: number | null
-  fingerprint_gpu_vendor: string | null
-  fingerprint_gpu_renderer: string | null
-  lang: string | null
-  accept_lang: string | null
-  timezone: string | null
-  proxy_server: string | null
-}
+/** 浏览器 ID：优先取字符串形式，避免大整数精度丢失 */
+const getBrowserId = (item: UserBrowserInfo) => item.browser_id_str || item.browser_id
 
 const router = useRouter()
 const userNavStore = useUserNavStore()
@@ -74,12 +57,15 @@ const handlePageChange = (page: number) => {
   loadFingerprintList()
 }
 
-const handleDelete = async (browserId: string | number) => {
+const handleDelete = async (item: UserBrowserInfo) => {
+  const browserId = getBrowserId(item)
+
   try {
     await ElMessageBox.confirm('确定要删除这个浏览器指纹吗？', '提示', {
       confirmButtonText: '确定',
       cancelButtonText: '取消',
-      type: 'warning'
+      type: 'warning',
+      lockScroll: false
     })
   } catch {
     return // 用户取消
@@ -98,14 +84,16 @@ const handleDelete = async (browserId: string | number) => {
   loadFingerprintList()
 }
 
-const handleRename = async (browserId: string | number, currentName: string | null) => {
+const handleRename = async (item: UserBrowserInfo) => {
+  const browserId = getBrowserId(item)
   let newName: string
   try {
     const result = await ElMessageBox.prompt('请输入新的名称', '重命名', {
       confirmButtonText: '确定',
       cancelButtonText: '取消',
-      inputValue: currentName || '',
-      type: 'info'
+      inputValue: item.custom_name || '',
+      type: 'info',
+      lockScroll: false
     })
     newName = result.value
   } catch {
@@ -126,7 +114,8 @@ const handleRename = async (browserId: string | number, currentName: string | nu
   loadFingerprintList()
 }
 
-const handleOpenStream = (browserId: string | number) => {
+const handleOpenStream = (item: UserBrowserInfo) => {
+  const browserId = getBrowserId(item)
   console.log('handleOpenStream called with browserId:', browserId)
   router.push({
     name: RouteName.RPA_BROWSER_STREAM,
@@ -139,8 +128,8 @@ const handleOpenStream = (browserId: string | number) => {
 }
 
 const showBrowserIdDetail = (item: UserBrowserInfo) => {
-  const browserId = (item.browser_id_str || item.browser_id)?.toString() || 'N/A'
-  
+  const browserId = getBrowserId(item)?.toString() || 'N/A'
+
   const detailContent = `
     <div class="p-4 max-w-2xl">
       <div class="space-y-6">
@@ -239,13 +228,14 @@ const showBrowserIdDetail = (item: UserBrowserInfo) => {
       </div>
     </div>
   `
-  
+
   ElMessageBox.alert(detailContent, '指纹详情', {
     dangerouslyUseHTMLString: true,
     confirmButtonText: '关闭',
     confirmButtonClass: 'bg-gradient-to-r from-cyan-600 to-purple-600 border-none',
     customClass: 'cyber-modal',
-    width: '500px'
+    width: '500px',
+    lockScroll: false
   })
 }
 
@@ -255,10 +245,10 @@ const handleCreateFingerprint = () => {
   })
 }
 
-const handleEdit = (browserId: string | number) => {
+const handleEdit = (item: UserBrowserInfo) => {
   router.push({
     name: 'RPA_BROWSER_EDIT',
-    params: { browserId: String(browserId) }
+    params: { browserId: String(getBrowserId(item)) }
   })
 }
 
@@ -291,133 +281,15 @@ onMounted(() => {
         </div>
       </div>
 
-      <div v-else-if="fingerprintList.length > 0" class="w-full">
+      <div v-else-if="fingerprintList.length > 0" class="w-full flex flex-col flex-1">
         <div class="grid gap-6" style="grid-template-columns: repeat(auto-fill, minmax(380px, 1fr))">
-          <div 
-            v-for="item in fingerprintList" 
-            :key="item.browser_id_str || item.browser_id"
-            class="relative rounded-2xl overflow-hidden group"
-            style="background: linear-gradient(135deg, #0f0f1a 0%, #1a0a2e 50%, #0d1b2a 100%);"
-          >
-            <div class="absolute inset-0 bg-gradient-to-br from-cyan-500/10 via-purple-500/10 to-pink-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-            
-            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-400 via-purple-500 to-pink-500"></div>
-            
-            <div class="absolute top-3 right-3 w-8 h-8 border border-cyan-500/30 rounded-full flex items-center justify-center">
-              <div class="w-2 h-2 bg-cyan-400 rounded-full animate-pulse"></div>
-            </div>
-
-            <div class="relative p-5">
-              <div class="flex items-start justify-between mb-4">
-                <div class="flex-1">
-                  <div class="flex items-center gap-2 mb-1">
-                    <span class="text-cyan-400 text-xs font-mono tracking-wider">浏览器指纹</span>
-                  </div>
-                  <h3 class="text-xl font-bold text-white group-hover:text-cyan-300 transition-colors flex items-center gap-2">
-                    <span class="truncate">{{ item.custom_name || '未命名' }}</span>
-                    <el-button
-                      size="small"
-                      text
-                      class="rename-icon flex-shrink-0 text-gray-400 hover:text-cyan-300"
-                      :icon="EditPen"
-                      aria-label="重命名"
-                      @click.stop="handleRename(item.browser_id_str || item.browser_id, item.custom_name)"
-                    />
-                  </h3>
-                </div>
-                <el-tag 
-                  size="small" 
-                  class="bg-gradient-to-r from-purple-600 to-pink-600 text-white border-none"
-                >
-                  {{ item.browser || item.fingerprint_browser || '未知' }}
-                </el-tag>
-              </div>
-
-              <div class="bg-black/30 rounded-lg p-3 mb-4 border border-cyan-500/20">
-                <div class="text-xs text-cyan-400/70 mb-1 font-mono">浏览器ID</div>
-                <div class="text-sm text-gray-200 font-mono break-all hover:text-cyan-300 transition-colors cursor-pointer" 
-                     @click="showBrowserIdDetail(item)">
-                  {{ (item.browser_id_str || item.browser_id)?.toString() || 'N/A' }}
-                </div>
-              </div>
-
-              <div class="grid grid-cols-3 gap-3 mb-4">
-                <div class="bg-black/20 rounded-lg p-2 border border-purple-500/20">
-                  <div class="flex items-center gap-2">
-                    <el-icon class="text-purple-400"><Monitor /></el-icon>
-                    <span class="text-xs text-gray-400">平台</span>
-                  </div>
-                  <div class="text-sm text-white mt-1">{{ item.platform || item.fingerprint_platform || '未知' }}</div>
-                </div>
-                <div class="bg-black/20 rounded-lg p-2 border border-pink-500/20">
-                  <div class="flex items-center gap-2">
-                    <el-icon class="text-pink-400"><Clock /></el-icon>
-                    <span class="text-xs text-gray-400">创建时间</span>
-                  </div>
-                  <div class="text-sm text-white mt-1">
-                    {{ item.created_at ? new Date(item.created_at).toLocaleDateString() : '未知' }}
-                  </div>
-                </div>
-                <div class="bg-black/20 rounded-lg p-2 border border-cyan-500/20">
-                  <div class="flex items-center gap-2">
-                    <el-icon class="text-cyan-400"><Clock /></el-icon>
-                    <span class="text-xs text-gray-400">更新时间</span>
-                  </div>
-                  <div class="text-sm text-white mt-1">
-                    {{ item.updated_at ? new Date(item.updated_at).toLocaleDateString() : '未知' }}
-                  </div>
-                </div>
-              </div>
-
-              <div class="flex items-center gap-2">
-                <el-button 
-                  size="small" 
-                  class="flex-1 bg-gradient-to-r from-cyan-600 to-cyan-500 hover:from-cyan-500 hover:to-cyan-400 text-white border-none font-medium"
-                  :icon="VideoPlay" 
-                  @click="handleOpenStream(item.browser_id_str || item.browser_id)"
-                >
-                  打开
-                </el-button>
-                <el-button 
-                  size="small" 
-                  class="flex-1 bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-500 hover:to-purple-400 text-white border-none font-medium"
-                  :icon="Search" 
-                  @click="showBrowserIdDetail(item)"
-                >
-                  详情
-                </el-button>
-                <el-button 
-                  size="small" 
-                  class="bg-black/30 border border-gray-600 text-gray-300 hover:border-gray-400 hover:text-white transition-colors"
-                  :icon="Edit" 
-                  @click="handleEdit(item.browser_id_str || item.browser_id)"
-                >
-                  编辑
-                </el-button>
-                <el-button 
-                  size="small" 
-                  class="bg-red-600/20 border border-red-500/50 text-red-400 hover:bg-red-600/30 hover:border-red-400 transition-colors"
-                  :icon="Delete" 
-                  @click="handleDelete(item.browser_id_str || item.browser_id)"
-                >
-                  删除
-                </el-button>
-              </div>
-            </div>
-
-            <div class="absolute bottom-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent"></div>
-          </div>
+          <FingerprintCard v-for="item in fingerprintList" :key="item.browser_id_str || item.browser_id" :item="item"
+            @open="handleOpenStream" @detail="showBrowserIdDetail" @rename="handleRename" @edit="handleEdit"
+            @remove="handleDelete" />
         </div>
 
-        <div class="mt-6 flex justify-center">
-          <el-pagination
-            v-model:current-page="currentPage"
-            :page-size="pageSize"
-            :total="total"
-            layout="prev, pager, next, total"
-            @current-change="handlePageChange"
-          />
-        </div>
+        <el-pagination class="flex justify-center mt-auto" v-model:current-page="currentPage" :page-size="pageSize"
+          :total="total" layout="prev, pager, next, total" @current-change="handlePageChange" />
       </div>
 
       <CenteredContainer v-else class="py-20">

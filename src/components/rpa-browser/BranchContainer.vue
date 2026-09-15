@@ -6,39 +6,14 @@ import ActionParamsForm from './ActionParamsForm.vue'
 import OperationFeedbackPanel from './OperationFeedbackPanel.vue'
 import ConditionEditor from './ConditionEditor.vue'
 import LoopEditor from './LoopEditor.vue'
-import type { BranchPathStep, LoopConfig } from './debugbox-types'
-import { defaultLoopConfig } from './debugbox-types'
+import type { BranchPathStep, DroppedItem, LoopConfig, NestedPreviewNode, OperationFeedback } from './debugbox-types'
+import { defaultLoopConfig, genItemId } from './debugbox-types'
 
 /**
  * 分支容器 —— True/False/Loop 分支的拖拽区域，含条目列表与操作栏。
  * 条目卡片渲染与 DebugBox 主列表统一，支持 if_else/loop 的递归嵌套渲染。
+ * 类型统一来自 debugbox-types，避免与 DebugBox 各持一份不兼容的同名接口。
  */
-
-interface DroppedItem {
-  id: string
-  name: string
-  action_id: string
-  action_type: string
-  description?: string
-  type: string
-  json_schema?: Record<string, unknown>
-  formData?: Record<string, unknown>
-  config_params?: Record<string, unknown>
-  input_vars?: Record<string, unknown>
-  output_vars?: string[]
-  trueBranch?: DroppedItem[]
-  falseBranch?: DroppedItem[]
-  loopBody?: DroppedItem[]
-  [key: string]: unknown
-}
-
-interface OperationFeedback {
-  kind: 'validate' | 'preview' | 'execute'
-  success: boolean
-  summary: string
-  detail: Record<string, unknown>
-  at: number
-}
 
 interface Props {
   /** 分支类型 */
@@ -284,7 +259,7 @@ const feedbackKey = (childIndex: number) => props.items[childIndex]?.id ?? ''
 function extractPreviewData(bi: number) {
   const fb = props.feedbackMap[feedbackKey(bi)]
   if (!fb || fb.kind !== 'preview' || !fb.detail) {
-    return { vars: [] as { key: string; value: unknown }[], found: [] as string[], replaced: [] as { key: string; value: unknown }[], tree: [] as { type: string; level: number; variables: { key: string; value: unknown }[]; branchLabel?: string; action_id?: string }[] }
+    return { vars: [] as { key: string; value: unknown }[], found: [] as string[], replaced: [] as { key: string; value: unknown }[], tree: [] as NestedPreviewNode[] }
   }
   const detail = fb.detail as Record<string, unknown>
   // 预览变量
@@ -296,7 +271,7 @@ function extractPreviewData(bi: number) {
   const replacedObj = detail.replaced_params as Record<string, unknown> | undefined
   const replaced = replacedObj ? Object.entries(replacedObj).map(([k, v]) => ({ key: k, value: v })) : []
   // 步骤展开树
-  const tree: { type: string; level: number; variables: { key: string; value: unknown }[]; branchLabel?: string; action_id?: string }[] = []
+  const tree: NestedPreviewNode[] = []
   const stepsPreview = detail.steps_preview as Record<string, unknown>[] | undefined
   if (stepsPreview) {
     const walkStep = (step: Record<string, unknown>, level: number) => {
@@ -347,6 +322,21 @@ function getNestedSelected(childIndex: number, branch: string): Set<string> {
   const key = `${childIndex}-${branch}`
   if (!nestedSelectedMap[key]) nestedSelectedMap[key] = new Set()
   return nestedSelectedMap[key]
+}
+
+/**
+ * 嵌套分支内切换选中：子组件 emit 的是「索引」，而选中集合以 item.id 为 key，
+ * 这里做一次索引 → id 的转换，保证重排序后选中状态跟随卡片。
+ */
+function toggleNestedSelect(childIndex: number, nestedBranch: 'true' | 'false' | 'loop', subIndex: number) {
+  const item = props.items[childIndex]
+  if (!item) return
+  const targetArr = nestedBranch === 'true' ? item.trueBranch : nestedBranch === 'false' ? item.falseBranch : item.loopBody
+  const child = targetArr?.[subIndex]
+  if (!child) return
+  const selected = getNestedSelected(childIndex, nestedBranch)
+  if (selected.has(child.id)) selected.delete(child.id)
+  else selected.add(child.id)
 }
 
 /** 处理拖入嵌套分支（支持工具箱新条目 + 本容器内卡片移入 + 多选批量移入 + 跨层向上传递） */
@@ -407,7 +397,7 @@ function handleNestedDrop(childIndex: number, nestedBranch: 'true' | 'false' | '
     const at = insertAt ?? targetArr.length
     targetArr.splice(at, 0, {
       ...parsed,
-      id: `${parsed.id || parsed.action_id || parsed.action_type || 'item'}-${Date.now()}`,
+      id: genItemId(String(parsed.action_id || parsed.action_type || 'item')),
       name: parsed.name || parsed.label || parsed.json_schema?.title || parsed.action_id || parsed.action_type || '未命名',
       action_id: parsed.action_id || parsed.action_type || 'custom',
       action_type: parsed.action_type || parsed.action_id || 'custom',
@@ -428,7 +418,7 @@ function handleNestedRemove(childIndex: number, nestedBranch: 'true' | 'false' |
   if (targetArr) targetArr.splice(subIndex, 1)
 }
 
-/** 嵌套分支全选切换 */
+/** 嵌套分支全选切换（选中集合统一存 item.id，与 DebugBox 的口径一致） */
 function handleNestedSelectAll(childIndex: number, nestedBranch: 'true' | 'false' | 'loop') {
   const item = props.items[childIndex]
   if (!item) return
@@ -439,7 +429,7 @@ function handleNestedSelectAll(childIndex: number, nestedBranch: 'true' | 'false
   if (current && current.size === targetArr.length) {
     nestedSelectedMap[key] = new Set()
   } else {
-    nestedSelectedMap[key] = new Set(targetArr.map((_, i) => i))
+    nestedSelectedMap[key] = new Set(targetArr.map(i => i.id))
   }
 }
 
@@ -453,16 +443,21 @@ function handleNestedReorder(childIndex: number, nestedBranch: 'true' | 'false' 
   targetArr.splice(to, 0, moved)
 }
 
-/** 嵌套分支内执行/预览/验证/另存为 —— 向上 emit 带上嵌套路径（支持任意深度） */
-function handleNestedBranchAction(childIndex: number, nestedBranch: 'true' | 'false' | 'loop', subIndex: number, action: 'execute' | 'preview' | 'validate' | 'closeFeedback' | 'saveAs', incomingPath?: BranchPathStep[]) {
+/**
+ * 嵌套分支内执行/预览/验证/另存为 —— 向上 emit 带上嵌套路径（支持任意深度）。
+ * 关闭反馈不走这里：反馈以 item.id 为 key，用 @item:close-feedback 直接透传 id。
+ */
+function handleNestedBranchAction(childIndex: number, nestedBranch: 'true' | 'false' | 'loop', subIndex: number, action: 'execute' | 'preview' | 'validate' | 'saveAs', incomingPath?: BranchPathStep[]) {
   const step: BranchPathStep = { parentIndex: childIndex, branch: nestedBranch }
   const path: BranchPathStep[] = incomingPath ? [step, ...incomingPath] : [step]
-  if (action === 'closeFeedback') {
-    emit('item:closeFeedback', subIndex, path)
-  } else if (action === 'saveAs') {
+  if (action === 'saveAs') {
     emit('item:saveAs', subIndex, path)
+  } else if (action === 'execute') {
+    emit('item:execute', subIndex, path)
+  } else if (action === 'preview') {
+    emit('item:preview', subIndex, path)
   } else {
-    emit(`item:${action}` as 'item:execute', subIndex, path)
+    emit('item:validate', subIndex, path)
   }
 }
 
@@ -515,7 +510,7 @@ function handleNestedToggleExpand(childIndex: number, nestedBranch: 'true' | 'fa
           <div class="mt-1.5 shrink-0">
             <input
               type="checkbox"
-              :checked="selectedItems.has(bi)"
+              :checked="selectedItems.has(branchItem.id)"
               @change="emit('item:toggleSelect', bi)"
               class="w-4 h-4 rounded border-gray-300 text-(--el-color-primary) cursor-pointer focus:ring-2 focus:ring-(--el-color-primary-light-5)"
             />
@@ -594,10 +589,10 @@ function handleNestedToggleExpand(childIndex: number, nestedBranch: 'true' | 'fa
                           @item:preview="(sub: number, p?: BranchPathStep[]) => handleNestedBranchAction(bi, 'true', sub, 'preview', p)"
                           @item:validate="(sub: number, p?: BranchPathStep[]) => handleNestedBranchAction(bi, 'true', sub, 'validate', p)"
                           @item:save-as="(sub: number, p?: BranchPathStep[]) => handleNestedBranchAction(bi, 'true', sub, 'saveAs', p)"
-                          @item:close-feedback="(sub: number, p?: BranchPathStep[]) => handleNestedBranchAction(bi, 'true', sub, 'closeFeedback', p)"
+                          @item:close-feedback="(id: string) => emit('item:closeFeedback', id)"
                           @item:remove="(sub: number) => handleNestedRemove(bi, 'true', sub)"
                           @item:toggle-expand="(sub: number) => handleNestedToggleExpand(bi, 'true', sub)"
-                          @item:toggle-select="(sub: number) => { const s = getNestedSelected(bi, 'true'); s.has(sub) ? s.delete(sub) : s.add(sub); }"
+                          @item:toggle-select="(sub: number) => toggleNestedSelect(bi, 'true', sub)"
                         />
                       </div>
                     </el-tab-pane>
@@ -626,10 +621,10 @@ function handleNestedToggleExpand(childIndex: number, nestedBranch: 'true' | 'fa
                           @item:preview="(sub: number, p?: BranchPathStep[]) => handleNestedBranchAction(bi, 'false', sub, 'preview', p)"
                           @item:validate="(sub: number, p?: BranchPathStep[]) => handleNestedBranchAction(bi, 'false', sub, 'validate', p)"
                           @item:save-as="(sub: number, p?: BranchPathStep[]) => handleNestedBranchAction(bi, 'false', sub, 'saveAs', p)"
-                          @item:close-feedback="(sub: number, p?: BranchPathStep[]) => handleNestedBranchAction(bi, 'false', sub, 'closeFeedback', p)"
+                          @item:close-feedback="(id: string) => emit('item:closeFeedback', id)"
                           @item:remove="(sub: number) => handleNestedRemove(bi, 'false', sub)"
                           @item:toggle-expand="(sub: number) => handleNestedToggleExpand(bi, 'false', sub)"
-                          @item:toggle-select="(sub: number) => { const s = getNestedSelected(bi, 'false'); s.has(sub) ? s.delete(sub) : s.add(sub); }"
+                          @item:toggle-select="(sub: number) => toggleNestedSelect(bi, 'false', sub)"
                         />
                       </div>
                     </el-tab-pane>
@@ -670,10 +665,10 @@ function handleNestedToggleExpand(childIndex: number, nestedBranch: 'true' | 'fa
                       @item:preview="(sub: number, p?: BranchPathStep[]) => handleNestedBranchAction(bi, 'loop', sub, 'preview', p)"
                       @item:validate="(sub: number, p?: BranchPathStep[]) => handleNestedBranchAction(bi, 'loop', sub, 'validate', p)"
                       @item:save-as="(sub: number, p?: BranchPathStep[]) => handleNestedBranchAction(bi, 'loop', sub, 'saveAs', p)"
-                      @item:close-feedback="(sub: number, p?: BranchPathStep[]) => handleNestedBranchAction(bi, 'loop', sub, 'closeFeedback', p)"
+                      @item:close-feedback="(id: string) => emit('item:closeFeedback', id)"
                       @item:remove="(sub: number) => handleNestedRemove(bi, 'loop', sub)"
                       @item:toggle-expand="(sub: number) => handleNestedToggleExpand(bi, 'loop', sub)"
-                      @item:toggle-select="(sub: number) => { const s = getNestedSelected(bi, 'loop'); s.has(sub) ? s.delete(sub) : s.add(sub); }"
+                      @item:toggle-select="(sub: number) => toggleNestedSelect(bi, 'loop', sub)"
                     />
                   </el-card>
                 </div>
@@ -695,12 +690,12 @@ function handleNestedToggleExpand(childIndex: number, nestedBranch: 'true' | 'fa
             <!-- 操作反馈 -->
             <div v-if="feedbackMap[feedbackKey(bi)]" class="mt-2">
               <OperationFeedbackPanel
-                :feedback="feedbackMap[feedbackKey(bi)]"
+                :feedback="feedbackMap[feedbackKey(bi)] as any"
                 :preview-variables="extractPreviewData(bi).vars"
                 :preview-found-params="extractPreviewData(bi).found"
                 :preview-replaced-params="extractPreviewData(bi).replaced"
                 :preview-nested-tree="extractPreviewData(bi).tree"
-                @close="emit('item:closeFeedback', bi)"
+                @close="emit('item:closeFeedback', feedbackKey(bi))"
               />
             </div>
           </div>

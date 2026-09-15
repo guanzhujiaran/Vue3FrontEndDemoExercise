@@ -230,10 +230,55 @@ function selectSession(session: DmSessionItem) {
   })
 }
 
+/**
+ * 静默同步：不重建列表，只把服务端最新的未读 / 预览就地合并进现有项。
+ * 用途：从其他子页切回时刷新红点，替代原先「resetList() + 重新加载」——
+ * 先清空会让列表闪一下空态（EmptyState）再重载，看起来像整块被重建。
+ */
+async function syncListSilently() {
+  try {
+    const list = await fetchDmSessions({
+      page: 1,
+      size: Math.max(PAGE_SIZE, items.value.length),
+      session_type: DmSessionType.SINGLE
+    })
+    const fresh = list.items ?? []
+    const freshMap = new Map(fresh.map((s) => [String(s.talker_mid), s]))
+    // 已有会话：就地更新未读 / 预览，保留原有顺序与 DOM，列表不闪空、不跳位
+    const merged = items.value.map((s) => {
+      const n = freshMap.get(String(s.talker_mid))
+      if (!n) return s
+      return {
+        ...s,
+        unread_count: n.unread_count ?? s.unread_count,
+        last_content_preview: n.last_content_preview ?? s.last_content_preview,
+        talker_name: n.talker_name ?? s.talker_name,
+        talker_avatar: n.talker_avatar ?? s.talker_avatar
+      }
+    })
+    // 新会话：补到列表头部（key 为 talker_mid，不会引起整列重排）
+    const known = new Set(merged.map((s) => String(s.talker_mid)))
+    const added = fresh.filter((s) => !known.has(String(s.talker_mid)))
+    items.value = added.length ? [...added, ...merged] : merged
+    total.value = list.total ?? total.value
+    // 陌生人聚合统计随每次响应返回，同步红点与拦截开关
+    strangerUnread.value = list.stranger_unread ?? strangerUnread.value
+    strangerTotal.value = list.stranger_total ?? strangerTotal.value
+    strangerInterceptEnabled.value =
+      list.stranger_dm_intercept_enabled ?? strangerInterceptEnabled.value
+  } catch {
+    // 静默失败：保留现有列表，不打断展示
+  }
+}
+
 onActivated(() => {
-  // 从其他子页切回时重拉会话列表，使后端已清的未读同步到前端红点
-  resetList()
-  handleLoad()
+  // 首次进入 / 列表为空（含上次加载失败）→ 走完整加载；
+  // 已加载过 → 只静默同步未读，保留列表内容与滚动位置，避免整块重建感
+  if (items.value.length === 0) {
+    handleLoad()
+  } else {
+    void syncListSilently()
+  }
 })
 </script>
 

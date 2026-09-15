@@ -81,3 +81,32 @@ export async function request<T>(
   )
   return result.success ? ((result.data as T) ?? fallback) : fallback
 }
+
+/**
+ * 通用请求（只关心「成功与否」的写操作 / 无返回体接口）。
+ *
+ * 背景：`request()` 的契约是「返回数据」（失败返回 fallback）。对没有业务返回体的写接口
+ * （如审核提交，成功时 `data` 也是空），成功与失败的返回值无法区分，调用方会把失败当成功。
+ * 本函数直接返回 `businessHandler` 的成功标志（业务码 === 0 且网络层成功），
+ * 便于 `if (!ok) return` 判定；错误提示仍由 businessHandler 统一处理。
+ *
+ * @param call    返回 SDK 调用结果的函数（如 () => SomeService.someAction({...})）
+ * @param options 可选配置：提示文案、是否自动弹错误（透传给 businessHandler）
+ */
+export async function requestOk(
+  call: () => Promise<unknown>,
+  options: RequestOptions = {}
+): Promise<boolean> {
+  const result = await businessHandler<unknown>(
+    // SDK 的 RequestResult 与 businessHandler 的响应契约结构一致（{ code, msg, data }），
+    // 这里只需要「成功标志」，故按契约做结构断言（与 request() 内部的处理方式一致）
+    call() as Promise<{ code: number; data?: unknown; msg?: string }>,
+    {
+      showSuccessToast: false,
+      showErrorToast: true,
+      autoHandleError: true,
+      ...options,
+    }
+  )
+  return result.success
+}

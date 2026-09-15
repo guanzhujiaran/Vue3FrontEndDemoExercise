@@ -1,0 +1,8 @@
+# 自动生成文件（勿格式化，避免与生成器输出产生 diff）
+src/utils/rpa/actionIconManifest.ts
+
+# 第三方 / 资源
+node_modules
+dist
+package-lock.json
+public

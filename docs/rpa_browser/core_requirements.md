@@ -1,6 +1,8 @@
 # RPA-Browser 前端功能实现需求
 
-根据 RPA-Browser 这个项目的后端，实现前端功能。admin的中台不需要实现，把需求拆分成一个个计划，等后续慢慢实现。
+根据 RPA-Browser 这个项目的后端，实现前端功能。admin 的中台不全面实现，把需求拆分成一个个计划，等后续慢慢实现。
+
+> **例外（治理优先）**：管理端中台的「**浏览器监管**」模块先行实现（见**模块四**）——审核员需要查看运行中浏览器是否在跑恶意内容并具备处置能力（停止 / 通知 / 封号）。其余中台功能（审批中心、标签、认证、权限等）仍按后续计划推进。
 
 > **重要说明**：本文档中涉及的所有数据类型（Model、Enum、Request/Response 类型等）均以后端 OpenAPI schema 自动生成为准。
 > 生成的类型文件位于 [src/api/browser/hey-api/types.gen.ts](/src/api/browser/hey-api/types.gen.ts)。
@@ -485,3 +487,37 @@ Fork 请求参数：`id`（原资源ID），`new_name`（可选，新名称，�
 - `/community/plugins/list` — 插件
 
 每种资源卡片展示：名称、描述、作者、点赞数、Fork 数、是否已验证。点击卡片可查看详情，详情中包含步骤/关联操作信息。支持一键 Fork 到自己的空间。
+
+---
+
+## 模块四：管理端浏览器监管（治理）
+
+> **定位**：浏览器指纹 / 浏览器实例是**用户私有资源**，不对外公开、无社区广场。但审核员必须能查看**运行中的浏览器**是否在跑恶意内容，并能立即处置。
+> **入口**：管理端 `/app/admin`（`AdminLayout`），与封禁 / 审核 / 举报同域，走现有 `biz_perms` 权限。
+> **口径**：处置只有三种——**停止会话**、**通知**、**封号**（不做「警告」这种中间态；短时封禁即 `ban_type=temporary` + `duration_minutes`）。
+
+### 后端 API
+
+| 接口路径 | 说明 | 权限位 |
+|----------|------|--------|
+| POST `/api/admin/rpa/browser/monitors` | 运行中浏览器监管列表（会话 + 指纹 + 时间 + 标签页概览） | `RPA_BROWSER` VIEW |
+| POST `/api/admin/rpa/browser/monitor/pages` | 指定浏览器实例的标签页列表（只读，绕过 owner 校验） | `RPA_BROWSER` VIEW |
+| POST `/api/admin/rpa/browser/session/stop` | 强制停止指定用户的浏览器会话 | `RPA_BROWSER` BAN |
+| POST `/api/admin/rpa/ban/create` | 封号（已有）：`temporary` + `duration_minutes` 即短时封禁，`scope=rpa` | `USER` BAN |
+| POST `/api/v1/message/notify/admin/create` | 通知（be-message，已有）：`target_type=CUSTOM` + `target_value=<mid>` 定向通知该用户 | 消息管理端 |
+
+`monitors` 列表项字段：`mid`、`browser_id` / `browser_id_str`、`custom_name`（无则「未命名」）、`platform`、`browser`、`started_at`（启动时间）、`last_activity_at`（最后操作时间）、`page_count`、`active_page{url,title}`、`is_streaming`。
+
+已有 `POST /api/admin/rpa/sessions/all` 保留不动（仅内存会话信息），监管列表为新增接口，便于补充指纹名与标签页概览。
+
+### 具体功能
+
+1. **监管列表**：`el-table-v2` + 分页 + 刷新按钮（对齐管理端规范），顶部可按 `mid` / `browser_id` 过滤；展示上述字段，标签页 URL 超长做省略 + tooltip。
+   - **入口**：路由 `/app/admin/rpa/browser-monitor`（`ADMIN_BROWSER_MONITOR`，`requiresAdmin`），组件 `src/views/admin/AdminBrowserMonitorView.vue`；管理端侧边栏「RPA 管理」组新增「浏览器监管」项（`AdminLayout.vue`）。
+2. **查看直播（只读）**：点击「查看」打开抽屉 / 独立页，复用 `LiveBox` 组件（`readonly` 模式）观看当前活动页的 WebRTC 流——**只能看，不能操作**：隐藏启动/停止流、新建页面、关闭页面按钮，不调用任何 `/operation/*` 与 `/actions/execute` 写接口；标签页列表以只读形式展示 `url` + `title`。
+3. **停止会话**：二次确认后调 `session/stop`，成功后行内状态更新；写入 `admin_audit_log`（`action=browser:stop`）。
+4. **通知**：打开通知发布表单（复用管理端通知能力），默认 `target_type=CUSTOM` 且 `target_value` 预填该浏览器所属 `mid`，审核员填写标题 / 正文后定向发送。
+5. **封号**：打开封禁表单，默认**临时封禁**并预填 `duration_minutes`（短时），可选永久；`reason` 必填，写入 `admin_audit_log`（`action=browser:ban`）。
+   - **只封 RPA**：调 `POST /api/admin/rpa/ban/create`（`scope=rpa`，RPA 侧中间件即时拦截），**不联动评论 / 私信封禁**——评论 / 私信的封禁由 be-message 管理端各自负责（`MessageAdminBanService.banUsers`），表单里不提供范围勾选。
+   - **权限**：封号走 `USER` 域 BAN 位（与 `user_ban_router` 一致），监管列表 / 停止走 `RPA_BROWSER` 域 VIEW / BAN 位；无 `USER:ban` 时封号按钮置灰并提示。
+6. **只读约束**：监管页不提供「读取指纹详情以外的写操作」，审核员无法代替用户执行任何动作；指纹本身仍不对外公开（与模块一口径一致）。

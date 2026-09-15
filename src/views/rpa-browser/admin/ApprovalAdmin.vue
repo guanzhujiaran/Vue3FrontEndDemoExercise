@@ -97,7 +97,7 @@ const handleReview = async (item: ApprovalItem, status: 'approved' | 'rejected')
     await ElMessageBox.confirm(
       status === 'approved' ? '确定通过该审批？' : '确定驳回该审批？',
       '审核',
-      { confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning' }
+      { confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning', lockScroll: false }
     )
   } catch {
     return

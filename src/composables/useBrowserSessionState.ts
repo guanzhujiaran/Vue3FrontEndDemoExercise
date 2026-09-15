@@ -74,11 +74,16 @@ export function useBrowserSessionState() {
     error?: string,
   ) {
     const from = _uiState.value
-    const allowed = ALLOWED_TRANSITIONS[from] as readonly string[]
-    if (!allowed.includes(to)) {
-      console.warn(
-        `[SessionState] 非法状态转换: ${from} → ${to}，强制执行以避免卡死`,
-      )
+
+    // 自转换是幂等的（轮询刷新会反复上报同一个状态，如 connected → connected），
+    // 属于正常情况，不走合法性校验以免刷警告
+    if (from !== to) {
+      const allowed = ALLOWED_TRANSITIONS[from] as readonly string[]
+      if (!allowed.includes(to)) {
+        console.warn(
+          `[SessionState] 非法状态转换: ${from} → ${to}，强制执行以避免卡死`,
+        )
+      }
     }
 
     _uiState.value = to

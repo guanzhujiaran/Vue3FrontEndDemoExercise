@@ -67,6 +67,21 @@ export interface LoopConfig {
   paramMapping: LoopParamMapping[]
 }
 
+/** 条目 id 自增序号：保证同一毫秒内创建的多个条目 id 也不撞车 */
+let itemIdSeq = 0
+
+/**
+ * 生成全局唯一的条目 id。
+ *
+ * v-for 用 item.id 作为 :key，重复或缺失的 key 会让 Vue 在 patch 时找不到正确的
+ * DOM 锚点，典型报错就是 `Cannot read properties of null (reading 'nextSibling')`。
+ * 因此这里用「时间戳 + 自增序号 + 随机串」替代单纯的 Date.now()。
+ */
+export function genItemId(baseId = 'item'): string {
+  itemIdSeq += 1
+  return `${baseId}-${Date.now().toString(36)}-${itemIdSeq}-${Math.random().toString(36).slice(2, 6)}`
+}
+
 export function defaultLoopConfig(): LoopConfig {
   return {
     loopSource: 'fixed_count',
@@ -82,6 +97,36 @@ export function defaultLoopConfig(): LoopConfig {
   }
 }
 
+/** JSON Schema 节点（动作参数表单按此结构渲染） */
+export interface JsonSchemaNode {
+  type?: string
+  title?: string
+  description?: string
+  default?: unknown
+  properties?: Record<string, JsonSchemaNode>
+  required?: string[]
+  $ref?: string
+  $defs?: Record<string, JsonSchemaNode>
+  anyOf?: JsonSchemaNode[]
+  allOf?: JsonSchemaNode[]
+  enum?: Array<string | number>
+  maxLength?: number
+  minimum?: number
+  maximum?: number
+  additionalProperties?: JsonSchemaNode | boolean
+  [key: string]: unknown
+}
+
+/** 动作参数 JSON Schema 顶层结构 */
+export interface JsonSchema {
+  title?: string
+  description?: string
+  properties?: Record<string, JsonSchemaNode>
+  required?: string[]
+  $defs?: Record<string, JsonSchemaNode>
+  [key: string]: unknown
+}
+
 export interface DroppedItem {
   id: string
   name: string
@@ -89,12 +134,7 @@ export interface DroppedItem {
   action_type: string
   description?: string
   type: string
-  json_schema?: {
-    title?: string
-    description?: string
-    properties?: Record<string, unknown>
-    required?: string[]
-  }
+  json_schema?: JsonSchema
   formData?: Record<string, unknown>
   config_params?: Record<string, unknown>
   input_vars?: Record<string, unknown>
@@ -109,6 +149,10 @@ export interface DroppedItem {
   loopConfig?: LoopConfig
   step_children?: Record<string, unknown>[]
   label?: string
+  /** 展示图标：系列编号（内置操作由后端分配；自定义操作取 action_detail） */
+  icon_series?: number
+  /** 展示图标：系列内编号 */
+  icon_id?: number
   /** 后端 action_detail：从数据库实时查询的自定义操作完整信息 */
   action_detail?: Record<string, unknown>
   [key: string]: unknown
@@ -121,6 +165,10 @@ export interface ActionDetail {
   version: string
   action_type: string
   description: string
+  /** 动作展示图标：系列编号（0 = 默认图标） */
+  icon_series?: number
+  /** 动作展示图标：系列内编号（0 = 默认图标） */
+  icon_id?: number
   mid: string
   tags: string[]
   input_vars: Record<string, unknown>[]

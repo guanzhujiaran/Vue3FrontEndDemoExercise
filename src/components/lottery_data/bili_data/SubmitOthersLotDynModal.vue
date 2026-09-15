@@ -8,6 +8,7 @@
     title="提交第三方抽奖动态"
     width="550px"
     :close-on-click-modal="true"
+    :lock-scroll="false"
   >
     <el-alert
       title="提交第三方（非官方号）发布的抽奖动态，后台将自动获取动态详情并解析"

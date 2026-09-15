@@ -3,7 +3,7 @@
 import type { RequestResult } from '../client';
 import { client } from '../client.gen';
 import type { Options } from '../sdk.gen';
-import type { BanUserApiAdminRpaBanCreatePostData, BanUserApiAdminRpaBanCreatePostErrors, BanUserApiAdminRpaBanCreatePostResponses, CancelApprovalApiAdminRpaApprovalCancelPostData, CancelApprovalApiAdminRpaApprovalCancelPostErrors, CancelApprovalApiAdminRpaApprovalCancelPostResponses, CertifyApiAdminRpaCertificationCertifyPostData, CertifyApiAdminRpaCertificationCertifyPostErrors, CertifyApiAdminRpaCertificationCertifyPostResponses, DeleteApprovalApiAdminRpaApprovalDeletePostData, DeleteApprovalApiAdminRpaApprovalDeletePostErrors, DeleteApprovalApiAdminRpaApprovalDeletePostResponses, DeleteTagApiAdminRpaTagDeletePostData, DeleteTagApiAdminRpaTagDeletePostErrors, DeleteTagApiAdminRpaTagDeletePostResponses, GetAllSessionsApiAdminRpaSessionsAllPostData, GetAllSessionsApiAdminRpaSessionsAllPostResponses, GetBanStatusApiAdminRpaBanStatusPostData, GetBanStatusApiAdminRpaBanStatusPostErrors, GetBanStatusApiAdminRpaBanStatusPostResponses, GetBrowserSessionConfigApiAdminRpaConfigBrowserSessionGetData, GetBrowserSessionConfigApiAdminRpaConfigBrowserSessionGetResponses, LiftUserBanApiAdminRpaBanLiftPostData, LiftUserBanApiAdminRpaBanLiftPostErrors, LiftUserBanApiAdminRpaBanLiftPostResponses, ListApprovalsApiAdminRpaApprovalListPostData, ListApprovalsApiAdminRpaApprovalListPostErrors, ListApprovalsApiAdminRpaApprovalListPostResponses, ListAuditApiAdminRpaAuditListPostData, ListAuditApiAdminRpaAuditListPostErrors, ListAuditApiAdminRpaAuditListPostResponses, ListBansApiAdminRpaBanListPostData, ListBansApiAdminRpaBanListPostErrors, ListBansApiAdminRpaBanListPostResponses, ListCertificationsApiAdminRpaCertificationListPostData, ListCertificationsApiAdminRpaCertificationListPostErrors, ListCertificationsApiAdminRpaCertificationListPostResponses, ReviewApprovalApiAdminRpaApprovalReviewPostData, ReviewApprovalApiAdminRpaApprovalReviewPostErrors, ReviewApprovalApiAdminRpaApprovalReviewPostResponses, RevokeCertificationApiAdminRpaCertificationRevokePostData, RevokeCertificationApiAdminRpaCertificationRevokePostErrors, RevokeCertificationApiAdminRpaCertificationRevokePostResponses, SearchResourcesApiAdminRpaApprovalResourcesPostData, SearchResourcesApiAdminRpaApprovalResourcesPostErrors, SearchResourcesApiAdminRpaApprovalResourcesPostResponses, SubmitApprovalApiAdminRpaApprovalSubmitPostData, SubmitApprovalApiAdminRpaApprovalSubmitPostErrors, SubmitApprovalApiAdminRpaApprovalSubmitPostResponses, UpdateBrowserSessionConfigApiAdminRpaConfigBrowserSessionPostData, UpdateBrowserSessionConfigApiAdminRpaConfigBrowserSessionPostErrors, UpdateBrowserSessionConfigApiAdminRpaConfigBrowserSessionPostResponses, UpdateTagApiAdminRpaTagUpdatePostData, UpdateTagApiAdminRpaTagUpdatePostErrors, UpdateTagApiAdminRpaTagUpdatePostResponses } from '../types.gen';
+import type { BanUserApiAdminRpaBanCreatePostData, BanUserApiAdminRpaBanCreatePostErrors, BanUserApiAdminRpaBanCreatePostResponses, CancelApprovalApiAdminRpaApprovalCancelPostData, CancelApprovalApiAdminRpaApprovalCancelPostErrors, CancelApprovalApiAdminRpaApprovalCancelPostResponses, CertifyApiAdminRpaCertificationCertifyPostData, CertifyApiAdminRpaCertificationCertifyPostErrors, CertifyApiAdminRpaCertificationCertifyPostResponses, DeleteApprovalApiAdminRpaApprovalDeletePostData, DeleteApprovalApiAdminRpaApprovalDeletePostErrors, DeleteApprovalApiAdminRpaApprovalDeletePostResponses, DeleteTagApiAdminRpaTagDeletePostData, DeleteTagApiAdminRpaTagDeletePostErrors, DeleteTagApiAdminRpaTagDeletePostResponses, GetAllSessionsApiAdminRpaSessionsAllPostData, GetAllSessionsApiAdminRpaSessionsAllPostResponses, GetBanStatusApiAdminRpaBanStatusPostData, GetBanStatusApiAdminRpaBanStatusPostErrors, GetBanStatusApiAdminRpaBanStatusPostResponses, GetBrowserMonitorPagesApiAdminRpaBrowserMonitorPagesPostData, GetBrowserMonitorPagesApiAdminRpaBrowserMonitorPagesPostErrors, GetBrowserMonitorPagesApiAdminRpaBrowserMonitorPagesPostResponses, GetBrowserSessionConfigApiAdminRpaConfigBrowserSessionGetData, GetBrowserSessionConfigApiAdminRpaConfigBrowserSessionGetResponses, LiftUserBanApiAdminRpaBanLiftPostData, LiftUserBanApiAdminRpaBanLiftPostErrors, LiftUserBanApiAdminRpaBanLiftPostResponses, ListApprovalsApiAdminRpaApprovalListPostData, ListApprovalsApiAdminRpaApprovalListPostErrors, ListApprovalsApiAdminRpaApprovalListPostResponses, ListAuditApiAdminRpaAuditListPostData, ListAuditApiAdminRpaAuditListPostErrors, ListAuditApiAdminRpaAuditListPostResponses, ListBansApiAdminRpaBanListPostData, ListBansApiAdminRpaBanListPostErrors, ListBansApiAdminRpaBanListPostResponses, ListBrowserMonitorsApiAdminRpaBrowserMonitorsPostData, ListBrowserMonitorsApiAdminRpaBrowserMonitorsPostErrors, ListBrowserMonitorsApiAdminRpaBrowserMonitorsPostResponses, ListCertificationsApiAdminRpaCertificationListPostData, ListCertificationsApiAdminRpaCertificationListPostErrors, ListCertificationsApiAdminRpaCertificationListPostResponses, ReviewApprovalApiAdminRpaApprovalReviewPostData, ReviewApprovalApiAdminRpaApprovalReviewPostErrors, ReviewApprovalApiAdminRpaApprovalReviewPostResponses, RevokeCertificationApiAdminRpaCertificationRevokePostData, RevokeCertificationApiAdminRpaCertificationRevokePostErrors, RevokeCertificationApiAdminRpaCertificationRevokePostResponses, SearchResourcesApiAdminRpaApprovalResourcesPostData, SearchResourcesApiAdminRpaApprovalResourcesPostErrors, SearchResourcesApiAdminRpaApprovalResourcesPostResponses, StopBrowserSessionApiAdminRpaBrowserSessionStopPostData, StopBrowserSessionApiAdminRpaBrowserSessionStopPostErrors, StopBrowserSessionApiAdminRpaBrowserSessionStopPostResponses, SubmitApprovalApiAdminRpaApprovalSubmitPostData, SubmitApprovalApiAdminRpaApprovalSubmitPostErrors, SubmitApprovalApiAdminRpaApprovalSubmitPostResponses, UpdateBrowserSessionConfigApiAdminRpaConfigBrowserSessionPostData, UpdateBrowserSessionConfigApiAdminRpaConfigBrowserSessionPostErrors, UpdateBrowserSessionConfigApiAdminRpaConfigBrowserSessionPostResponses, UpdateTagApiAdminRpaTagUpdatePostData, UpdateTagApiAdminRpaTagUpdatePostErrors, UpdateTagApiAdminRpaTagUpdatePostResponses } from '../types.gen';
 
 export class 管理员管理Service {
     /**
@@ -332,6 +332,57 @@ export class 管理员管理Service {
         return (options.client ?? client).post<GetBanStatusApiAdminRpaBanStatusPostResponses, GetBanStatusApiAdminRpaBanStatusPostErrors, ThrowOnError, 'data'>({
             responseStyle: 'data',
             url: '/api/admin/rpa/ban/status',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    /**
+     * 浏览器监管列表（管理员）
+     *
+     * 运行中浏览器实例列表：会话信息 + 指纹信息 + 时间 + 标签页概览
+     */
+    public static listBrowserMonitorsApiAdminRpaBrowserMonitorsPost<ThrowOnError extends boolean = false>(options: Options<ListBrowserMonitorsApiAdminRpaBrowserMonitorsPostData, ThrowOnError>): RequestResult<ListBrowserMonitorsApiAdminRpaBrowserMonitorsPostResponses, ListBrowserMonitorsApiAdminRpaBrowserMonitorsPostErrors, ThrowOnError, 'data'> {
+        return (options.client ?? client).post<ListBrowserMonitorsApiAdminRpaBrowserMonitorsPostResponses, ListBrowserMonitorsApiAdminRpaBrowserMonitorsPostErrors, ThrowOnError, 'data'>({
+            responseStyle: 'data',
+            url: '/api/admin/rpa/browser/monitors',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    /**
+     * 浏览器标签页列表（管理员，只读）
+     *
+     * 查看指定浏览器实例的标签页（url / title），仅供审核判断，不提供任何写操作
+     */
+    public static getBrowserMonitorPagesApiAdminRpaBrowserMonitorPagesPost<ThrowOnError extends boolean = false>(options: Options<GetBrowserMonitorPagesApiAdminRpaBrowserMonitorPagesPostData, ThrowOnError>): RequestResult<GetBrowserMonitorPagesApiAdminRpaBrowserMonitorPagesPostResponses, GetBrowserMonitorPagesApiAdminRpaBrowserMonitorPagesPostErrors, ThrowOnError, 'data'> {
+        return (options.client ?? client).post<GetBrowserMonitorPagesApiAdminRpaBrowserMonitorPagesPostResponses, GetBrowserMonitorPagesApiAdminRpaBrowserMonitorPagesPostErrors, ThrowOnError, 'data'>({
+            responseStyle: 'data',
+            url: '/api/admin/rpa/browser/monitor/pages',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    /**
+     * 强制停止浏览器会话（管理员）
+     *
+     * 强制关闭指定用户的浏览器会话（含直播流），并写审计日志
+     */
+    public static stopBrowserSessionApiAdminRpaBrowserSessionStopPost<ThrowOnError extends boolean = false>(options: Options<StopBrowserSessionApiAdminRpaBrowserSessionStopPostData, ThrowOnError>): RequestResult<StopBrowserSessionApiAdminRpaBrowserSessionStopPostResponses, StopBrowserSessionApiAdminRpaBrowserSessionStopPostErrors, ThrowOnError, 'data'> {
+        return (options.client ?? client).post<StopBrowserSessionApiAdminRpaBrowserSessionStopPostResponses, StopBrowserSessionApiAdminRpaBrowserSessionStopPostErrors, ThrowOnError, 'data'>({
+            responseStyle: 'data',
+            url: '/api/admin/rpa/browser/session/stop',
             ...options,
             headers: {
                 'Content-Type': 'application/json',

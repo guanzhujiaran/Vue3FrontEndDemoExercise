@@ -383,7 +383,7 @@ async function unbanSelected() {
     await ElMessageBox.confirm(
       t('message.unbanConfirm', { n: selectedMids.value.length }),
       t('message.unbanConfirmTitle'),
-      { type: 'warning' }
+      { type: 'warning', lockScroll: false }
     )
   } catch {
     return

@@ -9,6 +9,7 @@
       :close-on-press-escape="false"
       :show-close="true"
       center
+      :lock-scroll="false"
     >
       <div class="flex flex-col items-center py-[var(--spacing-5)] text-center">
         <el-icon class="mb-[var(--spacing-5)] animate-pulse text-danger" :size="60">

@@ -2,11 +2,12 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessageBox, ElMessage } from 'element-plus'
-import { Delete, Edit, Refresh, Search, Loading, Plus, CopyDocument, Promotion, SetUp } from '@element-plus/icons-vue'
+import { Delete, Edit, Refresh, Search, Loading, Plus, CopyDocument, Promotion, SetUp, VideoPlay, Clock } from '@element-plus/icons-vue'
 import { useDebounceFn } from '@vueuse/core'
 import FlexContainer from '@/components/CommonCompo/Bili-Container-Compo/FlexContainer.vue'
 import BiliPageHeader from '@/components/CommonCompo/Bili-Container-Compo/BiliPageHeader.vue'
 import WorkflowEditDialog from '@/components/rpa-browser/WorkflowEditDialog.vue'
+import WorkflowRunLogDialog from '@/components/rpa-browser/WorkflowRunLogDialog.vue'
 import { 工作流管理Service, 管理员管理Service } from '@/api/browser/hey-api'
 import type { FilterType, SortBy, SortOrder } from '@/api/browser/hey-api'
 import { useUserNavStore } from '@/stores/user_nav'
@@ -21,6 +22,9 @@ interface WorkflowItem {
   name: string
   custom_action_id: string | null
   description: string
+  browser_id: number | null
+  trigger_type: string
+  trigger_config: Record<string, unknown> | null
   is_enabled: boolean
   is_public: boolean
   likes_count: number
@@ -28,6 +32,9 @@ interface WorkflowItem {
   is_verified: boolean
   forks_count: number
   forked_from_id: number | null
+  last_run_at: string | null
+  last_run_status: string | null
+  next_run_at: string | null
   created_at: string | null
   updated_at: string | null
 }
@@ -52,10 +59,32 @@ const editDialogVisible = ref(false)
 const editDialogLoading = ref(false)
 const editDialogDetail = ref<Record<string, unknown> | null>(null)
 
+const cronOf = (item: WorkflowItem) => {
+  const cron = item.trigger_config?.cron
+  return typeof cron === 'string' ? cron : ''
+}
+
+const triggerText = (item: WorkflowItem) =>
+  item.trigger_type === 'cron' ? `定时（${cronOf(item) || '未配置'}）` : '手动'
+
+const runStatusLabel: Record<string, string> = {
+  success: '成功',
+  failed: '失败',
+  running: '运行中',
+}
+const runStatusType: Record<string, 'success' | 'danger' | 'warning' | 'info'> = {
+  success: 'success',
+  failed: 'danger',
+  running: 'warning',
+}
+
 const getTooltipContent = (item: WorkflowItem) => {
   const parts: string[] = []
   if (item.description) parts.push(item.description)
-  parts.push(`触发: 手动`)
+  parts.push(`触发: ${triggerText(item)}`)
+  parts.push(`目标浏览器: ${item.browser_id ?? '未配置'}`)
+  if (item.last_run_at) parts.push(`上次运行: ${formatTime(item.last_run_at)}`)
+  if (item.next_run_at) parts.push(`下次运行: ${formatTime(item.next_run_at)}`)
   parts.push(`可见性: ${item.is_public ? '公开' : '私有'}`)
   parts.push(`点赞: ${item.likes_count}`)
   parts.push(`Fork: ${item.forks_count}`)
@@ -150,6 +179,7 @@ const handleDuplicate = async (item: WorkflowItem) => {
       inputValue: `${item.name} 副本`,
       inputPattern: /\S+/,
       inputErrorMessage: '名称不能为空',
+      lockScroll: false,
     })
     newName = result.value
   } catch {
@@ -207,6 +237,7 @@ const handleApplyPublish = async (item: WorkflowItem) => {
         cancelButtonText: '取消',
         inputPlaceholder: '请输入申请说明（可选）',
         inputValue: '',
+        lockScroll: false,
       }
     )
     desc = result.value || ''
@@ -239,7 +270,7 @@ const handleDelete = async (item: WorkflowItem) => {
     await ElMessageBox.confirm(
       `确定要删除工作流「${item.name}」吗？此操作不可恢复。`,
       '删除确认',
-      { confirmButtonText: '删除', cancelButtonText: '取消', type: 'warning' }
+      { confirmButtonText: '删除', cancelButtonText: '取消', type: 'warning', lockScroll: false }
     )
   } catch {
     return
@@ -269,6 +300,52 @@ const handleRefresh = () => {
 
 const handleSaved = () => {
   loadWorkflows()
+}
+
+// ── 调度外壳：立即运行 / 运行记录 ─────────────────────
+const runningId = ref<number | null>(null)
+const runLogVisible = ref(false)
+const runLogWorkflowId = ref('')
+const runLogWorkflowName = ref('')
+
+const openRunLog = (item: WorkflowItem) => {
+  runLogWorkflowId.value = item.workflow_id
+  runLogWorkflowName.value = item.name
+  runLogVisible.value = true
+}
+
+const handleRun = async (item: WorkflowItem) => {
+  if (!item.custom_action_id) {
+    ElMessage.warning('该工作流未关联动作，请先编辑配置')
+    return
+  }
+  if (item.browser_id === null || item.browser_id === undefined) {
+    ElMessage.warning('该工作流未配置目标浏览器，请先编辑配置')
+    return
+  }
+  runningId.value = item.id
+  try {
+    const result = await businessHandler<Record<string, unknown>>(
+      工作流管理Service.runSavedWorkflowApiV1RpaBrowserControlWorkflowsRunPost({
+        query: { browser_id: item.browser_id },
+        body: { id: item.id },
+        headers: userNavStore.user_header,
+      }) as any,
+      { successMessage: '', errorMessage: '运行工作流失败', showSuccessToast: false }
+    )
+    if (result.success && result.data) {
+      const status = result.data.status as string
+      if (status === 'success') {
+        ElMessage.success(`运行成功（${result.data.success_count ?? 0} 步）`)
+      } else {
+        ElMessage.warning(`运行失败：${(result.data.error as string) || '未知错误'}`)
+      }
+      loadWorkflows()
+      openRunLog(item)
+    }
+  } finally {
+    runningId.value = null
+  }
 }
 
 const formatTime = (t: string | null) => {
@@ -360,6 +437,23 @@ onMounted(() => {
                 <span>更新: {{ formatTime(item.updated_at) }}</span>
               </div>
 
+              <!-- 调度信息（触发方式 / 上次运行 / 下次运行） -->
+              <div class="workflow-card__schedule flex flex-col gap-1 text-xs">
+                <div class="flex items-center gap-2 flex-wrap">
+                  <el-tag :type="item.trigger_type === 'cron' ? 'warning' : 'info'" effect="plain">
+                    {{ triggerText(item) }}
+                  </el-tag>
+                  <el-tag v-if="item.last_run_status" :type="runStatusType[item.last_run_status] || 'info'" effect="plain">
+                    上次运行：{{ runStatusLabel[item.last_run_status] || item.last_run_status }}
+                  </el-tag>
+                  <el-tag v-if="item.browser_id === null" type="danger" effect="plain">未配置浏览器</el-tag>
+                </div>
+                <div class="text-gray-400 flex items-center gap-3 flex-wrap">
+                  <span>上次：{{ formatTime(item.last_run_at) }}</span>
+                  <span v-if="item.trigger_type === 'cron'">下次：{{ formatTime(item.next_run_at) }}</span>
+                </div>
+              </div>
+
               <!-- 收藏/点赞（2.17.0：工作流走 be-message 通用互动） -->
               <div class="flex items-center pt-1">
                 <ResourceInteractionBar biz-type="rpa_workflow" :biz-id="item.workflow_id" />
@@ -367,7 +461,10 @@ onMounted(() => {
 
               <!-- 操作栏 -->
               <div
-                class="workflow-card__actions flex items-center gap-2 pt-2 border-t border-border-lighter">
+                class="workflow-card__actions flex items-center gap-2 pt-2 border-t border-border-lighter flex-wrap">
+                <el-button :icon="VideoPlay" type="primary" :loading="runningId === item.id"
+                  @click="handleRun(item)">立即运行</el-button>
+                <el-button :icon="Clock" @click="openRunLog(item)">运行记录</el-button>
                 <el-button size="small" :icon="Edit" :loading="editDialogLoading"
                   @click="handleEdit(item)">编辑</el-button>
                 <el-button size="small" :icon="CopyDocument" @click="handleDuplicate(item)">复制</el-button>
@@ -398,5 +495,12 @@ onMounted(() => {
 
     <!-- 编辑对话框 -->
     <WorkflowEditDialog v-model="editDialogVisible" :workflow-detail="editDialogDetail" @saved="handleSaved" />
+
+    <!-- 运行记录对话框 -->
+    <WorkflowRunLogDialog
+      v-model="runLogVisible"
+      :workflow-id="runLogWorkflowId"
+      :workflow-name="runLogWorkflowName"
+    />
   </FlexContainer>
 </template>

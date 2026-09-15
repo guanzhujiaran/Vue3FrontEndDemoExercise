@@ -7,6 +7,7 @@
     top="5vh"
     append-to-body
     :close-on-click-modal="false"
+    :lock-scroll="false"
     @closed="onClosed"
   >
     <div class="audit-reason-dialog__body flex flex-col gap-3">

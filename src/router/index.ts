@@ -712,6 +712,12 @@ const routes: CustomRouteRecordRaw[] = [
         meta: { title: '标签管理', requiresAdmin: true, hidden: true }
       },
       {
+        path: 'rpa/browser-monitor',
+        name: 'ADMIN_BROWSER_MONITOR',
+        component: () => import('@/views/admin/AdminBrowserMonitorView.vue'),
+        meta: { title: '浏览器监管', requiresAdmin: true, hidden: true }
+      },
+      {
         path: 'message-notify',
         name: 'ADMIN_MESSAGE_NOTIFY',
         component: () => import('@/views/message/NotifyAdminView.vue'),
@@ -815,8 +821,25 @@ const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes
 })
+
+/**
+ * 本次页面会话内最后打开的私信对象（talkerId）。
+ * 仅存内存：刷新 / 重新打开页面即清空 —— 此时访问 `/app/message/whisper`
+ * 仍落在空态首页（不指定任何用户私信）；页内切走再切回则自动回到该会话。
+ */
+let lastWhisperTalkerId = ''
+
 // 路由守卫 - 全局加载遮罩 + 管理员权限校验
 router.beforeEach(async (to, from) => {
+  // 私信会话记忆：
+  // - 进入某个会话 → 记住它；
+  // - 回到 `/app/message/whisper`（我的消息首页）→ 本次会话内打开过会话时自动跳回该会话。
+  if (to.name === 'MESSAGE_WHISPER_CHAT' && to.params.talkerId) {
+    lastWhisperTalkerId = String(to.params.talkerId)
+  } else if (to.name === 'MESSAGE_WHISPER_HOME' && lastWhisperTalkerId) {
+    return { name: 'MESSAGE_WHISPER_CHAT', params: { talkerId: lastWhisperTalkerId } }
+  }
+
   // 管理员专属页面（管理后台入口及其子页面）：未登录或非管理员时，
   // 不展示入口也不提示，直接假装页面不存在（前端仅做拦截，后端仍会强制校验）
   // 管理员身份统一由 be-message /me 裁决（RPA 旧 role/me 接口已下线）

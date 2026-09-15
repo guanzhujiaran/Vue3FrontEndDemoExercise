@@ -141,7 +141,8 @@ const handle_account_task_btn = () => {
   ElMessageBox.confirm(is_running ? `是否停止账号任务？` : `是否启动账号任务？`, '提示', {
     confirmButtonText: 'OK',
     cancelButtonText: 'Cancel',
-    type: 'warning'
+    type: 'warning',
+    lockScroll: false
   })
     .then(() => {
       biliMessage.info(`账号【${props.value?.info.account_name}】${action_name}任务！`)

@@ -36,3 +36,4 @@ playwright/.cache/
 .lh
 .history
 .env.prod
+*.png

@@ -63,7 +63,7 @@ emitter.on('needLogin', () => {
     :show-close="true"
     :close-on-click-modal="true"
     :close-on-press-escape="true"
-    :lock-scroll="true"
+    :lock-scroll="false"
     @close="closeLoginModal"
     :destroy-on-close="true"
   >

@@ -15,10 +15,16 @@ export function useDebugboxSave(
   // ── 保存对话框状态 ───────────────────────────────────
   const saveDialogVisible = ref(false)
   const saveDialogLoading = ref(false)
-  const saveDialogForm = ref({ name: '', description: '', isPublic: false })
+  /** iconSeries / iconId：动作展示图标（系列 + 系列内编号），0/0 表示默认图标 */
+  const saveDialogForm = ref({ name: '', description: '', isPublic: false, iconSeries: 0, iconId: 0 })
   const saveDialogItem = ref<DroppedItem | null>(null)
   const saveDialogIndex = ref(-1)
   const saveMultiItems = ref<DroppedItem[]>([])
+
+  /** 统一构造保存表单初始值（图标默认回落默认图标 0/0） */
+  function makeSaveForm(name: string, description: string) {
+    return { name, description, isPublic: false, iconSeries: 0, iconId: 0 }
+  }
 
   function makeTimestamp() {
     const now = new Date()
@@ -70,11 +76,10 @@ export function useDebugboxSave(
     saveMultiItems.value = []
     saveDialogItem.value = item
     saveDialogIndex.value = index
-    saveDialogForm.value = {
-      name: `${item.action_type || item.action_id}_${makeTimestamp()}`,
-      description: generateDefaultDescription(item) || item.description || item.json_schema?.description || '',
-      isPublic: false,
-    }
+    saveDialogForm.value = makeSaveForm(
+      `${item.action_type || item.action_id}_${makeTimestamp()}`,
+      generateDefaultDescription(item) || item.description || item.json_schema?.description || '',
+    )
     saveDialogVisible.value = true
   }
 
@@ -96,11 +101,10 @@ export function useDebugboxSave(
     saveMultiItems.value = []
     saveDialogItem.value = branchItem
     saveDialogIndex.value = -1
-    saveDialogForm.value = {
-      name: `${branchItem.action_type || branchItem.action_id}_${makeTimestamp()}`,
-      description: generateDefaultDescription(branchItem) || branchItem.description || branchItem.json_schema?.description || '',
-      isPublic: false,
-    }
+    saveDialogForm.value = makeSaveForm(
+      `${branchItem.action_type || branchItem.action_id}_${makeTimestamp()}`,
+      generateDefaultDescription(branchItem) || branchItem.description || branchItem.json_schema?.description || '',
+    )
     saveDialogVisible.value = true
   }
 
@@ -125,7 +129,7 @@ export function useDebugboxSave(
       : [...droppedItems.value]
     if (saveMultiItems.value.length === 0) { biliMessage.warning('没有可保存的动作'); return }
     saveDialogItem.value = saveMultiItems.value[0]
-    saveDialogForm.value = { name: `composite_${makeTimestamp()}`, description: generateMultiDescription(saveMultiItems.value), isPublic: false }
+    saveDialogForm.value = makeSaveForm(`composite_${makeTimestamp()}`, generateMultiDescription(saveMultiItems.value))
     saveDialogVisible.value = true
   }
 
@@ -136,7 +140,7 @@ export function useDebugboxSave(
     if (!items || items.length === 0) { biliMessage.warning('该分支没有可保存的动作'); return }
     saveMultiItems.value = [...items]
     saveDialogItem.value = items[0]
-    saveDialogForm.value = { name: `${branch}_composite_${makeTimestamp()}`, description: generateMultiDescription(items), isPublic: false }
+    saveDialogForm.value = makeSaveForm(`${branch}_composite_${makeTimestamp()}`, generateMultiDescription(items))
     saveDialogVisible.value = true
   }
 
@@ -160,6 +164,7 @@ export function useDebugboxSave(
         })
         const response = await 自定义操作管理Service.createCustomActionApiV1RpaBrowserControlCustomActionsCreatePost({
           body: { name: saveDialogForm.value.name, action_type: 'composite' as BuiltinActionType, description: saveDialogForm.value.description,
+            icon_series: saveDialogForm.value.iconSeries, icon_id: saveDialogForm.value.iconId,
             parameters_schema: [], steps, is_public: saveDialogForm.value.isPublic, tags: [],
             input_vars: [], output_vars: [], timeout: 30000, retry_on_error: false, retry_times: 0, retry_delay: 1.0 },
           headers: userNavStore.user_header,
@@ -199,6 +204,7 @@ export function useDebugboxSave(
         body: {
           name: saveDialogForm.value.name, action_type: (item.action_type || item.action_id) as BuiltinActionType,
           description: saveDialogForm.value.description,
+          icon_series: saveDialogForm.value.iconSeries, icon_id: saveDialogForm.value.iconId,
           parameters_schema: item.json_schema?.properties ? Object.entries(item.json_schema.properties).map(([key, prop]: [string, Record<string, unknown>]) => ({ name: key, json_schema: prop })) : [],
           steps: [stepData], is_public: saveDialogForm.value.isPublic, tags: [],
           input_vars: [], output_vars: [], timeout: 30000, retry_on_error: false, retry_times: 0, retry_delay: 1.0,

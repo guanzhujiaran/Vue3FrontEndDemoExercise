@@ -90,7 +90,9 @@ onMounted(load)
 </script>
 
 <template>
-  <section class="home-latest-comments mx-5 py-10 lg:mx-10">
+  <section
+    class="home-latest-comments mx-5 rounded-3xl border border-border-lighter bg-bg-secondary px-4 py-10 lg:mx-10 lg:px-8"
+  >
     <div class="mb-6">
       <el-text class="m-0 flex items-center gap-2 text-2xl font-semibold tracking-tight" tag="h2">
         <el-icon :size="22" class="text-primary"><ChatDotRound /></el-icon>

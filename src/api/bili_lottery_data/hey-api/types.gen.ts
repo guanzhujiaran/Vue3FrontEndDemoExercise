@@ -979,6 +979,60 @@ export type JobInfoModel = {
 };
 
 /**
+ * LLMApiConfig
+ *
+ * OpenAI 兼容 API 配置 —— 作为 Settings 的嵌套子模型列表元素，
+ * 部署时可整个列表填 JSON，也可逐字段用双下划线覆盖。
+ * 例如：llm_apis='[{"base_url":"https://...","model_name":"gpt-3.5","token":"sk-xxx"}]'
+ * 或：  llm_apis__0__base_url=https://...  llm_apis__0__model_name=gpt-3.5
+ */
+export type LlmApiConfig = {
+    /**
+     * Base Url
+     */
+    base_url?: string;
+    /**
+     * Model Name
+     */
+    model_name?: string;
+    /**
+     * Token
+     */
+    token?: string;
+    /**
+     * Requests Per Second
+     */
+    requests_per_second?: number;
+};
+
+/**
+ * LLMApiConfigPatch
+ *
+ * LLMApiConfig 的部分更新模型：仅传入需要修改的字段，未传字段保持原值。
+ *
+ * 用于内部接口 PATCH /llm/config/{index}：因读取接口返回的 token 已脱敏，
+ * 局部更新时可只提交需要变更的字段（如仅换 token / 仅调速率），无需回传明文 token。
+ */
+export type LlmApiConfigPatch = {
+    /**
+     * Base Url
+     */
+    base_url?: string | null;
+    /**
+     * Model Name
+     */
+    model_name?: string | null;
+    /**
+     * Token
+     */
+    token?: string | null;
+    /**
+     * Requests Per Second
+     */
+    requests_per_second?: number | null;
+};
+
+/**
  * LotdataResp
  */
 export type LotdataResp = {
@@ -5081,6 +5135,231 @@ export type GetLlmStatsLlmStatsGetResponses = {
 };
 
 export type GetLlmStatsLlmStatsGetResponse = GetLlmStatsLlmStatsGetResponses[keyof GetLlmStatsLlmStatsGetResponses];
+
+export type GetLlmConfigLlmConfigGetData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/llm/config';
+};
+
+export type GetLlmConfigLlmConfigGetResponses = {
+    /**
+     * Response Get Llm Config Llm Config Get
+     *
+     * Successful Response
+     */
+    200: Array<{
+        [key: string]: unknown;
+    }>;
+};
+
+export type GetLlmConfigLlmConfigGetResponse = GetLlmConfigLlmConfigGetResponses[keyof GetLlmConfigLlmConfigGetResponses];
+
+export type CreateLlmConfigLlmConfigPostData = {
+    body: LlmApiConfig;
+    path?: never;
+    query?: never;
+    url: '/llm/config';
+};
+
+export type CreateLlmConfigLlmConfigPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type CreateLlmConfigLlmConfigPostError = CreateLlmConfigLlmConfigPostErrors[keyof CreateLlmConfigLlmConfigPostErrors];
+
+export type CreateLlmConfigLlmConfigPostResponses = {
+    /**
+     * Response Create Llm Config Llm Config Post
+     *
+     * Successful Response
+     */
+    200: Array<{
+        [key: string]: unknown;
+    }>;
+};
+
+export type CreateLlmConfigLlmConfigPostResponse = CreateLlmConfigLlmConfigPostResponses[keyof CreateLlmConfigLlmConfigPostResponses];
+
+export type ReplaceLlmConfigLlmConfigPutData = {
+    /**
+     * Apis
+     */
+    body: Array<LlmApiConfig>;
+    path?: never;
+    query?: never;
+    url: '/llm/config';
+};
+
+export type ReplaceLlmConfigLlmConfigPutErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ReplaceLlmConfigLlmConfigPutError = ReplaceLlmConfigLlmConfigPutErrors[keyof ReplaceLlmConfigLlmConfigPutErrors];
+
+export type ReplaceLlmConfigLlmConfigPutResponses = {
+    /**
+     * Response Replace Llm Config Llm Config Put
+     *
+     * Successful Response
+     */
+    200: Array<{
+        [key: string]: unknown;
+    }>;
+};
+
+export type ReplaceLlmConfigLlmConfigPutResponse = ReplaceLlmConfigLlmConfigPutResponses[keyof ReplaceLlmConfigLlmConfigPutResponses];
+
+export type DeleteLlmConfigLlmConfigIndexDeleteData = {
+    body?: never;
+    path: {
+        /**
+         * Index
+         *
+         * 配置索引（从 0 开始）
+         */
+        index: number;
+    };
+    query?: never;
+    url: '/llm/config/{index}';
+};
+
+export type DeleteLlmConfigLlmConfigIndexDeleteErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type DeleteLlmConfigLlmConfigIndexDeleteError = DeleteLlmConfigLlmConfigIndexDeleteErrors[keyof DeleteLlmConfigLlmConfigIndexDeleteErrors];
+
+export type DeleteLlmConfigLlmConfigIndexDeleteResponses = {
+    /**
+     * Response Delete Llm Config Llm Config  Index  Delete
+     *
+     * Successful Response
+     */
+    200: Array<{
+        [key: string]: unknown;
+    }>;
+};
+
+export type DeleteLlmConfigLlmConfigIndexDeleteResponse = DeleteLlmConfigLlmConfigIndexDeleteResponses[keyof DeleteLlmConfigLlmConfigIndexDeleteResponses];
+
+export type GetLlmConfigItemLlmConfigIndexGetData = {
+    body?: never;
+    path: {
+        /**
+         * Index
+         *
+         * 配置索引（从 0 开始）
+         */
+        index: number;
+    };
+    query?: never;
+    url: '/llm/config/{index}';
+};
+
+export type GetLlmConfigItemLlmConfigIndexGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetLlmConfigItemLlmConfigIndexGetError = GetLlmConfigItemLlmConfigIndexGetErrors[keyof GetLlmConfigItemLlmConfigIndexGetErrors];
+
+export type GetLlmConfigItemLlmConfigIndexGetResponses = {
+    /**
+     * Response Get Llm Config Item Llm Config  Index  Get
+     *
+     * Successful Response
+     */
+    200: {
+        [key: string]: unknown;
+    };
+};
+
+export type GetLlmConfigItemLlmConfigIndexGetResponse = GetLlmConfigItemLlmConfigIndexGetResponses[keyof GetLlmConfigItemLlmConfigIndexGetResponses];
+
+export type PatchLlmConfigLlmConfigIndexPatchData = {
+    body: LlmApiConfigPatch;
+    path: {
+        /**
+         * Index
+         *
+         * 配置索引（从 0 开始）
+         */
+        index: number;
+    };
+    query?: never;
+    url: '/llm/config/{index}';
+};
+
+export type PatchLlmConfigLlmConfigIndexPatchErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type PatchLlmConfigLlmConfigIndexPatchError = PatchLlmConfigLlmConfigIndexPatchErrors[keyof PatchLlmConfigLlmConfigIndexPatchErrors];
+
+export type PatchLlmConfigLlmConfigIndexPatchResponses = {
+    /**
+     * Response Patch Llm Config Llm Config  Index  Patch
+     *
+     * Successful Response
+     */
+    200: Array<{
+        [key: string]: unknown;
+    }>;
+};
+
+export type PatchLlmConfigLlmConfigIndexPatchResponse = PatchLlmConfigLlmConfigIndexPatchResponses[keyof PatchLlmConfigLlmConfigIndexPatchResponses];
+
+export type UpdateLlmConfigLlmConfigIndexPutData = {
+    body: LlmApiConfig;
+    path: {
+        /**
+         * Index
+         *
+         * 配置索引（从 0 开始）
+         */
+        index: number;
+    };
+    query?: never;
+    url: '/llm/config/{index}';
+};
+
+export type UpdateLlmConfigLlmConfigIndexPutErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type UpdateLlmConfigLlmConfigIndexPutError = UpdateLlmConfigLlmConfigIndexPutErrors[keyof UpdateLlmConfigLlmConfigIndexPutErrors];
+
+export type UpdateLlmConfigLlmConfigIndexPutResponses = {
+    /**
+     * Response Update Llm Config Llm Config  Index  Put
+     *
+     * Successful Response
+     */
+    200: Array<{
+        [key: string]: unknown;
+    }>;
+};
+
+export type UpdateLlmConfigLlmConfigIndexPutResponse = UpdateLlmConfigLlmConfigIndexPutResponses[keyof UpdateLlmConfigLlmConfigIndexPutResponses];
 
 export type TestPushErrorTestPushErrorGetData = {
     body?: never;

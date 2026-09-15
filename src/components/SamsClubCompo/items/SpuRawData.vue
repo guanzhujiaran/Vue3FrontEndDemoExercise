@@ -22,6 +22,7 @@ const dialogTableVisible = ref(false)
       :title="spuInfo.title"
       width="75%"
       draggable
+      :lock-scroll="false"
     >
       <VueJsonPretty
         :showDoubleQuotes="false"

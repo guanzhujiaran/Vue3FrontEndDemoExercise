@@ -1,6 +1,6 @@
 <template>
   <div class="bili-data-table-toolbar flex w-full flex-col gap-3 xl:w-auto">
-    <el-dialog v-model="isOpenSetting" class="setting-dialog" width="500px" :close-on-click-modal="true">
+    <el-dialog v-model="isOpenSetting" class="setting-dialog" width="500px" :close-on-click-modal="true" :lock-scroll="false">
       <div class="dialog-content">
         <el-alert
           title="注意：以下设置和数据均保存在本地浏览器中，清除浏览器缓存会导致设置丢失。"

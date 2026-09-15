@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { computed, type Component } from 'vue'
-import { Mouse, Edit, Top, View, Timer, Camera, Connection, SetUp, RefreshRight, Star, Grid, Cpu, Link, QuestionFilled } from '@element-plus/icons-vue'
+import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { ActionDetail } from './debugbox-types'
+import ActionIcon from './ActionIcon.vue'
+import { resolveActionTypeIcon } from '@/utils/rpa/actionTypeIcon'
 
 const { t } = useI18n()
 
@@ -15,6 +16,10 @@ interface Props {
     }
     name?: string
     description?: string
+    /** 展示图标：系列编号（工具箱拖入的内置/自定义操作会携带） */
+    icon_series?: number
+    /** 展示图标：系列内编号 */
+    icon_id?: number
     /** 后端 action_detail：仅 ca_ 自定义操作有此字段 */
     action_detail?: ActionDetail
   }
@@ -23,31 +28,6 @@ interface Props {
 }
 
 const props = defineProps<Props>()
-
-const actionIcon = computed<Component>(() => {
-  const iconMap: Record<string, Component> = {
-    click: Mouse,
-    input: Edit,
-    navigation: Top,
-    navigate: Top,
-    new_page: Top,
-    screenshot: Camera,
-    wait: Timer,
-    scroll: View,
-    hover: Mouse,
-    evaluate: Cpu,
-    select: Grid,
-    keyboard: SetUp,
-    mouse: Mouse,
-    llm: Star,
-    loop: RefreshRight,
-    if_else: Connection,
-    composite: Grid,
-    custom: Grid,
-    plugin: Link
-  }
-  return iconMap[props.action.action_id] || QuestionFilled
-})
 
 const actionTitle = computed(() => {
   // 优先使用自定义名称
@@ -156,9 +136,17 @@ const detailBadges = computed(() => {
     <div class="p-3">
       <div class="flex items-start gap-3">
         <div class="flex items-center justify-center w-8 h-8 rounded-lg shrink-0">
-          <el-icon class="text-lg text-text-primary">
-            <component :is="actionIcon" />
-          </el-icon>
+          <ActionIcon
+            :series="action.icon_series ?? action.action_detail?.icon_series"
+            :id="action.icon_id ?? action.action_detail?.icon_id"
+            class="action-card__icon w-5 h-5 text-text-primary"
+          >
+            <template #fallback>
+              <el-icon class="text-lg text-text-primary">
+                <component :is="resolveActionTypeIcon(action.action_id)" />
+              </el-icon>
+            </template>
+          </ActionIcon>
         </div>
         <div class="flex-1 min-w-0">
           <div class="flex items-center gap-2 mb-1">

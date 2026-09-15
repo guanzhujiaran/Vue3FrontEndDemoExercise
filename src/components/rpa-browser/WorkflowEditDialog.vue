@@ -1,16 +1,26 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
-import { Minus, VideoPlay, Loading, CircleCheck, CircleClose } from '@element-plus/icons-vue'
-import { 工作流管理Service, 执行引擎Service, 浏览器指纹管理Service, 自定义操作管理Service } from '@/api/browser/hey-api'
+import { useRouter } from 'vue-router'
+import { Minus, Monitor, Delete, Timer, Switch } from '@element-plus/icons-vue'
+import { 工作流管理Service, 浏览器指纹管理Service, 自定义操作管理Service } from '@/api/browser/hey-api'
 import { useUserNavStore } from '@/stores/user_nav'
 import { businessHandler } from '@/utils/businessHandler'
 import biliMessage from '@/utils/message'
-import DebugBox from './DebugBox.vue'
+import ActionCard from './ActionCard.vue'
+import ActionPickerDialog from './ActionPickerDialog.vue'
 import MinimizeBar from './MinimizeBar.vue'
-import type { DroppedItem } from './debugbox-types'
 import { useThemeStore } from '@/stores/theme'
+import { RouteName } from '@/models/router/index.ts'
 
+/**
+ * 工作流编辑弹窗（调度外壳配置面板）
+ *
+ * 工作流 = 「引用一个已有动作」+「触发配置」+「执行目标浏览器」+「可见性/启用」。
+ * 不在此处编辑步骤：步骤的编辑与调试在动作侧（BrowserStream 调试页）完成。
+ * 保存只写工作流（create/update），绝不创建或覆盖被引用的动作。
+ */
 const themeStore = useThemeStore()
+const router = useRouter()
 
 interface Props {
   modelValue: boolean
@@ -35,11 +45,17 @@ const triggerType = ref<'manual' | 'cron'>('manual')
 const cronExpression = ref('')
 const saving = ref(false)
 
-// ── 步骤编辑 ─────────────────────────────────────────
-const editItems = ref<DroppedItem[]>([])
-/** 每次打开弹窗递增，强制 DebugBox 重新挂载以加载 initialSteps */
-const dialogKey = ref(0)
-const debugBoxRef = ref<InstanceType<typeof DebugBox> | null>(null)
+// ── 引用的动作 ───────────────────────────────────────
+interface SelectedAction {
+  action_id: string
+  name?: string
+  description?: string
+  tags?: string[]
+  steps_count?: number
+  is_public?: boolean
+}
+const selectedAction = ref<SelectedAction | null>(null)
+const pickerVisible = ref(false)
 
 // ── 浏览器选择 ───────────────────────────────────────
 interface BrowserOption {
@@ -49,6 +65,10 @@ interface BrowserOption {
 }
 const browserList = ref<BrowserOption[]>([])
 const selectedBrowserId = ref<number | null>(null)
+
+// ── 最小化状态 ───────────────────────────────────────
+const isMinimized = ref(false)
+const dialogVisible = computed(() => props.modelValue && !isMinimized.value)
 
 async function loadBrowserList() {
   const result = await businessHandler<{ items?: BrowserOption[] }>(
@@ -64,82 +84,90 @@ async function loadBrowserList() {
       browser_id_str: b.browser_id_str || String(b.browser_id),
       custom_name: b.custom_name || `浏览器 ${b.browser_id}`,
     }))
-    if (browserList.value.length > 0 && selectedBrowserId.value === null) {
-      selectedBrowserId.value = browserList.value[0].browser_id
-    }
   }
 }
 
-// ── 运行状态 ─────────────────────────────────────────
-type RunStatus = 'idle' | 'running' | 'completed' | 'failed'
-const runStatus = ref<RunStatus>('idle')
-
-interface StepResult {
-  success: boolean
-  action_id?: string
-  action_name?: string
-  error?: string | null
-  execution_time?: number
-  data?: unknown
-  variables?: Record<string, unknown>
-  replaced_params?: Record<string, unknown>
+/** 按 action_id 拉取动作摘要（编辑已有工作流时回显引用信息） */
+async function loadActionSummary(actionId: string) {
+  const result = await businessHandler<Record<string, unknown>>(
+    自定义操作管理Service.getCustomActionApiV1RpaBrowserControlCustomActionsGetPost({
+      body: { action_id: actionId },
+      headers: userNavStore.user_header,
+    }) as any,
+    { successMessage: '', errorMessage: '加载引用动作失败', showSuccessToast: false }
+  )
+  if (result.success && result.data) {
+    const data = result.data
+    const steps = Array.isArray(data.steps) ? (data.steps as unknown[]) : []
+    selectedAction.value = {
+      action_id: (data.action_id as string) || actionId,
+      name: (data.name as string) || actionId,
+      description: (data.description as string) || '',
+      tags: Array.isArray(data.tags) ? (data.tags as string[]) : [],
+      steps_count: steps.length,
+      is_public: (data.is_public as boolean) ?? false,
+    }
+  } else {
+    selectedAction.value = { action_id: actionId, name: actionId, steps_count: 0 }
+  }
 }
-const stepResults = ref<StepResult[]>([])
-const runSummary = ref<{ total: number; success: number; failed: number } | null>(null)
-const runError = ref('')
 
-// ── 最小化状态 ───────────────────────────────────────
-const isMinimized = ref(false)
-const dialogVisible = computed(() => props.modelValue && !isMinimized.value)
+// ── 校验 ─────────────────────────────────────────────
+const nameError = computed(() => {
+  if (!workflowName.value.trim()) return '工作流名称不能为空'
+  if (workflowName.value.length > 50) return '名称不能超过50个字符'
+  return ''
+})
 
-// ── 反序列化后端 steps 为前端 DroppedItem[] ──────────
-function convertStepsToItems(steps: Record<string, unknown>[]): DroppedItem[] {
-  return steps.map((step, i) => {
-    const sp = { ...((step.params || {}) as Record<string, unknown>) }
-    let trueBranch: DroppedItem[] | undefined
-    let falseBranch: DroppedItem[] | undefined
-    let loopBody: DroppedItem[] | undefined
-    if (sp.TrueBranch && Array.isArray(sp.TrueBranch)) {
-      trueBranch = convertStepsToItems(sp.TrueBranch as Record<string, unknown>[])
-      delete sp.TrueBranch
-    }
-    if (sp.FalseBranch && Array.isArray(sp.FalseBranch)) {
-      falseBranch = convertStepsToItems(sp.FalseBranch as Record<string, unknown>[])
-      delete sp.FalseBranch
-    }
-    if (sp.loopBranch && Array.isArray(sp.loopBranch)) {
-      loopBody = convertStepsToItems(sp.loopBranch as Record<string, unknown>[])
-      delete sp.loopBranch
-    }
-    const actionDetail = step.action_detail as Record<string, unknown> | undefined
-    return {
-      id: `wf-step-${i}-${Date.now()}`,
-      name: (actionDetail?.name as string) || (step.name as string) || (step.action_id as string) || `步骤${i + 1}`,
-      action_id: (step.action_id as string) || '',
-      action_type: (step.action_type as string) || (step.action_id as string) || '',
-      description: (actionDetail?.description as string) || (step.description as string) || '',
-      type: 'action',
-      formData: { ...sp },
-      input_vars: (step.input_vars || {}) as Record<string, unknown>,
-      output_vars: (step.output_vars || []) as string[],
-      config_params: {},
-      trueBranch, falseBranch, loopBody,
-      action_detail: actionDetail,
-    }
-  })
+const actionError = computed(() => (selectedAction.value?.action_id ? '' : '必须选择一个要执行的动作'))
+
+const cronError = computed(() => {
+  if (triggerType.value !== 'cron') return ''
+  const expr = cronExpression.value.trim()
+  if (!expr) return 'Cron 表达式不能为空'
+  if (expr.split(/\s+/).length !== 5) return 'Cron 表达式需为 5 段，例如 */5 * * * *'
+  return ''
+})
+
+const browserError = computed(() => {
+  if (triggerType.value !== 'cron') return ''
+  return selectedBrowserId.value === null ? '定时触发必须指定执行目标浏览器' : ''
+})
+
+const formError = computed(
+  () => nameError.value || actionError.value || cronError.value || browserError.value
+)
+const canSave = computed(() => !formError.value && !saving.value)
+
+/** 运行状态展示 */
+const nextRunAt = computed(() => (props.workflowDetail?.next_run_at as string) || '')
+const lastRunAt = computed(() => (props.workflowDetail?.last_run_at as string) || '')
+const lastRunStatus = computed(() => (props.workflowDetail?.last_run_status as string) || '')
+
+const runStatusLabel: Record<string, string> = {
+  success: '成功',
+  failed: '失败',
+  running: '运行中',
+}
+const runStatusType: Record<string, 'success' | 'danger' | 'warning'> = {
+  success: 'success',
+  failed: 'danger',
+  running: 'warning',
 }
 
 // ── 监听打开/关闭 ─────────────────────────────────────
-watch(() => props.modelValue, async (visible) => {
-  if (visible) {
+watch(
+  () => props.modelValue,
+  async (visible) => {
+    if (!visible) return
     isMinimized.value = false
-    runStatus.value = 'idle'
-    stepResults.value = []
-    runSummary.value = null
-    runError.value = ''
+    saving.value = false
+    pickerVisible.value = false
+
     await loadBrowserList()
+
     if (props.workflowDetail) {
-      // 编辑模式：加载已有工作流
+      // 编辑模式
       workflowName.value = (props.workflowDetail.name as string) || ''
       workflowDescription.value = (props.workflowDetail.description as string) || ''
       isPublic.value = (props.workflowDetail.is_public as boolean) ?? false
@@ -148,25 +176,11 @@ watch(() => props.modelValue, async (visible) => {
       triggerType.value = tt === 'cron' ? 'cron' : 'manual'
       const tc = props.workflowDetail.trigger_config as Record<string, unknown> | undefined
       cronExpression.value = (tc?.cron as string) || ''
-      // 加载关联的自定义操作 steps
-      const customActionId = props.workflowDetail.custom_action_id as string | undefined
-      if (customActionId) {
-        const result = await businessHandler<{ steps?: Record<string, unknown>[] }>(
-          自定义操作管理Service.getCustomActionApiV1RpaBrowserControlCustomActionsGetPost({
-            body: { action_id: customActionId },
-            headers: userNavStore.user_header,
-          }) as any,
-          { successMessage: '', errorMessage: '加载工作流步骤失败', showSuccessToast: false }
-        )
-        if (result.success && result.data) {
-          const steps = result.data.steps
-          editItems.value = steps && Array.isArray(steps) ? convertStepsToItems(steps as Record<string, unknown>[]) : []
-        } else {
-          editItems.value = []
-        }
-      } else {
-        editItems.value = []
-      }
+      const bid = props.workflowDetail.browser_id as number | null | undefined
+      selectedBrowserId.value = bid ?? null
+      const actionId = props.workflowDetail.custom_action_id as string | undefined
+      selectedAction.value = actionId ? { action_id: actionId, name: actionId, steps_count: 0 } : null
+      if (actionId) await loadActionSummary(actionId)
     } else {
       // 新建模式
       workflowName.value = ''
@@ -175,27 +189,37 @@ watch(() => props.modelValue, async (visible) => {
       isEnabled.value = true
       triggerType.value = 'manual'
       cronExpression.value = ''
-      editItems.value = []
+      selectedBrowserId.value = browserList.value.length > 0 ? browserList.value[0].browser_id : null
+      selectedAction.value = null
     }
-    dialogKey.value++
+  },
+  { immediate: true }
+)
+
+// ── 动作选择 ─────────────────────────────────────────
+function openActionPicker() {
+  pickerVisible.value = true
+}
+
+async function handleActionPicked(actionId: string) {
+  await loadActionSummary(actionId)
+}
+
+function clearAction() {
+  selectedAction.value = null
+}
+
+// ── 去调试页（动作的调试在动作侧完成） ───────────────
+function goDebugPage() {
+  if (selectedBrowserId.value === null) {
+    biliMessage.warning('请先选择目标浏览器，再前往调试页')
+    return
   }
-}, { immediate: true })
-
-// ── 表单验证 ─────────────────────────────────────────
-const nameError = computed(() => {
-  if (!workflowName.value.trim()) return '工作流名称不能为空'
-  if (workflowName.value.length > 50) return '名称不能超过50个字符'
-  return ''
-})
-
-const cronError = computed(() => {
-  if (triggerType.value !== 'cron') return ''
-  if (!cronExpression.value.trim()) return 'Cron 表达式不能为空'
-  return ''
-})
-
-const canSave = computed(() => !nameError.value && !cronError.value && !saving.value)
-const canRun = computed(() => !nameError.value && runStatus.value !== 'running' && selectedBrowserId.value !== null)
+  router.push({
+    name: RouteName.RPA_BROWSER_STREAM,
+    params: { browserId: String(selectedBrowserId.value) },
+  })
+}
 
 // ── 最小化控制 ───────────────────────────────────────
 function handleMinimize() {
@@ -215,154 +239,47 @@ function handleDialogUpdate(val: boolean) {
   }
 }
 
-// ── 运行工作流 ───────────────────────────────────────
-async function handleRun() {
-  if (!canRun.value) return
-  if (selectedBrowserId.value === null) {
-    biliMessage.warning('请先选择浏览器')
-    return
-  }
-  const steps = debugBoxRef.value?.getSteps() || []
-  if (steps.length === 0) {
-    biliMessage.warning('请至少添加一个步骤')
-    return
-  }
-  runStatus.value = 'running'
-  stepResults.value = []
-  runSummary.value = null
-  runError.value = ''
-  try {
-    const response = await 执行引擎Service.executeWorkflowApiV1RpaBrowserControlWorkflowsExecutePost({
-      query: { browser_id: String(selectedBrowserId.value) },
-      body: {
-        steps,
-        variables: {},
-        input_data: {},
-        output_vars: [],
-      },
-      headers: userNavStore.user_header,
-    })
-    if (response?.code === 0) {
-      const result = response.data as {
-        results?: StepResult[]
-        summary?: { total: number; success: number; failed: number }
-      } | undefined
-      stepResults.value = result?.results ?? []
-      runSummary.value = result?.summary ?? null
-      const failedCount = runSummary.value?.failed ?? 0
-      runStatus.value = failedCount > 0 ? 'failed' : 'completed'
-      if (failedCount === 0) {
-        biliMessage.success(`工作流执行完成，共 ${runSummary.value?.total ?? steps.length} 步全部成功`)
-      } else {
-        biliMessage.warning(`工作流执行完成，成功 ${runSummary.value?.success ?? 0} 步，失败 ${failedCount} 步`)
-      }
-    } else {
-      runStatus.value = 'failed'
-      runError.value = (response?.msg as string) || '执行失败'
-      biliMessage.error(runError.value)
-    }
-  } catch (error: unknown) {
-    runStatus.value = 'failed'
-    runError.value = error instanceof Error ? error.message : '网络异常，执行失败'
-    console.error('[WorkflowEditDialog] 执行工作流异常:', error)
-    biliMessage.error(runError.value)
-  }
-}
-
-// ── 保存工作流（两步：先保存复合操作，再保存工作流） ──
+// ── 保存（只写工作流，不改动被引用的动作） ───────────
 async function handleSave() {
   if (!canSave.value) return
-  const steps = debugBoxRef.value?.getSteps() || []
   saving.value = true
   try {
+    const triggerConfig = triggerType.value === 'cron' ? { cron: cronExpression.value.trim() } : {}
     const isEditing = !!props.workflowDetail
-    const existingCustomActionId = props.workflowDetail?.custom_action_id as string | undefined
 
-    // 步骤1：保存/更新复合操作获取 action_id
-    let customActionId = existingCustomActionId
-    if (existingCustomActionId) {
-      const updateResult = await businessHandler<{ action_id: string }>(
-        自定义操作管理Service.updateCustomActionApiV1RpaBrowserControlCustomActionsUpdatePost({
-          body: {
-            action_id: existingCustomActionId,
-            name: workflowName.value,
-            description: workflowDescription.value,
-            steps,
-          },
-          headers: userNavStore.user_header,
-        }) as any,
-        { successMessage: '', errorMessage: '更新步骤失败', showSuccessToast: false }
-      )
-      if (!updateResult.success) {
-        saving.value = false
-        return
-      }
-    } else {
-      const createResult = await businessHandler<{ action_id: string }>(
-        自定义操作管理Service.createCustomActionApiV1RpaBrowserControlCustomActionsCreatePost({
-          body: {
-            name: workflowName.value,
-            description: workflowDescription.value,
-            steps,
-            is_public: isPublic.value,
-          },
-          headers: userNavStore.user_header,
-        }) as any,
-        { successMessage: '', errorMessage: '创建步骤失败', showSuccessToast: false }
-      )
-      if (!createResult.success || !createResult.data) {
-        saving.value = false
-        return
-      }
-      customActionId = createResult.data.action_id
+    const body: Record<string, unknown> = {
+      name: workflowName.value,
+      description: workflowDescription.value,
+      custom_action_id: selectedAction.value?.action_id ?? null,
+      browser_id: selectedBrowserId.value,
+      trigger_type: triggerType.value,
+      trigger_config: triggerConfig,
+      is_public: isPublic.value,
     }
 
-    // 步骤2：保存/更新工作流
-    const triggerConfig = triggerType.value === 'cron' && cronExpression.value
-      ? { cron: cronExpression.value }
-      : {}
+    const result = isEditing
+      ? await businessHandler(
+          工作流管理Service.updateWorkflowApiV1RpaBrowserControlWorkflowsUpdatePost({
+            body: {
+              id: props.workflowDetail?.id as number,
+              ...body,
+              is_enabled: isEnabled.value,
+            } as any,
+            headers: userNavStore.user_header,
+          }) as any,
+          { successMessage: '工作流更新成功', errorMessage: '工作流更新失败' }
+        )
+      : await businessHandler(
+          工作流管理Service.createWorkflowApiV1RpaBrowserControlWorkflowsCreatePost({
+            body: body as any,
+            headers: userNavStore.user_header,
+          }) as any,
+          { successMessage: '工作流创建成功', errorMessage: '工作流创建失败' }
+        )
 
-    if (isEditing && props.workflowDetail) {
-      const workflowId = props.workflowDetail.id as number
-      const wfResult = await businessHandler(
-        工作流管理Service.updateWorkflowApiV1RpaBrowserControlWorkflowsUpdatePost({
-          body: {
-            id: workflowId,
-            name: workflowName.value,
-            description: workflowDescription.value,
-            custom_action_id: customActionId,
-            trigger_type: triggerType.value,
-            trigger_config: triggerConfig,
-            is_enabled: isEnabled.value,
-            is_public: isPublic.value,
-          },
-          headers: userNavStore.user_header,
-        }) as any,
-        { successMessage: '工作流更新成功', errorMessage: '工作流更新失败' }
-      )
-      if (wfResult.success) {
-        emit('saved')
-        emit('update:modelValue', false)
-      }
-    } else {
-      const wfResult = await businessHandler(
-        工作流管理Service.createWorkflowApiV1RpaBrowserControlWorkflowsCreatePost({
-          body: {
-            name: workflowName.value,
-            description: workflowDescription.value,
-            custom_action_id: customActionId,
-            trigger_type: triggerType.value,
-            trigger_config: triggerConfig,
-            is_public: isPublic.value,
-          },
-          headers: userNavStore.user_header,
-        }) as any,
-        { successMessage: '工作流创建成功', errorMessage: '工作流创建失败' }
-      )
-      if (wfResult.success) {
-        emit('saved')
-        emit('update:modelValue', false)
-      }
+    if (result.success) {
+      emit('saved')
+      emit('update:modelValue', false)
     }
   } catch (error: unknown) {
     const msg = error instanceof Error ? error.message : '保存失败'
@@ -373,16 +290,16 @@ async function handleSave() {
   }
 }
 
-function formatExecTime(t?: number) {
-  if (t == null) return '-'
-  return `${t.toFixed(2)}s`
+function formatTime(t: string | null) {
+  if (!t) return '-'
+  return new Date(t).toLocaleString('zh-CN')
 }
 </script>
 
 <template>
   <el-dialog
     :model-value="dialogVisible"
-    width="85%"
+    width="80%"
     :modal-penetrable="true"
     :modal="false"
     :lock-scroll="false"
@@ -403,14 +320,13 @@ function formatExecTime(t?: number) {
       </div>
     </template>
 
-    <div class="flex flex-col gap-3">
+    <div class="workflow-config-panel flex flex-col gap-4">
       <!-- 元信息表单 -->
       <div class="workflow-meta-form grid grid-cols-2 gap-3">
         <div>
           <label class="text-xs text-color-secondary">名称 <span class="text-danger">*</span></label>
           <el-input
             v-model="workflowName"
-            size="small"
             placeholder="工作流名称"
             maxlength="50"
             show-word-limit
@@ -422,7 +338,6 @@ function formatExecTime(t?: number) {
           <label class="text-xs text-color-secondary">描述</label>
           <el-input
             v-model="workflowDescription"
-            size="small"
             placeholder="工作流描述（可选）"
             maxlength="200"
             show-word-limit
@@ -431,122 +346,121 @@ function formatExecTime(t?: number) {
         <div class="flex items-center gap-4">
           <div class="flex items-center gap-2">
             <label class="text-xs text-color-secondary">公开</label>
-            <el-switch v-model="isPublic" size="small" inline-prompt active-text="是" inactive-text="否" />
+            <el-switch v-model="isPublic" inline-prompt active-text="是" inactive-text="否" />
           </div>
           <div v-if="workflowDetail" class="flex items-center gap-2">
             <label class="text-xs text-color-secondary">启用</label>
-            <el-switch v-model="isEnabled" size="small" inline-prompt active-text="是" inactive-text="否" />
+            <el-switch v-model="isEnabled" inline-prompt active-text="是" inactive-text="否" />
           </div>
         </div>
-        <div class="flex items-center gap-3">
-          <label class="text-xs text-color-secondary whitespace-nowrap">触发方式</label>
-          <el-radio-group v-model="triggerType" size="small">
-            <el-radio value="manual">手动</el-radio>
-            <el-radio value="cron">定时</el-radio>
-          </el-radio-group>
-          <el-input
-            v-if="triggerType === 'cron'"
-            v-model="cronExpression"
-            size="small"
-            placeholder="如: */5 * * * *"
-            class="flex-1"
-          />
+        <div class="workflow-run-state flex items-center gap-4 text-xs text-color-secondary flex-wrap">
+          <span>上次运行：{{ formatTime(lastRunAt) }}</span>
+          <el-tag v-if="lastRunStatus" :type="runStatusType[lastRunStatus] || 'info'" effect="plain">
+            {{ runStatusLabel[lastRunStatus] || lastRunStatus }}
+          </el-tag>
+          <span v-if="triggerType === 'cron'">下次运行：{{ formatTime(nextRunAt) }}</span>
         </div>
       </div>
-      <div v-if="cronError" class="text-xs text-danger -mt-2">{{ cronError }}</div>
 
-      <!-- 浏览器选择 + 运行按钮 -->
-      <div class="workflow-run-bar flex items-center gap-3 py-2 border-y border-border">
-        <label class="text-xs text-color-secondary whitespace-nowrap">目标浏览器</label>
-        <el-select
-          v-model="selectedBrowserId"
-          size="small"
-          placeholder="选择浏览器"
-          class="flex-1"
-          :disabled="browserList.length === 0"
-        >
-          <el-option
-            v-for="b in browserList"
-            :key="b.browser_id_str"
-            :label="b.custom_name"
-            :value="b.browser_id"
-          />
-        </el-select>
-        <el-button
-          type="primary"
-          size="small"
-          :icon="runStatus === 'running' ? Loading : VideoPlay"
-          :loading="runStatus === 'running'"
-          :disabled="!canRun"
-          @click="handleRun"
-        >
-          {{ runStatus === 'running' ? '运行中...' : '运行工作流' }}
-        </el-button>
+      <!-- 引用的动作 -->
+      <div class="workflow-action-section border border-border rounded p-3 flex flex-col gap-2">
+        <div class="workflow-action-section__header flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <el-icon class="text-primary"><Switch /></el-icon>
+            <span class="text-sm font-medium">执行动作 <span class="text-danger">*</span></span>
+            <span class="text-xs text-color-secondary">引用已有动作，多个工作流可共享同一动作</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <el-button :icon="Monitor" @click="goDebugPage">去调试页</el-button>
+            <el-button type="primary" @click="openActionPicker">
+              {{ selectedAction ? '更换动作' : '选择动作' }}
+            </el-button>
+          </div>
+        </div>
+
+        <div v-if="selectedAction" class="workflow-action-section__card flex items-start gap-3">
+          <div class="flex-1 min-w-0">
+            <ActionCard
+              :action="{
+                action_id: selectedAction.action_id,
+                name: selectedAction.name,
+                description: selectedAction.description,
+              }"
+              :action-detail="{ tags: selectedAction.tags, is_public: selectedAction.is_public } as any"
+            />
+          </div>
+          <div class="flex flex-col items-end gap-2 shrink-0">
+            <el-tag type="info" effect="plain">{{ selectedAction.steps_count ?? 0 }} 步</el-tag>
+            <el-button type="danger" plain :icon="Delete" @click="clearAction">移除</el-button>
+          </div>
+        </div>
+        <el-alert
+          v-else
+          class="workflow-action-section__empty"
+          type="info"
+          :effect="themeStore.themeEffectString"
+          :closable="false"
+          show-icon
+          title="尚未选择动作，请点击右上角「选择动作」"
+        />
+        <div v-if="actionError" class="text-xs text-danger">{{ actionError }}</div>
       </div>
 
-      <!-- 运行错误提示 -->
+      <!-- 触发配置 -->
+      <div class="workflow-trigger-section border border-border rounded p-3 flex flex-col gap-3">
+        <div class="flex items-center gap-2">
+          <el-icon class="text-primary"><Timer /></el-icon>
+          <span class="text-sm font-medium">触发配置</span>
+        </div>
+        <div class="flex items-center gap-4 flex-wrap">
+          <el-radio-group v-model="triggerType">
+            <el-radio value="manual">手动运行</el-radio>
+            <el-radio value="cron">定时运行</el-radio>
+          </el-radio-group>
+          <template v-if="triggerType === 'cron'">
+            <el-input
+              v-model="cronExpression"
+              placeholder="Cron 表达式，例如 */5 * * * *"
+              class="workflow-trigger-section__cron w-70"
+            />
+            <span class="text-xs text-color-secondary">5 段：分 时 日 月 周（保存后由服务端计算下次运行时间）</span>
+          </template>
+        </div>
+        <div v-if="cronError" class="text-xs text-danger">{{ cronError }}</div>
+
+        <div class="workflow-trigger-section__browser flex items-center gap-3 flex-wrap">
+          <label class="text-xs text-color-secondary whitespace-nowrap">
+            目标浏览器 <span v-if="triggerType === 'cron'" class="text-danger">*</span>
+          </label>
+          <el-select
+            v-model="selectedBrowserId"
+            placeholder="选择执行目标浏览器"
+            class="workflow-trigger-section__browser-select w-80"
+            :disabled="browserList.length === 0"
+            clearable
+          >
+            <el-option
+              v-for="b in browserList"
+              :key="b.browser_id_str"
+              :label="b.custom_name"
+              :value="b.browser_id"
+            />
+          </el-select>
+          <span class="text-xs text-color-secondary">
+            定时运行时若浏览器未启动，服务端会自动拉起会话
+          </span>
+        </div>
+        <div v-if="browserError" class="text-xs text-danger">{{ browserError }}</div>
+      </div>
+
       <el-alert
-        v-if="runError"
-        class="workflow-run-error"
-        :title="runError"
-        type="error"
+        class="workflow-debug-tip"
+        type="info"
         :effect="themeStore.themeEffectString"
         :closable="false"
         show-icon
+        title="工作流不提供步骤编辑器：步骤的编辑与调试请在动作侧完成，工作流只负责「何时、用哪个浏览器跑哪个动作」。"
       />
-
-      <!-- 步骤编辑器 -->
-      <div class="workflow-step-editor h-[50vh] border border-border rounded">
-        <DebugBox
-          :key="dialogKey"
-          ref="debugBoxRef"
-          :browser-id="selectedBrowserId !== null ? String(selectedBrowserId) : ''"
-          :initial-steps="editItems"
-          edit-mode
-        />
-      </div>
-
-      <!-- 运行结果面板 -->
-      <el-collapse v-if="stepResults.length > 0" class="workflow-results-panel">
-        <el-collapse-item class="max-h-[30vh] overflow-auto">
-          <template #title>
-          <span class="font-medium">执行结果</span>
-          <div v-if="runSummary" class="text-xs text-color-primary">
-            共 {{ runSummary.total }} 步 ·
-            <span class="text-success">成功 {{ runSummary.success }}</span> ·
-            <span class="text-danger">失败 {{ runSummary.failed }}</span>
-          </div>
-        </template>
-        <div class="flex flex-col gap-2">
-          <div
-            v-for="(sr, idx) in stepResults"
-            :key="idx"
-            class="workflow-result-item flex items-start gap-2 p-2 rounded border border-border-lighter"
-            :class="sr.success ? 'bg-success-light-9' : 'bg-danger-light-9'"
-          >
-            <el-icon :size="16" :class="sr.success ? 'text-success' : 'text-danger'">
-              <CircleCheck v-if="sr.success" />
-              <CircleClose v-else />
-            </el-icon>
-            <div class="flex-1 min-w-0">
-              <div class="flex items-center gap-2">
-                <span class="text-sm font-medium">{{ sr.action_name || sr.action_id || `步骤 ${idx + 1}` }}</span>
-                <el-tag size="small" :type="sr.success ? 'success' : 'danger'">
-                  {{ sr.success ? '成功' : '失败' }}
-                </el-tag>
-                <span class="text-xs text-color-secondary">{{ formatExecTime(sr.execution_time) }}</span>
-              </div>
-              <div v-if="sr.error" class="text-xs text-danger mt-1 break-all">{{ sr.error }}</div>
-              <details v-if="sr.data || sr.variables" class="mt-1">
-                <summary class="text-xs text-color-secondary cursor-pointer hover:text-primary">详细信息</summary>
-                <pre class="text-xs mt-1 p-2 bg-bg-secondary rounded overflow-auto whitespace-pre-wrap break-all">{{ JSON.stringify({ data: sr.data, variables: sr.variables, replaced_params: sr.replaced_params }, null, 2) }}</pre>
-              </details>
-            </div>
-          </div>
-        </div>
-        </el-collapse-item>
-        
-      </el-collapse>
     </div>
 
     <template #footer>
@@ -556,6 +470,13 @@ function formatExecTime(t?: number) {
       </el-button>
     </template>
   </el-dialog>
+
+  <!-- 动作选择器 -->
+  <ActionPickerDialog
+    v-model="pickerVisible"
+    :selected-action-id="selectedAction?.action_id"
+    @select="handleActionPicked"
+  />
 
   <!-- 最小化浮动标签 -->
   <MinimizeBar

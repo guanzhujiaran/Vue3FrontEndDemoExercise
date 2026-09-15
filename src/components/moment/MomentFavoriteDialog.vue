@@ -5,6 +5,7 @@
     :title="bizTypeNum !== InteractionBizTypeEnum.DYNAMIC ? '收藏到收藏夹' : '收藏动态'"
     width="420px"
     align-center
+    :lock-scroll="false"
   >
     <div class="moment-favorite-dialog__body">
       <!-- 收藏夹列表 -->

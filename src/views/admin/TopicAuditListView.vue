@@ -222,6 +222,8 @@ async function handleApprove(item: MomentTopicAuditItem) {
   if (res) {
     removeRow((i) => i.topicId === item.topicId)
     ElMessage.success('已通过，话题已公开')
+    // 审核会改变各状态的数量，总览统计需同步刷新（否则卡片停留在审核前的数字）
+    await loadStatistics()
   }
 }
 
@@ -229,6 +231,7 @@ async function handleReject(item: MomentTopicAuditItem) {
   try {
     const { value: reason } = await ElMessageBox.prompt('请输入驳回原因', '驳回话题', {
       inputType: 'textarea',
+      lockScroll: false,
     })
     if (reason) {
       rejectingId.value = item.topicId
@@ -237,6 +240,8 @@ async function handleReject(item: MomentTopicAuditItem) {
       if (res) {
         removeRow((i) => i.topicId === item.topicId)
         ElMessage.success('已驳回')
+        // 审核会改变各状态的数量，总览统计需同步刷新
+        await loadStatistics()
       }
     }
   } catch {

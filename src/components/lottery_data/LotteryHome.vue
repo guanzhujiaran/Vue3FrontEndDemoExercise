@@ -90,7 +90,8 @@ const goTo = (item: NavigationItem) => {
     ElMessageBox.confirm('该功能需要登录才能使用，是否立即登录?', '提示', {
       confirmButtonText: '立即登录',
       cancelButtonText: '取消',
-      type: 'info'
+      type: 'info',
+      lockScroll: false
     })
       .then(() => {
         openGlobalLoginModal()

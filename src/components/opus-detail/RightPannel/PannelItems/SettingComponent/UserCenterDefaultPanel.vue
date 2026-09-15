@@ -378,6 +378,7 @@ onMounted(() => {
       class="user-center-avatar-dialog"
       title="修改头像"
       width="480px"
+      :lock-scroll="false"
     >
       <div class="user-center-avatar-dialog__body flex flex-col gap-3">
         <el-input

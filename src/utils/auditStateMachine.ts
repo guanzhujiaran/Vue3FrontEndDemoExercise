@@ -39,12 +39,21 @@ export const AUDIT_TABS: Array<{ name: AuditStateName; label: string; status: Re
   { name: 'REJECTED', label: '已驳回', status: ResourceAuditStatusEnum.REJECTED },
 ]
 
-/** 任意形态的状态值 → 成员名（大小写不敏感；RPA 审批字符串状态做映射） */
+/**
+ * 任意形态的状态值 → 成员名（大小写不敏感；各业务域的字符串状态做映射）
+ *
+ * 已登记的字符串词汇表：
+ * - RPA 审批单：`pending` / `approved` / `rejected`
+ * - 举报（be-message `ReportItem.auditStatus` 契约）：`pending` / `resolved` / `rejected`
+ *   —— `resolved`（已成立）等价于本状态机的 `NORMAL`（已过审）。
+ *   ⚠️ 漏登记会让它落到下方 `AUDITING` 兜底，把「已成立」显示成「待审核」（且颜色、可审核动作一并判错）。
+ */
 export function toAuditStateName(status: string | number | null | undefined): AuditStateName {
   const raw = String(status ?? '').trim()
   const alias: Record<string, AuditStateName> = {
     pending: 'AUDITING',
     approved: 'NORMAL',
+    resolved: 'NORMAL', // 举报「已成立」≡ 已过审（通过）
   }
   const key = (alias[raw.toLowerCase()] ?? raw).toUpperCase()
   return (key in AUDIT_STATE_META ? key : 'AUDITING') as AuditStateName

@@ -146,6 +146,7 @@
       title="创建话题"
       width="480"
       :close-on-click-modal="false"
+      :lock-scroll="false"
     >
       <el-form
         class="topic-create-dialog__form"

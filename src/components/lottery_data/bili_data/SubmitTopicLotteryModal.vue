@@ -8,6 +8,7 @@
     title="提交话题抽奖"
     width="500px"
     :close-on-click-modal="true"
+    :lock-scroll="false"
   >
     <el-alert
       title="提交 B 站话题活动抽奖"
