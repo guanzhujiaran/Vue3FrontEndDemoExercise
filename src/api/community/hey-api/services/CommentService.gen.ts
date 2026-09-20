@@ -14,6 +14,13 @@ export class CommentService {
      * 通过 x-bili-* 头识别登录用户；作者展示信息（昵称等）由列表接口按需从 pptr
      * Postgres 只读取回，本服务不再冗余用户快照。客户端真实 IP 从网关注入的头里提取，
      * 仅存原始地址。
+     *
+     * **资源为主体（2.63.0，计划书 §5.9）**：统一经 `get_biz(...).reply()` 分发——
+     * 一级评论目标是资源本身（`dynamic` / `lottery` / `others_lot_dyn` / `rpa_*`…），
+     * 楼中楼目标是根评论（`CommentBiz`，其内部按评论所属评论区定位 `oid`/`type`）。
+     * 「该类型是否支持评论」由资源类表达能力决定（未实现 `reply` 的类型直接报错），
+     * 「资源是否存在 / 是否可互动」由 `@biz_action` 校验（写路径严格、不降级），
+     * 因此本路由**不需要也不允许**维护可评论类型白名单。
      */
     public static addCommentApiV1CommentAddPost<ThrowOnError extends boolean = false>(options: Options<AddCommentApiV1CommentAddPostData, ThrowOnError>): RequestResult<AddCommentApiV1CommentAddPostResponses, AddCommentApiV1CommentAddPostErrors, ThrowOnError, 'data'> {
         return (options.client ?? client).post<AddCommentApiV1CommentAddPostResponses, AddCommentApiV1CommentAddPostErrors, ThrowOnError, 'data'>({

@@ -125,8 +125,8 @@
     <MomentPublishForm
       v-model:visible="forwardVisible"
       :attach-resource="{
-        bizType: InteractionBizTypeEnum.LOTTERY,
-        bizId: forwardingItem ? String(forwardingItem.normalized.id) : '',
+        bizType: forwardingItem ? itemBizType(forwardingItem) : InteractionBizTypeEnum.LOTTERY,
+        bizId: forwardingItem ? itemBizId(forwardingItem) : '',
         name: forwardingItem?.normalized.title || undefined,
       }"
     />
@@ -134,9 +134,9 @@
     <!-- 收藏到收藏夹：选择/新建收藏夹 -->
     <MomentFavoriteDialog
       v-model="favDialogVisible"
-      :dyn-id="favItem ? String(favItem.normalized.id) : ''"
-      :biz-type="InteractionBizTypeEnum.LOTTERY"
-      :biz-id="favItem ? String(favItem.normalized.id) : ''"
+      :dyn-id="favItem ? itemBizId(favItem) : ''"
+      :biz-type="favItem ? itemBizType(favItem) : InteractionBizTypeEnum.LOTTERY"
+      :biz-id="favItem ? itemBizId(favItem) : ''"
       @changed="handleFavChanged"
     />
   </div>
@@ -154,6 +154,7 @@ import MomentPublishForm from '@/components/moment/MomentPublishForm.vue'
 import MomentFavoriteDialog from '@/components/moment/MomentFavoriteDialog.vue'
 import { fetchInteractionStatus, InteractionBizTypeEnum, thumbMoment } from '@/api/notify/moment-api'
 import type { InteractionStatusItem } from '@/api/notify/moment-api'
+import { interactionBizTypeOf } from '@/stores/lottery_detail.ts'
 
 interface SimpleListItem {
   raw: any
@@ -194,18 +195,40 @@ const handleLinkClick = (normalized: SimpleListItem['normalized']) => {
 }
 
 // ============ 点赞 / 收藏 / 转发到动态（2.20.0，批量拉取互动状态）============
+// 互动定位按行类型分流：第三方抽奖动态走 others_lot_dyn（bizId=dynId），
+// 其余抽奖卡片走 lottery（bizId=lottery_id）；状态 key 含 bizType 避免互相覆盖。
 const statusMap = reactive<Record<string, InteractionStatusItem>>({})
 const interactLoading = ref(false)
 
+const itemBizType = (item: SimpleListItem) => interactionBizTypeOf(item.normalized.type)
+const itemBizId = (item: SimpleListItem) => String(item.normalized.id ?? '')
+const statusKey = (bizType: InteractionBizTypeEnum, bizId: string) => `${bizType}:${bizId}`
+
 async function loadAllStatus() {
-  const ids = parsedData.value.map((i) => String(i.normalized.id)).filter(Boolean)
-  if (!ids.length) return
+  const targets = parsedData.value
+    .map((i) => ({ bizType: itemBizType(i), bizId: itemBizId(i) }))
+    .filter((t) => t.bizId)
+  if (!targets.length) return
+  // 按 bizType 分组，每组一次批量接口
+  const groups = new Map<InteractionBizTypeEnum, string[]>()
+  for (const t of targets) {
+    const arr = groups.get(t.bizType) ?? []
+    if (!arr.includes(t.bizId)) arr.push(t.bizId)
+    groups.set(t.bizType, arr)
+  }
   const seq = ++loadSeq
   try {
-    const res = await fetchInteractionStatus(InteractionBizTypeEnum.LOTTERY, ids)
+    const results = await Promise.all(
+      [...groups.entries()].map(async ([bizType, ids]) => ({
+        bizType,
+        res: await fetchInteractionStatus(bizType, ids).catch(() => null)
+      }))
+    )
     if (seq !== loadSeq) return // 过期响应（期间又切页）丢弃
-    for (const item of res?.items ?? []) {
-      if (item?.bizId) statusMap[item.bizId] = item
+    for (const { bizType, res } of results) {
+      for (const item of res?.items ?? []) {
+        if (item?.bizId) statusMap[statusKey(bizType, item.bizId)] = item
+      }
     }
   } catch {
     // 弱依赖：失败不阻断展示
@@ -216,8 +239,10 @@ let lastLoadedKey = ''
 let loadSeq = 0
 watch(
   computed(() => {
-    const ids = parsedData.value.map((i) => String(i.normalized.id)).filter(Boolean)
-    return ids.slice().sort().join(',')
+    const keys = parsedData.value
+      .map((i) => statusKey(itemBizType(i), itemBizId(i)))
+      .filter((k) => !k.endsWith(':'))
+    return keys.slice().sort().join(',')
   }),
   async (key) => {
     if (!key) {
@@ -233,19 +258,26 @@ watch(
 )
 
 function statusOf(item: SimpleListItem): InteractionStatusItem {
-  return statusMap[String(item.normalized.id)] ?? { bizId: String(item.normalized.id), bizType: InteractionBizTypeEnum.LOTTERY }
+  const bizType = itemBizType(item)
+  const bizId = itemBizId(item)
+  return statusMap[statusKey(bizType, bizId)] ?? { bizId, bizType }
 }
 
 async function handleLike(item: SimpleListItem) {
   if (interactLoading.value) return
   interactLoading.value = true
-  const id = String(item.normalized.id)
+  const bizType = itemBizType(item)
+  const id = itemBizId(item)
   const st = statusOf(item)
   const next = !Boolean(st.isLike)
-  const res = await thumbMoment(id, next ? 1 : 2, { bizType: InteractionBizTypeEnum.LOTTERY, bizId: id })
+  const res = await thumbMoment(id, next ? 1 : 2, { bizType, bizId: id })
   interactLoading.value = false
   if (res) {
-    statusMap[id] = { ...st, isLike: next, likeCount: Math.max(0, Number(st.likeCount ?? 0) + (next ? 1 : -1)) }
+    statusMap[statusKey(bizType, id)] = {
+      ...st,
+      isLike: next,
+      likeCount: Math.max(0, Number(st.likeCount ?? 0) + (next ? 1 : -1))
+    }
   }
 }
 

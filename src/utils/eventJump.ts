@@ -11,6 +11,7 @@
  *
  * - `resource_type=dynamic`（resource_id=dynId） → 动态详情页（携带 rpid 定位）；
  * - `resource_type=lottery`（resource_id=lotteryId）→ 抽奖卡片详情页（携带 rpid 定位）；
+ * - `resource_type=others_lot_dyn`（resource_id=第三方动态 dynId）→ 第三方抽奖动态详情页；
  * - 其它业务（视频 / 专栏 / 其它）前端暂无对应路由，保持不跳转。
  */
 import type { Router } from 'vue-router'
@@ -45,6 +46,14 @@ export async function openEventDetail(item: EventFeedItem, router: Router): Prom
         name: RouteName.LOTTERY_CARD_DETAIL,
         query: rpid ? { id: resourceId, rpid } : { id: resourceId },
       })
+      return
+    }
+    // 第三方抽奖动态（resource_id=dynId）：独立命名空间与详情页，不能走抽奖卡片详情
+    if (resourceType === InteractionBizTypeEnum.OTHERS_LOT_DYN) {
+      openRouteInNewTab(router, {
+        name: RouteName.OTHERS_LOT_DYN_DETAIL,
+        query: rpid ? { dynId: resourceId, rpid } : { dynId: resourceId },
+      })
     }
   }
 
@@ -61,5 +70,9 @@ export async function openEventDetail(item: EventFeedItem, router: Router): Prom
   }
   if (business === InteractionBizTypeEnum.LOTTERY && resourceId) {
     openRouteInNewTab(router, { name: RouteName.LOTTERY_CARD_DETAIL, query: { id: resourceId } })
+    return
+  }
+  if (business === InteractionBizTypeEnum.OTHERS_LOT_DYN && resourceId) {
+    openRouteInNewTab(router, { name: RouteName.OTHERS_LOT_DYN_DETAIL, query: { dynId: resourceId } })
   }
 }

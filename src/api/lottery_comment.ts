@@ -15,7 +15,7 @@ import type { InjectionKey } from 'vue'
 
 /**
  * 评论区业务类型 / 排序 / 状态，直接使用 SDK 生成的数值枚举，不再手写字符串镜像：
- * - InteractionBizTypeEnum（评论区 type）：DYNAMIC=1 / LOTTERY=2（白名单仅收录二者）
+ * - InteractionBizTypeEnum（评论区 type）：DYNAMIC=1 / LOTTERY=2 / OTHERS_LOT_DYN=15（第三方抽奖动态）
  * - CommentSortEnum：HOT=1 / TIME=2
  * - ResourceAuditStatusEnum：NORMAL=1 / AUDITING=2 / REJECTED=3 / HIDDEN=4 / DELETED=5
  * 与后端 be-message-service `app.models.enums.*` 严格对齐，保证前后端取值永远一致。
@@ -41,7 +41,8 @@ export type {
 export interface CommentHandlers {
   like: (payload: { rpid: string; nextAction: 0 | 1 | 2 }) => void
   del: (rpid: string) => Promise<BusinessHandlerResult<null> | undefined>
-  reply: (payload: { root: string; parent: string; message: string; atNameToMid?: Record<string, number>; replyTo?: CommentUserBrief | null }) => void
+  /** 发表回复：允许返回 Promise，调用方（楼中楼）需要等落库完成后再展开查看 */
+  reply: (payload: { root: string; parent: string; message: string; atNameToMid?: Record<string, number>; replyTo?: CommentUserBrief | null }) => void | Promise<void>
   /** 楼中楼展开：返回某一页的子回复与总数 */
   expandReplies: (item: CommentItem, page: number) => Promise<{ items: CommentItem[]; total: number }>
 }

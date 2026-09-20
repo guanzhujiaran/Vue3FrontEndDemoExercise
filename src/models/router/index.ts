@@ -101,6 +101,8 @@ export enum RouteName {
   TOPIC_LOTTERY = '话题抽奖',
   OTHERS_LOT_DYN_LIST = '第三方抽奖动态',
   LOTTERY_CARD_DETAIL = '抽奖卡片详情',
+  // 第三方抽奖动态详情（按 dynId 定位；后端 FrontendRouteEnum.OTHERS_LOT_DYN_DETAIL 同名）
+  OTHERS_LOT_DYN_DETAIL = '第三方抽奖动态详情',
 
   // 动态模块
   MOMENT = '动态',

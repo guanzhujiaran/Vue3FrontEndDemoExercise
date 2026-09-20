@@ -38,7 +38,8 @@ export const generated = {
       typeRpaAction: 'RPA动作',
       typeRpaWorkflow: 'RPA流程',
       typeRpaBrowser: 'RPA浏览器',
-      typeRpaPlugin: 'RPA插件'
+      typeRpaPlugin: 'RPA插件',
+      typeOthersLotDyn: '第三方抽奖'
     },
     network: {
       title: '网络连接诊断',
@@ -103,7 +104,8 @@ export const generated = {
       typeRpaAction: 'RPA Action',
       typeRpaWorkflow: 'RPA Workflow',
       typeRpaBrowser: 'RPA Browser',
-      typeRpaPlugin: 'RPA Plugin'
+      typeRpaPlugin: 'RPA Plugin',
+      typeOthersLotDyn: 'Third-party Lottery'
     },
     network: {
       title: 'Network Connection Diagnostics',
@@ -168,7 +170,8 @@ export const generated = {
       typeRpaAction: 'RPA動作',
       typeRpaWorkflow: 'RPA流程',
       typeRpaBrowser: 'RPA瀏覽器',
-      typeRpaPlugin: 'RPA外掛'
+      typeRpaPlugin: 'RPA外掛',
+      typeOthersLotDyn: '第三方抽獎'
     },
     network: {
       title: '網路連線診斷',
@@ -232,7 +235,8 @@ export const generated = {
       typeRpaAction: 'RPA動作',
       typeRpaWorkflow: 'RPAフロー',
       typeRpaBrowser: 'RPAブラウザ',
-      typeRpaPlugin: 'RPAプラグイン'
+      typeRpaPlugin: 'RPAプラグイン',
+      typeOthersLotDyn: '第三者抽選'
     },
     network: {
       title: 'ネットワーク接続診断',
@@ -297,7 +301,8 @@ export const generated = {
       typeRpaAction: 'RPA 액션',
       typeRpaWorkflow: 'RPA 흐름',
       typeRpaBrowser: 'RPA 브라우저',
-      typeRpaPlugin: 'RPA 플러그인'
+      typeRpaPlugin: 'RPA 플러그인',
+      typeOthersLotDyn: '서드파티 추첨'
     },
     network: {
       title: '네트워크 연결 진단',

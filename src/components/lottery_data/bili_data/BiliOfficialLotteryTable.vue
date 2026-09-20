@@ -12,7 +12,9 @@ import LotteryActionsDropdown from '@/components/lottery_data/bili_data/LotteryA
 import MomentPublishForm from '@/components/moment/MomentPublishForm.vue'
 import MomentFavoriteDialog from '@/components/moment/MomentFavoriteDialog.vue'
 import { useLotteryInteractions } from '@/utils/useLotteryInteractions'
+import type { InteractionTarget } from '@/utils/useLotteryInteractions'
 import { InteractionBizTypeEnum } from '@/api/notify/moment-api'
+import { interactionBizTypeOf } from '@/stores/lottery_detail'
 
 const props = withDefaults(
   defineProps<{
@@ -36,9 +38,17 @@ const handleParticipateSwitch = (row: NormalizedLottery, val: boolean | number |
   setLotteryParticipation(String(row.id), Boolean(val))
 }
 
-// 抽奖互动（点赞）：批量拉取本页全部行互动状态
+// 行的互动定位（bizType + bizId）：第三方抽奖动态走 others_lot_dyn，其余走 lottery
+const rowBizType = (row: NormalizedLottery) => interactionBizTypeOf(row.type)
+const rowBizId = (row: NormalizedLottery) => String(row.id ?? '')
+const rowTarget = (row: NormalizedLottery): InteractionTarget => ({
+  bizType: rowBizType(row),
+  bizId: rowBizId(row)
+})
+
+// 抽奖互动（点赞）：批量拉取本页全部行互动状态（按 bizType 分组请求）
 const { statusOf, like, loadAll, loading: interactionLoading } = useLotteryInteractions(
-  () => tableData.value.map((r) => String(r.id)).filter(Boolean)
+  () => tableData.value.map(rowTarget).filter((t) => t.bizId)
 )
 
 // 收藏到收藏夹：弹出收藏夹选择弹窗（多夹），选择/新建收藏夹后收藏
@@ -227,10 +237,10 @@ const prizeIndexOf = (columnKey: PropertyKey | undefined) =>
 
                 <!-- 点赞 / 收藏 / 转发到动态（三个点下拉框） -->
                 <LotteryActionsDropdown
-                  :lottery-id="String(rowData.id)"
-                  :status="statusOf(String(rowData.id))"
+                  :lottery-id="rowBizId(rowData)"
+                  :status="statusOf(rowBizId(rowData), rowBizType(rowData))"
                   :loading="interactionLoading"
-                  @like="like(String(rowData.id))"
+                  @like="like(rowBizId(rowData), rowBizType(rowData))"
                   @favorite="openFavoriteDialog(rowData)"
                   @forward="openForwardDialog(rowData)"
                 />
@@ -257,8 +267,8 @@ const prizeIndexOf = (columnKey: PropertyKey | undefined) =>
     <MomentPublishForm
       v-model:visible="forwardVisible"
       :attach-resource="{
-        bizType: InteractionBizTypeEnum.LOTTERY,
-        bizId: forwardingRow ? String(forwardingRow.id) : '',
+        bizType: forwardingRow ? rowBizType(forwardingRow) : InteractionBizTypeEnum.LOTTERY,
+        bizId: forwardingRow ? rowBizId(forwardingRow) : '',
         name: forwardingRow?.title || undefined,
       }"
     />
@@ -266,9 +276,9 @@ const prizeIndexOf = (columnKey: PropertyKey | undefined) =>
     <!-- 收藏到收藏夹：选择/新建收藏夹 -->
     <MomentFavoriteDialog
       v-model="favDialogVisible"
-      :dyn-id="favRow ? String(favRow.id) : ''"
-      :biz-type="InteractionBizTypeEnum.LOTTERY"
-      :biz-id="favRow ? String(favRow.id) : ''"
+      :dyn-id="favRow ? rowBizId(favRow) : ''"
+      :biz-type="favRow ? rowBizType(favRow) : InteractionBizTypeEnum.LOTTERY"
+      :biz-id="favRow ? rowBizId(favRow) : ''"
       @changed="handleFavChanged"
     />
   </div>

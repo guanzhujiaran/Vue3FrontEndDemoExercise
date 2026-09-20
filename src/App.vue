@@ -4,8 +4,8 @@ import SponsorNotification from '@/components/sponsor/sponsor-notification.vue'
 import { onMounted, onUnmounted, provide, ref, computed } from 'vue'
 import { useThemeStore } from '@/stores/theme'
 import { useUserPrefStore } from '@/stores/user_pref.ts'
-import { useHead } from '@vueuse/head'
 import emitter from '@/utils/mitt'
+import { useRouteSeo } from '@/composables/useRouteSeo.ts'
 import { useLocaleStore } from '@/stores/locale'
 import { BiliImg } from '@/assets/img/BiliImg.ts'
 import HeaderBarView from '@/components/CommonCompo/Bili-Header-Compo/items/HeaderBarView.vue'
@@ -18,20 +18,8 @@ import { isLogin } from '@/api/user/utils.ts'
 import type { Ref } from 'vue'
 import NetworkErrorView from '@/views/NetworkErrorView.vue'
 import { useDebounceFn, useResizeObserver } from '@vueuse/core'
-useHead({
-  title: '爆破哔哩哔哩弹幕视频网 - ( ゜- ゜)つロ 乾杯~ - bilibili',
-  meta: [
-    {
-      name: 'description',
-      content:
-        'B站官方抽奖信息集合，转发抽奖，预约抽奖，充电抽奖。山姆会员店（上海）商品数据统计展示。'
-    },
-    {
-      property: 'og:title',
-      content: 'B站官方抽奖信息集合 | 山姆会员店（上海）商品数据统计展示'
-    }
-  ]
-})
+// 按当前路由动态维护 title / description / canonical / robots / OG（SEO）
+useRouteSeo()
 
 const route = useRoute()
 /**

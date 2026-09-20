@@ -24,6 +24,8 @@ function typeLabel(type: InteractionBizTypeEnum): string {
       return t('home.typeDynamic')
     case InteractionBizTypeEnum.LOTTERY:
       return t('home.typeLottery')
+    case InteractionBizTypeEnum.OTHERS_LOT_DYN:
+      return t('home.typeOthersLotDyn')
     case InteractionBizTypeEnum.RPA_ACTION:
       return t('home.typeRpaAction')
     case InteractionBizTypeEnum.RPA_WORKFLOW:
@@ -62,12 +64,15 @@ function formatTime(ctime?: string): string {
   return d.toLocaleString('zh-CN', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false })
 }
 
-/** 点击单条评论 → 跳转对应资源的评论区（LOTTERY / DYNAMIC 支持，RPA 暂无详情页仅展示） */
+/** 点击单条评论 → 跳转对应资源的评论区（LOTTERY / OTHERS_LOT_DYN / DYNAMIC 支持，RPA 暂无详情页仅展示） */
 function goComment(item: CommentItem, type: InteractionBizTypeEnum) {
   if (!item.oid) return
   const rpid = String(item.rpid ?? '')
   if (type === InteractionBizTypeEnum.LOTTERY) {
     router.push({ name: RouteName.LOTTERY_CARD_DETAIL, query: { id: String(item.oid), ...(rpid ? { rpid } : {}) } })
+  } else if (type === InteractionBizTypeEnum.OTHERS_LOT_DYN) {
+    // 第三方抽奖动态：按 dynId 走独立详情页（无 lottery_id）
+    router.push({ name: RouteName.OTHERS_LOT_DYN_DETAIL, query: { dynId: String(item.oid), ...(rpid ? { rpid } : {}) } })
   } else if (type === InteractionBizTypeEnum.DYNAMIC) {
     router.push({ name: 'MOMENT_DETAIL', params: { momentId: String(item.oid) }, query: rpid ? { rpid } : {} })
   }

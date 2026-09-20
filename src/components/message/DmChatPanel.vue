@@ -46,7 +46,7 @@
     </div>
 
     <!-- 消息列表：反向无限加载（最新在底部，默认滚到底；向上拉取更老内容） -->
-    <div class="dm-chat-panel__body flex-1 min-h-0 flex flex-col">
+    <div class="dm-chat-panel__body bili-thin-scroll flex min-h-0 flex-1 flex-col">
       <LoadingWrap v-if="talkerLoading" :loading="true" class="h-full" />
       <LoadingWrap v-else-if="loading" :loading="loading" class="h-full" />
       <BiliError
@@ -85,7 +85,7 @@
                 <!-- 对方头像 -->
                 <img
                   v-if="!isSelf(msg)"
-                  class="dm-chat-panel__avatar h-9 w-9 shrink-0 self-start rounded-full object-cover"
+                  class="dm-chat-panel__avatar mr-3 h-9 w-9 shrink-0 self-start rounded-full object-cover"
                   :src="displayAvatar || BiliImg.face.noface"
                   alt="avatar"
                   referrerpolicy="no-referrer"
@@ -114,13 +114,13 @@
                     <!-- 气泡 -->
                     <div
                       v-if="msg.audit_state === ResourceAuditStatusEnum.REJECTED || msg.audit_state === ResourceAuditStatusEnum.HIDDEN"
-                      class="dm-chat-panel__bubble dm-chat-panel__bubble--system max-w-full break-words rounded-lg px-4 py-2.5 text-sm"
+                      class="dm-chat-panel__bubble dm-chat-panel__bubble--system max-w-full break-words rounded-lg bg-bg-overlay px-4 py-2.5 text-sm text-text-placeholder"
                     >
                       {{ msg.audit_state === ResourceAuditStatusEnum.HIDDEN ? t('message.dmHidden') : t('message.dmRejected') }}
                     </div>
                     <div
                       v-else-if="msg.msg_status === DmMsgStatusEnum.RECALLED"
-                      class="dm-chat-panel__bubble dm-chat-panel__bubble--system max-w-full break-words rounded-lg px-4 py-2.5 text-sm"
+                      class="dm-chat-panel__bubble dm-chat-panel__bubble--system max-w-full break-words rounded-lg bg-bg-overlay px-4 py-2.5 text-sm text-text-placeholder"
                     >
                       {{ t('message.dmRecalled') }}
                     </div>
@@ -186,7 +186,7 @@
           <el-button
             :disabled="!draft.trim() || sending"
             :loading="sending"
-            class="dm-chat-panel__send-btn"
+            class="dm-chat-panel__send-btn border-black bg-black text-white enabled:hover:border-black/80 enabled:hover:bg-black/80 disabled:border-fill disabled:bg-fill disabled:text-text-placeholder"
             @click="onSend"
           >
             发送
@@ -677,32 +677,3 @@ onUnmounted(stopPolling)
 
 defineExpose({ load })
 </script>
-
-<style scoped>
-.dm-chat-panel__body::-webkit-scrollbar {
-  width: 6px;
-}
-.dm-chat-panel__body::-webkit-scrollbar-thumb {
-  background: var(--color-border-light);
-  border-radius: 3px;
-}
-.dm-chat-panel__bubble--system {
-  background: var(--color-bg-overlay);
-  color: var(--color-text-placeholder);
-}
-.dm-chat-panel__avatar {
-  margin-right: 0.75rem;
-}
-.dm-chat-panel__send-btn {
-  background: #222 !important;
-  border-color: #222 !important;
-  color: #fff !important;
-}
-.dm-chat-panel__send-btn:hover:not(:disabled) {
-  background: #333 !important;
-  border-color: #333 !important;
-}
-.dm-chat-panel__send-btn.is-disabled {
-  background: var(--color-fill) !important;
-  border-color: var(--color-fill) !important;
-  color: var(--color-text-placehold

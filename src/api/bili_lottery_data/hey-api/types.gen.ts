@@ -895,6 +895,27 @@ export type GetLotteryDetailReq = {
 };
 
 /**
+ * GetOthersLotDynDetailReq
+ *
+ * 按 dynId 获取单个第三方抽奖动态详情的请求体（2.61.0）。
+ *
+ * 第三方抽奖动态没有 `lottery_id`，互动 / 详情一律以 `dynId` 定位
+ * （对应 be-message 的 `others_lot_dyn` 资源类型，bizType=15）。
+ *
+ * `dyn_id` 是 19 位雪花 ID，超过 JS `Number` 安全整数范围：前端 / 网关一旦
+ * 经过 JS Number 就会丢精度（`...52360` → `...52400`）导致查询 404，
+ * 故入参用 `StrInt` 接受字符串，由后端归一为 int（前端统一以字符串传）。
+ */
+export type GetOthersLotDynDetailReq = {
+    /**
+     * Dyn Id
+     *
+     * 第三方抽奖动态 dynId（biliopusdb.t_lotdyninfo.dynId；雪花 ID，支持字符串传参避免 JS 精度丢失）
+     */
+    dyn_id: number | string;
+};
+
+/**
  * GlobalSchedulerStatusModel
  *
  * 全局调度器完整状态
@@ -1542,6 +1563,78 @@ export type OfficialLotteryResp = {
      * Lottery Id Str
      */
     readonly lottery_id_str: string;
+};
+
+/**
+ * OthersLotDynItem
+ *
+ * 第三方抽奖动态条目
+ *
+ * 奖品信息（prize_names / lottery_time）已并入 extra_info（t_lot_extra_info），
+ * 接口统一通过 extra_info 返回，不再使用独立的 prize_info 字段。
+ */
+export type OthersLotDynItem = {
+    /**
+     * Dynid
+     */
+    dynId: number;
+    /**
+     * Dynamicurl
+     */
+    dynamicUrl: string | null;
+    /**
+     * Authorname
+     */
+    authorName: string | null;
+    /**
+     * Up Uid
+     */
+    up_uid: number | null;
+    /**
+     * Pubtime
+     */
+    pubTime: string | null;
+    /**
+     * Dyncontent
+     */
+    dynContent: string | null;
+    /**
+     * Commentcount
+     */
+    commentCount: number | null;
+    /**
+     * Repostcount
+     */
+    repostCount: number | null;
+    /**
+     * Likecount
+     */
+    likeCount: number | null;
+    officialLotType: OfficialLotType | null;
+    /**
+     * Isofficialaccount
+     */
+    isOfficialAccount: number | null;
+    /**
+     * Created At
+     */
+    created_at: string | null;
+    /**
+     * Ismanualreply
+     */
+    isManualReply?: boolean | null;
+    /**
+     * 抽奖附加信息（含奖品名/开奖时间，统一来自 t_lot_extra_info）
+     */
+    extra_info?: CommonLotExtraInfoResp | null;
+    /**
+     * Dynid Str
+     */
+    readonly dynId_str: string;
+    /**
+     * Up Uid Str
+     */
+    readonly up_uid_str: string | null;
 };
 
 /**
@@ -2233,6 +2326,21 @@ export type StandardResponseLotteryFilterParamsResp = {
      */
     msg?: string;
     data?: LotteryFilterParamsResp | null;
+};
+
+/**
+ * StandardResponse[OthersLotDynItem]
+ */
+export type StandardResponseOthersLotDynItem = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: OthersLotDynItem | null;
 };
 
 /**
@@ -3703,6 +3811,70 @@ export type OfficialLotteryRespWritable = {
 };
 
 /**
+ * OthersLotDynItem
+ *
+ * 第三方抽奖动态条目
+ *
+ * 奖品信息（prize_names / lottery_time）已并入 extra_info（t_lot_extra_info），
+ * 接口统一通过 extra_info 返回，不再使用独立的 prize_info 字段。
+ */
+export type OthersLotDynItemWritable = {
+    /**
+     * Dynid
+     */
+    dynId: number;
+    /**
+     * Dynamicurl
+     */
+    dynamicUrl: string | null;
+    /**
+     * Authorname
+     */
+    authorName: string | null;
+    /**
+     * Up Uid
+     */
+    up_uid: number | null;
+    /**
+     * Pubtime
+     */
+    pubTime: string | null;
+    /**
+     * Dyncontent
+     */
+    dynContent: string | null;
+    /**
+     * Commentcount
+     */
+    commentCount: number | null;
+    /**
+     * Repostcount
+     */
+    repostCount: number | null;
+    /**
+     * Likecount
+     */
+    likeCount: number | null;
+    officialLotType: OfficialLotType | null;
+    /**
+     * Isofficialaccount
+     */
+    isOfficialAccount: number | null;
+    /**
+     * Created At
+     */
+    created_at: string | null;
+    /**
+     * Ismanualreply
+     */
+    isManualReply?: boolean | null;
+    /**
+     * 抽奖附加信息（含奖品名/开奖时间，统一来自 t_lot_extra_info）
+     */
+    extra_info?: CommonLotExtraInfoResp | null;
+};
+
+/**
  * ProgressStatusResp
  */
 export type ProgressStatusRespWritable = {
@@ -4021,6 +4193,21 @@ export type StandardResponseLotteryFilterParamsRespWritable = {
      */
     msg?: string;
     data?: LotteryFilterParamsRespWritable | null;
+};
+
+/**
+ * StandardResponse[OthersLotDynItem]
+ */
+export type StandardResponseOthersLotDynItemWritable = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: OthersLotDynItemWritable | null;
 };
 
 /**
@@ -4825,6 +5012,31 @@ export type GetLotteryDetailApiV1LotteryDatabaseBiliGetLotteryDetailPostResponse
 };
 
 export type GetLotteryDetailApiV1LotteryDatabaseBiliGetLotteryDetailPostResponse = GetLotteryDetailApiV1LotteryDatabaseBiliGetLotteryDetailPostResponses[keyof GetLotteryDetailApiV1LotteryDatabaseBiliGetLotteryDetailPostResponses];
+
+export type GetOthersLotDynDetailApiV1LotteryDatabaseBiliGetOthersLotDynDetailPostData = {
+    body: GetOthersLotDynDetailReq;
+    path?: never;
+    query?: never;
+    url: '/api/v1/lottery_database/bili/GetOthersLotDynDetail';
+};
+
+export type GetOthersLotDynDetailApiV1LotteryDatabaseBiliGetOthersLotDynDetailPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetOthersLotDynDetailApiV1LotteryDatabaseBiliGetOthersLotDynDetailPostError = GetOthersLotDynDetailApiV1LotteryDatabaseBiliGetOthersLotDynDetailPostErrors[keyof GetOthersLotDynDetailApiV1LotteryDatabaseBiliGetOthersLotDynDetailPostErrors];
+
+export type GetOthersLotDynDetailApiV1LotteryDatabaseBiliGetOthersLotDynDetailPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseOthersLotDynItem;
+};
+
+export type GetOthersLotDynDetailApiV1LotteryDatabaseBiliGetOthersLotDynDetailPostResponse = GetOthersLotDynDetailApiV1LotteryDatabaseBiliGetOthersLotDynDetailPostResponses[keyof GetOthersLotDynDetailApiV1LotteryDatabaseBiliGetOthersLotDynDetailPostResponses];
 
 export type LotteryHofApiV1LotteryDatabaseBiliLotteryHofLotTypeGetData = {
     body?: never;

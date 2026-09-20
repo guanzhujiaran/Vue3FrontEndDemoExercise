@@ -203,6 +203,20 @@ const routes: CustomRouteRecordRaw[] = [
         }
       },
       {
+        // 第三方抽奖动态详情：按 dynId 拉详情（互动 bizType=others_lot_dyn），
+        // 不能复用 card-detail（那按 lotdata.lottery_id 拉详情）
+        path: 'others-dyn-detail',
+        name: RouteName.OTHERS_LOT_DYN_DETAIL,
+        component: () => import('@/views/OthersLotDynDetailView.vue'),
+        meta: {
+          title: RouteName.OTHERS_LOT_DYN_DETAIL,
+          icon: IconChat,
+          description: '第三方抽奖动态详情与评论区',
+          showInHome: false,
+          isHeaderShow: false
+        }
+      },
+      {
         path: 'bili-data',
         name: RouteName.BILI_DATA,
         redirect: {
@@ -804,6 +818,17 @@ const routes: CustomRouteRecordRaw[] = [
         meta: {
           title: '封面审核',
           requiresAdmin: true,
+          hidden: true
+        }
+      },
+      {
+        // 运行时配置热更新（msg_sys_config）：仅消息管理端 root 可见
+        path: 'sys-config',
+        name: 'ADMIN_SYS_CONFIG',
+        component: () => import('@/views/admin/SysConfigView.vue'),
+        meta: {
+          title: '系统配置',
+          requiresMessageRoot: true,
           hidden: true
         }
       }

@@ -45,8 +45,34 @@ const isOwn = computed(
 const isUp = computed(
   () => !!props.upMid && String(props.upMid) === String(props.item.mid)
 )
-/** 是否存在子回复（决定是否展示「共 N 条回复」折叠入口） */
-const hasMoreSub = computed(() => Number(props.item.rcount) > 0)
+
+/**
+ * 是否为一级评论（只有一级评论有楼中楼；楼中楼恒两层，不再向下嵌套入口）。
+ * `root` 后端为字符串 `"0"`，这里用 `String()` 归一，避免 number/string 差异导致入口消失。
+ */
+const isRootComment = computed(() => String(props.item.root ?? '0') === '0')
+
+/** 折叠态预览：复用后端已返回的 `replies`（`comment_sub_preview_count` 条），展开态改由分页列表渲染 */
+const previewReplies = computed<CommentItem[]>(() => {
+  if (!isRootComment.value || subExpanded.value) return []
+  return (props.item.replies ?? []) as CommentItem[]
+})
+
+/** 子回复总数（入口文案展示）：rcount 缺失时用预览条数兜底 */
+const subCountDisplay = computed(() =>
+  Math.max(Number(props.item.rcount) || 0, previewReplies.value.length)
+)
+
+/**
+ * 是否展示「共 N 条回复，点击查看」入口：
+ * 预览未覆盖全部回复时展示；`rcount` 缺失（0）但已有预览的异常数据也展示，避免无法查看更多。
+ */
+const hasMoreSub = computed(() => {
+  if (!isRootComment.value) return false
+  const total = Number(props.item.rcount) || 0
+  if (total > previewReplies.value.length) return true
+  return total === 0 && previewReplies.value.length > 0
+})
 
 // SDK 重新生成后 CommentUserBrief / reply_to 为松散索引类型（[key: string]: unknown），
 // 模板取值统一经此收窄，避免 {} 直接赋给 string / number
@@ -164,12 +190,12 @@ function onReport() {
 /** 回复输入框引用：复用主评论框同一套 @ 提及组件 */
 const replyMentionRef = ref<InstanceType<typeof LotteryCommentMention> | null>(null)
 
-const submitReply = () => {
+const submitReply = async () => {
   const msg = replyContent.value.trim()
   if (!msg) return
-  const root = props.item.root === '0' ? props.item.rpid : (props.item.root || props.item.rpid)
+  const root = String(props.item.root ?? '0') === '0' ? props.item.rpid : (props.item.root || props.item.rpid)
   const atMap = replyMentionRef.value?.buildAtNameToMid(msg) || {}
-  handlers.reply({
+  await handlers.reply({
     root,
     parent: props.item.rpid,
     message: msg,
@@ -179,6 +205,10 @@ const submitReply = () => {
   })
   replyMentionRef.value?.reset()
   showReply.value = false
+  // 自己刚发的回复要立刻可见：显式展开楼中楼（折叠态只展示预览，
+  // 不会被新回复自动顶开）；首次展开时按第 1 页拉取，已展开则靠父级 prepend + watch 合并。
+  subExpanded.value = true
+  if (subItems.value.length === 0) await loadSubRepliesPage(1)
 }
 
 /** 加载指定页的子回复（用于分页切换；替换当前页 subItems） */
@@ -221,20 +251,20 @@ function collapseSubReplies() {
 }
 
 /**
- * 同步父级新增的子回复：用户在本评论的楼中楼发表回复后，
- * 父级会把新回复 prepend 到 item.replies；展开态下需同步进 subItems 以立即可见。
- * 分页自身触发的 item.replies 变更（subLoading=true）会被跳过。
+ * 同步父级变更的子回复（`item.replies` 既承载折叠态预览，也承载本地新增回复）：
+ * **仅在已展开时**把新回复并入当前页列表，让回复立即可见；
+ * 折叠态一律交给 `previewReplies` 渲染——绝不能在这里自动展开，
+ * 否则列表刷新（发评论 / 点赞 / 切换分页）会把「共 N 条回复，点击查看」入口顶掉。
+ * 分页自身触发的变更（subLoading=true）会被跳过。
  */
 watch(
   () => props.item.replies,
   (newReplies) => {
     if (subLoading.value) return
-    if (!newReplies) return
+    if (!newReplies || !subExpanded.value) return
     const existing = new Set(subItems.value.map((s) => s.rpid))
     const fresh = newReplies.filter((r) => !existing.has(r.rpid))
     if (fresh.length) {
-      // 回复后无论楼中楼是否已展开都自动展开，确保用户能立刻看到自己/他人的新回复
-      subExpanded.value = true
       subItems.value = [...fresh, ...subItems.value]
     }
   },
@@ -389,19 +419,36 @@ watch(
         </el-dropdown>
       </div>
 
-      <!-- 楼中楼折叠入口：点击展开并加载第 1 页 -->
-      <div v-if="item.root === '0' && hasMoreSub && !subExpanded" class="mt-1">
-        <span
-          class="inline-flex items-center gap-1 cursor-pointer text-primary text-sm hover:opacity-80 transition-opacity"
+      <!-- 楼中楼折叠态：预览（后端 comment_sub_preview_count 条）+「共 N 条回复，点击查看」 -->
+      <div
+        v-if="!subExpanded && (previewReplies.length || hasMoreSub)"
+        class="lottery-comment-item__sub-collapsed mt-2 border-l border-border-light pl-3"
+      >
+        <ul v-if="previewReplies.length" class="lottery-comment-item__sub-preview-list m-0 list-none space-y-0 p-0">
+          <li v-for="sub in previewReplies" :key="sub.rpid">
+            <LotteryCommentItem
+              :item="sub"
+              :depth="(depth || 0) + 1"
+              :up-mid="upMid"
+              :current-mid="currentMid"
+              :focused="focusedRpid === sub.rpid"
+              @deleted="onSubDeleted"
+            />
+          </li>
+        </ul>
+        <button
+          v-if="hasMoreSub"
+          type="button"
+          class="lottery-comment-item__sub-more mt-1 inline-flex items-center gap-1 cursor-pointer border-none bg-transparent px-0 text-primary text-sm hover:opacity-80 transition-opacity"
           @click="openSubReplies"
         >
-          共 {{ item.rcount }} 条回复
+          共 {{ subCountDisplay }} 条回复，点击查看
           <el-icon :size="14"><ArrowDown /></el-icon>
-        </span>
+        </button>
       </div>
 
       <!-- 展开态子回复列表：分页加载当前页 subItems -->
-      <ul v-if="subExpanded && subItems.length" class="mt-2 space-y-0 border-l border-border-light pl-3">
+      <ul v-if="subExpanded && subItems.length" class="lottery-comment-item__sub-list mt-2 m-0 list-none space-y-0 border-l border-border-light pl-3 p-0">
         <li v-for="sub in subItems" :key="sub.rpid">
           <LotteryCommentItem
             :item="sub"
@@ -414,27 +461,46 @@ watch(
         </li>
       </ul>
 
-      <!-- 展开态分页器（B 站风格：共N页 + 页码 + 下一页 + 收起）；只有一页时整组隐藏 -->
-      <div v-if="subExpanded && subTotalPages > 1" class="lottery-comment-item__sub-pagination mt-2 flex items-center gap-3 text-xs">
-        <span class="text-text-placeholder">共{{ subTotalPages }}页</span>
-        <button
-          v-for="p in subTotalPages"
-          :key="p"
-          class="cursor-pointer border-none bg-transparent px-1 transition-colors"
-          :class="p === subCurrentPage ? 'text-primary font-medium' : 'text-text-secondary hover:text-primary'"
-          @click="gotoSubPage(p)"
+      <!-- 展开态加载中 / 加载失败重试（避免展开后空白且无路可退） -->
+      <div
+        v-if="subExpanded && !subItems.length"
+        v-loading="subLoading"
+        class="lottery-comment-item__sub-loading mt-2 min-h-12"
+      >
+        <el-link
+          v-if="!subLoading"
+          class="lottery-comment-item__sub-retry text-sm"
+          type="primary"
+          :underline="false"
+          @click="loadSubRepliesPage(subCurrentPage)"
         >
-          {{ p }}
-        </button>
+          加载失败，点击重试
+        </el-link>
+      </div>
+
+      <!-- 展开态页脚：多页时给「共N页 + 页码 + 下一页」，任何展开态都保留「收起」 -->
+      <div v-if="subExpanded" class="lottery-comment-item__sub-pagination mt-2 flex items-center gap-3 text-xs">
+        <template v-if="subTotalPages > 1">
+          <span class="text-text-placeholder">共{{ subTotalPages }}页</span>
+          <button
+            v-for="p in subTotalPages"
+            :key="p"
+            class="lottery-comment-item__sub-page cursor-pointer border-none bg-transparent px-1 transition-colors"
+            :class="p === subCurrentPage ? 'text-primary font-medium' : 'text-text-secondary hover:text-primary'"
+            @click="gotoSubPage(p)"
+          >
+            {{ p }}
+          </button>
+          <button
+            v-if="subCurrentPage < subTotalPages"
+            class="lottery-comment-item__sub-next cursor-pointer border-none bg-transparent text-text-secondary hover:text-primary transition-colors"
+            @click="gotoSubPage(subCurrentPage + 1)"
+          >
+            下一页
+          </button>
+        </template>
         <button
-          v-if="subCurrentPage < subTotalPages"
-          class="cursor-pointer border-none bg-transparent text-text-secondary hover:text-primary transition-colors"
-          @click="gotoSubPage(subCurrentPage + 1)"
-        >
-          下一页
-        </button>
-        <button
-          class="ml-auto cursor-pointer border-none bg-transparent text-text-placeholder hover:text-primary transition-colors"
+          class="lottery-comment-item__sub-collapse ml-auto cursor-pointer border-none bg-transparent text-text-placeholder hover:text-primary transition-colors"
           @click="collapseSubReplies"
         >
           收起

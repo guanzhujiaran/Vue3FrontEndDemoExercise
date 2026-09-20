@@ -27,6 +27,23 @@ const hey_api_parser: UserParser = {
   }
 }
 const pathSrc = path.resolve(__dirname, 'src')
+/**
+ * 允许搜索引擎收录的页面（与 src/router/index.ts 中「无需登录」的路由保持一致）。
+ * 登录 / 管理端页面（用户中心、RPA 浏览器、消息中心、动态、管理后台等）不进 sitemap，
+ * 它们由 useRouteSeo 输出 <meta name="robots" content="noindex,nofollow">。
+ */
+const SEO_INDEXABLE_ROUTES = [
+  '/',
+  '/app/lot-data/home',
+  '/app/lot-data/scrapy-stat',
+  '/app/lot-data/bili-atari-ranking',
+  '/app/lot-data/bili-data/official',
+  '/app/lot-data/bili-data/reserve',
+  '/app/lot-data/bili-data/charge',
+  '/app/lot-data/bili-data/topic',
+  '/app/samsclub/info',
+  '/app/changelog'
+]
 export default defineConfig({
   plugins: [
     vue(),
@@ -39,8 +56,8 @@ export default defineConfig({
     Sitemap({
       hostname: 'https://serena.dynv6.net',
       exclude: ['google22ac62fc624759d1.html'],
-      dynamicRoutes: [],
-      generateRobotsTxt: false // 禁用自动生成 robots.txt
+      dynamicRoutes: SEO_INDEXABLE_ROUTES,
+      generateRobotsTxt: false // 禁用自动生成 robots.txt（沿用 public/robots.txt 里带 Sitemap 声明的版本）
     }),
     AutoImport({
       // Auto import functions from Vue, e.g. ref, reactive, toRef...

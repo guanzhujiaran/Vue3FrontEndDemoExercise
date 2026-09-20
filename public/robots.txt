@@ -1,2 +1,6 @@
 User-agent: *
 Allow: /
+
+# 登录/管理端页面不在这里 Disallow：需要在页面内通过 <meta name="robots" content="noindex"> 生效，
+# 一旦被 robots.txt 屏蔽，爬虫就抓不到 noindex 标记，反而可能被收录成空壳页。
+Sitemap: https://serena.dynv6.net/sitemap.xml

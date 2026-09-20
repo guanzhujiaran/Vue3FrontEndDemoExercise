@@ -178,6 +178,11 @@ export class MomentService {
      *
      * 匿名时 `user` 为 None → `viewer_mid=0`（非合法 mid），点赞 / 收藏态恒 false，
      * 计数与举报数照常返回。
+     *
+     * **不做资源存在性校验（2.63.0，计划书 §5.11）**：本接口是纯读、不投递浏览 MQ、
+     * 不产生任何写入，资源没有互动态本就应返回 `isLike=false` / 计数 0，这是正确语义；
+     * 原「任一缺失 → 整批 400」会把归属服务（lottery / others_lot_dyn 走同步 RPC）的
+     * 可用性抖动放大成整页互动态缺失。校验只保留在有写副作用的单资源接口与写接口。
      */
     public static interactionStatusApiV1CommunityInteractionStatusGet<ThrowOnError extends boolean = false>(options: Options<InteractionStatusApiV1CommunityInteractionStatusGetData, ThrowOnError>): RequestResult<InteractionStatusApiV1CommunityInteractionStatusGetResponses, InteractionStatusApiV1CommunityInteractionStatusGetErrors, ThrowOnError, 'data'> {
         return (options.client ?? client).get<InteractionStatusApiV1CommunityInteractionStatusGetResponses, InteractionStatusApiV1CommunityInteractionStatusGetErrors, ThrowOnError, 'data'>({
@@ -198,6 +203,11 @@ export class MomentService {
      * 2.60.0（§5.18）：匿名可读，`user` 为 None 时 `viewer_mid=0`（点赞 / 收藏态恒 false）；
      * 浏览 MQ **仅登录用户投递**——匿名无 mid，`TInteractionViewLog`（uq bizType+bizId+mid）
      * 会把全部游客流量压成 mid=0 一行，计数失真且污染明细表，沿用「浏览统计仅登录用户」语义。
+     *
+     * 2.63.0（计划书 §5.11）：**资源存在性校验保留但降级**——浏览计数是写副作用，必须校验
+     * 才能防任意 bizId 在 `TInteractionStat` / `TInteractionViewLog` 造脏行；但「校验不通过 /
+     * 校验不可用（RPC 超时未连接）」时不再返回 400，而是**不投递浏览 + 照常返回本地状态**，
+     * 避免把归属服务的可用性问题伪装成业务错误、打挂详情页。
      */
     public static interactionStatusDetailApiV1CommunityInteractionStatusBizIdGet<ThrowOnError extends boolean = false>(options: Options<InteractionStatusDetailApiV1CommunityInteractionStatusBizIdGetData, ThrowOnError>): RequestResult<InteractionStatusDetailApiV1CommunityInteractionStatusBizIdGetResponses, InteractionStatusDetailApiV1CommunityInteractionStatusBizIdGetErrors, ThrowOnError, 'data'> {
         return (options.client ?? client).get<InteractionStatusDetailApiV1CommunityInteractionStatusBizIdGetResponses, InteractionStatusDetailApiV1CommunityInteractionStatusBizIdGetErrors, ThrowOnError, 'data'>({

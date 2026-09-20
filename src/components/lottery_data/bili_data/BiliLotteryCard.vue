@@ -71,6 +71,17 @@
               @click="handleLinkClick" link icon="link" underline="never" class="whitespace-nowrap">
               查看源动态
             </el-link>
+            <!-- 第三方抽奖动态：站内详情页（评论区 + 互动，按 dynId 定位） -->
+            <el-link
+              v-if="normalizedData.type === 'THIRD_PARTY' && canInteract"
+              type="primary"
+              size="default"
+              underline="never"
+              class="lottery-card__detail-link whitespace-nowrap"
+              @click="goOthersLotDynDetail"
+            >
+              查看详情
+            </el-link>
             <el-button icon="link" v-else type="info" size="default" disabled class="whitespace-nowrap">
               暂无源动态
             </el-button>
@@ -324,7 +335,7 @@
         @click.stop>
         <LotteryCommentSection
           :oid="lotteryId"
-          :type="LOTTERY_COMMENT_TYPE"
+          :type="interactionBizType"
           @count-change="handleCommentCountChange"
         />
       </div>
@@ -362,7 +373,7 @@
   <MomentPublishForm
     v-model:visible="forwardVisible"
     :attach-resource="{
-      bizType: InteractionBizTypeEnum.LOTTERY,
+      bizType: interactionBizType,
       bizId: lotteryId,
       name: normalizedData.title || undefined,
     }"
@@ -372,7 +383,7 @@
   <MomentFavoriteDialog
     v-model="favDialogVisible"
     :dyn-id="lotteryId"
-    :biz-type="InteractionBizTypeEnum.LOTTERY"
+    :biz-type="interactionBizType"
     :biz-id="lotteryId"
     @changed="handleFavChanged"
   />
@@ -380,7 +391,9 @@
 
 <script setup lang="ts">
 import { computed, ref, useAttrs, type PropType, type Ref } from 'vue'
+import { useRouter } from 'vue-router'
 import type { TagProps } from 'element-plus'
+import { RouteName } from '@/models/router'
 
 defineOptions({
   // 模板存在多个根节点（el-card + MomentPublishForm），关闭自动继承，
@@ -398,7 +411,7 @@ import FavoriteIcon from '@/assets/svgs/dynamic/detail/side_toolbar/favorite.svg
 import ForwardIcon from '@/assets/svgs/dynamic/detail/side_toolbar/forward.svg?component'
 import EyeIcon from '@/assets/svgs/space/eye.svg?component'
 
-import { LOTTERY_COMMENT_TYPE } from '@/stores/lottery_detail.ts'
+import { interactionBizTypeOf } from '@/stores/lottery_detail.ts'
 
 import type {
   AnchorLotteryData,
@@ -416,7 +429,7 @@ import { LINK_REL, LINK_REFERRER_POLICY } from '@/utils/PageOpen/linkPolicy'
 import { isMobileDevice } from '@/utils/Browser/useDeviceDetect.ts'
 import { BiliCommTxt } from '@/assets/text/BiliCommTxt.ts'
 import { handleLotteryLinkClick, setLotteryParticipation, isLotteryParticipated } from '@/utils/lotteryParticipation'
-import { thumbMoment, fetchInteractionStatus, InteractionBizTypeEnum } from '@/api/notify/moment-api'
+import { thumbMoment, fetchInteractionStatus } from '@/api/notify/moment-api'
 import type { InteractionStatusItem } from '@/api/notify/moment-api'
 import MomentPublishForm from '@/components/moment/MomentPublishForm.vue'
 import MomentFavoriteDialog from '@/components/moment/MomentFavoriteDialog.vue'
@@ -434,6 +447,12 @@ const is_mobile = isMobileDevice()
 
 // ============ 点赞 / 收藏 / 转发到动态（2.20.0）============
 const lotteryId = computed(() => String(normalizedData.value.id ?? ''))
+/**
+ * 互动 / 评论区 bizType：第三方抽奖动态（THIRD_PARTY）走独立命名空间
+ * `others_lot_dyn`（bizId = dynId），其余抽奖卡片走 `lottery`（bizId = lottery_id）。
+ * 两者混用会被后端 `check_lottery_exist` 判为「资源不存在」（400），故必须分流。
+ */
+const interactionBizType = computed(() => interactionBizTypeOf(normalizedData.value.type))
 /** 互动可用性：旧缓存数据可能缺失规范互动 ID（lottery_id），此时禁用全部互动入口 */
 const canInteract = computed(() => Boolean(normalizedData.value.id))
 const interactLoading = ref(false)
@@ -454,7 +473,7 @@ async function handleLike() {
   interactLoading.value = true
   const nextActive = !likeActive.value
   const res = await thumbMoment(lotteryId.value, nextActive ? 1 : 2, {
-    bizType: InteractionBizTypeEnum.LOTTERY,
+    bizType: interactionBizType.value,
     bizId: lotteryId.value,
   })
   interactLoading.value = false
@@ -491,7 +510,7 @@ function handleFavorite() {
 /** 收藏夹变更后重新拉取最新互动状态并上报容器层 */
 async function handleFavChanged() {
   try {
-    const res = await fetchInteractionStatus(InteractionBizTypeEnum.LOTTERY, [lotteryId.value])
+    const res = await fetchInteractionStatus(interactionBizType.value, [lotteryId.value])
     const item = res?.items?.[0]
     if (item?.bizId) {
       emit('update-status', { bizId: item.bizId, status: item })
@@ -499,6 +518,13 @@ async function handleFavChanged() {
   } catch {
     // 静默：刷新失败不影响浏览
   }
+}
+
+/** 第三方抽奖动态：跳转站内详情页（按 dynId 定位，评论区 + 互动都在详情页） */
+const router = useRouter()
+function goOthersLotDynDetail() {
+  if (!lotteryId.value) return
+  router.push({ name: RouteName.OTHERS_LOT_DYN_DETAIL, query: { dynId: lotteryId.value } })
 }
 
 /** 转发到动态：弹窗由 MomentPublishForm（attach 资源模式）处理 */

@@ -50,6 +50,7 @@ const items = computed<OverviewItem[]>(() => {
   }
   if (isMessageRoot.value) {
     list.push({ name: 'ADMIN_PERMISSION', title: '管理端权限', desc: '授予 / 撤销各资源域的管理端权限（rwx 位掩码）', icon: Key })
+    list.push({ name: 'ADMIN_SYS_CONFIG', title: '系统配置', desc: '运行时参数热更新（评论频率限制等），改完无需重启', icon: Setting })
   }
   return list
 })

@@ -11,7 +11,7 @@
 
 <script setup lang="ts">
 import { computed, type Component } from 'vue'
-import { Bell, ChatDotRound, Comment, Key, Checked, Collection, Avatar, Flag, Stamp, Document, Medal, CollectionTag } from '@element-plus/icons-vue'
+import { Bell, ChatDotRound, Comment, Key, Checked, Collection, Avatar, Flag, Stamp, Document, Medal, CollectionTag, Setting } from '@element-plus/icons-vue'
 import icShoucang from '@/assets/svgs/audit/shoucang.svg?component'
 import icLiveCenter from '@/assets/svgs/audit/ic_Livecenter.svg?component'
 import { useMessageAdminStore } from '@/stores/message_admin'
@@ -61,8 +61,11 @@ const navGroups = computed<NavGroup[]>(() => {
   }
   if (isMessageRoot.value) {
     groups.push({
-      title: '权限设置',
-      items: [{ name: 'ADMIN_PERMISSION', title: '管理端权限', icon: Key }]
+      title: '系统设置',
+      items: [
+        { name: 'ADMIN_PERMISSION', title: '管理端权限', icon: Key },
+        { name: 'ADMIN_SYS_CONFIG', title: '系统配置', icon: Setting }
+      ]
     })
   }
   if (isRpaAdmin.value) {

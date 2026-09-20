@@ -390,6 +390,21 @@ elementDark放到theme后面是为了确保暗色状态下直接用elementDark�
     background: var(--color-border);
   }
 
+  /* 通用细滚动条：用于自定义滚动容器（无法用原子类表达的伪元素样式） */
+  .bili-thin-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-border-light) transparent;
+  }
+
+  .bili-thin-scroll::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .bili-thin-scroll::-webkit-scrollbar-thumb {
+    background: var(--color-border-light);
+    border-radius: 3px;
+  }
+
   /* comment_item el-card / vditor overrides */
   .comment-main-card.el-card {
     overflow: visible;

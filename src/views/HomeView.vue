@@ -12,7 +12,9 @@ import { KeysEnum, useInject } from '@/models/base/provide_model.ts'
 import type { UserNavModel } from '@/models/user/user_model.ts'
 import { routes } from '@/router'
 import router from '@/router'
+import { onSpaLinkClick } from '@/utils/PageOpen/spaLink.ts'
 const { t } = useI18n()
+const goTo = (path: string) => router.push(path)
 const jwtStore = useJwtStore()
 const activeTab = ref('all')
 const openGlobalLoginModal = inject(openGlobalLoginModalKey, () => { })
@@ -38,10 +40,10 @@ const filteredModules = computed(() => {
   }
   return modules
 })
-// 未登录时隐藏需要登录的子项入口
+// 未登录时隐藏需要登录的子项入口；没有可跳转路径的项不渲染成链接
 const visibleChildren = (children: any[]) => {
-  if (isLoggedIn.value) return children
-  return children.filter((child: any) => !child.requiresLogin)
+  const list = isLoggedIn.value ? children : children.filter((child: any) => !child.requiresLogin)
+  return list.filter((child: any) => !!child.path)
 }
 const biliUser = useInject(KeysEnum.BiliUser) as Ref<UserNavModel>
 const isLoggedIn = computed(() => !!biliUser.value.uid)
@@ -83,23 +85,6 @@ const handleLogoutClick = () => {
     .catch(() => { })
 }
 
-// 处理卡片点击
-const handleCardClick = (path: string | undefined, requiresLogin = false) => {
-  if (!isLoggedIn.value && requiresLogin) {
-    ElMessageBox.confirm(t('home.loginNeeded'), t('home.loginNeededTitle'), {
-      confirmButtonText: t('home.loginNow'),
-      cancelButtonText: t('common.cancel'),
-      type: 'info',
-      lockScroll: false
-    })
-      .then(() => {
-        openGlobalLoginModal()
-      })
-      .catch(() => { })
-    return
-  }
-  path && router.push(path)
-}
 </script>
 
 <template>
@@ -187,9 +172,10 @@ const handleCardClick = (path: string | undefined, requiresLogin = false) => {
           <!-- 如果有子项，显示子项列表 -->
           <div v-if="module.children && module.children.length"
             class="flex flex-col divide-y divide-border overflow-hidden rounded-lg border border-border">
-            <div v-for="(child, childIndex) in visibleChildren(module.children)" :key="childIndex"
-              class="group flex cursor-pointer items-center p-3 transition-all duration-150 hover:bg-fill-light"
-              @click="handleCardClick(child.path, child.requiresLogin || module.requiresLogin)">
+            <!-- 子项入口渲染为带真实 href 的 <a>，爬虫可据此发现站内页面 -->
+            <router-link v-for="(child, childIndex) in visibleChildren(module.children)" :key="childIndex"
+              :to="child.path"
+              class="home-nav__item group flex cursor-pointer items-center p-3 no-underline transition-all duration-150 hover:bg-fill-light">
               <div class="mr-3 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-white"
                 :style="{ background: child.color }">
                 <el-icon :size="15">
@@ -206,14 +192,17 @@ const handleCardClick = (path: string | undefined, requiresLogin = false) => {
                 class="shrink-0 text-text-secondary transition-transform duration-150 group-hover:translate-x-0.5">
                 <el-icon-arrow-right />
               </el-icon>
-            </div>
+            </router-link>
           </div>
 
-          <!-- 如果没有子项，显示直接访问按钮 -->
+          <!-- 如果没有子项，显示直接访问按钮（同样是 <a>，保留 href 供爬虫抓取） -->
           <div v-else class="flex justify-center">
-            <el-button type="default" :plain="true" @click="handleCardClick(module.path, module.requiresLogin)">
-              {{ t('home.visitNow') }}
-            </el-button>
+            <router-link v-if="module.path" v-slot="{ href, navigate }" custom :to="module.path">
+              <el-button tag="a" type="default" :plain="true" :href="href" class="home-nav__visit"
+                @click="onSpaLinkClick($event, navigate)">
+                {{ t('home.visitNow') }}
+              </el-button>
+            </router-link>
           </div>
         </div>
       </div>
@@ -244,14 +233,14 @@ const handleCardClick = (path: string | undefined, requiresLogin = false) => {
           <el-text class="mb-4 block text-base font-semibold" tag="h3">{{ t('home.quickLinks') }}</el-text>
           <ul class="m-0 flex list-none flex-wrap gap-x-6 gap-y-2 p-0">
             <li>
-              <el-link class="text-sm! text-text-regular! no-underline transition-colors hover:text-primary!"
-                @click="router.push('/app/user-center')">
+              <el-link class="home-footer__link text-sm! text-text-regular! no-underline transition-colors hover:text-primary!"
+                href="/app/user-center" @click="onSpaLinkClick($event, () => goTo('/app/user-center'))">
                 {{ t('home.linkBrowserMgmt') }}
               </el-link>
             </li>
             <li>
-              <el-link class="text-sm! text-text-regular! no-underline transition-colors hover:text-primary!"
-                @click="router.push('/app/lot-data/bili-data/official')">
+              <el-link class="home-footer__link text-sm! text-text-regular! no-underline transition-colors hover:text-primary!"
+                href="/app/lot-data/bili-data/official" @click="onSpaLinkClick($event, () => goTo('/app/lot-data/bili-data/official'))">
                 {{ t('home.linkLottery') }}
               </el-link>
             </li>

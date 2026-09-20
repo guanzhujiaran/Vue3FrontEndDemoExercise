@@ -36,6 +36,9 @@ export type AdminItem = {
  * AdminStatusResponse
  *
  * 当前登录用户的角色/权限状态（任意登录用户可查）。
+ *
+ * 继承 ``AutoStrMixin``：``mid``（雪花 ID）除数值形式外自动附带字符串版
+ * ``mid_str``，前端统一消费 ``mid_str`` 避免 JS Number 精度丢失。
  */
 export type AdminStatusResponse = {
     /**
@@ -56,6 +59,10 @@ export type AdminStatusResponse = {
      * Mid
      */
     mid?: number;
+    /**
+     * Mid Str
+     */
+    readonly mid_str: string | null;
 };
 
 /**
@@ -2608,15 +2615,6 @@ export type EventMsgfeedContent = {
      */
     ctime: number;
     /**
-     * Business Name
-     *
-     * `business`（source_type）的文字名称，如「动态」/「评论」/「抽奖」。
-     *
-     * 前端据此直接展示这是对哪种实体的提醒，无需自行维护 business→文案 的映射。
-     * 未知 / 缺省 business 统一回落「其他」。
-     */
-    readonly business_name: string;
-    /**
      * Item Idstr
      */
     readonly item_idStr: string | null;
@@ -2628,6 +2626,15 @@ export type EventMsgfeedContent = {
      * Target Midstr
      */
     readonly target_midStr: string | null;
+    /**
+     * Business Name
+     *
+     * `business`（source_type）的文字名称，如「动态」/「评论」/「抽奖」。
+     *
+     * 前端据此直接展示这是对哪种实体的提醒，无需自行维护 business→文案 的映射。
+     * 未知 / 缺省 business 统一回落「其他」。
+     */
+    readonly business_name: string;
 };
 
 /**
@@ -3819,6 +3826,7 @@ export type InteractionActionTypeEnum = typeof InteractionActionTypeEnum[keyof t
  * - COMMENT: 7
  * - USER: 8
  * - RPA_TAG: 14
+ * - OTHERS_LOT_DYN: 15
  * - TOPIC: 9
  * - DM: 10
  * - AVATAR: 11
@@ -3863,6 +3871,10 @@ export const InteractionBizTypeEnum = {
      */
     RPA_TAG: 14,
     /**
+     * OTHERS_LOT_DYN
+     */
+    OTHERS_LOT_DYN: 15,
+    /**
      * TOPIC
      */
     TOPIC: 9,
@@ -3897,6 +3909,7 @@ export const InteractionBizTypeEnum = {
  * - COMMENT: 7
  * - USER: 8
  * - RPA_TAG: 14
+ * - OTHERS_LOT_DYN: 15
  * - TOPIC: 9
  * - DM: 10
  * - AVATAR: 11
@@ -9462,6 +9475,36 @@ export type StandardResponseSpaceInfoResp = {
 };
 
 /**
+ * StandardResponse[SysConfigItem]
+ */
+export type StandardResponseSysConfigItem = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: SysConfigItem | null;
+};
+
+/**
+ * StandardResponse[SysConfigListResp]
+ */
+export type StandardResponseSysConfigListResp = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: SysConfigListResp | null;
+};
+
+/**
  * StandardResponse[Union[AvatarAuditMineResp, NoneType]]
  */
 export type StandardResponseUnionAvatarAuditMineRespNoneType = {
@@ -9743,6 +9786,89 @@ export type StandardResponseStr = {
      * Data
      */
     data?: string | null;
+};
+
+/**
+ * SysConfigItem
+ *
+ * 单个运行时配置项（管理端读）。
+ *
+ * `isDefault=True` 表示该 key 尚未写入 `msg_sys_config`，当前生效的是 settings 默认值
+ * （管理端据此展示「默认值 / 已覆盖」状态，并可把默认值直接改为自定义值）。
+ */
+export type SysConfigItem = {
+    /**
+     * Key
+     */
+    key: string;
+    /**
+     * Value
+     */
+    value: {
+        [key: string]: unknown;
+    };
+    /**
+     * Remark
+     */
+    remark?: string | null;
+    /**
+     * Updatedby
+     *
+     * 最后修改者 mid
+     */
+    updatedBy?: number;
+    /**
+     * Updated At
+     *
+     * 最后更新时间
+     */
+    updated_at?: string | null;
+    /**
+     * Isdefault
+     *
+     * 是否仍是 settings 默认值（未写入 DB）
+     */
+    isDefault?: boolean;
+};
+
+/**
+ * SysConfigListResp
+ *
+ * 运行时配置列表（管理端读）。
+ */
+export type SysConfigListResp = {
+    /**
+     * Items
+     */
+    items?: Array<SysConfigItem>;
+};
+
+/**
+ * SysConfigUpdateReq
+ *
+ * 写入运行时配置（整体替换该 key 的值）。
+ */
+export type SysConfigUpdateReq = {
+    /**
+     * Key
+     *
+     * 配置键（必须是已登记的可热更新项）
+     */
+    key: string;
+    /**
+     * Value
+     *
+     * 配置值（JSON，整体替换；按 key 派发校验）
+     */
+    value: {
+        [key: string]: unknown;
+    };
+    /**
+     * Remark
+     *
+     * 备注
+     */
+    remark?: string | null;
 };
 
 /**
@@ -10105,6 +10231,35 @@ export type UnbanRes = {
      * Lifted Count
      */
     lifted_count?: number;
+};
+
+/**
+ * AdminStatusResponse
+ *
+ * 当前登录用户的角色/权限状态（任意登录用户可查）。
+ *
+ * 继承 ``AutoStrMixin``：``mid``（雪花 ID）除数值形式外自动附带字符串版
+ * ``mid_str``，前端统一消费 ``mid_str`` 避免 JS Number 精度丢失。
+ */
+export type AdminStatusResponseWritable = {
+    /**
+     * Is Root
+     */
+    is_root?: boolean;
+    /**
+     * Is Admin
+     */
+    is_admin?: boolean;
+    /**
+     * Biz Perms
+     */
+    biz_perms?: {
+        [key: string]: number;
+    };
+    /**
+     * Mid
+     */
+    mid?: number;
 };
 
 /**
@@ -12952,6 +13107,21 @@ export type SpaceInfoRespWritable = {
     is_self?: boolean;
     follow_stat?: SpaceFollowStat;
     upstat?: SpaceUpStat;
+};
+
+/**
+ * StandardResponse[AdminStatusResponse]
+ */
+export type StandardResponseAdminStatusResponseWritable = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: AdminStatusResponseWritable | null;
 };
 
 /**
@@ -22920,6 +23090,156 @@ export type GetActivityApiV1MessageSettingActivityGetResponses = {
 };
 
 export type GetActivityApiV1MessageSettingActivityGetResponse = GetActivityApiV1MessageSettingActivityGetResponses[keyof GetActivityApiV1MessageSettingActivityGetResponses];
+
+export type ListSysConfigApiV1MessageAdminSysConfigGetData = {
+    body?: never;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Jwt
+         */
+        'x-bili-jwt'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string | null;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string | null;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string | null;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string | null;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string | null;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string | null;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string | null;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/message/admin/sys-config';
+};
+
+export type ListSysConfigApiV1MessageAdminSysConfigGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ListSysConfigApiV1MessageAdminSysConfigGetError = ListSysConfigApiV1MessageAdminSysConfigGetErrors[keyof ListSysConfigApiV1MessageAdminSysConfigGetErrors];
+
+export type ListSysConfigApiV1MessageAdminSysConfigGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseSysConfigListResp;
+};
+
+export type ListSysConfigApiV1MessageAdminSysConfigGetResponse = ListSysConfigApiV1MessageAdminSysConfigGetResponses[keyof ListSysConfigApiV1MessageAdminSysConfigGetResponses];
+
+export type UpdateSysConfigApiV1MessageAdminSysConfigUpdatePostData = {
+    body: SysConfigUpdateReq;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Jwt
+         */
+        'x-bili-jwt'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string | null;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string | null;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string | null;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string | null;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string | null;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string | null;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string | null;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/message/admin/sys-config/update';
+};
+
+export type UpdateSysConfigApiV1MessageAdminSysConfigUpdatePostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type UpdateSysConfigApiV1MessageAdminSysConfigUpdatePostError = UpdateSysConfigApiV1MessageAdminSysConfigUpdatePostErrors[keyof UpdateSysConfigApiV1MessageAdminSysConfigUpdatePostErrors];
+
+export type UpdateSysConfigApiV1MessageAdminSysConfigUpdatePostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseSysConfigItem;
+};
+
+export type UpdateSysConfigApiV1MessageAdminSysConfigUpdatePostResponse = UpdateSysConfigApiV1MessageAdminSysConfigUpdatePostResponses[keyof UpdateSysConfigApiV1MessageAdminSysConfigUpdatePostResponses];
 
 export type BatchUserInfoApiV1MessageAdminUserBatchGetData = {
     body?: never;

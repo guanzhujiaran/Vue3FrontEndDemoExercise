@@ -7,6 +7,10 @@ import { Setting, DataAnalysis, Trophy, Promotion, Lightning, CreditCard, ChatDo
 import { useInject, KeysEnum } from '@/models/base/provide_model.ts'
 import type { UserNavModel } from '@/models/user/user_model.ts'
 import { openGlobalLoginModalKey } from '@/models/inject/inject_type.ts'
+import { onSpaLinkClick } from '@/utils/PageOpen/spaLink.ts'
+
+// 卡片链接的真实 href（带上 router base），爬虫据此发现站内页面
+const resolveHref = (path: string) => router.resolve(path).href
 
 interface NavigationItem {
   title: string
@@ -152,10 +156,10 @@ const goTo = (item: NavigationItem) => {
 
       <!-- 模块列表：两列布局 -->
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <!-- 每个功能作为独立卡片 -->
-        <div v-for="item in navigationItems" :key="item.path"
-          class="flex cursor-pointer flex-col overflow-hidden rounded-xl border border-border shadow-sm hover:shadow-md transition-all duration-200"
-          @click="goTo(item)">
+        <!-- 每个功能作为独立卡片：渲染成带真实 href 的 <a>，爬虫可据此发现各抽奖数据页 -->
+        <a v-for="item in navigationItems" :key="item.path" :href="resolveHref(item.path)"
+          class="lottery-nav__item flex cursor-pointer flex-col overflow-hidden rounded-xl border border-border no-underline shadow-sm hover:shadow-md transition-all duration-200"
+          @click="onSpaLinkClick($event, () => goTo(item))">
           <!-- 卡片头部 -->
           <div class="flex items-center gap-3 px-5 py-4 text-white" :style="{ background: item.color }">
             <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/20 backdrop-blur-sm">
@@ -171,7 +175,7 @@ const goTo = (item: NavigationItem) => {
               {{ item.description }}
             </p>
           </div>
-        </div>
+        </a>
       </div>
     </section>
 

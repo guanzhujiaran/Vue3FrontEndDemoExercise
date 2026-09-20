@@ -301,6 +301,27 @@ class LotteryDataBaseApi {
     return res as any
   }
 
+  /**
+   * 按 `dynId` 获取单个第三方抽奖动态详情（后端 GetOthersLotDynDetail，2.61.0）。
+   *
+   * 第三方抽奖动态没有 `lottery_id`，**不能**走 `getLotteryDetailById`（那按 lotdata 主键查）；
+   * 响应形态与 GetOthersLotDynList 列表项一致，可直接交 `normalizeLotteryData` 渲染。
+   *
+   * ⚠️ `dynId` 是 **19 位雪花 ID**，超过 JS `Number.MAX_SAFE_INTEGER`：
+   * `Number(dynId)` / 网关 `JSON.parse` 会把它四舍五入（`...52360` → `...52400`），
+   * 后端按错误 ID 查询必然 404，故**必须以字符串传递**（后端 `dyn_id` 为 StrInt，
+   * 接受数字字符串并归一为 int）。
+   */
+  async getOthersLotDynDetailById(
+    dynId: string | number
+  ): Promise<RootObject<OthersLotDynItem | null>> {
+    const res = await V1BiliService.getOthersLotDynDetailApiV1LotteryDatabaseBiliGetOthersLotDynDetailPost({
+      // 以字符串提交：dyn_id 是 19 位雪花 ID，Number() 会丢精度导致后端查不到
+      body: { dyn_id: String(dynId) },
+    })
+    return res as any
+  }
+
   // ==================== 提交抽奖数据 ====================
 
   async addDynamicLottery(dynamic_id_or_url: string): Promise<RootObject<AddDynamicLotteryResp>> {

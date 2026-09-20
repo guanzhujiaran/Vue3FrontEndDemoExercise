@@ -34,6 +34,7 @@
           <el-option label="评论" :value="InteractionBizTypeEnum.COMMENT" />
           <el-option label="用户" :value="InteractionBizTypeEnum.USER" />
           <el-option label="抽奖" :value="InteractionBizTypeEnum.LOTTERY" />
+          <el-option label="第三方抽奖" :value="InteractionBizTypeEnum.OTHERS_LOT_DYN" />
           <el-option label="RPA 动作" :value="InteractionBizTypeEnum.RPA_ACTION" />
           <el-option label="RPA 工作流" :value="InteractionBizTypeEnum.RPA_WORKFLOW" />
           <el-option label="RPA 浏览器" :value="InteractionBizTypeEnum.RPA_BROWSER" />
@@ -243,6 +244,8 @@ const bizTypeName = (bt: InteractionBizTypeEnum) => {
       return '用户'
     case InteractionBizTypeEnum.LOTTERY:
       return '抽奖'
+    case InteractionBizTypeEnum.OTHERS_LOT_DYN:
+      return '第三方抽奖'
     case InteractionBizTypeEnum.RPA_ACTION:
       return 'RPA 动作'
     case InteractionBizTypeEnum.RPA_WORKFLOW:
@@ -256,9 +259,11 @@ const bizTypeName = (bt: InteractionBizTypeEnum) => {
   }
 }
 
-// 抽奖（LOTTERY）与用户（USER）不允许下架；动态/评论/RPA 资源允许
+// 抽奖（LOTTERY）/ 第三方抽奖（OTHERS_LOT_DYN，站外内容）/ 用户（USER）不允许下架；动态/评论/RPA 资源允许
 const canHide = (row: ReportItem) =>
-  row.bizType !== InteractionBizTypeEnum.LOTTERY && row.bizType !== InteractionBizTypeEnum.USER
+  row.bizType !== InteractionBizTypeEnum.LOTTERY &&
+  row.bizType !== InteractionBizTypeEnum.OTHERS_LOT_DYN &&
+  row.bizType !== InteractionBizTypeEnum.USER
 
 const formatTime = (t?: string | null) =>
   t ? new Date(t).toLocaleString('zh-CN', { hour12: false }) : '-'

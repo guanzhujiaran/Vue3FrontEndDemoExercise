@@ -1,16 +1,30 @@
 <template>
-  <!-- 最末端的菜单（无子菜单）：整个菜单项（含边框/留白）单击即可跳转；
-       移动端下若为某个子菜单的首项或顶层叶子项，则单击不跳转、需双击跳转以防误触 -->
+  <!-- 最末端的菜单（无子菜单）：标题渲染成带真实 href 的 <a>，便于搜索引擎抓取站内链接；
+       点击时只拦掉浏览器整页跳转，事件继续冒泡到 el-menu-item，由菜单逻辑统一跳转 -->
   <el-menu-item
     v-if="!item.children || item.children.length === 0"
     :index="item.path"
     @click="handleMenuItemClick"
   >
-    <span class="text-lg">{{ item.i18nKey ? t(item.i18nKey) : item.title }}</span>
+    <a
+      class="header-nav__link header-nav__link--leaf no-underline text-inherit"
+      :href="resolvedHref"
+      @click="preventLinkDefault"
+    >
+      <span class="text-lg">{{ item.i18nKey ? t(item.i18nKey) : item.title }}</span>
+    </a>
   </el-menu-item>
-  <!-- 中间层子菜单：桌面端单击标题跳转；移动端单击展开，双击（两次快速点击）跳转 -->
+  <!-- 中间层子菜单：标题同样是真实链接；点击交给 el-sub-menu 既有逻辑（桌面端跳转、移动端双击跳转） -->
   <el-sub-menu v-else :index="item.path" @click="handleSubMenuClick">
-    <template #title><span class="text-lg">{{ item.i18nKey ? t(item.i18nKey) : item.title }}</span></template>
+    <template #title>
+      <a
+        class="header-nav__link header-nav__link--submenu no-underline text-inherit"
+        :href="resolvedHref"
+        @click="preventLinkDefault"
+      >
+        <span class="text-lg">{{ item.i18nKey ? t(item.i18nKey) : item.title }}</span>
+      </a>
+    </template>
     <template v-for="(child, idx) in item.children" :key="child.path">
       <MenuItem :item="child" :is-first="idx === 0" />
     </template>
@@ -22,6 +36,7 @@ import { ref, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ElMenuItem, ElSubMenu } from 'element-plus'
 import { useRouter } from 'vue-router'
+import { preventLinkDefault } from '@/utils/PageOpen/spaLink.ts'
 
 const { t } = useI18n()
 
@@ -46,6 +61,9 @@ const props = withDefaults(defineProps<Props>(), {
   isTopLevel: false
 })
 const router = useRouter()
+
+// 菜单项的真实 href（带上 router base），爬虫据此发现站内页面
+const resolvedHref = computed(() => router.resolve(props.item.path).href)
 
 // 移动端直接根据 UA 判断（不再依赖屏幕宽度），用于决定子菜单/顶层叶子项是否需双击跳转
 const isMobile = computed(() => {

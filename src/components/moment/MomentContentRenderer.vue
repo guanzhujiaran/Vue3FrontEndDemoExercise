@@ -111,6 +111,10 @@ function handleResourceClick(node: MomentContentNode): void {
     case InteractionBizTypeEnum.LOTTERY:
       router.push({ path: '/app/lot-data/card-detail', query: { id: bizId } })
       break
+    case InteractionBizTypeEnum.OTHERS_LOT_DYN:
+      // 第三方抽奖动态：按 dynId 走独立详情页（无 lottery_id）
+      router.push({ path: '/app/lot-data/others-dyn-detail', query: { dynId: bizId } })
+      break
     case InteractionBizTypeEnum.RPA_BROWSER:
       router.push({ path: `/app/rpa-browser/stream/${bizId}` })
       break
@@ -132,6 +136,8 @@ function resourceTypeLabel(bizType?: InteractionBizTypeEnum | null): string {
   switch (bizType) {
     case InteractionBizTypeEnum.LOTTERY:
       return '抽奖'
+    case InteractionBizTypeEnum.OTHERS_LOT_DYN:
+      return '第三方抽奖'
     case InteractionBizTypeEnum.RPA_ACTION:
       return 'RPA动作'
     case InteractionBizTypeEnum.RPA_WORKFLOW:
