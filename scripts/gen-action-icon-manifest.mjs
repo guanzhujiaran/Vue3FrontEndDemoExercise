@@ -4,8 +4,11 @@
  *
  * ## 为什么需要这份清单
  *
- * action-icons 是**内容图库**（当前 4000+ 张 png、约 580MB），已从 `src/assets/` 迁到
- * `public/action-icons/`：作为静态资源原样拷贝，不参与打包、不加 hash。
+ * action-icons 是**内容图库**（当前 4000+ 张 png、约 580MB），已从 `src/assets/` 迁到项目根的
+ * `action-icons/`（**不在 `public/` 里**）：作为静态资源原样拷贝、不参与打包、不加 hash。
+ * 放在 public 之外的原因：静态托管目录每次构建都会被清理/复制，4000+ 个文件会让构建明显变慢，
+ * 也把产物从几十 MB 撑到近 600MB —— 它本质上是一份「不随代码发布变化」的数据，
+ * 部署时单独同步到站点根即可（见 docs/前端部署说明.md）。
  * 代价是打包器不再知道「`icon_series` / `icon_id` → 文件」的映射（文件名里带的是中文名称，
  * 无法由编号反推），所以这里在构建前扫描目录、把映射固化成一份清单供运行时 import。
  *
@@ -28,12 +31,17 @@ import { fileURLToPath } from 'node:url'
 
 const HERE = dirname(fileURLToPath(import.meta.url))
 const FRONTEND = resolve(HERE, '..')
-const ICONS_ROOT = join(FRONTEND, 'public', 'action-icons')
+const ICONS_ROOT = join(FRONTEND, 'action-icons')
 const OUT_FILE = join(FRONTEND, 'src', 'utils', 'rpa', 'actionIconManifest.ts')
 
 /** 清单版本：结构变更时自增，供运行时兼容判断 */
 const MANIFEST_VERSION = 1
-/** public 下的资源目录名，运行时会以 `${import.meta.env.BASE_URL}${PUBLIC_DIR}/` 为前缀拼 URL */
+/**
+ * 资源目录名（项目根 `<frontend>/action-icons`，部署时同步到站点根同名目录）。
+ *
+ * 运行时不使用 `import.meta.env.BASE_URL`（Nuxt 客户端为 `/_nuxt/`，拼出来必然 404），
+ * 而是固定站点根绝对路径 `/action-icons/`，见 `src/utils/rpa/actionIcon.ts`。
+ */
 const PUBLIC_DIR = 'action-icons'
 
 const SERIES_RE = /^s_(\d+)(?:_(.*))?$/
@@ -162,15 +170,16 @@ function render(registry, skipped) {
  * 本文件由 scripts/gen-action-icon-manifest.mjs 自动生成，请勿手动修改
  *
  * 内容：RPA 动作图标「系列编号 / 图片编号 → 静态资源路径」映射。
- * 资源本体位于 public/${PUBLIC_DIR}/（不参与打包），这里的 dir/file 是相对该目录的路径。
- * 运行时 URL = \`\${import.meta.env.BASE_URL}${PUBLIC_DIR}/\${dir}/\${file}\`（路径分段各自 encodeURIComponent）。
+ * 资源本体位于项目根 ${PUBLIC_DIR}/（不参与打包，部署时同步到站点根同名目录），
+ * 这里的 dir/file 是相对该目录的路径。
+ * 运行时 URL = \`/${PUBLIC_DIR}/\${dir}/\${file}\`（路径分段各自 encodeURIComponent，站点根绝对路径）。
  */
 /* eslint-disable */
 
 /** 清单结构版本 */
 export const ACTION_ICON_MANIFEST_VERSION = ${MANIFEST_VERSION}
 
-/** public 下的资源目录名 */
+/** 资源目录名（站点根下的 ${PUBLIC_DIR}/） */
 export const ACTION_ICON_PUBLIC_DIR = ${JSON.stringify(PUBLIC_DIR)}
 
 export interface ActionIconManifestIcon {
@@ -187,7 +196,7 @@ export interface ActionIconManifestSeries {
   seriesName: string
   /** 分类名称（系列目录的上一级目录，可缺省） */
   category: string
-  /** 系列目录相对 \`public/${PUBLIC_DIR}/\` 的路径 */
+  /** 系列目录相对 \`${PUBLIC_DIR}/\` 的路径 */
   dir: string
   /** 图片编号 → 图标 */
   icons: Record<string, ActionIconManifestIcon>

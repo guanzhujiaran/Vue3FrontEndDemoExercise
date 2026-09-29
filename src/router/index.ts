@@ -6,7 +6,13 @@
  * @FilePath: \Vue3FrontEndDemoExercise\src\router\index.ts
  * @Description: 路由配置文件，整合了所有路由信息和元数据
  */
-import { createRouter, createWebHistory } from 'vue-router'
+import {
+  createMemoryHistory,
+  createRouter,
+  createWebHistory,
+  type Router,
+  type RouterHistory
+} from 'vue-router'
 import {
   Setting as IconSetting,
   User as IconUser,
@@ -732,6 +738,12 @@ const routes: CustomRouteRecordRaw[] = [
         meta: { title: '浏览器监管', requiresAdmin: true, hidden: true }
       },
       {
+        path: 'rpa/launch-queue',
+        name: 'ADMIN_LAUNCH_QUEUE',
+        component: () => import('@/views/admin/AdminLaunchQueueView.vue'),
+        meta: { title: '启动队列', requiresAdmin: true, hidden: true }
+      },
+      {
         path: 'message-notify',
         name: 'ADMIN_MESSAGE_NOTIFY',
         component: () => import('@/views/message/NotifyAdminView.vue'),
@@ -831,6 +843,17 @@ const routes: CustomRouteRecordRaw[] = [
           requiresMessageRoot: true,
           hidden: true
         }
+      },
+      {
+        // 等级指纹配额（RPA app/data/permissions.json）：仅消息管理端 root 可见
+        path: 'browser-quota',
+        name: 'ADMIN_BROWSER_QUOTA',
+        component: () => import('@/views/admin/BrowserQuotaView.vue'),
+        meta: {
+          title: '浏览器配额',
+          requiresMessageRoot: true,
+          hidden: true
+        }
       }
     ]
   },
@@ -842,10 +865,42 @@ const routes: CustomRouteRecordRaw[] = [
       import('@/components/CommonCompo/Bili-Feedback-Compo/items/BiliNotFoundError.vue')
   }
 ]
-const router = createRouter({
-  history: createWebHistory(import.meta.env.BASE_URL),
-  routes
-})
+/**
+ * 创建 router 实例。
+ *
+ * - 客户端：`createWebHistory`（浏览器 URL）；
+ * - SSR / 预渲染：调用方传入 `createMemoryHistory()`，且**每个页面一个实例**，
+ *   避免多页共用一个 router 导致 `currentRoute` 串状态。
+ *
+ * 注意：SSR 环境下不能用 `createWebHistory()`——它会访问 `window.history` 直接崩溃，
+ * 故 Node 环境自动退回 MemoryHistory（组件里优先用 `useRouter()` 而非单例）。
+ */
+export function createAppRouter(history?: RouterHistory) {
+  return createRouter({
+    history: history ?? createWebHistory(import.meta.env.BASE_URL),
+    routes
+  })
+}
+
+/**
+ * 当前应用 router。
+ *
+ * Nuxt 启动时会通过 `setAppRouter()` 把它替换为 Nuxt 自己创建的实例（见
+ * `src/plugins/router-guards.ts`）。为什么用可变绑定而不是逐个改写调用点：
+ * 项目里有多处历史代码 `import router from '@/router'` 后直接 `router.push(...)`，
+ * 而 Nuxt 的页面由它自己的 router 驱动 —— 若这里仍持有独立实例，那些跳转会「静默失效」
+ * （实例内部状态变了，页面不动）。`export { router as default }` 是 **live binding**，
+ * 替换后所有导入点读到的都是新实例，无需改调用点。
+ *
+ * 初始值是占位实例（SSR 下用 memory history），避免模块加载期就有代码调用它而崩溃。
+ */
+export let router: Router =
+  typeof window === 'undefined' ? createAppRouter(createMemoryHistory()) : createAppRouter()
+
+/** 由 Nuxt 插件注入真实 router 实例（live binding：所有导入点同步生效） */
+export function setAppRouter(instance: Router) {
+  router = instance
+}
 
 /**
  * 本次页面会话内最后打开的私信对象（talkerId）。
@@ -854,8 +909,14 @@ const router = createRouter({
  */
 let lastWhisperTalkerId = ''
 
-// 路由守卫 - 全局加载遮罩 + 管理员权限校验
-router.beforeEach(async (to, from) => {
+/**
+ * 注册全局路由守卫（原单例上的守卫抽成函数，供 Nuxt 的 router 实例复用）。
+ *
+ * 三段逻辑：私信会话记忆、管理员 / root 专属页面拦截、路由切换的全局 loading 遮罩。
+ * 注意：Nuxt 下必须注册到 `useRouter()` 返回的实例上（`router.options` 只能配置 options）。
+ */
+export function registerRouterGuards(r: Router) {
+  r.beforeEach(async (to, from) => {
   // 私信会话记忆：
   // - 进入某个会话 → 记住它；
   // - 回到 `/app/message/whisper`（我的消息首页）→ 本次会话内打开过会话时自动跳回该会话。
@@ -903,11 +964,12 @@ router.beforeEach(async (to, from) => {
   return true
 })
 
-router.afterEach(() => {
-  // 路由切换完成后隐藏加载遮罩
-  emitter.emit('loading', { isLoading: false, loadingText: '' })
-})
+  r.afterEach(() => {
+    // 路由切换完成后隐藏加载遮罩
+    emitter.emit('loading', { isLoading: false, loadingText: '' })
+  })
+}
 
 
-export default router
+export { router as default }
 export { routes, user_center_routes }

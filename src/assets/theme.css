@@ -47,34 +47,8 @@
   --spacing-40: calc(var(--spacing-base) * 40);
   /* 160px */
 
-  /* 字体大小系统 */
-  --text-xs: calc(var(--spacing-base) * 3);
-  /* 12px */
-  --text-sm: calc(var(--spacing-base) * 3.5);
-  /* 14px */
-  --text-base: calc(var(--spacing-base) * 4);
-  /* 16px */
-  --text-lg: calc(var(--spacing-base) * 4.5);
-  /* 18px */
-  --text-xl: calc(var(--spacing-base) * 5);
-  /* 20px */
-  --text-2xl: calc(var(--spacing-base) * 6);
-  /* 24px */
-  --text-3xl: calc(var(--spacing-base) * 7.5);
-  /* 30px */
-  --text-4xl: calc(var(--spacing-base) * 9);
-  /* 36px */
-  --text-5xl: calc(var(--spacing-base) * 10.5);
-  /* 48px */
-  /* 行高系统 */
-  --leading-none: 1;
-  --leading-tight: 1.25;
-  --leading-snug: 1.375;
-  --leading-normal: 1.5;
-  --leading-relaxed: 1.625;
-  --leading-loose: 2;
-
-  /* 组件字体大小 */
+  /* 字体大小系统：同一变量只定义一次（此前 xs~2xl 被后面的「组件字体大小」二次覆盖，
+     重复声明已合并，这里保留的就是原本最终生效的数值） */
   --text-xxs: calc(var(--spacing-base) * 2.75);
   /* 11px */
   --text-xs: calc(var(--spacing-base) * 3);
@@ -91,6 +65,20 @@
   /* 18px */
   --text-2xl: calc(var(--spacing-base) * 5);
   /* 20px */
+  --text-3xl: calc(var(--spacing-base) * 7.5);
+  /* 30px */
+  --text-4xl: calc(var(--spacing-base) * 9);
+  /* 36px */
+  --text-5xl: calc(var(--spacing-base) * 10.5);
+  /* 42px */
+
+  /* 行高系统 */
+  --leading-none: 1;
+  --leading-tight: 1.25;
+  --leading-snug: 1.375;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.625;
+  --leading-loose: 2;
 
   /* Element Plus 组件尺寸覆盖 */
   --el-component-size-small: var(--spacing-5);
@@ -134,8 +122,8 @@
   --el-input-font-size: var(--text-base);
   --el-menu-item-height: var(--spacing-5);
   --el-menu-horizontal-item-padding: 0 var(--px-base);
-  --el-menu-base-level-padding: var(--spacing-5);
-  --el-menu-level-padding: var(--spacing-5);
+  --el-menu-base-level-padding: var(--spacing-6);
+  --el-menu-level-padding: var(--spacing-6);
   --el-menu-font-size: var(--text-base);
   --el-button-height: var(--spacing-5);
   --el-button-font-size: var(--text-base);
@@ -182,11 +170,7 @@
   --el-table-row-hover-bg-color: var(--el-fill-color-lighter);
   --el-loading-spinner-size: var(--spacing-4);
   --el-loading-fullscreen-spinner-size: 3rem;
-  --el-menu-item-height: var(--spacing-5);
-  --el-menu-horizontal-item-padding: 0 var(--px-base);
-  --el-menu-base-level-padding: var(--spacing-6);
-  --el-menu-level-padding: var(--spacing-6);
-  --el-menu-font-size: var(--text-base);
+
   /* ==================== 主色系 ==================== */
   --color-primary: var(--el-color-primary);
   --color-primary-light-3: var(--el-color-primary-light-3);
@@ -480,7 +464,8 @@
      注意：主区宽度远大于侧边栏（~1200px vs ~200px），故 scaleX 幅度按宽度比例等比缩小到 ±0.7%，
      才能在视觉上得到与左侧相当的位移量；幅度再大会让文字/表格出现可感知的横向拉伸。
      配合组件上的 origin-right，右边缘锚定不动，形变只发生在与侧边栏相邻的一侧，避免溢出或右侧露底。 */
-  --animate-sidenav-content-jelly: bili-sidenav-content-jelly 0.55s cubic-bezier(0.34, 1.56, 0.64, 1);
+  --animate-sidenav-content-jelly: bili-sidenav-content-jelly 0.55s
+    cubic-bezier(0.34, 1.56, 0.64, 1);
 
   @keyframes bili-sidenav-content-jelly {
     0% {
@@ -502,92 +487,4 @@
       transform: scaleX(1);
     }
   }
-}
-
-/* ==================== RPA Browser Stream 动画 ==================== */
-@keyframes toolbox-enter {
-  from {
-    opacity: 0;
-    transform: scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-@keyframes toolbox-leave {
-  from {
-    opacity: 1;
-    transform: scale(1);
-  }
-  to {
-    opacity: 0;
-    transform: scale(0.95);
-  }
-}
-
-.toolbox-float-panel {
-  width: 400px;
-  animation: toolbox-enter 0.2s ease-out;
-  user-select: none;
-}
-
-.toolbox-float-panel:active {
-  cursor: grabbing;
-}
-
-.button-stack .el-button + .el-button {
-  margin-left: 0;
-}
-
-.tree-drag-drop .el-tree-node__content {
-  padding: 4px 8px !important;
-}
-
-/* ==================== 安全区内边距（替代 UseScreenSafeArea 的 padding） ==================== */
-.safe-area-padding {
-  padding-top: env(safe-area-inset-top, 0px);
-  padding-right: env(safe-area-inset-right, 0px);
-  padding-bottom: env(safe-area-inset-bottom, 0px);
-  padding-left: env(safe-area-inset-left, 0px);
-  box-sizing: border-box;
-}
-
-/* ==================== 侧边导航折叠态：禁用 Element Plus 默认的 hover 标题弹层 ====================
-   折叠态下菜单项只展示 icon，不需要再弹出菜单标题 tooltip；
-   Element Plus 在 el-menu collapse 模式下，popper-class 仍会被挂到 .el-popper 上，
-   这里通过自定义 popper-class 把折叠态下的弹层整体隐藏，避免塌陷样式干扰。 */
-.bili-side-nav-layout__popper--hidden {
-  display: none !important;
-}
-
-/* 折叠态（小图标模式）悬浮 tooltip：el-tooltip 仅包裹菜单项图标（避免破坏 el-menu 的 <li> 结构），
-   展开态下图标被包裹后不再是 .el-menu-item 的直接子节点，EP 的 `.el-menu-item > .el-icon` 间距失效，
-   这里在展开态补回图标与标题的 8px 间距。 */
-.bili-side-nav-layout__nav-item--expanded .el-tooltip__trigger .el-icon {
-  margin-right: 8px;
-}
-
-/* 侧边导航内容区：外层 el-scrollbar 只做纵向滚动，隐藏横向滚动条（横向滚动由 el-table-v2 等内部表格自管理），
-   避免空态/内容不满时出现无意义的横向滚动条 */
-.bili-side-nav-layout__content .el-scrollbar__bar.is-horizontal {
-  display: none !important;
-}
-
-/* 侧边菜单滚动：让 el-scrollbar 承接菜单列的纵向滚动（限定高度 + 内容自然生长），
-   并隐藏原生滚动条 / 横向条，避免菜单项增多时出现浏览器原生滚动条 */
-.bili-side-nav-layout__nav-scroll {
-  height: 100%;
-}
-.bili-side-nav-layout__nav-scroll .el-scrollbar__wrap {
-  overflow-y: auto;
-  scrollbar-width: none;
-}
-.bili-side-nav-layout__nav-scroll .el-scrollbar__wrap::-webkit-scrollbar {
-  width: 0;
-  height: 0;
-}
-.bili-side-nav-layout__nav-scroll .el-scrollbar__bar.is-horizontal {
-  display: none !important;
 }

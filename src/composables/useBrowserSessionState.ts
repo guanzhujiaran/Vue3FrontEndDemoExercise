@@ -4,17 +4,20 @@ import { SessionLifecycleState, getSessionLifecycleStateLabel } from '@/models/r
 
 /**
  * 前端 UI 会话状态
+ *
+ * queued：内存准入排队中（服务器内存不足，浏览器尚未启动）
  */
-export type UISessionState = 'disconnected' | 'connecting' | 'connected' | 'error'
+export type UISessionState = 'disconnected' | 'connecting' | 'queued' | 'connected' | 'error'
 
 /**
  * 允许的状态转换
  */
 const ALLOWED_TRANSITIONS: Record<UISessionState, readonly UISessionState[]> = {
-  disconnected: ['connecting'],
-  connecting:    ['connected', 'disconnected', 'error'],
+  disconnected: ['connecting', 'queued'],
+  connecting:    ['queued', 'connected', 'disconnected', 'error'],
+  queued:        ['connecting', 'connected', 'disconnected', 'error'],
   connected:     ['disconnected', 'error'],
-  error:         ['disconnected', 'connected'],
+  error:         ['disconnected', 'connecting'],
 }
 
 /**
@@ -24,6 +27,10 @@ const ALLOWED_TRANSITIONS: Record<UISessionState, readonly UISessionState[]> = {
  */
 const ERROR_CODE_HANDLERS: Record<number, { state: UISessionState; lifecycle: SessionLifecycleState; labelKey: string }> = {
   3001: { state: 'disconnected', lifecycle: SessionLifecycleState.TERMINATED, labelKey: 'rpa.sessionTerminated' },
+  // 启动排队（内存准入）：2013 已进入排队 / 2014 排队超时 / 2015 排队被取消
+  2013: { state: 'queued', lifecycle: SessionLifecycleState.INITIALIZING, labelKey: 'rpa.queueTitle' },
+  2014: { state: 'disconnected', lifecycle: SessionLifecycleState.TERMINATED, labelKey: 'rpa.queueTimeout' },
+  2015: { state: 'disconnected', lifecycle: SessionLifecycleState.TERMINATED, labelKey: 'rpa.queueCancelled' },
   // 可扩展更多后端错误码
 }
 
@@ -49,6 +56,7 @@ export function useBrowserSessionState() {
   const isConnected = computed(() => _uiState.value === 'connected')
   const isDisconnected = computed(() => _uiState.value === 'disconnected')
   const isConnecting = computed(() => _uiState.value === 'connecting')
+  const isQueued = computed(() => _uiState.value === 'queued')
   const hasError = computed(() => _uiState.value === 'error')
 
   const lifecycleLabel = computed(() =>
@@ -59,6 +67,7 @@ export function useBrowserSessionState() {
     const labels: Record<UISessionState, string> = {
       disconnected: t('rpa.sessionStatusDisconnected'),
       connecting: t('rpa.sessionStatusConnecting'),
+      queued: t('rpa.sessionStatusQueued'),
       connected: t('rpa.sessionStatusConnected'),
       error: t('rpa.sessionStatusError'),
     }
@@ -101,6 +110,9 @@ export function useBrowserSessionState() {
     const d = data as Record<string, unknown> | undefined
     if (d?.status === 'running') {
       transition('connected')
+    } else if (d?.status === 'queued') {
+      // 内存不足进入启动队列：排队态属于「进行中」而非错误，不写 errorMsg
+      transition('queued', SessionLifecycleState.INITIALIZING)
     } else {
       transition('disconnected', null, (d?.message as string) || '会话创建失败')
     }
@@ -109,6 +121,11 @@ export function useBrowserSessionState() {
   /** 启动会话失败 */
   function onSessionStartFailed(msg: string) {
     transition('disconnected', null, msg)
+  }
+
+  /** 排队结束但未启动（超时 / 被取消 / 队列中消失） */
+  function onQueueEnded(msg: string) {
+    transition('disconnected', SessionLifecycleState.TERMINATED, msg)
   }
 
   /** 开始启动会话（乐观） */
@@ -159,8 +176,16 @@ export function useBrowserSessionState() {
 
     const sessionExists = !!status.session_exists
     const browserRunning = !!status.browser_running
+    const inLaunchQueue = !!status.in_launch_queue
     const lifecycle = (status.lifecycle_state as SessionLifecycleState) || null
     const running = (status.status as string) === 'running'
+
+    // 排队中：会话尚未建立，但语义是「正在等待启动」而非「未启动」。
+    // 必须优先判断，否则会被下方兜底分支重置为 disconnected。
+    if (!sessionExists && inLaunchQueue) {
+      transition('queued', SessionLifecycleState.INITIALIZING)
+      return
+    }
 
     if (sessionExists && browserRunning) {
       if (lifecycle === SessionLifecycleState.ACTIVE || lifecycle === SessionLifecycleState.IDLE || running) {
@@ -199,6 +224,7 @@ export function useBrowserSessionState() {
     isConnected,
     isDisconnected,
     isConnecting,
+    isQueued,
     hasError,
     statusLabel,
     lifecycleLabel,
@@ -212,6 +238,7 @@ export function useBrowserSessionState() {
     onSessionStopped,
     onSessionStopFailed,
     onStatusResponse,
+    onQueueEnded,
     reset,
   }
 }

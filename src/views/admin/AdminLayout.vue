@@ -11,9 +11,10 @@
 
 <script setup lang="ts">
 import { computed, type Component } from 'vue'
-import { Bell, ChatDotRound, Comment, Key, Checked, Collection, Avatar, Flag, Stamp, Document, Medal, CollectionTag, Setting } from '@element-plus/icons-vue'
+import { Bell, ChatDotRound, Comment, Key, Checked, Collection, Avatar, Flag, Stamp, Document, Medal, CollectionTag, Setting, Odometer } from '@element-plus/icons-vue'
 import icShoucang from '@/assets/svgs/audit/shoucang.svg?component'
 import icLiveCenter from '@/assets/svgs/audit/ic_Livecenter.svg?component'
+import icQuota from '@/assets/svgs/space/play_data.svg?component'
 import { useMessageAdminStore } from '@/stores/message_admin'
 import BiliSideNavLayout from '@/components/CommonCompo/Bili-Container-Compo/BiliSideNavLayout.vue'
 
@@ -46,7 +47,8 @@ const navGroups = computed<NavGroup[]>(() => {
       { name: 'ADMIN_RPA_AUDIT', title: '操作审计', icon: Document },
       { name: 'ADMIN_RPA_CERT', title: '官方认证', icon: Medal },
       { name: 'ADMIN_RPA_TAG', title: '标签管理', icon: CollectionTag },
-      { name: 'ADMIN_BROWSER_MONITOR', title: '浏览器监管', icon: icLiveCenter }
+      { name: 'ADMIN_BROWSER_MONITOR', title: '浏览器监管', icon: icLiveCenter },
+      { name: 'ADMIN_LAUNCH_QUEUE', title: '启动队列', icon: Odometer }
     ]
     groups.push({ title: 'RPA 管理', items: rpaItems })
   }
@@ -64,7 +66,8 @@ const navGroups = computed<NavGroup[]>(() => {
       title: '系统设置',
       items: [
         { name: 'ADMIN_PERMISSION', title: '管理端权限', icon: Key },
-        { name: 'ADMIN_SYS_CONFIG', title: '系统配置', icon: Setting }
+        { name: 'ADMIN_SYS_CONFIG', title: '系统配置', icon: Setting },
+        { name: 'ADMIN_BROWSER_QUOTA', title: '浏览器配额', icon: icQuota }
       ]
     })
   }

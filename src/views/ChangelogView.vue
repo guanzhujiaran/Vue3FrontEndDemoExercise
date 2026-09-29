@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ElTimeline, ElTimelineItem, ElCard } from 'element-plus'
 
@@ -17,8 +17,39 @@ interface ChangelogEntry {
 
 const changelogData = ref<ChangelogEntry[]>([])
 
-onMounted(() => {
+// 数据是本地常量：必须直接在 setup 阶段赋值（原来放在 onMounted，
+// SSR / 预渲染时读到的是空数组，更新日志页就成了空壳）
   changelogData.value = [
+    {
+      version: '0.0.3',
+      date: '2026-09-22',
+      changes: {
+        added: [
+          '迁移到 Nuxt 4 + nuxt generate（SSG）：收录页在构建期渲染出带真实数据的静态 HTML，不再依赖无头浏览器预渲染',
+          '新增 5 语言国际化（简体中文 / English / 繁體中文 / 日本語 / 한국어），表头可切换并记忆选择，Element Plus 组件文案同步联动',
+          'SEO 能力升级：按路由输出 title / description / canonical / OG / Twitter / robots，并注入 JSON-LD 结构化数据（WebSite / BreadcrumbList / ItemList / SocialMediaPosting）',
+          '新增 sitemap.xml 与 robots.txt 构建产物，收录清单与站内配置同源',
+          '抽奖列表页（官方 / 充电 / 预约 / 话题）支持服务端取数，首屏 HTML 即包含列表数据与实时收录条数',
+          '更新日志页改为服务端取数，静态 HTML 即包含版本记录',
+          '新增页脚不蒜子访问统计（全站 PV / UV）展示'
+        ],
+        improved: [
+          '部署产物由 589MB / 4665 个文件瘦身到约 6.6MB / 260 个文件；action-icons 素材移出产物目录单独同步',
+          '首屏数据改在 setup 阶段获取并随 HTML 下发，客户端 hydration 直接复用，不再重复请求接口',
+          '页面时间展示统一使用固定时区与 locale，避免构建机与用户浏览器渲染出不同文本',
+          'API 层统一为 hey-api 自动生成的 SDK，按业务域拆分调用入口',
+          '站外跳转统一 no-referrer 策略，避免通过 Referer 泄露当前页地址',
+          '消息中心、管理端审核队列与动态模块持续重构，弹窗滚动与响应式布局优化'
+        ],
+        fixed: [
+          '修复首页、消息中心、动态广场、话题广场、RPA 浏览器、第三方抽奖等页面因登录态来自 localStorage 导致的两端首帧结构不一致（hydration 告警）',
+          '修复英文浏览器下首页文案与静态 HTML 不一致的水合告警（挂载后再按浏览器语言切换）',
+          '修复时间文本在服务端与客户端渲染不一致的水合告警',
+          '修复列表 / 排行榜在客户端水合后渲染为空的问题',
+          '修复抽奖列表接口请求失败时清空已有列表的问题'
+        ]
+      }
+    },
     {
       version: '0.0.2',
       date: '2026-04-24',
@@ -95,7 +126,6 @@ onMounted(() => {
       }
     }
   ]
-})
 </script>
 
 <template>

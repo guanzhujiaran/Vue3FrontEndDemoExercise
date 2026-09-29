@@ -29,7 +29,15 @@ function detectLocale(): SupportedLocale {
 export const useLocaleStore = defineStore(
   'locale',
   () => {
-    const locale = ref<SupportedLocale>(detectLocale())
+    /**
+     * 当前语言。
+     *
+     * 初值固定 `zh-CN`（与服务端渲染一致），**不能**在首帧调用 `detectLocale()`：
+     * 服务端没有 navigator、客户端有，中文静态 HTML 与英文浏览器首帧会渲染成
+     * 不同文案（实测「首页」vs「Home」）→ hydration mismatch。
+     * 浏览器语言在客户端挂载后由 `applyBrowserLocale()` 应用。
+     */
+    const locale = ref<SupportedLocale>('zh-CN')
     const elLocale = computed(() => elLocaleMap[locale.value])
     // 用于注入后端 Accept-Language 请求头（fastapi-i18n 会把 '-' 规范为 '_'，
     // 因此直接发 'zh-CN' / 'zh-TW' 等即可匹配后端 locale 目录）
@@ -52,7 +60,18 @@ export const useLocaleStore = defineStore(
       setLocale(locale.value)
     }
 
-    return { locale, elLocale, acceptLanguage, setLocale, init }
+    /**
+     * 按浏览器语言切换（**只能在客户端挂载之后调用**）。
+     * 用户已显式选过语言（persist 里有记录）时不覆盖其选择。
+     */
+    const applyBrowserLocale = () => {
+      if (typeof localStorage === 'undefined') return
+      if (localStorage.getItem('locale-store')) return
+      const detected = detectLocale()
+      if (detected !== locale.value) setLocale(detected)
+    }
+
+    return { locale, elLocale, acceptLanguage, setLocale, init, applyBrowserLocale }
   },
   {
     persist: {

@@ -55,6 +55,7 @@ import type { RankingPartition } from '@/models/api/lottery/lotdata.ts'
 import HallAreaContent from '@/components/CommonCompo/Bili-Ranking-Compo/items/HallAreaContent.vue'
 import RankItemRow from '@/components/CommonCompo/Bili-Ranking-Compo/items/RankItemRow.vue'
 import LoadingMoreContainer from '@/components/CommonCompo/Bili-Container-Compo/LoadingMoreContainer.vue'
+import { formatDateTime } from '@/utils/dateFormat.ts'
 import BiliEmpty from '@/components/CommonCompo/Bili-Feedback-Compo/BiliEmpty.vue'
 import BiliError from '@/components/CommonCompo/Bili-Feedback-Compo/BiliError.vue'
 import { Timer, ArrowDown } from '@element-plus/icons-vue'
@@ -72,8 +73,9 @@ const syncTimeText = computed(() => {
   if (!syncTs.value || syncTs.value === 0) {
     return '暂无同步记录'
   }
-  const date = new Date(syncTs.value * 1e3)
-  return date.toLocaleString() // 根据需要调整日期格式
+  // 必须用固定时区/locale 格式化：本页数据在服务端渲染，直接 toLocaleString() 会因
+  // 构建机（en-US）与用户浏览器（zh-CN）语言不同而渲染出不同字符串 → hydration mismatch
+  return formatDateTime(syncTs.value * 1e3)
 })
 const props = defineProps({
   page_size: {
@@ -101,6 +103,14 @@ const props = defineProps({
   ranking_partitions: {
     type: Array as PropType<RankingPartition[]>,
     default: () => []
+  },
+  /**
+   * 预渲染数据键：传入时首次加载会在 setup 阶段执行（SSR 需要），数据随之进入 HTML。
+   * 不传则维持「客户端挂载后加载」的原行为，避免影响其它复用本组件的页面。
+   */
+  ssr_key: {
+    type: String,
+    default: ''
   }
 })
 const cur_offset = ref(0)
@@ -127,7 +137,8 @@ const activedParams = computed(() => {
 })
 const handleLoad = () => {
   isLoading.value = true
-  props
+  // 返回 Promise：SSR 时需要 await 首次加载（见下方 ssr_key 分支）
+  return props
     .load_func(cur_offset.value, props.page_size, activedParams.value)
     .then((resp_rank_items) => {
       const isNewList = rankItems.value.length === 0 && topItems.value.length === 0
@@ -157,6 +168,20 @@ const handleLoad = () => {
     })
 }
 
+/**
+ * 重置到第一页再加载（切换分区、刷新预渲染快照都走这里）。
+ *
+ * 必须先清空已有列表：`handleLoad` 在列表非空时走的是「加载更多」分支（追加），
+ * 不清空会把第一页重复追加一遍。
+ */
+const reload = () => {
+  cur_offset.value = 0
+  rankItems.value = []
+  topItems.value = []
+  isMore.value = true
+  return handleLoad()
+}
+
 const handlePartitionChange = (updatedPartition: RankingPartition) => {
   const index = localPartitions.value.findIndex(
     (p) => p.partitionValue === updatedPartition.partitionValue
@@ -164,11 +189,7 @@ const handlePartitionChange = (updatedPartition: RankingPartition) => {
   if (index !== -1) {
     localPartitions.value[index] = updatedPartition
   }
-  cur_offset.value = 0
-  rankItems.value.splice(0, rankItems.value.length)
-  topItems.value.splice(0, topItems.value.length)
-  isMore.value = !0
-  handleLoad()
+  reload()
 }
 
 const handleScoreClick = (item: BaseRankItem) => {
@@ -176,8 +197,39 @@ const handleScoreClick = (item: BaseRankItem) => {
   ActivedUserLotteryResult.value.isOpenDrawer = true
 }
 
-// 组件挂载时自动加载数据
+/**
+ * 预渲染：`ssr_key` 存在时，首次加载必须在 **setup 阶段**完成 —— `onMounted` 只在客户端执行，
+ * 放在那里预渲染出的 HTML 就是空壳。数据同时进入 Nuxt payload，客户端 hydration 直接复用。
+ */
+if (props.ssr_key) {
+  const { data: ssrData } = await useAsyncData(props.ssr_key, async () => {
+    await handleLoad()
+    return {
+      top: topItems.value,
+      list: rankItems.value,
+      offset: cur_offset.value,
+      more: isMore.value
+    }
+  })
+  // 客户端 hydration：payload 命中时上面的 fn 不会执行，必须把数据写回组件状态，
+  // 否则「SSR 有内容、客户端渲染成空列表」（排行榜一开始就踩了这个坑）。
+  if (ssrData.value && !topItems.value.length && !rankItems.value.length) {
+    topItems.value = ssrData.value.top
+    rankItems.value = ssrData.value.list
+    cur_offset.value = ssrData.value.offset
+    isMore.value = ssrData.value.more
+  }
+}
+
+// 组件挂载时取数：
+// - 没有 ssr_key 的页面：维持原行为（挂载后首次加载）
+// - 有 ssr_key 的预渲染页：上面的 useAsyncData 在 hydration 时会命中 payload 而不请求，
+//   首屏数据即「构建时快照」——挂载后重置到第一页重新拉取，保证展示当前数据
 onMounted(() => {
-  handleLoad()
+  if (!props.ssr_key) {
+    handleLoad()
+    return
+  }
+  reload()
 })
 </script>

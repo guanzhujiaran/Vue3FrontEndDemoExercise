@@ -13,6 +13,8 @@ import lotteryDataBaseApi from '@/api/lottery_data/bili/lottery_database_bili_ap
 import { fetchInteractionStatusOne, InteractionBizTypeEnum } from '@/api/notify/moment-api'
 import type { InteractionStatusItem } from '@/api/notify/moment-api'
 import type { AnyLotteryData } from '@/models/api/lottery/lottery_card.ts'
+import { usePageSeo } from '@/composables/usePageSeo.ts'
+import { SITE_URL } from '@/config/seo.ts'
 
 const { t } = useI18n()
 const route = useRoute()
@@ -80,6 +82,31 @@ watch(lotteryId, () => {
   void loadDetail()
 })
 void loadDetail()
+
+// ============ 页面级 SEO：用接口返回的真实内容覆盖分享卡片与搜索结果 ============
+const normalizedDetail = computed(() =>
+  detailData.value ? normalizeLotteryData(detailData.value) : null
+)
+usePageSeo(() => {
+  const n = normalizedDetail.value
+  if (!n) return null
+  const title = n.title?.trim() || 'B站抽奖'
+  const displayType = n.displayType || 'B站抽奖'
+  const url = `${SITE_URL}/app/lot-data/card-detail?id=${lotteryId.value}`
+  return {
+    title: `${displayType}：${title}`,
+    description: `${displayType}「${title}」的开奖时间、奖品与参与条件，一键跳转原动态查看与参与。`,
+    jsonLd: {
+      '@context': 'https://schema.org',
+      '@type': 'SocialMediaPosting',
+      headline: `${displayType}：${title}`,
+      articleSection: displayType,
+      inLanguage: 'zh-CN',
+      url,
+      author: n.senderInfo?.name ? { '@type': 'Person', name: n.senderInfo.name } : undefined
+    }
+  }
+})
 
 // 详情页互动状态（bizType=lottery）：走单资源接口并累计浏览，供卡片回显浏览数/点赞/收藏等
 const status = ref<InteractionStatusItem | null>(null)

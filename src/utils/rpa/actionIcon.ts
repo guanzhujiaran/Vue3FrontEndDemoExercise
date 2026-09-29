@@ -1,4 +1,3 @@
-import { defineComponent, h, type Component } from 'vue'
 import { ACTION_ICON_MANIFEST, ACTION_ICON_PUBLIC_DIR } from './actionIconManifest'
 
 /**
@@ -6,12 +5,13 @@ import { ACTION_ICON_MANIFEST, ACTION_ICON_PUBLIC_DIR } from './actionIconManife
  *
  * ## 资源位置与目录约定
  *
- * 动作图标是「内容图库」而非打包资产（4000+ 张 png、约 580MB），因此资源放在 `public/` 下
- * 由 Web 服务器原样托管，**不参与构建、不加内容 hash**（否则 dist 会膨胀到 580MB 且每个图标
- * 都要多下载一个 wrapper chunk 才能拿到 URL）：
+ * 动作图标是「内容图库」而非打包资产（4000+ 张 png、约 580MB），资源放在**项目根**
+ * `action-icons/`（不在 `public/`，也不在 `src/assets/`）：作为静态资源原样托管、
+ * **不参与构建、不加内容 hash**（放 `public/` 会让产物膨胀到 580MB，且每次构建都要
+ * 复制/清理这 4000+ 文件）。部署时单独同步到站点根，见 `docs/前端部署说明.md`。
  *
  * ```
- * public/action-icons/{分类}/s_{系列编号}_{系列名称}/i_{图片编号}_{图片名称}.{扩展名}
+ * action-icons/{分类}/s_{系列编号}_{系列名称}/i_{图片编号}_{图片名称}.{扩展名}
  * ```
  *
  * | 示例 | 解析结果 |
@@ -39,18 +39,23 @@ import { ACTION_ICON_MANIFEST, ACTION_ICON_PUBLIC_DIR } from './actionIconManife
  * 生成 `actionIconManifest.ts`（自动生成，勿手改）。运行时 URL：
  *
  * ```
- * `${import.meta.env.BASE_URL}action-icons/${dir}/${file}`   // 路径分段各自 encodeURIComponent
+ * `/action-icons/${dir}/${file}`   // 路径分段各自 encodeURIComponent
  * ```
+ *
+ * ⚠️ **不要用 `import.meta.env.BASE_URL` 拼这个 URL**：Nuxt 客户端把 Vite 的 base 设为
+ * `/_nuxt/`（用于产物寻址），拼出来是 `/_nuxt/action-icons/...`，静态目录里没有这条路径
+ * → 请求全部 404，界面上表现为「破图」。故由 `ACTION_ICON_URL_PREFIX` 固定为站点根绝对路径。
  *
  * ⚠️ 代价：失去内容 hash，资源更新不受打包器校验。清单生成脚本即校验手段
  * （`npm run icons:manifest -- --check` 可放进 CI）。
  *
  * ## 兜底规则
  *
- * 本模块只负责「具体图标」的查找：命中返回组件，未命中一律返回 `null`。
+ * 本模块只负责「具体图标」的查找：命中返回 URL，未命中一律返回 `null`。
  * - 未命中场景：`series/id` 为 0（未选择自定义图标）、编号不存在、清单为空等；
  * - **默认图标由调用方通过 `fallback` 插槽提供**（沿用前端既有的动作类型图标 /
  *   `QuestionFilled`，见 `@/utils/rpa/actionTypeIcon`），因此图库**无需**提供默认资源；
+ * - 调用方（`ActionIcon.vue`）还需在图片加载失败时回落 `fallback`（资源缺失也不破图）；
  * - `icon_series = 0` 或 `icon_id = 0` 是「未选择自定义图标」的协议约定（见 `isDefaultActionIcon`）。
  */
 
@@ -58,16 +63,23 @@ import { ACTION_ICON_MANIFEST, ACTION_ICON_PUBLIC_DIR } from './actionIconManife
 export const DEFAULT_ICON_SERIES = 0
 export const DEFAULT_ICON_ID = 0
 
-/** 资源根目录（展示用；运行时 URL 前缀跟随 `import.meta.env.BASE_URL`） */
-export const ACTION_ICON_DIR = `public/${ACTION_ICON_PUBLIC_DIR}`
+/** 资源根目录（展示用，如 `action-icons/`；运行时以站点根绝对路径引用） */
+export const ACTION_ICON_DIR = ACTION_ICON_PUBLIC_DIR
+
+/**
+ * 图标 URL 前缀：**站点根绝对路径**，与部署约定一致
+ * （站点根下直接有 `action-icons/`，见 `docs/前端部署说明.md`）。
+ *
+ * 这里刻意不用 `import.meta.env.BASE_URL`：Nuxt 客户端把它设为 `/_nuxt/`，
+ * 拼出来会变成 `/_nuxt/action-icons/...` 而 404。
+ */
+const ACTION_ICON_URL_PREFIX = `/${ACTION_ICON_PUBLIC_DIR}/`
 
 interface IconEntry {
   /** 图片名称（来自文件名，可缺省） */
   name: string
-  /** 静态资源 URL（含 base） */
+  /** 静态资源 URL（站点根绝对路径） */
   url: string
-  /** 惰性创建的渲染组件（首次请求时才构建） */
-  component?: Component
 }
 
 interface SeriesEntry {
@@ -87,25 +99,7 @@ interface SeriesEntry {
  */
 function buildIconUrl(dir: string, file: string): string {
   const encoded = [...dir.split('/'), file].map(encodeURIComponent).join('/')
-  return `${import.meta.env.BASE_URL}${ACTION_ICON_PUBLIC_DIR}/${encoded}`
-}
-
-/**
- * 图标渲染组件（同步）
- *
- * 位图与 SVG 统一按 URL 渲染 `<img>`：SVG 以 URL 形式加载时无法响应 `currentColor`，
- * 需要跟随文字颜色变化的图标请用 `@/utils/rpa/actionTypeIcon` 的内置图标。
- * class/style 经 attrs 落到 `img` 上。
- */
-function getIconComponent(entry: IconEntry): Component {
-  if (!entry.component) {
-    const url = entry.url
-    entry.component = defineComponent({
-      name: 'ActionIconImage',
-      setup: () => () => h('img', { src: url, alt: '' }),
-    })
-  }
-  return entry.component
+  return `${ACTION_ICON_URL_PREFIX}${encoded}`
 }
 
 /** 系列编号 → 系列信息 */
@@ -139,18 +133,23 @@ function findExact(series: number, id: number): IconEntry | undefined {
 }
 
 /**
- * 解析动作图标（组件）
+ * 解析动作图标 URL
+ *
+ * 位图与 SVG 统一按 URL 渲染 `<img>`：SVG 以 URL 形式加载时无法响应 `currentColor`，
+ * 需要跟随文字颜色变化的图标请用 `@/utils/rpa/actionTypeIcon` 的内置图标。
  *
  * @param series 图标系列编号（后端 `icon_series`）
  * @param id     系列内编号（后端 `icon_id`）
- * @returns 图标组件；未命中返回 `null`（由调用方渲染 `fallback`）
+ * @returns 图标 URL；未命中返回 `null`（由调用方渲染 `fallback`）
  */
-export function resolveActionIcon(series?: number | null, id?: number | null): Component | null {
+export function resolveActionIconUrl(
+  series?: number | null,
+  id?: number | null
+): string | null {
   const s = typeof series === 'number' && Number.isFinite(series) ? series : DEFAULT_ICON_SERIES
   const i = typeof id === 'number' && Number.isFinite(id) ? id : DEFAULT_ICON_ID
 
-  const entry = findExact(s, i)
-  return entry ? getIconComponent(entry) : null
+  return findExact(s, i)?.url ?? null
 }
 
 /** 是否等价于「默认图标」（系列或编号为 0 / 未设置） */

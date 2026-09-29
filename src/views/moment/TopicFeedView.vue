@@ -10,7 +10,7 @@
           v-if="topicItem.share_pic"
           class="topic-feed__detail-cover h-16 w-16 rounded-lg object-cover"
           :src="topicItem.share_pic"
-          referrerpolicy="no-referrer"
+          :referrerpolicy="IMG_REFERRER_POLICY"
           alt="topic cover"
         />
         <div class="topic-feed__detail-main min-w-0 flex-1">
@@ -75,6 +75,7 @@
 </template>
 
 <script setup lang="ts">
+import { IMG_REFERRER_POLICY } from '@/utils/PageOpen/linkPolicy'
 import { ref, watch, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { fetchTopicFeed, fetchTopicDetail, fetchInteractionStatus, InteractionBizTypeEnum, thumbMoment } from '@/api/notify/moment-api'

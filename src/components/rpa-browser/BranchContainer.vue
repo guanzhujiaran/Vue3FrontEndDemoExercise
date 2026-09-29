@@ -535,7 +535,7 @@ function handleNestedToggleExpand(childIndex: number, nestedBranch: 'true' | 'fa
                   :config-params="branchItem.config_params"
                 />
               </div>
-              <div class="grid grid-cols-2 gap-3 shrink-0 py-1 button-stack">
+              <div class="grid grid-cols-2 gap-3 shrink-0 py-1">
                 <el-button size="small" :icon="VideoPlay" type="primary" :loading="isOperating(bi)" @click="emit('item:execute', bi)" class="execute-btn w-20">执行</el-button>
                 <el-button size="small" :icon="View" :loading="isOperating(bi)" @click="emit('item:preview', bi)" class="preview-btn w-20 ml-0">预览</el-button>
                 <el-button size="small" :icon="Check" :loading="isOperating(bi)" @click="emit('item:validate', bi)" class="validate-btn w-20 ml-0">验证</el-button>

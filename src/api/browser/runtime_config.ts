@@ -2,9 +2,17 @@ import type { CreateClientConfig } from './hey-api/client.gen'
 import { useLocaleStore } from '@/stores/locale'
 import { useUserNavStore } from '@/stores/user_nav'
 
+/** SSR 下服务端没有同源概念，必须用绝对地址；浏览器仍走同源相对路径（见 bili_lottery_data/runtime_config.ts 说明） */
+/**
+ * SSR / 预渲染时的后端绝对地址：由构建期 `PRERENDER_API_TARGET` 静态注入（见 nuxt.config.ts）。
+ * 浏览器端永远用同源相对路径（空字符串），故这里只保留服务端取值。
+ */
+declare const __SSR_API_TARGET__: string
+const SSR_API_TARGET = typeof __SSR_API_TARGET__ === 'string' ? __SSR_API_TARGET__ : ''
+
 export const createClientConfig: CreateClientConfig = (config) => ({
   ...config,
-  baseUrl:'',
+  baseUrl: import.meta.server ? SSR_API_TARGET : '',
   timeout:30000,
   responseStyle: 'data',
   // JWT 已改为 HttpOnly Cookie，浏览器自动随请求携带（credentials 保证跨域也携带）

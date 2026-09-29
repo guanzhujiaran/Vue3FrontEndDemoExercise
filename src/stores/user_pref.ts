@@ -8,8 +8,9 @@ export const useUserPrefStore = defineStore(
   () => {
     // 大小主题
     const sizeTheme = ref<SizeTheme>('base')
-    // 应用主题到DOM
+    // 应用主题到DOM（SSR / 预渲染环境没有 document，直接跳过：字体尺寸由客户端挂载后再应用）
     const applyThemes = () => {
+      if (typeof document === 'undefined') return
       switch (sizeTheme.value) {
         case 'xs':
           document.documentElement.style.fontSize = '12px'

@@ -4,9 +4,13 @@
         <AutoHeightContainer
             class="bili-side-nav-layout__body flex-auto flex min-w-0 items-stretch gap-3 p-3">
             <el-aside width="auto" class="bili-side-nav-layout__aside h-full overflow-hidden">
-                <el-scrollbar class="bili-side-nav-layout__nav-scroll h-full" view-class="h-full">
+                <!-- 菜单列滚动：el-scrollbar 承接纵向滚动（EP 的 wrap 自带 overflow:auto），
+                     这里只需隐藏原生滚动条与横向条，避免菜单项增多时出现浏览器原生滚动条 -->
+                <el-scrollbar
+                    class="bili-side-nav-layout__nav-scroll h-full [&_.el-scrollbar__wrap]:overflow-y-auto [&_.el-scrollbar__wrap]:scrollbar-none [&_.el-scrollbar__wrap::-webkit-scrollbar]:h-0 [&_.el-scrollbar__wrap::-webkit-scrollbar]:w-0 [&_.el-scrollbar__bar.is-horizontal]:hidden!"
+                    view-class="h-full">
                     <el-menu :default-active="activeIndex" :collapse="collapsed" :collapse-transition="false"
-                        :popper-class="collapsed ? 'bili-side-nav-layout__popper--hidden' : ''"
+                        :popper-class="collapsed ? 'bili-side-nav-layout__popper--hidden hidden!' : ''"
                         class="bili-side-nav-layout__nav min-h-full overflow-x-hidden border-r bg-bg/50 rounded-lg! py-4 origin-left will-change-[width,transform] transition-[width] duration-420 ease-[cubic-bezier(0.34,1.56,0.64,1)]"
                         :class="[
                             collapsed ? 'w-16' : 'w-52',
@@ -35,7 +39,7 @@
                                 class="bili-side-nav-layout__nav-item mb-3 last:mb-0"
                                 :class="collapsed
                                     ? 'bili-side-nav-layout__nav-item--collapsed flex-col justify-center'
-                                    : 'bili-side-nav-layout__nav-item--expanded h-7 text-lg'">
+                                    : 'bili-side-nav-layout__nav-item--expanded h-7 text-lg [&_.el-tooltip__trigger_.el-icon]:mr-2'">
                                 <!-- 折叠态（小图标模式）悬浮显示菜单项完整标题；展开态禁用 tooltip（标题已横排展示）。
                                     注意：el-tooltip 只包裹图标，不能包裹 el-menu-item 本身——后者渲染为 <li>，
                                     被 el-tooltip 的 <span> 包裹会导致浏览器把 <li> 移出触发器，破坏菜单结构。 -->
@@ -72,8 +76,10 @@
                     <slot name="header-extra" />
                 </el-header>
                 <el-main class="bili-side-nav-layout__main-body p-3 overflow-hidden">
-                    <el-scrollbar class="bili-side-nav-layout__content h-full" view-class="h-full"
-                        wrap-style="overflow-x: hidden;" @scroll="onContentScroll">
+                    <!-- 内容区只做纵向滚动：横向滚动由 el-table-v2 等内部表格自管理，
+                         因此隐藏横向条，避免空态/内容不满时出现无意义的横向滚动条 -->
+                    <el-scrollbar class="bili-side-nav-layout__content h-full [&_.el-scrollbar__bar.is-horizontal]:hidden!"
+                        view-class="h-full" wrap-style="overflow-x: hidden;" @scroll="onContentScroll">
                         <slot />
                         <ScrollButtons :scroll-top="contentScrollTop" :top-threshold="100" :bottom-threshold="100" />
                     </el-scrollbar>

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { IMG_REFERRER_POLICY } from '@/utils/PageOpen/linkPolicy'
 import { computed, nextTick, onMounted, provide, ref, watch, type Ref } from 'vue'
 import { ElMessageBox } from 'element-plus'
 import { ChatDotSquare } from '@element-plus/icons-vue'
@@ -394,22 +395,27 @@ const scrollToFocus = () => {
     <div v-if="isLoggedIn" class="lottery-comment-section__submit mb-6">
       <div class="flex gap-3">
         <el-avatar :size="40" class="shrink-0">
-          <img :src="userAvatar" referrerpolicy="no-referrer" alt="头像" />
+          <img :src="userAvatar" :referrerpolicy="IMG_REFERRER_POLICY" alt="头像" />
         </el-avatar>
-        <div class="flex-1">
+        <!-- 输入框与「发表评论」同一行、按底部对齐：按钮紧贴输入框右下角。
+             原来按钮独占一行放在输入框下方，位置偏低；此写法与私信发送区（DmChatPanel）保持一致。 -->
+        <div class="flex min-w-0 flex-1 items-end gap-2">
           <LotteryCommentMention
             ref="topMentionRef"
             v-model="newComment"
             :local-options="mentionOptions"
             placeholder="发一条友善的评论"
             :rows="2"
-            class="lottery-comment-section__mention"
+            class="lottery-comment-section__mention flex-1"
           />
-          <div class="flex items-center justify-end mt-1">
-            <el-button size="small" type="primary" :disabled="!newComment.trim()" @click="submitTopComment">
-              发表评论
-            </el-button>
-          </div>
+          <el-button
+            class="lottery-comment-section__submit-btn shrink-0"
+            type="primary"
+            :disabled="!newComment.trim()"
+            @click="submitTopComment"
+          >
+            发表评论
+          </el-button>
         </div>
       </div>
     </div>
@@ -419,7 +425,7 @@ const scrollToFocus = () => {
       class="lottery-comment-section__login-tip mb-6 flex gap-3"
     >
       <el-avatar :size="40" class="shrink-0">
-        <img :src="BiliImg.face.noface" referrerpolicy="no-referrer" alt="头像" />
+        <img :src="BiliImg.face.noface" :referrerpolicy="IMG_REFERRER_POLICY" alt="头像" />
       </el-avatar>
       <div class="lottery-comment-section__login-box flex-1 flex items-center justify-center gap-2 rounded-md bg-bg-secondary py-3 text-sm text-text-secondary border border-border-light">
         <span>请先</span>

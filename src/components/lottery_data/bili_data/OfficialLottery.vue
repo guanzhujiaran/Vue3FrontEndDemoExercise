@@ -77,11 +77,15 @@
             </div>
 
             <div class="flex w-full justify-end xl:w-auto">
-              <LotteryDataTableToolbar :refresh_data="refresh_data" v-model:view-mode="viewMode">
-              <template #submit-button>
-                <SubmitDynamicLotteryModal />
-              </template>
-            </LotteryDataTableToolbar>
+              <LotteryDataTableToolbar
+                :feedback-source="FEEDBACK_SOURCE.OFFICIAL_LOTTERY"
+                :refresh_data="refresh_data"
+                v-model:view-mode="viewMode"
+              >
+                <template #submit-button>
+                  <SubmitDynamicLotteryModal />
+                </template>
+              </LotteryDataTableToolbar>
             </div>
           </div>
         </template>
@@ -107,8 +111,12 @@
 </template>
 
 <script setup lang="ts">
-import { watch, onMounted, onUnmounted, ref } from 'vue'
-import { useLotteryData } from '@/utils/useLotteryData.ts'
+import { watch, onActivated, onUnmounted, ref } from 'vue'
+import { usePageSeo } from '@/composables/usePageSeo.ts'
+import { useRefreshAfterMount } from '@/composables/useRefreshAfterMount.ts'
+import { buildItemListJsonLd } from '@/config/seo.ts'
+import { collectSsrData, getSsrData } from '@/app/ssrData'
+import { ssrDataKeyOf, ssrFilterKeyOf, useLotteryData } from '@/utils/useLotteryData.ts'
 import BiliScrapyStatusMini from './BiliScrapyStatusMini.vue'
 import BiliLotterySimpleList from './BiliLotterySimpleList.vue'
 import biliMessage from '@/utils/message'
@@ -116,15 +124,24 @@ import SubmitDynamicLotteryModal from './SubmitDynamicLotteryModal.vue'
 import { useBiliLotteryRecord } from '@/stores/bili_lottery_record.ts'
 import lotteryDataBaseApi, { type FilterParamMeta } from '@/api/lottery_data/bili/lottery_database_bili_api'
 import LotteryFilterBar from './LotteryFilterBar.vue'
+import { FEEDBACK_SOURCE } from '@/api/notify/message_feedback'
 
-const { page_size, lotteryDataProps: official_lot_data_props, getLotData: get_lot_data, extraFilters } = useLotteryData('GetOfficialLottery')
+const {
+  page_size,
+  lotteryDataProps: official_lot_data_props,
+  getLotData: get_lot_data,
+  extraFilters,
+} = useLotteryData('GetOfficialLottery')
 
 const ClickedBiliLotteryId = useBiliLotteryRecord()
 const viewMode = ref<'card' | 'table' | 'simple'>(ClickedBiliLotteryId.lottery_view_mode)
 
 const statValueStyle = { fontSize: '34px', fontWeight: '800' }
 
-const filterParams = ref<FilterParamMeta[]>([])
+// 复用 SSR 取到的筛选参数：两端首屏一致，避免筛选栏水合不匹配
+const filterParams = ref<FilterParamMeta[]>(
+  getSsrData<FilterParamMeta[]>(ssrFilterKeyOf('GetOfficialLottery')) ?? []
+)
 const filterValues = ref<Record<string, any>>({})
 
 /** 从 API 返回的 FilterParamMeta 中提取 default_value 构建初始 filterValues */
@@ -144,6 +161,8 @@ async function loadFilterParams() {
       if (endpoint) {
         filterParams.value = endpoint.params
         filterValues.value = buildDefaultFilterValues(endpoint.params)
+        // 预渲染采集：把筛选参数一并注入静态 HTML
+        collectSsrData(ssrFilterKeyOf('GetOfficialLottery'), filterParams.value)
       }
     }
   } catch (e) { console.error('加载筛选参数失败:', e) }
@@ -159,19 +178,48 @@ function applyFilters() {
   get_lot_data(1, page_size.value)
 }
 
-onMounted(async () => {
-  await loadFilterParams()
-  extraFilters.value = { ...filterValues.value }
-  official_lot_data_props.value.lot_page = 1
-  get_lot_data(1, page_size.value)
-    .then((resp) => {
-      if (!resp.is_succ) {
-        biliMessage.error(resp.msg)
-      }
-    })
-    .catch(() => {
-      biliMessage.error('加载数据失败')
-    })
+// ============ 首屏数据：必须在 setup 阶段取，SSR / 预渲染的 HTML 才有列表内容 ============
+/**
+ * SSR / 预渲染时执行本函数：数据既写进 `official_lot_data_props`（供本次渲染出 HTML），
+ * 也作为返回值进入 Nuxt payload；客户端 hydration 直接复用 payload（不重复请求），
+ * 客户端路由首次进入该页时同样会自动执行。
+ */
+const { data: firstPageData } = await useAsyncData(
+  'lot:GetOfficialLottery:firstPage',
+  async () => {
+    await loadFilterParams()
+    extraFilters.value = { ...filterValues.value }
+    official_lot_data_props.value.lot_page = 1
+    const resp = await get_lot_data(1, page_size.value)
+    if (!resp.is_succ) throw new Error(resp.msg || '加载数据失败')
+    return official_lot_data_props.value.lot_data
+  }
+)
+
+/**
+ * 把 payload 里的首屏数据写回组件状态。
+ * 只在「当前列表为空」时补写 —— 翻页 / 刷新会更新 `lot_data`，不能被这里覆盖；
+ * `onActivated` 覆盖 keep-alive 场景（组件被缓存且 onUnmounted 已清空数据）。
+ */
+const restoreFirstPage = () => {
+  if (!official_lot_data_props.value.lot_data?.items?.length && firstPageData.value) {
+    official_lot_data_props.value.lot_data = firstPageData.value
+  }
+}
+restoreFirstPage()
+onActivated(restoreFirstPage)
+
+// ============ 页面级 SEO：列表页输出 ItemList，描述带实时收录条数 ============
+usePageSeo(() => {
+  const lot = official_lot_data_props.value.lot_data
+  const items = lot?.items ?? []
+  const jsonLd = buildItemListJsonLd('B站官方抽奖汇总', items, lot?.total)
+  // 首屏尚无数据时不覆盖：回落到 ROUTE_SEO 的路由级文案
+  if (!jsonLd) return null
+  return {
+    description: `B站官方抽奖汇总：当前收录 ${lot?.total ?? items.length} 条官方账号发起的转发抽奖，含开奖时间、奖品、参与条件与一键跳转原动态。`,
+    jsonLd
+  }
 })
 
 onUnmounted(() => {
@@ -204,5 +252,8 @@ watch(
 const refresh_data = () => {
   get_lot_data(official_lot_data_props.value.lot_page, page_size.value)
 }
+
+// 预渲染页首屏吃的是构建期快照，挂载后再拉一次最新数据（见 composable 内注释）
+useRefreshAfterMount(refresh_data)
 </script>
 

@@ -11,7 +11,7 @@ import biliMessage from '@/utils/message'
 import type { PrizeResult } from '@/models/api/lottery/lottery_prize_result.ts'
 import { BiliImg } from '@/assets/img/BiliImg.ts'
 import { gotoOpusDynamic, getBiliLotteryResultUrl } from '@/utils/PageOpen/BiliJump.ts'
-import { LINK_REL, LINK_REFERRER_POLICY, openExternalLink } from '@/utils/PageOpen/linkPolicy'
+import { IMG_REFERRER_POLICY, LINK_REL, LINK_REFERRER_POLICY, openExternalLink } from '@/utils/PageOpen/linkPolicy'
 import { useDebounceFn } from '@vueuse/core'
 import { useTourTipStore } from '@/stores/tour_tip.ts'
 import BiliEmpty from '@/components/CommonCompo/Bili-Feedback-Compo/BiliEmpty.vue'
@@ -192,7 +192,7 @@ const biliRankUserAtariDetailTip = computed(
                 class="flex flex-col rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-all duration-200">
                 <img :src="getPrizeImage(prize)" alt="Prize Image"
                   class="h-24 w-24 object-cover bg-[var(--el-color-white)] transition-transform duration-300 hover:scale-105"
-                  referrerpolicy="no-referrer" />
+                  :referrerpolicy="IMG_REFERRER_POLICY" />
               </a>
             </div>
             <div :class="[

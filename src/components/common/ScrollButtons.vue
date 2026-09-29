@@ -38,6 +38,14 @@ const getMetrics = () => {
       scrollHeight: wrap.scrollHeight
     }
   }
+  // SSR / 预渲染：没有 window / document，返回零值（按钮恒不显示，客户端挂载后自动恢复）
+  if (typeof window === 'undefined') {
+    return {
+      el: null as unknown as HTMLElement | Window,
+      clientHeight: 0,
+      scrollHeight: 0
+    }
+  }
   return {
     el: window as unknown as HTMLElement | Window,
     clientHeight: window.innerHeight,

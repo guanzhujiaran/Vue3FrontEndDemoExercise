@@ -3,6 +3,7 @@
 </template>
 
 <script setup lang="ts">
+import { IMG_REFERRER_POLICY } from '@/utils/PageOpen/linkPolicy'
 import { computed, onBeforeUnmount, onMounted, useTemplateRef, watch } from 'vue'
 import Vditor from 'vditor'
 import 'vditor/dist/index.css'
@@ -24,7 +25,7 @@ const handle_image_render = (node: any, entering: boolean): [string, number] => 
   )
   if (link_str.startsWith('(')) link_str = link_str.slice(1, -1) //去掉链接的括号
   return [
-    `<img src="${link_str}" size="64" referrerPolicy="no-referrer" alt="${node.Text()}" />`,
+    `<img src="${link_str}" size="64" referrerPolicy="${IMG_REFERRER_POLICY}" alt="${node.Text()}" />`,
     Lute.WalkContinue
   ]
 }

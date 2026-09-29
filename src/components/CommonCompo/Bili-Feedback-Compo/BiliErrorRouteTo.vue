@@ -7,6 +7,7 @@
  * @Description: 未授权访问页面，当用户未登录时展示
 -->
 <script setup lang="ts">
+import { IMG_REFERRER_POLICY } from '@/utils/PageOpen/linkPolicy'
 import { ref, computed, inject, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
 import { type BiliErrorDetailType, BiliErrorRouteToTxt } from '@/assets/text/BiliErrorTxt.ts'
@@ -61,7 +62,7 @@ const onLoginClick = () => {
     <div class="mb-6 animate-float">
       <el-image
         :src="props.detail.error_img_src"
-        referrerpolicy="no-referrer"
+        :referrerpolicy="IMG_REFERRER_POLICY"
         class="max-w-[70vw] w-full h-auto drop-shadow-[0_8px_24px_rgba(64,158,255,0.15)]"
       />
     </div>

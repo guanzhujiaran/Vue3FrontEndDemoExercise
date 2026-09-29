@@ -1,15 +1,15 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-import { resolveActionIcon } from '@/utils/rpa/actionIcon'
+import { computed, ref, watch } from 'vue'
+import { resolveActionIconUrl } from '@/utils/rpa/actionIcon'
 
 /**
  * 动作图标渲染器
  *
- * 只做一件事：`(series, id)` → 图标组件 → `<component :is>`。
- * 图标本体是 `public/action-icons/` 下的静态资源（不参与打包），注册表按清单拼出 URL，
- * 统一以 `<img>` 渲染；因此不再支持 `currentColor` 染色（需染色的用内置图标）。
+ * 只做一件事：`(series, id)` → 图标 URL → `<img>`。
+ * 图标本体是项目根 `action-icons/` 下的静态资源（不参与打包，站点根绝对路径引用）。
  *
- * 无对应资源时渲染 `fallback` 插槽（可留空），**不使用 Element Plus 图标兜底**。
+ * 未命中清单（`series/id` 为 0、编号不存在、清单为空）**或图片加载失败（404）**时，
+ * 都渲染 `fallback` 插槽，避免界面上出现破图；**不使用 Element Plus 图标兜底**。
  */
 defineOptions({ inheritAttrs: false })
 
@@ -22,10 +22,26 @@ interface Props {
 
 const props = defineProps<Props>()
 
-const icon = computed(() => resolveActionIcon(props.series, props.id))
+const url = computed(() => resolveActionIconUrl(props.series, props.id))
+
+/** 图片加载失败（资源缺失 / 404）时同样回落 fallback */
+const loadFailed = ref(false)
+/** 切到另一个图标时重置失败态，否则会一直沿用上一次的回落 */
+watch(url, () => {
+  loadFailed.value = false
+})
+
+const showFallback = computed(() => !url.value || loadFailed.value)
 </script>
 
 <template>
-  <component v-if="icon" :is="icon" v-bind="$attrs" class="action-icon" />
+  <img
+    v-if="!showFallback"
+    :src="url || ''"
+    alt=""
+    class="action-icon"
+    v-bind="$attrs"
+    @error="loadFailed = true"
+  />
   <slot v-else name="fallback" />
 </template>

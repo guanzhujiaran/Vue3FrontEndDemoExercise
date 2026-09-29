@@ -74,7 +74,7 @@
       </div>
       <div class="button-row flex flex-wrap items-center justify-center gap-3 sm:flex-none sm:justify-end">
         <slot name="submit-button"></slot>
-        <SubmitFeedbackModal />
+        <SubmitFeedbackModal :source="feedbackSource" />
       </div>
 
 
@@ -89,6 +89,7 @@ import { ref } from 'vue'
 import { useBiliLotteryRecord } from '@/stores/bili_lottery_record.ts'
 import { Setting, Refresh, Grid, List, Menu } from '@element-plus/icons-vue'
 import { useThemeStore } from '@/stores/theme'
+import type { FeedbackSource } from '@/api/notify/message_feedback'
 import SubmitFeedbackModal from './SubmitFeedbackModal.vue'
 
 const themeStore = useThemeStore()
@@ -97,6 +98,8 @@ defineProps<{
   refresh_data: () => void
   showSubmitButton?: boolean
   viewMode: 'card' | 'table' | 'simple'
+  /** 反馈来源：各抽奖页面传入自己的具体抽奖类型，避免反馈标题一律显示「抽奖数据页」 */
+  feedbackSource: FeedbackSource
 }>()
 
 const emit = defineEmits<{

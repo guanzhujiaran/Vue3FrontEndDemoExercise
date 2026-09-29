@@ -2,15 +2,16 @@
  * 本文件由 scripts/gen-action-icon-manifest.mjs 自动生成，请勿手动修改
  *
  * 内容：RPA 动作图标「系列编号 / 图片编号 → 静态资源路径」映射。
- * 资源本体位于 public/action-icons/（不参与打包），这里的 dir/file 是相对该目录的路径。
- * 运行时 URL = `${import.meta.env.BASE_URL}action-icons/${dir}/${file}`（路径分段各自 encodeURIComponent）。
+ * 资源本体位于项目根 action-icons/（不参与打包，部署时同步到站点根同名目录），
+ * 这里的 dir/file 是相对该目录的路径。
+ * 运行时 URL = `/action-icons/${dir}/${file}`（路径分段各自 encodeURIComponent，站点根绝对路径）。
  */
 /* eslint-disable */
 
 /** 清单结构版本 */
 export const ACTION_ICON_MANIFEST_VERSION = 1
 
-/** public 下的资源目录名 */
+/** 资源目录名（站点根下的 action-icons/） */
 export const ACTION_ICON_PUBLIC_DIR = "action-icons"
 
 export interface ActionIconManifestIcon {
@@ -27,7 +28,7 @@ export interface ActionIconManifestSeries {
   seriesName: string
   /** 分类名称（系列目录的上一级目录，可缺省） */
   category: string
-  /** 系列目录相对 `public/action-icons/` 的路径 */
+  /** 系列目录相对 `action-icons/` 的路径 */
   dir: string
   /** 图片编号 → 图标 */
   icons: Record<string, ActionIconManifestIcon>
@@ -43,7 +44,7 @@ export interface ActionIconManifest {
 
 export const ACTION_ICON_MANIFEST: ActionIconManifest = {
   version: 1,
-  generatedAt: "2026-09-20T15:14:33Z",
+  generatedAt: "2026-09-28T16:16:09Z",
   iconCount: 4087,
   series: {
     1: {

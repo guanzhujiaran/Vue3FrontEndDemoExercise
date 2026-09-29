@@ -11,6 +11,8 @@ import lotteryDataBaseApi from '@/api/lottery_data/bili/lottery_database_bili_ap
 import { fetchInteractionStatusOne, InteractionBizTypeEnum } from '@/api/notify/moment-api'
 import type { InteractionStatusItem } from '@/api/notify/moment-api'
 import type { AnyLotteryData } from '@/models/api/lottery/lottery_card.ts'
+import { usePageSeo } from '@/composables/usePageSeo.ts'
+import { SITE_URL } from '@/config/seo.ts'
 
 const route = useRoute()
 
@@ -66,6 +68,34 @@ watch(dynId, () => {
   void loadDetail()
 })
 void loadDetail()
+
+// ============ 页面级 SEO：用接口返回的真实内容覆盖分享卡片与搜索结果 ============
+usePageSeo(() => {
+  // 详情为 OthersLotDynItem 结构（含 authorName / dynContent），此处只取 SEO 用到的字段
+  const data = detailData.value as
+    | { authorName?: string | null; dynContent?: string | null }
+    | null
+    | undefined
+  if (!data) return null
+  const author = data.authorName?.trim() || 'B站用户'
+  const content = (data.dynContent ?? '').replace(/\s+/g, ' ').trim()
+  const url = `${SITE_URL}/app/lot-data/others-dyn-detail?dynId=${dynId.value}`
+  return {
+    title: `${author}的第三方抽奖动态`,
+    description: content
+      ? `${author}的抽奖动态：${content.slice(0, 110)}`
+      : `${author} 在B站发布的第三方抽奖动态，查看开奖信息、参与条件与评论区。`,
+    jsonLd: {
+      '@context': 'https://schema.org',
+      '@type': 'SocialMediaPosting',
+      headline: `${author}的第三方抽奖动态`,
+      articleSection: '抽奖动态',
+      inLanguage: 'zh-CN',
+      url,
+      author: { '@type': 'Person', name: author }
+    }
+  }
+})
 
 // ============ 详情页互动状态（bizType=others_lot_dyn）：单资源接口并累计浏览 ============
 const status = ref<InteractionStatusItem | null>(null)

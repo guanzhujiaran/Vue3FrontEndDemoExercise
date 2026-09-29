@@ -54,8 +54,10 @@ const effectiveHeightRatio = computed(() => {
   return Math.min(raw, 0.99)
 })
 
-// 组件自行维护窗口高度，乘以系数作为滚动容器的高度上限
-const windowHeight = ref(window.innerHeight)
+// 组件自行维护窗口高度，乘以系数作为滚动容器的高度上限。
+// 初值固定 0（不用 window.innerHeight）：两端首帧一致，避免 hydration mismatch；
+// 挂载后由 resize 监听（含挂载时的一次初始化）补上真实值。
+const windowHeight = ref(0)
 const maxHeightPx = computed(() => `${Math.floor(windowHeight.value * effectiveHeightRatio.value)}px`)
 
 const handleLoad = useThrottleFn(() => {
@@ -105,6 +107,10 @@ const onWindowResize = () => {
   windowHeight.value = window.innerHeight
 }
 onMounted(() => {
+  // 必须立刻量一次真实窗口高度：初值 0 只是为了让两端首帧一致，若这里不初始化，
+  // maxHeightPx 会一直停留在 0px —— 滚动容器高度为 0，容器内列表整块不可见
+  // （只有用户手动缩放窗口触发 resize 才会恢复）。
+  onWindowResize()
   window.addEventListener('resize', onWindowResize)
   const wrap = scrollbarRef.value?.wrapRef
   if (wrap) {

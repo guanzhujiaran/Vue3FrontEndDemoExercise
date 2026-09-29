@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { IMG_REFERRER_POLICY } from '@/utils/PageOpen/linkPolicy'
 import { ref, watch } from 'vue'
 import commentApi from '@/api/lottery_comment'
 import { BiliImg } from '@/assets/img/BiliImg.ts'
@@ -112,8 +113,8 @@ defineExpose({ buildAtNameToMid, reset })
   >
     <template #label="{ item }">
       <div class="flex items-center gap-2">
-        <el-avatar :size="24" :src="item.avatar || BiliImg.face.noface" referrerpolicy="no-referrer">
-          <img :src="item.avatar || BiliImg.face.noface" referrerpolicy="no-referrer" alt="avatar" />
+        <el-avatar :size="24" :src="item.avatar || BiliImg.face.noface" :referrerpolicy="IMG_REFERRER_POLICY">
+          <img :src="item.avatar || BiliImg.face.noface" :referrerpolicy="IMG_REFERRER_POLICY" alt="avatar" />
         </el-avatar>
         <span class="text-sm text-text-primary">{{ item.value }}</span>
       </div>

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { IMG_REFERRER_POLICY } from '@/utils/PageOpen/linkPolicy'
 import { computed, ref, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
@@ -7,6 +8,7 @@ import type { CommentLatestGroup, CommentItem, CommentLatestResp } from '@/api/l
 import { RouteName } from '@/models/router'
 import { BiliImg } from '@/assets/img/BiliImg.ts'
 import { ChatDotRound } from '@element-plus/icons-vue'
+import { formatDate, formatMonthDayTime, formatTimeShort } from '@/utils/dateFormat.ts'
 
 const { t } = useI18n()
 const router = useRouter()
@@ -56,12 +58,11 @@ function formatTime(ctime?: string): string {
   if (!ctime) return ''
   const d = new Date(ctime)
   if (isNaN(d.getTime())) return ctime
-  const now = new Date()
-  const sameDay = d.toDateString() === now.toDateString()
-  if (sameDay) {
-    return d.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', hour12: false })
-  }
-  return d.toLocaleString('zh-CN', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false })
+  // 本页参与 SSR：原来用 toDateString() 判「今天」+ 无时区格式化，
+  // 构建机与用户浏览器的时区/locale 不同就会渲染出不同字符串 → hydration mismatch。
+  // 统一走固定时区/locale 的工具函数。
+  const sameDay = formatDate(d) === formatDate(Date.now())
+  return sameDay ? formatTimeShort(d) : formatMonthDayTime(d)
 }
 
 /** 点击单条评论 → 跳转对应资源的评论区（LOTTERY / OTHERS_LOT_DYN / DYNAMIC 支持，RPA 暂无详情页仅展示） */
@@ -143,7 +144,7 @@ onMounted(load)
                     <el-avatar :size="32" class="home-latest-comments__avatar shrink-0">
                       <img
                         :src="avatarOf(item) || BiliImg.face.noface"
-                        referrerpolicy="no-referrer"
+                        :referrerpolicy="IMG_REFERRER_POLICY"
                         :alt="unameOf(item) || '头像'"
                       />
                     </el-avatar>

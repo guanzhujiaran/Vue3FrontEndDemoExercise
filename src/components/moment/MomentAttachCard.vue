@@ -9,7 +9,7 @@
         v-if="bizType === InteractionBizTypeEnum.LOTTERY && cover"
         :src="cover"
         class="w-full h-full object-cover"
-        referrerpolicy="no-referrer"
+        :referrerpolicy="IMG_REFERRER_POLICY"
         :alt="title"
       />
       <el-icon v-else :size="24" class="text-text-placeholder">
@@ -34,7 +34,7 @@
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { Collection } from '@element-plus/icons-vue'
-import { openExternalLink } from '@/utils/PageOpen/linkPolicy'
+import { IMG_REFERRER_POLICY, openExternalLink } from '@/utils/PageOpen/linkPolicy'
 import { InteractionBizTypeEnum } from '@/api/notify/moment-api'
 
 const props = withDefaults(

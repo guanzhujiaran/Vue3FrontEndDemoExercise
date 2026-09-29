@@ -214,27 +214,26 @@ const formatValue = (key: string, value: any) => {
   if (key === 'running_params_set') return formatters.paramsList(value)
   return formatters.default(value)
 }
-const handle_get_scrapy_status = () => {
+const handle_get_scrapy_status = async () => {
   is_loading.value = true
-  lottery_database_bili_api
-    .get_all_scrapy_status()
-    .then((res) => {
-      // 不显示未登录错误消息
-      if (res.code === -101) {
-        console.log('未登录状态，继续显示数据')
-        // 即使未登录，也尝试显示数据
-        if (res.data) {
-          data.value = res.data
-        }
-      } else if (res.code) {
-        biliMessage.error(res.msg)
-      } else {
+  try {
+    const res = await lottery_database_bili_api.get_all_scrapy_status()
+    // 不显示未登录错误消息
+    if (res.code === -101) {
+      console.log('未登录状态，继续显示数据')
+      // 即使未登录，也尝试显示数据
+      if (res.data) {
         data.value = res.data
       }
-    })
-    .finally(() => {
-      is_loading.value = false
-    })
+    } else if (res.code) {
+      biliMessage.error(res.msg)
+    } else {
+      data.value = res.data
+    }
+  } finally {
+    is_loading.value = false
+  }
+  return data.value
 }
 const handle_show_scrapy_data = (scrapy_data: ScrapyStatus | any) => {
   // 过滤并排序显示的字段，确保重要信息优先显示
@@ -263,8 +262,27 @@ const handle_show_scrapy_data = (scrapy_data: ScrapyStatus | any) => {
       return indexA - indexB
     })
 }
+// ============ 首屏数据：setup 阶段取，SSR / 预渲染的 HTML 才有内容 ============
+/**
+ * 爬虫状态列表由服务端在渲染时取好并进入 Nuxt payload，
+ * 客户端 hydration 直接复用（不重复请求）；挂载后再拉一次最新（见下方 onMounted）。
+ */
+const { data: ssrScrapyData } = await useAsyncData('scrapy-status', () => handle_get_scrapy_status())
+/**
+ * 必须无条件写回 payload。
+ *
+ * 不能写成 `if (!data.value && ssrScrapyData.value)`：`data` 声明时带了一个**默认占位对象**
+ * （dyn_scrapy_status 等字段），永远为真，于是 hydration 时 payload 根本不会被应用 ——
+ * 服务端渲染真实数据、客户端渲染默认占位，出现大量
+ * `Hydration text content mismatch（官方抽奖爬虫 / 动态爬虫）`。
+ */
+if (ssrScrapyData.value) data.value = ssrScrapyData.value
+
 onMounted(() => {
-  handle_get_scrapy_status()
+  // 预渲染页首屏吃的是构建期快照（useAsyncData 命中 payload 时不重新请求），
+  // 挂载后立即拉一次真实状态；自动轮询默认关闭，不能指望它来纠正首屏。
+  // catch 兜底：handle_get_scrapy_status 只有 try/finally，网络异常时会 reject。
+  handle_get_scrapy_status().catch(() => { })
   startAutoRefresh()
 })
 const isAutoRefresh = ref(false)

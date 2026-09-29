@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { IMG_REFERRER_POLICY } from '@/utils/PageOpen/linkPolicy'
 import { computed } from 'vue'
 import type { SpuInfoType } from '@/gql/samsclub/graphql.ts'
 
@@ -21,7 +22,7 @@ const image_list = computed(() => {
         <el-image
           v-if="props.spuInfo.image"
           :src="props.spuInfo.image"
-          referrerpolicy="no-referrer"
+          :referrerpolicy="IMG_REFERRER_POLICY"
           lazy
           fit="cover"
           class="spu-image"

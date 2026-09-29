@@ -4,6 +4,10 @@
  * * @returns {2|1} 如果是移动设备，则返回2，否则返回1
  */
 export function isMobileDevice() {
+  // SSR / 预渲染环境没有 navigator：按「桌面端」处理。
+  // 该函数用于点击跳转与 URL 生成，服务端不产生交互，客户端执行时会拿到真实结果。
+  // 注意：不能在模块顶层调用后长期缓存（BiliJump.ts 就是这么做的），否则服务端会直接崩溃。
+  if (typeof navigator === 'undefined') return 1
   // 获取当前浏览器的用户代理信息，并将其转换为小写
   const t = navigator.userAgent.toLowerCase(),
     // 判断是否为iPad设备

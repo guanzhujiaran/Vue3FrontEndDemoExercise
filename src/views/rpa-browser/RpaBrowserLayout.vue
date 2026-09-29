@@ -56,10 +56,14 @@ import RpaMobileTip from '@/components/rpa-browser/RpaMobileTip.vue'
 import { BiliErrorRouteToTxt } from '@/assets/text/BiliErrorTxt.ts'
 import { RouteName } from '@/models/router'
 import WarningIcon from '@/assets/svgs/space/warning.svg?component'
+import { useHydrated } from '@/composables/useHydrated'
 
 // 仅开发环境（VITE_BILI_ENV=dev）允许正常进入 RPA 模块，生产等环境统一展示施工提示
 const isDev = import.meta.env.VITE_BILI_ENV === 'dev'
 
 const biliUser = useInject(KeysEnum.BiliUser) as Ref<UserNavModel>
-const isLoggedIn = computed(() => !!biliUser.value.uid)
+// 登录态取自 persist(localStorage)，SSR/预渲染阶段恒为空；用 isHydrated 让两端首帧都按
+// 「未登录」渲染，挂载后再切到真实登录态，避免 BiliErrorRouteTo 与正文整体互换导致的水合不匹配。
+const isHydrated = useHydrated()
+const isLoggedIn = computed(() => isHydrated.value && !!biliUser.value.uid)
 </script>

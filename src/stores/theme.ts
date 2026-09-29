@@ -7,8 +7,8 @@ type themeEffectString = 'dark' | 'light'
 export const useThemeStore = defineStore(
   'pref_theme',
   () => {
-    // 使用VueUse的useDark，自动处理暗色模式切换
-    const isDark = useDark({
+    // 使用VueUse的useDark，自动处理暗色模式切换（内部真实值，客户端会同步读 localStorage）
+    const darkMode = useDark({
       selector: 'html',
       valueDark: 'dark',
       valueLight: 'light',
@@ -17,7 +17,25 @@ export const useThemeStore = defineStore(
     const themeEffectString = computed<themeEffectString>(() => {
       return isDark.value ? 'dark' : 'light'
     })
-    const toggleDark = useToggle(isDark)
+    const toggleDark = useToggle(darkMode)
+
+    /**
+     * 是否已完成客户端首次挂载（由 `App.vue` 的 onMounted 调用 `markHydrated()` 置位）。
+     *
+     * 首帧必须与服务端一致：SSR / 预渲染阶段没有 localStorage，`useDark` 解析为 false（浅色），
+     * 而客户端在 setup 阶段就会同步从 localStorage 恢复真实主题。对外的 `isDark` 在置位前
+     * 固定为「浅色」，挂载后再放开 —— 否则全项目 ~20 处 `:effect="themeEffectString"`
+     * （el-tag / el-alert / el-dialog）以及 `App.vue` 的背景图都会与静态 HTML 不一致。
+     *
+     * 内部真实的暗色状态请用 `darkMode`（applyThemeMode / 系统主题监听都用它），不要用对外的 `isDark`。
+     */
+    const hydrated = ref(false)
+    const markHydrated = () => {
+      hydrated.value = true
+    }
+
+    /** 对外的暗色状态：水合完成前恒为 false，与服务端输出保持一致 */
+    const isDark = computed(() => hydrated.value && darkMode.value)
 
     // 使用useStorage持久化主题模式设置
     const themeMode = useStorage<ThemeMode>('theme-mode', 'auto')
@@ -110,7 +128,8 @@ export const useThemeStore = defineStore(
       isDark,
       toggleDark,
       applyThemeMode,
-      themeEffectString
+      themeEffectString,
+      markHydrated
     }
   },
   {

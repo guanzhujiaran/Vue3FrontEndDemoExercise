@@ -8,14 +8,19 @@ import { userSearchNs } from './modules/userSearch'
 export const SUPPORTED_LOCALES = ['zh-CN', 'en', 'zh-TW', 'ja', 'ko'] as const
 export type SupportedLocale = (typeof SUPPORTED_LOCALES)[number]
 
-// 浏览器语言 -> 应用语言 映射
+/**
+ * 初始语言（**必须两端一致**，故固定为站点默认语言）。
+ *
+ * 为什么不能在这里按 `navigator.language` 取值：
+ * SSR 时没有 navigator（回落 zh-CN），客户端有（英文浏览器得到 en）——
+ * 中文站点的静态 HTML 与英文浏览器首帧就会渲染出不同文案
+ * （实测首页导航：服务端 `首页` vs 客户端 `Home`），直接触发
+ * `Hydration text content mismatch`。
+ *
+ * 真实语言偏好由 `localeStore` 在**客户端挂载后**切换（见 src/stores/locale.ts），
+ * 属于挂载后的正常更新，不参与水合对比。
+ */
 function detectLocale(): SupportedLocale {
-  const nav = (typeof navigator !== 'undefined' && navigator.language) || 'zh-CN'
-  const lower = nav.toLowerCase()
-  if (lower.startsWith('zh')) return lower.includes('tw') || lower.includes('hk') ? 'zh-TW' : 'zh-CN'
-  if (lower.startsWith('en')) return 'en'
-  if (lower.startsWith('ja')) return 'ja'
-  if (lower.startsWith('ko')) return 'ko'
   return 'zh-CN'
 }
 

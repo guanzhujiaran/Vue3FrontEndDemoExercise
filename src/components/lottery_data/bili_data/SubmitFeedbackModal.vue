@@ -52,7 +52,8 @@
         <el-input
           v-model="form.contact"
           placeholder="选填，方便服主回复您（QQ / 邮箱 / 微信等）"
-          maxlength="100"
+          :maxlength="FEEDBACK_CONTACT_MAX_LENGTH"
+          show-word-limit
         />
       </el-form-item>
     </el-form>
@@ -78,18 +79,23 @@
 import { ref, reactive, watch } from 'vue'
 import biliMessage from '@/utils/message'
 import { ChatLineRound, Check, RefreshLeft } from '@element-plus/icons-vue'
-import { submitFeedback } from '@/api/notify/message_feedback'
+import {
+  FEEDBACK_CONTACT_MAX_LENGTH,
+  FEEDBACK_SOURCE,
+  submitFeedback,
+  type FeedbackSource,
+} from '@/api/notify/message_feedback'
 import { useThemeStore } from '@/stores/theme'
 
 const props = withDefaults(
   defineProps<{
-    /** 反馈来源渠道：不同页面传入不同值，便于服主区分推送来自哪里 */
-    source?: string
+    /** 反馈来源渠道：不同页面传入不同值（抽奖页请传具体抽奖类型），便于服主区分推送来自哪里 */
+    source?: FeedbackSource
     /** 是否渲染内置的触发按钮，设为 false 时可仅作为弹窗由父组件 ref 调用 openDialog 打开 */
     showTrigger?: boolean
   }>(),
   {
-    source: '抽奖数据页',
+    source: FEEDBACK_SOURCE.LOTTERY_DATA,
     showTrigger: true,
   },
 )
@@ -100,14 +106,12 @@ const dialogVisible = ref(false)
 const loading = ref(false)
 const formRef = ref()
 
-// 不同来源渠道：告诉服主这条反馈来自哪里
-const sourceOptions = [
-  { label: '抽奖数据页', value: '抽奖数据页' },
-  { label: '首页', value: '首页' },
-  { label: 'B站动态', value: 'B站动态' },
-  { label: '通用建议', value: '通用建议' },
-  { label: '其他', value: '其他' },
-]
+// 不同来源渠道：告诉服主这条反馈来自哪里。
+// 抽奖类页面已在 FEEDBACK_SOURCE 中按具体抽奖类型拆分（官方 / 预约 / 充电 / 话题 / 第三方）。
+const sourceOptions = Object.values(FEEDBACK_SOURCE).map((source) => ({
+  label: source,
+  value: source,
+}))
 
 const form = reactive({
   source: props.source,
@@ -130,6 +134,13 @@ const rules = {
   content: [
     { required: true, message: '请输入反馈内容', trigger: 'blur' },
     { min: 5, message: '反馈内容不能少于 5 个字符', trigger: 'blur' },
+  ],
+  contact: [
+    {
+      max: FEEDBACK_CONTACT_MAX_LENGTH,
+      message: `联系方式不能超过 ${FEEDBACK_CONTACT_MAX_LENGTH} 个字符`,
+      trigger: 'blur',
+    },
   ],
 }
 
@@ -168,7 +179,8 @@ const handleSubmit = async () => {
         biliMessage.error(resp.msg || '提交失败')
       }
     } catch (error: any) {
-      biliMessage.error(error?.message || '提交失败')
+      // 后端参数校验失败时抛出的是 {code, msg, data} 响应体，优先展示 msg
+      biliMessage.error(error?.msg || error?.message || '提交失败')
     } finally {
       loading.value = false
     }

@@ -1,6 +1,6 @@
 import { ref, type Ref } from 'vue'
 import { 执行引擎Service } from '@/api/browser/hey-api'
-import type { ActionPreviewResponse } from '@/api/browser/hey-api'
+import type { ActionPreviewResponse, WorkflowStepRequest } from '@/api/browser/hey-api'
 import { useUserNavStore } from '@/stores/user_nav'
 import biliMessage from '@/utils/message'
 import type { DroppedItem, OperationFeedback, OperationKind, ActionResultResponse, StepResultItem, NestedPreviewNode, BranchPathStep } from './debugbox-types'
@@ -28,8 +28,47 @@ export function useDebugboxExecution(
   const executingSelected = ref(false)
   const branchOperating = ref<Record<string, boolean>>({})
 
-  function formatApiError(response: { msg?: string } | undefined | null, fallback: string) {
-    return (response as any)?.msg || fallback
+  // ── 业务码引导（对齐后端 bili_common.models.response_code，见计划书 §5.17）──
+  /** 浏览器未启动 / 已被闲置回收：调试入口不自动拉起，需引导用户手动启动 */
+  const CODE_BROWSER_NOT_STARTED = 1007
+  /** 浏览器正在执行工作流：执行期互斥（直播为只读拉流，不受影响） */
+  const CODE_BROWSER_WORKFLOW_RUNNING = 2016
+
+  /**
+   * 会话类业务码 → 可操作的引导文案
+   *
+   * 后端 msg 偏「状态描述」（如「浏览器未启动或已停止」），前端补一层「下一步做什么」，
+   * 否则用户只知道失败了、不知道点哪里。
+   */
+  const SESSION_CODE_HINTS: Record<number, string> = {
+    [CODE_BROWSER_NOT_STARTED]: '浏览器未启动或已停止，请先点击「启动浏览器」后再执行',
+    [CODE_BROWSER_WORKFLOW_RUNNING]: '浏览器正在执行工作流（直播不受影响），请等待执行结束后重试',
+  }
+
+  function formatApiError(
+    response: { code?: number; msg?: string } | undefined | null,
+    fallback: string,
+  ) {
+    const code = response?.code
+    const hint = code == null ? undefined : SESSION_CODE_HINTS[code]
+    return hint ?? response?.msg ?? fallback
+  }
+
+  /**
+   * 把复合操作的子步骤并入 params.steps
+   *
+   * 后端只认 `params.steps`：CompositeAction 从 params 提取步骤，
+   * DB 里保存的版本仅在 `params.steps` 为空时兜底（见 engine.py 的 db_steps 分支）。
+   * 原先顶层传 `step_children` 会被 pydantic 直接忽略，导致「调试面板改动的子步骤
+   * 不生效、实际执行的是已保存版本」——必须在执行前先保存才看得到效果。
+   */
+  function withStepChildren(item: DroppedItem): Record<string, unknown> {
+    const params = getActionParams(item)
+    const children = getStepChildren(item)
+    if (children?.length && !params.steps) {
+      params.steps = children
+    }
+    return params
   }
 
   // ── 反馈 ─────────────────────────────────────────────
@@ -51,10 +90,9 @@ export function useDebugboxExecution(
 
     const body = {
       action_id: item.action_id,
-      params: getActionParams(item),
+      params: withStepChildren(item),
       input_vars: getInputVars(item),
       output_vars: getOutputVars(item),
-      step_children: getStepChildren(item),
     }
 
     try {
@@ -96,7 +134,7 @@ export function useDebugboxExecution(
 
     try {
       const response = await 执行引擎Service.previewActionParamsApiV1RpaBrowserControlActionsPreviewPost({
-        query: { browser_id: browserId }, body: { action_id: item.action_id, params: getActionParams(item), input_vars: getInputVars(item), output_vars: getOutputVars(item) }, headers: userNavStore.user_header,
+        query: { browser_id: browserId }, body: { action_id: item.action_id, params: getActionParams(item), input_vars: getInputVars(item) }, headers: userNavStore.user_header,
       })
       if (response?.code !== 0) {
         const msg = formatApiError(response, '预览失败')
@@ -127,7 +165,7 @@ export function useDebugboxExecution(
 
     try {
       const response = await 执行引擎Service.validateActionParamsApiV1RpaBrowserControlActionsValidatePost({
-        query: { browser_id: browserId }, body: { action_id: item.action_id, params: getActionParams(item), input_vars: getInputVars(item), output_vars: getOutputVars(item) }, headers: userNavStore.user_header,
+        query: { browser_id: browserId }, body: { action_id: item.action_id, params: getActionParams(item), input_vars: getInputVars(item) }, headers: userNavStore.user_header,
       })
       if (response?.code !== 0) {
         const msg = formatApiError(response, '参数验证失败')
@@ -169,10 +207,10 @@ export function useDebugboxExecution(
 
     executingSelected.value = true
     try {
-      const steps = selectedItems.map(item => {
-        const step: Record<string, unknown> = {
+      const steps: WorkflowStepRequest[] = selectedItems.map(item => {
+        const step: WorkflowStepRequest = {
           action_id: item.action_id, action_type: item.action_type || item.action_id,
-          params: getActionParams(item), input_vars: getInputVars(item), output_vars: getOutputVars(item),
+          params: withStepChildren(item), input_vars: getInputVars(item), output_vars: getOutputVars(item),
         }
         if (item.trueBranch?.length) (step.params as Record<string, unknown>).TrueBranch = serializeBranchSteps(item.trueBranch)
         if (item.falseBranch?.length) (step.params as Record<string, unknown>).FalseBranch = serializeBranchSteps(item.falseBranch)
@@ -232,9 +270,9 @@ export function useDebugboxExecution(
 
     const branchKey = `${parentIndex}-${branch}`; branchOperating.value[branchKey] = true
     try {
-      const steps = items.map(child => ({
+      const steps: WorkflowStepRequest[] = items.map(child => ({
         action_id: child.action_id, action_type: child.action_type || child.action_id,
-        params: getActionParams(child), input_vars: getInputVars(child), output_vars: getOutputVars(child),
+        params: withStepChildren(child), input_vars: getInputVars(child), output_vars: getOutputVars(child),
       }))
       const response = await 执行引擎Service.executeWorkflowApiV1RpaBrowserControlWorkflowsExecutePost({
         query: { browser_id: browserId }, body: { steps, variables: {}, input_data: {}, output_vars: [] }, headers: userNavStore.user_header,
@@ -275,11 +313,14 @@ export function useDebugboxExecution(
   function resolveNestedItem(dropped: DroppedItem[], parentIndex: number, branch: 'true' | 'false' | 'loop', childIndex: number, path?: BranchPathStep[]): { item: DroppedItem; key: string } | null {
     const parent = dropped[parentIndex]
     if (!parent) return null
-    let items = branch === 'true' ? parent.trueBranch : branch === 'false' ? parent.falseBranch : parent.loopBody
+    // 显式标注类型：否则 items 会被推断为依赖自身（赋值发生在循环内），
+    // TS 会把 nestedParent 判为隐式 any
+    let items: DroppedItem[] | undefined =
+      branch === 'true' ? parent.trueBranch : branch === 'false' ? parent.falseBranch : parent.loopBody
     if (!items) return null
     if (path) {
       for (const step of path) {
-        const nestedParent = items[step.parentIndex]
+        const nestedParent: DroppedItem | undefined = items[step.parentIndex]
         if (!nestedParent) return null
         items = step.branch === 'true' ? nestedParent.trueBranch : step.branch === 'false' ? nestedParent.falseBranch : nestedParent.loopBody
         if (!items) return null
@@ -297,7 +338,7 @@ export function useDebugboxExecution(
     branchOperating.value[childKey] = true
     try {
       const response = await 执行引擎Service.executeActionApiV1RpaBrowserControlActionsExecutePost({
-        query: { browser_id: browserId }, body: { action_id: child.action_id, params: getActionParams(child), input_vars: getInputVars(child), output_vars: getOutputVars(child), step_children: getStepChildren(child) }, headers: userNavStore.user_header,
+        query: { browser_id: browserId }, body: { action_id: child.action_id, params: withStepChildren(child), input_vars: getInputVars(child), output_vars: getOutputVars(child) }, headers: userNavStore.user_header,
       })
       if (response?.code !== 0) {
         const msg = formatApiError(response, '执行失败')
@@ -332,7 +373,7 @@ export function useDebugboxExecution(
     branchOperating.value[childKey] = true
     try {
       const response = await 执行引擎Service.previewActionParamsApiV1RpaBrowserControlActionsPreviewPost({
-        query: { browser_id: browserId }, body: { action_id: child.action_id, params: getActionParams(child), input_vars: getInputVars(child), output_vars: getOutputVars(child) }, headers: userNavStore.user_header,
+        query: { browser_id: browserId }, body: { action_id: child.action_id, params: getActionParams(child), input_vars: getInputVars(child) }, headers: userNavStore.user_header,
       })
       if (response?.code !== 0) {
         const msg = formatApiError(response, '预览失败')
@@ -357,7 +398,7 @@ export function useDebugboxExecution(
     branchOperating.value[childKey] = true
     try {
       const response = await 执行引擎Service.validateActionParamsApiV1RpaBrowserControlActionsValidatePost({
-        query: { browser_id: browserId }, body: { action_id: child.action_id, params: getActionParams(child), input_vars: getInputVars(child), output_vars: getOutputVars(child) }, headers: userNavStore.user_header,
+        query: { browser_id: browserId }, body: { action_id: child.action_id, params: getActionParams(child), input_vars: getInputVars(child) }, headers: userNavStore.user_header,
       })
       if (response?.code !== 0) {
         setOperationFeedback(childKey, 'validate', false, '验证失败', { error: '验证失败' })
@@ -388,14 +429,28 @@ export function useDebugboxExecution(
     return fb.detail as ActionResultResponse
   }
 
+  /**
+   * 复合操作的子步骤结果
+   *
+   * 后端把子步骤结果放在 `ActionResultResponse.data`（CompositeResult）的 `results` 里，
+   * 是**数组**而非 map。此前读顶层 `step_results` 是错误路径（该字段后端不存在），
+   * 导致分步结果面板恒为空。
+   */
   function execResultSteps(id: string): StepResultItem[] {
-    const steps = getExecuteDetail(id)?.step_results
-    if (!steps) return []
-    return Object.entries(steps).map(([key, val]) => ({
-      key, success: (val as Record<string, unknown>)?.success === true,
-      action_name: (val as Record<string, unknown>)?.action_name as string | undefined,
-      execution_time: (val as Record<string, unknown>)?.execution_time as number | undefined,
-    }))
+    const detail = getExecuteDetail(id) as unknown as
+      | { data?: { results?: unknown } }
+      | null
+    const results = detail?.data?.results
+    if (!Array.isArray(results)) return []
+    return results.map((step, index) => {
+      const record = step as Record<string, unknown>
+      return {
+        key: String(index),
+        success: record?.success === true,
+        action_name: record?.action_name as string | undefined,
+        execution_time: record?.execution_time as number | undefined,
+      }
+    })
   }
 
   function getPreviewDetail(id: string): ActionPreviewResponse | null {

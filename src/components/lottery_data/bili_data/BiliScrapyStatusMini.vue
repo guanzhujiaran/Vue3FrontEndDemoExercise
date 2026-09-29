@@ -70,6 +70,13 @@ onMounted(() => {
 </script>
 
 <template>
+  <!--
+    ClientOnly：该组件的数据来自挂载后的接口请求，SSR 时只能渲染成「加载中…」，
+    客户端挂载后立刻变成真实状态（或「状态获取失败」）—— 两端首帧不一致就会触发
+    hydration mismatch。它只是辅助状态展示、不参与 SEO，交给客户端独占渲染最干净。
+  -->
+  <ClientOnly>
+
   <div class="rounded-lg border border-border-light bg-bg-page px-4 py-2.5">
     <div class="flex items-center justify-between gap-3">
       <div class="flex items-center gap-2">
@@ -102,4 +109,5 @@ onMounted(() => {
       </div>
     </div>
   </div>
+  </ClientOnly>
 </template>

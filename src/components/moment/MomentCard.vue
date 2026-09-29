@@ -123,7 +123,7 @@
             :src="images[0]"
             class="moment-card__image-single-img w-full h-auto"
             :fit="'contain'"
-            referrerpolicy="no-referrer"
+            :referrerpolicy="IMG_REFERRER_POLICY"
             loading="lazy"
             :preview-src-list="images"
             :initial-index="0"
@@ -146,7 +146,7 @@
               :src="img"
               class="moment-card__image w-full h-full"
               :fit="'cover'"
-              referrerpolicy="no-referrer"
+              :referrerpolicy="IMG_REFERRER_POLICY"
               loading="lazy"
               :preview-src-list="images"
               :initial-index="idx"
@@ -219,7 +219,7 @@
                 :src="srcMomentImages[0]"
                 class="moment-card__forward-image-single-img w-full h-auto"
                 :fit="'contain'"
-                referrerpolicy="no-referrer"
+                :referrerpolicy="IMG_REFERRER_POLICY"
                 loading="lazy"
                 :preview-src-list="srcMomentImages"
                 :initial-index="0"
@@ -241,7 +241,7 @@
                   :src="img"
                   class="moment-card__forward-image w-full h-full"
                   :fit="'cover'"
-                  referrerpolicy="no-referrer"
+                  :referrerpolicy="IMG_REFERRER_POLICY"
                   loading="lazy"
                   :preview-src-list="srcMomentImages"
                   :initial-index="idx"
@@ -330,6 +330,7 @@
 </template>
 
 <script setup lang="ts">
+import { IMG_REFERRER_POLICY } from '@/utils/PageOpen/linkPolicy'
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { MoreFilled, Delete, WarningFilled, Collection } from '@element-plus/icons-vue'
@@ -359,6 +360,7 @@ import { BiliImg } from '@/assets/img/BiliImg'
 import { useUserNavStore } from '@/stores/user_nav'
 import { useMessageAdminStore } from '@/stores/message_admin'
 import biliMessage from '@/utils/message'
+import { SITE_TIME_ZONE } from '@/utils/dateFormat.ts'
 
 const props = withDefaults(
   defineProps<{
@@ -569,7 +571,7 @@ const srcMomentTime = computed(() => {
   if (!t) return ''
   const d = new Date(t)
   if (Number.isNaN(d.getTime())) return ''
-  return d.toLocaleString('zh-CN', { hour12: false })
+  return d.toLocaleString('zh-CN', { timeZone: SITE_TIME_ZONE, hour12: false })
 })
 
 /** 原动态若本身是转发，再往上一层 */
@@ -619,7 +621,7 @@ const timeLabel = computed(() => {
   if (!t) return '-'
   const d = new Date(t)
   if (Number.isNaN(d.getTime())) return '-'
-  return d.toLocaleString('zh-CN', { hour12: false })
+  return d.toLocaleString('zh-CN', { timeZone: SITE_TIME_ZONE, hour12: false })
 })
 
 /** IP 属地 + ISP 组合文案（如「浙江 杭州 · 电信」）；无属地则不显示 */

@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { ref, computed, shallowRef, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, shallowRef, onMounted, onBeforeUnmount, h, render } from 'vue'
 import { Search, Tools, Lock, Refresh, Edit, Folder } from '@element-plus/icons-vue'
 import {
-  ElAutocomplete, ElEmpty, ElTreeV2, ElButton, ElText,
+  ElAutocomplete, ElEmpty, ElTreeV2, ElButton, ElText, ElIcon,
   ElMessage, ElTooltip, ElSelect, ElOption, ElSegmented,
 } from 'element-plus'
 import { 自定义操作管理Service } from '@/api/browser/hey-api'
@@ -11,6 +11,7 @@ import type { FilterType, SortBy, SortOrder } from '@/api/browser/hey-api'
 import { useUserNavStore } from '@/stores/user_nav'
 import ActionIcon from './ActionIcon.vue'
 import { resolveActionTypeIcon } from '@/utils/rpa/actionTypeIcon'
+import { resolveActionIconUrl } from '@/utils/rpa/actionIcon'
 
 // ── 常量 ─────────────────────────────────────────────
 enum ToolboxTab {
@@ -20,6 +21,15 @@ enum ToolboxTab {
 }
 const MAX_VISIBLE_TAGS = 2
 const PER_PAGE = 10
+
+/** 工具箱条目标题图标尺寸类（列表与树共用，保证两处视觉一致） */
+const TOOLBOX_ICON_CLASS = 'toolbox-item__icon w-8 h-8 shrink-0 text-text-primary'
+/** 基础操作树行高（px）：el-tree-v2 虚拟滚动依赖固定行高，需与条目内容高度匹配
+ *  （32px 图标 + 上下各 12px 内边距 = 56px，与列表行 `py-3` 的高度一致） */
+const TOOLBOX_TREE_ITEM_SIZE = 56
+/** 拖拽预览锚点（px）：预览外框 64px（w-16 h-16）+ 8px 内边距（p-2）包住 48px（w-12 h-12）图标，
+ *  锚点取外框中心，拖拽时图标中心跟随光标 */
+const DRAG_GHOST_ANCHOR = 32
 
 interface TabOption {
   value: ToolboxTab
@@ -344,7 +354,8 @@ const filteredRegistered = computed<unknown[]>(() => {
     action_id: a.action_id,
     action_type: a.action_id,
     // 图标字段必须透传：后端为每个内置动作都下发了 (icon_series, icon_id)
-    // —— 现已指向现有系列 `FGO头像/s_1_saber` 的 `i_1~i_16`（见 action_params.BUILTIN_ACTION_ICON_SERIES）；
+    // —— 现已指向现有系列 `Saber脸/s_33_FGO状态图`，且是一个动作一位不同角色的最终形态
+    // （编号不连续，见 action_params.BUILTIN_ACTION_ICON_SERIES / BuiltinActionIconId）；
     // 此前漏传导致 ActionIcon 拿不到 series/id，树节点永远走 fallback（图标全都一样）
     icon_series: a.icon_series,
     icon_id: a.icon_id,
@@ -368,6 +379,46 @@ function handleDragStart(event: DragEvent, nodeData: unknown) {
   event.dataTransfer.setData('text/plain', json)
   event.dataTransfer.setData('application/json', json)
   event.dataTransfer.effectAllowed = 'copyMove'
+  setToolboxDragGhost(event, data)
+}
+
+/**
+ * 把「该动作当前设置的图标」渲染成拖拽预览图（drag ghost）
+ *
+ * 浏览器默认的拖拽影像是被拖元素的整行截图（含文字/标签、宽高不定），
+ * 拖到画布上难以辨认；这里替换为固定尺寸的方形图标缩略图，
+ * 图标缺失（未设置 / 图库无资源）时用内置类型图标兜底，保证预览不空白。
+ *
+ * 实现要点：`setDragImage` 要求元素在调用瞬间位于文档中（允许移出视口），
+ * 故临时挂到 body、调用后下一帧卸载移除；外观全部为 Tailwind 原子类字面量
+ * （动态拼接的类名不会被 Tailwind 扫描到）。
+ */
+function setToolboxDragGhost(event: DragEvent, action: Record<string, unknown>) {
+  const dt = event.dataTransfer
+  if (!dt) return
+
+  const iconUrl = resolveActionIconUrl(
+    action.icon_series as number | undefined,
+    action.icon_id as number | undefined,
+  )
+  const iconVNode = iconUrl
+    ? h('img', { src: iconUrl, alt: '', class: 'toolbox-drag-ghost__icon w-12 h-12 object-contain' })
+    : h(ElIcon, { class: 'toolbox-drag-ghost__icon w-12 h-12 text-text-primary' }, () =>
+        h(resolveActionTypeIcon(action.action_id as string)),
+      )
+
+  const ghost = document.createElement('div')
+  ghost.className =
+    'toolbox-drag-ghost pointer-events-none fixed top-[-9999px] left-0 flex h-16 w-16 items-center justify-center rounded-lg bg-bg p-2 shadow-lg'
+  render(iconVNode, ghost)
+  document.body.appendChild(ghost)
+  dt.setDragImage(ghost, DRAG_GHOST_ANCHOR, DRAG_GHOST_ANCHOR)
+
+  // 浏览器已取走图像快照，下一帧回收临时节点（避免残留 DOM）
+  requestAnimationFrame(() => {
+    render(null, ghost)
+    ghost.remove()
+  })
 }
 
 // ── 编辑 ─────────────────────────────────────────────
@@ -388,7 +439,7 @@ async function handleEditCustomAction(nodeData: Record<string, unknown>) {
 
 const treeProps = { children: 'children', label: 'label' }
 
-/** 基础操作树容器（flex-1 自适应高度） */
+/** 基础操作树容器（flex-1 自适应高度，只做裁剪、不滚动——滚动由树的虚拟列表自己承担） */
 const treeWrapRef = ref<HTMLElement | null>(null)
 /** 虚拟树需要显式高度，跟随容器实际高度同步 */
 const treeHeight = ref(320)
@@ -396,9 +447,12 @@ let treeResizeObserver: ResizeObserver | null = null
 
 onMounted(() => {
   if (!treeWrapRef.value) return
-  treeResizeObserver = new ResizeObserver(() => {
-    const h = treeWrapRef.value?.clientHeight ?? 0
-    if (h > 0) treeHeight.value = h
+  treeResizeObserver = new ResizeObserver((entries) => {
+    // 必须取 contentRect（内容盒）而不是 clientHeight（padding 盒）：
+    // 容器有 p-3 的 24px 上下内边距，用 padding 盒高度会让树比可用区高 24px，
+    // 既多出一条外层滚动条，又让虚拟列表误以为可视区更高、末行只露出一半。
+    const h = entries[0]?.contentRect.height ?? 0
+    if (h > 0) treeHeight.value = Math.floor(h)
   })
   treeResizeObserver.observe(treeWrapRef.value)
 })
@@ -410,7 +464,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="toolbox-root h-[70vh] flex flex-col overflow-hidden">
+  <div class="toolbox-root h-full min-h-0 flex flex-col overflow-hidden">
     <!-- 分段控制 + 搜索/刷新/筛选内容区 -->
     <div class="p-3 border-b border-border space-y-2">
       <el-segmented
@@ -486,7 +540,7 @@ onBeforeUnmount(() => {
             <div
               v-for="(item, idx) in actionList"
               :key="(item as Record<string, unknown>).action_id as string"
-              class="flex items-center justify-between w-full gap-2 px-2 py-2 rounded cursor-grab active:cursor-grabbing hover:bg-(--el-fill-color-light) transition-colors"
+              class="flex items-center justify-between w-full gap-2 px-2 py-3 rounded cursor-grab active:cursor-grabbing hover:bg-(--el-fill-color-light) transition-colors"
               draggable="true"
               @dragstart="handleDragStart($event, item)"
               @mousedown.stop @dragstart.stop
@@ -495,11 +549,11 @@ onBeforeUnmount(() => {
                 <ActionIcon
                   :series="(item as Record<string, unknown>).icon_series as number | undefined"
                   :id="(item as Record<string, unknown>).icon_id as number | undefined"
-                  class="toolbox-item__icon w-4 h-4 shrink-0 text-text-primary"
+                  :class="TOOLBOX_ICON_CLASS"
                 >
                   <template #fallback>
                     <!-- 未选图标 / 图库无资源：按动作类型兜底（自定义动作 ca_* 回落默认问号图标） -->
-                    <el-icon class="w-4 h-4 shrink-0">
+                    <el-icon class="w-8 h-8 shrink-0">
                       <component :is="resolveActionTypeIcon((item as Record<string, unknown>).action_id as string)" />
                     </el-icon>
                   </template>
@@ -540,11 +594,11 @@ onBeforeUnmount(() => {
     </LoadingMoreContainer>
 
     <!-- 基础操作树 -->
-    <div v-show="activeTab === ToolboxTab.BASIC" ref="treeWrapRef" class="flex-1 min-h-0 overflow-auto p-3" v-loading="loading">
+    <div v-show="activeTab === ToolboxTab.BASIC" ref="treeWrapRef" class="flex-1 min-h-0 overflow-hidden p-3" v-loading="loading">
       <el-tree-v2
         v-if="filteredRegistered.length > 0"
         :data="filteredRegistered" :props="treeProps"
-        :height="treeHeight" class="tree-drag-drop"
+        :height="treeHeight" :item-size="TOOLBOX_TREE_ITEM_SIZE" class="tree-drag-drop [&_.el-tree-node__content]:p-[4px_8px]!"
       >
         <template #default="{ data }">
           <div
@@ -556,11 +610,11 @@ onBeforeUnmount(() => {
               <ActionIcon
                 :series="(data as Record<string, unknown>).icon_series as number | undefined"
                 :id="(data as Record<string, unknown>).icon_id as number | undefined"
-                class="toolbox-item__icon w-4 h-4 shrink-0 text-text-primary"
+                :class="TOOLBOX_ICON_CLASS"
               >
                 <template #fallback>
                   <!-- 图库中无对应资源时按 action_id 取内置类型图标（点击/输入/导航…各不相同） -->
-                  <el-icon class="w-4 h-4 shrink-0">
+                  <el-icon class="w-8 h-8 shrink-0">
                     <component :is="resolveActionTypeIcon((data as Record<string, unknown>).action_id as string)" />
                   </el-icon>
                 </template>

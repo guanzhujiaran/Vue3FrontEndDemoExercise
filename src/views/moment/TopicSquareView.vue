@@ -214,13 +214,17 @@ import LoadingWrap from '@/components/message/LoadingWrap.vue'
 import LoadingMoreContainer from '@/components/CommonCompo/Bili-Container-Compo/LoadingMoreContainer.vue'
 import EmptyState from '@/components/message/EmptyState.vue'
 import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
+import { useHydrated } from '@/composables/useHydrated'
 
 const router = useRouter()
 
 // 登录态：未登录时隐藏「我创建的」与「创建话题」（这两个接口需登录）；
 // 话题广场 / 热门话题本身已对匿名开放（后端 OptionalUser，无需登录即可浏览）
 const { user_nav } = storeToRefs(useUserNavStore())
-const isLoggedIn = computed(() => !!user_nav.value.uid)
+// 登录态取自 persist(localStorage)，SSR/预渲染阶段恒为空；用 isHydrated 让两端首帧都按
+// 「未登录」渲染，挂载后再切到真实登录态，避免「我创建的」「创建话题」等入口的水合不匹配。
+const isHydrated = useHydrated()
+const isLoggedIn = computed(() => isHydrated.value && !!user_nav.value.uid)
 
 type MineItem = MomentTopicMineItem & { isHot?: number; dynCount?: number; viewCount?: number }
 

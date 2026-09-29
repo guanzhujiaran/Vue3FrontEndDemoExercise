@@ -13,6 +13,7 @@ import type { UserNavModel } from '@/models/user/user_model.ts'
 import { routes } from '@/router'
 import router from '@/router'
 import { onSpaLinkClick } from '@/utils/PageOpen/spaLink.ts'
+import { useHydrated } from '@/composables/useHydrated'
 const { t } = useI18n()
 const goTo = (path: string) => router.push(path)
 const jwtStore = useJwtStore()
@@ -46,7 +47,11 @@ const visibleChildren = (children: any[]) => {
   return list.filter((child: any) => !!child.path)
 }
 const biliUser = useInject(KeysEnum.BiliUser) as Ref<UserNavModel>
-const isLoggedIn = computed(() => !!biliUser.value.uid)
+// 登录态来自 persist(localStorage)，SSR/预渲染阶段为空；用 isHydrated 让两端首帧
+// 都按「未登录」渲染，挂载后再按真实登录态更新，避免首页模块卡片数量不一致导致的
+// Hydration children mismatch。
+const isHydrated = useHydrated()
+const isLoggedIn = computed(() => isHydrated.value && !!biliUser.value.uid)
 
 // 首页"提交反馈"按钮弹窗
 const feedbackModalRef = ref<InstanceType<typeof SubmitFeedbackModal> | null>(null)

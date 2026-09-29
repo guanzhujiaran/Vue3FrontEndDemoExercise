@@ -44,7 +44,7 @@
                 class="h-12 w-12 rounded-full object-cover"
                 :src="session.talker_avatar || BiliImg.face.noface"
                 alt="avatar"
-                referrerpolicy="no-referrer"
+                :referrerpolicy="IMG_REFERRER_POLICY"
               />
               <span
                 v-if="(session.unread_count ?? 0) > 0"
@@ -75,6 +75,7 @@
 </template>
 
 <script setup lang="ts">
+import { IMG_REFERRER_POLICY } from '@/utils/PageOpen/linkPolicy'
 import { onActivated, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'

@@ -3233,9 +3233,11 @@ export type FavoriteSettingResp = {
  *
  * 前端反馈请求体（POST /api/v1/message/push/feedback）。
  *
- * source 标注反馈来源页面 / 模块（如「首页」「抽奖数据页」），
- * 用于后端拼接推送标题前缀，告诉站长这条反馈来自哪里；
- * content 为反馈正文，contact 为可选联系方式。
+ * source 标注反馈来源页面 / 模块，抽奖类页面须传具体抽奖类型
+ * （如「官方抽奖」「预约抽奖」「充电抽奖」「话题抽奖」「第三方抽奖」），
+ * 用于后端拼接推送标题前缀，告诉站长这条反馈来自哪个页面；
+ * content 为反馈正文，contact 为可选联系方式
+ * （最长 FEEDBACK_CONTACT_MAX_LENGTH 个字符，超长由请求参数校验拦截）。
  */
 export type FeedbackRequest = {
     /**
@@ -3244,6 +3246,8 @@ export type FeedbackRequest = {
     content: string;
     /**
      * Contact
+     *
+     * 联系方式（选填，最长 100 个字符）
      */
     contact?: string | null;
     /**

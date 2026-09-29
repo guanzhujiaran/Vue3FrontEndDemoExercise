@@ -29,8 +29,8 @@
         >
           <template #label="{ item }">
             <div class="moment-publish-form__mention-option flex items-center gap-2">
-              <el-avatar :size="24" :src="item.avatar || BiliImg.face.noface" referrerpolicy="no-referrer">
-                <img :src="item.avatar || BiliImg.face.noface" referrerpolicy="no-referrer" alt="avatar" />
+              <el-avatar :size="24" :src="item.avatar || BiliImg.face.noface" :referrerpolicy="IMG_REFERRER_POLICY">
+                <img :src="item.avatar || BiliImg.face.noface" :referrerpolicy="IMG_REFERRER_POLICY" alt="avatar" />
               </el-avatar>
               <span class="moment-publish-form__mention-name text-sm text-text-primary">{{ item.value }}</span>
             </div>
@@ -147,7 +147,7 @@
             v-if="attachResource.cover"
             :src="attachResource.cover"
             class="w-full h-full object-cover"
-            referrerpolicy="no-referrer"
+            :referrerpolicy="IMG_REFERRER_POLICY"
           />
         </div>
         <div class="moment-publish-form__attach-body flex-1 min-w-0">
@@ -179,6 +179,7 @@
 </template>
 
 <script setup lang="ts">
+import { IMG_REFERRER_POLICY } from '@/utils/PageOpen/linkPolicy'
 import { computed, ref, watch } from 'vue'
 import {
   createMoment,

@@ -729,9 +729,14 @@ elementDark放到theme后面是为了确保暗色状态下直接用elementDark�
     z-index: 3100 !important;
   }
 
-  /* 工具箱弹窗限制高度，避免超出视口导致外层滚动条 */
+  /* 工具箱弹窗：定高填满视口可用高度（5vh + 88vh < 100vh，不触发遮罩层滚动条）。
+     原先只写 max-height: 75vh，而面板自身按 70vh 计算，多出来的部分会被下方
+     .el-dialog__body 的 overflow: hidden 直接裁掉 —— 表现为「内层滚动条滚到底也看不到最后一行」 */
   .toolbox-dialog {
-    max-height: 75vh;
+    margin-top: 5vh !important;
+    margin-bottom: 0 !important;
+    height: 88vh;
+    max-height: none;
     display: flex;
     flex-direction: column;
   }

@@ -125,7 +125,6 @@
 | POST `/api/v1/rpa/browser/control/operation/open_page` | 打开指定 URL，`page_index=-1` 表示新建页面 |
 | POST `/api/v1/rpa/browser/control/operation/close_page` | 关闭指定索引的页面 |
 | POST `/api/v1/rpa/browser/control/operation/switch_page` | 切换到指定索引的页面 |
-| POST `/api/v1/rpa/browser/control/operation/execute_js` | 在指定页面执行 JavaScript 代码 |
 | POST `/api/v1/rpa/browser/control/operation/get_page_info` | 获取指定页面的信息（标题、URL） |
 | POST `/api/v1/rpa/browser/control/browser/info` | 获取浏览器整体信息 |
 

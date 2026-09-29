@@ -28,6 +28,7 @@
         type="primary"
         underline="never"
         :href="node.jumpUrl || '#'"
+        target="_blank"
         :rel="LINK_REL"
         :referrerpolicy="LINK_REFERRER_POLICY"
         @click.stop
@@ -42,6 +43,7 @@
         type="primary"
         underline="never"
         :href="node.jumpUrl || '#'"
+        target="_blank"
         :rel="LINK_REL"
         :referrerpolicy="LINK_REFERRER_POLICY"
         @click.stop

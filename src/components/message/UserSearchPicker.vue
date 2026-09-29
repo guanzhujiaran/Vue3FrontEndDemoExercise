@@ -25,7 +25,7 @@
       :value="String(su.mid)"
     >
       <div class="flex items-center gap-2">
-        <el-avatar :size="24" :src="su.avatar || BiliImg.face.noface" referrerpolicy="no-referrer" />
+        <el-avatar :size="24" :src="su.avatar || BiliImg.face.noface" :referrerpolicy="IMG_REFERRER_POLICY" />
         <span class="truncate text-text-primary">{{ su.user_name || t('userSearch.unnamed') }}</span>
         <el-tag type="info" effect="plain" size="small" disable-transitions>
           Lv.{{ su.level_info?.current_level ?? 0 }}
@@ -41,7 +41,7 @@
       :value="String(u.mid)"
     >
       <div class="flex items-center gap-2">
-        <el-avatar :size="24" :src="u.avatar || BiliImg.face.noface" referrerpolicy="no-referrer" />
+        <el-avatar :size="24" :src="u.avatar || BiliImg.face.noface" :referrerpolicy="IMG_REFERRER_POLICY" />
         <span class="truncate text-text-primary">{{ u.user_name || t('userSearch.unnamed') }}</span>
         <el-tag type="info" effect="plain" size="small" disable-transitions>
           Lv.{{ u.level_info?.current_level ?? 0 }}
@@ -82,6 +82,7 @@
 </template>
 
 <script setup lang="ts">
+import { IMG_REFERRER_POLICY } from '@/utils/PageOpen/linkPolicy'
 import { computed, ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import { useI18n } from 'vue-i18n'

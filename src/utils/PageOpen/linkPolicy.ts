@@ -18,6 +18,12 @@ export const LINK_REL = 'noopener noreferrer'
 /** 跳转链接的 referrer 策略 */
 export const LINK_REFERRER_POLICY: ReferrerPolicy = 'no-referrer'
 
+/**
+ * 站外图片（头像 / 封面 / 奖品图等防盗链资源）的 referrer 策略。
+ * 与链接同值但语义不同，统一走常量，禁止组件里手写 `referrerpolicy="no-referrer"` 字面量。
+ */
+export const IMG_REFERRER_POLICY: ReferrerPolicy = 'no-referrer'
+
 /** window.open 的 features：与 LINK_REL / LINK_REFERRER_POLICY 等价 */
 export const LINK_WINDOW_FEATURES = 'noopener=yes,noreferrer=yes'
 

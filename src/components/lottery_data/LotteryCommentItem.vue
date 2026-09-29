@@ -3,7 +3,7 @@ import { inject, ref, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { Pointer, ChatDotRound, Delete, Bottom, ArrowDown } from '@element-plus/icons-vue'
 import MoreIcon from '@/assets/svgs/more.svg?component'
-import { LINK_REL, LINK_REFERRER_POLICY } from '@/utils/PageOpen/linkPolicy'
+import { IMG_REFERRER_POLICY, LINK_REL, LINK_REFERRER_POLICY } from '@/utils/PageOpen/linkPolicy'
 import type { CommentItem } from '@/api/lottery_comment.ts'
 import { CommentHandlersKey, ResourceAuditStatusEnum } from '@/api/lottery_comment.ts'
 import { BiliImg } from '@/assets/img/BiliImg.ts'
@@ -12,6 +12,7 @@ import ReportDialog from '@/components/moment/ReportDialog.vue'
 import LotteryCommentMention from '@/components/lottery_data/LotteryCommentMention.vue'
 import UserBriefCell from '@/components/message/UserBriefCell.vue'
 import biliMessage from '@/utils/message'
+import { formatDateTime } from '@/utils/dateFormat.ts'
 
 const props = defineProps<{
   item: CommentItem
@@ -133,7 +134,8 @@ const renderedSegments = computed(() => {
 const formatTime = (t: string) => {
   const d = new Date(t)
   if (isNaN(d.getTime())) return t
-  return d.toLocaleString('zh-Cn', { hour12: false })
+  // 固定时区/locale：列表页会参与 SSR，只指定 locale 不够（时区仍随环境变化）
+  return formatDateTime(d)
 }
 
 const onLike = () => {
@@ -288,7 +290,7 @@ watch(
     >
       <img
         :src="memberAvatar || BiliImg.face.noface"
-        referrerpolicy="no-referrer"
+        :referrerpolicy="IMG_REFERRER_POLICY"
         :alt="memberUname || '头像'"
       />
     </el-avatar>

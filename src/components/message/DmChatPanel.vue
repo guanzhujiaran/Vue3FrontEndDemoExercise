@@ -17,7 +17,7 @@
           class="h-9 w-9 shrink-0 rounded-full object-cover"
           :src="displayAvatar || BiliImg.face.noface"
           alt="avatar"
-          referrerpolicy="no-referrer"
+          :referrerpolicy="IMG_REFERRER_POLICY"
         />
         <span class="truncate text-base font-medium text-text-primary">
           {{ displayName }}
@@ -88,7 +88,7 @@
                   class="dm-chat-panel__avatar mr-3 h-9 w-9 shrink-0 self-start rounded-full object-cover"
                   :src="displayAvatar || BiliImg.face.noface"
                   alt="avatar"
-                  referrerpolicy="no-referrer"
+                  :referrerpolicy="IMG_REFERRER_POLICY"
                 />
 
                 <!-- 消息主体：右键弹出「撤回 / 删除」菜单 -->
@@ -205,6 +205,7 @@
 </template>
 
 <script setup lang="ts">
+import { IMG_REFERRER_POLICY } from '@/utils/PageOpen/linkPolicy'
 import { computed, nextTick, onActivated, onDeactivated, onMounted, onUnmounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ArrowLeft, MoreFilled } from '@element-plus/icons-vue'

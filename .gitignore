@@ -37,3 +37,6 @@ playwright/.cache/
 .history
 .env.prod
 *.png
+# 例外：SEO 分享图（Open Graph / Twitter Card）必须随站点一起部署，
+# 否则社交平台与搜索引擎抓到的 og:image 是 404。
+!public/og-image.png

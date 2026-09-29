@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { IMG_REFERRER_POLICY } from '@/utils/PageOpen/linkPolicy'
 import { BiliImg } from '@/assets/img/BiliImg.ts'
 import type { PropType } from 'vue'
 import ExpBar from '@/components/CommonCompo/ExpBar.vue'
@@ -47,7 +48,7 @@ const expBarSize = computed(() => {
   <div class="avatar-container flex flex-col items-center">
     <div class="avatar-box relative flex items-center rounded-full justify-center" :style="{ width: size + 'px', height: size + 'px' }">
       <div class="avatar flex items-center justify-center rounded-full box-border hover:cursor-pointer border border-solid border-[var(--el-color-danger-dark-2)] overflow-hidden" :style="{ width: size + 'px', height: size + 'px' }">
-        <el-image :src="props.src" fit="fill" class="url rounded-full w-full h-full block [&_img]:w-full [&_img]:h-full [&_img]:object-cover" referrerpolicy="no-referrer" alt="" />
+        <el-image :src="props.src" fit="fill" class="url rounded-full w-full h-full block [&_img]:w-full [&_img]:h-full [&_img]:object-cover" :referrerpolicy="IMG_REFERRER_POLICY" alt="" />
       </div>
     </div>
     <ExpBar

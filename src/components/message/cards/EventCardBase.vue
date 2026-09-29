@@ -12,7 +12,7 @@
         :class="idx === 0 ? 'top-0 left-0 z-10 h-10 w-10' : 'top-5 left-5 z-20 h-7 w-7'"
         :src="u.avatar || BiliImg.face.noface"
         :alt="u.nickname || 'avatar'"
-        referrerpolicy="no-referrer"
+        :referrerpolicy="IMG_REFERRER_POLICY"
       />
     </div>
 
@@ -52,7 +52,7 @@
           class="event-card__cover h-14 w-24 rounded object-cover"
           :src="coverUrl"
           alt="cover"
-          referrerpolicy="no-referrer"
+          :referrerpolicy="IMG_REFERRER_POLICY"
         />
       </slot>
     </div>
@@ -60,6 +60,7 @@
 </template>
 
 <script setup lang="ts">
+import { IMG_REFERRER_POLICY } from '@/utils/PageOpen/linkPolicy'
 /**
  * 互动通知卡片「抽象基类」——统一骨架（模板方法模式）。
  *

@@ -5,7 +5,9 @@
     "vitest.config.*",
     "cypress.config.*",
     "nightwatch.conf.*",
-    "playwright.config.*"
+    "playwright.config.*",
+    "scripts/**/*",
+    "src/config/seo_routes.ts"
   ],
   "compilerOptions": {
     "composite": true,

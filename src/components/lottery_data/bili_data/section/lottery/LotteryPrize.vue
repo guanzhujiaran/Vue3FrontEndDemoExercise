@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { IMG_REFERRER_POLICY } from '@/utils/PageOpen/linkPolicy'
 import type { LotteryPrize } from '@/models/api/lottery/lottery_card.ts'
 import utils from '@/utils/mixin.ts'
 import { ref } from 'vue'
@@ -64,7 +65,7 @@ const handleImageClick = (imageUrl: string | null) => {
             :src="prize.img"
             fit="contain"
             class="w-full h-full"
-            referrerpolicy="no-referrer"
+            :referrerpolicy="IMG_REFERRER_POLICY"
           />
           <svg v-else xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-primary">
             <rect x="3" y="8" width="18" height="4" rx="1"></rect>
@@ -86,7 +87,7 @@ const handleImageClick = (imageUrl: string | null) => {
       v-if="imageViewerVisible"
       :url-list="[currentImage]"
       @close="imageViewerVisible = false"
-      :referrer-policy="'no-referrer'"
+      :referrer-policy="IMG_REFERRER_POLICY"
     />
 
 

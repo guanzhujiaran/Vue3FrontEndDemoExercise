@@ -5,6 +5,21 @@ import lotteryDataBaseApi, {
   type OthersLotDynListParams
 } from '@/api/lottery_data/bili/lottery_database_bili_api';
 import biliMessage from '@/utils/message';
+import { collectSsrData, getSsrData } from '@/app/ssrData';
+
+/** SSR 预取数据快照的键（与页面 onServerPrefetch 写入的键保持一致） */
+export const ssrDataKeyOf = (lotName: string) => `lot:${lotName}`;
+/** 筛选参数元数据快照的键（列表页筛选栏也要两端一致，否则水合不匹配） */
+export const ssrFilterKeyOf = (lotName: string) => `lotfilter:${lotName}`;
+
+/** 服务端没有 DOM：轻提示依赖 Element Plus，SSR 下只能打日志 */
+const notifyError = (msg: string) => {
+  if (import.meta.env.SSR) {
+    console.error('[SSR] 抽奖数据加载失败:', msg);
+    return;
+  }
+  biliMessage.error(msg);
+};
 
 export interface LotteryDataProps {
   lot_name: string;
@@ -25,9 +40,11 @@ export interface ExtraFilterParams {
 export const useLotteryData = (lotName: string) => {
   const page_size = ref(10);
   const extraFilters = ref<ExtraFilterParams>({});
+  // 复用静态 HTML 里注入的快照：首屏直接有内容（不会先空后满），随后仍会请求最新数据
+  const ssrSnapshot = getSsrData<LotteryDataProps['lot_data']>(ssrDataKeyOf(lotName));
   const lotteryDataProps = ref<LotteryDataProps>({
     lot_name: lotName,
-    lot_data: {
+    lot_data: ssrSnapshot ?? {
       items: [],
       total: 0,
     },
@@ -36,6 +53,16 @@ export const useLotteryData = (lotName: string) => {
     error: false,
     error_msg: '',
   });
+
+  /**
+   * 请求失败时**不要**清掉已在展示的列表：首屏可能来自静态 HTML 里的快照，
+   * 或者上一次已成功加载的数据——因一次刷新失败就清空会让页面反而变空。
+   */
+  const clearOnlyWhenEmpty = () => {
+    if (!lotteryDataProps.value.lot_data?.items?.length) {
+      lotteryDataProps.value.lot_data = { items: [], total: 0 };
+    }
+  };
 
   const getLotData = async (page_num: number, page_size_val: number) => {
     lotteryDataProps.value.loading = true;
@@ -109,29 +136,31 @@ export const useLotteryData = (lotName: string) => {
       if (resp.code === -9999 || resp.code < 0) {
         lotteryDataProps.value.error = true;
         lotteryDataProps.value.error_msg = resp.msg || '网络异常';
-        lotteryDataProps.value.lot_data = { items: [], total: 0 };
-        biliMessage.error(resp.msg || '加载数据失败');
+        clearOnlyWhenEmpty();
+        notifyError(resp.msg || '加载数据失败');
         return { is_succ: false, msg: resp.msg || '加载数据失败' };
       }
 
       if (resp.code !== 0) {
         lotteryDataProps.value.error = true;
         lotteryDataProps.value.error_msg = resp.msg || '业务错误';
-        lotteryDataProps.value.lot_data = { items: [], total: 0 };
-        biliMessage.error(resp.msg || '业务错误');
+        clearOnlyWhenEmpty();
+        notifyError(resp.msg || '业务错误');
         return { is_succ: false, msg: resp.msg || '业务错误' };
       }
 
       lotteryDataProps.value.lot_data = resp.data ?? { items: [], total: 0 };
       lotteryDataProps.value.error = false;
       lotteryDataProps.value.error_msg = '';
+      // 预渲染采集：把真实数据登记给无头浏览器脚本，注入静态 HTML 供客户端首屏复用
+      collectSsrData(ssrDataKeyOf(lotName), lotteryDataProps.value.lot_data);
       return { is_succ: true, msg: resp.msg };
     } catch (error) {
       console.error('获取抽奖数据失败:', error);
       lotteryDataProps.value.error = true;
       lotteryDataProps.value.error_msg = '加载数据失败';
-      lotteryDataProps.value.lot_data = { items: [], total: 0 };
-      biliMessage.error('加载数据失败');
+      clearOnlyWhenEmpty();
+      notifyError('加载数据失败');
       return { is_succ: false, msg: '加载数据失败' };
     } finally {
       lotteryDataProps.value.loading = false;

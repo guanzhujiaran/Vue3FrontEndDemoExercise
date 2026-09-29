@@ -248,6 +248,8 @@ import MomentPublishForm from '@/components/moment/MomentPublishForm.vue'
 import MomentFavoriteDialog from '@/components/moment/MomentFavoriteDialog.vue'
 import ReportDialog from '@/components/moment/ReportDialog.vue'
 import { BiliImg } from '@/assets/img/BiliImg'
+import { usePageSeo } from '@/composables/usePageSeo.ts'
+import { SITE_URL } from '@/config/seo.ts'
 
 defineOptions({ name: 'MomentDetailView' })
 
@@ -360,6 +362,30 @@ const detailAuthor = computed(() =>
 const detailDescText = computed(() =>
   detail.value?.modules?.find((m) => m.moduleType === 'desc')?.text || ''
 )
+
+// ============ 页面级 SEO：用动态正文覆盖分享卡片与搜索结果 ============
+usePageSeo(() => {
+  if (!detail.value) return null
+  const authorName =
+    (detailAuthor.value as unknown as { uname?: string } | undefined)?.uname?.trim() || 'B站用户'
+  const text = detailDescText.value.replace(/\s+/g, ' ').trim()
+  const url = `${SITE_URL}/app/moment-detail/${momentId}`
+  return {
+    title: `${authorName}的动态`,
+    description: text
+      ? `${authorName}的动态：${text.slice(0, 110)}`
+      : `${authorName} 在B站发布的动态，查看正文、图片与评论区互动。`,
+    jsonLd: {
+      '@context': 'https://schema.org',
+      '@type': 'SocialMediaPosting',
+      headline: `${authorName}的动态`,
+      articleSection: 'B站动态',
+      inLanguage: 'zh-CN',
+      url,
+      author: { '@type': 'Person', name: authorName }
+    }
+  }
+})
 
 function formatNum(n?: number) {
   if (!n) return '0'

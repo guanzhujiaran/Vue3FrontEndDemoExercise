@@ -10,7 +10,7 @@
           :src="card.avatar"
           class="user-card__avatar h-full w-full object-cover"
           alt="avatar"
-          referrerpolicy="no-referrer"
+          :referrerpolicy="IMG_REFERRER_POLICY"
         />
         <div v-else class="user-card__avatar-placeholder flex h-full w-full items-center justify-center bg-text-placeholder">
           <el-icon class="text-bg-overlay" size="24"><UserFilled /></el-icon>
@@ -91,7 +91,7 @@
 import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { openExternalLink, openRouteInNewTab } from '@/utils/PageOpen/linkPolicy'
+import { IMG_REFERRER_POLICY, openExternalLink, openRouteInNewTab } from '@/utils/PageOpen/linkPolicy'
 import { Female, Male, UserFilled } from '@element-plus/icons-vue'
 import LevelIcon from '@/components/CommonCompo/LevelIcon.vue'
 

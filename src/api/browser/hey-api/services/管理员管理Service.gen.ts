@@ -3,7 +3,7 @@
 import type { RequestResult } from '../client';
 import { client } from '../client.gen';
 import type { Options } from '../sdk.gen';
-import type { BanUserApiAdminRpaBanCreatePostData, BanUserApiAdminRpaBanCreatePostErrors, BanUserApiAdminRpaBanCreatePostResponses, CancelApprovalApiAdminRpaApprovalCancelPostData, CancelApprovalApiAdminRpaApprovalCancelPostErrors, CancelApprovalApiAdminRpaApprovalCancelPostResponses, CertifyApiAdminRpaCertificationCertifyPostData, CertifyApiAdminRpaCertificationCertifyPostErrors, CertifyApiAdminRpaCertificationCertifyPostResponses, DeleteApprovalApiAdminRpaApprovalDeletePostData, DeleteApprovalApiAdminRpaApprovalDeletePostErrors, DeleteApprovalApiAdminRpaApprovalDeletePostResponses, DeleteTagApiAdminRpaTagDeletePostData, DeleteTagApiAdminRpaTagDeletePostErrors, DeleteTagApiAdminRpaTagDeletePostResponses, GetAllSessionsApiAdminRpaSessionsAllPostData, GetAllSessionsApiAdminRpaSessionsAllPostResponses, GetBanStatusApiAdminRpaBanStatusPostData, GetBanStatusApiAdminRpaBanStatusPostErrors, GetBanStatusApiAdminRpaBanStatusPostResponses, GetBrowserMonitorPagesApiAdminRpaBrowserMonitorPagesPostData, GetBrowserMonitorPagesApiAdminRpaBrowserMonitorPagesPostErrors, GetBrowserMonitorPagesApiAdminRpaBrowserMonitorPagesPostResponses, GetBrowserSessionConfigApiAdminRpaConfigBrowserSessionGetData, GetBrowserSessionConfigApiAdminRpaConfigBrowserSessionGetResponses, LiftUserBanApiAdminRpaBanLiftPostData, LiftUserBanApiAdminRpaBanLiftPostErrors, LiftUserBanApiAdminRpaBanLiftPostResponses, ListApprovalsApiAdminRpaApprovalListPostData, ListApprovalsApiAdminRpaApprovalListPostErrors, ListApprovalsApiAdminRpaApprovalListPostResponses, ListAuditApiAdminRpaAuditListPostData, ListAuditApiAdminRpaAuditListPostErrors, ListAuditApiAdminRpaAuditListPostResponses, ListBansApiAdminRpaBanListPostData, ListBansApiAdminRpaBanListPostErrors, ListBansApiAdminRpaBanListPostResponses, ListBrowserMonitorsApiAdminRpaBrowserMonitorsPostData, ListBrowserMonitorsApiAdminRpaBrowserMonitorsPostErrors, ListBrowserMonitorsApiAdminRpaBrowserMonitorsPostResponses, ListCertificationsApiAdminRpaCertificationListPostData, ListCertificationsApiAdminRpaCertificationListPostErrors, ListCertificationsApiAdminRpaCertificationListPostResponses, ReviewApprovalApiAdminRpaApprovalReviewPostData, ReviewApprovalApiAdminRpaApprovalReviewPostErrors, ReviewApprovalApiAdminRpaApprovalReviewPostResponses, RevokeCertificationApiAdminRpaCertificationRevokePostData, RevokeCertificationApiAdminRpaCertificationRevokePostErrors, RevokeCertificationApiAdminRpaCertificationRevokePostResponses, SearchResourcesApiAdminRpaApprovalResourcesPostData, SearchResourcesApiAdminRpaApprovalResourcesPostErrors, SearchResourcesApiAdminRpaApprovalResourcesPostResponses, StopBrowserSessionApiAdminRpaBrowserSessionStopPostData, StopBrowserSessionApiAdminRpaBrowserSessionStopPostErrors, StopBrowserSessionApiAdminRpaBrowserSessionStopPostResponses, SubmitApprovalApiAdminRpaApprovalSubmitPostData, SubmitApprovalApiAdminRpaApprovalSubmitPostErrors, SubmitApprovalApiAdminRpaApprovalSubmitPostResponses, UpdateBrowserSessionConfigApiAdminRpaConfigBrowserSessionPostData, UpdateBrowserSessionConfigApiAdminRpaConfigBrowserSessionPostErrors, UpdateBrowserSessionConfigApiAdminRpaConfigBrowserSessionPostResponses, UpdateTagApiAdminRpaTagUpdatePostData, UpdateTagApiAdminRpaTagUpdatePostErrors, UpdateTagApiAdminRpaTagUpdatePostResponses } from '../types.gen';
+import type { BanUserApiAdminRpaBanCreatePostData, BanUserApiAdminRpaBanCreatePostErrors, BanUserApiAdminRpaBanCreatePostResponses, CancelApprovalApiAdminRpaApprovalCancelPostData, CancelApprovalApiAdminRpaApprovalCancelPostErrors, CancelApprovalApiAdminRpaApprovalCancelPostResponses, CertifyApiAdminRpaCertificationCertifyPostData, CertifyApiAdminRpaCertificationCertifyPostErrors, CertifyApiAdminRpaCertificationCertifyPostResponses, DeleteApprovalApiAdminRpaApprovalDeletePostData, DeleteApprovalApiAdminRpaApprovalDeletePostErrors, DeleteApprovalApiAdminRpaApprovalDeletePostResponses, DeleteTagApiAdminRpaTagDeletePostData, DeleteTagApiAdminRpaTagDeletePostErrors, DeleteTagApiAdminRpaTagDeletePostResponses, GetAllSessionsApiAdminRpaSessionsAllPostData, GetAllSessionsApiAdminRpaSessionsAllPostResponses, GetBanStatusApiAdminRpaBanStatusPostData, GetBanStatusApiAdminRpaBanStatusPostErrors, GetBanStatusApiAdminRpaBanStatusPostResponses, GetBrowserMonitorPagesApiAdminRpaBrowserMonitorPagesPostData, GetBrowserMonitorPagesApiAdminRpaBrowserMonitorPagesPostErrors, GetBrowserMonitorPagesApiAdminRpaBrowserMonitorPagesPostResponses, GetBrowserSessionConfigApiAdminRpaConfigBrowserSessionGetData, GetBrowserSessionConfigApiAdminRpaConfigBrowserSessionGetResponses, GetLaunchQueueStatusApiAdminRpaBrowserLaunchQueueStatusPostData, GetLaunchQueueStatusApiAdminRpaBrowserLaunchQueueStatusPostErrors, GetLaunchQueueStatusApiAdminRpaBrowserLaunchQueueStatusPostResponses, LiftUserBanApiAdminRpaBanLiftPostData, LiftUserBanApiAdminRpaBanLiftPostErrors, LiftUserBanApiAdminRpaBanLiftPostResponses, ListApprovalsApiAdminRpaApprovalListPostData, ListApprovalsApiAdminRpaApprovalListPostErrors, ListApprovalsApiAdminRpaApprovalListPostResponses, ListAuditApiAdminRpaAuditListPostData, ListAuditApiAdminRpaAuditListPostErrors, ListAuditApiAdminRpaAuditListPostResponses, ListBansApiAdminRpaBanListPostData, ListBansApiAdminRpaBanListPostErrors, ListBansApiAdminRpaBanListPostResponses, ListBrowserMonitorsApiAdminRpaBrowserMonitorsPostData, ListBrowserMonitorsApiAdminRpaBrowserMonitorsPostErrors, ListBrowserMonitorsApiAdminRpaBrowserMonitorsPostResponses, ListCertificationsApiAdminRpaCertificationListPostData, ListCertificationsApiAdminRpaCertificationListPostErrors, ListCertificationsApiAdminRpaCertificationListPostResponses, ReadPermissionQuotasApiAdminRpaPermissionLevelsGetData, ReadPermissionQuotasApiAdminRpaPermissionLevelsGetErrors, ReadPermissionQuotasApiAdminRpaPermissionLevelsGetResponses, ResetPermissionQuotasApiAdminRpaPermissionResetPostData, ResetPermissionQuotasApiAdminRpaPermissionResetPostErrors, ResetPermissionQuotasApiAdminRpaPermissionResetPostResponses, ReviewApprovalApiAdminRpaApprovalReviewPostData, ReviewApprovalApiAdminRpaApprovalReviewPostErrors, ReviewApprovalApiAdminRpaApprovalReviewPostResponses, RevokeCertificationApiAdminRpaCertificationRevokePostData, RevokeCertificationApiAdminRpaCertificationRevokePostErrors, RevokeCertificationApiAdminRpaCertificationRevokePostResponses, SearchResourcesApiAdminRpaApprovalResourcesPostData, SearchResourcesApiAdminRpaApprovalResourcesPostErrors, SearchResourcesApiAdminRpaApprovalResourcesPostResponses, StopBrowserSessionApiAdminRpaBrowserSessionStopPostData, StopBrowserSessionApiAdminRpaBrowserSessionStopPostErrors, StopBrowserSessionApiAdminRpaBrowserSessionStopPostResponses, SubmitApprovalApiAdminRpaApprovalSubmitPostData, SubmitApprovalApiAdminRpaApprovalSubmitPostErrors, SubmitApprovalApiAdminRpaApprovalSubmitPostResponses, UpdateBrowserSessionConfigApiAdminRpaConfigBrowserSessionPostData, UpdateBrowserSessionConfigApiAdminRpaConfigBrowserSessionPostErrors, UpdateBrowserSessionConfigApiAdminRpaConfigBrowserSessionPostResponses, UpdatePermissionQuotasApiAdminRpaPermissionUpdatePostData, UpdatePermissionQuotasApiAdminRpaPermissionUpdatePostErrors, UpdatePermissionQuotasApiAdminRpaPermissionUpdatePostResponses, UpdateTagApiAdminRpaTagUpdatePostData, UpdateTagApiAdminRpaTagUpdatePostErrors, UpdateTagApiAdminRpaTagUpdatePostResponses } from '../types.gen';
 
 export class 管理员管理Service {
     /**
@@ -375,6 +375,21 @@ export class 管理员管理Service {
     }
     
     /**
+     * 浏览器启动队列总览（管理员）
+     *
+     * 启动队列总览：系统内存水位 + 单实例内存实测 + VIP/普通队列长度 + 排队明细
+     *
+     * 只读接口，用于运营判断是否需要扩容或调整准入配置，不含任何处置能力。
+     */
+    public static getLaunchQueueStatusApiAdminRpaBrowserLaunchQueueStatusPost<ThrowOnError extends boolean = false>(options?: Options<GetLaunchQueueStatusApiAdminRpaBrowserLaunchQueueStatusPostData, ThrowOnError>): RequestResult<GetLaunchQueueStatusApiAdminRpaBrowserLaunchQueueStatusPostResponses, GetLaunchQueueStatusApiAdminRpaBrowserLaunchQueueStatusPostErrors, ThrowOnError, 'data'> {
+        return (options?.client ?? client).post<GetLaunchQueueStatusApiAdminRpaBrowserLaunchQueueStatusPostResponses, GetLaunchQueueStatusApiAdminRpaBrowserLaunchQueueStatusPostErrors, ThrowOnError, 'data'>({
+            responseStyle: 'data',
+            url: '/api/admin/rpa/browser/launch-queue/status',
+            ...options
+        });
+    }
+    
+    /**
      * 强制停止浏览器会话（管理员）
      *
      * 强制关闭指定用户的浏览器会话（含直播流），并写审计日志
@@ -388,6 +403,49 @@ export class 管理员管理Service {
                 'Content-Type': 'application/json',
                 ...options.headers
             }
+        });
+    }
+    
+    /**
+     * Read Permission Quotas
+     *
+     * 查询各等级的最大浏览器指纹数量（仅 root）
+     */
+    public static readPermissionQuotasApiAdminRpaPermissionLevelsGet<ThrowOnError extends boolean = false>(options?: Options<ReadPermissionQuotasApiAdminRpaPermissionLevelsGetData, ThrowOnError>): RequestResult<ReadPermissionQuotasApiAdminRpaPermissionLevelsGetResponses, ReadPermissionQuotasApiAdminRpaPermissionLevelsGetErrors, ThrowOnError, 'data'> {
+        return (options?.client ?? client).get<ReadPermissionQuotasApiAdminRpaPermissionLevelsGetResponses, ReadPermissionQuotasApiAdminRpaPermissionLevelsGetErrors, ThrowOnError, 'data'>({
+            responseStyle: 'data',
+            url: '/api/admin/rpa/permission/levels',
+            ...options
+        });
+    }
+    
+    /**
+     * Update Permission Quotas
+     *
+     * 更新各等级的最大浏览器指纹数量（仅 root），写回 permissions.json 后立即生效
+     */
+    public static updatePermissionQuotasApiAdminRpaPermissionUpdatePost<ThrowOnError extends boolean = false>(options: Options<UpdatePermissionQuotasApiAdminRpaPermissionUpdatePostData, ThrowOnError>): RequestResult<UpdatePermissionQuotasApiAdminRpaPermissionUpdatePostResponses, UpdatePermissionQuotasApiAdminRpaPermissionUpdatePostErrors, ThrowOnError, 'data'> {
+        return (options.client ?? client).post<UpdatePermissionQuotasApiAdminRpaPermissionUpdatePostResponses, UpdatePermissionQuotasApiAdminRpaPermissionUpdatePostErrors, ThrowOnError, 'data'>({
+            responseStyle: 'data',
+            url: '/api/admin/rpa/permission/update',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    /**
+     * Reset Permission Quotas
+     *
+     * 各等级指纹配额恢复为代码内默认值（仅 root），写回配置文件后立即生效
+     */
+    public static resetPermissionQuotasApiAdminRpaPermissionResetPost<ThrowOnError extends boolean = false>(options?: Options<ResetPermissionQuotasApiAdminRpaPermissionResetPostData, ThrowOnError>): RequestResult<ResetPermissionQuotasApiAdminRpaPermissionResetPostResponses, ResetPermissionQuotasApiAdminRpaPermissionResetPostErrors, ThrowOnError, 'data'> {
+        return (options?.client ?? client).post<ResetPermissionQuotasApiAdminRpaPermissionResetPostResponses, ResetPermissionQuotasApiAdminRpaPermissionResetPostErrors, ThrowOnError, 'data'>({
+            responseStyle: 'data',
+            url: '/api/admin/rpa/permission/reset',
+            ...options
         });
     }
 }

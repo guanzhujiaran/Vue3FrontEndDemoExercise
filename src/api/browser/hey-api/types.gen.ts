@@ -2095,6 +2095,243 @@ export type BrowserInfoResponse = {
 };
 
 /**
+ * BrowserLaunchQueueMonitorResponse
+ *
+ * 启动队列监管总览（管理端）
+ *
+ * 用于运营观察「服务器内存水位 / 单实例实测占用 / VIP 与普通队列长度 / 谁在排队」，
+ * 以便判断是否需要扩容或调整准入配置；只读，不含任何处置能力。
+ */
+export type BrowserLaunchQueueMonitorResponse = {
+    /**
+     * 队列全局状态（含系统内存快照与浏览器单实例内存实测）
+     */
+    queue: LaunchQueueStatus;
+    /**
+     * Waiting Sessions
+     *
+     * 排队 / 启动中的会话明细（VIP 优先、等待久者在前）
+     */
+    waiting_sessions?: Array<BrowserLaunchQueueWaitingItem>;
+};
+
+/**
+ * BrowserLaunchQueueStatusResponse
+ *
+ * 浏览器启动队列状态（排队进度查询）
+ *
+ * 同时给出「全局队列水位」与「当前会话排位」两部分：
+ * 前端既可展示本会话排在第几位，也可展示服务器繁忙程度。
+ */
+export type BrowserLaunchQueueStatusResponse = {
+    /**
+     * Enabled
+     *
+     * 是否启用内存准入排队；false 时不会排队
+     */
+    enabled: boolean;
+    /**
+     * Vip Waiting
+     *
+     * VIP 队列等待数
+     */
+    vip_waiting?: number;
+    /**
+     * Normal Waiting
+     *
+     * 普通用户队列等待数
+     */
+    normal_waiting?: number;
+    /**
+     * Launching
+     *
+     * 已放行、正在启动的浏览器数
+     */
+    launching?: number;
+    /**
+     * Max Wait Seconds
+     *
+     * 排队最大等待时长（秒），超时后启动请求作废；0 表示不限
+     */
+    max_wait_seconds?: number;
+    /**
+     * Max Instances
+     *
+     * 浏览器实例数上限（运行中+启动中）；0 表示仅按内存限制
+     */
+    max_instances?: number;
+    /**
+     * 当前系统内存快照
+     */
+    memory: MemorySnapshot;
+    /**
+     * 浏览器单实例内存实测估算（准入预留额度的来源）
+     */
+    browser_memory: BrowserMemoryEstimatorStatus;
+    /**
+     * In Queue
+     *
+     * 当前会话是否在启动队列中（含排队中与已放行启动中）
+     */
+    in_queue?: boolean;
+    /**
+     * 排队状态：queued=排队等待，launching=已放行启动中
+     */
+    queue_state?: LaunchQueueStateEnum | null;
+    /**
+     * 所在队列：vip / normal
+     */
+    queue_type?: LaunchQueueTypeEnum | null;
+    /**
+     * Queue Position
+     *
+     * 同队列中的排位（1 起），前方还有 position-1 位
+     */
+    queue_position?: number | null;
+    /**
+     * Queue Waiting Seconds
+     *
+     * 已排队等待时长（秒）
+     */
+    queue_waiting_seconds?: number;
+    /**
+     * Estimated Wait Seconds
+     *
+     * 当前会话预计还需等待时长(秒)，按「前方人数 × 放行节奏」估算（见计划书 §5.17）；已放行时为 0；null 表示当前不在启动队列中。属粗略参考值，不是承诺
+     */
+    estimated_wait_seconds?: number | null;
+    /**
+     * Estimate Reliable
+     *
+     * 估算是否可信：true=实测样本充足且当前名额已释放；false=样本不足或内存长期未释放，实际可能更久
+     */
+    estimate_reliable?: boolean;
+};
+
+/**
+ * BrowserLaunchQueueWaitingItem
+ *
+ * 排队 / 启动中的会话明细（管理端监管用）
+ */
+export type BrowserLaunchQueueWaitingItem = {
+    /**
+     * Mid
+     *
+     * 用户 mid
+     */
+    mid: number;
+    /**
+     * Mid Str
+     *
+     * 用户 mid（字符串，避免精度丢失）
+     */
+    mid_str?: string;
+    /**
+     * Browser Id
+     *
+     * 浏览器实例 ID
+     */
+    browser_id: number;
+    /**
+     * Browser Id Str
+     *
+     * 浏览器实例 ID（字符串）
+     */
+    browser_id_str?: string;
+    /**
+     * 所在队列：vip / normal
+     */
+    queue_type: LaunchQueueTypeEnum;
+    /**
+     * 状态：queued=排队等待，launching=已放行、正在启动
+     */
+    state: LaunchQueueStateEnum;
+    /**
+     * Position
+     *
+     * 同队列中的排位（1 起）；launching 时为 null
+     */
+    position?: number | null;
+    /**
+     * Waiting Seconds
+     *
+     * 已等待时长(秒)
+     */
+    waiting_seconds?: number;
+};
+
+/**
+ * BrowserMemoryEstimatorStatus
+ *
+ * 浏览器单实例内存占用的实测估算状态
+ *
+ * 用真实进程占用（不可回收的匿名内存：Pss_Anon + Pss_Shmem）校准启动准入的
+ * 单实例预留额度，替代写死的固定常量，避免并发启动把内存打爆。
+ */
+export type BrowserMemoryEstimatorStatus = {
+    /**
+     * Enabled
+     *
+     * 是否启用实测估算
+     */
+    enabled: boolean;
+    /**
+     * Sample Count
+     *
+     * 当前滑动窗口内的样本数
+     */
+    sample_count?: number;
+    /**
+     * Window
+     *
+     * 滑动窗口长度
+     */
+    window?: number;
+    /**
+     * Min Samples
+     *
+     * 生效所需的最小样本数
+     */
+    min_samples?: number;
+    /**
+     * Active Instances
+     *
+     * 最近一次扫描到的活跃浏览器实例数
+     */
+    active_instances?: number;
+    /**
+     * Last Sample Mb
+     *
+     * 最近一次采样的单实例占用(MB)
+     */
+    last_sample_mb?: number | null;
+    /**
+     * Average Mb
+     *
+     * 窗口内单实例平均占用(MB)
+     */
+    average_mb?: number | null;
+    /**
+     * Peak Mb
+     *
+     * 单实例占用历史峰值(MB)
+     */
+    peak_mb?: number | null;
+    /**
+     * Reserved Mb
+     *
+     * 当前准入记账用的单实例预留额度(MB)
+     */
+    reserved_mb?: number;
+    /**
+     * Configured Reserved Mb
+     *
+     * 配置的基准预留额度(MB)
+     */
+    configured_reserved_mb?: number;
+};
+
+/**
  * BrowserMonitorItem
  *
  * 监管列表项：运行中浏览器实例概览
@@ -2500,6 +2737,32 @@ export type BrowserSessionStatus = {
      * 待关闭的宽限截止时间戳（闲置超时进入宽限期后非空）
      */
     pending_termination_at?: number | null;
+    /**
+     * In Launch Queue
+     *
+     * 是否处于启动队列中
+     */
+    in_launch_queue?: boolean;
+    /**
+     * 排队状态：queued=排队等待，launching=已放行启动中
+     */
+    queue_state?: LaunchQueueStateEnum | null;
+    /**
+     * 所在队列：vip / normal
+     */
+    queue_type?: LaunchQueueTypeEnum | null;
+    /**
+     * Queue Position
+     *
+     * 同队列中的排位（1 起）
+     */
+    queue_position?: number | null;
+    /**
+     * Queue Waiting Seconds
+     *
+     * 已排队等待时长（秒）
+     */
+    queue_waiting_seconds?: number;
 };
 
 /**
@@ -3427,7 +3690,7 @@ export type CreateSessionResponse = {
     /**
      * Status
      *
-     * 浏览器会话状态
+     * 浏览器会话状态：running / queued
      */
     status?: string;
     /**
@@ -3446,6 +3709,22 @@ export type CreateSessionResponse = {
      * 详细信息
      */
     message?: string | null;
+    /**
+     * Queued
+     *
+     * 是否因内存不足进入启动队列排队
+     */
+    queued?: boolean;
+    /**
+     * 所在队列：vip / normal
+     */
+    queue_type?: LaunchQueueTypeEnum | null;
+    /**
+     * Queue Position
+     *
+     * 同队列中的排位（1 起）
+     */
+    queue_position?: number | null;
 };
 
 /**
@@ -3649,6 +3928,118 @@ export type InputVarDefinition = {
 };
 
 /**
+ * LaunchQueueStateEnum
+ *
+ * 枚举选项：
+ * - QUEUED: queued
+ * - LAUNCHING: launching
+ */
+export const LaunchQueueStateEnum = { /**
+     * QUEUED
+     */
+    QUEUED: 'queued', /**
+     * LAUNCHING
+     */
+    LAUNCHING: 'launching' } as const;
+
+/**
+ * LaunchQueueStateEnum
+ *
+ * 枚举选项：
+ * - QUEUED: queued
+ * - LAUNCHING: launching
+ */
+export type LaunchQueueStateEnum = typeof LaunchQueueStateEnum[keyof typeof LaunchQueueStateEnum];
+
+/**
+ * LaunchQueueStatus
+ *
+ * 浏览器启动队列全局状态
+ */
+export type LaunchQueueStatus = {
+    /**
+     * Enabled
+     *
+     * 是否启用内存准入排队
+     */
+    enabled: boolean;
+    /**
+     * Vip Waiting
+     *
+     * VIP 队列等待数
+     */
+    vip_waiting?: number;
+    /**
+     * Normal Waiting
+     *
+     * 普通队列等待数
+     */
+    normal_waiting?: number;
+    /**
+     * Launching
+     *
+     * 已放行、正在启动的浏览器数
+     */
+    launching?: number;
+    /**
+     * Submitted Total
+     *
+     * 累计受理的启动请求数
+     */
+    submitted_total?: number;
+    /**
+     * Queued Total
+     *
+     * 累计进入排队的启动请求数
+     */
+    queued_total?: number;
+    /**
+     * Timeout Total
+     *
+     * 累计排队超时数
+     */
+    timeout_total?: number;
+    /**
+     * 当前系统内存快照
+     */
+    memory: MemorySnapshot;
+    /**
+     * 浏览器单实例内存实测估算（准入预留额度的来源）
+     */
+    browser_memory: BrowserMemoryEstimatorStatus;
+    /**
+     * Max Instances
+     *
+     * 浏览器实例数上限（运行中+启动中）；0 表示仅按内存限制
+     */
+    max_instances?: number;
+};
+
+/**
+ * LaunchQueueTypeEnum
+ *
+ * 枚举选项：
+ * - VIP: vip
+ * - NORMAL: normal
+ */
+export const LaunchQueueTypeEnum = { /**
+     * VIP
+     */
+    VIP: 'vip', /**
+     * NORMAL
+     */
+    NORMAL: 'normal' } as const;
+
+/**
+ * LaunchQueueTypeEnum
+ *
+ * 枚举选项：
+ * - VIP: vip
+ * - NORMAL: normal
+ */
+export type LaunchQueueTypeEnum = typeof LaunchQueueTypeEnum[keyof typeof LaunchQueueTypeEnum];
+
+/**
  * LiftBanRequest
  *
  * 解封请求（root 或持有 user:ban 权限的管理员）
@@ -3700,6 +4091,50 @@ export const LogicOperator = {
  * - NOT: NOT
  */
 export type LogicOperator = typeof LogicOperator[keyof typeof LogicOperator];
+
+/**
+ * MemorySnapshot
+ *
+ * 系统内存快照
+ */
+export type MemorySnapshot = {
+    /**
+     * Total Mb
+     *
+     * 物理内存总量(MB)
+     */
+    total_mb: number;
+    /**
+     * Available Mb
+     *
+     * 当前可用内存(MB)
+     */
+    available_mb: number;
+    /**
+     * Used Mb
+     *
+     * 已用内存(MB)
+     */
+    used_mb: number;
+    /**
+     * Used Percent
+     *
+     * 内存使用率(%)
+     */
+    used_percent: number;
+    /**
+     * Required Mb
+     *
+     * 启动单个浏览器所需的最小可用内存(MB)
+     */
+    required_mb: number;
+    /**
+     * Can Launch
+     *
+     * 当前可用内存是否满足启动条件
+     */
+    can_launch: boolean;
+};
 
 /**
  * NameSearchRequest
@@ -4523,6 +4958,95 @@ export type ParamsCondition = {
      * 可选描述（便于调试）
      */
     description?: string | null;
+};
+
+/**
+ * PermissionLevelConfig
+ *
+ * 权限等级配置
+ */
+export type PermissionLevelConfig = {
+    /**
+     * Level Name
+     *
+     * 等级名称，如 level0, level1, root
+     */
+    level_name: string;
+    /**
+     * Level Value
+     *
+     * 等级数值
+     */
+    level_value: number;
+    /**
+     * Permissions
+     *
+     * 该等级拥有的权限列表
+     */
+    permissions: Array<number>;
+    /**
+     * Max Fingerprints
+     *
+     * 该等级允许创建的最大浏览器指纹数量
+     */
+    max_fingerprints?: number;
+};
+
+/**
+ * PermissionLevelQuotaUpdate
+ *
+ * 单个等级的指纹配额更新项。
+ *
+ * 只承载「最大指纹数量」：``permissions`` / ``level_value`` 由服务端按磁盘现值回写，
+ * 不接受调用方传值（避免经配额接口变相修改功能权限位）。
+ */
+export type PermissionLevelQuotaUpdate = {
+    /**
+     * Level Name
+     *
+     * 等级名称，如 level0 / level6 / root
+     */
+    level_name: string;
+    /**
+     * Max Fingerprints
+     *
+     * 该等级允许创建的最大浏览器指纹数量（≥0）
+     */
+    max_fingerprints: number;
+};
+
+/**
+ * PermissionQuotaResp
+ *
+ * 等级权限配置响应（含配置文件路径，便于管理端/运维定位实际读写位置）。
+ */
+export type PermissionQuotaResp = {
+    /**
+     * Levels
+     *
+     * 所有等级的配置
+     */
+    levels: Array<PermissionLevelConfig>;
+    /**
+     * Config File
+     *
+     * 配置文件路径（实际读写位置）
+     */
+    config_file: string;
+};
+
+/**
+ * PermissionQuotaUpdateReq
+ *
+ * 等级指纹配额更新请求：按 level_name 合并，未传的等级保持现值。
+ */
+export type PermissionQuotaUpdateReq = {
+    /**
+     * Levels
+     *
+     * 需要更新的等级列表
+     */
+    levels: Array<PermissionLevelQuotaUpdate>;
 };
 
 /**
@@ -5387,6 +5911,36 @@ export type StandardResponseBrowserInfoResponse = {
 };
 
 /**
+ * StandardResponse[BrowserLaunchQueueMonitorResponse]
+ */
+export type StandardResponseBrowserLaunchQueueMonitorResponse = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: BrowserLaunchQueueMonitorResponse | null;
+};
+
+/**
+ * StandardResponse[BrowserLaunchQueueStatusResponse]
+ */
+export type StandardResponseBrowserLaunchQueueStatusResponse = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: BrowserLaunchQueueStatusResponse | null;
+};
+
+/**
  * StandardResponse[BrowserMonitorListResponse]
  */
 export type StandardResponseBrowserMonitorListResponse = {
@@ -5666,6 +6220,21 @@ export type StandardResponsePagesListResponse = {
      */
     msg?: string;
     data?: PagesListResponse | null;
+};
+
+/**
+ * StandardResponse[PermissionQuotaResp]
+ */
+export type StandardResponsePermissionQuotaResp = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: PermissionQuotaResp | null;
 };
 
 /**
@@ -6103,6 +6672,51 @@ export type StepPreviewItem = {
 };
 
 /**
+ * StreamQualityLevelEnum
+ *
+ * 枚举选项：
+ * - ORIGINAL: original
+ * - ULTRA: ultra
+ * - HIGH: high
+ * - MEDIUM: medium
+ * - LOW: low
+ */
+export const StreamQualityLevelEnum = {
+    /**
+     * ORIGINAL
+     */
+    ORIGINAL: 'original',
+    /**
+     * ULTRA
+     */
+    ULTRA: 'ultra',
+    /**
+     * HIGH
+     */
+    HIGH: 'high',
+    /**
+     * MEDIUM
+     */
+    MEDIUM: 'medium',
+    /**
+     * LOW
+     */
+    LOW: 'low'
+} as const;
+
+/**
+ * StreamQualityLevelEnum
+ *
+ * 枚举选项：
+ * - ORIGINAL: original
+ * - ULTRA: ultra
+ * - HIGH: high
+ * - MEDIUM: medium
+ * - LOW: low
+ */
+export type StreamQualityLevelEnum = typeof StreamQualityLevelEnum[keyof typeof StreamQualityLevelEnum];
+
+/**
  * SubmitApprovalRequest
  *
  * 提交审批请求
@@ -6523,6 +7137,12 @@ export type ViewportSize = {
  */
 export type WebRtcAnswerRequest = {
     /**
+     * Viewer Id
+     *
+     * 观看者标识
+     */
+    viewer_id: string;
+    /**
      * Stream Key
      */
     stream_key: string;
@@ -6541,15 +7161,61 @@ export type WebRtcAnswerRequest = {
  */
 export type WebRtcCloseRequest = {
     /**
+     * Viewer Id
+     *
+     * 观看者标识
+     */
+    viewer_id: string;
+    /**
      * Stream Key
      */
-    stream_key: string;
+    stream_key?: string;
+};
+
+/**
+ * WebRTCHeartbeatRequest
+ *
+ * 观看者保活（多观看者并发直播）
+ */
+export type WebRtcHeartbeatRequest = {
+    /**
+     * Viewer Id
+     *
+     * 观看者标识
+     */
+    viewer_id: string;
+};
+
+/**
+ * WebRTCIceCandidateItem
+ *
+ * 单个 ICE 候选（批量端点用）
+ */
+export type WebRtcIceCandidateItem = {
+    /**
+     * Candidate
+     */
+    candidate: string;
+    /**
+     * Sdpmid
+     */
+    sdpMid?: string;
+    /**
+     * Sdpmlineindex
+     */
+    sdpMLineIndex?: number;
 };
 
 /**
  * WebRTCIceCandidateRequest
  */
 export type WebRtcIceCandidateRequest = {
+    /**
+     * Viewer Id
+     *
+     * 观看者标识
+     */
+    viewer_id: string;
     /**
      * Stream Key
      */
@@ -6569,6 +7235,28 @@ export type WebRtcIceCandidateRequest = {
 };
 
 /**
+ * WebRTCIceCandidatesRequest
+ *
+ * 批量 ICE 候选（见计划书 §10.9：建连期攒批上报，替代逐个 POST）
+ */
+export type WebRtcIceCandidatesRequest = {
+    /**
+     * Viewer Id
+     *
+     * 观看者标识
+     */
+    viewer_id: string;
+    /**
+     * Stream Key
+     */
+    stream_key: string;
+    /**
+     * Candidates
+     */
+    candidates: Array<WebRtcIceCandidateItem>;
+};
+
+/**
  * WebRTCOfferRequest
  */
 export type WebRtcOfferRequest = {
@@ -6576,6 +7264,63 @@ export type WebRtcOfferRequest = {
      * Page Index
      */
     page_index?: number;
+    /**
+     * Viewer Id
+     *
+     * 观看者标识
+     */
+    viewer_id: string;
+};
+
+/**
+ * WebRTCPauseRequest
+ *
+ * 本观看者的暂停 / 恢复（见计划书 §5.18）
+ */
+export type WebRtcPauseRequest = {
+    /**
+     * Viewer Id
+     *
+     * 观看者标识
+     */
+    viewer_id: string;
+    /**
+     * Paused
+     */
+    paused: boolean;
+};
+
+/**
+ * WebRTCQualityRequest
+ *
+ * 设置本观看者的清晰度档位（见计划书 §5.18）
+ */
+export type WebRtcQualityRequest = {
+    /**
+     * Viewer Id
+     *
+     * 观看者标识
+     */
+    viewer_id: string;
+    level: StreamQualityLevelEnum;
+};
+
+/**
+ * WebRTCVisibilityRequest
+ *
+ * 本观看者的页面可见性信号（见计划书 §5.18）
+ */
+export type WebRtcVisibilityRequest = {
+    /**
+     * Viewer Id
+     *
+     * 观看者标识
+     */
+    viewer_id: string;
+    /**
+     * Visible
+     */
+    visible: boolean;
 };
 
 /**
@@ -12625,6 +13370,156 @@ export type BrowserSessionStatusApiV1RpaBrowserControlStatusPostResponses = {
 
 export type BrowserSessionStatusApiV1RpaBrowserControlStatusPostResponse = BrowserSessionStatusApiV1RpaBrowserControlStatusPostResponses[keyof BrowserSessionStatusApiV1RpaBrowserControlStatusPostResponses];
 
+export type BrowserSessionEventsApiV1RpaBrowserControlEventsGetData = {
+    body?: never;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string;
+    };
+    path?: never;
+    query: {
+        /**
+         * Browser Id
+         */
+        browser_id: number | string;
+    };
+    url: '/api/v1/rpa/browser/control/events';
+};
+
+export type BrowserSessionEventsApiV1RpaBrowserControlEventsGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type BrowserSessionEventsApiV1RpaBrowserControlEventsGetError = BrowserSessionEventsApiV1RpaBrowserControlEventsGetErrors[keyof BrowserSessionEventsApiV1RpaBrowserControlEventsGetErrors];
+
+export type BrowserSessionEventsApiV1RpaBrowserControlEventsGetResponses = {
+    /**
+     * 会话状态 SSE 事件流（text/event-stream 长连接）
+     */
+    200: unknown;
+};
+
+export type BrowserLaunchQueueStatusApiV1RpaBrowserControlQueueStatusPostData = {
+    body?: never;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string;
+    };
+    path?: never;
+    query: {
+        /**
+         * Browser Id
+         */
+        browser_id: number | string;
+    };
+    url: '/api/v1/rpa/browser/control/queue_status';
+};
+
+export type BrowserLaunchQueueStatusApiV1RpaBrowserControlQueueStatusPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type BrowserLaunchQueueStatusApiV1RpaBrowserControlQueueStatusPostError = BrowserLaunchQueueStatusApiV1RpaBrowserControlQueueStatusPostErrors[keyof BrowserLaunchQueueStatusApiV1RpaBrowserControlQueueStatusPostErrors];
+
+export type BrowserLaunchQueueStatusApiV1RpaBrowserControlQueueStatusPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseBrowserLaunchQueueStatusResponse;
+};
+
+export type BrowserLaunchQueueStatusApiV1RpaBrowserControlQueueStatusPostResponse = BrowserLaunchQueueStatusApiV1RpaBrowserControlQueueStatusPostResponses[keyof BrowserLaunchQueueStatusApiV1RpaBrowserControlQueueStatusPostResponses];
+
 export type CloseBrowserSessionApiV1RpaBrowserControlClosePostData = {
     body?: never;
     headers?: {
@@ -12986,6 +13881,14 @@ export type CreateWebrtcOfferApiV1RpaBrowserControlWebrtcOfferPostData = {
          * X-Bili-Vip-Type
          */
         'x-bili-vip-type'?: string;
+        /**
+         * X-Bili-Client-Ip
+         */
+        'x-bili-client-ip'?: string | null;
+        /**
+         * User-Agent
+         */
+        'user-agent'?: string | null;
     };
     path?: never;
     query: {
@@ -13161,6 +14064,80 @@ export type AddIceCandidateApiV1RpaBrowserControlWebrtcIceCandidatePostResponses
     200: unknown;
 };
 
+export type AddIceCandidatesApiV1RpaBrowserControlWebrtcIceCandidatesPostData = {
+    body: WebRtcIceCandidatesRequest;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string;
+    };
+    path?: never;
+    query: {
+        /**
+         * Browser Id
+         */
+        browser_id: number | string;
+    };
+    url: '/api/v1/rpa/browser/control/webrtc/ice-candidates';
+};
+
+export type AddIceCandidatesApiV1RpaBrowserControlWebrtcIceCandidatesPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type AddIceCandidatesApiV1RpaBrowserControlWebrtcIceCandidatesPostError = AddIceCandidatesApiV1RpaBrowserControlWebrtcIceCandidatesPostErrors[keyof AddIceCandidatesApiV1RpaBrowserControlWebrtcIceCandidatesPostErrors];
+
+export type AddIceCandidatesApiV1RpaBrowserControlWebrtcIceCandidatesPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
 export type CloseWebrtcStreamApiV1RpaBrowserControlWebrtcClosePostData = {
     body: WebRtcCloseRequest;
     headers?: {
@@ -13303,6 +14280,302 @@ export type GetWebrtcStatusApiV1RpaBrowserControlWebrtcStatusPostErrors = {
 export type GetWebrtcStatusApiV1RpaBrowserControlWebrtcStatusPostError = GetWebrtcStatusApiV1RpaBrowserControlWebrtcStatusPostErrors[keyof GetWebrtcStatusApiV1RpaBrowserControlWebrtcStatusPostErrors];
 
 export type GetWebrtcStatusApiV1RpaBrowserControlWebrtcStatusPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
+export type SetWebrtcQualityApiV1RpaBrowserControlWebrtcQualityPostData = {
+    body: WebRtcQualityRequest;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string;
+    };
+    path?: never;
+    query: {
+        /**
+         * Browser Id
+         */
+        browser_id: number | string;
+    };
+    url: '/api/v1/rpa/browser/control/webrtc/quality';
+};
+
+export type SetWebrtcQualityApiV1RpaBrowserControlWebrtcQualityPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type SetWebrtcQualityApiV1RpaBrowserControlWebrtcQualityPostError = SetWebrtcQualityApiV1RpaBrowserControlWebrtcQualityPostErrors[keyof SetWebrtcQualityApiV1RpaBrowserControlWebrtcQualityPostErrors];
+
+export type SetWebrtcQualityApiV1RpaBrowserControlWebrtcQualityPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
+export type ReportWebrtcVisibilityApiV1RpaBrowserControlWebrtcVisibilityPostData = {
+    body: WebRtcVisibilityRequest;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string;
+    };
+    path?: never;
+    query: {
+        /**
+         * Browser Id
+         */
+        browser_id: number | string;
+    };
+    url: '/api/v1/rpa/browser/control/webrtc/visibility';
+};
+
+export type ReportWebrtcVisibilityApiV1RpaBrowserControlWebrtcVisibilityPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ReportWebrtcVisibilityApiV1RpaBrowserControlWebrtcVisibilityPostError = ReportWebrtcVisibilityApiV1RpaBrowserControlWebrtcVisibilityPostErrors[keyof ReportWebrtcVisibilityApiV1RpaBrowserControlWebrtcVisibilityPostErrors];
+
+export type ReportWebrtcVisibilityApiV1RpaBrowserControlWebrtcVisibilityPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
+export type SetWebrtcPausedApiV1RpaBrowserControlWebrtcPausePostData = {
+    body: WebRtcPauseRequest;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string;
+    };
+    path?: never;
+    query: {
+        /**
+         * Browser Id
+         */
+        browser_id: number | string;
+    };
+    url: '/api/v1/rpa/browser/control/webrtc/pause';
+};
+
+export type SetWebrtcPausedApiV1RpaBrowserControlWebrtcPausePostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type SetWebrtcPausedApiV1RpaBrowserControlWebrtcPausePostError = SetWebrtcPausedApiV1RpaBrowserControlWebrtcPausePostErrors[keyof SetWebrtcPausedApiV1RpaBrowserControlWebrtcPausePostErrors];
+
+export type SetWebrtcPausedApiV1RpaBrowserControlWebrtcPausePostResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
+export type WebrtcViewerHeartbeatApiV1RpaBrowserControlWebrtcHeartbeatPostData = {
+    body: WebRtcHeartbeatRequest;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string;
+    };
+    path?: never;
+    query: {
+        /**
+         * Browser Id
+         */
+        browser_id: number | string;
+    };
+    url: '/api/v1/rpa/browser/control/webrtc/heartbeat';
+};
+
+export type WebrtcViewerHeartbeatApiV1RpaBrowserControlWebrtcHeartbeatPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type WebrtcViewerHeartbeatApiV1RpaBrowserControlWebrtcHeartbeatPostError = WebrtcViewerHeartbeatApiV1RpaBrowserControlWebrtcHeartbeatPostErrors[keyof WebrtcViewerHeartbeatApiV1RpaBrowserControlWebrtcHeartbeatPostErrors];
+
+export type WebrtcViewerHeartbeatApiV1RpaBrowserControlWebrtcHeartbeatPostResponses = {
     /**
      * Successful Response
      */
@@ -14649,6 +15922,77 @@ export type GetBrowserMonitorPagesApiAdminRpaBrowserMonitorPagesPostResponses = 
 
 export type GetBrowserMonitorPagesApiAdminRpaBrowserMonitorPagesPostResponse = GetBrowserMonitorPagesApiAdminRpaBrowserMonitorPagesPostResponses[keyof GetBrowserMonitorPagesApiAdminRpaBrowserMonitorPagesPostResponses];
 
+export type GetLaunchQueueStatusApiAdminRpaBrowserLaunchQueueStatusPostData = {
+    body?: never;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/admin/rpa/browser/launch-queue/status';
+};
+
+export type GetLaunchQueueStatusApiAdminRpaBrowserLaunchQueueStatusPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetLaunchQueueStatusApiAdminRpaBrowserLaunchQueueStatusPostError = GetLaunchQueueStatusApiAdminRpaBrowserLaunchQueueStatusPostErrors[keyof GetLaunchQueueStatusApiAdminRpaBrowserLaunchQueueStatusPostErrors];
+
+export type GetLaunchQueueStatusApiAdminRpaBrowserLaunchQueueStatusPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseBrowserLaunchQueueMonitorResponse;
+};
+
+export type GetLaunchQueueStatusApiAdminRpaBrowserLaunchQueueStatusPostResponse = GetLaunchQueueStatusApiAdminRpaBrowserLaunchQueueStatusPostResponses[keyof GetLaunchQueueStatusApiAdminRpaBrowserLaunchQueueStatusPostResponses];
+
 export type StopBrowserSessionApiAdminRpaBrowserSessionStopPostData = {
     body: BrowserMonitorStopRequest;
     headers?: {
@@ -14719,3 +16063,216 @@ export type StopBrowserSessionApiAdminRpaBrowserSessionStopPostResponses = {
 };
 
 export type StopBrowserSessionApiAdminRpaBrowserSessionStopPostResponse = StopBrowserSessionApiAdminRpaBrowserSessionStopPostResponses[keyof StopBrowserSessionApiAdminRpaBrowserSessionStopPostResponses];
+
+export type ReadPermissionQuotasApiAdminRpaPermissionLevelsGetData = {
+    body?: never;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/admin/rpa/permission/levels';
+};
+
+export type ReadPermissionQuotasApiAdminRpaPermissionLevelsGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ReadPermissionQuotasApiAdminRpaPermissionLevelsGetError = ReadPermissionQuotasApiAdminRpaPermissionLevelsGetErrors[keyof ReadPermissionQuotasApiAdminRpaPermissionLevelsGetErrors];
+
+export type ReadPermissionQuotasApiAdminRpaPermissionLevelsGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponsePermissionQuotaResp;
+};
+
+export type ReadPermissionQuotasApiAdminRpaPermissionLevelsGetResponse = ReadPermissionQuotasApiAdminRpaPermissionLevelsGetResponses[keyof ReadPermissionQuotasApiAdminRpaPermissionLevelsGetResponses];
+
+export type UpdatePermissionQuotasApiAdminRpaPermissionUpdatePostData = {
+    body: PermissionQuotaUpdateReq;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/admin/rpa/permission/update';
+};
+
+export type UpdatePermissionQuotasApiAdminRpaPermissionUpdatePostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type UpdatePermissionQuotasApiAdminRpaPermissionUpdatePostError = UpdatePermissionQuotasApiAdminRpaPermissionUpdatePostErrors[keyof UpdatePermissionQuotasApiAdminRpaPermissionUpdatePostErrors];
+
+export type UpdatePermissionQuotasApiAdminRpaPermissionUpdatePostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponsePermissionQuotaResp;
+};
+
+export type UpdatePermissionQuotasApiAdminRpaPermissionUpdatePostResponse = UpdatePermissionQuotasApiAdminRpaPermissionUpdatePostResponses[keyof UpdatePermissionQuotasApiAdminRpaPermissionUpdatePostResponses];
+
+export type ResetPermissionQuotasApiAdminRpaPermissionResetPostData = {
+    body?: never;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/admin/rpa/permission/reset';
+};
+
+export type ResetPermissionQuotasApiAdminRpaPermissionResetPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ResetPermissionQuotasApiAdminRpaPermissionResetPostError = ResetPermissionQuotasApiAdminRpaPermissionResetPostErrors[keyof ResetPermissionQuotasApiAdminRpaPermissionResetPostErrors];
+
+export type ResetPermissionQuotasApiAdminRpaPermissionResetPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponsePermissionQuotaResp;
+};
+
+export type ResetPermissionQuotasApiAdminRpaPermissionResetPostResponse = ResetPermissionQuotasApiAdminRpaPermissionResetPostResponses[keyof ResetPermissionQuotasApiAdminRpaPermissionResetPostResponses];

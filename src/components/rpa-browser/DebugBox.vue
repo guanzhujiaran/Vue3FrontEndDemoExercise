@@ -206,7 +206,7 @@ defineExpose({ droppedItems, getSteps })
                     :action="{ action_id: item.action_type || item.action_id, json_schema: item.json_schema, name: item.name, description: item.description, icon_series: item.icon_series, icon_id: item.icon_id }"
                     :config-params="item.config_params" />
                 </div>
-                <div class="grid grid-cols-2 gap-3 shrink-0 py-1 button-stack">
+                <div class="grid grid-cols-2 gap-3 shrink-0 py-1">
                   <el-button size="small" :icon="VideoPlay" type="primary"
                     :loading="operatingId === item.id && operatingKind === 'execute'" @click="executeAction(index)"
                     class="execute-btn w-20">执行</el-button>

@@ -8,6 +8,35 @@ import type { FeedbackRequest } from '@/api/community/hey-api'
 
 export type { FeedbackRequest }
 
+/**
+ * 反馈来源渠道：各页面把自己的来源传进来，后端据此拼成
+ * 「用户反馈|{source}」推送标题，站长一眼能看出反馈来自哪个页面。
+ *
+ * 抽奖类页面必须使用具体类型（官方抽奖 / 预约抽奖 / 充电抽奖 / 话题抽奖 /
+ * 第三方抽奖），不要统一落到笼统的「抽奖数据页」。
+ */
+export const FEEDBACK_SOURCE = {
+  OFFICIAL_LOTTERY: '官方抽奖',
+  RESERVE_LOTTERY: '预约抽奖',
+  CHARGE_LOTTERY: '充电抽奖',
+  TOPIC_LOTTERY: '话题抽奖',
+  OTHERS_LOT_DYN: '第三方抽奖',
+  LOTTERY_DATA: '抽奖数据页',
+  HOME: '首页',
+  BILI_DYNAMIC: 'B站动态',
+  GENERAL: '通用建议',
+  OTHER: '其他',
+} as const
+
+export type FeedbackSource = (typeof FEEDBACK_SOURCE)[keyof typeof FEEDBACK_SOURCE]
+
+/**
+ * 联系方式最大长度（字符）。
+ * 与后端 app/models/push.py 的 FEEDBACK_CONTACT_MAX_LENGTH 保持一致，
+ * 前端只做体验层拦截，后端才是最终校验。
+ */
+export const FEEDBACK_CONTACT_MAX_LENGTH = 100
+
 /** 与后端 StandardResponse 同构的统一响应 */
 export interface StandardFeedbackResponse {
   code: number

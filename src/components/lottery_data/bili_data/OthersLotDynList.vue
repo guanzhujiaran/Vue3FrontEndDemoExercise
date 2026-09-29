@@ -89,7 +89,11 @@
             </div>
 
             <div class="flex w-full justify-end xl:w-auto">
-              <LotteryDataTableToolbar :refresh_data="refresh_data" v-model:view-mode="viewMode">
+              <LotteryDataTableToolbar
+                :feedback-source="FEEDBACK_SOURCE.OTHERS_LOT_DYN"
+                :refresh_data="refresh_data"
+                v-model:view-mode="viewMode"
+              >
                 <template #submit-button>
                   <SubmitOthersLotDynModal />
                 </template>
@@ -128,7 +132,9 @@ import lotteryDataBaseApi, { type FilterParamMeta } from '@/api/lottery_data/bil
 import { useInject, KeysEnum } from '@/models/base/provide_model.ts'
 import type { UserNavModel } from '@/models/user/user_model.ts'
 import LotteryFilterBar from './LotteryFilterBar.vue'
+import { FEEDBACK_SOURCE } from '@/api/notify/message_feedback'
 import SubmitOthersLotDynModal from './SubmitOthersLotDynModal.vue'
+import { useHydrated } from '@/composables/useHydrated'
 
 const { page_size, lotteryDataProps: lotDataProps, getLotData, extraFilters } = useLotteryData('GetOthersLotDynList')
 
@@ -139,7 +145,11 @@ const statValueStyle = { fontSize: '34px', fontWeight: '800' }
 const statTextValueStyle = { fontSize: '16px', fontWeight: '600' }
 
 const biliUser = useInject(KeysEnum.BiliUser) as Ref<UserNavModel>
-const isLoggedIn = computed(() => !!biliUser.value.uid)
+// 登录态取自 persist(localStorage)，SSR/预渲染阶段恒为空；用 isHydrated 让两端首帧都按
+// 「未登录」渲染，挂载后再切到真实登录态，避免 OthersLotDynLoginRequired 与正文互换
+// 导致的水合 node mismatch。
+const isHydrated = useHydrated()
+const isLoggedIn = computed(() => isHydrated.value && !!biliUser.value.uid)
 
 // 筛选参数元数据
 const filterParams = ref<FilterParamMeta[]>([])

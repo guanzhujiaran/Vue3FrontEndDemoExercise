@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { IMG_REFERRER_POLICY } from '@/utils/PageOpen/linkPolicy'
 import type { BaseRankItem } from '@/models/compo/ranking/Ranking.ts'
 import { BiliImg } from '@/assets/img/BiliImg.ts'
 import UserAvatarBox from '@/components/CommonCompo/Bili-User-Compo/UserAvatarBox.vue'
@@ -27,7 +28,7 @@ const emit = defineEmits<{
             ? BiliImg.ranking.background.two
             : BiliImg.ranking.background.three
       "
-      referrerpolicy="no-referrer"
+      :referrerpolicy="IMG_REFERRER_POLICY"
       alt=""
     />
     <div

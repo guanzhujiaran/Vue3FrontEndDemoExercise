@@ -5,6 +5,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { SITE_LOCALE, SITE_TIME_ZONE } from '@/utils/dateFormat.ts'
 
 const { locale } = useI18n()
 const props = defineProps<{ time?: string | number | null }>()
@@ -45,7 +46,11 @@ function toDate(value?: string | number | null): Date | null {
 function format(value?: string | number | null): string {
   const d = toDate(value)
   if (!d) return '-'
-  return d.toLocaleString(localeMap[locale.value] ?? 'zh-CN', { hour12: false })
+  // 补上固定时区：locale 已随界面语言变化，但时区不显式指定仍会随运行环境漂移
+  return d.toLocaleString(localeMap[locale.value] ?? SITE_LOCALE, {
+    timeZone: SITE_TIME_ZONE,
+    hour12: false
+  })
 }
 
 const display = computed(() => format(props.time))

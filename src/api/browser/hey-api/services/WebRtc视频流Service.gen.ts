@@ -3,7 +3,7 @@
 import type { RequestResult } from '../client';
 import { client } from '../client.gen';
 import type { Options } from '../sdk.gen';
-import type { AddIceCandidateApiV1RpaBrowserControlWebrtcIceCandidatePostData, AddIceCandidateApiV1RpaBrowserControlWebrtcIceCandidatePostErrors, AddIceCandidateApiV1RpaBrowserControlWebrtcIceCandidatePostResponses, ClosePageApiV1RpaBrowserControlPagesClosePostData, ClosePageApiV1RpaBrowserControlPagesClosePostErrors, ClosePageApiV1RpaBrowserControlPagesClosePostResponses, CloseWebrtcStreamApiV1RpaBrowserControlWebrtcClosePostData, CloseWebrtcStreamApiV1RpaBrowserControlWebrtcClosePostErrors, CloseWebrtcStreamApiV1RpaBrowserControlWebrtcClosePostResponses, CreateWebrtcOfferApiV1RpaBrowserControlWebrtcOfferPostData, CreateWebrtcOfferApiV1RpaBrowserControlWebrtcOfferPostErrors, CreateWebrtcOfferApiV1RpaBrowserControlWebrtcOfferPostResponses, GetPagesListApiV1RpaBrowserControlPagesListPostData, GetPagesListApiV1RpaBrowserControlPagesListPostErrors, GetPagesListApiV1RpaBrowserControlPagesListPostResponses, GetWebrtcStatusApiV1RpaBrowserControlWebrtcStatusPostData, GetWebrtcStatusApiV1RpaBrowserControlWebrtcStatusPostErrors, GetWebrtcStatusApiV1RpaBrowserControlWebrtcStatusPostResponses, HandleWebrtcAnswerApiV1RpaBrowserControlWebrtcAnswerPostData, HandleWebrtcAnswerApiV1RpaBrowserControlWebrtcAnswerPostErrors, HandleWebrtcAnswerApiV1RpaBrowserControlWebrtcAnswerPostResponses, SwitchPageApiV1RpaBrowserControlPagesSwitchPostData, SwitchPageApiV1RpaBrowserControlPagesSwitchPostErrors, SwitchPageApiV1RpaBrowserControlPagesSwitchPostResponses } from '../types.gen';
+import type { AddIceCandidateApiV1RpaBrowserControlWebrtcIceCandidatePostData, AddIceCandidateApiV1RpaBrowserControlWebrtcIceCandidatePostErrors, AddIceCandidateApiV1RpaBrowserControlWebrtcIceCandidatePostResponses, AddIceCandidatesApiV1RpaBrowserControlWebrtcIceCandidatesPostData, AddIceCandidatesApiV1RpaBrowserControlWebrtcIceCandidatesPostErrors, AddIceCandidatesApiV1RpaBrowserControlWebrtcIceCandidatesPostResponses, ClosePageApiV1RpaBrowserControlPagesClosePostData, ClosePageApiV1RpaBrowserControlPagesClosePostErrors, ClosePageApiV1RpaBrowserControlPagesClosePostResponses, CloseWebrtcStreamApiV1RpaBrowserControlWebrtcClosePostData, CloseWebrtcStreamApiV1RpaBrowserControlWebrtcClosePostErrors, CloseWebrtcStreamApiV1RpaBrowserControlWebrtcClosePostResponses, CreateWebrtcOfferApiV1RpaBrowserControlWebrtcOfferPostData, CreateWebrtcOfferApiV1RpaBrowserControlWebrtcOfferPostErrors, CreateWebrtcOfferApiV1RpaBrowserControlWebrtcOfferPostResponses, GetPagesListApiV1RpaBrowserControlPagesListPostData, GetPagesListApiV1RpaBrowserControlPagesListPostErrors, GetPagesListApiV1RpaBrowserControlPagesListPostResponses, GetWebrtcStatusApiV1RpaBrowserControlWebrtcStatusPostData, GetWebrtcStatusApiV1RpaBrowserControlWebrtcStatusPostErrors, GetWebrtcStatusApiV1RpaBrowserControlWebrtcStatusPostResponses, HandleWebrtcAnswerApiV1RpaBrowserControlWebrtcAnswerPostData, HandleWebrtcAnswerApiV1RpaBrowserControlWebrtcAnswerPostErrors, HandleWebrtcAnswerApiV1RpaBrowserControlWebrtcAnswerPostResponses, ReportWebrtcVisibilityApiV1RpaBrowserControlWebrtcVisibilityPostData, ReportWebrtcVisibilityApiV1RpaBrowserControlWebrtcVisibilityPostErrors, ReportWebrtcVisibilityApiV1RpaBrowserControlWebrtcVisibilityPostResponses, SetWebrtcPausedApiV1RpaBrowserControlWebrtcPausePostData, SetWebrtcPausedApiV1RpaBrowserControlWebrtcPausePostErrors, SetWebrtcPausedApiV1RpaBrowserControlWebrtcPausePostResponses, SetWebrtcQualityApiV1RpaBrowserControlWebrtcQualityPostData, SetWebrtcQualityApiV1RpaBrowserControlWebrtcQualityPostErrors, SetWebrtcQualityApiV1RpaBrowserControlWebrtcQualityPostResponses, SwitchPageApiV1RpaBrowserControlPagesSwitchPostData, SwitchPageApiV1RpaBrowserControlPagesSwitchPostErrors, SwitchPageApiV1RpaBrowserControlPagesSwitchPostResponses, WebrtcViewerHeartbeatApiV1RpaBrowserControlWebrtcHeartbeatPostData, WebrtcViewerHeartbeatApiV1RpaBrowserControlWebrtcHeartbeatPostErrors, WebrtcViewerHeartbeatApiV1RpaBrowserControlWebrtcHeartbeatPostResponses } from '../types.gen';
 
 export class WebRtc视频流Service {
     /**
@@ -82,8 +82,11 @@ export class WebRtc视频流Service {
     /**
      * 创建 WebRTC Offer
      *
-     * 创建 WebRTC Offer 以开始视频流传输。
-     * 会话不存在时自动创建，WebRTC 管理器已内建无需手动启用。
+     * 为指定观看者创建 WebRTC Offer 以开始视频流传输。
+     *
+     * **同一会话可并发多个观看者**（各自一条连接），互不淘汰。
+     * 同一 `viewer_id` 再次调用视为重连：会先关闭自己的旧连接再新建。
+     * 会话不存在时自动创建。
      */
     public static createWebrtcOfferApiV1RpaBrowserControlWebrtcOfferPost<ThrowOnError extends boolean = false>(options: Options<CreateWebrtcOfferApiV1RpaBrowserControlWebrtcOfferPostData, ThrowOnError>): RequestResult<CreateWebrtcOfferApiV1RpaBrowserControlWebrtcOfferPostResponses, CreateWebrtcOfferApiV1RpaBrowserControlWebrtcOfferPostErrors, ThrowOnError, 'data'> {
         return (options.client ?? client).post<CreateWebrtcOfferApiV1RpaBrowserControlWebrtcOfferPostResponses, CreateWebrtcOfferApiV1RpaBrowserControlWebrtcOfferPostErrors, ThrowOnError, 'data'>({
@@ -100,7 +103,7 @@ export class WebRtc视频流Service {
     /**
      * 处理 WebRTC Answer
      *
-     * 处理客户端返回的 SDP Answer（O(1) 流查找）
+     * 处理客户端返回的 SDP Answer（O(1) 查找 + 归属校验）
      */
     public static handleWebrtcAnswerApiV1RpaBrowserControlWebrtcAnswerPost<ThrowOnError extends boolean = false>(options: Options<HandleWebrtcAnswerApiV1RpaBrowserControlWebrtcAnswerPostData, ThrowOnError>): RequestResult<HandleWebrtcAnswerApiV1RpaBrowserControlWebrtcAnswerPostResponses, HandleWebrtcAnswerApiV1RpaBrowserControlWebrtcAnswerPostErrors, ThrowOnError, 'data'> {
         return (options.client ?? client).post<HandleWebrtcAnswerApiV1RpaBrowserControlWebrtcAnswerPostResponses, HandleWebrtcAnswerApiV1RpaBrowserControlWebrtcAnswerPostErrors, ThrowOnError, 'data'>({
@@ -117,7 +120,7 @@ export class WebRtc视频流Service {
     /**
      * 添加 ICE Candidate
      *
-     * 添加 ICE Candidate（O(1) 流查找）
+     * 添加 ICE Candidate（O(1) 查找 + 归属校验）
      */
     public static addIceCandidateApiV1RpaBrowserControlWebrtcIceCandidatePost<ThrowOnError extends boolean = false>(options: Options<AddIceCandidateApiV1RpaBrowserControlWebrtcIceCandidatePostData, ThrowOnError>): RequestResult<AddIceCandidateApiV1RpaBrowserControlWebrtcIceCandidatePostResponses, AddIceCandidateApiV1RpaBrowserControlWebrtcIceCandidatePostErrors, ThrowOnError, 'data'> {
         return (options.client ?? client).post<AddIceCandidateApiV1RpaBrowserControlWebrtcIceCandidatePostResponses, AddIceCandidateApiV1RpaBrowserControlWebrtcIceCandidatePostErrors, ThrowOnError, 'data'>({
@@ -132,9 +135,34 @@ export class WebRtc视频流Service {
     }
     
     /**
+     * 批量添加 ICE Candidate
+     *
+     * 批量添加 ICE Candidate（计划书 §10.9）。
+     *
+     * 建连期 Chrome 会陆续产出 3~6 个候选，逐个 POST 就是同量级的额外请求；
+     * 前端攒 200ms 批量上报，建连期请求量降一个量级。
+     * 单个候选失败（如无法解析的 mDNS host 候选）不影响批次内其他候选，
+     * 与单候选端点语义一致：被跳过的候选已由 ViewerStream 记 WARNING 留痕。
+     *
+     * Returns:
+     * data: {total, added, skipped}
+     */
+    public static addIceCandidatesApiV1RpaBrowserControlWebrtcIceCandidatesPost<ThrowOnError extends boolean = false>(options: Options<AddIceCandidatesApiV1RpaBrowserControlWebrtcIceCandidatesPostData, ThrowOnError>): RequestResult<AddIceCandidatesApiV1RpaBrowserControlWebrtcIceCandidatesPostResponses, AddIceCandidatesApiV1RpaBrowserControlWebrtcIceCandidatesPostErrors, ThrowOnError, 'data'> {
+        return (options.client ?? client).post<AddIceCandidatesApiV1RpaBrowserControlWebrtcIceCandidatesPostResponses, AddIceCandidatesApiV1RpaBrowserControlWebrtcIceCandidatesPostErrors, ThrowOnError, 'data'>({
+            responseStyle: 'data',
+            url: '/api/v1/rpa/browser/control/webrtc/ice-candidates',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    /**
      * 关闭 WebRTC 流
      *
-     * 关闭指定的 WebRTC 视频流（O(1) 查找 + 自动清理双索引）
+     * 关闭**本观看者**的 WebRTC 视频流（不影响其他观看者）
      */
     public static closeWebrtcStreamApiV1RpaBrowserControlWebrtcClosePost<ThrowOnError extends boolean = false>(options: Options<CloseWebrtcStreamApiV1RpaBrowserControlWebrtcClosePostData, ThrowOnError>): RequestResult<CloseWebrtcStreamApiV1RpaBrowserControlWebrtcClosePostResponses, CloseWebrtcStreamApiV1RpaBrowserControlWebrtcClosePostErrors, ThrowOnError, 'data'> {
         return (options.client ?? client).post<CloseWebrtcStreamApiV1RpaBrowserControlWebrtcClosePostResponses, CloseWebrtcStreamApiV1RpaBrowserControlWebrtcClosePostErrors, ThrowOnError, 'data'>({
@@ -151,13 +179,101 @@ export class WebRtc视频流Service {
     /**
      * 获取 WebRTC 流状态
      *
-     * 获取当前浏览器会话的 WebRTC 流状态信息
+     * 获取当前浏览器会话的 WebRTC 流状态信息（只读，**不保活**）
      */
     public static getWebrtcStatusApiV1RpaBrowserControlWebrtcStatusPost<ThrowOnError extends boolean = false>(options: Options<GetWebrtcStatusApiV1RpaBrowserControlWebrtcStatusPostData, ThrowOnError>): RequestResult<GetWebrtcStatusApiV1RpaBrowserControlWebrtcStatusPostResponses, GetWebrtcStatusApiV1RpaBrowserControlWebrtcStatusPostErrors, ThrowOnError, 'data'> {
         return (options.client ?? client).post<GetWebrtcStatusApiV1RpaBrowserControlWebrtcStatusPostResponses, GetWebrtcStatusApiV1RpaBrowserControlWebrtcStatusPostErrors, ThrowOnError, 'data'>({
             responseStyle: 'data',
             url: '/api/v1/rpa/browser/control/webrtc/status',
             ...options
+        });
+    }
+    
+    /**
+     * 设置 WebRTC 清晰度档位
+     *
+     * 设置**本观看者**的清晰度档位（原画 / 超清 / 高清 / 标清 / 流畅）
+     *
+     * 档位切换通过「帧源按最高档采集 + 本端轨道缩放」生效，**不重建 WebRTC 连接**，
+     * 前端无需重新 offer/answer。
+     *
+     * 实际生效档位由「本端用户档位」与「本端页面可见性」取最省决定（见计划书 §5.18），
+     * 因此响应里的 effective_level 可能低于请求的 level —— 这是预期行为，不是失败。
+     */
+    public static setWebrtcQualityApiV1RpaBrowserControlWebrtcQualityPost<ThrowOnError extends boolean = false>(options: Options<SetWebrtcQualityApiV1RpaBrowserControlWebrtcQualityPostData, ThrowOnError>): RequestResult<SetWebrtcQualityApiV1RpaBrowserControlWebrtcQualityPostResponses, SetWebrtcQualityApiV1RpaBrowserControlWebrtcQualityPostErrors, ThrowOnError, 'data'> {
+        return (options.client ?? client).post<SetWebrtcQualityApiV1RpaBrowserControlWebrtcQualityPostResponses, SetWebrtcQualityApiV1RpaBrowserControlWebrtcQualityPostErrors, ThrowOnError, 'data'>({
+            responseStyle: 'data',
+            url: '/api/v1/rpa/browser/control/webrtc/quality',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    /**
+     * 上报页面可见性（自动降载）
+     *
+     * 上报**本观看者**的页面可见性，供前端切后台 / 组件被遮挡时自动降档
+     *
+     * `visible=false` 本端降到最省档、`true` 回落到本端用户档位（见计划书 §5.18）。
+     * 只影响本端，不影响其他观看者。
+     */
+    public static reportWebrtcVisibilityApiV1RpaBrowserControlWebrtcVisibilityPost<ThrowOnError extends boolean = false>(options: Options<ReportWebrtcVisibilityApiV1RpaBrowserControlWebrtcVisibilityPostData, ThrowOnError>): RequestResult<ReportWebrtcVisibilityApiV1RpaBrowserControlWebrtcVisibilityPostResponses, ReportWebrtcVisibilityApiV1RpaBrowserControlWebrtcVisibilityPostErrors, ThrowOnError, 'data'> {
+        return (options.client ?? client).post<ReportWebrtcVisibilityApiV1RpaBrowserControlWebrtcVisibilityPostResponses, ReportWebrtcVisibilityApiV1RpaBrowserControlWebrtcVisibilityPostErrors, ThrowOnError, 'data'>({
+            responseStyle: 'data',
+            url: '/api/v1/rpa/browser/control/webrtc/visibility',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    /**
+     * 暂停 / 恢复 WebRTC 视频发送
+     *
+     * 暂停 / 恢复**本观看者**的视频发送（见计划书 §5.18）
+     *
+     * 暂停时本端轨道停止取帧，画面停留在最后一帧；**不影响其他观看者**。
+     * 当所有观看者都暂停时，后端才真正停止 screencast（浏览器侧零编码）。
+     * **不重建 WebRTC 连接**，恢复立即生效、无需重新协商。
+     */
+    public static setWebrtcPausedApiV1RpaBrowserControlWebrtcPausePost<ThrowOnError extends boolean = false>(options: Options<SetWebrtcPausedApiV1RpaBrowserControlWebrtcPausePostData, ThrowOnError>): RequestResult<SetWebrtcPausedApiV1RpaBrowserControlWebrtcPausePostResponses, SetWebrtcPausedApiV1RpaBrowserControlWebrtcPausePostErrors, ThrowOnError, 'data'> {
+        return (options.client ?? client).post<SetWebrtcPausedApiV1RpaBrowserControlWebrtcPausePostResponses, SetWebrtcPausedApiV1RpaBrowserControlWebrtcPausePostErrors, ThrowOnError, 'data'>({
+            responseStyle: 'data',
+            url: '/api/v1/rpa/browser/control/webrtc/pause',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    /**
+     * 观看者保活心跳
+     *
+     * 观看者保活（**已非必需**，保留用于 SDK 兼容与手动兜底）。
+     *
+     * 常规链路前端不再调用：观看者与会话的活性改由 **WebRTC 连接状态**判定
+     * （ICE/DTLS 自带保活，见计划书 §10.7）—— 连接在就一直在，暂停中的观看者
+     * 也不会被误回收，监管场景（不订阅 SSE）同样被覆盖。
+     *
+     * `/webrtc/status` 仍是只读的（不刷新活跃时间），不会打穿闲置回收。
+     * 观看者已被回收时返回业务失败码，客户端据此重新建流（新 viewer_id 再 offer）。
+     */
+    public static webrtcViewerHeartbeatApiV1RpaBrowserControlWebrtcHeartbeatPost<ThrowOnError extends boolean = false>(options: Options<WebrtcViewerHeartbeatApiV1RpaBrowserControlWebrtcHeartbeatPostData, ThrowOnError>): RequestResult<WebrtcViewerHeartbeatApiV1RpaBrowserControlWebrtcHeartbeatPostResponses, WebrtcViewerHeartbeatApiV1RpaBrowserControlWebrtcHeartbeatPostErrors, ThrowOnError, 'data'> {
+        return (options.client ?? client).post<WebrtcViewerHeartbeatApiV1RpaBrowserControlWebrtcHeartbeatPostResponses, WebrtcViewerHeartbeatApiV1RpaBrowserControlWebrtcHeartbeatPostErrors, ThrowOnError, 'data'>({
+            responseStyle: 'data',
+            url: '/api/v1/rpa/browser/control/webrtc/heartbeat',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
         });
     }
 }

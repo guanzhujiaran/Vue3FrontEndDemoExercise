@@ -34,6 +34,7 @@ import BiliErrorRouteTo from '@/components/CommonCompo/Bili-Feedback-Compo/BiliE
 import BiliSideNavLayout from '@/components/CommonCompo/Bili-Container-Compo/BiliSideNavLayout.vue'
 import { BiliErrorRouteToTxt } from '@/assets/text/BiliErrorTxt.ts'
 import { useI18n } from 'vue-i18n'
+import { useHydrated } from '@/composables/useHydrated'
 
 defineOptions({ name: 'MessageLayout' })
 
@@ -41,7 +42,11 @@ const { t } = useI18n()
 const unreadStore = useMessageUnreadStore()
 
 const biliUser = useInject(KeysEnum.BiliUser) as Ref<UserNavModel>
-const isLoggedIn = computed(() => !!biliUser.value.uid)
+// 登录态取自 persist(localStorage)，SSR/预渲染阶段恒为空；用 isHydrated 让两端首帧都按
+// 「未登录」渲染，挂载后再切到真实登录态，避免 BiliErrorRouteTo / BiliSideNavLayout
+// 整体互换导致的 hydration node mismatch（Vue 在同 tick 内完成更新，不会闪屏）。
+const isHydrated = useHydrated()
+const isLoggedIn = computed(() => isHydrated.value && !!biliUser.value.uid)
 
 // keep-alive 缓存的子页面组件名（会话/回复/@/赞/通知/设置）。
 // 聊天页 DmListView 按 talkerMid 动态切换、管理后台页各有独立状态，均不缓存。

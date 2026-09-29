@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { IMG_REFERRER_POLICY } from '@/utils/PageOpen/linkPolicy'
 import { RouterView, useRoute, useRouter } from 'vue-router'
 import SponsorNotification from '@/components/sponsor/sponsor-notification.vue'
 import { onMounted, onUnmounted, provide, ref, computed } from 'vue'
@@ -35,13 +36,22 @@ const routeViewKey = computed(() => {
   return parent && route.matched.length > 1 ? parent.path : route.path
 })
 
-const isInit = ref(false)
+/**
+ * 是否渲染主布局骨架。
+ *
+ * 初值必须是 `true`：SSR / 预渲染阶段若不渲染，静态 HTML 就是空壳（SEO 与首屏都退化）。
+ * 副作用（登录态检查、主题初始化）仍在 onMounted 里执行，客户端挂载后按真实状态更新，
+ * 因此两端首屏结构一致，不存在水合不匹配。
+ */
+const isInit = ref(true)
+/** 客户端是否已完成挂载（登录态检查 / 主题初始化等都在挂载后执行） */
+const isMounted = ref(false)
 const themeStore = useThemeStore()
 const userPrefStore = useUserPrefStore()
 const loginModalRef = ref<InstanceType<typeof LoginModal> | null>(null)
 const router = useRouter()
 
-// 计算背景图片URL
+// 计算背景图片URL（themeStore.isDark 已做水合安全处理：挂载前恒为浅色，与服务端一致）
 const backgroundUrl = computed(() => {
   return themeStore.isDark ? BiliImg.background.home.dark : BiliImg.background.home.light
 })
@@ -88,9 +98,13 @@ onMounted(() => {
   }
   hasCheckedLogin = true
   isInit.value = true
+  isMounted.value = true
 
   // 初始化主题
   themeStore.initTheme()
+  // 主题已应用到 DOM，放开对外 isDark / themeEffectString
+  // （水合期间固定为「浅色」以保证与服务端首帧一致，见 stores/theme.ts）
+  themeStore.markHydrated()
 
   // 应用用户偏好设置
   userPrefStore.applyThemes()
@@ -122,7 +136,14 @@ const screen_size = {
   xl: 1680,
   xxl: 2060
 }
-const window_height = ref(window.innerHeight)
+/**
+ * 滚动容器高度。
+ *
+ * 初值固定 `0`，**不**用 `window.innerHeight`：服务端没有 window、客户端首帧却有，
+ * 两端渲染出的 style 不同会触发 hydration mismatch（Nuxt 会自动修正，但控制台报警告且首屏会闪）。
+ * 统一从 0 起步，挂载后由 `getWindowHeight()`（onMounted 内）量出真实值。
+ */
+const window_height = ref(0)
 
 // 记录 el-scrollbar 的滚动位置，传给 ScrollButtons 控制按钮显隐
 const scrollTop = ref(0)
@@ -132,12 +153,14 @@ const onScrollbarScroll = (payload: { scrollTop: number; scrollLeft: number }) =
 
 // 参照媒体查询断点库：t=smaller(小于上限), n=between(介于区间), r=greater(大于等于下限)
 type ScreenKey = keyof typeof screen_size
+/** `window.outerWidth` 的 SSR 安全读取：预渲染时按 0 处理（断点判定退化为不命中） */
+const outerWidthValue = () => (typeof window === 'undefined' ? 0 : window.outerWidth)
 const smaller = (key: ScreenKey) =>
-  computed(() => outerWidth < screen_size[key])
+  computed(() => outerWidthValue() < screen_size[key])
 const between = (min: ScreenKey, max: ScreenKey) =>
-  computed(() => outerWidth >= screen_size[min] && outerWidth < screen_size[max])
+  computed(() => outerWidthValue() >= screen_size[min] && outerWidthValue() < screen_size[max])
 const greater = (key: ScreenKey) =>
-  computed(() => outerWidth >= screen_size[key])
+  computed(() => outerWidthValue() >= screen_size[key])
 
 // 维持原有行为：smallest 用于 smallest-width，is_lg 用于 xs_sm-width
 const smallest = smaller('xxs')
@@ -164,6 +187,9 @@ onUnmounted(() => {
 // 国际化：语言切换同步 Element Plus locale
 const localeStore = useLocaleStore()
 localeStore.init()
+// 语言：首帧必须与服务端一致（zh-CN），挂载后再按浏览器语言切换，
+// 否则英文浏览器会拿中文 SSR 文案做对比 → hydration mismatch（详见 stores/locale.ts）
+onMounted(() => localeStore.applyBrowserLocale())
 </script>
 
 <template>
@@ -175,11 +201,13 @@ localeStore.init()
   <template v-else>
     <!-- 背景图片 -->
     <img class="bg-img pointer-events-none fixed inset-0 z-[-9999] h-full w-full object-cover" :src="backgroundUrl"
-      referrerpolicy="no-referrer" alt="Background Image" />
+      :referrerpolicy="IMG_REFERRER_POLICY" alt="Background Image" />
     <el-config-provider :locale="localeStore.elLocale">
       <el-scrollbar class="smallest-width" view-class="min-h-full flex flex-col" v-model:height="window_height"
         @scroll="onScrollbarScroll">
-        <div class="site-layout safe-area-padding w-full flex-1 flex flex-col">
+        <!-- 安全区内边距直接落在元素上（preflight 已统一 box-sizing: border-box，无需重复声明） -->
+        <div
+          class="site-layout w-full flex-1 flex flex-col pt-[env(safe-area-inset-top,0px)] pr-[env(safe-area-inset-right,0px)] pb-[env(safe-area-inset-bottom,0px)] pl-[env(safe-area-inset-left,0px)]">
           <el-container v-if="isInit" id="i_cecream">
             <el-header class="bili-header">
               <HeaderBarView />
@@ -210,7 +238,16 @@ localeStore.init()
           </el-container>
           <SponsorNotification />
           <GlobalLoadingMask />
-          <LoginModal ref="loginModalRef" />
+          <!--
+            用 <ClientOnly> 而不是 v-if="isMounted"：
+            el-dialog 等在 SSR 下会访问 window，两者都能规避；但 v-if 会在 hydrate 期间把状态
+            从 false 翻到 true，客户端 DOM 立刻多出 el-overlay / el-overlay-dialog，触发
+            「Hydration completed but contains mismatches」。ClientOnly 在服务端与客户端首次渲染
+            都输出空，挂载后才切换，两端首帧结构完全一致。
+          -->
+          <ClientOnly>
+            <LoginModal ref="loginModalRef" />
+          </ClientOnly>
         </div>
         <ScrollButtons :scroll-top="scrollTop" :top-threshold="100" :bottom-threshold="100" />
       </el-scrollbar>

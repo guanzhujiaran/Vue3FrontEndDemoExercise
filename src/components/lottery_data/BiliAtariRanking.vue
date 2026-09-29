@@ -4,6 +4,7 @@
     score_prefix="中奖"
     score_suffix="次"
     :load_func="load_func"
+    ssr_key="lot:atari-ranking:firstPage"
     :ranking_partitions="ranking_partitions"
     v-model:is-error="isError"
     v-model:sync-ts="syncTs"

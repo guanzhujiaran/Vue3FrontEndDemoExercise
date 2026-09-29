@@ -5,7 +5,7 @@ import TableV2FixableHeaderCell from '@/components/CommonCompo/TableV2Compo/Tabl
 import { useTableV2FixedColumns } from '@/utils/useTableV2FixedColumns'
 import type { AnyLotteryData, NormalizedLottery } from '@/models/api/lottery/lottery_card'
 import { gotoBiliUserSpace } from '@/utils/PageOpen/BiliJump';
-import { LINK_REL, LINK_REFERRER_POLICY } from '@/utils/PageOpen/linkPolicy'
+import { IMG_REFERRER_POLICY, LINK_REL, LINK_REFERRER_POLICY } from '@/utils/PageOpen/linkPolicy'
 import { handleLotteryLinkClick, setLotteryParticipation, isLotteryParticipated } from '@/utils/lotteryParticipation'
 import { normalizeLotteryData, formatTimestamp } from '@/utils/lotteryNormalization'
 import LotteryActionsDropdown from '@/components/lottery_data/bili_data/LotteryActionsDropdown.vue'
@@ -167,7 +167,7 @@ const prizeIndexOf = (columnKey: PropertyKey | undefined) =>
                     :src="rowData.prizes[prizeIndexOf(column.key)].img"
                     fit="contain"
                     class="h-[120px] w-[120px]"
-                    referrerpolicy="no-referrer"
+                    :referrerpolicy="IMG_REFERRER_POLICY"
                   />
                 </el-popover>
                 <span v-else class="prize-name">
@@ -261,7 +261,7 @@ const prizeIndexOf = (columnKey: PropertyKey | undefined) =>
         </el-table-v2>
       </template>
     </el-auto-resizer>
-    <el-image-viewer v-if="imageViewerVisible" :url-list="[currentImage]" @close="imageViewerVisible = false" referrerpolicy="no-referrer" />
+    <el-image-viewer v-if="imageViewerVisible" :url-list="[currentImage]" @close="imageViewerVisible = false" :referrerpolicy="IMG_REFERRER_POLICY" />
 
     <!-- 转发抽奖到动态：复用统一动态编辑器（attach 资源模式） -->
     <MomentPublishForm
