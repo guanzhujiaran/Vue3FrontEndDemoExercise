@@ -66,6 +66,7 @@ export enum RouteName {
   RPA_BROWSER_ACTION_MANAGEMENT = '动作管理',
   RPA_BROWSER_WORKFLOW_MANAGEMENT = '工作流管理',
   RPA_BROWSER_ACTION_LOG = '操作日志',
+  RPA_BROWSER_MEMBERSHIP = '时长权益',
   RPA_BROWSER_ADMIN = 'RPA管理后台',
   // 管理后台（独立模块，不与服务类界面混放）
   ADMIN = '管理后台',
@@ -114,7 +115,11 @@ export enum RouteName {
 
   // 404 页面
   NOT_FOUND = 'NotFound',
-  CHANGE_LOG = '更新日志'
+  CHANGE_LOG = '更新日志',
+
+  // 法律与合规页面
+  PRIVACY_POLICY = '隐私政策',
+  DISCLAIMER = '免责声明'
 }
 
 export type { CustomRouteRecordRaw, CustomRouteMeta }

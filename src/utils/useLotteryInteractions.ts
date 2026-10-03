@@ -17,7 +17,7 @@
  */
 
 import { reactive, ref, onMounted } from 'vue'
-import { fetchInteractionStatus, InteractionBizTypeEnum, thumbMoment } from '@/api/notify/moment-api'
+import { fetchInteractionStatus, isNumericBizId, InteractionBizTypeEnum, thumbMoment } from '@/api/notify/moment-api'
 import type { InteractionStatusItem } from '@/api/notify/moment-api'
 
 /** 一次互动的目标资源（bizType + bizId 唯一确定内容） */
@@ -36,7 +36,8 @@ export function useLotteryInteractions(
   const keyOf = (bizType: InteractionBizTypeEnum, bizId: string) => `${bizType}:${bizId}`
 
   async function loadAll() {
-    const targets = (getTargets() ?? []).filter((t) => t?.bizId)
+    // 非数字 ID（旧数据兜底 / 未知类型）进批量接口会被后端整批 400，必须过滤
+    const targets = (getTargets() ?? []).filter((t) => isNumericBizId(t?.bizId))
     if (!targets.length) return
     // 按 bizType 分组，每组一次批量接口
     const groups = new Map<InteractionBizTypeEnum, string[]>()

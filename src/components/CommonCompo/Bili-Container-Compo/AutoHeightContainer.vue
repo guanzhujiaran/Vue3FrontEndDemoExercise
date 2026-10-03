@@ -8,53 +8,61 @@ import { onBeforeUnmount, onMounted, ref } from 'vue'
  * flex 撑开，页面内容一旦变化高度就会跟着变，导致内部页面里的 h-full / flex-1 拿不到确定高度
  * （历史做法是在各页面写 min-h-[70vh] 之类的兜底）。
  *
- * 因此统一在这里按「窗口高度 - 顶部导航高度 - 偏移量」算出一个确定高度并下沉到容器上，
- * 让内部页面可以按 100% 高度自行布局与滚动（侧边导航布局 BiliSideNavLayout、RPA 浏览器布局
- * RpaBrowserLayout 等共用同一套测量口径，避免各处再抄一遍魔法数字）。
+ * 高度公式（v2，按自身位置测量）：
+ *     height = window.innerHeight - 自身 getBoundingClientRect().top - bottomOffset
  *
- * 高度公式：window.innerHeight - .bili-header 高度 - offset
+ * 相比 v1（窗口 - header 高度 - 固定 offset）：
+ * - 自身 top 已天然包含顶部导航、上方兄弟元素（如 RpaMobileTip 提示条）、
+ *   el-main 的 margin/padding 等全部占位，不依赖 headerSelector 与魔法数字，
+ *   上方内容增减时高度自动跟随，不会在 main 底部留下空隙；
+ * - bottomOffset 只表达「自身底部到视口底部」希望保留的留白（默认 16 = el-main 的 pb-4）。
  */
 
 interface Props {
-  /** 追加扣减的偏移量（px），默认 28 = el-main 的 mt-3(12px) + pb-4(16px) */
-  offset?: number
+  /** 自身底部到视口底部保留的留白（px），默认 16 = el-main 的 pb-4 */
+  bottomOffset?: number
   /** 高度下限保护（px），避免窗口过矮时算出过小或负值 */
   minHeight?: number
-  /** 顶部导航选择器，用于扣减其高度 */
-  headerSelector?: string
-  /** 顶部导航测量失败时的兜底高度（px） */
-  fallbackHeaderHeight?: number
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  offset: 28,
+  bottomOffset: 16,
   minHeight: 300,
-  headerSelector: '.bili-header',
-  fallbackHeaderHeight: 60,
 })
+
+const rootEl = ref<HTMLElement | null>(null)
 
 // 首帧先用 100%（跟随父级 flex 撑出的高度），挂载后再换算成精确的像素高度，避免布局跳变
 const layoutHeight = ref('100%')
 
 function calcLayoutHeight() {
-  const headerEl = document.querySelector<HTMLElement>(props.headerSelector)
-  const headerHeight = headerEl?.getBoundingClientRect().height ?? props.fallbackHeaderHeight
-  const availableHeight = window.innerHeight - headerHeight - props.offset
+  const el = rootEl.value
+  if (!el || typeof window === 'undefined') return
+  const top = el.getBoundingClientRect().top
+  const availableHeight = window.innerHeight - top - props.bottomOffset
   layoutHeight.value = `${Math.max(availableHeight, props.minHeight)}px`
 }
+
+let resizeObserver: ResizeObserver | null = null
 
 onMounted(() => {
   calcLayoutHeight()
   window.addEventListener('resize', calcLayoutHeight)
+  // 上方兄弟元素（如提示条挂载/收起）改变自身 top 时跟随重算
+  resizeObserver = new ResizeObserver(calcLayoutHeight)
+  if (rootEl.value?.previousElementSibling) {
+    resizeObserver.observe(rootEl.value.previousElementSibling)
+  }
 })
 
 onBeforeUnmount(() => {
   window.removeEventListener('resize', calcLayoutHeight)
+  resizeObserver?.disconnect()
 })
 </script>
 
 <template>
-  <div class="auto-height-container" :style="{ height: layoutHeight }">
+  <div ref="rootEl" class="auto-height-container" :style="{ height: layoutHeight }">
     <!-- 动态像素高度无法用静态 class 表达，这里是全项目唯一承载该内联 height 的位置 -->
     <slot />
   </div>

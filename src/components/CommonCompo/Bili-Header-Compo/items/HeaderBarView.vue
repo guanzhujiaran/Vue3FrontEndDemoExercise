@@ -76,8 +76,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div id="bili-header"
-    class="sticky top-0 z-50 border-b border-(--el-border-color-light) bg-bg/90 backdrop-blur-md backdrop-saturate-150 shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
+  <div class="sticky top-0 z-50 border-b border-(--el-border-color-light) bg-bg/90 backdrop-blur-md backdrop-saturate-150 shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
     <div class="flex items-center justify-between w-full px-2 md:px-0 lg:px-4 relative">
       <el-scrollbar class="headerbar-scroller z-10">
         <el-menu :default-active="route.path" mode="horizontal" class="flex w-fit" :collapse="false" :ellipsis="false">

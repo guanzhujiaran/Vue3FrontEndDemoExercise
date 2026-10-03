@@ -9,6 +9,24 @@ import { RuntimeConfig as UserRuntimeConfig, PublicRuntimeConfig as UserPublicRu
 
       cdnURL: string,
    },
+
+   sitemap: {
+      cacheMaxAgeSeconds: number,
+
+      debug: boolean,
+   },
+
+   "nuxt-site-config": {
+      stack: Array<{
+
+      }>,
+
+      version: string,
+
+      debug: boolean,
+
+      multiTenancy: Array<any>,
+   },
   }
   interface SharedPublicRuntimeConfig {
 

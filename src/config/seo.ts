@@ -13,9 +13,10 @@
  *    此时输出 `noindex`，避免搜索引擎收录无内容的详情页模板。
  */
 import { RouteName } from '@/models/router/index.ts'
+import { SITE_URL } from './seo_routes'
 
-/** 站点权威域名（无尾斜杠）：canonical / sitemap / OG 一律以它为准 */
-export const SITE_URL = 'https://serena.dynv6.net'
+/** 站点权威域名（无尾斜杠）：canonical / sitemap / OG 一律以它为准（唯一定义在 seo_routes.ts） */
+export { SITE_URL }
 /** 站点名：拼在所有非首页标题末尾 */
 export const SITE_NAME = '爆破哔哩哔哩弹幕视频网'
 /** 品牌 slogan（仅首页标题使用，沿用已被收录的标题） */

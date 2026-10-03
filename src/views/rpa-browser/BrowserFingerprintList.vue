@@ -258,7 +258,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <FlexContainer>
+  <FlexContainer class="min-h-0">
     <BiliPageHeader title="浏览器指纹管理" description="管理你的浏览器指纹列表" tag-text="浏览器指纹">
       <template #extra>
         <div class="flex items-center gap-2">
@@ -272,7 +272,7 @@ onMounted(() => {
       </template>
     </BiliPageHeader>
 
-    <FlexContainer class="mt-4 bg-bg rounded-2xl p-4">
+    <FlexContainer class="bg-bg rounded-2xl flex-1 min-h-0">
       <div v-if="loading" class="w-full">
         <div class="grid gap-4" style="grid-template-columns: repeat(auto-fill, minmax(350px, 1fr))">
           <div v-for="i in 6" :key="i" class="rounded-xl  p-5 border border-border-light">
@@ -281,18 +281,24 @@ onMounted(() => {
         </div>
       </div>
 
-      <div v-else-if="fingerprintList.length > 0" class="w-full flex flex-col flex-1">
-        <div class="grid gap-6" style="grid-template-columns: repeat(auto-fill, minmax(380px, 1fr))">
-          <FingerprintCard v-for="item in fingerprintList" :key="item.browser_id_str || item.browser_id" :item="item"
-            @open="handleOpenStream" @detail="showBrowserIdDetail" @rename="handleRename" @edit="handleEdit"
-            @remove="handleDelete" />
-        </div>
+      <div v-else-if="fingerprintList.length > 0" class="w-full flex flex-col flex-1 min-h-0">
+        <!-- 卡片区域内部滚动（BiliScrollbar 自带快速滚动按钮）：分页随内容滚动，
+             内容不足一屏时占满一屏，超出时需滚动到最底部才能看到分页 -->
+        <BiliScrollbar class="flex-1 min-h-0" inner-class="flex flex-col min-h-full">
+          <div class="fingerprint-list__cards flex-1 min-h-0 grid gap-6 pr-1"
+            style="grid-template-columns: repeat(auto-fill, minmax(380px, 1fr))">
+            <FingerprintCard v-for="item in fingerprintList" :key="item.browser_id_str || item.browser_id" :item="item"
+              @open="handleOpenStream" @detail="showBrowserIdDetail" @rename="handleRename" @edit="handleEdit"
+              @remove="handleDelete" />
+          </div>
 
-        <el-pagination class="flex justify-center mt-auto" v-model:current-page="currentPage" :page-size="pageSize"
-          :total="total" layout="prev, pager, next, total" @current-change="handlePageChange" />
+          <el-pagination class="fingerprint-list__pagination flex justify-center mt-3 shrink-0"
+            v-model:current-page="currentPage" :page-size="pageSize" :total="total"
+            layout="prev, pager, next, total" @current-change="handlePageChange" />
+        </BiliScrollbar>
       </div>
 
-      <CenteredContainer v-else class="py-20">
+      <CenteredContainer v-else class="my-20">
         <el-empty description="暂无浏览器指纹">
           <el-button type="primary" @click="handleCreateFingerprint">创建第一个指纹</el-button>
         </el-empty>

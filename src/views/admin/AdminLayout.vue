@@ -15,6 +15,7 @@ import { Bell, ChatDotRound, Comment, Key, Checked, Collection, Avatar, Flag, St
 import icShoucang from '@/assets/svgs/audit/shoucang.svg?component'
 import icLiveCenter from '@/assets/svgs/audit/ic_Livecenter.svg?component'
 import icQuota from '@/assets/svgs/space/play_data.svg?component'
+import icLaboratory from '@/assets/svgs/audit/ic_laboratory_.svg?component'
 import { useMessageAdminStore } from '@/stores/message_admin'
 import BiliSideNavLayout from '@/components/CommonCompo/Bili-Container-Compo/BiliSideNavLayout.vue'
 
@@ -45,6 +46,7 @@ const navGroups = computed<NavGroup[]>(() => {
     const rpaItems: NavItem[] = [
       { name: 'ADMIN_RPA_APPROVAL', title: '操作审批', icon: Stamp },
       { name: 'ADMIN_RPA_AUDIT', title: '操作审计', icon: Document },
+      { name: 'ADMIN_RPA_MEMBERSHIP_CODES', title: '兑换码管理', icon: Medal },
       { name: 'ADMIN_RPA_CERT', title: '官方认证', icon: Medal },
       { name: 'ADMIN_RPA_TAG', title: '标签管理', icon: CollectionTag },
       { name: 'ADMIN_BROWSER_MONITOR', title: '浏览器监管', icon: icLiveCenter },
@@ -67,7 +69,8 @@ const navGroups = computed<NavGroup[]>(() => {
       items: [
         { name: 'ADMIN_PERMISSION', title: '管理端权限', icon: Key },
         { name: 'ADMIN_SYS_CONFIG', title: '系统配置', icon: Setting },
-        { name: 'ADMIN_BROWSER_QUOTA', title: '浏览器配额', icon: icQuota }
+        { name: 'ADMIN_BROWSER_QUOTA', title: '浏览器配额', icon: icQuota },
+        { name: 'ADMIN_RPC_DEBUG', title: 'RPC 调试', icon: icLaboratory }
       ]
     })
   }

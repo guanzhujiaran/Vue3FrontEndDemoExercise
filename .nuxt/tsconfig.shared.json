@@ -19,6 +19,9 @@
       "nuxt": [
         "../node_modules/nuxt"
       ],
+      "nuxt-site-config": [
+        "../node_modules/nuxt-site-config"
+      ],
       "nitropack/types": [
         "../node_modules/nitropack/types"
       ],
@@ -115,6 +118,18 @@
       "vue-demi": [
         "../node_modules/nuxt/dist/app/compat/vue-demi"
       ],
+      "#sitemap": [
+        "../node_modules/@nuxtjs/sitemap/dist/runtime"
+      ],
+      "#sitemap/*": [
+        "../node_modules/@nuxtjs/sitemap/dist/runtime/*"
+      ],
+      "#site-config": [
+        "../node_modules/nuxt-site-config/dist/runtime"
+      ],
+      "#site-config/*": [
+        "../node_modules/nuxt-site-config/dist/runtime/*"
+      ],
       "#vue-router": [
         "../node_modules/vue-router"
       ],
@@ -125,7 +140,7 @@
         "./imports"
       ],
       "#app-manifest": [
-        "./manifest/meta/4d4a321c-7cd7-4427-b97e-3bbd15edee74.json"
+        "./manifest/meta/dev.json"
       ],
       "#build": [
         "."

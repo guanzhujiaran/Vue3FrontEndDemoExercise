@@ -1,8 +1,10 @@
 <template>
+    <!-- 外层留白由 App.vue el-main 统一提供（mx-6 mt-3 pb-4）；
+         AutoHeightContainer 的 bottomOffset=16 与 el-main pb-4 对应 -->
     <flex-container class="bili-side-nav-layout">
-        <!-- 场景高度由公共组件统一计算（窗口高 - 顶部导航 - el-main 偏移），内部才能独立滚动 -->
-        <AutoHeightContainer
-            class="bili-side-nav-layout__body flex-auto flex min-w-0 items-stretch gap-3 p-3">
+        <!-- 场景高度由 AutoHeightContainer 按自身位置测量（窗口高 - 自身 top - 底部留白），
+             滚动交给布局内部实现，外侧 main 不被内容撑开 -->
+        <AutoHeightContainer class="bili-side-nav-layout__body flex-auto flex min-w-0 items-stretch">
             <el-aside width="auto" class="bili-side-nav-layout__aside h-full overflow-hidden">
                 <!-- 菜单列滚动：el-scrollbar 承接纵向滚动（EP 的 wrap 自带 overflow:auto），
                      这里只需隐藏原生滚动条与横向条，避免菜单项增多时出现浏览器原生滚动条 -->
@@ -53,7 +55,7 @@
                                     <div v-if="!collapsed" class="flex w-full items-center">
                                         <span class="bili-side-nav-layout__nav-text flex-1 truncate text-lg">{{
                                             item.title
-                                            }}</span>
+                                        }}</span>
                                         <el-badge v-if="item.badge && (item.badgeValue ?? 0) > 0"
                                             :value="item.badgeValue ?? 0" :max="99" type="danger" class="mr-8" />
                                     </div>
@@ -65,24 +67,19 @@
             </el-aside>
 
 
-            <!-- 右侧主区：与左侧菜单同步做「布丁」弹性动画（origin-right 锚定右边缘，形变只发生在靠侧边栏的一侧） -->
-            <el-container
-                class="bili-side-nav-layout__main bg-bg rounded-lg origin-right will-change-transform"
-                :class="{ 'animate-sidenav-content-jelly': isContentSettling }"
-                @animationend="onContentJellyEnd">
+            <el-container class="bili-side-nav-layout__main bg-bg rounded-lg origin-right will-change-transform"
+                :class="{ 'animate-sidenav-content-jelly': isContentSettling }" @animationend="onContentJellyEnd">
                 <el-header
                     class="bili-side-nav-layout__header flex items-center justify-between rounded-lg px-6 py-0 shrink-0">
                     <h1 class="bili-side-nav-layout__title text-base font-bold">{{ pageTitle }}</h1>
                     <slot name="header-extra" />
                 </el-header>
-                <el-main class="bili-side-nav-layout__main-body p-3 overflow-hidden">
-                    <!-- 内容区只做纵向滚动：横向滚动由 el-table-v2 等内部表格自管理，
-                         因此隐藏横向条，避免空态/内容不满时出现无意义的横向滚动条 -->
-                    <el-scrollbar class="bili-side-nav-layout__content h-full [&_.el-scrollbar__bar.is-horizontal]:hidden!"
-                        view-class="h-full" wrap-style="overflow-x: hidden;" @scroll="onContentScroll">
+                <el-main class="bili-side-nav-layout__main-body">
+                    <BiliScrollbar
+                        class="bili-side-nav-layout__content h-full [&_.el-scrollbar__bar.is-horizontal]:hidden!"
+                        view-class="h-full" @scroll="onContentScroll" inner-class="h-full flex flex-col min-h-0">
                         <slot />
-                        <ScrollButtons :scroll-top="contentScrollTop" :top-threshold="100" :bottom-threshold="100" />
-                    </el-scrollbar>
+                    </BiliScrollbar>
                 </el-main>
             </el-container>
         </AutoHeightContainer>
@@ -94,6 +91,7 @@ import { computed, ref, onMounted, type Component } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Fold, Expand } from '@element-plus/icons-vue'
 import AutoHeightContainer from './AutoHeightContainer.vue'
+import BiliScrollbar from './BiliScrollbar.vue'
 
 export interface BiliSideNavItem {
     name: string
@@ -143,10 +141,9 @@ onMounted(() => {
     collapsed.value = props.collapsible && isNarrowScreen()
 })
 
-// ===== 内容区滚动：记录 el-scrollbar 的滚动位置，传给 ScrollButtons 控制按钮显隐 =====
-const contentScrollTop = ref(0)
-function onContentScroll(payload: { scrollTop: number; scrollLeft: number }) {
-    contentScrollTop.value = payload.scrollTop
+// ===== 内容区滚动：滚动事件透传给 BiliScrollbar（快速滚动按钮由其内部自管理） =====
+function onContentScroll(_payload: { scrollTop: number; scrollLeft: number }) {
+    // 目前无需额外处理；保留回调以便后续扩展（如顶部吸顶判断）
 }
 
 function handleSelect(index: string) {

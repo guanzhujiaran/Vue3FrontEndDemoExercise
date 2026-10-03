@@ -7943,6 +7943,65 @@ export type RpaTagListResp = {
 };
 
 /**
+ * RpcInvokeReq
+ *
+ * 发起一次 RPC 调试调用。
+ *
+ * `payload_json` 是**原始 JSON 文本**（前端文本域直接贴）：不同方法的参数形态不同，
+ * 无法静态建模；服务端会按该方法的 params 契约严格校验后投递。
+ */
+export type RpcInvokeReq = {
+    /**
+     * Method Name
+     *
+     * 方法名（见 GET /methods 返回列表）
+     */
+    method_name: string;
+    /**
+     * Payload Json
+     *
+     * 请求参数（JSON 文本）
+     */
+    payload_json?: string;
+    /**
+     * Timeout
+     *
+     * 超时秒数（1~30，默认 5）
+     */
+    timeout?: number;
+};
+
+/**
+ * RpcInvokeResult
+ *
+ * 一次真实 RPC 调用的结果（回显原始信封，不吞错）。
+ */
+export type RpcInvokeResult = {
+    /**
+     * Method Name
+     *
+     * 方法名
+     */
+    method_name: string;
+    /**
+     * Routing Key
+     *
+     * 实际调用的队列名
+     */
+    routing_key: string;
+    /**
+     * Duration Ms
+     *
+     * 耗时（毫秒，含 MQ 往返）
+     */
+    duration_ms: number;
+    /**
+     * RPC 服务端返回的 StandardResponse 信封
+     */
+    reply: StandardResponse;
+};
+
+/**
  * SpaceFollowStat
  *
  * 关注 / 粉丝 / 互关计数（2.32.0：内联自 `GET /api/v1/message/follow/stat`）。
@@ -9464,6 +9523,21 @@ export type StandardResponseRpaTagListResp = {
 };
 
 /**
+ * StandardResponse[RpcInvokeResult]
+ */
+export type StandardResponseRpcInvokeResult = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: RpcInvokeResult | null;
+};
+
+/**
  * StandardResponse[SpaceInfoResp]
  */
 export type StandardResponseSpaceInfoResp = {
@@ -9700,6 +9774,24 @@ export type StandardResponseInt = {
      * Data
      */
     data?: number | null;
+};
+
+/**
+ * StandardResponse[list]
+ */
+export type StandardResponseList = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    /**
+     * Data
+     */
+    data?: Array<unknown> | null;
 };
 
 /**
@@ -24266,6 +24358,156 @@ export type ListTagsByTargetApiV1RpaTagListByTargetPostResponses = {
 };
 
 export type ListTagsByTargetApiV1RpaTagListByTargetPostResponse = ListTagsByTargetApiV1RpaTagListByTargetPostResponses[keyof ListTagsByTargetApiV1RpaTagListByTargetPostResponses];
+
+export type ListMethodsApiV1MessageAdminRpcDebugMethodsGetData = {
+    body?: never;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Jwt
+         */
+        'x-bili-jwt'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string | null;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string | null;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string | null;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string | null;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string | null;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string | null;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string | null;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/message/admin/rpc-debug/methods';
+};
+
+export type ListMethodsApiV1MessageAdminRpcDebugMethodsGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ListMethodsApiV1MessageAdminRpcDebugMethodsGetError = ListMethodsApiV1MessageAdminRpcDebugMethodsGetErrors[keyof ListMethodsApiV1MessageAdminRpcDebugMethodsGetErrors];
+
+export type ListMethodsApiV1MessageAdminRpcDebugMethodsGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseList;
+};
+
+export type ListMethodsApiV1MessageAdminRpcDebugMethodsGetResponse = ListMethodsApiV1MessageAdminRpcDebugMethodsGetResponses[keyof ListMethodsApiV1MessageAdminRpcDebugMethodsGetResponses];
+
+export type InvokeRpcApiV1MessageAdminRpcDebugInvokePostData = {
+    body: RpcInvokeReq;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Jwt
+         */
+        'x-bili-jwt'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string | null;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string | null;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string | null;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string | null;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string | null;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string | null;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string | null;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/message/admin/rpc-debug/invoke';
+};
+
+export type InvokeRpcApiV1MessageAdminRpcDebugInvokePostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type InvokeRpcApiV1MessageAdminRpcDebugInvokePostError = InvokeRpcApiV1MessageAdminRpcDebugInvokePostErrors[keyof InvokeRpcApiV1MessageAdminRpcDebugInvokePostErrors];
+
+export type InvokeRpcApiV1MessageAdminRpcDebugInvokePostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseRpcInvokeResult;
+};
+
+export type InvokeRpcApiV1MessageAdminRpcDebugInvokePostResponse = InvokeRpcApiV1MessageAdminRpcDebugInvokePostResponses[keyof InvokeRpcApiV1MessageAdminRpcDebugInvokePostResponses];
 
 export type IdentifyUserApiV1UserIdentifyGetData = {
     body?: never;

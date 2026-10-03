@@ -5,7 +5,7 @@
     "type": "module",
     "scripts": {
         "dev": "node scripts/prepare-build.mjs && nuxt dev",
-        "build": "node scripts/prepare-build.mjs && nuxt generate && node scripts/gen-sitemap.mjs",
+        "build": "node scripts/prepare-build.mjs && nuxt generate",
         "generate": "node scripts/prepare-build.mjs && nuxt generate",
         "preview": "npx --yes serve dist/client -l 4180",
         "postinstall": "nuxt prepare",
@@ -24,6 +24,7 @@
         "@headlessui/vue": "^1.7.23",
         "@heroicons/vue": "^2.2.0",
         "@microsoft/clarity": "^1.0.2",
+        "@nuxtjs/sitemap": "^8.6.1",
         "@pinia/nuxt": "^1.0.2",
         "@tailwindcss/postcss": "^4.3.3",
         "@tailwindcss/vite": "^4.3.3",

@@ -403,7 +403,7 @@ onMounted(() => {
       </div>
 
       <!-- 空状态 -->
-      <div v-else-if="workflowList.length === 0" class="flex flex-col items-center justify-center py-20 text-gray-400">
+      <div v-else-if="workflowList.length === 0" class="flex flex-col items-center justify-center my-20 text-gray-400">
         <el-empty description="暂无工作流">
           <el-button type="primary" :icon="Plus" @click="handleCreate">新建工作流</el-button>
         </el-empty>

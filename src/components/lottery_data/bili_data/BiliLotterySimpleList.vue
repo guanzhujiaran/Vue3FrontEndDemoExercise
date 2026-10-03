@@ -152,7 +152,7 @@ import { handleLotteryLinkClick, isLotteryParticipated } from '@/utils/lotteryPa
 import MoreIcon from '@/assets/svgs/more.svg?component'
 import MomentPublishForm from '@/components/moment/MomentPublishForm.vue'
 import MomentFavoriteDialog from '@/components/moment/MomentFavoriteDialog.vue'
-import { fetchInteractionStatus, InteractionBizTypeEnum, thumbMoment } from '@/api/notify/moment-api'
+import { fetchInteractionStatus, isNumericBizId, InteractionBizTypeEnum, thumbMoment } from '@/api/notify/moment-api'
 import type { InteractionStatusItem } from '@/api/notify/moment-api'
 import { interactionBizTypeOf } from '@/stores/lottery_detail.ts'
 
@@ -207,7 +207,8 @@ const statusKey = (bizType: InteractionBizTypeEnum, bizId: string) => `${bizType
 async function loadAllStatus() {
   const targets = parsedData.value
     .map((i) => ({ bizType: itemBizType(i), bizId: itemBizId(i) }))
-    .filter((t) => t.bizId)
+    // 非数字 ID（旧数据兜底 / 未知类型）进批量接口会被后端整批 400，必须过滤
+    .filter((t) => isNumericBizId(t.bizId))
   if (!targets.length) return
   // 按 bizType 分组，每组一次批量接口
   const groups = new Map<InteractionBizTypeEnum, string[]>()

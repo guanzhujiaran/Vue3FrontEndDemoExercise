@@ -1,3 +1,6 @@
+/** 站点权威域名（无尾斜杠）：与 src/config/seo.ts 的 SITE_URL 同源（由其 re-export） */
+export const SITE_URL = 'https://serena.dynv6.net'
+
 /**
  * 可索引 / 需预渲染的页面路径清单（无尾斜杠）。
  *
@@ -17,5 +20,7 @@ export const SEO_INDEXABLE_ROUTES: readonly string[] = [
   '/app/lot-data/bili-data/charge',
   '/app/lot-data/bili-data/topic',
   '/app/samsclub/info',
-  '/app/changelog'
+  '/app/changelog',
+  '/app/privacy-policy',
+  '/app/disclaimer'
 ]

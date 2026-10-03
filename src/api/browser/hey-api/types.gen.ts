@@ -1529,6 +1529,56 @@ export type BasePaginationRespPluginListItemResponse = {
 };
 
 /**
+ * BasePaginationResp[RedemptionCodeItem]
+ */
+export type BasePaginationRespRedemptionCodeItem = {
+    /**
+     * Page
+     *
+     * 页码
+     */
+    page?: number;
+    /**
+     * Per Page
+     *
+     * 每页数量
+     */
+    per_page?: number;
+    /**
+     * Total
+     *
+     * 总记录数
+     */
+    total?: number;
+    /**
+     * Items
+     *
+     * 当前页数据
+     */
+    items?: Array<unknown>;
+    /**
+     * Pages
+     */
+    readonly pages: number;
+    /**
+     * Has Next
+     */
+    readonly has_next: boolean;
+    /**
+     * Has Prev
+     */
+    readonly has_prev: boolean;
+    /**
+     * Next Page
+     */
+    readonly next_page: number;
+    /**
+     * Prev Page
+     */
+    readonly prev_page: number;
+};
+
+/**
  * BasePaginationResp[UserBrowserInfo]
  */
 export type BasePaginationRespUserBrowserInfo = {
@@ -3011,6 +3061,58 @@ export type CertifyRequest = {
 };
 
 /**
+ * ClearLoginStateRequest
+ *
+ * 清空登录态（换号）请求
+ */
+export type ClearLoginStateRequest = {
+    /**
+     * Reload Pages
+     *
+     * 清空后是否刷新已打开的页面：不刷新的话页面上仍是旧账号的 DOM，用户会以为没生效
+     */
+    reload_pages?: boolean;
+};
+
+/**
+ * ClearLoginStateResponse
+ *
+ * 清空登录态（换号）响应
+ */
+export type ClearLoginStateResponse = {
+    /**
+     * Cleared Cookies
+     *
+     * 是否已清空全部站点的 cookie（含 HttpOnly）
+     */
+    cleared_cookies: boolean;
+    /**
+     * Cleared Pages
+     *
+     * 已清空 web storage 的页面数
+     */
+    cleared_pages?: number;
+    /**
+     * Reloaded Pages
+     *
+     * 已刷新的页面数
+     */
+    reloaded_pages?: number;
+    /**
+     * Affected Domains
+     *
+     * 清理前 cookie 覆盖的站点数（供前端提示影响范围）
+     */
+    affected_domains?: number;
+    /**
+     * Message
+     *
+     * 结果说明
+     */
+    message?: string;
+};
+
+/**
  * ClosePageRequest
  *
  * 关闭页面请求
@@ -3749,6 +3851,51 @@ export type DeleteTagRequest = {
 };
 
 /**
+ * DurationAccountResponse
+ *
+ * 账户概览响应（数值以 str 传递）
+ */
+export type DurationAccountResponse = {
+    /**
+     * Balance Seconds
+     *
+     * 剩余时长（秒）
+     */
+    balance_seconds: string;
+    /**
+     * Total Granted Seconds
+     *
+     * 累计获得（秒）
+     */
+    total_granted_seconds: string;
+    /**
+     * Total Consumed Seconds
+     *
+     * 累计消耗（秒）
+     */
+    total_consumed_seconds: string;
+    /**
+     * 月卡状态
+     */
+    month_card: MonthCardInfo;
+    /**
+     * Signed Today
+     *
+     * 今日是否已签到
+     */
+    signed_today: boolean;
+};
+
+/**
+ * EmptyRequest
+ *
+ * 空请求体占位
+ */
+export type EmptyRequest = {
+    [key: string]: unknown;
+};
+
+/**
  * ExecuteStepRequest
  *
  * 单步执行请求
@@ -3855,6 +4002,82 @@ export const FilterType = {
  * - VERIFIED: verified
  */
 export type FilterType = typeof FilterType[keyof typeof FilterType];
+
+/**
+ * GenerateCodesRequest
+ *
+ * 批量生成兑换码请求（数值/日期均 str 传输）
+ */
+export type GenerateCodesRequest = {
+    /**
+     * Code Type
+     *
+     * 码类型: duration / month_card
+     */
+    code_type: string;
+    /**
+     * Count
+     *
+     * 生成数量（1~500）
+     */
+    count: string;
+    /**
+     * Max Uses
+     *
+     * 每码最大兑换次数
+     */
+    max_uses?: string;
+    /**
+     * Duration Seconds
+     *
+     * 时长卡面值（秒）；DURATION 必填
+     */
+    duration_seconds?: string;
+    /**
+     * Card Days
+     *
+     * 月卡天数；MONTH_CARD 必填
+     */
+    card_days?: string;
+    /**
+     * Expire At
+     *
+     * 兑换码有效期 YYYY-MM-DD HH:MM:SS（可选）
+     */
+    expire_at?: string | null;
+    /**
+     * Batch No
+     *
+     * 批次号（可选，默认随机）
+     */
+    batch_no?: string;
+    /**
+     * Remark
+     *
+     * 备注
+     */
+    remark?: string;
+};
+
+/**
+ * GenerateCodesResponse
+ *
+ * 生成结果响应
+ */
+export type GenerateCodesResponse = {
+    /**
+     * Batch No
+     *
+     * 批次号
+     */
+    batch_no: string;
+    /**
+     * Codes
+     *
+     * 生成的兑换码列表
+     */
+    codes: Array<string>;
+};
 
 /**
  * GetPageInfoRequest
@@ -4040,6 +4263,78 @@ export const LaunchQueueTypeEnum = { /**
 export type LaunchQueueTypeEnum = typeof LaunchQueueTypeEnum[keyof typeof LaunchQueueTypeEnum];
 
 /**
+ * LedgerListRequest
+ *
+ * 时长流水分页请求
+ */
+export type LedgerListRequest = {
+    /**
+     * Page
+     *
+     * 页码，从 1 开始
+     */
+    page?: number;
+    /**
+     * Per Page
+     *
+     * 每页数量
+     */
+    per_page?: number;
+};
+
+/**
+ * LedgerListResponse
+ *
+ * 时长流水分页响应
+ */
+export type LedgerListResponse = {
+    /**
+     * Page
+     *
+     * 页码
+     */
+    page?: number;
+    /**
+     * Per Page
+     *
+     * 每页数量
+     */
+    per_page?: number;
+    /**
+     * Total
+     *
+     * 总记录数
+     */
+    total?: number;
+    /**
+     * Items
+     *
+     * 当前页数据
+     */
+    items?: Array<unknown>;
+    /**
+     * Pages
+     */
+    readonly pages: number;
+    /**
+     * Has Next
+     */
+    readonly has_next: boolean;
+    /**
+     * Has Prev
+     */
+    readonly has_prev: boolean;
+    /**
+     * Next Page
+     */
+    readonly next_page: number;
+    /**
+     * Prev Page
+     */
+    readonly prev_page: number;
+};
+
+/**
  * LiftBanRequest
  *
  * 解封请求（root 或持有 user:ban 权限的管理员）
@@ -4057,6 +4352,38 @@ export type LiftBanRequest = {
      * 解封理由
      */
     reason?: string;
+};
+
+/**
+ * ListCodesRequest
+ *
+ * 兑换码分页查询请求
+ */
+export type ListCodesRequest = {
+    /**
+     * Page
+     *
+     * 页码
+     */
+    page?: string;
+    /**
+     * Per Page
+     *
+     * 每页数量
+     */
+    per_page?: string;
+    /**
+     * Batch No
+     *
+     * 批次号过滤
+     */
+    batch_no?: string | null;
+    /**
+     * Code Type
+     *
+     * 码类型过滤
+     */
+    code_type?: string | null;
 };
 
 /**
@@ -4134,6 +4461,32 @@ export type MemorySnapshot = {
      * 当前可用内存是否满足启动条件
      */
     can_launch: boolean;
+};
+
+/**
+ * MonthCardInfo
+ *
+ * 月卡状态信息
+ */
+export type MonthCardInfo = {
+    /**
+     * Active
+     *
+     * 是否有生效中的月卡
+     */
+    active: boolean;
+    /**
+     * Start At
+     *
+     * 生效时间
+     */
+    start_at?: string | null;
+    /**
+     * Expire At
+     *
+     * 到期时间
+     */
+    expire_at?: string | null;
 };
 
 /**
@@ -4961,6 +5314,131 @@ export type ParamsCondition = {
 };
 
 /**
+ * PaymentConfirmRequest
+ *
+ * 支付对账确认请求（占位；入账只按登录用户对账，不信任任何前端参数）
+ */
+export type PaymentConfirmRequest = {
+    [key: string]: unknown;
+};
+
+/**
+ * PaymentConfirmResponse
+ *
+ * 支付对账结果响应
+ */
+export type PaymentConfirmResponse = {
+    /**
+     * Granted
+     */
+    granted?: Array<PaymentGrantedItem>;
+};
+
+/**
+ * PaymentGrantedItem
+ *
+ * 单笔入账结果
+ */
+export type PaymentGrantedItem = {
+    /**
+     * Product
+     *
+     * 商品展示名
+     */
+    product: string;
+    /**
+     * Summary
+     *
+     * 入账摘要
+     */
+    summary: string;
+};
+
+/**
+ * PaymentNotifyRequest
+ *
+ * 支付完成通知请求（透传 Casdoor Success URL 的跳转参数）
+ *
+ * 参数仅作为「去 Casdoor 核验哪笔支付」的线索，入账以服务端 get-payment 为准。
+ */
+export type PaymentNotifyRequest = {
+    /**
+     * Transaction Owner
+     *
+     * Casdoor 跳转参数 transactionOwner
+     */
+    transaction_owner?: string;
+    /**
+     * Transaction Name
+     *
+     * Casdoor 跳转参数 transactionName
+     */
+    transaction_name?: string;
+};
+
+/**
+ * PaymentProductItem
+ *
+ * 支付商品条目
+ */
+export type PaymentProductItem = {
+    /**
+     * Product Name
+     *
+     * Casdoor 商品名（购买页 URL 用）
+     */
+    product_name: string;
+    /**
+     * Display Name
+     *
+     * 展示名
+     */
+    display_name: string;
+    /**
+     * Price
+     *
+     * 价格（元，仅展示）
+     */
+    price: string;
+    /**
+     * Grant Type
+     *
+     * 权益类型: duration / month_card
+     */
+    grant_type: string;
+    /**
+     * Duration Seconds
+     *
+     * 入账时长（秒）
+     */
+    duration_seconds: string;
+    /**
+     * Card Days
+     *
+     * 月卡天数
+     */
+    card_days: string;
+    /**
+     * Buy Url
+     *
+     * Casdoor 收银台购买 URL
+     */
+    buy_url: string;
+};
+
+/**
+ * PaymentProductsResponse
+ *
+ * 支付商品列表响应
+ */
+export type PaymentProductsResponse = {
+    /**
+     * Items
+     */
+    items?: Array<PaymentProductItem>;
+};
+
+/**
  * PermissionLevelConfig
  *
  * 权限等级配置
@@ -5333,6 +5811,58 @@ export type PluginUpdateRequest = {
 };
 
 /**
+ * RedeemRequest
+ *
+ * 兑换码兑换请求
+ */
+export type RedeemRequest = {
+    /**
+     * Code
+     *
+     * 兑换码
+     */
+    code: string;
+};
+
+/**
+ * RedeemResponse
+ *
+ * 兑换结果响应
+ */
+export type RedeemResponse = {
+    /**
+     * Code Type
+     *
+     * 码类型: duration / month_card
+     */
+    code_type: string;
+    /**
+     * Duration Seconds
+     *
+     * 获得的时长（秒）
+     */
+    duration_seconds?: string;
+    /**
+     * Card Days
+     *
+     * 月卡天数
+     */
+    card_days?: string;
+    /**
+     * Reward Summary
+     *
+     * 兑换所得摘要
+     */
+    reward_summary: string;
+    /**
+     * Balance Seconds
+     *
+     * 兑换后余额（秒）
+     */
+    balance_seconds: string;
+};
+
+/**
  * ResourceSearchItemResp
  *
  * 资源搜索结果项
@@ -5510,6 +6040,41 @@ export const SessionLifecycleState = {
  * - TERMINATED: terminated
  */
 export type SessionLifecycleState = typeof SessionLifecycleState[keyof typeof SessionLifecycleState];
+
+/**
+ * SignInRequest
+ *
+ * 签到请求（占位，保持 POST 语义）
+ */
+export type SignInRequest = {
+    [key: string]: unknown;
+};
+
+/**
+ * SignInResponse
+ *
+ * 签到结果响应
+ */
+export type SignInResponse = {
+    /**
+     * Reward Seconds
+     *
+     * 本次奖励秒数
+     */
+    reward_seconds: string;
+    /**
+     * Continuous Days
+     *
+     * 连续签到天数
+     */
+    continuous_days: string;
+    /**
+     * Balance Seconds
+     *
+     * 签到后余额（秒）
+     */
+    balance_seconds: string;
+};
 
 /**
  * SortBy
@@ -5806,6 +6371,21 @@ export type StandardResponseBasePaginationRespPluginListItemResponse = {
 };
 
 /**
+ * StandardResponse[BasePaginationResp[RedemptionCodeItem]]
+ */
+export type StandardResponseBasePaginationRespRedemptionCodeItem = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: BasePaginationRespRedemptionCodeItem | null;
+};
+
+/**
  * StandardResponse[BasePaginationResp[UserBrowserInfo]]
  */
 export type StandardResponseBasePaginationRespUserBrowserInfo = {
@@ -6046,6 +6626,21 @@ export type StandardResponseCertificationListResponse = {
 };
 
 /**
+ * StandardResponse[ClearLoginStateResponse]
+ */
+export type StandardResponseClearLoginStateResponse = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: ClearLoginStateResponse | null;
+};
+
+/**
  * StandardResponse[CloseSessionResponse]
  */
 export type StandardResponseCloseSessionResponse = {
@@ -6091,6 +6686,21 @@ export type StandardResponseCreateSessionResponse = {
 };
 
 /**
+ * StandardResponse[DurationAccountResponse]
+ */
+export type StandardResponseDurationAccountResponse = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: DurationAccountResponse | null;
+};
+
+/**
  * StandardResponse[ExecuteStepResponse]
  */
 export type StandardResponseExecuteStepResponse = {
@@ -6103,6 +6713,36 @@ export type StandardResponseExecuteStepResponse = {
      */
     msg?: string;
     data?: ExecuteStepResponse | null;
+};
+
+/**
+ * StandardResponse[GenerateCodesResponse]
+ */
+export type StandardResponseGenerateCodesResponse = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: GenerateCodesResponse | null;
+};
+
+/**
+ * StandardResponse[LedgerListResponse]
+ */
+export type StandardResponseLedgerListResponse = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: LedgerListResponse | null;
 };
 
 /**
@@ -6223,6 +6863,36 @@ export type StandardResponsePagesListResponse = {
 };
 
 /**
+ * StandardResponse[PaymentConfirmResponse]
+ */
+export type StandardResponsePaymentConfirmResponse = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: PaymentConfirmResponse | null;
+};
+
+/**
+ * StandardResponse[PaymentProductsResponse]
+ */
+export type StandardResponsePaymentProductsResponse = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: PaymentProductsResponse | null;
+};
+
+/**
  * StandardResponse[PermissionQuotaResp]
  */
 export type StandardResponsePermissionQuotaResp = {
@@ -6268,6 +6938,21 @@ export type StandardResponsePluginForkResponse = {
 };
 
 /**
+ * StandardResponse[RedeemResponse]
+ */
+export type StandardResponseRedeemResponse = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: RedeemResponse | null;
+};
+
+/**
  * StandardResponse[ResourceSearchResponse]
  */
 export type StandardResponseResourceSearchResponse = {
@@ -6280,6 +6965,21 @@ export type StandardResponseResourceSearchResponse = {
      */
     msg?: string;
     data?: ResourceSearchResponse | null;
+};
+
+/**
+ * StandardResponse[SignInResponse]
+ */
+export type StandardResponseSignInResponse = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: SignInResponse | null;
 };
 
 /**
@@ -6370,6 +7070,21 @@ export type StandardResponseUnionUserBrowserDefaultSettingResponseNoneType = {
      */
     msg?: string;
     data?: UserBrowserDefaultSettingResponse | null;
+};
+
+/**
+ * StandardResponse[UsageStatsResponse]
+ */
+export type StandardResponseUsageStatsResponse = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: UsageStatsResponse | null;
 };
 
 /**
@@ -6960,6 +7675,82 @@ export type UpdateTagRequest = {
      * 新颜色
      */
     color?: string | null;
+};
+
+/**
+ * UsageStatItem
+ *
+ * 使用日统计条目
+ */
+export type UsageStatItem = {
+    /**
+     * Stat Date
+     *
+     * 统计日期
+     */
+    stat_date: string;
+    /**
+     * Browser Id
+     *
+     * 浏览器ID
+     */
+    browser_id: string;
+    /**
+     * Workflow Seconds
+     *
+     * 工作流运行时长（秒）
+     */
+    workflow_seconds: string;
+    /**
+     * Manual Seconds
+     *
+     * 手动调试时长（秒，不计费）
+     */
+    manual_seconds: string;
+    /**
+     * Workflow Run Count
+     *
+     * 工作流运行次数
+     */
+    workflow_run_count: string;
+};
+
+/**
+ * UsageStatsRequest
+ *
+ * 使用日统计查询请求
+ */
+export type UsageStatsRequest = {
+    /**
+     * Start Date
+     *
+     * 开始日期 YYYY-MM-DD
+     */
+    start_date: string;
+    /**
+     * End Date
+     *
+     * 结束日期 YYYY-MM-DD
+     */
+    end_date: string;
+    /**
+     * Browser Id
+     *
+     * 浏览器ID（str，可选过滤）
+     */
+    browser_id?: string | null;
+};
+
+/**
+ * UsageStatsResponse
+ *
+ * 使用日统计响应
+ */
+export type UsageStatsResponse = {
+    /**
+     * Items
+     */
+    items?: Array<UsageStatItem>;
 };
 
 /**
@@ -8355,6 +9146,36 @@ export type BasePaginationRespPluginListItemResponseWritable = {
 };
 
 /**
+ * BasePaginationResp[RedemptionCodeItem]
+ */
+export type BasePaginationRespRedemptionCodeItemWritable = {
+    /**
+     * Page
+     *
+     * 页码
+     */
+    page?: number;
+    /**
+     * Per Page
+     *
+     * 每页数量
+     */
+    per_page?: number;
+    /**
+     * Total
+     *
+     * 总记录数
+     */
+    total?: number;
+    /**
+     * Items
+     *
+     * 当前页数据
+     */
+    items?: Array<unknown>;
+};
+
+/**
  * BasePaginationResp[UserBrowserInfo]
  */
 export type BasePaginationRespUserBrowserInfoWritable = {
@@ -8659,12 +9480,53 @@ export type DeleteSettingsRequestWritable = {
 };
 
 /**
+ * EmptyRequest
+ *
+ * 空请求体占位
+ */
+export type EmptyRequestWritable = {
+    [key: string]: unknown;
+};
+
+/**
  * GetSettingsRequest
  *
  * 获取默认设置请求（占位符）
  */
 export type GetSettingsRequestWritable = {
     [key: string]: unknown;
+};
+
+/**
+ * LedgerListResponse
+ *
+ * 时长流水分页响应
+ */
+export type LedgerListResponseWritable = {
+    /**
+     * Page
+     *
+     * 页码
+     */
+    page?: number;
+    /**
+     * Per Page
+     *
+     * 每页数量
+     */
+    per_page?: number;
+    /**
+     * Total
+     *
+     * 总记录数
+     */
+    total?: number;
+    /**
+     * Items
+     *
+     * 当前页数据
+     */
+    items?: Array<unknown>;
 };
 
 /**
@@ -8679,6 +9541,24 @@ export type PagesListResponseWritable = {
      * 页面列表
      */
     pages?: Array<PageInfo>;
+};
+
+/**
+ * PaymentConfirmRequest
+ *
+ * 支付对账确认请求（占位；入账只按登录用户对账，不信任任何前端参数）
+ */
+export type PaymentConfirmRequestWritable = {
+    [key: string]: unknown;
+};
+
+/**
+ * SignInRequest
+ *
+ * 签到请求（占位，保持 POST 语义）
+ */
+export type SignInRequestWritable = {
+    [key: string]: unknown;
 };
 
 /**
@@ -8787,6 +9667,21 @@ export type StandardResponseBasePaginationRespPluginListItemResponseWritable = {
 };
 
 /**
+ * StandardResponse[BasePaginationResp[RedemptionCodeItem]]
+ */
+export type StandardResponseBasePaginationRespRedemptionCodeItemWritable = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: BasePaginationRespRedemptionCodeItemWritable | null;
+};
+
+/**
  * StandardResponse[BasePaginationResp[UserBrowserInfo]]
  */
 export type StandardResponseBasePaginationRespUserBrowserInfoWritable = {
@@ -8889,6 +9784,21 @@ export type StandardResponseCertificationListResponseWritable = {
      */
     msg?: string;
     data?: CertificationListResponseWritable | null;
+};
+
+/**
+ * StandardResponse[LedgerListResponse]
+ */
+export type StandardResponseLedgerListResponseWritable = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: LedgerListResponseWritable | null;
 };
 
 /**
@@ -9975,6 +10885,574 @@ export type GetServerDefaultSettingsApiV1RpaBrowserDefaultSettingsServerDefaults
 };
 
 export type GetServerDefaultSettingsApiV1RpaBrowserDefaultSettingsServerDefaultsGetPostResponse = GetServerDefaultSettingsApiV1RpaBrowserDefaultSettingsServerDefaultsGetPostResponses[keyof GetServerDefaultSettingsApiV1RpaBrowserDefaultSettingsServerDefaultsGetPostResponses];
+
+export type GetMembershipAccountApiV1RpaBrowserMembershipGetAccountPostData = {
+    body: EmptyRequestWritable;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/rpa/browser/membership/get_account';
+};
+
+export type GetMembershipAccountApiV1RpaBrowserMembershipGetAccountPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetMembershipAccountApiV1RpaBrowserMembershipGetAccountPostError = GetMembershipAccountApiV1RpaBrowserMembershipGetAccountPostErrors[keyof GetMembershipAccountApiV1RpaBrowserMembershipGetAccountPostErrors];
+
+export type GetMembershipAccountApiV1RpaBrowserMembershipGetAccountPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseDurationAccountResponse;
+};
+
+export type GetMembershipAccountApiV1RpaBrowserMembershipGetAccountPostResponse = GetMembershipAccountApiV1RpaBrowserMembershipGetAccountPostResponses[keyof GetMembershipAccountApiV1RpaBrowserMembershipGetAccountPostResponses];
+
+export type SignInApiV1RpaBrowserMembershipSignInPostData = {
+    body: SignInRequestWritable;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/rpa/browser/membership/sign_in';
+};
+
+export type SignInApiV1RpaBrowserMembershipSignInPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type SignInApiV1RpaBrowserMembershipSignInPostError = SignInApiV1RpaBrowserMembershipSignInPostErrors[keyof SignInApiV1RpaBrowserMembershipSignInPostErrors];
+
+export type SignInApiV1RpaBrowserMembershipSignInPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseSignInResponse;
+};
+
+export type SignInApiV1RpaBrowserMembershipSignInPostResponse = SignInApiV1RpaBrowserMembershipSignInPostResponses[keyof SignInApiV1RpaBrowserMembershipSignInPostResponses];
+
+export type RedeemCodeApiV1RpaBrowserMembershipRedeemPostData = {
+    body: RedeemRequest;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/rpa/browser/membership/redeem';
+};
+
+export type RedeemCodeApiV1RpaBrowserMembershipRedeemPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type RedeemCodeApiV1RpaBrowserMembershipRedeemPostError = RedeemCodeApiV1RpaBrowserMembershipRedeemPostErrors[keyof RedeemCodeApiV1RpaBrowserMembershipRedeemPostErrors];
+
+export type RedeemCodeApiV1RpaBrowserMembershipRedeemPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseRedeemResponse;
+};
+
+export type RedeemCodeApiV1RpaBrowserMembershipRedeemPostResponse = RedeemCodeApiV1RpaBrowserMembershipRedeemPostResponses[keyof RedeemCodeApiV1RpaBrowserMembershipRedeemPostResponses];
+
+export type ListDurationLedgerApiV1RpaBrowserMembershipLedgerListPostData = {
+    body: LedgerListRequest;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/rpa/browser/membership/ledger_list';
+};
+
+export type ListDurationLedgerApiV1RpaBrowserMembershipLedgerListPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ListDurationLedgerApiV1RpaBrowserMembershipLedgerListPostError = ListDurationLedgerApiV1RpaBrowserMembershipLedgerListPostErrors[keyof ListDurationLedgerApiV1RpaBrowserMembershipLedgerListPostErrors];
+
+export type ListDurationLedgerApiV1RpaBrowserMembershipLedgerListPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseLedgerListResponse;
+};
+
+export type ListDurationLedgerApiV1RpaBrowserMembershipLedgerListPostResponse = ListDurationLedgerApiV1RpaBrowserMembershipLedgerListPostResponses[keyof ListDurationLedgerApiV1RpaBrowserMembershipLedgerListPostResponses];
+
+export type ListUsageStatsApiV1RpaBrowserMembershipUsageStatsPostData = {
+    body: UsageStatsRequest;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/rpa/browser/membership/usage_stats';
+};
+
+export type ListUsageStatsApiV1RpaBrowserMembershipUsageStatsPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ListUsageStatsApiV1RpaBrowserMembershipUsageStatsPostError = ListUsageStatsApiV1RpaBrowserMembershipUsageStatsPostErrors[keyof ListUsageStatsApiV1RpaBrowserMembershipUsageStatsPostErrors];
+
+export type ListUsageStatsApiV1RpaBrowserMembershipUsageStatsPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseUsageStatsResponse;
+};
+
+export type ListUsageStatsApiV1RpaBrowserMembershipUsageStatsPostResponse = ListUsageStatsApiV1RpaBrowserMembershipUsageStatsPostResponses[keyof ListUsageStatsApiV1RpaBrowserMembershipUsageStatsPostResponses];
+
+export type ListPaymentProductsApiV1RpaBrowserMembershipPaymentProductsPostData = {
+    body: EmptyRequestWritable;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/rpa/browser/membership/payment/products';
+};
+
+export type ListPaymentProductsApiV1RpaBrowserMembershipPaymentProductsPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ListPaymentProductsApiV1RpaBrowserMembershipPaymentProductsPostError = ListPaymentProductsApiV1RpaBrowserMembershipPaymentProductsPostErrors[keyof ListPaymentProductsApiV1RpaBrowserMembershipPaymentProductsPostErrors];
+
+export type ListPaymentProductsApiV1RpaBrowserMembershipPaymentProductsPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponsePaymentProductsResponse;
+};
+
+export type ListPaymentProductsApiV1RpaBrowserMembershipPaymentProductsPostResponse = ListPaymentProductsApiV1RpaBrowserMembershipPaymentProductsPostResponses[keyof ListPaymentProductsApiV1RpaBrowserMembershipPaymentProductsPostResponses];
+
+export type ConfirmPaymentsApiV1RpaBrowserMembershipPaymentConfirmPostData = {
+    body: PaymentConfirmRequestWritable;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/rpa/browser/membership/payment/confirm';
+};
+
+export type ConfirmPaymentsApiV1RpaBrowserMembershipPaymentConfirmPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ConfirmPaymentsApiV1RpaBrowserMembershipPaymentConfirmPostError = ConfirmPaymentsApiV1RpaBrowserMembershipPaymentConfirmPostErrors[keyof ConfirmPaymentsApiV1RpaBrowserMembershipPaymentConfirmPostErrors];
+
+export type ConfirmPaymentsApiV1RpaBrowserMembershipPaymentConfirmPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponsePaymentConfirmResponse;
+};
+
+export type ConfirmPaymentsApiV1RpaBrowserMembershipPaymentConfirmPostResponse = ConfirmPaymentsApiV1RpaBrowserMembershipPaymentConfirmPostResponses[keyof ConfirmPaymentsApiV1RpaBrowserMembershipPaymentConfirmPostResponses];
+
+export type NotifyPaymentApiV1RpaBrowserMembershipPaymentNotifyPostData = {
+    body: PaymentNotifyRequest;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/rpa/browser/membership/payment/notify';
+};
+
+export type NotifyPaymentApiV1RpaBrowserMembershipPaymentNotifyPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type NotifyPaymentApiV1RpaBrowserMembershipPaymentNotifyPostError = NotifyPaymentApiV1RpaBrowserMembershipPaymentNotifyPostErrors[keyof NotifyPaymentApiV1RpaBrowserMembershipPaymentNotifyPostErrors];
+
+export type NotifyPaymentApiV1RpaBrowserMembershipPaymentNotifyPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponsePaymentConfirmResponse;
+};
+
+export type NotifyPaymentApiV1RpaBrowserMembershipPaymentNotifyPostResponse = NotifyPaymentApiV1RpaBrowserMembershipPaymentNotifyPostResponses[keyof NotifyPaymentApiV1RpaBrowserMembershipPaymentNotifyPostResponses];
 
 export type ListRegisteredActionsApiV1RpaBrowserControlActionsRegisteredPostData = {
     body?: never;
@@ -13142,6 +14620,82 @@ export type GetPageInfoApiV1RpaBrowserControlOperationGetPageInfoPostResponses =
 
 export type GetPageInfoApiV1RpaBrowserControlOperationGetPageInfoPostResponse = GetPageInfoApiV1RpaBrowserControlOperationGetPageInfoPostResponses[keyof GetPageInfoApiV1RpaBrowserControlOperationGetPageInfoPostResponses];
 
+export type ClearLoginStateApiV1RpaBrowserControlOperationClearLoginStatePostData = {
+    body: ClearLoginStateRequest;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string;
+    };
+    path?: never;
+    query: {
+        /**
+         * Browser Id
+         */
+        browser_id: number | string;
+    };
+    url: '/api/v1/rpa/browser/control/operation/clear_login_state';
+};
+
+export type ClearLoginStateApiV1RpaBrowserControlOperationClearLoginStatePostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ClearLoginStateApiV1RpaBrowserControlOperationClearLoginStatePostError = ClearLoginStateApiV1RpaBrowserControlOperationClearLoginStatePostErrors[keyof ClearLoginStateApiV1RpaBrowserControlOperationClearLoginStatePostErrors];
+
+export type ClearLoginStateApiV1RpaBrowserControlOperationClearLoginStatePostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseClearLoginStateResponse;
+};
+
+export type ClearLoginStateApiV1RpaBrowserControlOperationClearLoginStatePostResponse = ClearLoginStateApiV1RpaBrowserControlOperationClearLoginStatePostResponses[keyof ClearLoginStateApiV1RpaBrowserControlOperationClearLoginStatePostResponses];
+
 export type GetBrowserInfoApiV1RpaBrowserControlBrowserInfoPostData = {
     body?: never;
     headers?: {
@@ -16276,3 +17830,145 @@ export type ResetPermissionQuotasApiAdminRpaPermissionResetPostResponses = {
 };
 
 export type ResetPermissionQuotasApiAdminRpaPermissionResetPostResponse = ResetPermissionQuotasApiAdminRpaPermissionResetPostResponses[keyof ResetPermissionQuotasApiAdminRpaPermissionResetPostResponses];
+
+export type GenerateMembershipCodesApiAdminRpaMembershipCodesGeneratePostData = {
+    body: GenerateCodesRequest;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/admin/rpa/membership/codes/generate';
+};
+
+export type GenerateMembershipCodesApiAdminRpaMembershipCodesGeneratePostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GenerateMembershipCodesApiAdminRpaMembershipCodesGeneratePostError = GenerateMembershipCodesApiAdminRpaMembershipCodesGeneratePostErrors[keyof GenerateMembershipCodesApiAdminRpaMembershipCodesGeneratePostErrors];
+
+export type GenerateMembershipCodesApiAdminRpaMembershipCodesGeneratePostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseGenerateCodesResponse;
+};
+
+export type GenerateMembershipCodesApiAdminRpaMembershipCodesGeneratePostResponse = GenerateMembershipCodesApiAdminRpaMembershipCodesGeneratePostResponses[keyof GenerateMembershipCodesApiAdminRpaMembershipCodesGeneratePostResponses];
+
+export type ListMembershipCodesApiAdminRpaMembershipCodesListPostData = {
+    body: ListCodesRequest;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/admin/rpa/membership/codes/list';
+};
+
+export type ListMembershipCodesApiAdminRpaMembershipCodesListPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ListMembershipCodesApiAdminRpaMembershipCodesListPostError = ListMembershipCodesApiAdminRpaMembershipCodesListPostErrors[keyof ListMembershipCodesApiAdminRpaMembershipCodesListPostErrors];
+
+export type ListMembershipCodesApiAdminRpaMembershipCodesListPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseBasePaginationRespRedemptionCodeItem;
+};
+
+export type ListMembershipCodesApiAdminRpaMembershipCodesListPostResponse = ListMembershipCodesApiAdminRpaMembershipCodesListPostResponses[keyof ListMembershipCodesApiAdminRpaMembershipCodesListPostResponses];

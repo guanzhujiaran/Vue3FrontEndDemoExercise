@@ -517,7 +517,10 @@ export const normalizeLotteryData = (data: AnyLotteryData): NormalizedLottery =>
     const lotteryTime = rawData.lottery_time || null
     const dynId = rawData.dynId || null
     const senderUid = rawData.sender_uid || null
-    const lotteryId = rawData.lottery_id || dynId || lotteryText.substring(0, 10)
+    // 互动资源 ID 只能是数字（lotdata 主键 lottery_id / B 站 dynId）。话题抽奖
+    // （TopicEventData）两者都没有，禁止再拿 lotteryText 文本片段兜底当 ID ——
+    // 用它发互动态请求会被后端判 400「bizIds 不合法」。置 null 后 canInteract 关闭互动。
+    const lotteryId = [rawData.lottery_id, dynId].find((v) => /^\d+$/.test(String(v ?? ''))) ?? null
 
     normalized.id = lotteryId
     normalized.type = 'DYNAMIC'

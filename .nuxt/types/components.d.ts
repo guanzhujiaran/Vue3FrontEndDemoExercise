@@ -17,6 +17,7 @@ interface _GlobalComponents {
   AvatarDropdown: typeof import("../../src/components/CommonCompo/AvatarDropdown.vue")['default']
   AutoHeightContainer: typeof import("../../src/components/CommonCompo/Bili-Container-Compo/AutoHeightContainer.vue")['default']
   BiliPageHeader: typeof import("../../src/components/CommonCompo/Bili-Container-Compo/BiliPageHeader.vue")['default']
+  BiliScrollbar: typeof import("../../src/components/CommonCompo/Bili-Container-Compo/BiliScrollbar.vue")['default']
   BiliSideNavLayout: typeof import("../../src/components/CommonCompo/Bili-Container-Compo/BiliSideNavLayout.vue")['default']
   CenteredContainer: typeof import("../../src/components/CommonCompo/Bili-Container-Compo/CenteredContainer.vue")['default']
   CommContainer: typeof import("../../src/components/CommonCompo/Bili-Container-Compo/CommContainer.vue")['default']
@@ -632,6 +633,7 @@ interface _GlobalComponents {
   LazyAvatarDropdown: LazyComponent<typeof import("../../src/components/CommonCompo/AvatarDropdown.vue")['default']>
   LazyAutoHeightContainer: LazyComponent<typeof import("../../src/components/CommonCompo/Bili-Container-Compo/AutoHeightContainer.vue")['default']>
   LazyBiliPageHeader: LazyComponent<typeof import("../../src/components/CommonCompo/Bili-Container-Compo/BiliPageHeader.vue")['default']>
+  LazyBiliScrollbar: LazyComponent<typeof import("../../src/components/CommonCompo/Bili-Container-Compo/BiliScrollbar.vue")['default']>
   LazyBiliSideNavLayout: LazyComponent<typeof import("../../src/components/CommonCompo/Bili-Container-Compo/BiliSideNavLayout.vue")['default']>
   LazyCenteredContainer: LazyComponent<typeof import("../../src/components/CommonCompo/Bili-Container-Compo/CenteredContainer.vue")['default']>
   LazyCommContainer: LazyComponent<typeof import("../../src/components/CommonCompo/Bili-Container-Compo/CommContainer.vue")['default']>

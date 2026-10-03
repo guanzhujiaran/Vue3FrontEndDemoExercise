@@ -47,6 +47,9 @@
       "nuxt": [
         "../node_modules/nuxt"
       ],
+      "nuxt-site-config": [
+        "../node_modules/nuxt-site-config"
+      ],
       "nitropack/types": [
         "../node_modules/nitropack/types"
       ],
@@ -67,6 +70,9 @@
       ],
       "crossws": [
         "../node_modules/crossws"
+      ],
+      "#nuxtseo/h3": [
+        "../node_modules/h3/dist/index"
       ],
       "#shared": [
         "../shared"
@@ -119,8 +125,29 @@
       "@assets/*": [
         "../src/assets/*"
       ],
+      "#sitemap": [
+        "../node_modules/@nuxtjs/sitemap/dist/runtime"
+      ],
+      "#sitemap/*": [
+        "../node_modules/@nuxtjs/sitemap/dist/runtime/*"
+      ],
+      "#site-config": [
+        "../node_modules/nuxt-site-config/dist/runtime"
+      ],
+      "#site-config/*": [
+        "../node_modules/nuxt-site-config/dist/runtime/*"
+      ],
       "#unhead/composables": [
         "../node_modules/nuxt/dist/head/runtime/composables"
+      ],
+      "#nuxtseo/content": [
+        "../node_modules/nuxtseo-shared/dist/runtime/content/none"
+      ],
+      "#internal/nuxt-robots": [
+        "../node_modules/@nuxtjs/sitemap/dist/runtime/server/robots-polyfill"
+      ],
+      "#internal/nuxt-robots/*": [
+        "../node_modules/@nuxtjs/sitemap/dist/runtime/server/robots-polyfill/*"
       ],
       "#app/island-hash": [
         "../node_modules/nuxt/dist/app/island-hash"
@@ -148,6 +175,8 @@
     "./types/nitro-nuxt.d.ts",
     "../node_modules/runtime/server",
     "../node_modules/dist/runtime/server",
+    "../node_modules/nuxt-site-config/dist/runtime/server",
+    "../node_modules/nuxt-site-config/dist/dist/runtime/server",
     "../server/**/*",
     "../shared/**/*.d.ts",
     "./types/nitro.d.ts"
@@ -157,6 +186,8 @@
     "../node_modules/nuxt/node_modules",
     "../node_modules/@pinia/nuxt/node_modules",
     "../node_modules/@element-plus/nuxt/node_modules",
+    "../node_modules/nuxt-site-config/node_modules",
+    "../node_modules/@nuxtjs/sitemap/node_modules",
     "../node_modules/@nuxt/telemetry/node_modules",
     "../dist"
   ]

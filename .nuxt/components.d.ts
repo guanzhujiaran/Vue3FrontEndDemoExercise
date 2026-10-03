@@ -17,6 +17,7 @@ type LazyComponent<T> = DefineComponent<HydrationStrategies, {}, {}, {}, {}, {},
 export const AvatarDropdown: typeof import("../src/components/CommonCompo/AvatarDropdown.vue")['default']
 export const AutoHeightContainer: typeof import("../src/components/CommonCompo/Bili-Container-Compo/AutoHeightContainer.vue")['default']
 export const BiliPageHeader: typeof import("../src/components/CommonCompo/Bili-Container-Compo/BiliPageHeader.vue")['default']
+export const BiliScrollbar: typeof import("../src/components/CommonCompo/Bili-Container-Compo/BiliScrollbar.vue")['default']
 export const BiliSideNavLayout: typeof import("../src/components/CommonCompo/Bili-Container-Compo/BiliSideNavLayout.vue")['default']
 export const CenteredContainer: typeof import("../src/components/CommonCompo/Bili-Container-Compo/CenteredContainer.vue")['default']
 export const CommContainer: typeof import("../src/components/CommonCompo/Bili-Container-Compo/CommContainer.vue")['default']
@@ -632,6 +633,7 @@ export const NuxtIsland: typeof import("../node_modules/nuxt/dist/app/components
 export const LazyAvatarDropdown: LazyComponent<typeof import("../src/components/CommonCompo/AvatarDropdown.vue")['default']>
 export const LazyAutoHeightContainer: LazyComponent<typeof import("../src/components/CommonCompo/Bili-Container-Compo/AutoHeightContainer.vue")['default']>
 export const LazyBiliPageHeader: LazyComponent<typeof import("../src/components/CommonCompo/Bili-Container-Compo/BiliPageHeader.vue")['default']>
+export const LazyBiliScrollbar: LazyComponent<typeof import("../src/components/CommonCompo/Bili-Container-Compo/BiliScrollbar.vue")['default']>
 export const LazyBiliSideNavLayout: LazyComponent<typeof import("../src/components/CommonCompo/Bili-Container-Compo/BiliSideNavLayout.vue")['default']>
 export const LazyCenteredContainer: LazyComponent<typeof import("../src/components/CommonCompo/Bili-Container-Compo/CenteredContainer.vue")['default']>
 export const LazyCommContainer: LazyComponent<typeof import("../src/components/CommonCompo/Bili-Container-Compo/CommContainer.vue")['default']>

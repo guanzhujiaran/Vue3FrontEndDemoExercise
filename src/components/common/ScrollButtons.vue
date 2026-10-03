@@ -56,10 +56,14 @@ const getMetrics = () => {
 // 根据当前滚动位置计算按钮显隐
 const applyVisibility = (scrollTop: number) => {
   const { clientHeight, scrollHeight } = getMetrics()
+  // 内容本身不可滚动时（scrollHeight <= clientHeight）两个按钮都隐藏，
+  // 避免「内容不满一屏也显示一键到底」的误导性按钮
+  const canScroll = scrollHeight - clientHeight > 1
   // 当滚动超过设定阈值时显示回到顶部按钮
-  const nextTop = scrollTop > props.topThreshold
+  const nextTop = canScroll && scrollTop > props.topThreshold
   // 当没有滚动到底部时显示一键到底按钮（距离底部设定阈值以上）
-  const nextBottom = scrollHeight - (scrollTop + clientHeight) > props.bottomThreshold
+  const nextBottom =
+    canScroll && scrollHeight - (scrollTop + clientHeight) > props.bottomThreshold
 
   showBackToTop.value = nextTop
   showScrollToBottom.value = nextBottom
@@ -68,39 +72,55 @@ const applyVisibility = (scrollTop: number) => {
 // 防抖后的显隐计算（高频滚动时避免频繁计算与调试打印）
 const debouncedApply = useDebounceFn((top: number) => applyVisibility(top), 100)
 
+// 状态声明必须位于 watch 之前：watch 带 immediate:true 会在 setup 阶段同步回调
+let offScroll: (() => void) | null = null
+let lastScrollTop = 0
+
 // 外部传入 scrollTop：直接驱动显隐
 watch(
   () => props.scrollTop,
   (v) => {
-    if (v >= 0) debouncedApply(v)
+    if (v >= 0) {
+      lastScrollTop = v
+      debouncedApply(v)
+    }
   },
   { immediate: true }
 )
 
-// 未传入 scrollTop 时，自行监听滚动（兼容整页 / 内部容器滚动）
-let offScroll: (() => void) | null = null
+// 只监听滚动事件：初始挂载算一次显隐，之后每次滚动重算。
+// 内容增减导致的可滚动性变化几乎总是伴随滚动，不为边角情况引入 ResizeObserver。
 onMounted(() => {
   if (props.scrollTop < 0) {
     const onScroll = (e?: Event) => {
-      const t = e?.target as HTMLElement | null
+      const t = e?.target as EventTarget | null
       let scroller: HTMLElement | Window = window
       if (t && t !== document && t !== document.documentElement && t !== document.body) {
         const wrap = rootRef.value?.closest('.el-scrollbar__wrap') as HTMLElement | null
-        scroller = wrap && (t === wrap || wrap.contains(t)) ? wrap : t
+        scroller =
+          wrap && (t === wrap || (t instanceof Node && wrap.contains(t)))
+            ? (t as HTMLElement)
+            : wrap ?? window
       } else {
         const wrap = rootRef.value?.closest('.el-scrollbar__wrap') as HTMLElement | null
         scroller = wrap ?? window
       }
       const top = scroller === window ? window.scrollY : (scroller as HTMLElement).scrollTop
+      lastScrollTop = top
       debouncedApply(top)
     }
     window.addEventListener('scroll', onScroll as EventListener, true)
     offScroll = () => window.removeEventListener('scroll', onScroll as EventListener, true)
     onScroll()
-    requestAnimationFrame(onScroll)
+    requestAnimationFrame(() => onScroll())
+  } else {
+    lastScrollTop = props.scrollTop
+    debouncedApply(lastScrollTop)
   }
 })
-onUnmounted(() => offScroll?.())
+onUnmounted(() => {
+  offScroll?.()
+})
 
 // 回到顶部
 const scrollToTop = () => {

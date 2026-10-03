@@ -10,7 +10,7 @@ import type {
 } from '@/models/api/lottery/lottery_card.ts'
 import { normalizeLotteryData } from '@/utils/lotteryNormalization'
 import { interactionBizTypeOf } from '@/stores/lottery_detail.ts'
-import { fetchInteractionStatus, InteractionBizTypeEnum } from '@/api/notify/moment-api'
+import { fetchInteractionStatus, isNumericBizId, InteractionBizTypeEnum } from '@/api/notify/moment-api'
 import type { InteractionStatusItem } from '@/api/notify/moment-api'
 
 const lotteryDataArr = withDefaults(
@@ -56,6 +56,9 @@ const normalizedEntries = computed(() => {
 const idsByBizType = computed(() => {
   const groups = new Map<InteractionBizTypeEnum, string[]>()
   for (const entry of normalizedEntries.value) {
+    // 非数字 ID（旧数据兜底 / 未知类型 'N/A'）不能进批量互动态请求：
+    // 后端逐段 int() 校验，混入会整批 400「bizIds 不合法」
+    if (!isNumericBizId(entry.id)) continue
     const arr = groups.get(entry.bizType) ?? []
     if (!arr.includes(entry.id)) arr.push(entry.id)
     groups.set(entry.bizType, arr)

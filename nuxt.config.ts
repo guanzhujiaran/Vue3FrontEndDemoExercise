@@ -14,7 +14,36 @@ import tailwindcss from '@tailwindcss/vite'
 import svgLoader from 'vite-svg-loader'
 import { heyApiPlugin } from '@hey-api/vite-plugin'
 import { type UserParser } from '@hey-api/shared'
-import { SEO_INDEXABLE_ROUTES } from './src/config/seo_routes'
+import { SITE_URL, SEO_INDEXABLE_ROUTES } from './src/config/seo_routes'
+
+/**
+ * sitemap 条目权重：沿用 gen-sitemap.mjs 时代的分级
+ * （首页 > 抽奖数据主列表页 > 其余抽奖列表 > 工具 / 内容页 > 状态页）。
+ * `lastmod` 取 nuxt.config 求值时刻 = 构建时间：产物本身就是构建时刻的快照。
+ */
+const SITEMAP_LASTMOD = new Date().toISOString()
+const SITEMAP_PRIORITY: Record<string, string> = {
+  '*': '0.6',
+  '/': '1.0',
+  '/app/lot-data/home': '0.9',
+  '/app/lot-data/bili-data/official': '0.9',
+  '/app/lot-data/bili-data/reserve': '0.8',
+  '/app/lot-data/bili-data/charge': '0.8',
+  '/app/lot-data/bili-data/topic': '0.8',
+  '/app/samsclub/info': '0.7',
+  '/app/lot-data/bili-atari-ranking': '0.7',
+  '/app/lot-data/scrapy-stat': '0.5',
+  '/app/changelog': '0.5',
+  '/app/privacy-policy': '0.3',
+  '/app/disclaimer': '0.3'
+}
+/** 绝大多数是抽奖数据（每天变），更新日志随版本发布变，法律页基本不变 */
+const SITEMAP_CHANGEFREQ: Record<string, string> = {
+  '*': 'daily',
+  '/app/changelog': 'weekly',
+  '/app/privacy-policy': 'monthly',
+  '/app/disclaimer': 'monthly'
+}
 
 // Nuxt 只按 NODE_ENV 加载 `.env` / `.env.production`；本项目的变量沿用原名
 // （`.env.prod` / `.env.development`，Vike 时代按 `--mode` 加载），这里显式加载。
@@ -112,7 +141,28 @@ export default defineNuxtConfig({
   srcDir: 'src',
   devtools: { enabled: false },
 
-  modules: ['@pinia/nuxt', '@element-plus/nuxt'],
+  modules: ['@pinia/nuxt', '@element-plus/nuxt', '@nuxtjs/sitemap'],
+
+  /**
+   * 站点配置（nuxt-site-config）：@nuxtjs/sitemap 依赖它拼出绝对 URL，
+   * canonical / OG 等仍由 useRouteSeo 单独维护，互不影响。
+   */
+  site: { url: SITE_URL },
+
+  /**
+   * sitemap 模块：`nuxt generate` 时由 Nitro 预渲染出 `dist/client/sitemap.xml`，
+   * 替代原「构建后脚本生成」方案（scripts/gen-sitemap.mjs 已删除）。
+   * 路由清单唯一来源仍是 `src/config/seo_routes.ts`，与 `nitro.prerender.routes` 同源。
+   */
+  sitemap: {
+    autoLastmod: false,
+    urls: SEO_INDEXABLE_ROUTES.map((route) => ({
+      loc: route,
+      lastmod: SITEMAP_LASTMOD,
+      changefreq: SITEMAP_CHANGEFREQ[route] ?? SITEMAP_CHANGEFREQ['*'],
+      priority: SITEMAP_PRIORITY[route] ?? SITEMAP_PRIORITY['*']
+    }))
+  },
 
   // Element Plus 样式已在 assets/app-tailwind.css 里全量引入（并参与 Tailwind 分层），
   // 故模块只负责组件按需注册，不再注入样式，避免重复加载与层级错乱。

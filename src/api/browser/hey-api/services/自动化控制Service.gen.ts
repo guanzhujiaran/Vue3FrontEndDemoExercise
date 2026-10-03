@@ -3,7 +3,7 @@
 import type { RequestResult } from '../client';
 import { client } from '../client.gen';
 import type { Options } from '../sdk.gen';
-import type { ClosePageApiV1RpaBrowserControlOperationClosePagePostData, ClosePageApiV1RpaBrowserControlOperationClosePagePostErrors, ClosePageApiV1RpaBrowserControlOperationClosePagePostResponses, GetBrowserInfoApiV1RpaBrowserControlBrowserInfoPostData, GetBrowserInfoApiV1RpaBrowserControlBrowserInfoPostErrors, GetBrowserInfoApiV1RpaBrowserControlBrowserInfoPostResponses, GetPageInfoApiV1RpaBrowserControlOperationGetPageInfoPostData, GetPageInfoApiV1RpaBrowserControlOperationGetPageInfoPostErrors, GetPageInfoApiV1RpaBrowserControlOperationGetPageInfoPostResponses, OpenPageApiV1RpaBrowserControlOperationOpenPagePostData, OpenPageApiV1RpaBrowserControlOperationOpenPagePostErrors, OpenPageApiV1RpaBrowserControlOperationOpenPagePostResponses, SwitchPageApiV1RpaBrowserControlOperationSwitchPagePostData, SwitchPageApiV1RpaBrowserControlOperationSwitchPagePostErrors, SwitchPageApiV1RpaBrowserControlOperationSwitchPagePostResponses } from '../types.gen';
+import type { ClearLoginStateApiV1RpaBrowserControlOperationClearLoginStatePostData, ClearLoginStateApiV1RpaBrowserControlOperationClearLoginStatePostErrors, ClearLoginStateApiV1RpaBrowserControlOperationClearLoginStatePostResponses, ClosePageApiV1RpaBrowserControlOperationClosePagePostData, ClosePageApiV1RpaBrowserControlOperationClosePagePostErrors, ClosePageApiV1RpaBrowserControlOperationClosePagePostResponses, GetBrowserInfoApiV1RpaBrowserControlBrowserInfoPostData, GetBrowserInfoApiV1RpaBrowserControlBrowserInfoPostErrors, GetBrowserInfoApiV1RpaBrowserControlBrowserInfoPostResponses, GetPageInfoApiV1RpaBrowserControlOperationGetPageInfoPostData, GetPageInfoApiV1RpaBrowserControlOperationGetPageInfoPostErrors, GetPageInfoApiV1RpaBrowserControlOperationGetPageInfoPostResponses, OpenPageApiV1RpaBrowserControlOperationOpenPagePostData, OpenPageApiV1RpaBrowserControlOperationOpenPagePostErrors, OpenPageApiV1RpaBrowserControlOperationOpenPagePostResponses, SwitchPageApiV1RpaBrowserControlOperationSwitchPagePostData, SwitchPageApiV1RpaBrowserControlOperationSwitchPagePostErrors, SwitchPageApiV1RpaBrowserControlOperationSwitchPagePostResponses } from '../types.gen';
 
 export class 自动化控制Service {
     /**
@@ -66,6 +66,34 @@ export class 自动化控制Service {
         return (options.client ?? client).post<GetPageInfoApiV1RpaBrowserControlOperationGetPageInfoPostResponses, GetPageInfoApiV1RpaBrowserControlOperationGetPageInfoPostErrors, ThrowOnError, 'data'>({
             responseStyle: 'data',
             url: '/api/v1/rpa/browser/control/operation/get_page_info',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    /**
+     * 清空登录态（换号）
+     *
+     * 清空该浏览器的登录态，用于「换号」——**不关闭、不重建浏览器**。
+     *
+     * 只做两件事：
+     * 1. 清 cookie（全部站点，含 HttpOnly）+ 权限授权：登录态的真正载体，B 站的
+     * SESSDATA 就是 HttpOnly cookie，页面 JS 清不掉，只能在这里做；
+     * 2. 清已打开页面的 localStorage / sessionStorage：否则 cookie 没了、
+     * 前端缓存的用户信息还在，页面会继续显示旧账号；再按需刷新页面让站点回到未登录态。
+     *
+     * ⚠️ 明确不做：HTTP 磁盘缓存 / Service Worker / IndexedDB / 扩展数据 / 浏览历史。
+     * 正因为不动这些，才不需要删 profile 重建浏览器 —— 会话 ID 不变、不断 WebRTC 流、
+     * 不重排启动队列。反过来，若站点把凭证存在 IndexedDB / SW 里（不靠 cookie），
+     * 本接口对它无效，那类只能走「删除浏览器重建」。
+     */
+    public static clearLoginStateApiV1RpaBrowserControlOperationClearLoginStatePost<ThrowOnError extends boolean = false>(options: Options<ClearLoginStateApiV1RpaBrowserControlOperationClearLoginStatePostData, ThrowOnError>): RequestResult<ClearLoginStateApiV1RpaBrowserControlOperationClearLoginStatePostResponses, ClearLoginStateApiV1RpaBrowserControlOperationClearLoginStatePostErrors, ThrowOnError, 'data'> {
+        return (options.client ?? client).post<ClearLoginStateApiV1RpaBrowserControlOperationClearLoginStatePostResponses, ClearLoginStateApiV1RpaBrowserControlOperationClearLoginStatePostErrors, ThrowOnError, 'data'>({
+            responseStyle: 'data',
+            url: '/api/v1/rpa/browser/control/operation/clear_login_state',
             ...options,
             headers: {
                 'Content-Type': 'application/json',

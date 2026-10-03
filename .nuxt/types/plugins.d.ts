@@ -11,6 +11,9 @@ type NuxtAppInjections =
   InjectionType<typeof import("../../node_modules/nuxt/dist/head/runtime/plugins/unhead.server.js")> &
   InjectionType<typeof import("../../node_modules/nuxt/dist/head/runtime/plugins/unhead.client.js")> &
   InjectionType<typeof import("../../node_modules/nuxt/dist/pages/runtime/plugins/router.js")> &
+  InjectionType<typeof import("../../node_modules/nuxt-site-config/dist/runtime/app/plugins/0.siteConfig.js")> &
+  InjectionType<typeof import("../../node_modules/nuxt/dist/app/plugins/browser-devtools-timing.client.js")> &
+  InjectionType<typeof import("../../node_modules/nuxt/dist/app/plugins/dev-server-logs.js")> &
   InjectionType<typeof import("../../node_modules/nuxt/dist/app/plugins/navigation-repaint.client.js")> &
   InjectionType<typeof import("../../node_modules/nuxt/dist/app/plugins/check-outdated-build.client.js")> &
   InjectionType<typeof import("../../node_modules/nuxt/dist/app/plugins/revive-payload.server.js")> &
@@ -19,6 +22,9 @@ type NuxtAppInjections =
   InjectionType<typeof import("../../node_modules/nuxt/dist/app/plugins/island-link-navigation.client.js")> &
   InjectionType<typeof import("../../node_modules/@pinia/nuxt/dist/runtime/plugin.js")> &
   InjectionType<typeof import("../../node_modules/nuxt/dist/pages/runtime/plugins/prefetch.client.js")> &
+  InjectionType<typeof import("../../node_modules/nuxt/dist/pages/runtime/plugins/check-if-page-unused.js")> &
+  InjectionType<typeof import("../../node_modules/nuxt/dist/app/plugins/warn.dev.server.js")> &
+  InjectionType<typeof import("../../node_modules/nuxt/dist/app/plugins/check-if-layout-used.js")> &
   InjectionType<typeof import("../../src/plugins/casdoor.client")> &
   InjectionType<typeof import("../../src/plugins/clarity.client")> &
   InjectionType<typeof import("../../src/plugins/element-icons")> &
@@ -32,7 +38,7 @@ declare module '#app' {
   interface NuxtApp extends NuxtAppInjections { }
 
   interface NuxtAppLiterals {
-    pluginName: 'nuxt:revive-payload:client' | 'nuxt:head' | 'nuxt:head' | 'nuxt:router' | 'nuxt:revive-payload:server' | 'nuxt:chunk-reload-crawler' | 'nuxt:chunk-reload' | 'nuxt:island-link-navigation' | 'pinia' | 'nuxt:global-components' | 'nuxt:prefetch'
+    pluginName: 'nuxt:revive-payload:client' | 'nuxt:head' | 'nuxt:head' | 'nuxt:router' | 'nuxt-site-config:init' | 'nuxt:browser-devtools-timing' | 'nuxt:revive-payload:server' | 'nuxt:chunk-reload-crawler' | 'nuxt:chunk-reload' | 'nuxt:island-link-navigation' | 'pinia' | 'nuxt:global-components' | 'nuxt:prefetch' | 'nuxt:checkIfPageUnused' | 'nuxt:checkIfLayoutUsed'
   }
 }
 

@@ -22,6 +22,11 @@
     </div>
     <div class="footer-bottom">
       <p>&copy; 2025 BiliExplosion</p>
+      <p class="footer-links">
+        <router-link to="/app/privacy-policy">隐私政策</router-link>
+        <span class="footer-links__divider">|</span>
+        <router-link to="/app/disclaimer">免责声明</router-link>
+      </p>
     </div>
   </footer>
 </template>

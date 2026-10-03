@@ -71,6 +71,7 @@ function retry() {
   props.handleLoad()
 }
 
+// scrollbarRef 指向 BiliScrollbar 封装：其暴露的 wrapRef 即真实滚动元素（el-scrollbar wrap）
 const scrollbarRef = ref<{ wrapRef?: HTMLElement }>()
 function onScroll() {
   const wrap = scrollbarRef.value?.wrapRef
@@ -131,7 +132,7 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="with-loading-more-container-wrapper mb-4 flex min-h-0 flex-1" v-loading="isLoading && !props.reverse">
-    <el-scrollbar ref="scrollbarRef" class="with-loading-more-container mx-auto max-w-6xl w-full" noresize
+    <BiliScrollbar ref="scrollbarRef" class="with-loading-more-container mx-auto max-w-6xl w-full" noresize
       aria-orientation="vertical" :class="{ 'h-full': props.fillParent }"
       :style="props.fillParent ? undefined : { maxHeight: maxHeightPx }"
       wrap-style="overflow-x: hidden;">
@@ -150,7 +151,7 @@ onBeforeUnmount(() => {
         <span v-if="isMore" @click="handleLoad" class="cursor-pointer">查看更多</span>
         <span v-else-if="!isError && showEndText" class="cursor-pointer">到底了喵~</span>
       </div>
-    </el-scrollbar>
+    </BiliScrollbar>
   </div>
 </template>
 

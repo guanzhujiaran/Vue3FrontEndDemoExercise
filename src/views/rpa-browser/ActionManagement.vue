@@ -341,7 +341,7 @@ onMounted(() => {
       </div>
 
       <!-- 空状态 -->
-      <div v-else-if="actionList.length === 0" class="flex flex-col items-center justify-center py-20 text-gray-400">
+      <div v-else-if="actionList.length === 0" class="flex flex-col items-center justify-center my-20 text-gray-400">
         <el-empty description="暂无自定义动作" />
       </div>
 

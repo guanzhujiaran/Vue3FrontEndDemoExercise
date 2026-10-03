@@ -3,6 +3,9 @@
 /// <reference path="shared-app.config.d.ts" />
 /// <reference path="runtime-config.d.ts" />
 /// <reference path="../../node_modules/@nuxt/nitro-server/dist/augments.d.mts" />
+/// <reference path="nuxtseo-nitro.d.ts" />
+/// <reference path="../module/nuxt-site-config.d.ts" />
+/// <reference path="nuxt-sitemap-augments.d.ts" />
 /// <reference path="nitro-middleware.d.ts" />
 /// <reference path="../schema/nuxt.schema.d.ts" />
 

@@ -209,28 +209,19 @@ onMounted(() => localeStore.applyBrowserLocale())
         <div
           class="site-layout w-full flex-1 flex flex-col pt-[env(safe-area-inset-top,0px)] pr-[env(safe-area-inset-right,0px)] pb-[env(safe-area-inset-bottom,0px)] pl-[env(safe-area-inset-left,0px)]">
           <el-container v-if="isInit" id="i_cecream">
-            <el-header class="bili-header">
+            <el-header class="bili-header p-0">
               <HeaderBarView />
             </el-header>
-            <el-main
-              class="flex! flex-col flex-1 px-0 pb-4 pt-0 mt-3 mx-6 text-text-primary"
-              :style="{ overflow: 'visible' }"
-            >
+            <el-main class="flex! flex-col flex-1 mx-2 mt-3 p-0 text-text-primary" :style="{ overflow: 'visible' }">
               <RouterView v-slot="{ Component, route }">
                 <!-- 注意：本 transition 的 mode="out-in" 依赖「子组件单根元素」。
                      顶层路由组件若为多根（fragment）组件，会把 keep-alive 缓存的布局 vnode
                      弄丢/残留（例如从 /app/rpa-browser 切回 /app/admin 时侧边栏整体消失）。
                      因此所有被本 RouterView 渲染的顶层路由组件必须是单根组件。 -->
                 <transition name="slide-fade" mode="out-in">
-                  <keep-alive
-                    :max="30"
-                    :exclude="['MomentDetailView']"
-                  >
-                    <component
-                      :is="Component"
-                      :key="routeViewKey"
-                      class="main-inner flex flex-col flex-1 box-border rounded"
-                    />
+                  <keep-alive :max="30" :exclude="['MomentDetailView']">
+                    <component :is="Component" :key="routeViewKey"
+                      class="main-inner flex flex-col flex-1 box-border rounded" />
                   </keep-alive>
                 </transition>
               </RouterView>
@@ -249,7 +240,11 @@ onMounted(() => localeStore.applyBrowserLocale())
             <LoginModal ref="loginModalRef" />
           </ClientOnly>
         </div>
-        <ScrollButtons :scroll-top="scrollTop" :top-threshold="100" :bottom-threshold="100" />
+        <!-- 自带内部滚动容器的侧边导航模块（消息/管理后台/RPA）隐藏全局快速滚动按钮，
+             只保留各自布局内部的 ScrollButtons，避免两对按钮叠在右下角 -->
+        <ScrollButtons
+          v-if="!route.path.startsWith('/app/message') && !route.path.startsWith('/app/admin') && !route.path.startsWith('/app/rpa-browser')"
+          :scroll-top="scrollTop" :top-threshold="100" :bottom-threshold="100" />
       </el-scrollbar>
     </el-config-provider>
   </template>

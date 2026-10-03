@@ -347,6 +347,26 @@ const routes: CustomRouteRecordRaw[] = [
       order: 6
     }
   },
+  {
+    path: '/app/privacy-policy',
+    name: RouteName.PRIVACY_POLICY,
+    component: () => import('@/views/PrivacyPolicyView.vue'),
+    meta: {
+      title: '隐私政策',
+      description: '本应用隐私政策',
+      isHeaderShow: false
+    }
+  },
+  {
+    path: '/app/disclaimer',
+    name: RouteName.DISCLAIMER,
+    component: () => import('@/views/DisclaimerView.vue'),
+    meta: {
+      title: '免责声明',
+      description: '免责声明',
+      isHeaderShow: false
+    }
+  },
 
   {
     path: '/app/casdoor-callback',
@@ -404,7 +424,7 @@ const routes: CustomRouteRecordRaw[] = [
           description: '浏览器指纹列表',
           order: 1,
           showInHome: false,
-          isHeaderShow: true
+          isHeaderShow: false
         }
       },
       {
@@ -443,7 +463,9 @@ const routes: CustomRouteRecordRaw[] = [
           description: '浏览器Stream控制台',
           order: 4,
           showInHome: false,
-          isHeaderShow: false
+          isHeaderShow: false,
+          // Stream 控制台为沉浸式实时操控页，隐藏 RPA 布局的侧边导航（返回列表页进入）
+          hideSideNav: true
         }
       },
       {
@@ -470,7 +492,7 @@ const routes: CustomRouteRecordRaw[] = [
           description: '管理自定义动作',
           order: 6,
           showInHome: false,
-          isHeaderShow: true
+          isHeaderShow: false
         }
       },
       {
@@ -483,7 +505,7 @@ const routes: CustomRouteRecordRaw[] = [
           description: '提交公开审批申请并查看我的审批进度',
           order: 9,
           showInHome: false,
-          isHeaderShow: true
+          isHeaderShow: false
         }
       },
       {
@@ -497,7 +519,7 @@ const routes: CustomRouteRecordRaw[] = [
           description: '管理工作流配置与执行',
           order: 7,
           showInHome: false,
-          isHeaderShow: true
+          isHeaderShow: false
         }
       },
       {
@@ -511,7 +533,20 @@ const routes: CustomRouteRecordRaw[] = [
           description: '查看浏览器操作的执行日志',
           order: 8,
           showInHome: false,
-          isHeaderShow: true
+          isHeaderShow: false
+        }
+      },
+      {
+        path: 'membership',
+        name: RouteName.RPA_BROWSER_MEMBERSHIP,
+        component: () => import('@/views/rpa-browser/MembershipView.vue'),
+        meta: {
+          title: RouteName.RPA_BROWSER_MEMBERSHIP,
+          icon: IconShoppingCart,
+          description: '时长余额、每日签到、兑换码与使用统计',
+          isHeaderShow: false,
+          order: 10,
+          showInHome: false
         }
       }
     ]
@@ -720,6 +755,12 @@ const routes: CustomRouteRecordRaw[] = [
         meta: { title: '操作审计', requiresAdmin: true, hidden: true }
       },
       {
+        path: 'rpa/membership-codes',
+        name: 'ADMIN_RPA_MEMBERSHIP_CODES',
+        component: () => import('@/views/rpa-browser/admin/MembershipCodesAdmin.vue'),
+        meta: { title: '兑换码管理', requiresAdmin: true, hidden: true }
+      },
+      {
         path: 'rpa/cert',
         name: 'ADMIN_RPA_CERT',
         component: () => import('@/views/rpa-browser/admin/CertificationAdmin.vue'),
@@ -851,6 +892,17 @@ const routes: CustomRouteRecordRaw[] = [
         component: () => import('@/views/admin/BrowserQuotaView.vue'),
         meta: {
           title: '浏览器配额',
+          requiresMessageRoot: true,
+          hidden: true
+        }
+      },
+      {
+        // RPC 调试（真实 RabbitMQ 往返，回显原始信封）：仅消息管理端 root 可见
+        path: 'rpc-debug',
+        name: 'ADMIN_RPC_DEBUG',
+        component: () => import('@/views/admin/RpcDebugView.vue'),
+        meta: {
+          title: 'RPC 调试',
           requiresMessageRoot: true,
           hidden: true
         }

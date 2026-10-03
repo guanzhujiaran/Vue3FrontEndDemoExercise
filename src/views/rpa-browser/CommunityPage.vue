@@ -410,7 +410,7 @@ onMounted(() => {
         </div>
       </div>
 
-      <CenteredContainer v-else class="py-20">
+      <CenteredContainer v-else class="my-20">
         <el-empty description="暂无内容">
           <el-button type="primary">成为第一个分享者</el-button>
         </el-empty>

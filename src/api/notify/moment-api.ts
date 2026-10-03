@@ -288,6 +288,16 @@ export async function dislikeMoment(
 }
 
 /** 批量查询某类型资源当前用户交互态（收藏+点赞+计数）——列表页专用，不累计浏览 */
+/**
+ * 合法互动 bizId：纯数字雪花 ID。
+ * 后端 `/interaction/status` 把逗号分隔的 bizIds 逐段 `int()`，任何非数字片段
+ * 都会返回 400「bizIds 不合法」——归一化兜底分支曾拿中文文本片段当 ID 导致整页 400。
+ * 批量拉取前必须用它过滤。
+ */
+export function isNumericBizId(bizId: string | null | undefined): boolean {
+  return !!bizId && /^\d+$/.test(bizId)
+}
+
 export async function fetchInteractionStatus(
   bizType: InteractionBizTypeEnum,
   bizIds: string[]
