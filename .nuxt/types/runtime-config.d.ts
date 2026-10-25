@@ -1,5 +1,7 @@
 import { RuntimeConfig as UserRuntimeConfig, PublicRuntimeConfig as UserPublicRuntimeConfig } from 'nuxt/schema'
   interface SharedRuntimeConfig {
+   appSecret: string,
+
    app: {
       buildId: string,
 
@@ -29,7 +31,7 @@ import { RuntimeConfig as UserRuntimeConfig, PublicRuntimeConfig as UserPublicRu
    },
   }
   interface SharedPublicRuntimeConfig {
-
+   minLayoutWidth: number,
   }
 declare module '@nuxt/schema' {
   interface RuntimeConfig extends UserRuntimeConfig {}

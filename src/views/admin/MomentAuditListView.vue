@@ -45,7 +45,7 @@
               :row-height="72"
               :header-height="44"
               :footer-height="total > pageSize ? 64 : 0"
-              row-key="dynIdStr"
+              row-key="dynId_str"
               fixed
             >
               <template #header-cell="{ column }">
@@ -92,7 +92,7 @@
                       v-if="canApprove(rowData.auditStatus)"
                       size="default"
                       type="primary"
-                      :loading="approvingId === rowData.dynIdStr"
+                      :loading="approvingId === rowData.dynId_str"
                       @click="handleApprove(rowData)"
                     >
                       通过
@@ -101,7 +101,7 @@
                       v-if="canReject(rowData.auditStatus)"
                       size="default"
                       type="danger"
-                      :loading="rejectingId === rowData.dynIdStr"
+                      :loading="rejectingId === rowData.dynId_str"
                       @click="handleReject(rowData)"
                     >
                       驳回
@@ -111,7 +111,7 @@
 
                 <!-- 动态 ID -->
                 <template v-else>
-                  <span class="text-sm text-text-primary">{{ rowData.dynIdStr }}</span>
+                  <span class="text-sm text-text-primary">{{ rowData.dynId_str }}</span>
                 </template>
               </template>
 
@@ -228,7 +228,7 @@ const emptyText = computed(() => {
 
 // el-table-v2 列定义（与 CommentAdminView 保持同构；无批量选择列，操作列固定右侧）
 const auditColumns: Column<MomentAuditItem>[] = [
-  { key: 'dynIdStr', title: '动态 ID', width: 160 },
+  { key: 'dynId_str', title: '动态 ID', width: 160 },
   { key: 'author', title: '发布者', width: 180 },
   { key: 'contentText', title: '内容预览', width: 360, minWidth: 200, flexGrow: 1 },
   { key: 'type', title: '类型', width: 100 },
@@ -264,16 +264,16 @@ function fitTableHeight(avail: number): number {
 
 /** 拉取当前 Tab 数据；`force=true`（刷新按钮）时忽略已加载标记重新请求 */
 async function handleApprove(item: MomentAuditItem) {
-  approvingId.value = item.dynIdStr
+  approvingId.value = item.dynId_str
   // 统一审核接口：按 bizType(dynamic) + bizId(dynId) 操作，驳回通知由后端资源方法承载
   const res = await auditApproveByBiz(
     InteractionBizTypeEnum.DYNAMIC,
-    item.dynIdStr,
+    item.dynId_str ?? '',
     '通过'
   )
   approvingId.value = null
   if (res) {
-    removeRow((i) => i.dynIdStr === item.dynIdStr)
+    removeRow((i) => i.dynId_str === item.dynId_str)
     biliMessage.success('已通过')
     // 审核会改变各状态的数量，总览统计需同步刷新（否则卡片停留在审核前的数字）
     await loadStatistics()
@@ -286,16 +286,16 @@ async function handleReject(item: MomentAuditItem) {
       m.ElMessageBox.prompt('请输入驳回原因', '驳回动态', { inputType: 'textarea', lockScroll: false })
     )
     if (reason) {
-      rejectingId.value = item.dynIdStr
+      rejectingId.value = item.dynId_str
       const res = await auditRejectByBiz(
         InteractionBizTypeEnum.DYNAMIC,
-        item.dynIdStr,
+        item.dynId_str ?? '',
         reason,
         '驳回'
       )
       rejectingId.value = null
       if (res) {
-        removeRow((i) => i.dynIdStr === item.dynIdStr)
+        removeRow((i) => i.dynId_str === item.dynId_str)
         biliMessage.success('已驳回')
         // 审核会改变各状态的数量，总览统计需同步刷新
         await loadStatistics()

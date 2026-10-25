@@ -283,13 +283,13 @@ const POLL_INTERVAL = 15000
 const pollLoading = ref(false)
 let pollTimer: ReturnType<typeof setInterval> | null = null
 
-const talkerMidStr = computed(() => String(props.talkerMid))
+const talkerMid_str = computed(() => String(props.talkerMid))
 
 // 展示用「对方资料」：优先用主动拉取到的真实资料（按 mid 走 /user/space/info），
 // 回退到布局透传的会话快照（昵称/头像），最后回落到「用户{mid}」+ 默认头像。
 // 不再依赖外部 deep link 带入的 ?name= 查询参数。
 const talkerInfo = ref<{ name?: string | null; face?: string | null } | null>(null)
-const displayName = computed(() => talkerInfo.value?.name || props.talkerName || `用户${talkerMidStr.value}`)
+const displayName = computed(() => talkerInfo.value?.name || props.talkerName || `用户${talkerMid_str.value}`)
 const displayAvatar = computed(() => talkerInfo.value?.face || props.talkerAvatar || null)
 
 // 拉取对方资料时的加载态与「用户不存在/拉取失败」标记：
@@ -337,7 +337,7 @@ async function fetchTalker() {
       // 不置 talkerMissing，保留聊天窗，展示历史消息；对方资料回落到会话快照 / 占位。
       blockedWithTalker.value = true
       talkerMissing.value = false
-      talkerInfo.value = { name: props.talkerName || `用户${talkerMidStr.value}`, face: props.talkerAvatar || null }
+      talkerInfo.value = { name: props.talkerName || `用户${talkerMid_str.value}`, face: props.talkerAvatar || null }
       // 判定方向：是否我主动拉黑了对方（用于顶部「解除拉黑」入口）
       try {
         const r = await userApi.BlocklistCheck(mid)
@@ -360,7 +360,7 @@ async function fetchTalker() {
 }
 
 function isSelf(msg: DmMessageItem): boolean {
-  return String(msg.sender_uid) !== talkerMidStr.value
+  return String(msg.sender_uid) !== talkerMid_str.value
 }
 
 function formatTime(ts?: number | null): string {
@@ -407,7 +407,7 @@ async function load() {
   hasMore.value = true
   cursor.value = null
   try {
-    const res = await fetchDmMessages({ talker_mid: talkerMidStr.value, size: 10 })
+    const res = await fetchDmMessages({ talker_mid: talkerMid_str.value, size: 10 })
     // 后端按 msgkey 倒序返回（最新消息在前），聊天展示需要最早在上、最新在底部
     messages.value = [...(res.items ?? [])].reverse()
     cursor.value = res.cursor ?? null
@@ -415,7 +415,7 @@ async function load() {
     // 打开会话即标记已读：把该会话未读清零并抬高已读水位，后端红点随之消失。
     // 失败不影响消息展示，静默忽略（下次打开或轮询仍会再同步）。
     try {
-      await ackDmSession({ talker_mid: talkerMidStr.value })
+      await ackDmSession({ talker_mid: talkerMid_str.value })
     } catch {
       // 标记已读失败静默处理
     }
@@ -438,7 +438,7 @@ async function loadOlder() {
     const prevHeight = el?.scrollHeight ?? 0
     const prevTop = el?.scrollTop ?? 0
     const res = await fetchDmMessages({
-      talker_mid: talkerMidStr.value,
+      talker_mid: talkerMid_str.value,
       cursor: cursor.value,
       size: 10
     })
@@ -480,7 +480,8 @@ const newestMsgkey = computed<string | null>(() => {
   let max: string | null = null
   for (const m of messages.value) {
     if (!m.msgkey) continue
-    if (max === null || BigInt(m.msgkey) > BigInt(max)) max = m.msgkey
+    const key = m.msgkey_str ?? ''
+    if (max === null || (key && BigInt(key) > BigInt(max))) max = key
   }
   return max
 })
@@ -494,7 +495,7 @@ async function pollLoad() {
   try {
     if (newestMsgkey.value) {
       const res = await fetchDmMessages({
-        talker_mid: talkerMidStr.value,
+        talker_mid: talkerMid_str.value,
         cursor: newestMsgkey.value,
         size: 10,
         direction: 'forward'
@@ -512,7 +513,7 @@ async function pollLoad() {
       }
     } else {
       // 尚无已加载消息（异常兜底）：回落拉最新一页
-      const res = await fetchDmMessages({ talker_mid: talkerMidStr.value, size: 10 })
+      const res = await fetchDmMessages({ talker_mid: talkerMid_str.value, size: 10 })
       const fetched = [...(res.items ?? [])].reverse()
       const existingKeys = new Set(messages.value.map((m) => m.msgkey))
       const merged = messages.value.slice()
@@ -545,7 +546,7 @@ async function onSend() {
   if (!text || sending.value) return
   sending.value = true
   try {
-    const resp = await sendDm({ receiver_mid: talkerMidStr.value, content: text })
+    const resp = await sendDm({ receiver_mid: talkerMid_str.value, content: text })
     if (resp) {
       // 发送成功：直接按发送回执本地构造并追加这条消息，不再整段重拉聊天记录
       //（避免触发 loading 骨架屏闪动、丢失浏览位置）。真实 msgkey 与轮询 / 历史
@@ -553,9 +554,10 @@ async function onSend() {
       draft.value = ''
       const ts = resp.msg_ts || Date.now()
       const localMsg: DmMessageItem = {
-        msgkey: resp.msgkey,
+        msgkey: 0,
+        msgkey_str: resp.msgkey_str ?? '',
         sender_uid: Number(selfMid.value) || 0,
-        sender_uidStr: selfMid.value || null,
+        sender_uid_str: selfMid.value || null,
         msg_type: DmMsgTypeEnum.TEXT,
         msg_status: DmMsgStatusEnum.NORMAL,
         content: text,
@@ -592,7 +594,7 @@ async function onMessageCommand(msg: DmMessageItem, command: string) {
     } catch {
       return // 用户取消
     }
-    const ok = await recallDmMessage(msg.msgkey)
+    const ok = await recallDmMessage(msg.msgkey_str ?? '')
     if (!ok) return // 失败已由 request 弹错（含后端超时拒绝）
     // 本地标记为已撤回，展示「XX 撤回了一条消息」样式
     messages.value = messages.value.map((m) =>
@@ -613,7 +615,7 @@ async function onMessageCommand(msg: DmMessageItem, command: string) {
     } catch {
       return // 用户取消
     }
-    const ok = await deleteDmMessages([msg.msgkey])
+    const ok = await deleteDmMessages([msg.msgkey_str ?? ''])
     if (!ok) return
     messages.value = messages.value.filter((m) => m.msgkey !== msg.msgkey)
   }

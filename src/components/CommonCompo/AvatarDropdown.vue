@@ -152,11 +152,18 @@ const handleMessageCenterClick = () => {
 // 处理退出登录
 const handleLogout = async () => {
   try {
-    await userApi.Logout()
-    biliMessage.success(t('common.logoutSuccess'))
+    // silent=true：成功提示由本函数统一弹，避免与 businessHandler 内部重复弹两次。
+    // 注意 businessHandler 不会 reject，失败时只返回 { success: false }，
+    // 因此必须显式判断 success，不能靠 catch 兜业务失败。
+    const result = await userApi.Logout(true)
+    if (result.success) {
+      biliMessage.success(t('common.logoutSuccess'))
+    }
+    // 失败时 businessHandler 已弹出后端返回的真实报错文案，这里不再重复提示；
+    // 无论成败本地登录态都已清掉（HttpOnly Cookie 由网关的响应负责清除）。
   } catch (error) {
-    console.error('退出登录失败:', error)
-    biliMessage.warning(t('common.logoutFailedCleared'))
+    // 仅兜底极端异常（如代码级报错），业务失败不会走到这里
+    console.error('退出登录异常:', error)
   } finally {
     // 清除用户信息和JWT token
     userNavStore.delete_user_nav()

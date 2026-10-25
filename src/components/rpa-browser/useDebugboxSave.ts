@@ -3,6 +3,7 @@ import { 自定义操作管理Service } from '@/api/browser/hey-api'
 import type { BuiltinActionType } from '@/api/browser/hey-api'
 import { useUserNavStore } from '@/stores/user_nav'
 import biliMessage from '@/utils/message'
+import { pickBackendMsg } from '@/utils/backendErrorMsg'
 import type { BranchPathStep, DroppedItem } from './debugbox-types'
 
 export function useDebugboxSave(
@@ -168,17 +169,20 @@ export function useDebugboxSave(
             parameters_schema: [], steps, is_public: saveDialogForm.value.isPublic, tags: [],
             input_vars: [], output_vars: [], timeout: 30000, retry_on_error: false, retry_times: 0, retry_delay: 1.0 },
           headers: userNavStore.user_header,
+          // 失败走非 2xx 响应，开启 throwOnError 以便 catch 直接拿到后端 { code, msg, data }
+          throwOnError: true,
         })
         if (response?.code === 0) { biliMessage.success('自定义操作保存成功'); saveDialogVisible.value = false; saveMultiItems.value = [] }
         else {
-          const msg = response?.msg || `保存失败 (code: ${response?.code})`
+          const msg = response?.msg || '保存失败'
           console.error('[DebugboxSave] 复合动作保存失败:', response.data)
           biliMessage.error(msg)
         }
       } catch (error: unknown) {
-        const msg = error instanceof Error ? error.message : String(error)
+        // 优先直接展示后端 msg；无 msg 或默认 500 才用兜底文案
+        const backendMsg = pickBackendMsg(error)
         console.error('[DebugboxSave] 复合动作保存异常:', error)
-        biliMessage.error(msg ? `保存失败: ${msg}` : '网络异常，保存失败')
+        biliMessage.error(backendMsg || '网络异常，保存失败')
       }
       finally { saveDialogLoading.value = false }
       return
@@ -210,17 +214,20 @@ export function useDebugboxSave(
           input_vars: [], output_vars: [], timeout: 30000, retry_on_error: false, retry_times: 0, retry_delay: 1.0,
         },
         headers: userNavStore.user_header,
+        // 失败走非 2xx 响应，开启 throwOnError 以便 catch 直接拿到后端 { code, msg, data }
+        throwOnError: true,
       })
       if (response?.code === 0) { biliMessage.success('自定义操作保存成功'); saveDialogVisible.value = false }
       else {
-        const msg = response?.msg || `保存失败 (code: ${response?.code})`
+        const msg = response?.msg || '保存失败'
         console.error('[DebugboxSave] 单项动作保存失败:', response.data)
         biliMessage.error(msg)
       }
     } catch (error: unknown) {
-      const msg = error instanceof Error ? error.message : String(error)
+      // 优先直接展示后端 msg；无 msg 或默认 500 才用兜底文案
+      const backendMsg = pickBackendMsg(error)
       console.error('[DebugboxSave] 单项动作保存异常:', error)
-      biliMessage.error(msg ? `保存失败: ${msg}` : '网络异常，保存失败')
+      biliMessage.error(backendMsg || '网络异常，保存失败')
     }
     finally { saveDialogLoading.value = false }
   }

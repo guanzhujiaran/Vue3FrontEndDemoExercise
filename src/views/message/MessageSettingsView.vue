@@ -50,6 +50,18 @@
           <el-radio :label="true">{{ t('message.on') }}</el-radio>
           <el-radio :label="false">{{ t('message.off') }}</el-radio>
         </el-radio-group>
+        <div
+          class="message-settings__push mt-3 flex items-center gap-2"
+          :class="{ 'opacity-60': form.recv_reply !== true }"
+        >
+          <el-switch
+            :model-value="form.push_reply === true"
+            :disabled="form.recv_reply !== true"
+            @update:model-value="update('push_reply', $event === true)"
+          />
+          <span class="text-sm text-text-secondary">{{ t('message.settingsPush') }}</span>
+          <span class="message-settings__tip text-text-placeholder">{{ t('message.settingsPushTip') }}</span>
+        </div>
       </div>
 
       <div class="message-settings__row mb-6">
@@ -66,6 +78,18 @@
           <el-radio :label="true">{{ t('message.on') }}</el-radio>
           <el-radio :label="false">{{ t('message.off') }}</el-radio>
         </el-radio-group>
+        <div
+          class="message-settings__push mt-3 flex items-center gap-2"
+          :class="{ 'opacity-60': form.recv_at !== true }"
+        >
+          <el-switch
+            :model-value="form.push_at === true"
+            :disabled="form.recv_at !== true"
+            @update:model-value="update('push_at', $event === true)"
+          />
+          <span class="text-sm text-text-secondary">{{ t('message.settingsPush') }}</span>
+          <span class="message-settings__tip text-text-placeholder">{{ t('message.settingsPushTip') }}</span>
+        </div>
       </div>
 
       <div class="message-settings__row">
@@ -80,6 +104,18 @@
           <el-radio :label="true">{{ t('message.on') }}</el-radio>
           <el-radio :label="false">{{ t('message.off') }}</el-radio>
         </el-radio-group>
+        <div
+          class="message-settings__push mt-3 flex items-center gap-2"
+          :class="{ 'opacity-60': form.recv_like !== true }"
+        >
+          <el-switch
+            :model-value="form.push_like === true"
+            :disabled="form.recv_like !== true"
+            @update:model-value="update('push_like', $event === true)"
+          />
+          <span class="text-sm text-text-secondary">{{ t('message.settingsPush') }}</span>
+          <span class="message-settings__tip text-text-placeholder">{{ t('message.settingsPushTip') }}</span>
+        </div>
       </div>
     </div>
   </div>
@@ -103,6 +139,10 @@ const form = reactive<MessageSettingPartial>({
   recv_stranger_dm: true,
   recv_notify: true,
   push_enabled: true,
+  // 互动事件外推开关默认关闭（与后端默认一致）
+  push_reply: false,
+  push_at: false,
+  push_like: false,
   dnd_start_hour: null,
   dnd_end_hour: null
 })

@@ -1,5 +1,6 @@
 import { ref } from 'vue'
 import { defineStore } from 'pinia'
+import { browserPersistStorage } from '@/utils/persistStorage'
 
 // 定义Store
 export const useViewedLotDataStore = defineStore(
@@ -48,7 +49,7 @@ export const useViewedLotDataStore = defineStore(
   {
     persist: {
       key: 'viewed-lot-data', // 确保这里的key与store的id一致或根据实际情况调整
-      storage: localStorage
+      storage: browserPersistStorage
     }
   }
 )

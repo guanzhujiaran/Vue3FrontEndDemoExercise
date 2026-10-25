@@ -3,7 +3,7 @@
 import type { RequestResult } from '../client';
 import { client } from '../client.gen';
 import type { Options } from '../sdk.gen';
-import type { BanUserApiAdminRpaBanCreatePostData, BanUserApiAdminRpaBanCreatePostErrors, BanUserApiAdminRpaBanCreatePostResponses, CancelApprovalApiAdminRpaApprovalCancelPostData, CancelApprovalApiAdminRpaApprovalCancelPostErrors, CancelApprovalApiAdminRpaApprovalCancelPostResponses, CertifyApiAdminRpaCertificationCertifyPostData, CertifyApiAdminRpaCertificationCertifyPostErrors, CertifyApiAdminRpaCertificationCertifyPostResponses, DeleteApprovalApiAdminRpaApprovalDeletePostData, DeleteApprovalApiAdminRpaApprovalDeletePostErrors, DeleteApprovalApiAdminRpaApprovalDeletePostResponses, DeleteTagApiAdminRpaTagDeletePostData, DeleteTagApiAdminRpaTagDeletePostErrors, DeleteTagApiAdminRpaTagDeletePostResponses, GenerateMembershipCodesApiAdminRpaMembershipCodesGeneratePostData, GenerateMembershipCodesApiAdminRpaMembershipCodesGeneratePostErrors, GenerateMembershipCodesApiAdminRpaMembershipCodesGeneratePostResponses, GetAllSessionsApiAdminRpaSessionsAllPostData, GetAllSessionsApiAdminRpaSessionsAllPostResponses, GetBanStatusApiAdminRpaBanStatusPostData, GetBanStatusApiAdminRpaBanStatusPostErrors, GetBanStatusApiAdminRpaBanStatusPostResponses, GetBrowserMonitorPagesApiAdminRpaBrowserMonitorPagesPostData, GetBrowserMonitorPagesApiAdminRpaBrowserMonitorPagesPostErrors, GetBrowserMonitorPagesApiAdminRpaBrowserMonitorPagesPostResponses, GetBrowserSessionConfigApiAdminRpaConfigBrowserSessionGetData, GetBrowserSessionConfigApiAdminRpaConfigBrowserSessionGetResponses, GetLaunchQueueStatusApiAdminRpaBrowserLaunchQueueStatusPostData, GetLaunchQueueStatusApiAdminRpaBrowserLaunchQueueStatusPostErrors, GetLaunchQueueStatusApiAdminRpaBrowserLaunchQueueStatusPostResponses, LiftUserBanApiAdminRpaBanLiftPostData, LiftUserBanApiAdminRpaBanLiftPostErrors, LiftUserBanApiAdminRpaBanLiftPostResponses, ListApprovalsApiAdminRpaApprovalListPostData, ListApprovalsApiAdminRpaApprovalListPostErrors, ListApprovalsApiAdminRpaApprovalListPostResponses, ListAuditApiAdminRpaAuditListPostData, ListAuditApiAdminRpaAuditListPostErrors, ListAuditApiAdminRpaAuditListPostResponses, ListBansApiAdminRpaBanListPostData, ListBansApiAdminRpaBanListPostErrors, ListBansApiAdminRpaBanListPostResponses, ListBrowserMonitorsApiAdminRpaBrowserMonitorsPostData, ListBrowserMonitorsApiAdminRpaBrowserMonitorsPostErrors, ListBrowserMonitorsApiAdminRpaBrowserMonitorsPostResponses, ListCertificationsApiAdminRpaCertificationListPostData, ListCertificationsApiAdminRpaCertificationListPostErrors, ListCertificationsApiAdminRpaCertificationListPostResponses, ListMembershipCodesApiAdminRpaMembershipCodesListPostData, ListMembershipCodesApiAdminRpaMembershipCodesListPostErrors, ListMembershipCodesApiAdminRpaMembershipCodesListPostResponses, ReadPermissionQuotasApiAdminRpaPermissionLevelsGetData, ReadPermissionQuotasApiAdminRpaPermissionLevelsGetErrors, ReadPermissionQuotasApiAdminRpaPermissionLevelsGetResponses, ResetPermissionQuotasApiAdminRpaPermissionResetPostData, ResetPermissionQuotasApiAdminRpaPermissionResetPostErrors, ResetPermissionQuotasApiAdminRpaPermissionResetPostResponses, ReviewApprovalApiAdminRpaApprovalReviewPostData, ReviewApprovalApiAdminRpaApprovalReviewPostErrors, ReviewApprovalApiAdminRpaApprovalReviewPostResponses, RevokeCertificationApiAdminRpaCertificationRevokePostData, RevokeCertificationApiAdminRpaCertificationRevokePostErrors, RevokeCertificationApiAdminRpaCertificationRevokePostResponses, SearchResourcesApiAdminRpaApprovalResourcesPostData, SearchResourcesApiAdminRpaApprovalResourcesPostErrors, SearchResourcesApiAdminRpaApprovalResourcesPostResponses, StopBrowserSessionApiAdminRpaBrowserSessionStopPostData, StopBrowserSessionApiAdminRpaBrowserSessionStopPostErrors, StopBrowserSessionApiAdminRpaBrowserSessionStopPostResponses, SubmitApprovalApiAdminRpaApprovalSubmitPostData, SubmitApprovalApiAdminRpaApprovalSubmitPostErrors, SubmitApprovalApiAdminRpaApprovalSubmitPostResponses, UpdateBrowserSessionConfigApiAdminRpaConfigBrowserSessionPostData, UpdateBrowserSessionConfigApiAdminRpaConfigBrowserSessionPostErrors, UpdateBrowserSessionConfigApiAdminRpaConfigBrowserSessionPostResponses, UpdatePermissionQuotasApiAdminRpaPermissionUpdatePostData, UpdatePermissionQuotasApiAdminRpaPermissionUpdatePostErrors, UpdatePermissionQuotasApiAdminRpaPermissionUpdatePostResponses, UpdateTagApiAdminRpaTagUpdatePostData, UpdateTagApiAdminRpaTagUpdatePostErrors, UpdateTagApiAdminRpaTagUpdatePostResponses } from '../types.gen';
+import type { BanUserApiAdminRpaBanCreatePostData, BanUserApiAdminRpaBanCreatePostErrors, BanUserApiAdminRpaBanCreatePostResponses, CancelApprovalApiAdminRpaApprovalCancelPostData, CancelApprovalApiAdminRpaApprovalCancelPostErrors, CancelApprovalApiAdminRpaApprovalCancelPostResponses, CertifyApiAdminRpaCertificationCertifyPostData, CertifyApiAdminRpaCertificationCertifyPostErrors, CertifyApiAdminRpaCertificationCertifyPostResponses, DeleteApprovalApiAdminRpaApprovalDeletePostData, DeleteApprovalApiAdminRpaApprovalDeletePostErrors, DeleteApprovalApiAdminRpaApprovalDeletePostResponses, DeleteTagApiAdminRpaTagDeletePostData, DeleteTagApiAdminRpaTagDeletePostErrors, DeleteTagApiAdminRpaTagDeletePostResponses, DeleteWorkflowAdminApiAdminRpaWorkflowDeletePostData, DeleteWorkflowAdminApiAdminRpaWorkflowDeletePostErrors, DeleteWorkflowAdminApiAdminRpaWorkflowDeletePostResponses, GenerateMembershipCodesApiAdminRpaMembershipCodesGeneratePostData, GenerateMembershipCodesApiAdminRpaMembershipCodesGeneratePostErrors, GenerateMembershipCodesApiAdminRpaMembershipCodesGeneratePostResponses, GetAllSessionsApiAdminRpaSessionsAllPostData, GetAllSessionsApiAdminRpaSessionsAllPostResponses, GetBanStatusApiAdminRpaBanStatusPostData, GetBanStatusApiAdminRpaBanStatusPostErrors, GetBanStatusApiAdminRpaBanStatusPostResponses, GetBrowserMonitorPagesApiAdminRpaBrowserMonitorPagesPostData, GetBrowserMonitorPagesApiAdminRpaBrowserMonitorPagesPostErrors, GetBrowserMonitorPagesApiAdminRpaBrowserMonitorPagesPostResponses, GetBrowserSessionConfigApiAdminRpaConfigBrowserSessionGetData, GetBrowserSessionConfigApiAdminRpaConfigBrowserSessionGetResponses, GetLaunchQueueStatusApiAdminRpaBrowserLaunchQueueStatusPostData, GetLaunchQueueStatusApiAdminRpaBrowserLaunchQueueStatusPostErrors, GetLaunchQueueStatusApiAdminRpaBrowserLaunchQueueStatusPostResponses, GetSignRewardConfigApiAdminRpaMembershipSignInRewardsGetPostData, GetSignRewardConfigApiAdminRpaMembershipSignInRewardsGetPostErrors, GetSignRewardConfigApiAdminRpaMembershipSignInRewardsGetPostResponses, GetWorkflowAdminApiAdminRpaWorkflowGetPostData, GetWorkflowAdminApiAdminRpaWorkflowGetPostErrors, GetWorkflowAdminApiAdminRpaWorkflowGetPostResponses, LiftUserBanApiAdminRpaBanLiftPostData, LiftUserBanApiAdminRpaBanLiftPostErrors, LiftUserBanApiAdminRpaBanLiftPostResponses, ListApprovalsApiAdminRpaApprovalListPostData, ListApprovalsApiAdminRpaApprovalListPostErrors, ListApprovalsApiAdminRpaApprovalListPostResponses, ListAuditApiAdminRpaAuditListPostData, ListAuditApiAdminRpaAuditListPostErrors, ListAuditApiAdminRpaAuditListPostResponses, ListBansApiAdminRpaBanListPostData, ListBansApiAdminRpaBanListPostErrors, ListBansApiAdminRpaBanListPostResponses, ListBrowserMonitorsApiAdminRpaBrowserMonitorsPostData, ListBrowserMonitorsApiAdminRpaBrowserMonitorsPostErrors, ListBrowserMonitorsApiAdminRpaBrowserMonitorsPostResponses, ListCertificationsApiAdminRpaCertificationListPostData, ListCertificationsApiAdminRpaCertificationListPostErrors, ListCertificationsApiAdminRpaCertificationListPostResponses, ListMembershipCodesApiAdminRpaMembershipCodesListPostData, ListMembershipCodesApiAdminRpaMembershipCodesListPostErrors, ListMembershipCodesApiAdminRpaMembershipCodesListPostResponses, ListWorkflowRunsAdminApiAdminRpaWorkflowRunsPostData, ListWorkflowRunsAdminApiAdminRpaWorkflowRunsPostErrors, ListWorkflowRunsAdminApiAdminRpaWorkflowRunsPostResponses, ListWorkflowsAdminApiAdminRpaWorkflowListPostData, ListWorkflowsAdminApiAdminRpaWorkflowListPostErrors, ListWorkflowsAdminApiAdminRpaWorkflowListPostResponses, ReadPermissionQuotasApiAdminRpaPermissionLevelsGetData, ReadPermissionQuotasApiAdminRpaPermissionLevelsGetErrors, ReadPermissionQuotasApiAdminRpaPermissionLevelsGetResponses, ResetPermissionQuotasApiAdminRpaPermissionResetPostData, ResetPermissionQuotasApiAdminRpaPermissionResetPostErrors, ResetPermissionQuotasApiAdminRpaPermissionResetPostResponses, ReviewApprovalApiAdminRpaApprovalReviewPostData, ReviewApprovalApiAdminRpaApprovalReviewPostErrors, ReviewApprovalApiAdminRpaApprovalReviewPostResponses, RevokeCertificationApiAdminRpaCertificationRevokePostData, RevokeCertificationApiAdminRpaCertificationRevokePostErrors, RevokeCertificationApiAdminRpaCertificationRevokePostResponses, SearchResourcesApiAdminRpaApprovalResourcesPostData, SearchResourcesApiAdminRpaApprovalResourcesPostErrors, SearchResourcesApiAdminRpaApprovalResourcesPostResponses, SetWorkflowEnabledAdminApiAdminRpaWorkflowSetEnabledPostData, SetWorkflowEnabledAdminApiAdminRpaWorkflowSetEnabledPostErrors, SetWorkflowEnabledAdminApiAdminRpaWorkflowSetEnabledPostResponses, StopBrowserSessionApiAdminRpaBrowserSessionStopPostData, StopBrowserSessionApiAdminRpaBrowserSessionStopPostErrors, StopBrowserSessionApiAdminRpaBrowserSessionStopPostResponses, SubmitApprovalApiAdminRpaApprovalSubmitPostData, SubmitApprovalApiAdminRpaApprovalSubmitPostErrors, SubmitApprovalApiAdminRpaApprovalSubmitPostResponses, UpdateBrowserSessionConfigApiAdminRpaConfigBrowserSessionPostData, UpdateBrowserSessionConfigApiAdminRpaConfigBrowserSessionPostErrors, UpdateBrowserSessionConfigApiAdminRpaConfigBrowserSessionPostResponses, UpdatePermissionQuotasApiAdminRpaPermissionUpdatePostData, UpdatePermissionQuotasApiAdminRpaPermissionUpdatePostErrors, UpdatePermissionQuotasApiAdminRpaPermissionUpdatePostResponses, UpdateSignRewardConfigApiAdminRpaMembershipSignInRewardsUpdatePostData, UpdateSignRewardConfigApiAdminRpaMembershipSignInRewardsUpdatePostErrors, UpdateSignRewardConfigApiAdminRpaMembershipSignInRewardsUpdatePostResponses, UpdateTagApiAdminRpaTagUpdatePostData, UpdateTagApiAdminRpaTagUpdatePostErrors, UpdateTagApiAdminRpaTagUpdatePostResponses, UpdateWorkflowAdminApiAdminRpaWorkflowUpdatePostData, UpdateWorkflowAdminApiAdminRpaWorkflowUpdatePostErrors, UpdateWorkflowAdminApiAdminRpaWorkflowUpdatePostResponses } from '../types.gen';
 
 export class 管理员管理Service {
     /**
@@ -475,6 +475,146 @@ export class 管理员管理Service {
         return (options.client ?? client).post<ListMembershipCodesApiAdminRpaMembershipCodesListPostResponses, ListMembershipCodesApiAdminRpaMembershipCodesListPostErrors, ThrowOnError, 'data'>({
             responseStyle: 'data',
             url: '/api/admin/rpa/membership/codes/list',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    /**
+     * 读取签到奖励配置
+     *
+     * 读取当前签到奖励配置（app/data/sign_in_rewards.json，仅管理员/root）
+     */
+    public static getSignRewardConfigApiAdminRpaMembershipSignInRewardsGetPost<ThrowOnError extends boolean = false>(options?: Options<GetSignRewardConfigApiAdminRpaMembershipSignInRewardsGetPostData, ThrowOnError>): RequestResult<GetSignRewardConfigApiAdminRpaMembershipSignInRewardsGetPostResponses, GetSignRewardConfigApiAdminRpaMembershipSignInRewardsGetPostErrors, ThrowOnError, 'data'> {
+        return (options?.client ?? client).post<GetSignRewardConfigApiAdminRpaMembershipSignInRewardsGetPostResponses, GetSignRewardConfigApiAdminRpaMembershipSignInRewardsGetPostErrors, ThrowOnError, 'data'>({
+            responseStyle: 'data',
+            url: '/api/admin/rpa/membership/sign_in/rewards/get',
+            ...options
+        });
+    }
+    
+    /**
+     * 保存签到奖励配置
+     *
+     * 整体覆盖保存签到奖励配置（保存后即时生效，写审计日志）
+     */
+    public static updateSignRewardConfigApiAdminRpaMembershipSignInRewardsUpdatePost<ThrowOnError extends boolean = false>(options: Options<UpdateSignRewardConfigApiAdminRpaMembershipSignInRewardsUpdatePostData, ThrowOnError>): RequestResult<UpdateSignRewardConfigApiAdminRpaMembershipSignInRewardsUpdatePostResponses, UpdateSignRewardConfigApiAdminRpaMembershipSignInRewardsUpdatePostErrors, ThrowOnError, 'data'> {
+        return (options.client ?? client).post<UpdateSignRewardConfigApiAdminRpaMembershipSignInRewardsUpdatePostResponses, UpdateSignRewardConfigApiAdminRpaMembershipSignInRewardsUpdatePostErrors, ThrowOnError, 'data'>({
+            responseStyle: 'data',
+            url: '/api/admin/rpa/membership/sign_in/rewards/update',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    /**
+     * 获取全量工作流列表（管理端）
+     *
+     * 跨作者列出全部用户的工作流（仅 root），支持名称/作者/公开/启停筛选与排序
+     */
+    public static listWorkflowsAdminApiAdminRpaWorkflowListPost<ThrowOnError extends boolean = false>(options: Options<ListWorkflowsAdminApiAdminRpaWorkflowListPostData, ThrowOnError>): RequestResult<ListWorkflowsAdminApiAdminRpaWorkflowListPostResponses, ListWorkflowsAdminApiAdminRpaWorkflowListPostErrors, ThrowOnError, 'data'> {
+        return (options.client ?? client).post<ListWorkflowsAdminApiAdminRpaWorkflowListPostResponses, ListWorkflowsAdminApiAdminRpaWorkflowListPostErrors, ThrowOnError, 'data'>({
+            responseStyle: 'data',
+            url: '/api/admin/rpa/workflow/list',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    /**
+     * 获取任意工作流详情（管理端）
+     *
+     * 按 id 获取任意用户的工作流详情（仅 root，不做归属校验）
+     *
+     * Args:
+     * request: {"id": <工作流ID>}
+     */
+    public static getWorkflowAdminApiAdminRpaWorkflowGetPost<ThrowOnError extends boolean = false>(options: Options<GetWorkflowAdminApiAdminRpaWorkflowGetPostData, ThrowOnError>): RequestResult<GetWorkflowAdminApiAdminRpaWorkflowGetPostResponses, GetWorkflowAdminApiAdminRpaWorkflowGetPostErrors, ThrowOnError, 'data'> {
+        return (options.client ?? client).post<GetWorkflowAdminApiAdminRpaWorkflowGetPostResponses, GetWorkflowAdminApiAdminRpaWorkflowGetPostErrors, ThrowOnError, 'data'>({
+            responseStyle: 'data',
+            url: '/api/admin/rpa/workflow/get',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    /**
+     * 更新任意工作流（管理端）
+     *
+     * 更新任意用户的工作流（仅 root）
+     *
+     * 与管理端特权一致：**跳过 publish / execute 审批单强制**，直接落库并同步定时任务。
+     */
+    public static updateWorkflowAdminApiAdminRpaWorkflowUpdatePost<ThrowOnError extends boolean = false>(options: Options<UpdateWorkflowAdminApiAdminRpaWorkflowUpdatePostData, ThrowOnError>): RequestResult<UpdateWorkflowAdminApiAdminRpaWorkflowUpdatePostResponses, UpdateWorkflowAdminApiAdminRpaWorkflowUpdatePostErrors, ThrowOnError, 'data'> {
+        return (options.client ?? client).post<UpdateWorkflowAdminApiAdminRpaWorkflowUpdatePostResponses, UpdateWorkflowAdminApiAdminRpaWorkflowUpdatePostErrors, ThrowOnError, 'data'>({
+            responseStyle: 'data',
+            url: '/api/admin/rpa/workflow/update',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    /**
+     * 启用 / 停用任意工作流（管理端）
+     *
+     * 启用或停用任意用户的工作流（仅 root），并同步定时调度任务
+     */
+    public static setWorkflowEnabledAdminApiAdminRpaWorkflowSetEnabledPost<ThrowOnError extends boolean = false>(options: Options<SetWorkflowEnabledAdminApiAdminRpaWorkflowSetEnabledPostData, ThrowOnError>): RequestResult<SetWorkflowEnabledAdminApiAdminRpaWorkflowSetEnabledPostResponses, SetWorkflowEnabledAdminApiAdminRpaWorkflowSetEnabledPostErrors, ThrowOnError, 'data'> {
+        return (options.client ?? client).post<SetWorkflowEnabledAdminApiAdminRpaWorkflowSetEnabledPostResponses, SetWorkflowEnabledAdminApiAdminRpaWorkflowSetEnabledPostErrors, ThrowOnError, 'data'>({
+            responseStyle: 'data',
+            url: '/api/admin/rpa/workflow/set-enabled',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    /**
+     * 删除任意工作流（管理端）
+     *
+     * 删除任意用户的工作流（仅 root）
+     *
+     * Args:
+     * request: {"id": <工作流ID>}
+     */
+    public static deleteWorkflowAdminApiAdminRpaWorkflowDeletePost<ThrowOnError extends boolean = false>(options: Options<DeleteWorkflowAdminApiAdminRpaWorkflowDeletePostData, ThrowOnError>): RequestResult<DeleteWorkflowAdminApiAdminRpaWorkflowDeletePostResponses, DeleteWorkflowAdminApiAdminRpaWorkflowDeletePostErrors, ThrowOnError, 'data'> {
+        return (options.client ?? client).post<DeleteWorkflowAdminApiAdminRpaWorkflowDeletePostResponses, DeleteWorkflowAdminApiAdminRpaWorkflowDeletePostErrors, ThrowOnError, 'data'>({
+            responseStyle: 'data',
+            url: '/api/admin/rpa/workflow/delete',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    /**
+     * 查询任意工作流的运行记录（管理端）
+     *
+     * 分页查询任意工作流的运行记录（仅 root，不做归属校验，最新在前）
+     */
+    public static listWorkflowRunsAdminApiAdminRpaWorkflowRunsPost<ThrowOnError extends boolean = false>(options: Options<ListWorkflowRunsAdminApiAdminRpaWorkflowRunsPostData, ThrowOnError>): RequestResult<ListWorkflowRunsAdminApiAdminRpaWorkflowRunsPostResponses, ListWorkflowRunsAdminApiAdminRpaWorkflowRunsPostErrors, ThrowOnError, 'data'> {
+        return (options.client ?? client).post<ListWorkflowRunsAdminApiAdminRpaWorkflowRunsPostResponses, ListWorkflowRunsAdminApiAdminRpaWorkflowRunsPostErrors, ThrowOnError, 'data'>({
+            responseStyle: 'data',
+            url: '/api/admin/rpa/workflow/runs',
             ...options,
             headers: {
                 'Content-Type': 'application/json',

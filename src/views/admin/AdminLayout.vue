@@ -11,7 +11,7 @@
 
 <script setup lang="ts">
 import { computed, type Component } from 'vue'
-import { Bell, ChatDotRound, Comment, Key, Checked, Collection, Avatar, Flag, Stamp, Document, Medal, CollectionTag, Setting, Odometer } from '@element-plus/icons-vue'
+import { Bell, Calendar, ChatDotRound, Comment, Key, Checked, Collection, Avatar, Flag, Stamp, Document, Medal, CollectionTag, Setting, Odometer, SetUp, DataAnalysis } from '@element-plus/icons-vue'
 import icShoucang from '@/assets/svgs/audit/shoucang.svg?component'
 import icLiveCenter from '@/assets/svgs/audit/ic_Livecenter.svg?component'
 import icQuota from '@/assets/svgs/space/play_data.svg?component'
@@ -42,16 +42,28 @@ interface NavGroup {
 
 const navGroups = computed<NavGroup[]>(() => {
   const groups: NavGroup[] = []
+  // bili-crawler 抽奖数据汇总（管理端可见）
+  if (isRpaAdmin.value) {
+    groups.push({
+      title: '抽奖数据',
+      items: [{ name: 'ADMIN_BILI_CRAWLER_SUMMARY', title: '抽奖数据', icon: DataAnalysis }]
+    })
+  }
   if (isRpaAdmin.value) {
     const rpaItems: NavItem[] = [
       { name: 'ADMIN_RPA_APPROVAL', title: '操作审批', icon: Stamp },
       { name: 'ADMIN_RPA_AUDIT', title: '操作审计', icon: Document },
       { name: 'ADMIN_RPA_MEMBERSHIP_CODES', title: '兑换码管理', icon: Medal },
+      { name: 'ADMIN_RPA_MEMBERSHIP_SIGN_REWARDS', title: '签到奖励配置', icon: Calendar },
       { name: 'ADMIN_RPA_CERT', title: '官方认证', icon: Medal },
       { name: 'ADMIN_RPA_TAG', title: '标签管理', icon: CollectionTag },
       { name: 'ADMIN_BROWSER_MONITOR', title: '浏览器监管', icon: icLiveCenter },
       { name: 'ADMIN_LAUNCH_QUEUE', title: '启动队列', icon: Odometer }
     ]
+    // root 专属：全量工作流管理（跨作者查看 / 启停 / 运行 / 删除）
+    if (isMessageRoot.value) {
+      rpaItems.push({ name: 'ADMIN_RPA_WORKFLOW', title: '工作流管理', icon: SetUp })
+    }
     groups.push({ title: 'RPA 管理', items: rpaItems })
   }
   const messageItems: NavItem[] = []

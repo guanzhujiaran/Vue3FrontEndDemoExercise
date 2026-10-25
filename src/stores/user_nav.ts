@@ -1,6 +1,7 @@
 import { ref } from 'vue'
 import { defineStore } from 'pinia'
 import type { UserNavModel } from '@/models/user/user_model.ts'
+import { browserPersistStorage } from '@/utils/persistStorage'
 
 export const useUserNavStore = defineStore(
   'user-nav',
@@ -58,7 +59,7 @@ export const useUserNavStore = defineStore(
   {
     persist: {
       key: 'user-nav',
-      storage: localStorage
+      storage: browserPersistStorage
     }
   }
 )

@@ -3,6 +3,7 @@ import { onMounted, ref, computed, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { ElMessage } from 'element-plus'
 import userApi from '@/api/user/user_api.ts'
+import { mapNavResponse } from '@/api/user/utils'
 import { fetchAvatarAuditMine } from '@/api/notify/moment-api'
 import { useUserNavStore } from '@/stores/user_nav'
 import { BiliImg } from '@/assets/img/BiliImg.ts'
@@ -10,6 +11,7 @@ import BiliStyleExpBar from '@/components/CommonCompo/BiliStyleExpBar.vue'
 import LevelPrivilegePopover from '@/components/CommonCompo/LevelPrivilegePopover.vue'
 import type { User_base_info_config_form } from '@/models/user/user_setting/user_base_info_config_model.ts'
 import type { CasdoorUserModel } from '@/models/user/casdoor/casdoor_user_model.ts'
+import { formatDate } from '@/utils/dateFormat'
 
 // 直接读取 pinia user_nav store（由 App.vue 的 isLogin -> save_user_nav 写入），
 // 避免经由 provide/inject 单例 ref 的响应式同步时序问题。
@@ -44,11 +46,10 @@ const loadDetail = async () => {
     if (!userNavRef.value?.uid) {
       try {
         const navRes = await userApi.Nav()
-        const navData = (navRes.data ?? navRes.error) as
-          | { code: number; data?: any; msg?: string }
-          | undefined
+        const navData = navRes.data
         if (navData?.code === 0 && navData.data) {
-          userNavStore.save_user_nav(navData.data)
+          // uid 与 mid 同一个雪花 ID，只取字符串版 uid_str（见 mapNavResponse）
+          userNavStore.save_user_nav(mapNavResponse(navData.data))
         }
       } catch (_) {
         // nav 补拉失败不影响其余资料展示
@@ -286,8 +287,10 @@ onMounted(() => {
           <el-descriptions-item label="用户名(userid)">
             {{ fmt(profile?.userid) }}
           </el-descriptions-item>
-          <el-descriptions-item label="UID">{{ fmt(navInfo?.uid) }}</el-descriptions-item>
-          <el-descriptions-item label="MID">{{ fmt(profile?.mid ?? navInfo?.uid) }}</el-descriptions-item>
+          <!-- uid 与 mid 在本系统是同一个 BIGINT 主键，统一只展示 str 类型的 uid，避免 JS 精度丢失 -->
+          <el-descriptions-item label="UID" :span="2">
+            <span class="user-center-local-account-card__uid break-all">{{ fmt(navInfo?.uid) }}</span>
+          </el-descriptions-item>
           <el-descriptions-item label="角色标识">
             {{ fmt(navInfo?.role_info?.role) }}
           </el-descriptions-item>
@@ -308,7 +311,7 @@ onMounted(() => {
             {{ fmt(levelNext) }}
           </el-descriptions-item>
           <el-descriptions-item label="性别">{{ fmt(profile?.sex) }}</el-descriptions-item>
-          <el-descriptions-item label="生日">{{ fmt(profile?.birthday) }}</el-descriptions-item>
+          <el-descriptions-item label="生日">{{ fmt(profile?.birthday ? formatDate(profile.birthday) : undefined) }}</el-descriptions-item>
           <el-descriptions-item label="头像地址" :span="2">
             <span class="break-all">{{ fmt(navInfo?.face) }}</span>
           </el-descriptions-item>

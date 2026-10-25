@@ -82,7 +82,19 @@ export type SourceType = InteractionBizTypeEnum
 export type NotifyTargetType = NotifyTargetTypeEnum
 export type CreateNotifyPayload = NotifyCreateReq
 export type UpdateNotifyPayload = NotifyUpdateReq
-export type MessageSettingPartial = MessageSettingUpdateReq
+/**
+ * 互动事件外推开关（回复/评论、@、点赞 三个独立开关，默认关闭）。
+ *
+ * 后端 `MessageSettingUpdateReq` 已扩展此三字段，但 hey-api 的 SDK 尚未重新生成，
+ * 故以交叉类型本地补齐，避免手改生成代码（参见文件中 DmSessionListWithStranger 同款做法）。
+ * 语义：仅在站内对应「接收」开关开启时才可能生效——站内关了，站外也不再推送。
+ */
+export interface MessageSettingPushToggles {
+  push_reply?: boolean | null
+  push_at?: boolean | null
+  push_like?: boolean | null
+}
+export type MessageSettingPartial = MessageSettingUpdateReq & MessageSettingPushToggles
 export type EventFeedItem = EventMsgfeedItem
 export type EventFeedSection = EventMsgfeedSection
 export type EventFeedUser = EventUserBrief
@@ -400,7 +412,7 @@ export async function fetchDmMessages(params: {
       MessageDmService.listMessagesApiV1MessageDmMessagesGet({
         query
       } as Parameters<typeof MessageDmService.listMessagesApiV1MessageDmMessagesGet>[0]),
-    { items: [], cursor: null, has_more: false }
+    { items: [], cursor: null, has_more: false, talker_mid: 0, talker_mid_str: null }
   )
 }
 
@@ -483,19 +495,24 @@ export async function updateMessageSetting(
   payload: MessageSettingPartial,
   options?: RequestOptions
 ): Promise<MessageSettingResp | null> {
+  // push_reply / push_at / push_like 为后端新增字段，SDK 重新生成前以 as never 透传
+  const body = {
+    recv_like: payload.recv_like ?? null,
+    recv_reply: payload.recv_reply ?? null,
+    recv_at: payload.recv_at ?? null,
+    recv_stranger_dm: payload.recv_stranger_dm ?? null,
+    recv_notify: payload.recv_notify ?? null,
+    push_enabled: payload.push_enabled ?? null,
+    push_reply: payload.push_reply ?? null,
+    push_at: payload.push_at ?? null,
+    push_like: payload.push_like ?? null,
+    dnd_start_hour: payload.dnd_start_hour ?? null,
+    dnd_end_hour: payload.dnd_end_hour ?? null
+  }
   return request<MessageSettingResp | null>(
     () =>
       MessageSettingService.updateSettingApiV1MessageSettingUpdatePost({
-        body: {
-          recv_like: payload.recv_like ?? null,
-          recv_reply: payload.recv_reply ?? null,
-          recv_at: payload.recv_at ?? null,
-          recv_stranger_dm: payload.recv_stranger_dm ?? null,
-          recv_notify: payload.recv_notify ?? null,
-          push_enabled: payload.push_enabled ?? null,
-          dnd_start_hour: payload.dnd_start_hour ?? null,
-          dnd_end_hour: payload.dnd_end_hour ?? null
-        }
+        body: body as never
       }),
     null,
     options

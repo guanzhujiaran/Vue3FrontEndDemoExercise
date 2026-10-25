@@ -3,7 +3,7 @@
 import type { RequestResult } from '../client';
 import { client } from '../client.gen';
 import type { Options } from '../sdk.gen';
-import type { DetailApiV1CommunityDetailMomentIdGetData, DetailApiV1CommunityDetailMomentIdGetErrors, DetailApiV1CommunityDetailMomentIdGetResponses, DetailsBatchApiV1CommunityDetailsPostData, DetailsBatchApiV1CommunityDetailsPostErrors, DetailsBatchApiV1CommunityDetailsPostResponses, FeedAllApiV1CommunityFeedAllGetData, FeedAllApiV1CommunityFeedAllGetErrors, FeedAllApiV1CommunityFeedAllGetResponses, FeedFollowingApiV1CommunityFeedFollowingGetData, FeedFollowingApiV1CommunityFeedFollowingGetErrors, FeedFollowingApiV1CommunityFeedFollowingGetResponses, FeedSpaceApiV1CommunityFeedSpaceMidGetData, FeedSpaceApiV1CommunityFeedSpaceMidGetErrors, FeedSpaceApiV1CommunityFeedSpaceMidGetResponses, GetMomentForwardsApiV1CommunityMomentIdForwardsGetData, GetMomentForwardsApiV1CommunityMomentIdForwardsGetErrors, GetMomentForwardsApiV1CommunityMomentIdForwardsGetResponses, GetMomentLikersApiV1CommunityMomentIdLikersGetData, GetMomentLikersApiV1CommunityMomentIdLikersGetErrors, GetMomentLikersApiV1CommunityMomentIdLikersGetResponses } from '../types.gen';
+import type { DetailApiV1CommunityDetailMomentIdGetData, DetailApiV1CommunityDetailMomentIdGetErrors, DetailApiV1CommunityDetailMomentIdGetResponses, DetailsBatchApiV1CommunityDetailsPostData, DetailsBatchApiV1CommunityDetailsPostErrors, DetailsBatchApiV1CommunityDetailsPostResponses, FeedAllApiV1CommunityFeedAllGetData, FeedAllApiV1CommunityFeedAllGetErrors, FeedAllApiV1CommunityFeedAllGetResponses, FeedFollowingApiV1CommunityFeedFollowingGetData, FeedFollowingApiV1CommunityFeedFollowingGetErrors, FeedFollowingApiV1CommunityFeedFollowingGetResponses, FeedMlStatusApiV1CommunityFeedMlStatusGetData, FeedMlStatusApiV1CommunityFeedMlStatusGetResponses, FeedSpaceApiV1CommunityFeedSpaceMidGetData, FeedSpaceApiV1CommunityFeedSpaceMidGetErrors, FeedSpaceApiV1CommunityFeedSpaceMidGetResponses, GetMomentForwardsApiV1CommunityMomentIdForwardsGetData, GetMomentForwardsApiV1CommunityMomentIdForwardsGetErrors, GetMomentForwardsApiV1CommunityMomentIdForwardsGetResponses, GetMomentLikersApiV1CommunityMomentIdLikersGetData, GetMomentLikersApiV1CommunityMomentIdLikersGetErrors, GetMomentLikersApiV1CommunityMomentIdLikersGetResponses, ReportFeedEventsApiV1CommunityFeedEventsPostData, ReportFeedEventsApiV1CommunityFeedEventsPostErrors, ReportFeedEventsApiV1CommunityFeedEventsPostResponses } from '../types.gen';
 
 export class MomentFeedService {
     /**
@@ -13,6 +13,47 @@ export class MomentFeedService {
         return (options?.client ?? client).get<FeedAllApiV1CommunityFeedAllGetResponses, FeedAllApiV1CommunityFeedAllGetErrors, ThrowOnError, 'data'>({
             responseStyle: 'data',
             url: '/api/v1/community/feed/all',
+            ...options
+        });
+    }
+    
+    /**
+     * Feed 行为批量上报（click / dwell，匿名可上报）
+     *
+     * 2.66.0 机器学习埋点：前端上报点击 / 停留（曝光由服务端下发时写）。
+     *
+     * 单批上限 ``settings.ml_event_batch_limit``（默认 100）；超出部分**直接截断**
+     * （埋点是弱依赖，不因客户端异常数据报错）。观众标识与 Feed 去重同一口径：
+     * 登录 ``mid:{mid}``、匿名 ``anon:{uniq_id}``。
+     */
+    public static reportFeedEventsApiV1CommunityFeedEventsPost<ThrowOnError extends boolean = false>(options: Options<ReportFeedEventsApiV1CommunityFeedEventsPostData, ThrowOnError>): RequestResult<ReportFeedEventsApiV1CommunityFeedEventsPostResponses, ReportFeedEventsApiV1CommunityFeedEventsPostErrors, ThrowOnError, 'data'> {
+        return (options.client ?? client).post<ReportFeedEventsApiV1CommunityFeedEventsPostResponses, ReportFeedEventsApiV1CommunityFeedEventsPostErrors, ThrowOnError, 'data'>({
+            responseStyle: 'data',
+            url: '/api/v1/community/feed/events',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    /**
+     * 推荐机器学习状态（三件套开关 / 模型就绪 / 离线指标）
+     *
+     * 只读状态接口（2.66.0）：回答「开关开了有没有模型在跑」。
+     *
+     * - ``config``：当前生效的运行时配置（``feed_ml`` 配置项，管理端可热更新）；
+     * - ``ranker`` / ``als``：模型文件是否就绪 + 上次离线训练指标；
+     * - ``linucbArms`` / ``eventSamples``：臂参数行数 / 曝光样本量（样本太少时模型不可信）。
+     *
+     * **开关本身不通过本接口修改**——写入走既有运行时配置中心
+     * （``POST /api/v1/message/admin/sys-config``），本接口仅观测。
+     */
+    public static feedMlStatusApiV1CommunityFeedMlStatusGet<ThrowOnError extends boolean = false>(options?: Options<FeedMlStatusApiV1CommunityFeedMlStatusGetData, ThrowOnError>): RequestResult<FeedMlStatusApiV1CommunityFeedMlStatusGetResponses, unknown, ThrowOnError, 'data'> {
+        return (options?.client ?? client).get<FeedMlStatusApiV1CommunityFeedMlStatusGetResponses, unknown, ThrowOnError, 'data'>({
+            responseStyle: 'data',
+            url: '/api/v1/community/feed/ml-status',
             ...options
         });
     }

@@ -224,6 +224,7 @@ onMounted(async () => {
     <BiliPageHeader
       v-if="!isAdminRoute"
       title="审批中心"
+      hide-title
       description="申请将 RPA 资源公开到社区，并查看我的审批进度"
     >
       <template #extra>
@@ -342,7 +343,7 @@ onMounted(async () => {
           </template>
         </el-table-column>
       </el-table>
-      <el-pagination
+      <BiliPagination
         v-model:current-page="approvalPage"
         :page-size="20"
         :total="approvalTotal"

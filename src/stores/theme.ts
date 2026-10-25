@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { ref, computed, watch } from 'vue'
 import { Sunny, Moon, Monitor } from '@element-plus/icons-vue'
 import { useDark, useToggle, usePreferredDark, useStorage } from '@vueuse/core'
+import { browserPersistStorage } from '@/utils/persistStorage'
 export type ThemeMode = 'light' | 'dark' | 'auto'
 type themeEffectString = 'dark' | 'light'
 export const useThemeStore = defineStore(
@@ -135,7 +136,7 @@ export const useThemeStore = defineStore(
   {
     persist: {
       key: 'theme-store',
-      storage: localStorage
+      storage: browserPersistStorage
     }
   }
 )

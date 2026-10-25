@@ -48,6 +48,8 @@ export const BiliSearchBox: typeof import("../src/components/CommonCompo/Bili-Se
 export const UniversalSearchBox: typeof import("../src/components/CommonCompo/Bili-Search-Compo/UniversalSearchBox.vue")['default']
 export const BiliStatusIcon: typeof import("../src/components/CommonCompo/Bili-Status-Compo/BiliStatusIcon.vue")['default']
 export const UserAvatarBox: typeof import("../src/components/CommonCompo/Bili-User-Compo/UserAvatarBox.vue")['default']
+export const BiliIcon: typeof import("../src/components/CommonCompo/BiliIcon.vue")['default']
+export const BiliPagination: typeof import("../src/components/CommonCompo/BiliPagination.vue")['default']
 export const BiliStyleExpBar: typeof import("../src/components/CommonCompo/BiliStyleExpBar.vue")['default']
 export const ExpBar: typeof import("../src/components/CommonCompo/ExpBar.vue")['default']
 export const GlobalLoadingMask: typeof import("../src/components/CommonCompo/GlobalLoadingMask.vue")['default']
@@ -70,6 +72,7 @@ export const SpuTags: typeof import("../src/components/SamsClubCompo/items/SpuTa
 export const Utils: typeof import("../src/components/SamsClubCompo/utils")['default']
 export const AdminAuditTabs: typeof import("../src/components/admin/AdminAuditTabs.vue")['default']
 export const AuditOverviewCard: typeof import("../src/components/admin/AuditOverviewCard.vue")['default']
+export const StatsOverviewCards: typeof import("../src/components/admin/StatsOverviewCards.vue")['default']
 export const ScrollButtons: typeof import("../src/components/common/ScrollButtons.vue")['default']
 export const TopicTable: typeof import("../src/components/communicate_list/topic_table.vue")['default']
 export const FeatureNavigation: typeof import("../src/components/home/FeatureNavigation.vue")['default']
@@ -110,6 +113,7 @@ export const BiliLotterySimpleList: typeof import("../src/components/lottery_dat
 export const BiliOfficialLotteryTable: typeof import("../src/components/lottery_data/bili_data/BiliOfficialLotteryTable.vue")['default']
 export const BiliScrapyStatusMini: typeof import("../src/components/lottery_data/bili_data/BiliScrapyStatusMini.vue")['default']
 export const ChargeLottery: typeof import("../src/components/lottery_data/bili_data/ChargeLottery.vue")['default']
+export const HotLotteryList: typeof import("../src/components/lottery_data/bili_data/HotLotteryList.vue")['default']
 export const LotteryActionsDropdown: typeof import("../src/components/lottery_data/bili_data/LotteryActionsDropdown.vue")['default']
 export const LotteryDataTableToolbar: typeof import("../src/components/lottery_data/bili_data/LotteryDataTableToolbar.vue")['default']
 export const LotteryFilterBar: typeof import("../src/components/lottery_data/bili_data/LotteryFilterBar.vue")['default']
@@ -123,6 +127,7 @@ export const SubmitFeedbackModal: typeof import("../src/components/lottery_data/
 export const SubmitOthersLotDynModal: typeof import("../src/components/lottery_data/bili_data/SubmitOthersLotDynModal.vue")['default']
 export const SubmitTopicLotteryModal: typeof import("../src/components/lottery_data/bili_data/SubmitTopicLotteryModal.vue")['default']
 export const TopicLottery: typeof import("../src/components/lottery_data/bili_data/TopicLottery.vue")['default']
+export const UpcomingLotteryMarquee: typeof import("../src/components/lottery_data/bili_data/UpcomingLotteryMarquee.vue")['default']
 export const LotteryDesc: typeof import("../src/components/lottery_data/bili_data/section/lottery/LotteryDesc.vue")['default']
 export const LotteryPrize: typeof import("../src/components/lottery_data/bili_data/section/lottery/LotteryPrize.vue")['default']
 export const AuditReasonDialog: typeof import("../src/components/message/AuditReasonDialog.vue")['default']
@@ -156,6 +161,14 @@ export const MomentFeedList: typeof import("../src/components/moment/MomentFeedL
 export const MomentPublishForm: typeof import("../src/components/moment/MomentPublishForm.vue")['default']
 export const MomentStatBar: typeof import("../src/components/moment/MomentStatBar.vue")['default']
 export const ReportDialog: typeof import("../src/components/moment/ReportDialog.vue")['default']
+export const SpaceFansGrid: typeof import("../src/components/moment/SpaceFansGrid.vue")['default']
+export const SpaceFollowTagNav: typeof import("../src/components/moment/SpaceFollowTagNav.vue")['default']
+export const SpaceFollowTagPicker: typeof import("../src/components/moment/SpaceFollowTagPicker.vue")['default']
+export const SpaceProfileAside: typeof import("../src/components/moment/SpaceProfileAside.vue")['default']
+export const SpaceRelationList: typeof import("../src/components/moment/SpaceRelationList.vue")['default']
+export const SpaceSummaryCard: typeof import("../src/components/moment/SpaceSummaryCard.vue")['default']
+export const SpaceTimelineItem: typeof import("../src/components/moment/SpaceTimelineItem.vue")['default']
+export const SpaceTimelineList: typeof import("../src/components/moment/SpaceTimelineList.vue")['default']
 export const Placeholder: typeof import("../src/components/opus-detail/RightPannel/PannelItems/Placeholder.vue")['default']
 export const AccountStatusBoard: typeof import("../src/components/opus-detail/RightPannel/PannelItems/SettingComponent/AccountStatusBoard.vue")['default']
 export const BrowserManagementPanel: typeof import("../src/components/opus-detail/RightPannel/PannelItems/SettingComponent/BrowserManagementPanel.vue")['default']
@@ -168,8 +181,11 @@ export const UserCenterDeactivate: typeof import("../src/components/opus-detail/
 export const UserCenterDefaultPanel: typeof import("../src/components/opus-detail/RightPannel/PannelItems/SettingComponent/UserCenterDefaultPanel.vue")['default']
 export const UserCenterRecords: typeof import("../src/components/opus-detail/RightPannel/PannelItems/SettingComponent/UserCenterRecords.vue")['default']
 export const ActionCard: typeof import("../src/components/rpa-browser/ActionCard.vue")['default']
+export const ActionDetailDialog: typeof import("../src/components/rpa-browser/ActionDetailDialog.vue")['default']
+export const ActionFlowView: typeof import("../src/components/rpa-browser/ActionFlowView.vue")['default']
 export const ActionIcon: typeof import("../src/components/rpa-browser/ActionIcon.vue")['default']
 export const ActionIconPicker: typeof import("../src/components/rpa-browser/ActionIconPicker.vue")['default']
+export const ActionLogChainDialog: typeof import("../src/components/rpa-browser/ActionLogChainDialog.vue")['default']
 export const ActionParamsForm: typeof import("../src/components/rpa-browser/ActionParamsForm.vue")['default']
 export const ActionPickerDialog: typeof import("../src/components/rpa-browser/ActionPickerDialog.vue")['default']
 export const BranchContainer: typeof import("../src/components/rpa-browser/BranchContainer.vue")['default']
@@ -181,11 +197,19 @@ export const LaunchQueuePanel: typeof import("../src/components/rpa-browser/Laun
 export const LiveBox: typeof import("../src/components/rpa-browser/LiveBox.vue")['default']
 export const LoopEditor: typeof import("../src/components/rpa-browser/LoopEditor.vue")['default']
 export const MinimizeBar: typeof import("../src/components/rpa-browser/MinimizeBar.vue")['default']
+export const ObjectArrayEditor: typeof import("../src/components/rpa-browser/ObjectArrayEditor.vue")['default']
 export const OperationFeedbackPanel: typeof import("../src/components/rpa-browser/OperationFeedbackPanel.vue")['default']
+export const ResourceLinkTemplateDialog: typeof import("../src/components/rpa-browser/ResourceLinkTemplateDialog.vue")['default']
 export const RpaMobileTip: typeof import("../src/components/rpa-browser/RpaMobileTip.vue")['default']
 export const ToolboxPanel: typeof import("../src/components/rpa-browser/ToolboxPanel.vue")['default']
+export const WorkflowCard: typeof import("../src/components/rpa-browser/WorkflowCard.vue")['default']
 export const WorkflowEditDialog: typeof import("../src/components/rpa-browser/WorkflowEditDialog.vue")['default']
+export const WorkflowResourceRecordTable: typeof import("../src/components/rpa-browser/WorkflowResourceRecordTable.vue")['default']
 export const WorkflowRunLogDialog: typeof import("../src/components/rpa-browser/WorkflowRunLogDialog.vue")['default']
+export const WorkflowRunMessageDock: typeof import("../src/components/rpa-browser/WorkflowRunMessageDock.vue")['default']
+export const WorkflowRunMessageGroup: typeof import("../src/components/rpa-browser/WorkflowRunMessageGroup.vue")['default']
+export const WorkflowRunMessageItem: typeof import("../src/components/rpa-browser/WorkflowRunMessageItem.vue")['default']
+export const WorkflowRunProgressBar: typeof import("../src/components/rpa-browser/WorkflowRunProgressBar.vue")['default']
 export const DebugboxTypes: typeof import("../src/components/rpa-browser/debugbox-types")['default']
 export const LiveCenterPlayButton: typeof import("../src/components/rpa-browser/live/LiveCenterPlayButton.vue")['default']
 export const LiveOverlay: typeof import("../src/components/rpa-browser/live/LiveOverlay.vue")['default']
@@ -198,25 +222,85 @@ export const UseDebugboxExecution: typeof import("../src/components/rpa-browser/
 export const UseDebugboxItems: typeof import("../src/components/rpa-browser/useDebugboxItems")['default']
 export const UseDebugboxSave: typeof import("../src/components/rpa-browser/useDebugboxSave")['default']
 export const SponsorNotification: typeof import("../src/components/sponsor/sponsor-notification.vue")['default']
+/**
+ * Displays the welcome screen used by new Nuxt projects.
+ *
+ * @see https://nuxt.com/docs/4.x/api/components/nuxt-welcome
+ */
 export const NuxtWelcome: typeof import("../node_modules/nuxt/dist/app/components/welcome.vue")['default']
+/**
+ * Renders the selected layout around pages or error content.
+ *
+ * @see https://nuxt.com/docs/4.x/api/components/nuxt-layout
+ */
 export const NuxtLayout: typeof import("../node_modules/nuxt/dist/app/components/nuxt-layout")['default']
+/**
+ * Catches client-side errors from its default slot and renders an error slot.
+ *
+ * @see https://nuxt.com/docs/4.x/api/components/nuxt-error-boundary
+ */
 export const NuxtErrorBoundary: typeof import("../node_modules/nuxt/dist/app/components/nuxt-error-boundary.vue")['default']
+/**
+ * Renders its default slot only on the client, with an optional server fallback.
+ *
+ * @see https://nuxt.com/docs/4.x/api/components/client-only
+ */
 export const ClientOnly: typeof import("../node_modules/nuxt/dist/app/components/client-only")['default']
+/**
+ * Renders its content only during development.
+ *
+ * @see https://nuxt.com/docs/4.x/api/components/dev-only
+ */
 export const DevOnly: typeof import("../node_modules/nuxt/dist/app/components/dev-only")['default']
 export const ServerPlaceholder: typeof import("../node_modules/nuxt/dist/app/components/server-placeholder")['default']
+/**
+ * A drop-in replacement for Vue Router's `<RouterLink>` and the HTML `<a>` element.
+ *
+ * @see https://nuxt.com/docs/4.x/api/components/nuxt-link
+ */
 export const NuxtLink: typeof import("../node_modules/nuxt/dist/app/components/nuxt-link")['default']
+/**
+ * Displays a progress bar during page navigation.
+ *
+ * @see https://nuxt.com/docs/4.x/api/components/nuxt-loading-indicator
+ */
 export const NuxtLoadingIndicator: typeof import("../node_modules/nuxt/dist/app/components/nuxt-loading-indicator")['default']
+/**
+ * Formats dates and times consistently across server and client using the user's locale.
+ *
+ * @see https://nuxt.com/docs/4.x/api/components/nuxt-time
+ */
 export const NuxtTime: typeof import("../node_modules/nuxt/dist/app/components/nuxt-time.vue")['default']
+/**
+ * Announces route changes to assistive technologies using the current page title.
+ *
+ * @see https://nuxt.com/docs/4.x/api/components/nuxt-route-announcer
+ */
 export const NuxtRouteAnnouncer: typeof import("../node_modules/nuxt/dist/app/components/nuxt-route-announcer")['default']
+/**
+ * Announces dynamic content changes to assistive technologies.
+ *
+ * @see https://nuxt.com/docs/4.x/api/components/nuxt-announcer
+ */
 export const NuxtAnnouncer: typeof import("../node_modules/nuxt/dist/app/components/nuxt-announcer")['default']
+/**
+ * Renders an optimized image through the Nuxt Image module.
+ *
+ * @see https://nuxt.com/docs/4.x/api/components/nuxt-img
+ */
 export const NuxtImg: typeof import("../node_modules/nuxt/dist/app/components/nuxt-stubs")['NuxtImg']
+/**
+ * Renders responsive optimized images through the Nuxt Image module.
+ *
+ * @see https://nuxt.com/docs/4.x/api/components/nuxt-picture
+ */
 export const NuxtPicture: typeof import("../node_modules/nuxt/dist/app/components/nuxt-stubs")['NuxtPicture']
 export const ElAffix: typeof import("../node_modules/element-plus/es/components/affix/index")['ElAffix']
 export const ElAlert: typeof import("../node_modules/element-plus/es/components/alert/index")['ElAlert']
 export const ElAnchor: typeof import("../node_modules/element-plus/es/components/anchor/index")['ElAnchor']
 export const ElAnchorLink: typeof import("../node_modules/element-plus/es/components/anchor/index")['ElAnchorLink']
-export const ElAside: typeof import("../node_modules/element-plus/es/components/container/index")['ElAside']
 export const ElAutoResizer: typeof import("../node_modules/element-plus/es/components/table-v2/index")['ElAutoResizer']
+export const ElAside: typeof import("../node_modules/element-plus/es/components/container/index")['ElAside']
 export const ElAutocomplete: typeof import("../node_modules/element-plus/es/components/autocomplete/index")['ElAutocomplete']
 export const ElAvatar: typeof import("../node_modules/element-plus/es/components/avatar/index")['ElAvatar']
 export const ElAvatarGroup: typeof import("../node_modules/element-plus/es/components/avatar/index")['ElAvatarGroup']
@@ -619,6 +703,11 @@ export const ElIconWatermelon: typeof import("../node_modules/@element-plus/icon
 export const ElIconWindPower: typeof import("../node_modules/@element-plus/icons-vue/dist/index")['WindPower']
 export const ElIconZoomIn: typeof import("../node_modules/@element-plus/icons-vue/dist/index")['ZoomIn']
 export const ElIconZoomOut: typeof import("../node_modules/@element-plus/icons-vue/dist/index")['ZoomOut']
+/**
+ * Renders the current page from the `pages/` directory.
+ *
+ * @see https://nuxt.com/docs/4.x/api/components/nuxt-page
+ */
 export const NuxtPage: typeof import("../node_modules/nuxt/dist/pages/runtime/page")['default']
 export const NoScript: typeof import("../node_modules/nuxt/dist/head/runtime/components")['NoScript']
 export const Link: typeof import("../node_modules/nuxt/dist/head/runtime/components")['Link']
@@ -629,6 +718,11 @@ export const Style: typeof import("../node_modules/nuxt/dist/head/runtime/compon
 export const Head: typeof import("../node_modules/nuxt/dist/head/runtime/components")['Head']
 export const Html: typeof import("../node_modules/nuxt/dist/head/runtime/components")['Html']
 export const Body: typeof import("../node_modules/nuxt/dist/head/runtime/components")['Body']
+/**
+ * Renders a non-interactive server component without shipping client-side JavaScript.
+ *
+ * @see https://nuxt.com/docs/4.x/api/components/nuxt-island
+ */
 export const NuxtIsland: typeof import("../node_modules/nuxt/dist/app/components/nuxt-island")['default']
 export const LazyAvatarDropdown: LazyComponent<typeof import("../src/components/CommonCompo/AvatarDropdown.vue")['default']>
 export const LazyAutoHeightContainer: LazyComponent<typeof import("../src/components/CommonCompo/Bili-Container-Compo/AutoHeightContainer.vue")['default']>
@@ -664,6 +758,8 @@ export const LazyBiliSearchBox: LazyComponent<typeof import("../src/components/C
 export const LazyUniversalSearchBox: LazyComponent<typeof import("../src/components/CommonCompo/Bili-Search-Compo/UniversalSearchBox.vue")['default']>
 export const LazyBiliStatusIcon: LazyComponent<typeof import("../src/components/CommonCompo/Bili-Status-Compo/BiliStatusIcon.vue")['default']>
 export const LazyUserAvatarBox: LazyComponent<typeof import("../src/components/CommonCompo/Bili-User-Compo/UserAvatarBox.vue")['default']>
+export const LazyBiliIcon: LazyComponent<typeof import("../src/components/CommonCompo/BiliIcon.vue")['default']>
+export const LazyBiliPagination: LazyComponent<typeof import("../src/components/CommonCompo/BiliPagination.vue")['default']>
 export const LazyBiliStyleExpBar: LazyComponent<typeof import("../src/components/CommonCompo/BiliStyleExpBar.vue")['default']>
 export const LazyExpBar: LazyComponent<typeof import("../src/components/CommonCompo/ExpBar.vue")['default']>
 export const LazyGlobalLoadingMask: LazyComponent<typeof import("../src/components/CommonCompo/GlobalLoadingMask.vue")['default']>
@@ -686,6 +782,7 @@ export const LazySpuTags: LazyComponent<typeof import("../src/components/SamsClu
 export const LazyUtils: LazyComponent<typeof import("../src/components/SamsClubCompo/utils")['default']>
 export const LazyAdminAuditTabs: LazyComponent<typeof import("../src/components/admin/AdminAuditTabs.vue")['default']>
 export const LazyAuditOverviewCard: LazyComponent<typeof import("../src/components/admin/AuditOverviewCard.vue")['default']>
+export const LazyStatsOverviewCards: LazyComponent<typeof import("../src/components/admin/StatsOverviewCards.vue")['default']>
 export const LazyScrollButtons: LazyComponent<typeof import("../src/components/common/ScrollButtons.vue")['default']>
 export const LazyTopicTable: LazyComponent<typeof import("../src/components/communicate_list/topic_table.vue")['default']>
 export const LazyFeatureNavigation: LazyComponent<typeof import("../src/components/home/FeatureNavigation.vue")['default']>
@@ -726,6 +823,7 @@ export const LazyBiliLotterySimpleList: LazyComponent<typeof import("../src/comp
 export const LazyBiliOfficialLotteryTable: LazyComponent<typeof import("../src/components/lottery_data/bili_data/BiliOfficialLotteryTable.vue")['default']>
 export const LazyBiliScrapyStatusMini: LazyComponent<typeof import("../src/components/lottery_data/bili_data/BiliScrapyStatusMini.vue")['default']>
 export const LazyChargeLottery: LazyComponent<typeof import("../src/components/lottery_data/bili_data/ChargeLottery.vue")['default']>
+export const LazyHotLotteryList: LazyComponent<typeof import("../src/components/lottery_data/bili_data/HotLotteryList.vue")['default']>
 export const LazyLotteryActionsDropdown: LazyComponent<typeof import("../src/components/lottery_data/bili_data/LotteryActionsDropdown.vue")['default']>
 export const LazyLotteryDataTableToolbar: LazyComponent<typeof import("../src/components/lottery_data/bili_data/LotteryDataTableToolbar.vue")['default']>
 export const LazyLotteryFilterBar: LazyComponent<typeof import("../src/components/lottery_data/bili_data/LotteryFilterBar.vue")['default']>
@@ -739,6 +837,7 @@ export const LazySubmitFeedbackModal: LazyComponent<typeof import("../src/compon
 export const LazySubmitOthersLotDynModal: LazyComponent<typeof import("../src/components/lottery_data/bili_data/SubmitOthersLotDynModal.vue")['default']>
 export const LazySubmitTopicLotteryModal: LazyComponent<typeof import("../src/components/lottery_data/bili_data/SubmitTopicLotteryModal.vue")['default']>
 export const LazyTopicLottery: LazyComponent<typeof import("../src/components/lottery_data/bili_data/TopicLottery.vue")['default']>
+export const LazyUpcomingLotteryMarquee: LazyComponent<typeof import("../src/components/lottery_data/bili_data/UpcomingLotteryMarquee.vue")['default']>
 export const LazyLotteryDesc: LazyComponent<typeof import("../src/components/lottery_data/bili_data/section/lottery/LotteryDesc.vue")['default']>
 export const LazyLotteryPrize: LazyComponent<typeof import("../src/components/lottery_data/bili_data/section/lottery/LotteryPrize.vue")['default']>
 export const LazyAuditReasonDialog: LazyComponent<typeof import("../src/components/message/AuditReasonDialog.vue")['default']>
@@ -772,6 +871,14 @@ export const LazyMomentFeedList: LazyComponent<typeof import("../src/components/
 export const LazyMomentPublishForm: LazyComponent<typeof import("../src/components/moment/MomentPublishForm.vue")['default']>
 export const LazyMomentStatBar: LazyComponent<typeof import("../src/components/moment/MomentStatBar.vue")['default']>
 export const LazyReportDialog: LazyComponent<typeof import("../src/components/moment/ReportDialog.vue")['default']>
+export const LazySpaceFansGrid: LazyComponent<typeof import("../src/components/moment/SpaceFansGrid.vue")['default']>
+export const LazySpaceFollowTagNav: LazyComponent<typeof import("../src/components/moment/SpaceFollowTagNav.vue")['default']>
+export const LazySpaceFollowTagPicker: LazyComponent<typeof import("../src/components/moment/SpaceFollowTagPicker.vue")['default']>
+export const LazySpaceProfileAside: LazyComponent<typeof import("../src/components/moment/SpaceProfileAside.vue")['default']>
+export const LazySpaceRelationList: LazyComponent<typeof import("../src/components/moment/SpaceRelationList.vue")['default']>
+export const LazySpaceSummaryCard: LazyComponent<typeof import("../src/components/moment/SpaceSummaryCard.vue")['default']>
+export const LazySpaceTimelineItem: LazyComponent<typeof import("../src/components/moment/SpaceTimelineItem.vue")['default']>
+export const LazySpaceTimelineList: LazyComponent<typeof import("../src/components/moment/SpaceTimelineList.vue")['default']>
 export const LazyPlaceholder: LazyComponent<typeof import("../src/components/opus-detail/RightPannel/PannelItems/Placeholder.vue")['default']>
 export const LazyAccountStatusBoard: LazyComponent<typeof import("../src/components/opus-detail/RightPannel/PannelItems/SettingComponent/AccountStatusBoard.vue")['default']>
 export const LazyBrowserManagementPanel: LazyComponent<typeof import("../src/components/opus-detail/RightPannel/PannelItems/SettingComponent/BrowserManagementPanel.vue")['default']>
@@ -784,8 +891,11 @@ export const LazyUserCenterDeactivate: LazyComponent<typeof import("../src/compo
 export const LazyUserCenterDefaultPanel: LazyComponent<typeof import("../src/components/opus-detail/RightPannel/PannelItems/SettingComponent/UserCenterDefaultPanel.vue")['default']>
 export const LazyUserCenterRecords: LazyComponent<typeof import("../src/components/opus-detail/RightPannel/PannelItems/SettingComponent/UserCenterRecords.vue")['default']>
 export const LazyActionCard: LazyComponent<typeof import("../src/components/rpa-browser/ActionCard.vue")['default']>
+export const LazyActionDetailDialog: LazyComponent<typeof import("../src/components/rpa-browser/ActionDetailDialog.vue")['default']>
+export const LazyActionFlowView: LazyComponent<typeof import("../src/components/rpa-browser/ActionFlowView.vue")['default']>
 export const LazyActionIcon: LazyComponent<typeof import("../src/components/rpa-browser/ActionIcon.vue")['default']>
 export const LazyActionIconPicker: LazyComponent<typeof import("../src/components/rpa-browser/ActionIconPicker.vue")['default']>
+export const LazyActionLogChainDialog: LazyComponent<typeof import("../src/components/rpa-browser/ActionLogChainDialog.vue")['default']>
 export const LazyActionParamsForm: LazyComponent<typeof import("../src/components/rpa-browser/ActionParamsForm.vue")['default']>
 export const LazyActionPickerDialog: LazyComponent<typeof import("../src/components/rpa-browser/ActionPickerDialog.vue")['default']>
 export const LazyBranchContainer: LazyComponent<typeof import("../src/components/rpa-browser/BranchContainer.vue")['default']>
@@ -797,11 +907,19 @@ export const LazyLaunchQueuePanel: LazyComponent<typeof import("../src/component
 export const LazyLiveBox: LazyComponent<typeof import("../src/components/rpa-browser/LiveBox.vue")['default']>
 export const LazyLoopEditor: LazyComponent<typeof import("../src/components/rpa-browser/LoopEditor.vue")['default']>
 export const LazyMinimizeBar: LazyComponent<typeof import("../src/components/rpa-browser/MinimizeBar.vue")['default']>
+export const LazyObjectArrayEditor: LazyComponent<typeof import("../src/components/rpa-browser/ObjectArrayEditor.vue")['default']>
 export const LazyOperationFeedbackPanel: LazyComponent<typeof import("../src/components/rpa-browser/OperationFeedbackPanel.vue")['default']>
+export const LazyResourceLinkTemplateDialog: LazyComponent<typeof import("../src/components/rpa-browser/ResourceLinkTemplateDialog.vue")['default']>
 export const LazyRpaMobileTip: LazyComponent<typeof import("../src/components/rpa-browser/RpaMobileTip.vue")['default']>
 export const LazyToolboxPanel: LazyComponent<typeof import("../src/components/rpa-browser/ToolboxPanel.vue")['default']>
+export const LazyWorkflowCard: LazyComponent<typeof import("../src/components/rpa-browser/WorkflowCard.vue")['default']>
 export const LazyWorkflowEditDialog: LazyComponent<typeof import("../src/components/rpa-browser/WorkflowEditDialog.vue")['default']>
+export const LazyWorkflowResourceRecordTable: LazyComponent<typeof import("../src/components/rpa-browser/WorkflowResourceRecordTable.vue")['default']>
 export const LazyWorkflowRunLogDialog: LazyComponent<typeof import("../src/components/rpa-browser/WorkflowRunLogDialog.vue")['default']>
+export const LazyWorkflowRunMessageDock: LazyComponent<typeof import("../src/components/rpa-browser/WorkflowRunMessageDock.vue")['default']>
+export const LazyWorkflowRunMessageGroup: LazyComponent<typeof import("../src/components/rpa-browser/WorkflowRunMessageGroup.vue")['default']>
+export const LazyWorkflowRunMessageItem: LazyComponent<typeof import("../src/components/rpa-browser/WorkflowRunMessageItem.vue")['default']>
+export const LazyWorkflowRunProgressBar: LazyComponent<typeof import("../src/components/rpa-browser/WorkflowRunProgressBar.vue")['default']>
 export const LazyDebugboxTypes: LazyComponent<typeof import("../src/components/rpa-browser/debugbox-types")['default']>
 export const LazyLiveCenterPlayButton: LazyComponent<typeof import("../src/components/rpa-browser/live/LiveCenterPlayButton.vue")['default']>
 export const LazyLiveOverlay: LazyComponent<typeof import("../src/components/rpa-browser/live/LiveOverlay.vue")['default']>
@@ -814,25 +932,109 @@ export const LazyUseDebugboxExecution: LazyComponent<typeof import("../src/compo
 export const LazyUseDebugboxItems: LazyComponent<typeof import("../src/components/rpa-browser/useDebugboxItems")['default']>
 export const LazyUseDebugboxSave: LazyComponent<typeof import("../src/components/rpa-browser/useDebugboxSave")['default']>
 export const LazySponsorNotification: LazyComponent<typeof import("../src/components/sponsor/sponsor-notification.vue")['default']>
+/**
+ * Lazy-loaded version of `<NuxtWelcome>`.
+ *
+ * Displays the welcome screen used by new Nuxt projects.
+ *
+ * @see https://nuxt.com/docs/4.x/api/components/nuxt-welcome
+ */
 export const LazyNuxtWelcome: LazyComponent<typeof import("../node_modules/nuxt/dist/app/components/welcome.vue")['default']>
+/**
+ * Lazy-loaded version of `<NuxtLayout>`.
+ *
+ * Renders the selected layout around pages or error content.
+ *
+ * @see https://nuxt.com/docs/4.x/api/components/nuxt-layout
+ */
 export const LazyNuxtLayout: LazyComponent<typeof import("../node_modules/nuxt/dist/app/components/nuxt-layout")['default']>
+/**
+ * Lazy-loaded version of `<NuxtErrorBoundary>`.
+ *
+ * Catches client-side errors from its default slot and renders an error slot.
+ *
+ * @see https://nuxt.com/docs/4.x/api/components/nuxt-error-boundary
+ */
 export const LazyNuxtErrorBoundary: LazyComponent<typeof import("../node_modules/nuxt/dist/app/components/nuxt-error-boundary.vue")['default']>
+/**
+ * Lazy-loaded version of `<ClientOnly>`.
+ *
+ * Renders its default slot only on the client, with an optional server fallback.
+ *
+ * @see https://nuxt.com/docs/4.x/api/components/client-only
+ */
 export const LazyClientOnly: LazyComponent<typeof import("../node_modules/nuxt/dist/app/components/client-only")['default']>
+/**
+ * Lazy-loaded version of `<DevOnly>`.
+ *
+ * Renders its content only during development.
+ *
+ * @see https://nuxt.com/docs/4.x/api/components/dev-only
+ */
 export const LazyDevOnly: LazyComponent<typeof import("../node_modules/nuxt/dist/app/components/dev-only")['default']>
 export const LazyServerPlaceholder: LazyComponent<typeof import("../node_modules/nuxt/dist/app/components/server-placeholder")['default']>
+/**
+ * Lazy-loaded version of `<NuxtLink>`.
+ *
+ * A drop-in replacement for Vue Router's `<RouterLink>` and the HTML `<a>` element.
+ *
+ * @see https://nuxt.com/docs/4.x/api/components/nuxt-link
+ */
 export const LazyNuxtLink: LazyComponent<typeof import("../node_modules/nuxt/dist/app/components/nuxt-link")['default']>
+/**
+ * Lazy-loaded version of `<NuxtLoadingIndicator>`.
+ *
+ * Displays a progress bar during page navigation.
+ *
+ * @see https://nuxt.com/docs/4.x/api/components/nuxt-loading-indicator
+ */
 export const LazyNuxtLoadingIndicator: LazyComponent<typeof import("../node_modules/nuxt/dist/app/components/nuxt-loading-indicator")['default']>
+/**
+ * Lazy-loaded version of `<NuxtTime>`.
+ *
+ * Formats dates and times consistently across server and client using the user's locale.
+ *
+ * @see https://nuxt.com/docs/4.x/api/components/nuxt-time
+ */
 export const LazyNuxtTime: LazyComponent<typeof import("../node_modules/nuxt/dist/app/components/nuxt-time.vue")['default']>
+/**
+ * Lazy-loaded version of `<NuxtRouteAnnouncer>`.
+ *
+ * Announces route changes to assistive technologies using the current page title.
+ *
+ * @see https://nuxt.com/docs/4.x/api/components/nuxt-route-announcer
+ */
 export const LazyNuxtRouteAnnouncer: LazyComponent<typeof import("../node_modules/nuxt/dist/app/components/nuxt-route-announcer")['default']>
+/**
+ * Lazy-loaded version of `<NuxtAnnouncer>`.
+ *
+ * Announces dynamic content changes to assistive technologies.
+ *
+ * @see https://nuxt.com/docs/4.x/api/components/nuxt-announcer
+ */
 export const LazyNuxtAnnouncer: LazyComponent<typeof import("../node_modules/nuxt/dist/app/components/nuxt-announcer")['default']>
+/**
+ * Lazy-loaded version of `<NuxtImg>`.
+ *
+ * Renders an optimized image through the Nuxt Image module.
+ *
+ * @see https://nuxt.com/docs/4.x/api/components/nuxt-img
+ */
 export const LazyNuxtImg: LazyComponent<typeof import("../node_modules/nuxt/dist/app/components/nuxt-stubs")['NuxtImg']>
+/**
+ * Lazy-loaded version of `<NuxtPicture>`.
+ *
+ * Renders responsive optimized images through the Nuxt Image module.
+ *
+ * @see https://nuxt.com/docs/4.x/api/components/nuxt-picture
+ */
 export const LazyNuxtPicture: LazyComponent<typeof import("../node_modules/nuxt/dist/app/components/nuxt-stubs")['NuxtPicture']>
 export const LazyElAffix: LazyComponent<typeof import("../node_modules/element-plus/es/components/affix/index")['ElAffix']>
 export const LazyElAlert: LazyComponent<typeof import("../node_modules/element-plus/es/components/alert/index")['ElAlert']>
 export const LazyElAnchor: LazyComponent<typeof import("../node_modules/element-plus/es/components/anchor/index")['ElAnchor']>
 export const LazyElAnchorLink: LazyComponent<typeof import("../node_modules/element-plus/es/components/anchor/index")['ElAnchorLink']>
-export const LazyElAside: LazyComponent<typeof import("../node_modules/element-plus/es/components/container/index")['ElAside']>
 export const LazyElAutoResizer: LazyComponent<typeof import("../node_modules/element-plus/es/components/table-v2/index")['ElAutoResizer']>
+export const LazyElAside: LazyComponent<typeof import("../node_modules/element-plus/es/components/container/index")['ElAside']>
 export const LazyElAutocomplete: LazyComponent<typeof import("../node_modules/element-plus/es/components/autocomplete/index")['ElAutocomplete']>
 export const LazyElAvatar: LazyComponent<typeof import("../node_modules/element-plus/es/components/avatar/index")['ElAvatar']>
 export const LazyElAvatarGroup: LazyComponent<typeof import("../node_modules/element-plus/es/components/avatar/index")['ElAvatarGroup']>
@@ -1235,6 +1437,13 @@ export const LazyElIconWatermelon: LazyComponent<typeof import("../node_modules/
 export const LazyElIconWindPower: LazyComponent<typeof import("../node_modules/@element-plus/icons-vue/dist/index")['WindPower']>
 export const LazyElIconZoomIn: LazyComponent<typeof import("../node_modules/@element-plus/icons-vue/dist/index")['ZoomIn']>
 export const LazyElIconZoomOut: LazyComponent<typeof import("../node_modules/@element-plus/icons-vue/dist/index")['ZoomOut']>
+/**
+ * Lazy-loaded version of `<NuxtPage>`.
+ *
+ * Renders the current page from the `pages/` directory.
+ *
+ * @see https://nuxt.com/docs/4.x/api/components/nuxt-page
+ */
 export const LazyNuxtPage: LazyComponent<typeof import("../node_modules/nuxt/dist/pages/runtime/page")['default']>
 export const LazyNoScript: LazyComponent<typeof import("../node_modules/nuxt/dist/head/runtime/components")['NoScript']>
 export const LazyLink: LazyComponent<typeof import("../node_modules/nuxt/dist/head/runtime/components")['Link']>
@@ -1245,6 +1454,13 @@ export const LazyStyle: LazyComponent<typeof import("../node_modules/nuxt/dist/h
 export const LazyHead: LazyComponent<typeof import("../node_modules/nuxt/dist/head/runtime/components")['Head']>
 export const LazyHtml: LazyComponent<typeof import("../node_modules/nuxt/dist/head/runtime/components")['Html']>
 export const LazyBody: LazyComponent<typeof import("../node_modules/nuxt/dist/head/runtime/components")['Body']>
+/**
+ * Lazy-loaded version of `<NuxtIsland>`.
+ *
+ * Renders a non-interactive server component without shipping client-side JavaScript.
+ *
+ * @see https://nuxt.com/docs/4.x/api/components/nuxt-island
+ */
 export const LazyNuxtIsland: LazyComponent<typeof import("../node_modules/nuxt/dist/app/components/nuxt-island")['default']>
 
 export const componentNames: string[]

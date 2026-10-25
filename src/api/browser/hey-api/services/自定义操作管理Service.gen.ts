@@ -3,7 +3,7 @@
 import type { RequestResult } from '../client';
 import { client } from '../client.gen';
 import type { Options } from '../sdk.gen';
-import type { CreateCustomActionApiV1RpaBrowserControlCustomActionsCreatePostData, CreateCustomActionApiV1RpaBrowserControlCustomActionsCreatePostErrors, CreateCustomActionApiV1RpaBrowserControlCustomActionsCreatePostResponses, DeleteCustomActionApiV1RpaBrowserControlCustomActionsDeletePostData, DeleteCustomActionApiV1RpaBrowserControlCustomActionsDeletePostErrors, DeleteCustomActionApiV1RpaBrowserControlCustomActionsDeletePostResponses, ForkCustomActionApiV1RpaBrowserControlCustomActionsForkPostData, ForkCustomActionApiV1RpaBrowserControlCustomActionsForkPostErrors, ForkCustomActionApiV1RpaBrowserControlCustomActionsForkPostResponses, GetActionForksApiV1RpaBrowserControlCustomActionsIdForksGetData, GetActionForksApiV1RpaBrowserControlCustomActionsIdForksGetErrors, GetActionForksApiV1RpaBrowserControlCustomActionsIdForksGetResponses, GetCustomActionApiV1RpaBrowserControlCustomActionsGetPostData, GetCustomActionApiV1RpaBrowserControlCustomActionsGetPostErrors, GetCustomActionApiV1RpaBrowserControlCustomActionsGetPostResponses, ListCustomActionsApiV1RpaBrowserControlCustomActionsListPostData, ListCustomActionsApiV1RpaBrowserControlCustomActionsListPostErrors, ListCustomActionsApiV1RpaBrowserControlCustomActionsListPostResponses, ListCustomActionTagsApiV1RpaBrowserControlCustomActionsTagsPostData, ListCustomActionTagsApiV1RpaBrowserControlCustomActionsTagsPostErrors, ListCustomActionTagsApiV1RpaBrowserControlCustomActionsTagsPostResponses, ListRegisteredActionsApiV1RpaBrowserControlActionsRegisteredPostData, ListRegisteredActionsApiV1RpaBrowserControlActionsRegisteredPostResponses, SearchCustomActionNamesApiV1RpaBrowserControlCustomActionsNamesSearchPostData, SearchCustomActionNamesApiV1RpaBrowserControlCustomActionsNamesSearchPostErrors, SearchCustomActionNamesApiV1RpaBrowserControlCustomActionsNamesSearchPostResponses, SearchCustomActionTagsApiV1RpaBrowserControlCustomActionsTagsSearchPostData, SearchCustomActionTagsApiV1RpaBrowserControlCustomActionsTagsSearchPostErrors, SearchCustomActionTagsApiV1RpaBrowserControlCustomActionsTagsSearchPostResponses, UpdateCustomActionApiV1RpaBrowserControlCustomActionsUpdatePostData, UpdateCustomActionApiV1RpaBrowserControlCustomActionsUpdatePostErrors, UpdateCustomActionApiV1RpaBrowserControlCustomActionsUpdatePostResponses } from '../types.gen';
+import type { CreateCustomActionApiV1RpaBrowserControlCustomActionsCreatePostData, CreateCustomActionApiV1RpaBrowserControlCustomActionsCreatePostErrors, CreateCustomActionApiV1RpaBrowserControlCustomActionsCreatePostResponses, DeleteCustomActionApiV1RpaBrowserControlCustomActionsDeletePostData, DeleteCustomActionApiV1RpaBrowserControlCustomActionsDeletePostErrors, DeleteCustomActionApiV1RpaBrowserControlCustomActionsDeletePostResponses, ExportCustomActionApiV1RpaBrowserControlCustomActionsExportPostData, ExportCustomActionApiV1RpaBrowserControlCustomActionsExportPostErrors, ExportCustomActionApiV1RpaBrowserControlCustomActionsExportPostResponses, ForkCustomActionApiV1RpaBrowserControlCustomActionsForkPostData, ForkCustomActionApiV1RpaBrowserControlCustomActionsForkPostErrors, ForkCustomActionApiV1RpaBrowserControlCustomActionsForkPostResponses, GetActionForksApiV1RpaBrowserControlCustomActionsIdForksGetData, GetActionForksApiV1RpaBrowserControlCustomActionsIdForksGetErrors, GetActionForksApiV1RpaBrowserControlCustomActionsIdForksGetResponses, GetCustomActionApiV1RpaBrowserControlCustomActionsGetPostData, GetCustomActionApiV1RpaBrowserControlCustomActionsGetPostErrors, GetCustomActionApiV1RpaBrowserControlCustomActionsGetPostResponses, ImportCustomActionApiV1RpaBrowserControlCustomActionsImportPostData, ImportCustomActionApiV1RpaBrowserControlCustomActionsImportPostErrors, ImportCustomActionApiV1RpaBrowserControlCustomActionsImportPostResponses, ListCustomActionsApiV1RpaBrowserControlCustomActionsListPostData, ListCustomActionsApiV1RpaBrowserControlCustomActionsListPostErrors, ListCustomActionsApiV1RpaBrowserControlCustomActionsListPostResponses, ListCustomActionTagsApiV1RpaBrowserControlCustomActionsTagsPostData, ListCustomActionTagsApiV1RpaBrowserControlCustomActionsTagsPostErrors, ListCustomActionTagsApiV1RpaBrowserControlCustomActionsTagsPostResponses, ListRegisteredActionsApiV1RpaBrowserControlActionsRegisteredPostData, ListRegisteredActionsApiV1RpaBrowserControlActionsRegisteredPostResponses, SearchCustomActionNamesApiV1RpaBrowserControlCustomActionsNamesSearchPostData, SearchCustomActionNamesApiV1RpaBrowserControlCustomActionsNamesSearchPostErrors, SearchCustomActionNamesApiV1RpaBrowserControlCustomActionsNamesSearchPostResponses, SearchCustomActionTagsApiV1RpaBrowserControlCustomActionsTagsSearchPostData, SearchCustomActionTagsApiV1RpaBrowserControlCustomActionsTagsSearchPostErrors, SearchCustomActionTagsApiV1RpaBrowserControlCustomActionsTagsSearchPostResponses, SyncCustomActionApiV1RpaBrowserControlCustomActionsSyncPostData, SyncCustomActionApiV1RpaBrowserControlCustomActionsSyncPostErrors, SyncCustomActionApiV1RpaBrowserControlCustomActionsSyncPostResponses, UpdateCustomActionApiV1RpaBrowserControlCustomActionsUpdatePostData, UpdateCustomActionApiV1RpaBrowserControlCustomActionsUpdatePostErrors, UpdateCustomActionApiV1RpaBrowserControlCustomActionsUpdatePostResponses } from '../types.gen';
 
 export class 自定义操作管理Service {
     /**
@@ -27,12 +27,53 @@ export class 自定义操作管理Service {
      * 创建用户自定义操作
      *
      * 用户可以基于系统预注册的操作或插件组合创建自己的操作。
-     * action_id 由系统自动生成（格式：ca_xxx），用户仅需提供显示名称 name。
+     * action_id 由系统自动生成（雪花 int），用户仅需提供显示名称 name。
      */
     public static createCustomActionApiV1RpaBrowserControlCustomActionsCreatePost<ThrowOnError extends boolean = false>(options: Options<CreateCustomActionApiV1RpaBrowserControlCustomActionsCreatePostData, ThrowOnError>): RequestResult<CreateCustomActionApiV1RpaBrowserControlCustomActionsCreatePostResponses, CreateCustomActionApiV1RpaBrowserControlCustomActionsCreatePostErrors, ThrowOnError, 'data'> {
         return (options.client ?? client).post<CreateCustomActionApiV1RpaBrowserControlCustomActionsCreatePostResponses, CreateCustomActionApiV1RpaBrowserControlCustomActionsCreatePostErrors, ThrowOnError, 'data'>({
             responseStyle: 'data',
             url: '/api/v1/rpa/browser/control/custom-actions/create',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    /**
+     * 从 JSON 导入自定义操作
+     *
+     * 从 JSON 导入自定义操作
+     *
+     * 请求体即「导出 JSON」内容（可携带 mid / id / created_at / version / likes_count
+     * 等数据库冗余字段，自动忽略）。导入会在**当前用户名下新建**一份动作，
+     * action_id 由系统重新生成（雪花 int），不影响原动作。
+     */
+    public static importCustomActionApiV1RpaBrowserControlCustomActionsImportPost<ThrowOnError extends boolean = false>(options: Options<ImportCustomActionApiV1RpaBrowserControlCustomActionsImportPostData, ThrowOnError>): RequestResult<ImportCustomActionApiV1RpaBrowserControlCustomActionsImportPostResponses, ImportCustomActionApiV1RpaBrowserControlCustomActionsImportPostErrors, ThrowOnError, 'data'> {
+        return (options.client ?? client).post<ImportCustomActionApiV1RpaBrowserControlCustomActionsImportPostResponses, ImportCustomActionApiV1RpaBrowserControlCustomActionsImportPostErrors, ThrowOnError, 'data'>({
+            responseStyle: 'data',
+            url: '/api/v1/rpa/browser/control/custom-actions/import',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    /**
+     * 导出自定义操作为 JSON
+     *
+     * 导出自定义操作
+     *
+     * 返回体与「创建 / 导入」请求体字段完全一致，可直接保存为 .json 后再由导入接口还原；
+     * 仅本人或已公开的动作可导出。
+     */
+    public static exportCustomActionApiV1RpaBrowserControlCustomActionsExportPost<ThrowOnError extends boolean = false>(options: Options<ExportCustomActionApiV1RpaBrowserControlCustomActionsExportPostData, ThrowOnError>): RequestResult<ExportCustomActionApiV1RpaBrowserControlCustomActionsExportPostResponses, ExportCustomActionApiV1RpaBrowserControlCustomActionsExportPostErrors, ThrowOnError, 'data'> {
+        return (options.client ?? client).post<ExportCustomActionApiV1RpaBrowserControlCustomActionsExportPostResponses, ExportCustomActionApiV1RpaBrowserControlCustomActionsExportPostErrors, ThrowOnError, 'data'>({
+            responseStyle: 'data',
+            url: '/api/v1/rpa/browser/control/custom-actions/export',
             ...options,
             headers: {
                 'Content-Type': 'application/json',
@@ -166,12 +207,35 @@ export class 自定义操作管理Service {
      * 类似 GitHub 的 Fork 功能，允许用户复制公开的社区操作到自己的空间，并可以选择重命名。
      *
      * Args:
-     * request: {"action_id": <操作action_id>, "new_name": <新名称（可选）>}
+     * request: {"action_id": <操作action_id>, "new_name": <新名称（可选）>,
+     * "auto_sync_upstream": <是否开启上游自动同步，默认 false>}
      */
     public static forkCustomActionApiV1RpaBrowserControlCustomActionsForkPost<ThrowOnError extends boolean = false>(options: Options<ForkCustomActionApiV1RpaBrowserControlCustomActionsForkPostData, ThrowOnError>): RequestResult<ForkCustomActionApiV1RpaBrowserControlCustomActionsForkPostResponses, ForkCustomActionApiV1RpaBrowserControlCustomActionsForkPostErrors, ThrowOnError, 'data'> {
         return (options.client ?? client).post<ForkCustomActionApiV1RpaBrowserControlCustomActionsForkPostResponses, ForkCustomActionApiV1RpaBrowserControlCustomActionsForkPostErrors, ThrowOnError, 'data'>({
             responseStyle: 'data',
             url: '/api/v1/rpa/browser/control/custom_actions/fork',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    /**
+     * 同步自定义操作到上游最新版本
+     *
+     * 将 Fork 的自定义操作同步到原作者最新版本
+     *
+     * 会递归同步整个依赖树：
+     * - 已有 Fork 副本的子动作会被更新到最新
+     * - 上游新增的依赖会自动 Fork
+     * - 上游已删除/私有化的依赖会保留当前副本并在 unavailable 中报告
+     */
+    public static syncCustomActionApiV1RpaBrowserControlCustomActionsSyncPost<ThrowOnError extends boolean = false>(options: Options<SyncCustomActionApiV1RpaBrowserControlCustomActionsSyncPostData, ThrowOnError>): RequestResult<SyncCustomActionApiV1RpaBrowserControlCustomActionsSyncPostResponses, SyncCustomActionApiV1RpaBrowserControlCustomActionsSyncPostErrors, ThrowOnError, 'data'> {
+        return (options.client ?? client).post<SyncCustomActionApiV1RpaBrowserControlCustomActionsSyncPostResponses, SyncCustomActionApiV1RpaBrowserControlCustomActionsSyncPostErrors, ThrowOnError, 'data'>({
+            responseStyle: 'data',
+            url: '/api/v1/rpa/browser/control/custom_actions/sync',
             ...options,
             headers: {
                 'Content-Type': 'application/json',

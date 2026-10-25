@@ -42,7 +42,7 @@ export interface CommentHandlers {
   like: (payload: { rpid: string; nextAction: 0 | 1 | 2 }) => void
   del: (rpid: string) => Promise<BusinessHandlerResult<null> | undefined>
   /** 发表回复：允许返回 Promise，调用方（楼中楼）需要等落库完成后再展开查看 */
-  reply: (payload: { root: string; parent: string; message: string; atNameToMid?: Record<string, number>; replyTo?: CommentUserBrief | null }) => void | Promise<void>
+  reply: (payload: { root: string; parent: string; message: string; atNameToMid?: Record<string, string>; replyTo?: CommentUserBrief | null }) => void | Promise<void>
   /** 楼中楼展开：返回某一页的子回复与总数 */
   expandReplies: (item: CommentItem, page: number) => Promise<{ items: CommentItem[]; total: number }>
 }
@@ -137,7 +137,7 @@ const commentApi = {
     root: string | number,
     parent: string | number,
     message: string,
-    atNameToMid?: Record<string, number>
+    atNameToMid?: Record<string, string>
   ): Promise<RootObject<CommentAddResp>> {
     return CommentService.addCommentApiV1CommentAddPost({
       body: {

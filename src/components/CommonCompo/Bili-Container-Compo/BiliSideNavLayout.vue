@@ -5,7 +5,7 @@
         <!-- 场景高度由 AutoHeightContainer 按自身位置测量（窗口高 - 自身 top - 底部留白），
              滚动交给布局内部实现，外侧 main 不被内容撑开 -->
         <AutoHeightContainer class="bili-side-nav-layout__body flex-auto flex min-w-0 items-stretch">
-            <el-aside width="auto" class="bili-side-nav-layout__aside h-full overflow-hidden">
+            <el-aside width="auto" class="bili-side-nav-layout__aside h-full overflow-hidden mr-1">
                 <!-- 菜单列滚动：el-scrollbar 承接纵向滚动（EP 的 wrap 自带 overflow:auto），
                      这里只需隐藏原生滚动条与横向条，避免菜单项增多时出现浏览器原生滚动条 -->
                 <el-scrollbar
@@ -74,10 +74,17 @@
                     <h1 class="bili-side-nav-layout__title text-base font-bold">{{ pageTitle }}</h1>
                     <slot name="header-extra" />
                 </el-header>
-                <el-main class="bili-side-nav-layout__main-body">
-                    <BiliScrollbar
+                <el-main class="bili-side-nav-layout__main-body ml-1">
+                    <!-- 内容区滚动：view 自身就是 h-full + flex 列（inner-class 与 view-class 合并到同一元素），
+                         子页面只需用 FlexContainer（自带 flex/flex-col/flex-1），
+                         无需再写 flex-1 / flex-col / min-h-0，更不能加 overflow-auto 
+                         mr-4 防止滚动条遮挡内部内容
+                         -->
+                    <BiliScrollbar ref="contentScrollbarRef"
                         class="bili-side-nav-layout__content h-full [&_.el-scrollbar__bar.is-horizontal]:hidden!"
-                        view-class="h-full" @scroll="onContentScroll" inner-class="h-full flex flex-col min-h-0">
+                        view-class="h-full flex flex-col min-h-0 mr-4"
+                        wrap-style="pb-10"
+                        @scroll="onContentScroll">
                         <slot />
                     </BiliScrollbar>
                 </el-main>
@@ -87,7 +94,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, onMounted, type Component } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch, type Component } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Fold, Expand } from '@element-plus/icons-vue'
 import AutoHeightContainer from './AutoHeightContainer.vue'
@@ -120,6 +127,11 @@ const props = withDefaults(
 const route = useRoute()
 const router = useRouter()
 const collapsed = ref(false)
+// 内容区滚动容器：EP 的 el-scrollbar 只在挂载 / wrap 尺寸变化时 update()，
+// 子页面异步渲染（接口返回后内容变高）不会触发 wrap 尺寸变化，
+// 会导致竖向 bar 陈旧地停在 display:none（内容能滚但没有条）。
+// 这里在挂载、路由切换、窗口尺寸变化后主动 update() 一次。
+const contentScrollbarRef = ref<{ scrollbarRef?: { wrapRef?: HTMLElement; update?: () => void } }>()
 // 布丁弹性动画触发标记：折叠/展开时侧边栏果冻摇摆、按钮图标摇晃
 const isCollapsing = ref(false)
 const isWobbling = ref(false)
@@ -139,7 +151,21 @@ function isNarrowScreen() {
 onMounted(() => {
     // 窄屏首屏直接收起侧边栏（初始化不走果冻动画，避免入场抖动）
     collapsed.value = props.collapsible && isNarrowScreen()
+    window.addEventListener('resize', refreshContentScrollbar)
+    refreshContentScrollbar()
 })
+
+onBeforeUnmount(() => {
+    window.removeEventListener('resize', refreshContentScrollbar)
+})
+
+// 内容区滚动条重算：等子页面渲染完成后再 update，避免 bar 停留在过期的 display:none
+function refreshContentScrollbar() {
+    nextTick(() => contentScrollbarRef.value?.scrollbarRef?.update?.())
+}
+
+// 路由切换 = 换了子页面，走一次 update
+watch(() => route.fullPath, refreshContentScrollbar)
 
 // ===== 内容区滚动：滚动事件透传给 BiliScrollbar（快速滚动按钮由其内部自管理） =====
 function onContentScroll(_payload: { scrollTop: number; scrollLeft: number }) {

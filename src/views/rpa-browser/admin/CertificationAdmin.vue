@@ -220,7 +220,6 @@ onMounted(async () => {
             <el-select v-model="certForm.target_type" class="w-full">
               <el-option label="复合操作" value="action" />
               <el-option label="工作流" value="workflow" />
-              <el-option label="插件" value="plugin" />
             </el-select>
           </el-form-item>
           <el-form-item label="资源 ID">

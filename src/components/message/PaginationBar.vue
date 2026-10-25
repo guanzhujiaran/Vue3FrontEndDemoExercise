@@ -1,7 +1,7 @@
 <template>
   <div class="message-pagination-bar flex items-center justify-between py-4">
     <span class="message-pagination-bar__total text-sm text-text-placeholder">{{ t('message.totalItems', { total }) }}</span>
-    <el-pagination
+    <BiliPagination
       layout="prev, pager, next, sizes"
       :total="total"
       :page-size="pageSize"

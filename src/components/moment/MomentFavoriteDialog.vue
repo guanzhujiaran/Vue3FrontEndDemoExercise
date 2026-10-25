@@ -16,7 +16,8 @@
         <button
           v-for="folder in folders"
           :key="folder.folderId"
-          class="moment-favorite-dialog__folder-item flex items-center gap-3 p-2.5 rounded-lg border border-border-light hover:border-primary/60 cursor-pointer transition-colors text-left"
+          class="moment-favorite-dialog__folder-item flex items-center gap-3 p-2.5 rounded-lg border border-border-light hover:border-primary/60 cursor-pointer transition-colors text-left disabled:cursor-not-allowed disabled:opacity-70"
+          :disabled="togglingFolderId !== ''"
           @click="toggleFolder(folder)"
         >
           <!-- 封面（无封面 / 封面审核未通过时展示默认图片兜底） -->
@@ -33,7 +34,13 @@
           <div class="moment-favorite-dialog__info flex-1 min-w-0">
             <div class="moment-favorite-dialog__name flex items-center gap-1">
               <span class="text-sm font-medium truncate">{{ folder.name }}</span>
-              <el-tag v-if="folder.isDefault" size="small" type="info" class="ml-1! shrink-0">默认</el-tag>
+              <el-tag v-if="folder.isDefault" type="info" class="ml-1! shrink-0">默认</el-tag>
+              <!-- 收藏夹可见性（2026-10-08 逐夹 is_public）：公开 / 隐藏 -->
+              <el-tag
+                class="moment-favorite-dialog__visibility shrink-0"
+                :type="folder.isPublic ? 'success' : 'info'"
+                effect="plain"
+              >{{ folder.isPublic ? '公开' : '隐藏' }}</el-tag>
             </div>
             <div v-if="folder.description" class="text-xs text-text-placeholder truncate">{{ folder.description }}</div>
           </div>
@@ -41,9 +48,9 @@
           <el-icon
             :size="18"
             class="moment-favorite-dialog__check shrink-0"
-            :class="isFavInFolder(folder.folderId) ? 'text-primary' : 'text-text-placeholder/40'"
+            :class="isFavInFolder(folder.folderId_str ?? '') ? 'text-primary' : 'text-text-placeholder/40'"
           >
-            <Select :class="isFavInFolder(folder.folderId) ? '' : 'opacity-0'" />
+            <Select :class="isFavInFolder(folder.folderId_str ?? '') ? '' : 'opacity-0'" />
           </el-icon>
         </button>
 
@@ -124,6 +131,8 @@ import {
   fetchDynFavoriteFolders,
 } from '@/api/notify/moment-api'
 import type { FavoriteFolderResp } from '@/api/notify/moment-api'
+import type { FavoriteChangedPayload } from '@/utils/interaction/favoriteSync'
+import { toFavoriteChanged } from '@/utils/interaction/favoriteSync'
 import biliMessage from '@/utils/message'
 
 const props = defineProps<{
@@ -135,7 +144,8 @@ const props = defineProps<{
 }>()
 const emit = defineEmits<{
   (e: 'update:modelValue', v: boolean): void
-  (e: 'changed'): void
+  /** 收藏态变化：上抛最新收藏夹集合与收藏数，父组件据此同步按钮态（不再整页重查） */
+  (e: 'changed', payload: FavoriteChangedPayload): void
 }>()
 
 const visible = computed({
@@ -156,14 +166,28 @@ function toBizTypeNum(v: InteractionBizTypeEnum | string | undefined): Interacti
 const bizTypeNum = computed(() => toBizTypeNum(props.bizType))
 
 const folders = ref<FavoriteFolderResp[]>([])
-const favFolderIds = ref<Set<string>>(new Set())
 const loading = ref(false)
+/** 正在提交变更的收藏夹 id（串行化收藏/取消收藏请求，空串表示无请求在途） */
+const togglingFolderId = ref('')
 const showCreate = ref(false)
 const creating = ref(false)
 const createForm = ref({ name: '', description: '', coverUrl: '' })
 
+/** 已收藏该资源的收藏夹 id 集合（整体替换而非原地增删，保证响应式可追踪） */
+const favFolderIds = ref<Set<string>>(new Set())
+
 function isFavInFolder(folderId: string): boolean {
   return favFolderIds.value.has(folderId)
+}
+
+/**
+ * 写入最新收藏夹集合并上抛同步载荷。
+ * 用新 Set 整体替换，避免 Set 原地增删在部分场景下被依赖引用相等判断的逻辑漏掉。
+ */
+function commitFavoriteSet(folderIds: string[], favoriteCount?: number) {
+  const payload = toFavoriteChanged(folderIds, favoriteCount)
+  favFolderIds.value = new Set(payload.folderIds)
+  emit('changed', payload)
 }
 
 function favOptions(): { bizType?: InteractionBizTypeEnum; bizId?: string } {
@@ -192,14 +216,22 @@ async function load() {
 }
 
 async function toggleFolder(folder: FavoriteFolderResp) {
-  const already = isFavInFolder(folder.folderId)
-  const ok = already
-    ? await removeFavorite(props.dynId, folder.folderId, favOptions())
-    : await addFavorite(props.dynId, folder.folderId, favOptions())
-  if (!ok) return // 失败提示已由统一封装按后端响应弹出
-  if (already) favFolderIds.value.delete(folder.folderId)
-  else favFolderIds.value.add(folder.folderId)
-  emit('changed')
+  const folderId = folder.folderId_str ?? ''
+  if (togglingFolderId.value) return // 串行化：避免并发点击导致夹内状态与实际不一致
+  const already = isFavInFolder(folderId)
+  togglingFolderId.value = folderId
+  try {
+    const resp = already
+      ? await removeFavorite(props.dynId, folderId, favOptions())
+      : await addFavorite(props.dynId, folderId, favOptions())
+    if (!resp) return // 失败提示已由统一封装按后端响应弹出
+    const next = already
+      ? [...favFolderIds.value].filter((id) => id !== folderId)
+      : [...favFolderIds.value, folderId]
+    commitFavoriteSet(next, resp.favoriteCount)
+  } finally {
+    togglingFolderId.value = ''
+  }
 }
 
 async function handleCreate() {
@@ -212,11 +244,13 @@ async function handleCreate() {
       coverUrl: createForm.value.coverUrl || undefined,
     })
     if (folder) {
-      const ok = await addFavorite(props.dynId, folder.folderId, favOptions())
-      if (ok) {
-        favFolderIds.value.add(folder.folderId)
+      const resp = await addFavorite(props.dynId, folder.folderId_str ?? '', favOptions())
+      if (resp) {
         folders.value.push(folder)
-        emit('changed')
+        commitFavoriteSet(
+          [...favFolderIds.value, folder.folderId_str ?? ''],
+          resp.favoriteCount
+        )
         biliMessage.success('已收藏')
         showCreate.value = false
         createForm.value = { name: '', description: '', coverUrl: '' }

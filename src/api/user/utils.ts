@@ -3,7 +3,42 @@ import type { UserNavModel } from '@/models/user/user_model.ts'
 import { useUserNavStore } from '@/stores/user_nav.ts'
 import type { ApiError } from '@/api/base_axios/error_handler.ts'
 import type { RootObject } from '@/models/api/base_model.ts'
+import type { PptrUserNavData } from '@/api/community/hey-api'
 import biliMessage from '@/utils/message'
+
+/**
+ * 把 `GET /api/v1/user/nav` 的响应映射为 store 用的 UserNavModel。
+ *
+ * 后端 uid / mid 是同一个雪花 ID（BIGINT），出参同时给：
+ * - `uid`：int 数值（JS Number 会丢精度，**前端禁止消费**）
+ * - `uid_str`：字符串版（由后端 @auto_str 自动派生），前端唯一数据源
+ *
+ * 这里统一收敛一次，全站（含 x-bili-mid 请求头、与后端 mid 的字符串比较、
+ * 空间页路由 mid）都只读 store 里的字符串 uid。
+ */
+export const mapNavResponse = (nav: PptrUserNavData): UserNavModel => {
+  return {
+    // uid 与 mid 同一个雪花 ID：只取字符串版 uid_str，数值版 uid 禁止进 store
+    uid: nav.uid_str ?? '',
+    user_name: nav.user_name ?? '',
+    face: nav.face ?? null,
+    email: nav.email ?? '',
+    // role 标识由后端 role_info.role_name 兜底（SDK 的 role_info 无 role 字段）
+    role: nav.role_info?.role_name ?? '',
+    role_info: {
+      role: nav.role_info?.role_name ?? '',
+      role_name: nav.role_info?.role_name ?? '',
+      role_description: nav.role_info?.role_description ?? ''
+    },
+    level_info: {
+      current_exp: String(nav.level_info?.current_exp ?? '0'),
+      current_level: String(nav.level_info?.current_level ?? '0'),
+      current_min: String(nav.level_info?.current_min ?? '0'),
+      next_exp: String(nav.level_info?.next_exp ?? '--')
+    },
+    jwt_token: nav.jwt_token ?? undefined
+  }
+}
 
 export const isLogin: () => Promise<[boolean, string, UserNavModel | null, ApiError | null]> = async () => {
   const user_nav_store = useUserNavStore()
@@ -23,7 +58,7 @@ export const isLogin: () => Promise<[boolean, string, UserNavModel | null, ApiEr
     }
 
     // 成功响应取 result.data，错误响应（如 401）取 result.error
-    const resp = (result.data ?? result.error) as RootObject<UserNavModel> | undefined
+    const resp = (result.data ?? result.error) as RootObject<PptrUserNavData> | undefined
     const status = result.response.status
 
     // nav 返回 -101（账号未登录）或网关注权返回 401 时，视为未登录：
@@ -49,14 +84,15 @@ export const isLogin: () => Promise<[boolean, string, UserNavModel | null, ApiEr
       } else if (status !== 200) {
         biliMessage.error(serverMsg)
       }
-      return [false, serverMsg, (resp?.data as UserNavModel) ?? null, null]
+      return [false, serverMsg, (resp?.data ? mapNavResponse(resp.data) : null), null]
     }
     
-    user_nav_store.save_user_nav(resp.data)
+    const nav = mapNavResponse(resp.data)
+    user_nav_store.save_user_nav(nav)
 
     // JWT 续期已改由服务端通过 HttpOnly Cookie 下发（nav 响应不再携带 token），前端无需处理
 
-    return [true, resp.msg, resp.data, null]
+    return [true, resp.msg, nav, null]
   } catch (error: any) {
     // 兜底：client 直接抛出（极端网络异常等）
     const apiError: ApiError = {

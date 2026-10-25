@@ -1,5 +1,6 @@
 import { ref } from 'vue'
 import { defineStore } from 'pinia'
+import { browserPersistStorage } from '@/utils/persistStorage'
 
 export const useTourTipStore = defineStore(
   'tour-tip',
@@ -11,7 +12,7 @@ export const useTourTipStore = defineStore(
   {
     persist: {
       key: 'device-system',
-      storage: localStorage
+      storage: browserPersistStorage
     }
   }
 )

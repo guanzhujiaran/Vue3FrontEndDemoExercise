@@ -45,6 +45,8 @@ export interface LoopParamMapping {
 
 /** 循环配置 */
 export interface LoopConfig {
+  /** 循环显示名称（可选，支持 {{变量}} 模板，如 '处理 {{loop_item.title}}'，逐轮解析） */
+  name: string
   /** 循环来源 */
   loopSource: 'fixed_count' | 'variable' | 'expression' | 'json_list'
   /** 固定次数 */
@@ -84,6 +86,7 @@ export function genItemId(baseId = 'item'): string {
 
 export function defaultLoopConfig(): LoopConfig {
   return {
+    name: '',
     loopSource: 'fixed_count',
     count: 1,
     loopItemsVar: '',
@@ -117,6 +120,11 @@ export interface JsonSchemaNode {
   [key: string]: unknown
 }
 
+import type { VariableSpec } from '@/api/browser/hey-api/types.gen'
+
+/** 动作变量契约项（后端动作自描述需要/产出哪些变量，SDK VariableSpec 别名） */
+export type ActionVariableSpec = VariableSpec
+
 /** 动作参数 JSON Schema 顶层结构 */
 export interface JsonSchema {
   title?: string
@@ -124,6 +132,10 @@ export interface JsonSchema {
   properties?: Record<string, JsonSchemaNode>
   required?: string[]
   $defs?: Record<string, JsonSchemaNode>
+  /** 输入变量契约：动作运行时消费的 {{变量}} 清单（后端 /actions/registered 下发后合并进来） */
+  input_variables?: ActionVariableSpec[]
+  /** 输出变量契约：动作执行产出的变量槽位清单 */
+  output_variables?: ActionVariableSpec[]
   [key: string]: unknown
 }
 

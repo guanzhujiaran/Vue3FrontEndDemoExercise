@@ -12,6 +12,8 @@ import { useLocaleStore } from '@/stores/locale'
 import axios, { type AxiosInstance, type CreateAxiosDefaults } from 'axios'
 import { apiErrorHandler } from './error_handler'
 import { AXIOS_CONFIG } from '@/utils/Const/axionsConstans'
+import { withStrIds, RESPONSE_ID_FIELDS } from '@/utils/idString'
+
 
 declare module 'axios' {
   interface AxiosResponse<T = any> {
@@ -55,7 +57,10 @@ export const AXIOS_RES_INJECTION = (response: any) => {
     response.code = data.code
     response.msg = data.msg
     response.ttl = data.ttl
-    response.data = data.data
+    // 雪花 ID 统一字符串化（后端出参为 int 数值 + `xxxStr` / `xxx_str` 派生字符串版，
+    // JS Number 无法精确承载 19 位 ID）。在此处这一处出口归一，组件层拿到的
+    // 全是字符串，`:key` / `===` / Set 去重 / 路由 query / 二次入参都不会丢精度。
+    response.data = withStrIds(data.data, RESPONSE_ID_FIELDS)
   }
 
   if (response.code !== 0) {

@@ -16,8 +16,18 @@ import { SITE_URL } from '@/config/seo.ts'
 
 const route = useRoute()
 
-// 第三方抽奖动态以 dynId 定位（没有 lottery_id，不能复用 /app/lot-data/card-detail）
-const dynId = computed(() => String(route.query.dynId ?? ''))
+// 入参宽松匹配：站内链接用 ?dynId=，兼容 dyn_id / id 拼写（无 lottery_id，不能复用 card-detail）
+function pickQueryId(keys: readonly string[]): string {
+  for (const key of keys) {
+    const raw = route.query[key]
+    const val = Array.isArray(raw) ? raw[0] : raw
+    if (val !== undefined && val !== null && String(val).trim() !== '') {
+      return String(val).trim()
+    }
+  }
+  return ''
+}
+const dynId = computed(() => pickQueryId(['dynId', 'dyn_id', 'id']))
 // 定位直达的评论 rpid（来自通知 / 外链），传给评论区滚动定位
 const focusRpid = computed(() => String(route.query.rpid ?? '') || null)
 
@@ -164,7 +174,7 @@ function handleStatusChange(payload: { bizId: string; status: Partial<Interactio
         v-else
         class="others-lot-dyn-detail__empty mb-6"
         title="缺少动态 ID"
-        description="请从第三方抽奖列表进入该动态详情"
+        description="请在链接中携带有效的动态 ID（dynId / dyn_id / id）。"
         type="info"
         :closable="false"
         show-icon

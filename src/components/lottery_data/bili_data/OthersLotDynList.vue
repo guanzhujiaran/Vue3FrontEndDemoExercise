@@ -36,6 +36,9 @@
 
         <BiliScrapyStatusMini crawler-key="others" class="w-full" />
 
+        <!-- 即将开奖（24 小时内）：第三方动态抽奖类型（当前数据源无开奖时间字段，默认展示空态） -->
+        <UpcomingLotteryMarquee lottery-type="others_dyn" />
+
         <div class="search-section basis-full">
           <div class="rounded-lg border border-border-light bg-bg-page p-4">
             <div class="mb-3 flex flex-wrap items-center justify-between gap-3">
@@ -126,6 +129,7 @@
 import { ref, computed, watch, onMounted, onUnmounted, type Ref } from 'vue'
 import { useLotteryData } from '@/utils/useLotteryData.ts'
 import BiliScrapyStatusMini from './BiliScrapyStatusMini.vue'
+import UpcomingLotteryMarquee from './UpcomingLotteryMarquee.vue'
 import BiliLotterySimpleList from './BiliLotterySimpleList.vue'
 import { useBiliLotteryRecord } from '@/stores/bili_lottery_record.ts'
 import lotteryDataBaseApi, { type FilterParamMeta } from '@/api/lottery_data/bili/lottery_database_bili_api'

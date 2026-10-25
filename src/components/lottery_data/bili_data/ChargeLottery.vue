@@ -25,6 +25,9 @@
 
         <BiliScrapyStatusMini crawler-key="official" class="w-full" />
 
+        <!-- 即将开奖（24 小时内）：充电抽奖类型 -->
+        <UpcomingLotteryMarquee lottery-type="charge" />
+
         <div class="search-section basis-full">
           <div class="rounded-lg border border-border-light bg-bg-page p-4">
             <div class="mb-3 flex flex-wrap items-center justify-between gap-3">
@@ -119,6 +122,7 @@ import { buildItemListJsonLd } from '@/config/seo.ts'
 import { collectSsrData, getSsrData } from '@/app/ssrData'
 import { ssrDataKeyOf, ssrFilterKeyOf, useLotteryData } from '@/utils/useLotteryData.ts'
 import BiliScrapyStatusMini from './BiliScrapyStatusMini.vue'
+import UpcomingLotteryMarquee from './UpcomingLotteryMarquee.vue'
 import BiliLotterySimpleList from './BiliLotterySimpleList.vue'
 import biliMessage from '@/utils/message'
 import SubmitDynamicLotteryModal from './SubmitDynamicLotteryModal.vue'
@@ -178,6 +182,27 @@ function applyFilters() {
   get_lot_data(1, page_size.value)
 }
 
+// 用 useAsyncData 加载筛选参数元数据，使其进入 SSR payload：
+// 客户端 hydration 时复用 payload（而非重新请求），filterParams 立即可用，
+// 否则 hydration 时 useAsyncData handler 不重跑、loadFilterParams 不被调用、
+// filterParams 为空 → 筛选栏 v-if 不成立而不渲染（缺筛选功能 bug）。
+const { data: filterMeta } = await useAsyncData(
+  'lot:GetChargeLottery:filterMeta',
+  async () => {
+    await loadFilterParams()
+    return filterParams.value
+  }
+)
+if (filterMeta.value) {
+  filterParams.value = filterMeta.value
+}
+// 客户端 hydration 时 loadFilterParams 不执行，用 payload 里的 filterParams 重建默认筛选值
+// （后端 status 默认 "unfinished" 即未开奖），保证首屏及刷新后默认按未开奖过滤。
+if (Object.keys(filterValues.value).length === 0) {
+  filterValues.value = buildDefaultFilterValues(filterParams.value)
+}
+extraFilters.value = { ...filterValues.value }
+
 // ============ 首屏数据：必须在 setup 阶段取，SSR / 预渲染的 HTML 才有列表内容 ============
 /**
  * SSR / 预渲染时执行：数据写进 `charge_lot_data_props`（供本次渲染出 HTML）+
@@ -187,8 +212,6 @@ function applyFilters() {
 const { data: firstPageData } = await useAsyncData(
   'lot:GetChargeLottery:firstPage',
   async () => {
-    await loadFilterParams()
-    extraFilters.value = { ...filterValues.value }
     charge_lot_data_props.value.lot_page = 1
     const resp = await get_lot_data(1, page_size.value)
     if (!resp.is_succ) throw new Error(resp.msg || '加载数据失败')

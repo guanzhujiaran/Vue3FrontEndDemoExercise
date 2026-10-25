@@ -215,14 +215,18 @@ const loadUserInfo = () => {
   // userApi.UserInfo 内部已用 businessHandler 包装并自动弹错误提示
   userApi.UserInfo().then((result) => {
     if (result.success && result.data) {
-      console.log((new Date(result.data.birthday)).toISOString())
-      userName.value = result.data.uname
-      userSign.value = result.data.usersign
-      sex.value = result.data.sex
-      // 将 UTC 日期转换为本地时区日期
-      const localDate = new Date(result.data.birthday)
-      birthday.value = `${localDate.getFullYear()}/${String(localDate.getMonth() + 1).padStart(2, '0')}/${String(localDate.getDate()).padStart(2, '0')}`
-      userid.value = result.data.userid
+    userName.value = result.data.uname
+    userSign.value = result.data.usersign
+    sex.value = result.data.sex
+    // 后端生日为秒级时间戳（0/未设置），转换为本地 YYYY/MM/DD 给 date-picker
+    const bd = result.data.birthday
+    const localDate = bd
+      ? new Date(typeof bd === 'number' ? bd * 1000 : bd)
+      : null
+    birthday.value = localDate
+      ? `${localDate.getFullYear()}/${String(localDate.getMonth() + 1).padStart(2, '0')}/${String(localDate.getDate()).padStart(2, '0')}`
+      : ''
+    userid.value = result.data.userid
       // 同步写回全局响应式变量，保证全局昵称与服务器一致
       if (currentUser.value) {
         userNavStore.save_user_nav({

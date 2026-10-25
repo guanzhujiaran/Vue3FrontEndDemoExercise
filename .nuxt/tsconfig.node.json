@@ -1,50 +1,50 @@
 {
   "compilerOptions": {
     "paths": {
-      "@unhead/vue": [
-        "../node_modules/@unhead/vue"
-      ],
       "@nuxt/devtools": [
-        "../node_modules/@nuxt/devtools"
-      ],
-      "@vue/runtime-core": [
-        "../node_modules/@vue/runtime-core"
-      ],
-      "@vue/compiler-sfc": [
-        "../node_modules/@vue/compiler-sfc"
+        "../node_modules/@nuxt/devtools/dist/module.d.mts"
       ],
       "@nuxt/schema": [
-        "../node_modules/@nuxt/schema"
+        "../node_modules/@nuxt/schema/dist/index.d.mts"
       ],
       "nuxt": [
-        "../node_modules/nuxt"
+        "../node_modules/nuxt/types.d.mts"
       ],
-      "nuxt-site-config": [
-        "../node_modules/nuxt-site-config"
+      "@unhead/vue": [
+        "../node_modules/@unhead/vue/dist/index.d.ts"
       ],
-      "nitropack/types": [
-        "../node_modules/nitropack/types"
+      "@vue/runtime-core": [
+        "../node_modules/@vue/runtime-core/dist/runtime-core.d.ts"
       ],
-      "nitropack/runtime": [
-        "../node_modules/nitropack/runtime"
+      "@vue/compiler-sfc": [
+        "../node_modules/@vue/compiler-sfc/dist/compiler-sfc.d.ts"
       ],
-      "nitropack": [
-        "../node_modules/nitropack"
+      "/home/minato/BilibiliExplosion/Vue3FrontEndDemoExercise/node_modules/nuxt-site-config/dist/module.mjs": [
+        "../node_modules/nuxt-site-config/dist/module.d.ts"
       ],
       "defu": [
-        "../node_modules/defu"
-      ],
-      "h3": [
-        "../node_modules/h3"
+        "../node_modules/defu/dist/defu.d.mts"
       ],
       "consola": [
-        "../node_modules/consola"
-      ],
-      "crossws": [
-        "../node_modules/crossws"
+        "../node_modules/consola/dist/browser.d.mts"
       ],
       "#app/types": [
-        "../node_modules/nuxt/dist/app/types"
+        "../node_modules/nuxt/dist/app/types.d.ts"
+      ],
+      "nitropack/types": [
+        "../node_modules/nitropack/dist/types/index.d.ts"
+      ],
+      "nitropack/runtime": [
+        "../node_modules/nitropack/runtime.d.ts"
+      ],
+      "nitropack": [
+        "../node_modules/nitropack/dist/core/index.d.ts"
+      ],
+      "h3": [
+        "../node_modules/h3/dist/index.d.ts"
+      ],
+      "crossws": [
+        "../node_modules/crossws/dist/index.d.mts"
       ]
     },
     "esModuleInterop": true,
@@ -86,9 +86,10 @@
     "../node_modules/nuxt/node_modules",
     "../node_modules/@pinia/nuxt/node_modules",
     "../node_modules/@element-plus/nuxt/node_modules",
-    "../node_modules/nuxt-site-config/node_modules",
     "../node_modules/@nuxtjs/sitemap/node_modules",
+    "../node_modules/@nuxt/devtools/node_modules",
     "../node_modules/@nuxt/telemetry/node_modules",
+    "../node_modules/nuxt-site-config/node_modules",
     "../dist",
     "../.data",
     "../src/**/*",
@@ -97,6 +98,7 @@
     "../tests/nuxt/**/*",
     "../layers/*/app/**/*",
     "../layers/*/modules/*/runtime/**/*",
+    "../server/**/*",
     "../modules/*/runtime/server/**/*",
     "../layers/*/server/**/*",
     "../layers/*/modules/*/runtime/server/**/*",

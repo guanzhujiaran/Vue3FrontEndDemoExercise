@@ -8,7 +8,7 @@
          因此注释必须放在根元素「内部」。 -->
     <!-- 与消息中心布局对齐：BiliSideNavLayout 侧边导航（内置 AutoHeightContainer）承载子页面；
          meta.hideSideNav 的子路由（Stream 控制台等沉浸式页面）不走侧边导航 -->
-    <template v-if="isDev">
+    <template v-if="isModuleAvailable">
       <RpaMobileTip v-if="isLoggedIn && !hideSideNav" class="rpa-browser-layout__mobile-tip mb-2" />
       <BiliErrorRouteTo v-if="!isLoggedIn" :detail="BiliErrorRouteToTxt.rpa_browser_login_required" />
       <BiliSideNavLayout v-else-if="!hideSideNav" :nav-groups="navGroups">
@@ -57,15 +57,17 @@
 </template>
 
 <script setup lang="ts">
-import { computed, type Component, type Ref } from 'vue'
+import { computed, onMounted, type Component, type Ref } from 'vue'
 import { useRoute } from 'vue-router'
 import {
   Monitor,
   Share,
   DataAnalysis,
+  Files,
   Setting,
   Stamp,
-  Coin
+  Coin,
+  Document
 } from '@element-plus/icons-vue'
 import { useInject, KeysEnum } from '@/models/base/provide_model.ts'
 import type { UserNavModel } from '@/models/user/user_model.ts'
@@ -79,11 +81,22 @@ import { RouteName } from '@/models/router'
 import WarningIcon from '@/assets/svgs/space/warning.svg?component'
 import CenteredContainer from '@/components/CommonCompo/Bili-Container-Compo/CenteredContainer.vue'
 import { useHydrated } from '@/composables/useHydrated'
+import { useMessageAdminStore } from '@/stores/message_admin.ts'
 
 defineOptions({ name: 'RpaBrowserLayout' })
 
-// 仅开发环境（VITE_BILI_ENV=dev）允许正常进入 RPA 模块，生产等环境统一展示施工提示
+// 开发环境（VITE_BILI_ENV=dev）允许正常进入 RPA 模块；其余环境默认展示施工提示，
+// 但消息管理端 root 例外（root 全环境可用），其他用户保持原策略不变。
 const isDev = import.meta.env.VITE_BILI_ENV === 'dev'
+const adminStore = useMessageAdminStore()
+/** 消息管理端 root 身份（后端 GET /api/v1/message/admin/me 裁决，后端仍独立强制校验） */
+const isRoot = computed(() => Boolean(adminStore.status.is_root))
+const isModuleAvailable = computed(() => isDev || isRoot.value)
+
+// 客户端挂载后再补拉身份：SSR / 首帧按非 root 渲染，挂载后异步更新，避免水合不一致
+onMounted(() => {
+  if (!adminStore.loaded) void adminStore.fetchStatus()
+})
 
 const biliUser = useInject(KeysEnum.BiliUser) as Ref<UserNavModel>
 // 登录态取自 persist(localStorage)，SSR/预渲染阶段恒为空；用 isHydrated 让两端首帧都按
@@ -127,9 +140,14 @@ const navGroups = computed<BiliSideNavGroup[]>(() => [
         icon: DataAnalysis as Component
       },
       {
+        name: RouteName.RPA_BROWSER_RESOURCE_RECORD,
+        title: RouteName.RPA_BROWSER_RESOURCE_RECORD,
+        icon: Files as Component
+      },
+      {
         name: RouteName.RPA_BROWSER_ACTION_LOG,
         title: RouteName.RPA_BROWSER_ACTION_LOG,
-        icon: DataAnalysis as Component
+        icon: Document as Component
       }
     ]
   },

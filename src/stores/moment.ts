@@ -6,7 +6,7 @@ import { ref, computed } from 'vue'
 import type { MomentFeedItem, MomentDetailResp } from '@/api/notify/moment-api'
 
 export const useMomentStore = defineStore('moment', () => {
-  /** 当前查看的动态详情缓存（key: dynIdStr） */
+  /** 当前查看的动态详情缓存（key: dynId_str） */
   const detailCache = ref<Map<string, MomentDetailResp>>(new Map())
 
   /** 当前 Feed 列表（按页面隔离，这里只存一份供跨组件共享） */
@@ -26,23 +26,23 @@ export const useMomentStore = defineStore('moment', () => {
     feedHistoryOffset.value = historyOffset
   }
 
-  function updateFeedItem(dynIdStr: string, patch: Partial<MomentFeedItem>) {
-    const idx = feedItems.value.findIndex((i) => i.dynIdStr === dynIdStr)
+  function updateFeedItem(dynId_str: string, patch: Partial<MomentFeedItem>) {
+    const idx = feedItems.value.findIndex((i) => i.dynId_str === dynId_str)
     if (idx !== -1) {
       feedItems.value[idx] = { ...feedItems.value[idx], ...patch }
     }
   }
 
-  function removeFeedItem(dynIdStr: string) {
-    feedItems.value = feedItems.value.filter((i) => i.dynIdStr !== dynIdStr)
+  function removeFeedItem(dynId_str: string) {
+    feedItems.value = feedItems.value.filter((i) => i.dynId_str !== dynId_str)
   }
 
   function cacheDetail(item: MomentDetailResp) {
-    detailCache.value.set(item.dynIdStr, item)
+    detailCache.value.set(item.dynId_str ?? '', item)
   }
 
-  function getCachedDetail(dynIdStr: string): MomentDetailResp | undefined {
-    return detailCache.value.get(dynIdStr)
+  function getCachedDetail(dynId_str: string): MomentDetailResp | undefined {
+    return detailCache.value.get(dynId_str)
   }
 
   /** 重置所有状态 */

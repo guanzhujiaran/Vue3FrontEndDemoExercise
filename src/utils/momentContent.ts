@@ -31,13 +31,15 @@ export interface MomentContentPayload {
   /** 纯文本正文 */
   content: string
   /** [兼容保留，2.22.0 起不再使用] 选中话题 id（正文不再解析 #话题#，话题经 MomentCreateReq.topics 单独提交） */
+  /** 话题 id（雪花 ID；字符串版见 topicId_str） */
   topicId?: number
   /** [兼容保留，2.22.0 起不再使用] 选中话题名 */
   topicName?: string
   /** 站外 http(s) 图片链接列表（可选，最多 18） */
   images?: string[]
   /** @昵称 → mid 映射（可选，用于把 @昵称 解析为 AT 节点） */
-  atNameToMid?: Record<string, number>
+  /** @昵称 → mid 映射；mid 是雪花 ID，用字符串传（后端 StrInt 归一为 int） */
+  atNameToMid?: Record<string, string>
   /**
    * attach 资源（可选，2.21.0 起不再追加 RESOURCE 节点）：
    * 仅用于编辑器底部贴卡预览；提交时由发布表单经 `MomentCreateReq.attach` 独立提交。

@@ -1,9 +1,9 @@
 {
-  "_hash": "eOp4UALzoD-MQ_FImeQVy1qY1xzB-VJxP_XOWCaqgO4",
+  "_hash": "1ijKOAYfCp",
   "project": {
     "rootDir": "/home/minato/BilibiliExplosion/Vue3FrontEndDemoExercise"
   },
   "versions": {
-    "nuxt": "4.5.2"
+    "nuxt": "4.6.1"
   }
 }

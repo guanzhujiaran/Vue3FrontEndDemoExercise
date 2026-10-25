@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import type { UnreadSummary } from '@/api/notify/message-api'
+import { browserPersistStorage } from '@/utils/persistStorage'
 
 /**
  * 消息系统未读数汇总 store（持久化）。
@@ -73,7 +74,7 @@ export const useMessageUnreadStore = defineStore(
   {
     persist: {
       key: 'message-unread',
-      storage: localStorage
+      storage: browserPersistStorage
     }
   }
 )

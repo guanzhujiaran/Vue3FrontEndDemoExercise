@@ -12,12 +12,12 @@ declare module 'nitropack' {
     sitemap?: SitemapItemDefaults | false
   }
   interface NitroRuntimeHooks {
-    'sitemap:index-resolved': (ctx: SitemapIndexRenderCtx<import('h3').H3Event>) => void | Promise<void>
-    'sitemap:input': (ctx: SitemapInputCtx<import('h3').H3Event>) => void | Promise<void>
-    'sitemap:resolved': (ctx: SitemapRenderCtx<import('h3').H3Event>) => void | Promise<void>
-    'sitemap:output': (ctx: SitemapOutputHookCtx<import('h3').H3Event>) => void | Promise<void>
-    'sitemap:sources': (ctx: SitemapSourcesHookCtx<import('h3').H3Event>) => void | Promise<void>
-    'sitemap:sitemaps-resolved': (ctx: SitemapsResolvedCtx<import('h3').H3Event>) => void | Promise<void>
+    'sitemap:index-resolved': (ctx: SitemapIndexRenderCtx) => void | Promise<void>
+    'sitemap:input': (ctx: SitemapInputCtx) => void | Promise<void>
+    'sitemap:resolved': (ctx: SitemapRenderCtx) => void | Promise<void>
+    'sitemap:output': (ctx: SitemapOutputHookCtx) => void | Promise<void>
+    'sitemap:sources': (ctx: SitemapSourcesHookCtx) => void | Promise<void>
+    'sitemap:sitemaps-resolved': (ctx: SitemapsResolvedCtx) => void | Promise<void>
   }
   interface PrerenderRoute {
     _sitemap?: SitemapUrl
@@ -34,12 +34,12 @@ declare module 'nitropack/types' {
     sitemap?: SitemapItemDefaults | false
   }
   interface NitroRuntimeHooks {
-    'sitemap:index-resolved': (ctx: SitemapIndexRenderCtx<import('h3').H3Event>) => void | Promise<void>
-    'sitemap:input': (ctx: SitemapInputCtx<import('h3').H3Event>) => void | Promise<void>
-    'sitemap:resolved': (ctx: SitemapRenderCtx<import('h3').H3Event>) => void | Promise<void>
-    'sitemap:output': (ctx: SitemapOutputHookCtx<import('h3').H3Event>) => void | Promise<void>
-    'sitemap:sources': (ctx: SitemapSourcesHookCtx<import('h3').H3Event>) => void | Promise<void>
-    'sitemap:sitemaps-resolved': (ctx: SitemapsResolvedCtx<import('h3').H3Event>) => void | Promise<void>
+    'sitemap:index-resolved': (ctx: SitemapIndexRenderCtx) => void | Promise<void>
+    'sitemap:input': (ctx: SitemapInputCtx) => void | Promise<void>
+    'sitemap:resolved': (ctx: SitemapRenderCtx) => void | Promise<void>
+    'sitemap:output': (ctx: SitemapOutputHookCtx) => void | Promise<void>
+    'sitemap:sources': (ctx: SitemapSourcesHookCtx) => void | Promise<void>
+    'sitemap:sitemaps-resolved': (ctx: SitemapsResolvedCtx) => void | Promise<void>
   }
   interface PrerenderRoute {
     _sitemap?: SitemapUrl

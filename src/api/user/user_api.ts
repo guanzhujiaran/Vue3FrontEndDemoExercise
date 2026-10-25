@@ -1,5 +1,5 @@
 import { client } from '@/api/bili_lottery_data/hey-api/client.gen'
-import type { LoginModel, UserNavModel } from '@/models/user/user_model'
+import type { LoginModel } from '@/models/user/user_model'
 import type { RootObject } from '@/models/api/base_model.ts'
 import { businessHandler } from '@/utils/businessHandler'
 import type {
@@ -20,6 +20,7 @@ import type {
 // 用户类型统一从 SDK 导入，单一数据源，消除重复定义
 import type {
   PptrUserLevelInfo,
+  PptrUserNavData,
   PptrUserVipInfo,
   PptrUserRoleInfo,
   PptrUserSearchItem,
@@ -57,30 +58,56 @@ function extractBackendError<T>(error: unknown): BusinessResponse<T> | null {
 }
 
 /**
- * 统一把 hey-api 的 RequestResult（{ data, error }）适配成 businessHandler 约定的
+ * 统一以 **fields 风格** 发起请求。
+ *
+ * 背景：bili_lottery_data 的 client 在 runtime_config 中被配置为 `responseStyle: 'data'`，
+ * 该风格下 promise 直接 resolve **响应体本身**，HTTP 非 2xx / 连接失败时 resolve
+ * `undefined` —— 后端随错误响应体返回的 `{ code, msg }` 会被整体丢失，
+ * 调用方只能拿到 undefined，无法区分「业务失败」与「网络故障」。
+ *
+ * fields 风格返回 `{ data, error, request, response }`，才能让下面的 adapt()
+ * 同时还原「成功体」与「错误体」。这里统一覆盖成 fields（与 Nav() 口径一致），
+ * 避免各调用点漏传导致响应被静默丢弃。
+ */
+const fieldsRequest = {
+  get: (options: Record<string, unknown>): Promise<unknown> =>
+    client.get({ ...options, responseStyle: 'fields' } as never),
+  post: (options: Record<string, unknown>): Promise<unknown> =>
+    client.post({ ...options, responseStyle: 'fields' } as never),
+  delete: (options: Record<string, unknown>): Promise<unknown> =>
+    client.delete({ ...options, responseStyle: 'fields' } as never),
+}
+
+/**
+ * 统一把 hey-api 的 fields 返回结果（{ data, error }）适配成 businessHandler 约定的
  * { code, data, msg } 业务响应契约，**原样透传后端返回的内容，不改写、不丢弃**：
  *   - 后端按 RootObject 契约返回（含 code 字段）时，直接透传其 code / data / msg；
  *   - HTTP 非 2xx / 连接失败时，优先还原后端随错误响应体返回的内容，仍以后端 msg 提示；
  *   - 只有确实拿不到任何后端内容（如服务不可达、空响应）时，才用调用方传入的 failMsg 兜底。
  *
+ * 注意：必须配合上面的 fieldsRequest 使用。若 client 的 responseStyle 是 'data'，
+ * 本函数拿到的 r 就是响应体本身，`r.data` / `r.error` 恒为 undefined，
+ * 会无条件落到最后的兜底分支（把后端返回的 code 0 也误判成失败）。
+ *
  * 所有 user_api 方法统一经 businessHandler 包装，保证「全部接口用 businessHandler 处理请求」，
  * 后端返回业务失败码（如 casdoor/info 的 -3）时会自动弹错误提示，无需调用方各自 try/catch。
  */
 function adapt<T>(
-  result: Promise<{ data?: unknown; error?: unknown }>,
+  result: Promise<unknown>,
   failMsg: string
 ): Promise<BusinessResponse<T>> {
   return result.then((r) => {
-    // hey-api 在 responseStyle 默认（data）下，r.data 已是后端的 RootObject
-    const root = r.data as unknown as RootObject<T> | null
+    const fields = r as { data?: unknown; error?: unknown } | undefined
+    // 成功：后端按 RootObject 契约返回（含 code 字段），原样透传
+    const root = fields?.data as RootObject<T> | undefined
     if (root && typeof root === 'object' && 'code' in root) {
       return { code: root.code, data: root.data, msg: root.msg }
     }
     // HTTP 非 2xx / 连接失败：后端通常仍会随错误响应体返回 { code, msg }，优先透传真实报错
-    const backendError = extractBackendError<T>(r.error)
+    const backendError = extractBackendError<T>(fields?.error)
     if (backendError) return backendError
     // 裸数据（无 code 字段）：视为成功，原样包进 data，不伪造后端 msg
-    if (r.data != null) return { code: 0, msg: '', data: r.data as T }
+    if (fields?.data != null) return { code: 0, msg: '', data: fields.data as T }
     return { code: -1, msg: failMsg, data: undefined }
   })
 }
@@ -89,7 +116,7 @@ class UserApi {
   RefreshToken(): Promise<BusinessHandlerResult<LoginModel>> {
     return businessHandler<LoginModel>(
       adapt<LoginModel>(
-        client.post({
+        fieldsRequest.post({
           url: '/api/v1/user/refresh_token',
           headers: { 'Content-Type': 'application/json' },
         }),
@@ -102,7 +129,7 @@ class UserApi {
   Login(user_name: String, pwd: String): Promise<BusinessHandlerResult<LoginModel>> {
     return businessHandler<LoginModel>(
       adapt<LoginModel>(
-        client.post({
+        fieldsRequest.post({
           url: '/api/v1/user/login',
           body: { user_name: user_name, pwd: pwd },
           headers: { 'Content-Type': 'application/json' },
@@ -117,7 +144,7 @@ class UserApi {
   // response（用于判断 HTTP 状态）和 error（响应体），避免 responseStyle: 'data'
   // 在错误响应时直接返回 undefined 导致上层无法区分网络故障与未登录
   Nav(): Promise<{
-    data?: RootObject<UserNavModel>
+    data?: RootObject<PptrUserNavData>
     error?: any
     response?: { status: number; [key: string]: any }
   }> {
@@ -130,7 +157,7 @@ class UserApi {
   Reg(user_name: String, pwd: String): Promise<BusinessHandlerResult<String>> {
     return businessHandler<String>(
       adapt<String>(
-        client.post({
+        fieldsRequest.post({
           url: '/api/v1/user/reg',
           body: { user_name: user_name, pwd: pwd },
           headers: { 'Content-Type': 'application/json' },
@@ -144,7 +171,7 @@ class UserApi {
   UserInfo(): Promise<BusinessHandlerResult<User_base_info_config_form>> {
     return businessHandler<User_base_info_config_form>(
       adapt<User_base_info_config_form>(
-        client.get({
+        fieldsRequest.get({
           url: '/api/v1/user/user_info',
         }),
         '获取用户信息失败'
@@ -158,7 +185,7 @@ class UserApi {
   ): Promise<BusinessHandlerResult<PptrUserInfoUpdateResult>> {
     return businessHandler<PptrUserInfoUpdateResult>(
       adapt<PptrUserInfoUpdateResult>(
-        client.post({
+        fieldsRequest.post({
           url: '/api/v1/user/user_info/update',
           body: user_base_info_config_form,
           headers: { 'Content-Type': 'application/json' },
@@ -177,7 +204,7 @@ class UserApi {
   Logout(silent = false): Promise<BusinessHandlerResult<string>> {
     return businessHandler<string>(
       adapt<string>(
-        client.post({
+        fieldsRequest.post({
           url: '/api/v1/user/logout',
           headers: { 'Content-Type': 'application/json' },
         }),
@@ -195,7 +222,7 @@ class UserApi {
   CasdoorInfo(): Promise<BusinessHandlerResult<UserCasdoorInfoModel>> {
     return businessHandler<UserCasdoorInfoModel>(
       adapt<UserCasdoorInfoModel>(
-        client.get({
+        fieldsRequest.get({
           url: '/api/v1/user/casdoor/info',
         }),
         '获取第三方账户信息失败'
@@ -208,7 +235,7 @@ class UserApi {
   SetUserRole(form: Set_user_role_form): Promise<BusinessHandlerResult<string>> {
     return businessHandler<string>(
       adapt<string>(
-        client.post({
+        fieldsRequest.post({
           url: '/api/v1/user/role/set',
           body: form,
           headers: { 'Content-Type': 'application/json' },
@@ -223,7 +250,7 @@ class UserApi {
   Search(keyword: string, limit = 10): Promise<BusinessHandlerResult<PptrUserSearchResult>> {
     return businessHandler<PptrUserSearchResult>(
       adapt<PptrUserSearchResult>(
-        client.get({
+        fieldsRequest.get({
           url: '/api/v1/user/search',
           query: { keyword, limit },
         }),
@@ -243,7 +270,7 @@ class UserApi {
   ): Promise<BusinessHandlerResult<PptrUserSearchResult>> {
     return businessHandler<PptrUserSearchResult>(
       adapt<PptrUserSearchResult>(
-        client.get({
+        fieldsRequest.get({
           url: '/api/v1/message/admin/user/search',
           query: { keyword, offset, limit },
         }),
@@ -261,7 +288,7 @@ class UserApi {
   ): Promise<BusinessHandlerResult<UserActLogListResp>> {
     return businessHandler<UserActLogListResp>(
       adapt<UserActLogListResp>(
-        client.get({
+        fieldsRequest.get({
           url: '/api/v1/user/act-log',
           query: { offset, limit, days },
         }),
@@ -279,7 +306,7 @@ class UserApi {
   ): Promise<BusinessHandlerResult<UserExpRecordListResp>> {
     return businessHandler<UserExpRecordListResp>(
       adapt<UserExpRecordListResp>(
-        client.get({
+        fieldsRequest.get({
           url: '/api/v1/user/exp-record',
           query: { offset, limit, days },
         }),
@@ -296,7 +323,7 @@ class UserApi {
   ): Promise<BusinessHandlerResult<FollowListResp>> {
     return businessHandler<FollowListResp>(
       adapt<FollowListResp>(
-        client.get({
+        fieldsRequest.get({
           url: '/api/v1/user/blocklist',
           query: { page_num, page_size },
         }),
@@ -310,7 +337,7 @@ class UserApi {
   BlocklistAdd(target_mid: number): Promise<BusinessHandlerResult<FollowOpResp>> {
     return businessHandler<FollowOpResp>(
       adapt<FollowOpResp>(
-        client.post({
+        fieldsRequest.post({
           url: '/api/v1/user/blocklist',
           body: { target_mid },
           headers: { 'Content-Type': 'application/json' },
@@ -325,7 +352,7 @@ class UserApi {
   BlocklistRemove(target_mid: number): Promise<BusinessHandlerResult<FollowOpResp>> {
     return businessHandler<FollowOpResp>(
       adapt<FollowOpResp>(
-        client.delete({
+        fieldsRequest.delete({
           url: '/api/v1/user/blocklist',
           query: { target_mid },
         }),
@@ -339,7 +366,7 @@ class UserApi {
   BlocklistCheck(target_mid: number): Promise<BusinessHandlerResult<FollowRelationResp>> {
     return businessHandler<FollowRelationResp>(
       adapt<FollowRelationResp>(
-        client.get({
+        fieldsRequest.get({
           url: '/api/v1/user/blocklist/check',
           query: { target_mid },
         }),
@@ -354,7 +381,7 @@ class UserApi {
   Deactivate(confirm = true, silent = false): Promise<BusinessHandlerResult<string>> {
     return businessHandler<string>(
       adapt<string>(
-        client.post({
+        fieldsRequest.post({
           url: '/api/v1/user/deactivate',
           body: { confirm },
           headers: { 'Content-Type': 'application/json' },

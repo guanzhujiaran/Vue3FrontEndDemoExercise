@@ -14,9 +14,9 @@
         <div v-else class="moment-feed-list__list space-y-4 max-w-2xl mx-auto py-4">
           <MomentCard
             v-for="item in items"
-            :key="item.dynIdStr"
+            :key="item.dynId_str ?? ''"
             :item="item"
-            :status="statusOf(item.dynIdStr)"
+            :status="statusOf(item.dynId_str ?? '')"
             :show-more-actions="true"
             @click="openDetail"
             @src-click="openDetail"
@@ -24,6 +24,7 @@
             @thumb="handleThumb(item)"
             @report="handleReport(item)"
             @remove="handleRemove(item)"
+            @status-change="onCardStatusChangeOf(item)"
           />
         </div>
       </template>
@@ -48,13 +49,10 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import {
-  fetchAllFeed,
-  fetchInteractionStatus,
-  InteractionBizTypeEnum,
-  thumbMoment,
-} from '@/api/notify/moment-api'
-import type { MomentFeedItem, InteractionStatusItem } from '@/api/notify/moment-api'
+import { fetchAllFeed, InteractionBizTypeEnum } from '@/api/notify/moment-api'
+import type { MomentFeedItem } from '@/api/notify/moment-api'
+import type { FavoriteChangedPayload } from '@/utils/interaction/favoriteSync'
+import { useInteractionStatusMap } from '@/composables/useInteractionStatusMap'
 import LoadingMoreContainer from '@/components/CommonCompo/Bili-Container-Compo/LoadingMoreContainer.vue'
 import EmptyState from '@/components/message/EmptyState.vue'
 import MomentCard from '@/components/moment/MomentCard.vue'
@@ -71,23 +69,9 @@ const isLoading = ref(false)
 const isMore = ref(true)
 const isError = ref(false)
 
-// 2.41.0：卡片统计统一走 /interaction/status 批量接口（卡片不再内置 stat 模块）
-const statusMap = ref<Record<string, InteractionStatusItem>>({})
-async function loadStatus(ids: string[]) {
-  const fresh = ids.filter((id) => !statusMap.value[id])
-  if (!fresh.length) return
-  try {
-    const res = await fetchInteractionStatus(InteractionBizTypeEnum.DYNAMIC, fresh)
-    for (const it of res?.items ?? []) {
-      if (it?.bizId) statusMap.value[it.bizId] = it
-    }
-  } catch {
-    // 弱依赖：失败不阻断 feed 展示
-  }
-}
-function statusOf(dynIdStr: string): InteractionStatusItem | null {
-  return statusMap.value[dynIdStr] ?? null
-}
+// 2.41.0：卡片统计统一走 /interaction/status 批量接口（收藏 / 点赞同步收敛到通用仓库）
+const { statusOf, ensure: loadStatus, applyFavorite, toggleLike, clear: clearStatus } =
+  useInteractionStatusMap()
 
 // 推荐流（对齐 B 站 rcmd）：已展示 dynId 列表，随请求作为 last_showlist 交给
 // 服务端去重——无 page/offset 游标，每次请求返回未展示的新推荐
@@ -119,20 +103,20 @@ const handleLoad = async () => {
     })
     const newItems = res.items || []
     // 兜底去重（推荐序漂移/候选变化时防同一卡片重复渲染）
-    const seen = new Set(items.value.map((i) => i.dynIdStr))
-    const fresh = newItems.filter((i) => !seen.has(i.dynIdStr))
+    const seen = new Set(items.value.map((i) => i.dynId_str))
+    const fresh = newItems.filter((i) => !seen.has(i.dynId_str))
     if (isFirst) {
       items.value = fresh
     } else {
       items.value.push(...fresh)
     }
     // 记录本次已展示项（含首屏），供下次请求去重；只保留最近 100 个
-    for (const it of fresh) showlist.push(it.dynIdStr)
+    for (const it of fresh) showlist.push(it.dynId_str ?? '')
     if (showlist.length > SHOWLIST_LIMIT) {
       showlist = showlist.slice(-SHOWLIST_LIMIT)
     }
     // 2.41.0：批量拉取本页卡片互动统计（统一 status 接口）
-    if (fresh.length) void loadStatus(fresh.map((i) => i.dynIdStr))
+    if (fresh.length) void loadStatus(fresh.map((i) => i.dynId_str ?? ''))
     isMore.value = res.hasMore ?? false
     // 无新增内容（候选耗尽/漂移导致后端无未展示项）：停止加载，避免死循环
     if (!isFirst && fresh.length === 0) {
@@ -149,43 +133,50 @@ const handleLoad = async () => {
 onMounted(handleLoad)
 
 function openDetail(item: MomentFeedItem) {
-  router.push({ name: 'MOMENT_DETAIL', params: { momentId: item.dynIdStr } })
+  router.push({ name: 'MOMENT_DETAIL', params: { momentId: item.dynId_str } })
 }
 
 function openUserSpace(item: MomentFeedItem) {
-  router.push({ name: 'MOMENT_USER_SPACE', params: { mid: String(item.mid) } })
+  router.push({ name: 'MOMENT_USER_SPACE_HOME', params: { mid: String(item.mid) } })
 }
 
-async function handleThumb(item: MomentFeedItem) {
-  const up = item.modules?.find((m) => m.moduleType === 'interaction')?.isLike ? 2 : 1
-  const res = await thumbMoment(item.dynIdStr, up)
-  if (res) {
-    // 乐观更新：interaction 模块点赞态 + status 计数
-    const interMod = item.modules?.find((m) => m.moduleType === 'interaction')
-    if (interMod) interMod.isLike = up === 1
-    const st = statusMap.value[item.dynIdStr]
-    if (st) {
-      st.isLike = up === 1
-      st.likeCount = Math.max(0, Number(st.likeCount ?? 0) + (up === 1 ? 1 : -1))
-    }
-  }
+/**
+ * 卡片内收藏态变化（收藏夹弹窗操作成功）：弹窗已带回最新收藏态，
+ * 直接浅合并进 statusMap，卡片按钮即刻高亮/取消高亮，无需整页重查。
+ */
+function handleStatusChange(dynId: string, payload: FavoriteChangedPayload) {
+  applyFavorite(dynId, payload)
+}
+
+/** 按条目生成收藏变更 handler（模板里 v-for 内逐条绑定，避免内联箭头） */
+function onCardStatusChangeOf(item: MomentFeedItem) {
+  return (_dynId: string, payload: FavoriteChangedPayload) =>
+    handleStatusChange(item.dynId_str ?? '', payload)
+}
+
+function handleThumb(item: MomentFeedItem) {
+  const interMod = item.modules?.find((m) => m.moduleType === 'interaction')
+  void toggleLike(item.dynId_str ?? '', (isLike) => {
+    if (interMod) interMod.isLike = isLike
+  })
 }
 
 function handleReport(item: MomentFeedItem) {
-  // 打开统一举报弹窗（bizType=dynamic，bizId=dynIdStr 直接传 str，避免雪花 ID 精度丢失）
-  reportDynId.value = item.dynIdStr
+  // 打开统一举报弹窗（bizType=dynamic，bizId=dynId_str 直接传 str，避免雪花 ID 精度丢失）
+  reportDynId.value = item.dynId_str ?? ''
   reportDialogVisible.value = true
 }
 
 /** 2.22.1：删除确认与 API 已下沉 MomentCard，父组件仅移除列表项 */
 function handleRemove(item: MomentFeedItem) {
-  items.value = items.value.filter((i) => i.dynIdStr !== item.dynIdStr)
+  items.value = items.value.filter((i) => i.dynId_str !== item.dynId_str)
 }
 
 /** 换一换：清空已展示列表 + 重置加载状态，按 B 站 rcmd 风格重新拉取推荐（保留 uniq_id） */
 async function handleRefresh() {
   if (isLoading.value) return
   items.value = []
+  clearStatus()
   showlist = []
   isMore.value = true
   isError.value = false

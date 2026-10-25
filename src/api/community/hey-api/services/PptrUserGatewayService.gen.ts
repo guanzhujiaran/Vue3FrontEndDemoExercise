@@ -3,7 +3,7 @@
 import type { RequestResult } from '../client';
 import { client } from '../client.gen';
 import type { Options } from '../sdk.gen';
-import type { AddBlocklistApiV1UserBlocklistPostData, AddBlocklistApiV1UserBlocklistPostErrors, AddBlocklistApiV1UserBlocklistPostResponses, CasdoorCallbackApiV1UserCasdoorCallbackGetData, CasdoorCallbackApiV1UserCasdoorCallbackGetErrors, CasdoorCallbackApiV1UserCasdoorCallbackGetResponses, CheckBlocklistApiV1UserBlocklistCheckGetData, CheckBlocklistApiV1UserBlocklistCheckGetErrors, CheckBlocklistApiV1UserBlocklistCheckGetResponses, DeactivateSelfApiV1UserDeactivatePostData, DeactivateSelfApiV1UserDeactivatePostErrors, DeactivateSelfApiV1UserDeactivatePostResponses, DeactivateUserApiV1UserAdminDeactivatePostData, DeactivateUserApiV1UserAdminDeactivatePostErrors, DeactivateUserApiV1UserAdminDeactivatePostResponses, GetCasdoorUserInfoApiV1UserCasdoorInfoGetData, GetCasdoorUserInfoApiV1UserCasdoorInfoGetErrors, GetCasdoorUserInfoApiV1UserCasdoorInfoGetResponses, GetSpaceInfoApiV1UserSpaceInfoGetData, GetSpaceInfoApiV1UserSpaceInfoGetErrors, GetSpaceInfoApiV1UserSpaceInfoGetResponses, GetUserActLogApiV1UserActLogGetData, GetUserActLogApiV1UserActLogGetErrors, GetUserActLogApiV1UserActLogGetResponses, GetUserExpRecordApiV1UserExpRecordGetData, GetUserExpRecordApiV1UserExpRecordGetErrors, GetUserExpRecordApiV1UserExpRecordGetResponses, GetUserInfoApiV1UserUserInfoGetData, GetUserInfoApiV1UserUserInfoGetErrors, GetUserInfoApiV1UserUserInfoGetResponses, GetUserNavApiV1UserNavGetData, GetUserNavApiV1UserNavGetErrors, GetUserNavApiV1UserNavGetResponses, IdentifyUserApiV1UserIdentifyGetData, IdentifyUserApiV1UserIdentifyGetErrors, IdentifyUserApiV1UserIdentifyGetResponses, ListBlocklistApiV1UserBlocklistGetData, ListBlocklistApiV1UserBlocklistGetErrors, ListBlocklistApiV1UserBlocklistGetResponses, LogoutApiV1UserLogoutPostData, LogoutApiV1UserLogoutPostErrors, LogoutApiV1UserLogoutPostResponses, RefreshTokenApiV1UserRefreshTokenPostData, RefreshTokenApiV1UserRefreshTokenPostErrors, RefreshTokenApiV1UserRefreshTokenPostResponses, RemoveBlocklistApiV1UserBlocklistDeleteData, RemoveBlocklistApiV1UserBlocklistDeleteErrors, RemoveBlocklistApiV1UserBlocklistDeleteResponses, SearchUsersApiV1UserSearchGetData, SearchUsersApiV1UserSearchGetErrors, SearchUsersApiV1UserSearchGetResponses, SetUserRoleApiV1UserRoleSetPostData, SetUserRoleApiV1UserRoleSetPostErrors, SetUserRoleApiV1UserRoleSetPostResponses, UpdateUserInfoApiV1UserUserInfoUpdatePostData, UpdateUserInfoApiV1UserUserInfoUpdatePostErrors, UpdateUserInfoApiV1UserUserInfoUpdatePostResponses } from '../types.gen';
+import type { AddBlocklistApiV1UserBlocklistPostData, AddBlocklistApiV1UserBlocklistPostErrors, AddBlocklistApiV1UserBlocklistPostResponses, CasdoorCallbackApiV1UserCasdoorCallbackGetData, CasdoorCallbackApiV1UserCasdoorCallbackGetErrors, CasdoorCallbackApiV1UserCasdoorCallbackGetResponses, CheckBlocklistApiV1UserBlocklistCheckGetData, CheckBlocklistApiV1UserBlocklistCheckGetErrors, CheckBlocklistApiV1UserBlocklistCheckGetResponses, DeactivateAccountApiV1UserDeactivatePostData, DeactivateAccountApiV1UserDeactivatePostErrors, DeactivateAccountApiV1UserDeactivatePostResponses, DeactivateUserApiV1UserAdminDeactivatePostData, DeactivateUserApiV1UserAdminDeactivatePostErrors, DeactivateUserApiV1UserAdminDeactivatePostResponses, GetCasdoorUserInfoApiV1UserCasdoorInfoGetData, GetCasdoorUserInfoApiV1UserCasdoorInfoGetErrors, GetCasdoorUserInfoApiV1UserCasdoorInfoGetResponses, GetMySpacePrivacyApiV1UserSpacePrivacyGetData, GetMySpacePrivacyApiV1UserSpacePrivacyGetErrors, GetMySpacePrivacyApiV1UserSpacePrivacyGetResponses, GetSpaceInfoApiV1UserSpaceInfoGetData, GetSpaceInfoApiV1UserSpaceInfoGetErrors, GetSpaceInfoApiV1UserSpaceInfoGetResponses, GetUserActLogApiV1UserActLogGetData, GetUserActLogApiV1UserActLogGetErrors, GetUserActLogApiV1UserActLogGetResponses, GetUserExpRecordApiV1UserExpRecordGetData, GetUserExpRecordApiV1UserExpRecordGetErrors, GetUserExpRecordApiV1UserExpRecordGetResponses, GetUserInfoApiV1UserUserInfoGetData, GetUserInfoApiV1UserUserInfoGetErrors, GetUserInfoApiV1UserUserInfoGetResponses, GetUserNavApiV1UserNavGetData, GetUserNavApiV1UserNavGetErrors, GetUserNavApiV1UserNavGetResponses, IdentifyUserApiV1UserIdentifyGetData, IdentifyUserApiV1UserIdentifyGetErrors, IdentifyUserApiV1UserIdentifyGetResponses, ListBlocklistApiV1UserBlocklistGetData, ListBlocklistApiV1UserBlocklistGetErrors, ListBlocklistApiV1UserBlocklistGetResponses, LogoutApiV1UserLogoutPostData, LogoutApiV1UserLogoutPostErrors, LogoutApiV1UserLogoutPostResponses, RefreshTokenApiV1UserRefreshTokenPostData, RefreshTokenApiV1UserRefreshTokenPostErrors, RefreshTokenApiV1UserRefreshTokenPostResponses, RemoveBlocklistApiV1UserBlocklistDeleteData, RemoveBlocklistApiV1UserBlocklistDeleteErrors, RemoveBlocklistApiV1UserBlocklistDeleteResponses, SearchUsersApiV1UserSearchGetData, SearchUsersApiV1UserSearchGetErrors, SearchUsersApiV1UserSearchGetResponses, SetUserRoleApiV1UserRoleSetPostData, SetUserRoleApiV1UserRoleSetPostErrors, SetUserRoleApiV1UserRoleSetPostResponses, UpdateMySpacePrivacyApiV1UserSpacePrivacyPostData, UpdateMySpacePrivacyApiV1UserSpacePrivacyPostErrors, UpdateMySpacePrivacyApiV1UserSpacePrivacyPostResponses, UpdateUserInfoApiV1UserUserInfoUpdatePostData, UpdateUserInfoApiV1UserUserInfoUpdatePostErrors, UpdateUserInfoApiV1UserUserInfoUpdatePostResponses } from '../types.gen';
 
 export class PptrUserGatewayService {
     /**
@@ -68,7 +68,7 @@ export class PptrUserGatewayService {
      * - userid    <- TUserInfo.user_name（注册名，前端展示为「用户名」）
      * - usersign  <- TUserDetail.sign（个性签名）
      * - sex       <- TUserDetail.sex
-     * - birthday  <- TUserDetail.birthday（ISO 字符串）
+     * - birthday  <- TUserDetail.birthday（秒级 int32 时间戳，0/未设置时为 0）
      * - mid       <- TUserInfo.uid
      * - email     <- TUserDetail.email
      * - avatar    <- TUserDetail.avatar
@@ -163,19 +163,24 @@ export class PptrUserGatewayService {
     }
     
     /**
-     * 注销当前账号（投递注销，异步删除账号及业务数据）
+     * 注销当前账户
      *
-     * 注销当前登录账号：投递注销消息，由消费者异步物理删除 pptr 四表 +
-     * 彻底清除 be-message 业务数据（不可恢复）。
+     * 注销当前登录账户（二次确认，进入冷静期而非立即删除）。
      *
-     * **Casdoor 不管**（不同步禁用）。注销为异步执行，接口提交成功后返回；
-     * 前端应清除本地登录态并跳登录页。
+     * 仅接受 `confirm=true` 的主动注销请求；提交后账号进入
+     * `account_deactivate_grace_days` 天冷静期（默认 7 天），本地数据保留，
+     * 期间重新走 Casdoor 登录即自动撤销；到期未撤销才由定时任务物理删除本地数据
+     * 并同步删除 Casdoor 账号。
      */
-    public static deactivateSelfApiV1UserDeactivatePost<ThrowOnError extends boolean = false>(options?: Options<DeactivateSelfApiV1UserDeactivatePostData, ThrowOnError>): RequestResult<DeactivateSelfApiV1UserDeactivatePostResponses, DeactivateSelfApiV1UserDeactivatePostErrors, ThrowOnError, 'data'> {
-        return (options?.client ?? client).post<DeactivateSelfApiV1UserDeactivatePostResponses, DeactivateSelfApiV1UserDeactivatePostErrors, ThrowOnError, 'data'>({
+    public static deactivateAccountApiV1UserDeactivatePost<ThrowOnError extends boolean = false>(options: Options<DeactivateAccountApiV1UserDeactivatePostData, ThrowOnError>): RequestResult<DeactivateAccountApiV1UserDeactivatePostResponses, DeactivateAccountApiV1UserDeactivatePostErrors, ThrowOnError, 'data'> {
+        return (options.client ?? client).post<DeactivateAccountApiV1UserDeactivatePostResponses, DeactivateAccountApiV1UserDeactivatePostErrors, ThrowOnError, 'data'>({
             responseStyle: 'data',
             url: '/api/v1/user/deactivate',
-            ...options
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
         });
     }
     
@@ -272,9 +277,48 @@ export class PptrUserGatewayService {
     }
     
     /**
-     * 管理端注销指定用户（投递注销）
+     * 我的空间对外可见性开关（2.58.0）
      *
-     * 管理端注销指定用户（root / 管理员）：投递注销消息，异步删除其账号及业务数据。
+     * 返回当前登录用户的空间可见性开关（仅本人，无需过滤）。
+     *
+     * 无记录时按「全关 + 收藏夹展示」返回（与 `TUserSpacePrivacy` 的默认口径一致）。
+     */
+    public static getMySpacePrivacyApiV1UserSpacePrivacyGet<ThrowOnError extends boolean = false>(options?: Options<GetMySpacePrivacyApiV1UserSpacePrivacyGetData, ThrowOnError>): RequestResult<GetMySpacePrivacyApiV1UserSpacePrivacyGetResponses, GetMySpacePrivacyApiV1UserSpacePrivacyGetErrors, ThrowOnError, 'data'> {
+        return (options?.client ?? client).get<GetMySpacePrivacyApiV1UserSpacePrivacyGetResponses, GetMySpacePrivacyApiV1UserSpacePrivacyGetErrors, ThrowOnError, 'data'>({
+            responseStyle: 'data',
+            url: '/api/v1/user/space/privacy',
+            ...options
+        });
+    }
+    
+    /**
+     * 更新我的空间对外可见性开关（2.58.0）
+     *
+     * 整体覆盖当前登录用户的四个可见性开关，返回设置后的值。
+     *
+     * 全量提交（不做 PATCH）：前端设置页一次保存全部开关，避免「部分更新」与
+     * 「默认值」混淆。收藏不在本接口范围内（2026-10-08 起改为逐夹
+     * `TFavoriteFolder.is_public`，由收藏夹自己的接口维护）。
+     */
+    public static updateMySpacePrivacyApiV1UserSpacePrivacyPost<ThrowOnError extends boolean = false>(options: Options<UpdateMySpacePrivacyApiV1UserSpacePrivacyPostData, ThrowOnError>): RequestResult<UpdateMySpacePrivacyApiV1UserSpacePrivacyPostResponses, UpdateMySpacePrivacyApiV1UserSpacePrivacyPostErrors, ThrowOnError, 'data'> {
+        return (options.client ?? client).post<UpdateMySpacePrivacyApiV1UserSpacePrivacyPostResponses, UpdateMySpacePrivacyApiV1UserSpacePrivacyPostErrors, ThrowOnError, 'data'>({
+            responseStyle: 'data',
+            url: '/api/v1/user/space/privacy',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    /**
+     * 管理端注销指定用户（进入冷静期）
+     *
+     * 管理端注销指定用户（root / 管理员）：与自助注销一致，进入冷静期。
+     *
+     * 提交后目标账号进入 `account_deactivate_grace_days` 天冷静期（默认 7 天），
+     * 数据保留、期间重新登录可撤销；到期未撤销才物理删除本地数据并同步删除 Casdoor 账号。
      */
     public static deactivateUserApiV1UserAdminDeactivatePost<ThrowOnError extends boolean = false>(options: Options<DeactivateUserApiV1UserAdminDeactivatePostData, ThrowOnError>): RequestResult<DeactivateUserApiV1UserAdminDeactivatePostResponses, DeactivateUserApiV1UserAdminDeactivatePostErrors, ThrowOnError, 'data'> {
         return (options.client ?? client).post<DeactivateUserApiV1UserAdminDeactivatePostResponses, DeactivateUserApiV1UserAdminDeactivatePostErrors, ThrowOnError, 'data'>({

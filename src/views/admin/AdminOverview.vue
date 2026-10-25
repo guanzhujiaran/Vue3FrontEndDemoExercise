@@ -4,6 +4,10 @@
       <el-text class="text-xl font-bold">管理后台</el-text>
       <el-text class="text-text-regular">这里集中管理 RPA 浏览器与消息中心的管理员功能，已与服务类界面分离。</el-text>
     </div>
+
+    <!-- 数据概览：审核待办多维统计（与首页共用组件；抽奖数据维度由「即将开奖」区块一并展示） -->
+    <StatsOverviewCards />
+
     <div class="admin-overview__grid grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
       <router-link
         v-for="item in items"
@@ -23,10 +27,14 @@
 
 <script setup lang="ts">
 import { computed, type Component } from 'vue'
-import { Setting, Bell, ChatDotRound, Comment, Key } from '@element-plus/icons-vue'
+import { Setting, Bell, ChatDotRound, Comment, Key, DataAnalysis } from '@element-plus/icons-vue'
 import { useMessageAdminStore } from '@/stores/message_admin'
+import StatsOverviewCards from '@/components/admin/StatsOverviewCards.vue'
 
 const messageAdminStore = useMessageAdminStore()
+
+// 主动拉取管理端身份，确保侧边栏在直接进入 /app/admin 时也能正确填充
+if (!messageAdminStore.loaded) messageAdminStore.fetchStatus()
 
 const isRpaAdmin = computed(() =>
   Boolean(messageAdminStore.status?.is_admin || messageAdminStore.status?.is_root)
@@ -43,6 +51,7 @@ interface OverviewItem {
 const items = computed<OverviewItem[]>(() => {
   const list: OverviewItem[] = []
   if (isRpaAdmin.value) {
+    list.push({ name: 'ADMIN_BILI_CRAWLER_SUMMARY', title: '抽奖数据', desc: '按抽奖类型统计未开奖、昨日/本周/本月新增等', icon: DataAnalysis })
     list.push({ name: 'ADMIN_RPA', title: 'RPA 管理后台', desc: '操作审批、官方认证、标签与操作审计', icon: Setting })
     list.push({ name: 'ADMIN_MESSAGE_NOTIFY', title: '通知管理', desc: '系统通知的发布与管理', icon: Bell })
     list.push({ name: 'ADMIN_MESSAGE_DM', title: '私信审核', desc: '审核用户私信内容', icon: ChatDotRound })

@@ -23,6 +23,29 @@ export interface CommentRateLimitConfig {
   reply: CommentRateRule[]
 }
 
+/**
+ * 推荐机器学习三件套配置（be-message `FeedMLConfig`，2.66.0）。
+ *
+ * 与后端 `app/models/schemas/sys_config.py::FeedMLConfig` 一一对应；默认全关，
+ * 需先跑训练脚本产出模型/索引，再按需灰度开启。
+ */
+export interface FeedMLConfig {
+  /** LightGBM 精排开关（需先产出模型文件） */
+  ranker_enabled: boolean
+  /** 模型分话语权 0~1（0 = 纯 EdgeRank 规则排序） */
+  ranker_blend_weight: number
+  /** ALS 协同召回开关（需先产出索引文件） */
+  als_enabled: boolean
+  /** ALS 召回条数上限 */
+  als_limit: number
+  /** LinUCB 上下文探索开关（需先回放训练臂参数） */
+  linucb_enabled: boolean
+  /** 探索分叠加强度 0~1（0 = 关闭探索） */
+  linucb_weight: number
+  /** UCB 置信区间系数 0~5（越大越探索） */
+  linucb_alpha: number
+}
+
 /** 单个运行时配置项 */
 export interface SysConfigItem {
   key: string
@@ -47,3 +70,5 @@ export interface SysConfigUpdateReq {
 
 /** 已知配置键：评论频率限制 */
 export const SYS_CONFIG_KEY_COMMENT_RATE_LIMIT = 'comment_rate_limit'
+/** 已知配置键：推荐机器学习三件套开关 */
+export const SYS_CONFIG_KEY_FEED_ML = 'feed_ml'

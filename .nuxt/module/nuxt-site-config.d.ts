@@ -8,7 +8,7 @@ declare module 'nitropack' {
     site?: import('../../node_modules/nuxt-site-config/dist/runtime/types').SiteConfig
   }
   interface NitroRuntimeHooks {
-    'site-config:init': (ctx: import('../../node_modules/nuxt-site-config/dist/runtime/types').HookSiteConfigInitContext<import('h3').H3Event>) => void | Promise<void>
+    'site-config:init': (ctx: import('../../node_modules/nuxt-site-config/dist/runtime/types').HookSiteConfigInitContext) => void | Promise<void>
   }
 }
 
@@ -20,14 +20,21 @@ declare module 'nitropack/types' {
     site?: import('../../node_modules/nuxt-site-config/dist/runtime/types').SiteConfig
   }
   interface NitroRuntimeHooks {
-    'site-config:init': (ctx: import('../../node_modules/nuxt-site-config/dist/runtime/types').HookSiteConfigInitContext<import('h3').H3Event>) => void | Promise<void>
+    'site-config:init': (ctx: import('../../node_modules/nuxt-site-config/dist/runtime/types').HookSiteConfigInitContext) => void | Promise<void>
+  }
+}
+
+declare module '@nuxt/schema' {
+  interface RequestEventContext {
+    siteConfig?: import('../../node_modules/nuxt-site-config/dist/runtime/types').SiteConfigStack
+    siteConfigNitroOrigin?: string
   }
 }
 
 declare module 'h3' {
   interface H3EventContext {
-    siteConfig: import('../../node_modules/nuxt-site-config/dist/runtime/types').SiteConfigStack
-    siteConfigNitroOrigin: string
+    siteConfig?: import('../../node_modules/nuxt-site-config/dist/runtime/types').SiteConfigStack
+    siteConfigNitroOrigin?: string
   }
 }
 

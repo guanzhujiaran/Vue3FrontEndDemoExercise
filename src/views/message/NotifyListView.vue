@@ -1,22 +1,6 @@
 <template>
+  <!-- 标题与未读角标已由 BiliSideNavLayout 的 header 统一承载，此处不再重复渲染工具栏 -->
   <div class="notify-list h-full flex flex-col">
-    <div class="notify-list__toolbar mb-4 flex items-center justify-between">
-      <h2 class="notify-list__title flex items-center gap-2 text-base font-bold text-text-primary">
-        {{ t('message.notifyTitle') }}
-        <el-badge
-          v-if="notifyUnread > 0"
-          :value="notifyUnread"
-          :max="99"
-          class="notify-list__title-badge"
-        />
-      </h2>
-      <div class="notify-list__actions flex items-center gap-3">
-        <el-button size="default" class="notify-list__refresh" @click="onRefresh">
-          {{ t('message.refresh') }}
-        </el-button>
-      </div>
-    </div>
-
     <LoadingMoreContainer
       class="notify-list__content"
       fill-parent
@@ -120,15 +104,6 @@ const page = ref(1)
 
 const displayItems = computed(() => items.value)
 
-/** 重置为第一页：手动刷新时清空已累积列表 */
-function resetList() {
-  items.value = []
-  page.value = 1
-  total.value = 0
-  isMore.value = true
-  isError.value = false
-}
-
 /** 首屏加载 / 触底加载统一入口（LoadingMoreContainer 触底回调） */
 async function handleLoad() {
   if (isLoading.value) return
@@ -154,11 +129,6 @@ async function handleLoad() {
   } finally {
     isLoading.value = false
   }
-}
-
-function onRefresh() {
-  resetList()
-  handleLoad()
 }
 
 /** 点「查看链接」：按后端下发的跳转目标走路由名 / 路径 / 外链。 */

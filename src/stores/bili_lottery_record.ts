@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia'
+import { browserPersistStorage } from '@/utils/persistStorage'
 
 export const useBiliLotteryRecord = defineStore(
   'bili-lottery-record',
@@ -44,7 +45,7 @@ export const useBiliLotteryRecord = defineStore(
   {
     persist: {
       key: 'bili-lottery-record',
-      storage: localStorage
+      storage: browserPersistStorage
     }
   }
 )

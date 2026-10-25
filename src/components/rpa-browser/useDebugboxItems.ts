@@ -369,6 +369,8 @@ export function useDebugboxItems(browserId: string, editMode: boolean, initialSt
     const result: Record<string, unknown> = {
       loop_source: lc.loopSource,
       count: lc.count,
+      // 循环名称：非空才写（支持 {{变量}} 模板，后端逐轮解析）；为空不写，保持 JSON 干净
+      name: lc.name?.trim() || undefined,
       loop_items_var: lc.loopItemsVar || undefined,
       loop_item_var: lc.loopItemVar || 'loop_item',
       loop_index_var: lc.loopIndexVar || 'loop_index',
@@ -490,11 +492,14 @@ export function useDebugboxItems(browserId: string, editMode: boolean, initialSt
       const res = await 自定义操作管理Service.listRegisteredActionsApiV1RpaBrowserControlActionsRegisteredPost({ headers: userNavStore.user_header })
       if (res?.code !== 0 || !res?.data) return
       const schemaMap = new Map<string, DroppedItem['json_schema']>()
-      for (const a of (res.data as unknown[]) || []) {
-        const meta = a as Record<string, unknown>
-        const id = meta.action_id
-        if (typeof id === 'string' && meta.json_schema) {
-          schemaMap.set(id, meta.json_schema as DroppedItem['json_schema'])
+      for (const meta of res.data) {
+        if (meta.json_schema) {
+          // 合并变量契约（input_variables / output_variables）进 schema 一并下发到表单
+          schemaMap.set(meta.action_id, {
+            ...(meta.json_schema || {}),
+            input_variables: meta.input_variables,
+            output_variables: meta.output_variables,
+          } as DroppedItem['json_schema'])
         }
       }
       if (schemaMap.size === 0) return

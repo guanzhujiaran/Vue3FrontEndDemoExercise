@@ -48,6 +48,8 @@ interface _GlobalComponents {
   UniversalSearchBox: typeof import("../../src/components/CommonCompo/Bili-Search-Compo/UniversalSearchBox.vue")['default']
   BiliStatusIcon: typeof import("../../src/components/CommonCompo/Bili-Status-Compo/BiliStatusIcon.vue")['default']
   UserAvatarBox: typeof import("../../src/components/CommonCompo/Bili-User-Compo/UserAvatarBox.vue")['default']
+  BiliIcon: typeof import("../../src/components/CommonCompo/BiliIcon.vue")['default']
+  BiliPagination: typeof import("../../src/components/CommonCompo/BiliPagination.vue")['default']
   BiliStyleExpBar: typeof import("../../src/components/CommonCompo/BiliStyleExpBar.vue")['default']
   ExpBar: typeof import("../../src/components/CommonCompo/ExpBar.vue")['default']
   GlobalLoadingMask: typeof import("../../src/components/CommonCompo/GlobalLoadingMask.vue")['default']
@@ -70,6 +72,7 @@ interface _GlobalComponents {
   Utils: typeof import("../../src/components/SamsClubCompo/utils")['default']
   AdminAuditTabs: typeof import("../../src/components/admin/AdminAuditTabs.vue")['default']
   AuditOverviewCard: typeof import("../../src/components/admin/AuditOverviewCard.vue")['default']
+  StatsOverviewCards: typeof import("../../src/components/admin/StatsOverviewCards.vue")['default']
   ScrollButtons: typeof import("../../src/components/common/ScrollButtons.vue")['default']
   TopicTable: typeof import("../../src/components/communicate_list/topic_table.vue")['default']
   FeatureNavigation: typeof import("../../src/components/home/FeatureNavigation.vue")['default']
@@ -110,6 +113,7 @@ interface _GlobalComponents {
   BiliOfficialLotteryTable: typeof import("../../src/components/lottery_data/bili_data/BiliOfficialLotteryTable.vue")['default']
   BiliScrapyStatusMini: typeof import("../../src/components/lottery_data/bili_data/BiliScrapyStatusMini.vue")['default']
   ChargeLottery: typeof import("../../src/components/lottery_data/bili_data/ChargeLottery.vue")['default']
+  HotLotteryList: typeof import("../../src/components/lottery_data/bili_data/HotLotteryList.vue")['default']
   LotteryActionsDropdown: typeof import("../../src/components/lottery_data/bili_data/LotteryActionsDropdown.vue")['default']
   LotteryDataTableToolbar: typeof import("../../src/components/lottery_data/bili_data/LotteryDataTableToolbar.vue")['default']
   LotteryFilterBar: typeof import("../../src/components/lottery_data/bili_data/LotteryFilterBar.vue")['default']
@@ -123,6 +127,7 @@ interface _GlobalComponents {
   SubmitOthersLotDynModal: typeof import("../../src/components/lottery_data/bili_data/SubmitOthersLotDynModal.vue")['default']
   SubmitTopicLotteryModal: typeof import("../../src/components/lottery_data/bili_data/SubmitTopicLotteryModal.vue")['default']
   TopicLottery: typeof import("../../src/components/lottery_data/bili_data/TopicLottery.vue")['default']
+  UpcomingLotteryMarquee: typeof import("../../src/components/lottery_data/bili_data/UpcomingLotteryMarquee.vue")['default']
   LotteryDesc: typeof import("../../src/components/lottery_data/bili_data/section/lottery/LotteryDesc.vue")['default']
   LotteryPrize: typeof import("../../src/components/lottery_data/bili_data/section/lottery/LotteryPrize.vue")['default']
   AuditReasonDialog: typeof import("../../src/components/message/AuditReasonDialog.vue")['default']
@@ -156,6 +161,14 @@ interface _GlobalComponents {
   MomentPublishForm: typeof import("../../src/components/moment/MomentPublishForm.vue")['default']
   MomentStatBar: typeof import("../../src/components/moment/MomentStatBar.vue")['default']
   ReportDialog: typeof import("../../src/components/moment/ReportDialog.vue")['default']
+  SpaceFansGrid: typeof import("../../src/components/moment/SpaceFansGrid.vue")['default']
+  SpaceFollowTagNav: typeof import("../../src/components/moment/SpaceFollowTagNav.vue")['default']
+  SpaceFollowTagPicker: typeof import("../../src/components/moment/SpaceFollowTagPicker.vue")['default']
+  SpaceProfileAside: typeof import("../../src/components/moment/SpaceProfileAside.vue")['default']
+  SpaceRelationList: typeof import("../../src/components/moment/SpaceRelationList.vue")['default']
+  SpaceSummaryCard: typeof import("../../src/components/moment/SpaceSummaryCard.vue")['default']
+  SpaceTimelineItem: typeof import("../../src/components/moment/SpaceTimelineItem.vue")['default']
+  SpaceTimelineList: typeof import("../../src/components/moment/SpaceTimelineList.vue")['default']
   Placeholder: typeof import("../../src/components/opus-detail/RightPannel/PannelItems/Placeholder.vue")['default']
   AccountStatusBoard: typeof import("../../src/components/opus-detail/RightPannel/PannelItems/SettingComponent/AccountStatusBoard.vue")['default']
   BrowserManagementPanel: typeof import("../../src/components/opus-detail/RightPannel/PannelItems/SettingComponent/BrowserManagementPanel.vue")['default']
@@ -168,8 +181,11 @@ interface _GlobalComponents {
   UserCenterDefaultPanel: typeof import("../../src/components/opus-detail/RightPannel/PannelItems/SettingComponent/UserCenterDefaultPanel.vue")['default']
   UserCenterRecords: typeof import("../../src/components/opus-detail/RightPannel/PannelItems/SettingComponent/UserCenterRecords.vue")['default']
   ActionCard: typeof import("../../src/components/rpa-browser/ActionCard.vue")['default']
+  ActionDetailDialog: typeof import("../../src/components/rpa-browser/ActionDetailDialog.vue")['default']
+  ActionFlowView: typeof import("../../src/components/rpa-browser/ActionFlowView.vue")['default']
   ActionIcon: typeof import("../../src/components/rpa-browser/ActionIcon.vue")['default']
   ActionIconPicker: typeof import("../../src/components/rpa-browser/ActionIconPicker.vue")['default']
+  ActionLogChainDialog: typeof import("../../src/components/rpa-browser/ActionLogChainDialog.vue")['default']
   ActionParamsForm: typeof import("../../src/components/rpa-browser/ActionParamsForm.vue")['default']
   ActionPickerDialog: typeof import("../../src/components/rpa-browser/ActionPickerDialog.vue")['default']
   BranchContainer: typeof import("../../src/components/rpa-browser/BranchContainer.vue")['default']
@@ -181,11 +197,19 @@ interface _GlobalComponents {
   LiveBox: typeof import("../../src/components/rpa-browser/LiveBox.vue")['default']
   LoopEditor: typeof import("../../src/components/rpa-browser/LoopEditor.vue")['default']
   MinimizeBar: typeof import("../../src/components/rpa-browser/MinimizeBar.vue")['default']
+  ObjectArrayEditor: typeof import("../../src/components/rpa-browser/ObjectArrayEditor.vue")['default']
   OperationFeedbackPanel: typeof import("../../src/components/rpa-browser/OperationFeedbackPanel.vue")['default']
+  ResourceLinkTemplateDialog: typeof import("../../src/components/rpa-browser/ResourceLinkTemplateDialog.vue")['default']
   RpaMobileTip: typeof import("../../src/components/rpa-browser/RpaMobileTip.vue")['default']
   ToolboxPanel: typeof import("../../src/components/rpa-browser/ToolboxPanel.vue")['default']
+  WorkflowCard: typeof import("../../src/components/rpa-browser/WorkflowCard.vue")['default']
   WorkflowEditDialog: typeof import("../../src/components/rpa-browser/WorkflowEditDialog.vue")['default']
+  WorkflowResourceRecordTable: typeof import("../../src/components/rpa-browser/WorkflowResourceRecordTable.vue")['default']
   WorkflowRunLogDialog: typeof import("../../src/components/rpa-browser/WorkflowRunLogDialog.vue")['default']
+  WorkflowRunMessageDock: typeof import("../../src/components/rpa-browser/WorkflowRunMessageDock.vue")['default']
+  WorkflowRunMessageGroup: typeof import("../../src/components/rpa-browser/WorkflowRunMessageGroup.vue")['default']
+  WorkflowRunMessageItem: typeof import("../../src/components/rpa-browser/WorkflowRunMessageItem.vue")['default']
+  WorkflowRunProgressBar: typeof import("../../src/components/rpa-browser/WorkflowRunProgressBar.vue")['default']
   DebugboxTypes: typeof import("../../src/components/rpa-browser/debugbox-types")['default']
   LiveCenterPlayButton: typeof import("../../src/components/rpa-browser/live/LiveCenterPlayButton.vue")['default']
   LiveOverlay: typeof import("../../src/components/rpa-browser/live/LiveOverlay.vue")['default']
@@ -198,25 +222,85 @@ interface _GlobalComponents {
   UseDebugboxItems: typeof import("../../src/components/rpa-browser/useDebugboxItems")['default']
   UseDebugboxSave: typeof import("../../src/components/rpa-browser/useDebugboxSave")['default']
   SponsorNotification: typeof import("../../src/components/sponsor/sponsor-notification.vue")['default']
+  /**
+   * Displays the welcome screen used by new Nuxt projects.
+   *
+   * @see https://nuxt.com/docs/4.x/api/components/nuxt-welcome
+   */
   NuxtWelcome: typeof import("../../node_modules/nuxt/dist/app/components/welcome.vue")['default']
+  /**
+   * Renders the selected layout around pages or error content.
+   *
+   * @see https://nuxt.com/docs/4.x/api/components/nuxt-layout
+   */
   NuxtLayout: typeof import("../../node_modules/nuxt/dist/app/components/nuxt-layout")['default']
+  /**
+   * Catches client-side errors from its default slot and renders an error slot.
+   *
+   * @see https://nuxt.com/docs/4.x/api/components/nuxt-error-boundary
+   */
   NuxtErrorBoundary: typeof import("../../node_modules/nuxt/dist/app/components/nuxt-error-boundary.vue")['default']
+  /**
+   * Renders its default slot only on the client, with an optional server fallback.
+   *
+   * @see https://nuxt.com/docs/4.x/api/components/client-only
+   */
   ClientOnly: typeof import("../../node_modules/nuxt/dist/app/components/client-only")['default']
+  /**
+   * Renders its content only during development.
+   *
+   * @see https://nuxt.com/docs/4.x/api/components/dev-only
+   */
   DevOnly: typeof import("../../node_modules/nuxt/dist/app/components/dev-only")['default']
   ServerPlaceholder: typeof import("../../node_modules/nuxt/dist/app/components/server-placeholder")['default']
+  /**
+   * A drop-in replacement for Vue Router's `<RouterLink>` and the HTML `<a>` element.
+   *
+   * @see https://nuxt.com/docs/4.x/api/components/nuxt-link
+   */
   NuxtLink: typeof import("../../node_modules/nuxt/dist/app/components/nuxt-link")['default']
+  /**
+   * Displays a progress bar during page navigation.
+   *
+   * @see https://nuxt.com/docs/4.x/api/components/nuxt-loading-indicator
+   */
   NuxtLoadingIndicator: typeof import("../../node_modules/nuxt/dist/app/components/nuxt-loading-indicator")['default']
+  /**
+   * Formats dates and times consistently across server and client using the user's locale.
+   *
+   * @see https://nuxt.com/docs/4.x/api/components/nuxt-time
+   */
   NuxtTime: typeof import("../../node_modules/nuxt/dist/app/components/nuxt-time.vue")['default']
+  /**
+   * Announces route changes to assistive technologies using the current page title.
+   *
+   * @see https://nuxt.com/docs/4.x/api/components/nuxt-route-announcer
+   */
   NuxtRouteAnnouncer: typeof import("../../node_modules/nuxt/dist/app/components/nuxt-route-announcer")['default']
+  /**
+   * Announces dynamic content changes to assistive technologies.
+   *
+   * @see https://nuxt.com/docs/4.x/api/components/nuxt-announcer
+   */
   NuxtAnnouncer: typeof import("../../node_modules/nuxt/dist/app/components/nuxt-announcer")['default']
+  /**
+   * Renders an optimized image through the Nuxt Image module.
+   *
+   * @see https://nuxt.com/docs/4.x/api/components/nuxt-img
+   */
   NuxtImg: typeof import("../../node_modules/nuxt/dist/app/components/nuxt-stubs")['NuxtImg']
+  /**
+   * Renders responsive optimized images through the Nuxt Image module.
+   *
+   * @see https://nuxt.com/docs/4.x/api/components/nuxt-picture
+   */
   NuxtPicture: typeof import("../../node_modules/nuxt/dist/app/components/nuxt-stubs")['NuxtPicture']
   ElAffix: typeof import("../../node_modules/element-plus/es/components/affix/index")['ElAffix']
   ElAlert: typeof import("../../node_modules/element-plus/es/components/alert/index")['ElAlert']
   ElAnchor: typeof import("../../node_modules/element-plus/es/components/anchor/index")['ElAnchor']
   ElAnchorLink: typeof import("../../node_modules/element-plus/es/components/anchor/index")['ElAnchorLink']
-  ElAside: typeof import("../../node_modules/element-plus/es/components/container/index")['ElAside']
   ElAutoResizer: typeof import("../../node_modules/element-plus/es/components/table-v2/index")['ElAutoResizer']
+  ElAside: typeof import("../../node_modules/element-plus/es/components/container/index")['ElAside']
   ElAutocomplete: typeof import("../../node_modules/element-plus/es/components/autocomplete/index")['ElAutocomplete']
   ElAvatar: typeof import("../../node_modules/element-plus/es/components/avatar/index")['ElAvatar']
   ElAvatarGroup: typeof import("../../node_modules/element-plus/es/components/avatar/index")['ElAvatarGroup']
@@ -619,6 +703,11 @@ interface _GlobalComponents {
   ElIconWindPower: typeof import("../../node_modules/@element-plus/icons-vue/dist/index")['WindPower']
   ElIconZoomIn: typeof import("../../node_modules/@element-plus/icons-vue/dist/index")['ZoomIn']
   ElIconZoomOut: typeof import("../../node_modules/@element-plus/icons-vue/dist/index")['ZoomOut']
+  /**
+   * Renders the current page from the `pages/` directory.
+   *
+   * @see https://nuxt.com/docs/4.x/api/components/nuxt-page
+   */
   NuxtPage: typeof import("../../node_modules/nuxt/dist/pages/runtime/page")['default']
   NoScript: typeof import("../../node_modules/nuxt/dist/head/runtime/components")['NoScript']
   Link: typeof import("../../node_modules/nuxt/dist/head/runtime/components")['Link']
@@ -629,6 +718,11 @@ interface _GlobalComponents {
   Head: typeof import("../../node_modules/nuxt/dist/head/runtime/components")['Head']
   Html: typeof import("../../node_modules/nuxt/dist/head/runtime/components")['Html']
   Body: typeof import("../../node_modules/nuxt/dist/head/runtime/components")['Body']
+  /**
+   * Renders a non-interactive server component without shipping client-side JavaScript.
+   *
+   * @see https://nuxt.com/docs/4.x/api/components/nuxt-island
+   */
   NuxtIsland: typeof import("../../node_modules/nuxt/dist/app/components/nuxt-island")['default']
   LazyAvatarDropdown: LazyComponent<typeof import("../../src/components/CommonCompo/AvatarDropdown.vue")['default']>
   LazyAutoHeightContainer: LazyComponent<typeof import("../../src/components/CommonCompo/Bili-Container-Compo/AutoHeightContainer.vue")['default']>
@@ -664,6 +758,8 @@ interface _GlobalComponents {
   LazyUniversalSearchBox: LazyComponent<typeof import("../../src/components/CommonCompo/Bili-Search-Compo/UniversalSearchBox.vue")['default']>
   LazyBiliStatusIcon: LazyComponent<typeof import("../../src/components/CommonCompo/Bili-Status-Compo/BiliStatusIcon.vue")['default']>
   LazyUserAvatarBox: LazyComponent<typeof import("../../src/components/CommonCompo/Bili-User-Compo/UserAvatarBox.vue")['default']>
+  LazyBiliIcon: LazyComponent<typeof import("../../src/components/CommonCompo/BiliIcon.vue")['default']>
+  LazyBiliPagination: LazyComponent<typeof import("../../src/components/CommonCompo/BiliPagination.vue")['default']>
   LazyBiliStyleExpBar: LazyComponent<typeof import("../../src/components/CommonCompo/BiliStyleExpBar.vue")['default']>
   LazyExpBar: LazyComponent<typeof import("../../src/components/CommonCompo/ExpBar.vue")['default']>
   LazyGlobalLoadingMask: LazyComponent<typeof import("../../src/components/CommonCompo/GlobalLoadingMask.vue")['default']>
@@ -686,6 +782,7 @@ interface _GlobalComponents {
   LazyUtils: LazyComponent<typeof import("../../src/components/SamsClubCompo/utils")['default']>
   LazyAdminAuditTabs: LazyComponent<typeof import("../../src/components/admin/AdminAuditTabs.vue")['default']>
   LazyAuditOverviewCard: LazyComponent<typeof import("../../src/components/admin/AuditOverviewCard.vue")['default']>
+  LazyStatsOverviewCards: LazyComponent<typeof import("../../src/components/admin/StatsOverviewCards.vue")['default']>
   LazyScrollButtons: LazyComponent<typeof import("../../src/components/common/ScrollButtons.vue")['default']>
   LazyTopicTable: LazyComponent<typeof import("../../src/components/communicate_list/topic_table.vue")['default']>
   LazyFeatureNavigation: LazyComponent<typeof import("../../src/components/home/FeatureNavigation.vue")['default']>
@@ -726,6 +823,7 @@ interface _GlobalComponents {
   LazyBiliOfficialLotteryTable: LazyComponent<typeof import("../../src/components/lottery_data/bili_data/BiliOfficialLotteryTable.vue")['default']>
   LazyBiliScrapyStatusMini: LazyComponent<typeof import("../../src/components/lottery_data/bili_data/BiliScrapyStatusMini.vue")['default']>
   LazyChargeLottery: LazyComponent<typeof import("../../src/components/lottery_data/bili_data/ChargeLottery.vue")['default']>
+  LazyHotLotteryList: LazyComponent<typeof import("../../src/components/lottery_data/bili_data/HotLotteryList.vue")['default']>
   LazyLotteryActionsDropdown: LazyComponent<typeof import("../../src/components/lottery_data/bili_data/LotteryActionsDropdown.vue")['default']>
   LazyLotteryDataTableToolbar: LazyComponent<typeof import("../../src/components/lottery_data/bili_data/LotteryDataTableToolbar.vue")['default']>
   LazyLotteryFilterBar: LazyComponent<typeof import("../../src/components/lottery_data/bili_data/LotteryFilterBar.vue")['default']>
@@ -739,6 +837,7 @@ interface _GlobalComponents {
   LazySubmitOthersLotDynModal: LazyComponent<typeof import("../../src/components/lottery_data/bili_data/SubmitOthersLotDynModal.vue")['default']>
   LazySubmitTopicLotteryModal: LazyComponent<typeof import("../../src/components/lottery_data/bili_data/SubmitTopicLotteryModal.vue")['default']>
   LazyTopicLottery: LazyComponent<typeof import("../../src/components/lottery_data/bili_data/TopicLottery.vue")['default']>
+  LazyUpcomingLotteryMarquee: LazyComponent<typeof import("../../src/components/lottery_data/bili_data/UpcomingLotteryMarquee.vue")['default']>
   LazyLotteryDesc: LazyComponent<typeof import("../../src/components/lottery_data/bili_data/section/lottery/LotteryDesc.vue")['default']>
   LazyLotteryPrize: LazyComponent<typeof import("../../src/components/lottery_data/bili_data/section/lottery/LotteryPrize.vue")['default']>
   LazyAuditReasonDialog: LazyComponent<typeof import("../../src/components/message/AuditReasonDialog.vue")['default']>
@@ -772,6 +871,14 @@ interface _GlobalComponents {
   LazyMomentPublishForm: LazyComponent<typeof import("../../src/components/moment/MomentPublishForm.vue")['default']>
   LazyMomentStatBar: LazyComponent<typeof import("../../src/components/moment/MomentStatBar.vue")['default']>
   LazyReportDialog: LazyComponent<typeof import("../../src/components/moment/ReportDialog.vue")['default']>
+  LazySpaceFansGrid: LazyComponent<typeof import("../../src/components/moment/SpaceFansGrid.vue")['default']>
+  LazySpaceFollowTagNav: LazyComponent<typeof import("../../src/components/moment/SpaceFollowTagNav.vue")['default']>
+  LazySpaceFollowTagPicker: LazyComponent<typeof import("../../src/components/moment/SpaceFollowTagPicker.vue")['default']>
+  LazySpaceProfileAside: LazyComponent<typeof import("../../src/components/moment/SpaceProfileAside.vue")['default']>
+  LazySpaceRelationList: LazyComponent<typeof import("../../src/components/moment/SpaceRelationList.vue")['default']>
+  LazySpaceSummaryCard: LazyComponent<typeof import("../../src/components/moment/SpaceSummaryCard.vue")['default']>
+  LazySpaceTimelineItem: LazyComponent<typeof import("../../src/components/moment/SpaceTimelineItem.vue")['default']>
+  LazySpaceTimelineList: LazyComponent<typeof import("../../src/components/moment/SpaceTimelineList.vue")['default']>
   LazyPlaceholder: LazyComponent<typeof import("../../src/components/opus-detail/RightPannel/PannelItems/Placeholder.vue")['default']>
   LazyAccountStatusBoard: LazyComponent<typeof import("../../src/components/opus-detail/RightPannel/PannelItems/SettingComponent/AccountStatusBoard.vue")['default']>
   LazyBrowserManagementPanel: LazyComponent<typeof import("../../src/components/opus-detail/RightPannel/PannelItems/SettingComponent/BrowserManagementPanel.vue")['default']>
@@ -784,8 +891,11 @@ interface _GlobalComponents {
   LazyUserCenterDefaultPanel: LazyComponent<typeof import("../../src/components/opus-detail/RightPannel/PannelItems/SettingComponent/UserCenterDefaultPanel.vue")['default']>
   LazyUserCenterRecords: LazyComponent<typeof import("../../src/components/opus-detail/RightPannel/PannelItems/SettingComponent/UserCenterRecords.vue")['default']>
   LazyActionCard: LazyComponent<typeof import("../../src/components/rpa-browser/ActionCard.vue")['default']>
+  LazyActionDetailDialog: LazyComponent<typeof import("../../src/components/rpa-browser/ActionDetailDialog.vue")['default']>
+  LazyActionFlowView: LazyComponent<typeof import("../../src/components/rpa-browser/ActionFlowView.vue")['default']>
   LazyActionIcon: LazyComponent<typeof import("../../src/components/rpa-browser/ActionIcon.vue")['default']>
   LazyActionIconPicker: LazyComponent<typeof import("../../src/components/rpa-browser/ActionIconPicker.vue")['default']>
+  LazyActionLogChainDialog: LazyComponent<typeof import("../../src/components/rpa-browser/ActionLogChainDialog.vue")['default']>
   LazyActionParamsForm: LazyComponent<typeof import("../../src/components/rpa-browser/ActionParamsForm.vue")['default']>
   LazyActionPickerDialog: LazyComponent<typeof import("../../src/components/rpa-browser/ActionPickerDialog.vue")['default']>
   LazyBranchContainer: LazyComponent<typeof import("../../src/components/rpa-browser/BranchContainer.vue")['default']>
@@ -797,11 +907,19 @@ interface _GlobalComponents {
   LazyLiveBox: LazyComponent<typeof import("../../src/components/rpa-browser/LiveBox.vue")['default']>
   LazyLoopEditor: LazyComponent<typeof import("../../src/components/rpa-browser/LoopEditor.vue")['default']>
   LazyMinimizeBar: LazyComponent<typeof import("../../src/components/rpa-browser/MinimizeBar.vue")['default']>
+  LazyObjectArrayEditor: LazyComponent<typeof import("../../src/components/rpa-browser/ObjectArrayEditor.vue")['default']>
   LazyOperationFeedbackPanel: LazyComponent<typeof import("../../src/components/rpa-browser/OperationFeedbackPanel.vue")['default']>
+  LazyResourceLinkTemplateDialog: LazyComponent<typeof import("../../src/components/rpa-browser/ResourceLinkTemplateDialog.vue")['default']>
   LazyRpaMobileTip: LazyComponent<typeof import("../../src/components/rpa-browser/RpaMobileTip.vue")['default']>
   LazyToolboxPanel: LazyComponent<typeof import("../../src/components/rpa-browser/ToolboxPanel.vue")['default']>
+  LazyWorkflowCard: LazyComponent<typeof import("../../src/components/rpa-browser/WorkflowCard.vue")['default']>
   LazyWorkflowEditDialog: LazyComponent<typeof import("../../src/components/rpa-browser/WorkflowEditDialog.vue")['default']>
+  LazyWorkflowResourceRecordTable: LazyComponent<typeof import("../../src/components/rpa-browser/WorkflowResourceRecordTable.vue")['default']>
   LazyWorkflowRunLogDialog: LazyComponent<typeof import("../../src/components/rpa-browser/WorkflowRunLogDialog.vue")['default']>
+  LazyWorkflowRunMessageDock: LazyComponent<typeof import("../../src/components/rpa-browser/WorkflowRunMessageDock.vue")['default']>
+  LazyWorkflowRunMessageGroup: LazyComponent<typeof import("../../src/components/rpa-browser/WorkflowRunMessageGroup.vue")['default']>
+  LazyWorkflowRunMessageItem: LazyComponent<typeof import("../../src/components/rpa-browser/WorkflowRunMessageItem.vue")['default']>
+  LazyWorkflowRunProgressBar: LazyComponent<typeof import("../../src/components/rpa-browser/WorkflowRunProgressBar.vue")['default']>
   LazyDebugboxTypes: LazyComponent<typeof import("../../src/components/rpa-browser/debugbox-types")['default']>
   LazyLiveCenterPlayButton: LazyComponent<typeof import("../../src/components/rpa-browser/live/LiveCenterPlayButton.vue")['default']>
   LazyLiveOverlay: LazyComponent<typeof import("../../src/components/rpa-browser/live/LiveOverlay.vue")['default']>
@@ -814,25 +932,109 @@ interface _GlobalComponents {
   LazyUseDebugboxItems: LazyComponent<typeof import("../../src/components/rpa-browser/useDebugboxItems")['default']>
   LazyUseDebugboxSave: LazyComponent<typeof import("../../src/components/rpa-browser/useDebugboxSave")['default']>
   LazySponsorNotification: LazyComponent<typeof import("../../src/components/sponsor/sponsor-notification.vue")['default']>
+  /**
+   * Lazy-loaded version of `<NuxtWelcome>`.
+   *
+   * Displays the welcome screen used by new Nuxt projects.
+   *
+   * @see https://nuxt.com/docs/4.x/api/components/nuxt-welcome
+   */
   LazyNuxtWelcome: LazyComponent<typeof import("../../node_modules/nuxt/dist/app/components/welcome.vue")['default']>
+  /**
+   * Lazy-loaded version of `<NuxtLayout>`.
+   *
+   * Renders the selected layout around pages or error content.
+   *
+   * @see https://nuxt.com/docs/4.x/api/components/nuxt-layout
+   */
   LazyNuxtLayout: LazyComponent<typeof import("../../node_modules/nuxt/dist/app/components/nuxt-layout")['default']>
+  /**
+   * Lazy-loaded version of `<NuxtErrorBoundary>`.
+   *
+   * Catches client-side errors from its default slot and renders an error slot.
+   *
+   * @see https://nuxt.com/docs/4.x/api/components/nuxt-error-boundary
+   */
   LazyNuxtErrorBoundary: LazyComponent<typeof import("../../node_modules/nuxt/dist/app/components/nuxt-error-boundary.vue")['default']>
+  /**
+   * Lazy-loaded version of `<ClientOnly>`.
+   *
+   * Renders its default slot only on the client, with an optional server fallback.
+   *
+   * @see https://nuxt.com/docs/4.x/api/components/client-only
+   */
   LazyClientOnly: LazyComponent<typeof import("../../node_modules/nuxt/dist/app/components/client-only")['default']>
+  /**
+   * Lazy-loaded version of `<DevOnly>`.
+   *
+   * Renders its content only during development.
+   *
+   * @see https://nuxt.com/docs/4.x/api/components/dev-only
+   */
   LazyDevOnly: LazyComponent<typeof import("../../node_modules/nuxt/dist/app/components/dev-only")['default']>
   LazyServerPlaceholder: LazyComponent<typeof import("../../node_modules/nuxt/dist/app/components/server-placeholder")['default']>
+  /**
+   * Lazy-loaded version of `<NuxtLink>`.
+   *
+   * A drop-in replacement for Vue Router's `<RouterLink>` and the HTML `<a>` element.
+   *
+   * @see https://nuxt.com/docs/4.x/api/components/nuxt-link
+   */
   LazyNuxtLink: LazyComponent<typeof import("../../node_modules/nuxt/dist/app/components/nuxt-link")['default']>
+  /**
+   * Lazy-loaded version of `<NuxtLoadingIndicator>`.
+   *
+   * Displays a progress bar during page navigation.
+   *
+   * @see https://nuxt.com/docs/4.x/api/components/nuxt-loading-indicator
+   */
   LazyNuxtLoadingIndicator: LazyComponent<typeof import("../../node_modules/nuxt/dist/app/components/nuxt-loading-indicator")['default']>
+  /**
+   * Lazy-loaded version of `<NuxtTime>`.
+   *
+   * Formats dates and times consistently across server and client using the user's locale.
+   *
+   * @see https://nuxt.com/docs/4.x/api/components/nuxt-time
+   */
   LazyNuxtTime: LazyComponent<typeof import("../../node_modules/nuxt/dist/app/components/nuxt-time.vue")['default']>
+  /**
+   * Lazy-loaded version of `<NuxtRouteAnnouncer>`.
+   *
+   * Announces route changes to assistive technologies using the current page title.
+   *
+   * @see https://nuxt.com/docs/4.x/api/components/nuxt-route-announcer
+   */
   LazyNuxtRouteAnnouncer: LazyComponent<typeof import("../../node_modules/nuxt/dist/app/components/nuxt-route-announcer")['default']>
+  /**
+   * Lazy-loaded version of `<NuxtAnnouncer>`.
+   *
+   * Announces dynamic content changes to assistive technologies.
+   *
+   * @see https://nuxt.com/docs/4.x/api/components/nuxt-announcer
+   */
   LazyNuxtAnnouncer: LazyComponent<typeof import("../../node_modules/nuxt/dist/app/components/nuxt-announcer")['default']>
+  /**
+   * Lazy-loaded version of `<NuxtImg>`.
+   *
+   * Renders an optimized image through the Nuxt Image module.
+   *
+   * @see https://nuxt.com/docs/4.x/api/components/nuxt-img
+   */
   LazyNuxtImg: LazyComponent<typeof import("../../node_modules/nuxt/dist/app/components/nuxt-stubs")['NuxtImg']>
+  /**
+   * Lazy-loaded version of `<NuxtPicture>`.
+   *
+   * Renders responsive optimized images through the Nuxt Image module.
+   *
+   * @see https://nuxt.com/docs/4.x/api/components/nuxt-picture
+   */
   LazyNuxtPicture: LazyComponent<typeof import("../../node_modules/nuxt/dist/app/components/nuxt-stubs")['NuxtPicture']>
   LazyElAffix: LazyComponent<typeof import("../../node_modules/element-plus/es/components/affix/index")['ElAffix']>
   LazyElAlert: LazyComponent<typeof import("../../node_modules/element-plus/es/components/alert/index")['ElAlert']>
   LazyElAnchor: LazyComponent<typeof import("../../node_modules/element-plus/es/components/anchor/index")['ElAnchor']>
   LazyElAnchorLink: LazyComponent<typeof import("../../node_modules/element-plus/es/components/anchor/index")['ElAnchorLink']>
-  LazyElAside: LazyComponent<typeof import("../../node_modules/element-plus/es/components/container/index")['ElAside']>
   LazyElAutoResizer: LazyComponent<typeof import("../../node_modules/element-plus/es/components/table-v2/index")['ElAutoResizer']>
+  LazyElAside: LazyComponent<typeof import("../../node_modules/element-plus/es/components/container/index")['ElAside']>
   LazyElAutocomplete: LazyComponent<typeof import("../../node_modules/element-plus/es/components/autocomplete/index")['ElAutocomplete']>
   LazyElAvatar: LazyComponent<typeof import("../../node_modules/element-plus/es/components/avatar/index")['ElAvatar']>
   LazyElAvatarGroup: LazyComponent<typeof import("../../node_modules/element-plus/es/components/avatar/index")['ElAvatarGroup']>
@@ -1235,6 +1437,13 @@ interface _GlobalComponents {
   LazyElIconWindPower: LazyComponent<typeof import("../../node_modules/@element-plus/icons-vue/dist/index")['WindPower']>
   LazyElIconZoomIn: LazyComponent<typeof import("../../node_modules/@element-plus/icons-vue/dist/index")['ZoomIn']>
   LazyElIconZoomOut: LazyComponent<typeof import("../../node_modules/@element-plus/icons-vue/dist/index")['ZoomOut']>
+  /**
+   * Lazy-loaded version of `<NuxtPage>`.
+   *
+   * Renders the current page from the `pages/` directory.
+   *
+   * @see https://nuxt.com/docs/4.x/api/components/nuxt-page
+   */
   LazyNuxtPage: LazyComponent<typeof import("../../node_modules/nuxt/dist/pages/runtime/page")['default']>
   LazyNoScript: LazyComponent<typeof import("../../node_modules/nuxt/dist/head/runtime/components")['NoScript']>
   LazyLink: LazyComponent<typeof import("../../node_modules/nuxt/dist/head/runtime/components")['Link']>
@@ -1245,6 +1454,13 @@ interface _GlobalComponents {
   LazyHead: LazyComponent<typeof import("../../node_modules/nuxt/dist/head/runtime/components")['Head']>
   LazyHtml: LazyComponent<typeof import("../../node_modules/nuxt/dist/head/runtime/components")['Html']>
   LazyBody: LazyComponent<typeof import("../../node_modules/nuxt/dist/head/runtime/components")['Body']>
+  /**
+   * Lazy-loaded version of `<NuxtIsland>`.
+   *
+   * Renders a non-interactive server component without shipping client-side JavaScript.
+   *
+   * @see https://nuxt.com/docs/4.x/api/components/nuxt-island
+   */
   LazyNuxtIsland: LazyComponent<typeof import("../../node_modules/nuxt/dist/app/components/nuxt-island")['default']>
 }
 

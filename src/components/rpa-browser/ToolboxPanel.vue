@@ -7,7 +7,7 @@ import {
 } from 'element-plus'
 import { 自定义操作管理Service } from '@/api/browser/hey-api'
 import { client } from '@/api/browser/hey-api/client.gen'
-import type { FilterType, SortBy, SortOrder } from '@/api/browser/hey-api'
+import type { ActionMetadataResponse, FilterType, SortBy, SortOrder } from '@/api/browser/hey-api'
 import { useUserNavStore } from '@/stores/user_nav'
 import ActionIcon from './ActionIcon.vue'
 import { resolveActionTypeIcon } from '@/utils/rpa/actionTypeIcon'
@@ -68,7 +68,7 @@ const currentPage = ref(1)
 const totalCount = ref(0)
 const loadError = ref(false)
 
-const registeredActions = shallowRef<unknown[]>([])
+const registeredActions = shallowRef<ActionMetadataResponse[]>([])
 
 /** 标签缓存：切换 tab 时保存/恢复各 tab 的列表状态 */
 const tabCache = ref<Record<string, {
@@ -193,9 +193,7 @@ async function reloadActions() {
 async function loadRegistered() {
   const res = await 自定义操作管理Service.listRegisteredActionsApiV1RpaBrowserControlActionsRegisteredPost({ headers: userNavStore.user_header })
   if (res?.code === 0 && res?.data) {
-    registeredActions.value = ((res.data as unknown[]) || []).filter(
-      (a: Record<string, unknown>) => a.action_id !== 'composite',
-    )
+    registeredActions.value = res.data.filter((a) => a.action_id !== 'composite')
   }
 }
 
@@ -347,9 +345,9 @@ function onTagChange(value: string) {
 
 const filteredRegistered = computed<unknown[]>(() => {
   const q = searchQuery.value.toLowerCase()
-  const items = registeredActions.value.map((a: Record<string, unknown>) => ({
+  const items = registeredActions.value.map((a) => ({
     id: `action-${a.action_id}`,
-    label: (a.name as string) || getActionLabel(a.action_id as string, a.json_schema as Record<string, unknown>),
+    label: a.name || getActionLabel(a.action_id, a.json_schema || {}),
     children: [],
     action_id: a.action_id,
     action_type: a.action_id,
@@ -359,10 +357,17 @@ const filteredRegistered = computed<unknown[]>(() => {
     // 此前漏传导致 ActionIcon 拿不到 series/id，树节点永远走 fallback（图标全都一样）
     icon_series: a.icon_series,
     icon_id: a.icon_id,
-    name: a.name || (a.json_schema as Record<string, unknown>)?.title || a.action_id,
-    description: (a.json_schema as Record<string, unknown>)?.description,
-    tags: a.tags || [],
-    json_schema: a.json_schema,
+    name: a.name || a.json_schema?.title || a.action_id,
+    description: a.json_schema?.description,
+    // ActionMetadataResponse 无 tags 字段，历史行为保留（恒为空数组）
+    tags: (a as { tags?: unknown[] }).tags || [],
+    // 变量契约（后端 /actions/registered 下发）合并进 json_schema 透传，
+    // ActionParamsForm 据此渲染变量绑定区；多余顶层键对参数表单渲染无影响
+    json_schema: {
+      ...(a.json_schema || {}),
+      input_variables: a.input_variables,
+      output_variables: a.output_variables,
+    },
   }))
   if (!q) return items
   return items.filter((i) => String(i.name || i.label || '').toLowerCase().includes(q))

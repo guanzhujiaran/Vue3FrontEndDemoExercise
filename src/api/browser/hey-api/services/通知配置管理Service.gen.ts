@@ -3,7 +3,7 @@
 import type { RequestResult } from '../client';
 import { client } from '../client.gen';
 import type { Options } from '../sdk.gen';
-import type { DeleteNotifyConfigRouterApiV1RpaBrowserNotifyConfDeletePostData, DeleteNotifyConfigRouterApiV1RpaBrowserNotifyConfDeletePostErrors, DeleteNotifyConfigRouterApiV1RpaBrowserNotifyConfDeletePostResponses, ReadNotifyConfigRouterApiV1RpaBrowserNotifyConfReadPostData, ReadNotifyConfigRouterApiV1RpaBrowserNotifyConfReadPostErrors, ReadNotifyConfigRouterApiV1RpaBrowserNotifyConfReadPostResponses, TestNotifyRouterApiV1RpaBrowserNotifyTestPostData, TestNotifyRouterApiV1RpaBrowserNotifyTestPostErrors, TestNotifyRouterApiV1RpaBrowserNotifyTestPostResponses, UpsertNotifyConfigRouterApiV1RpaBrowserNotifyConfUpsertPostData, UpsertNotifyConfigRouterApiV1RpaBrowserNotifyConfUpsertPostErrors, UpsertNotifyConfigRouterApiV1RpaBrowserNotifyConfUpsertPostResponses } from '../types.gen';
+import type { DeleteNotifyConfigRouterApiV1RpaBrowserNotifyConfDeletePostData, DeleteNotifyConfigRouterApiV1RpaBrowserNotifyConfDeletePostErrors, DeleteNotifyConfigRouterApiV1RpaBrowserNotifyConfDeletePostResponses, ReadNotifyConfigRouterApiV1RpaBrowserNotifyConfReadPostData, ReadNotifyConfigRouterApiV1RpaBrowserNotifyConfReadPostErrors, ReadNotifyConfigRouterApiV1RpaBrowserNotifyConfReadPostResponses, UpsertNotifyConfigRouterApiV1RpaBrowserNotifyConfUpsertPostData, UpsertNotifyConfigRouterApiV1RpaBrowserNotifyConfUpsertPostErrors, UpsertNotifyConfigRouterApiV1RpaBrowserNotifyConfUpsertPostResponses } from '../types.gen';
 
 export class 通知配置管理Service {
     /**
@@ -93,39 +93,6 @@ export class 通知配置管理Service {
         return (options.client ?? client).post<DeleteNotifyConfigRouterApiV1RpaBrowserNotifyConfDeletePostResponses, DeleteNotifyConfigRouterApiV1RpaBrowserNotifyConfDeletePostErrors, ThrowOnError, 'data'>({
             responseStyle: 'data',
             url: '/api/v1/rpa/browser/notify/conf/delete',
-            ...options,
-            headers: {
-                'Content-Type': 'application/json',
-                ...options.headers
-            }
-        });
-    }
-    
-    /**
-     * Test Notify Router
-     *
-     * 测试推送通知
-     *
-     * 发送一条测试通知消息来验证推送配置是否正确工作。
-     * 可以测试全局配置或特定浏览器实例的配置。
-     *
-     * Args:
-     * request: 测试通知的请求参数，包含标题、内容和可选的浏览器ID
-     * mid: 用户ID，从请求头中自动获取，用于权限验证
-     * session: 数据库会话
-     *
-     * Returns:
-     * TestNotificationResponse: 测试结果，包含发送状态和详细信息
-     *
-     * Note:
-     * - 如果提供了browser_id，则测试特定浏览器的通知配置
-     * - 如果不提供browser_id，则测试全局通知配置
-     * - 会尝试所有配置的推送渠道，并返回成功发送的渠道列表
-     */
-    public static testNotifyRouterApiV1RpaBrowserNotifyTestPost<ThrowOnError extends boolean = false>(options: Options<TestNotifyRouterApiV1RpaBrowserNotifyTestPostData, ThrowOnError>): RequestResult<TestNotifyRouterApiV1RpaBrowserNotifyTestPostResponses, TestNotifyRouterApiV1RpaBrowserNotifyTestPostErrors, ThrowOnError, 'data'> {
-        return (options.client ?? client).post<TestNotifyRouterApiV1RpaBrowserNotifyTestPostResponses, TestNotifyRouterApiV1RpaBrowserNotifyTestPostErrors, ThrowOnError, 'data'>({
-            responseStyle: 'data',
-            url: '/api/v1/rpa/browser/notify/test',
             ...options,
             headers: {
                 'Content-Type': 'application/json',

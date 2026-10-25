@@ -173,7 +173,7 @@
     >
       <MomentAttachCard
         :biz-type="additionalModule.bizType"
-        :biz-id="additionalModule.bizId"
+        :biz-id="additionalModule.bizId_str ?? ''"
         :name="additionalModule.name"
         :cover="additionalModule.cover"
         :jump-url="additionalModule.jumpUrl"
@@ -290,7 +290,7 @@
     <!-- 互动统计 -->
     <div @click.stop>
       <MomentStatBar
-        :stat="props.status ?? null"
+        :stat="favStat"
         :is-liked="interactionModule?.isLike ?? false"
         :loading="thumbLoading"
         :is-disliked="isDisliked"
@@ -299,6 +299,14 @@
         @comment="handleComment"
         @repost="showRepostDialog = true"
         @dislike="handleDislike"
+        :is-favorited="favStat?.isFavorite ?? false"
+        @favorite="favDialogVisible = true"
+      />
+      <!-- 收藏夹选择弹窗 -->
+      <MomentFavoriteDialog
+        v-model="favDialogVisible"
+        :dyn-id="props.item.dynId_str ?? ''"
+        @changed="onFavoriteChanged"
       />
     </div>
 
@@ -309,7 +317,7 @@
       @click.stop
     >
       <LotteryCommentSection
-        :oid="props.item.dynIdStr"
+        :oid="props.item.dynId_str ?? ''"
         :type="InteractionBizTypeEnum.DYNAMIC"
         :up-mid="props.item.mid"
         @count-change="handleCommentCountChange"
@@ -320,7 +328,7 @@
     <MomentPublishForm
       v-model:visible="showRepostDialog"
       is-repost
-      :src-dyn-id="props.item.dynIdStr"
+      :src-dyn-id="props.item.dynId_str ?? ''"
       :src-author-name="authorInfo?.uname ?? undefined"
       :src-author-face="authorInfo?.face ?? undefined"
       :src-summary="repostSrcSummary"
@@ -331,7 +339,7 @@
 
 <script setup lang="ts">
 import { IMG_REFERRER_POLICY } from '@/utils/PageOpen/linkPolicy'
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { MoreFilled, Delete, WarningFilled, Collection } from '@element-plus/icons-vue'
 import MomentContentRenderer from './MomentContentRenderer.vue'
@@ -348,6 +356,7 @@ import {
   dislikeMoment,
 } from '@/api/notify/moment-api'
 import { isMomentDisliked, setMomentDisliked } from '@/composables/useMomentDislike'
+import type { FavoriteChangedPayload } from '@/utils/interaction/favoriteSync'
 import type {
   MomentFeedItem,
   MomentModule,
@@ -356,6 +365,7 @@ import type {
 } from '@/api/notify/moment-api'
 import { InteractionBizTypeEnum } from '@/api/lottery_comment'
 import LotteryCommentSection from '@/components/lottery_data/LotteryCommentSection.vue'
+import MomentFavoriteDialog from '@/components/moment/MomentFavoriteDialog.vue'
 import { BiliImg } from '@/assets/img/BiliImg'
 import { useUserNavStore } from '@/stores/user_nav'
 import { useMessageAdminStore } from '@/stores/message_admin'
@@ -381,23 +391,61 @@ const props = withDefaults(
 const emit = defineEmits<{
   click: [item: MomentFeedItem]
   srcClick: [item: MomentFeedItem]
-  thumb: [dynIdStr: string]
-  remove: [dynIdStr: string]
-  report: [dynIdStr: string]
+  thumb: [dynId_str: string]
+  remove: [dynId_str: string]
+  report: [dynId_str: string]
   avatarClick: [item: MomentFeedItem]
   /** 点击评论（inlineComment=false 时）：父组件切换到评论 tab（详情页） */
   comment: [item: MomentFeedItem]
   /** 2.62.0：点踩 / 取消点踩（API 已由卡片内调用，父组件仅收通知） */
-  dislike: [dynIdStr: string, isDislike: boolean]
+  dislike: [dynId_str: string, isDislike: boolean]
+  /** 收藏态变化（收藏夹弹窗操作成功后触发，父组件据此刷新互动态计数 / isFavorite） */
+  statusChange: [dynId_str: string, payload: FavoriteChangedPayload]
 }>()
+
+/** 收藏夹弹窗操作成功后通知父组件同步互动态（携带最新收藏态，父组件无需整页重查） */
+function onFavoriteChanged(payload: FavoriteChangedPayload) {
+  // 本地覆盖态：让卡片内收藏按钮即时响应（父组件未监听 status-change 时也不会卡住）
+  favOverride.value = {
+    isFavorite: payload.isFavorite,
+    favoriteCount: payload.favoriteCount,
+  }
+  emit('statusChange', props.item.dynId_str ?? '', payload)
+}
+
+/**
+ * 收藏本地覆盖态：弹窗操作后立即生效；
+ * 父级把新的 status 传下来时让位给 status，保证最终一致。
+ */
+const favOverride = ref<{ isFavorite: boolean; favoriteCount?: number } | null>(null)
+watch(
+  () => props.status?.isFavorite,
+  (v) => {
+    if (v != null) favOverride.value = null
+  }
+)
+
+/** 透传给互动统计条的互动态：收藏字段以本地覆盖态优先 */
+const favStat = computed<InteractionStatusItem | null>(() => {
+  const base = props.status ?? null
+  const override = favOverride.value
+  if (!base || !override) return base
+  return {
+    ...base,
+    isFavorite: override.isFavorite,
+    favoriteCount: override.favoriteCount ?? base.favoriteCount,
+  }
+})
 
 const router = useRouter()
 const thumbLoading = ref(false)
+/** 收藏夹选择弹窗显隐（StatBar 收藏按钮点击后打开） */
+const favDialogVisible = ref(false)
 /** 2.62.0：点踩请求中（防连点） */
 const dislikeLoading = ref(false)
 
 /** 2.62.0：是否已点踩（本地乐观态优先，回落互动态 `status.isDislike`） */
-const isDisliked = computed(() => isMomentDisliked(props.item.dynIdStr, props.status))
+const isDisliked = computed(() => isMomentDisliked(props.item.dynId_str ?? '', props.status))
 
 const userNavStore = useUserNavStore()
 const currentMid = computed(() => Number(userNavStore.user_nav?.uid) || 0)
@@ -702,7 +750,7 @@ function handleSrcClick() {
     emit('srcClick', {
       ...props.item,
       dynId: forwardModule.value.srcDynId,
-      dynIdStr: String(forwardModule.value.srcDynId),
+      dynId_str: String(forwardModule.value.srcDynId),
     })
   }
 }
@@ -720,7 +768,7 @@ function handleAvatarClick() {
 
 async function handleThumb() {
   thumbLoading.value = true
-  emit('thumb', props.item.dynIdStr)
+  emit('thumb', props.item.dynId_str ?? '')
   // 父组件负责调用 API 并更新状态
   thumbLoading.value = false
 }
@@ -739,12 +787,12 @@ async function handleDislike() {
   dislikeLoading.value = true
   try {
     const next = !isDisliked.value
-    const res = await dislikeMoment(props.item.dynIdStr, next ? 1 : 2)
+    const res = await dislikeMoment(props.item.dynId_str ?? '', next ? 1 : 2)
     // 业务失败 request 返回 null（不抛异常），保持原状态
     if (!res) return
-    setMomentDisliked(props.item.dynIdStr, next)
+    setMomentDisliked(props.item.dynId_str ?? '', next)
     biliMessage.success(next ? '已点踩，将减少此类内容' : '已取消点踩')
-    emit('dislike', props.item.dynIdStr, next)
+    emit('dislike', props.item.dynId_str ?? '', next)
   } finally {
     dislikeLoading.value = false
   }
@@ -765,7 +813,7 @@ async function handleRemove() {
         .join('')
         .slice(0, 30)
       await ElMessageBox.confirm(
-        `管理员删除动态「${descText || props.item.dynIdStr}」？删除后该动态将不再可见（软删，可追溯审计流水）。`,
+        `管理员删除动态「${descText || (props.item.dynId_str ?? '')}」？删除后该动态将不再可见（软删，可追溯审计流水）。`,
         '管理员删除动态',
         { type: 'warning', confirmButtonText: '删除', cancelButtonText: '取消', lockScroll: false }
       )
@@ -773,22 +821,22 @@ async function handleRemove() {
       await ElMessageBox.confirm('确定删除这条动态吗？', '确认删除', { type: 'warning', lockScroll: false })
     }
     const res = isAdmin.value
-      ? await adminRemoveMoment(props.item.dynIdStr, {
+      ? await adminRemoveMoment(props.item.dynId_str ?? '', {
           showSuccessToast: true,
           successMessage: '已删除',
         })
-      : await removeMoment(props.item.dynIdStr, {
+      : await removeMoment(props.item.dynId_str ?? '', {
           showSuccessToast: true,
           successMessage: '已删除',
         })
-    if (res) emit('remove', props.item.dynIdStr)
+    if (res) emit('remove', props.item.dynId_str ?? '')
   } catch {
     // 用户取消或删除失败
   }
 }
 
 function handleReport() {
-  emit('report', props.item.dynIdStr)
+  emit('report', props.item.dynId_str ?? '')
 }
 
 /** 点击评论：inlineComment 模式卡片内展开评论区；否则透传给父组件（详情页切评论 tab） */

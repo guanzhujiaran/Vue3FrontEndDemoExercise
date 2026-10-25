@@ -1,13 +1,15 @@
 <template>
-  <!--
-    陌生人私信分类子列表（参考 B 站「应援团」集合下的子房间列表）：
-    - 进入页面才请求 STRANGER 会话，符合「点开之后再加载具体内容」的懒加载语义。
-    - 与普通 DM 列表共用 DmSessionItem / DmWhisperLayout 的渲染样式，
-      仅查询参数 session_type 不同。
-    - 点击子项进入与普通 DM 完全一致的聊天视图（whisper/:talkerId），
-      聊天接口（/messages）按 owner+talker 查索引，与 session_type 无关。
-  -->
   <div class="dm-stranger-list flex h-full flex-col bg-bg">
+    <!--
+      陌生人私信分类子列表（参考 B 站「应援团」集合下的子房间列表）：
+      - 进入页面才请求 STRANGER 会话，符合「点开之后再加载具体内容」的懒加载语义。
+      - 与普通 DM 列表共用 DmSessionItem / DmWhisperLayout 的渲染样式，
+        仅查询参数 session_type 不同。
+      - 点击子项进入与普通 DM 完全一致的聊天视图（whisper/:talkerId），
+        聊天接口（/messages）按 owner+talker 查索引，与 session_type 无关。
+      注意：本组件是「顶层路由组件」，根层只允许一个元素，说明注释必须写在根元素内部，
+      否则模板会被编译成 fragment，切换 header 时外层 transition + keep-alive 会卡死。
+    -->
     <div
       class="dm-stranger-list__header shrink-0 border-b border-border-lighter px-4 py-3 text-sm font-medium text-text-primary"
     >

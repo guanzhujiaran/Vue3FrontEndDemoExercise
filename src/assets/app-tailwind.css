@@ -15,6 +15,13 @@
     padding: 0;
   }
 
+  /*
+    全站布局的设计基准宽度：内容按「不小于 690px」布局，
+    窄屏（视口 < 690px）通过 .app-viewport 的整体等比缩放来完整显示，
+    而不是让页面溢出后由浏览器自动缩小 visual viewport（那会导致点一下就跳回「只显示一半」）。
+    注意：只挂在内容容器上，**绝不能挂到 body/html**，
+    否则 html 被撑宽会产生横向溢出，移动端浏览器仍会自动缩小并重置缩放比例。
+  */
   .smallest-width {
     min-width: 690px;
   }
@@ -238,6 +245,43 @@ elementDark放到theme后面是为了确保暗色状态下直接用elementDark�
 }
 
 @layer components {
+  /* ===== 窄屏整体缩放适配（配合 App.vue 的 content_scale） =====
+     .app-viewport：可视窗口容器，裁掉缩放后溢出的部分，高度由 JS 绑定为 window_height / scale
+     .app-viewport__inner：内容容器，保持 .smallest-width（>=690px）的布局宽度后整体 scale
+     这样窄屏也能一次看到全部内容，且页面本身没有横向溢出 */
+  .app-viewport {
+    overflow: hidden;
+    width: 100%;
+  }
+  .app-viewport__inner {
+    transform: scale(var(--app-content-scale, 1));
+    transform-origin: top left;
+    /* 必须显式给高度：el-scrollbar 的 height prop 只写到内部 .el-scrollbar__wrap，
+       根元素仍被 Element Plus 的 `.el-scrollbar { height: 100% }` 锁在外层容器高度上，
+       于是「wrap 高度 > 根高度」的部分会被根的 overflow: hidden 裁掉（表现为只显示一半）。 */
+    height: var(--app-content-height, 100%);
+  }
+
+  /* ===== 工作流运行消息浮窗（可拖动 / 可调整大小） =====
+     几何值由组件在 DOM 上写 CSS 变量（不用 :style 绑定），这里只负责消费：
+     首帧（变量尚未写入）用右下角默认摆放，写入后 .is-positioned 接管 left/top/宽高。 */
+  .workflow-run-message-bar {
+    right: 1rem;
+    bottom: 10rem;
+    width: 27.5rem;
+    height: 25rem;
+    max-width: calc(100vw - 2rem);
+  }
+
+  .workflow-run-message-bar.is-positioned {
+    right: auto;
+    bottom: auto;
+    width: var(--workflow-dock-width, 27.5rem);
+    height: var(--workflow-dock-height, 25rem);
+    left: var(--workflow-dock-left, 1rem);
+    top: var(--workflow-dock-top, 10rem);
+  }
+
   .lottery-card {
     @apply border-border overflow-hidden [--el-card-border-color:var(--color-border)] [--el-card-padding:var(--spacing-1)] sm:[--el-card-padding:var(--spacing-2)] lg:[--el-card-padding:var(--spacing-3)];
   }

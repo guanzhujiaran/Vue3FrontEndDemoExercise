@@ -41,7 +41,8 @@
             <span class="text-xs text-text-secondary">{{ item.remark || '—' }}</span>
           </div>
           <span class="text-xs text-text-secondary">
-            最后修改：{{ item.updatedBy || '—' }} · {{ formatTime(item.updated_at) }}
+            字段数：{{ Object.keys(item.value ?? {}).length }} · 最后修改：{{ item.updatedBy || '—' }} ·
+            {{ formatTime(item.updated_at) }}
           </span>
         </div>
       </template>
@@ -117,6 +118,116 @@
         </div>
       </div>
 
+      <!-- 推荐机器学习三件套（2.66.0）：结构化开关 + 权重，替代直接改 JSON -->
+      <div v-if="item.key === KEY_FEED_ML" class="feed-ml-config flex flex-col gap-4">
+        <el-alert
+          type="warning"
+          show-icon
+          :closable="false"
+          title="三件套默认全关；开启前请先用训练脚本产出模型/索引"
+          description="LightGBM 精排需 data/ml/feed_ranker.txt、ALS 需 data/ml/feed_als.npz、LinUCB 需先回放训练臂参数。样本量不足时模型不可信（灌数只验证链路，不代表线上收益）。"
+        />
+
+        <div class="feed-ml-config__row flex flex-col gap-1 rounded border border-border-lighter p-3">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <div class="flex flex-col">
+              <span class="font-bold">LightGBM 精排（LambdaRank）</span>
+              <span class="text-xs text-text-secondary">
+                与 EdgeRank 分融合：final = (1−w)·EdgeRank + w·ML；w=0 即纯规则排序，可逐档灰度
+              </span>
+            </div>
+            <el-switch v-model="feedMlForm.ranker_enabled" />
+          </div>
+          <div class="flex flex-wrap items-center gap-3">
+            <span class="w-40 shrink-0 text-sm text-text-regular">模型话语权 w</span>
+            <el-slider
+              v-model="feedMlForm.ranker_blend_weight"
+              :min="0"
+              :max="1"
+              :step="0.05"
+              :disabled="!feedMlForm.ranker_enabled"
+              class="feed-ml-config__slider flex-1"
+            />
+            <span class="w-16 shrink-0 text-sm text-text-secondary">
+              {{ feedMlForm.ranker_blend_weight.toFixed(2) }}
+            </span>
+          </div>
+        </div>
+
+        <div class="feed-ml-config__row flex flex-col gap-1 rounded border border-border-lighter p-3">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <div class="flex flex-col">
+              <span class="font-bold">ALS 协同召回</span>
+              <span class="text-xs text-text-secondary">
+                隐式反馈（点赞/评论/收藏/转发）分解出用户·资源隐向量，作为第 6 路召回；冷启动用户自动跳过
+              </span>
+            </div>
+            <el-switch v-model="feedMlForm.als_enabled" />
+          </div>
+          <div class="flex flex-wrap items-center gap-3">
+            <span class="w-40 shrink-0 text-sm text-text-regular">召回条数上限</span>
+            <el-input-number
+              v-model="feedMlForm.als_limit"
+              :min="1"
+              :max="1000"
+              :disabled="!feedMlForm.als_enabled"
+              controls-position="right"
+              class="w-40"
+            />
+          </div>
+        </div>
+
+        <div class="feed-ml-config__row flex flex-col gap-1 rounded border border-border-lighter p-3">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <div class="flex flex-col">
+              <span class="font-bold">LinUCB 上下文探索</span>
+              <span class="text-xs text-text-secondary">
+                带上下文特征的线性老虎机（ucb = θᵀx + α·√(xᵀA⁻¹x)），给没见过的新内容探索机会
+              </span>
+            </div>
+            <el-switch v-model="feedMlForm.linucb_enabled" />
+          </div>
+          <div class="flex flex-wrap items-center gap-3">
+            <span class="w-40 shrink-0 text-sm text-text-regular">探索强度 w</span>
+            <el-slider
+              v-model="feedMlForm.linucb_weight"
+              :min="0"
+              :max="1"
+              :step="0.05"
+              :disabled="!feedMlForm.linucb_enabled"
+              class="feed-ml-config__slider flex-1"
+            />
+            <span class="w-16 shrink-0 text-sm text-text-secondary">
+              {{ feedMlForm.linucb_weight.toFixed(2) }}
+            </span>
+          </div>
+          <div class="flex flex-wrap items-center gap-3">
+            <span class="w-40 shrink-0 text-sm text-text-regular">探索系数 α</span>
+            <el-slider
+              v-model="feedMlForm.linucb_alpha"
+              :min="0"
+              :max="5"
+              :step="0.1"
+              :disabled="!feedMlForm.linucb_enabled"
+              class="feed-ml-config__slider flex-1"
+            />
+            <span class="w-16 shrink-0 text-sm text-text-secondary">
+              {{ feedMlForm.linucb_alpha.toFixed(1) }}
+            </span>
+          </div>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2">
+          <el-button type="primary" :loading="savingKey === item.key" @click="saveFeedMl(item)">
+            保存
+          </el-button>
+          <el-button @click="applyFeedMl(item)">重置为当前生效值</el-button>
+          <span class="text-xs text-text-secondary">
+            保存后本实例立即生效，其他实例最迟在 TTL（默认 10s）内生效，无需重启。
+          </span>
+        </div>
+      </div>
+
       <!-- 其他 / 未来新增配置项：JSON 兜底编辑 -->
       <div v-else class="flex flex-col gap-2">
         <el-input
@@ -138,17 +249,31 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Refresh } from '@element-plus/icons-vue'
 import sysConfigApi from '@/api/community/sys_config_api'
 import {
   SYS_CONFIG_KEY_COMMENT_RATE_LIMIT,
+  SYS_CONFIG_KEY_FEED_ML,
   type CommentRateRule,
+  type FeedMLConfig,
   type SysConfigItem
 } from '@/models/admin/sys_config_model'
 
 const KEY_COMMENT_RATE_LIMIT = SYS_CONFIG_KEY_COMMENT_RATE_LIMIT
+const KEY_FEED_ML = SYS_CONFIG_KEY_FEED_ML
+
+/** 推荐机器学习三件套的兜底默认值（接口未返回字段时用；正常来自后端 settings） */
+const FEED_ML_FALLBACK: FeedMLConfig = {
+  ranker_enabled: false,
+  ranker_blend_weight: 0,
+  als_enabled: false,
+  als_limit: 100,
+  linucb_enabled: false,
+  linucb_weight: 0,
+  linucb_alpha: 0.5
+}
 
 type ScopeKey = 'root' | 'reply'
 
@@ -164,6 +289,8 @@ const savingKey = ref('')
 
 /** 评论限流的结构化编辑态（保存时整体替换该 key 的值） */
 const rateForm = reactive<Record<ScopeKey, CommentRateRule[]>>({ root: [], reply: [] })
+/** 推荐机器学习三件套的结构化编辑态 */
+const feedMlForm = reactive<FeedMLConfig>({ ...FEED_ML_FALLBACK })
 /** 未知 / 未来配置项的 JSON 草稿 */
 const jsonDrafts = reactive<Record<string, string>>({})
 

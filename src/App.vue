@@ -18,7 +18,8 @@ import { isLogin } from '@/api/user/utils.ts'
 
 import type { Ref } from 'vue'
 import NetworkErrorView from '@/views/NetworkErrorView.vue'
-import { useDebounceFn, useResizeObserver } from '@vueuse/core'
+import WorkflowRunMessageDock from '@/components/rpa-browser/WorkflowRunMessageDock.vue'
+import { useDebounceFn, useResizeObserver, useWindowSize } from '@vueuse/core'
 // 按当前路由动态维护 title / description / canonical / robots / OG（SEO）
 useRouteSeo()
 
@@ -51,8 +52,13 @@ const userPrefStore = useUserPrefStore()
 const loginModalRef = ref<InstanceType<typeof LoginModal> | null>(null)
 const router = useRouter()
 
-// 计算背景图片URL（themeStore.isDark 已做水合安全处理：挂载前恒为浅色，与服务端一致）
+// 计算背景图片URL：
+// 挂载前（首帧/开发加载阶段）固定使用暗色背景，避免亮色背景太刺眼；
+// 挂载后再按真实主题切换（themeStore.isDark 水合安全，挂载前恒为浅色）
 const backgroundUrl = computed(() => {
+  if (!isMounted.value) {
+    return BiliImg.background.home.dark
+  }
   return themeStore.isDark ? BiliImg.background.home.dark : BiliImg.background.home.light
 })
 
@@ -137,6 +143,11 @@ const screen_size = {
   xxl: 2060
 }
 /**
+ * 布局设计基准宽度，与 app-tailwind.css 的 `.smallest-width` 必须保持一致。
+ * 窄屏按 `viewport_width / DESIGN_MIN_WIDTH` 整体缩放。
+ */
+const DESIGN_MIN_WIDTH = 690
+/**
  * 滚动容器高度。
  *
  * 初值固定 `0`，**不**用 `window.innerHeight`：服务端没有 window、客户端首帧却有，
@@ -153,18 +164,24 @@ const onScrollbarScroll = (payload: { scrollTop: number; scrollLeft: number }) =
 
 // 参照媒体查询断点库：t=smaller(小于上限), n=between(介于区间), r=greater(大于等于下限)
 type ScreenKey = keyof typeof screen_size
-/** `window.outerWidth` 的 SSR 安全读取：预渲染时按 0 处理（断点判定退化为不命中） */
-const outerWidthValue = () => (typeof window === 'undefined' ? 0 : window.outerWidth)
+/**
+ * 断点判定基准宽度。
+ * - 用 `useWindowSize().width`（= documentElement.clientWidth，即真实 CSS 视口宽度），
+ *   而不是 `window.outerWidth`：后者包含浏览器边框 / 工具栏宽度，在桌面小窗口与移动端都会偏大，
+ *   导致断点误判。
+ * - 必须是响应式来源：旧实现把 `window.outerWidth` 放进无依赖的 computed，
+ *   首次求值后就被永久缓存，移动端首屏算出的 `smallest = true` 再也不会翻转，
+ *   页面宽度被永久钉死，旋转屏幕 / 缩放窗口都自愈不了。
+ * - SSR / 预渲染阶段 width 为 0，断点判定退化为不命中，与服务端首帧一致，不会 hydration mismatch。
+ */
+const { width: viewport_width } = useWindowSize()
 const smaller = (key: ScreenKey) =>
-  computed(() => outerWidthValue() < screen_size[key])
+  computed(() => viewport_width.value < screen_size[key])
 const between = (min: ScreenKey, max: ScreenKey) =>
-  computed(() => outerWidthValue() >= screen_size[min] && outerWidthValue() < screen_size[max])
+  computed(() => viewport_width.value >= screen_size[min] && viewport_width.value < screen_size[max])
 const greater = (key: ScreenKey) =>
-  computed(() => outerWidthValue() >= screen_size[key])
+  computed(() => viewport_width.value >= screen_size[key])
 
-// 维持原有行为：smallest 用于 smallest-width，is_lg 用于 xs_sm-width
-const smallest = smaller('xxs')
-const is_lg = smaller('lg')
 // 其余断点按 smaller / between / greater 语义构建，与参考库一致
 const xs_sm = between('xs', 'sm')
 const is_xs = smaller('sm')
@@ -172,9 +189,46 @@ const is_sm = between('sm', 'md')
 const is_md = between('md', 'lg')
 const is_xl = between('xl', 'xxl')
 const is_xxl = greater('xxl')
+
+/**
+ * 窄屏整体缩放比例。
+ *
+ * 布局按 `.smallest-width`（min-width: 690px）设计，即内容宽度不低于 690px。
+ * 视口窄于 690px 时（移动端），不改成流式布局，而是把整个布局等比缩小到刚好铺满视口：
+ * - scale = viewport / 690，缩放后视觉宽度 === 视口宽度 → 内容完整显示，无需横向滚动；
+ * - 页面没有横向溢出，移动端浏览器就不会为适配溢出宽度自动缩小 visual viewport，
+ *   也就不会出现「点一下缩放比例被重置、又只显示一半」的情况；
+ * - 视口 >= 690px 时 scale 恒为 1，桌面端行为与之前完全一致。
+ *
+ * SSR / 预渲染阶段 viewport_width 为 0，此处退化为 1（与首屏 HTML 一致，不会 hydration mismatch）。
+ */
+const content_scale = computed(() => {
+  const w = viewport_width.value
+  if (!w || w >= DESIGN_MIN_WIDTH) {
+    return 1
+  }
+  return w / DESIGN_MIN_WIDTH
+})
+
+/**
+ * 滚动容器在「布局坐标系」下的可视高度。
+ *
+ * 布局坐标系 = 未缩放的 690px 宽那一层，内层整体 scale 后才映射到真实视口，
+ * 因此要让缩放后的视觉高度正好等于视口高度（铺满、不留白），
+ * 滚动容器的 CSS 高度必须放大 1/scale：视觉高 = 容器高 × scale = window_height。
+ *
+ * 注意：这里放大的是**滚动容器**的高度，而不是外层 .app-viewport 容器的高度
+ * （外层不缩放，直接用 window_height 即可）。
+ * 之前误把 1/scale 加在外层，导致滚动容器可视高度只有 window_height，
+ * 缩放后仅占视口 1/scale 的高度 → 首屏以下的内容（功能导航区、页脚）全部被裁掉，
+ * 表现为「只显示了一半，下面一片空白」。
+ */
+const content_height = computed(() => {
+  const s = content_scale.value
+  return s > 0 ? Math.round(window_height.value / s) : window_height.value
+})
+
 const getWindowHeight = useDebounceFn(() => {
-  document.body.classList[smallest.value ? "add" : "remove"]("smallest-width"),
-    document.body.classList[is_lg.value ? "add" : "remove"]("xs_sm-width")
   window_height.value = window.innerHeight
 }, 100)
 onUnmounted(() => {
@@ -203,8 +257,17 @@ onMounted(() => localeStore.applyBrowserLocale())
     <img class="bg-img pointer-events-none fixed inset-0 z-[-9999] h-full w-full object-cover" :src="backgroundUrl"
       :referrerpolicy="IMG_REFERRER_POLICY" alt="Background Image" />
     <el-config-provider :locale="localeStore.elLocale">
-      <el-scrollbar class="smallest-width" view-class="min-h-full flex flex-col" v-model:height="window_height"
-        @scroll="onScrollbarScroll">
+      <!--
+        窄屏适配：内层保持 690px 设计布局宽度并整体 scale（--app-content-scale），
+        使窄屏也能横向完整显示全部内容，且页面不产生横向溢出
+        （否则移动端浏览器会自行缩小并重置 visual viewport，点一下就跳回「只显示一半」）。
+        外层 .app-viewport 不缩放，高度直接等于视口高度；内层滚动容器高度取 content_height
+        （=视口高/scale），缩放后视觉高度正好铺满视口，纵向滚动范围也完整。
+      -->
+      <div class="app-viewport"
+        :style="{ '--app-content-scale': content_scale, '--app-content-height': `${content_height}px`, height: `${window_height}px` }">
+        <el-scrollbar class="app-viewport__inner smallest-width w-full" view-class="min-h-full flex flex-col"
+          :height="content_height" @scroll="onScrollbarScroll">
         <!-- 安全区内边距直接落在元素上（preflight 已统一 box-sizing: border-box，无需重复声明） -->
         <div
           class="site-layout w-full flex-1 flex flex-col pt-[env(safe-area-inset-top,0px)] pr-[env(safe-area-inset-right,0px)] pb-[env(safe-area-inset-bottom,0px)] pl-[env(safe-area-inset-left,0px)]">
@@ -214,11 +277,17 @@ onMounted(() => localeStore.applyBrowserLocale())
             </el-header>
             <el-main class="flex! flex-col flex-1 mx-2 mt-3 p-0 text-text-primary" :style="{ overflow: 'visible' }">
               <RouterView v-slot="{ Component, route }">
-                <!-- 注意：本 transition 的 mode="out-in" 依赖「子组件单根元素」。
-                     顶层路由组件若为多根（fragment）组件，会把 keep-alive 缓存的布局 vnode
-                     弄丢/残留（例如从 /app/rpa-browser 切回 /app/admin 时侧边栏整体消失）。
-                     因此所有被本 RouterView 渲染的顶层路由组件必须是单根组件。 -->
-                <transition name="slide-fade" mode="out-in">
+                <!-- 这里【不能】加 mode="out-in"（2026-10 已实测修复，勿加回）。
+                     原因：out-in 模式下 Vue 的 BaseTransition 会先把 state.isLeaving 置 true 并渲染
+                     emptyPlaceholder（一个空的注释占位节点），等旧组件的 leave 钩子跑完才通过
+                     afterLeave 复位 isLeaving 再渲染新组件。但本处子节点是 keep-alive：
+                     被缓存的组件离开时走的是 deactivate（DOM 移入隐藏的 storage container），
+                     根本不会触发 leave 钩子 → afterLeave 永远不来 → isLeaving 永远为 true
+                     → 整个 RouterView 之后只输出占位注释，页面内容整块消失且无法自愈。
+                     症状：进入 /app/admin 正常，一旦从它切走就永久空白（与页面根节点是
+                     div 还是组件无关，已用 2x2 对照实验验证）。
+                     保留 transition 本身，将来补上 slide-fade 的 CSS 即可有淡入淡出。 -->
+                <transition name="slide-fade">
                   <keep-alive :max="30" :exclude="['MomentDetailView']">
                     <component :is="Component" :key="routeViewKey"
                       class="main-inner flex flex-col flex-1 box-border rounded" />
@@ -246,6 +315,12 @@ onMounted(() => localeStore.applyBrowserLocale())
           v-if="!route.path.startsWith('/app/message') && !route.path.startsWith('/app/admin') && !route.path.startsWith('/app/rpa-browser')"
           :scroll-top="scrollTop" :top-threshold="100" :bottom-threshold="100" />
       </el-scrollbar>
+      </div>
+      <!-- 工作流运行消息：全局挂载（SSE 订阅在 Pinia store，切换页面不中断），
+           默认收起，由右下角悬浮按钮打开 -->
+      <ClientOnly>
+        <WorkflowRunMessageDock />
+      </ClientOnly>
     </el-config-provider>
   </template>
 </template>

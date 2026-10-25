@@ -1,6 +1,7 @@
 /// <reference types="@pinia/nuxt" />
 /// <reference types="@element-plus/nuxt" />
 /// <reference types="@nuxtjs/sitemap" />
+/// <reference types="@nuxt/devtools" />
 /// <reference types="@nuxt/telemetry" />
 /// <reference path="types/nitro-layouts.d.ts" />
 /// <reference path="types/modules.d.ts" />

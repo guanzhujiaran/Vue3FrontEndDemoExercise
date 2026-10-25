@@ -20,7 +20,18 @@ const { t } = useI18n()
 const route = useRoute()
 const lotteryDetailStore = useLotteryDetailStore()
 
-const lotteryId = computed(() => String(route.query.id ?? ''))
+// 入参宽松匹配：站内链接用 ?id=，管理端汇总页等外链用 ?lottery_id=，兼容 lotdataId/lotteryId 拼写
+function pickQueryId(keys: readonly string[]): string {
+  for (const key of keys) {
+    const raw = route.query[key]
+    const val = Array.isArray(raw) ? raw[0] : raw
+    if (val !== undefined && val !== null && String(val).trim() !== '') {
+      return String(val).trim()
+    }
+  }
+  return ''
+}
+const lotteryId = computed(() => pickQueryId(['id', 'lottery_id', 'lotteryId', 'lotdataId']))
 // 定位直达的评论 rpid（来自通知 / 外链），传给评论区滚动定位
 const focusRpid = computed(() => String(route.query.rpid ?? '') || null)
 
@@ -167,7 +178,7 @@ function handleStatusChange(payload: { bizId: string; status: Partial<Interactio
         txt="卡片详情加载失败"
         @click-retry="loadDetail"
       />
-      <!-- URL 无 id：无法定位资源 -->
+      <!-- URL 无有效 id 参数：无法定位资源 -->
       <el-alert
         v-else
         class="lottery-card-detail__empty mb-6"

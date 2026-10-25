@@ -3,8 +3,19 @@ import type {
   DurationAccountResponse,
   MonthCardInfo,
   RedeemResponse,
+  SignInCalendarResponse,
   SignInResponse,
+  SignMakeupResponse,
+  SignOverviewResponse,
+  SignRewardExchangeResponse,
+  SignRewardConfigPayload,
+  SignRewardConfigResponse,
   UsageStatItem,
+  UsageStatsResponse,
+  PaymentProductItem,
+  PaymentProductsResponse,
+  PaymentGrantedItem,
+  PaymentConfirmResponse,
   GenerateCodesResponse
 } from '@/api/browser/hey-api'
 import type { RootObject } from '@/models/api/base_model'
@@ -123,23 +134,6 @@ export interface GenerateCodesReq {
   remark?: string
 }
 
-/** 支付商品条目（用户侧） */
-export interface PaymentProductItem {
-  product_name: string
-  display_name: string
-  price: string
-  grant_type: string
-  duration_seconds: string
-  card_days: string
-  buy_url: string
-}
-
-/** 支付对账入账结果 */
-export interface PaymentGrantedItem {
-  product: string
-  summary: string
-}
-
 class MembershipApi {
   /** 账户概览：余额 / 月卡状态 / 今日签到状态 */
   GetAccount(): Promise<BusinessHandlerResult<DurationAccountResponse>> {
@@ -154,6 +148,68 @@ class MembershipApi {
         '获取时长账户失败'
       ),
       { showSuccessToast: false, errorMessage: '获取时长账户失败' }
+    )
+  }
+
+  /**
+   * 签到日历（当月逐日补齐，含每天是否可补登）
+   *
+   * @param month 查询月份 `YYYY-MM`，不传取当前月。
+   */
+  SignInCalendar(month?: string): Promise<BusinessHandlerResult<SignInCalendarResponse>> {
+    return businessHandler<SignInCalendarResponse>(
+      adapt<SignInCalendarResponse>(
+        时长与会员权益Service.getSignInCalendarApiV1RpaBrowserMembershipSignInCalendarPost({
+          body: { month: month || null }
+        }) as unknown as Promise<{ data?: unknown; error?: unknown }>,
+        '获取签到日历失败'
+      ),
+      { showSuccessToast: false, errorMessage: '获取签到日历失败' }
+    )
+  }
+
+  /**
+   * 签到概览：累计天数 / 补登卡 / 档位状态 / 上线日期与时区
+   *
+   * 结构对齐后端 `SignOverviewResponse`（后端已按本项目资产裁剪：只有时长 + 补登卡）。
+   */
+  SignInOverview(): Promise<BusinessHandlerResult<SignOverviewResponse>> {
+    return businessHandler<SignOverviewResponse>(
+      adapt<SignOverviewResponse>(
+        时长与会员权益Service.getSignInOverviewApiV1RpaBrowserMembershipSignInOverviewPost({
+          body: {}
+        }) as unknown as Promise<{ data?: unknown; error?: unknown }>,
+        '获取签到概览失败'
+      ),
+      { showSuccessToast: false, errorMessage: '获取签到概览失败' }
+    )
+  }
+
+  /**
+   * 补登卡补签指定日期（仅未签到的过去日期，每次消耗 1 张卡）
+   *
+   * 业务码 5010/5011/5012 的后端 msg 原样透传给调用方展示。
+   */
+  MakeupSignInRaw(date: string): Promise<BusinessResponse<SignMakeupResponse>> {
+    return adapt<SignMakeupResponse>(
+      时长与会员权益Service.makeupSignInApiV1RpaBrowserMembershipSignInMakeupPost({
+        body: { date }
+      }) as unknown as Promise<{ data?: unknown; error?: unknown }>,
+      '补签失败'
+    )
+  }
+
+  /**
+   * 兑换签到奖励档位（7d / 14d / 28d，每档每用户仅一次）
+   *
+   * 业务码 5013/5014 的后端 msg 原样透传给调用方展示。
+   */
+  ExchangeSignRewardRaw(tier: string): Promise<BusinessResponse<SignRewardExchangeResponse>> {
+    return adapt<SignRewardExchangeResponse>(
+      时长与会员权益Service.exchangeSignRewardApiV1RpaBrowserMembershipSignInRewardExchangePost({
+        body: { tier }
+      }) as unknown as Promise<{ data?: unknown; error?: unknown }>,
+      '兑换奖励失败'
     )
   }
 
@@ -186,12 +242,21 @@ class MembershipApi {
     )
   }
 
-  /** 分页查询时长流水（时间倒序） */
-  LedgerList(page: number, perPage: number): Promise<BusinessHandlerResult<LedgerPage>> {
+  /**
+   * 分页查询时长流水（时间倒序）
+   *
+   * @param changeTypes 变动类型过滤（逗号分隔的 `LedgerChangeType` 值）：
+   *   空 = 全部；`consume` = 仅消耗；`sign_in,activity,redeem,purchase,adjust` = 仅获得。
+   */
+  LedgerList(
+    page: number,
+    perPage: number,
+    changeTypes?: string
+  ): Promise<BusinessHandlerResult<LedgerPage>> {
     return businessHandler<LedgerPage>(
       adapt<LedgerPage>(
         时长与会员权益Service.listDurationLedgerApiV1RpaBrowserMembershipLedgerListPost({
-          body: { page, per_page: perPage }
+          body: { page, per_page: perPage, change_types: changeTypes || '' }
         }) as unknown as Promise<{ data?: unknown; error?: unknown }>,
         '获取时长流水失败'
       ),
@@ -199,14 +264,18 @@ class MembershipApi {
     )
   }
 
-  /** 按日期区间查询使用日统计 */
+  /**
+   * 按日期区间查询使用日统计
+   *
+   * 后端 `UsageStatsResponse` 为包装对象（`{ items: [...] }`），不是裸数组。
+   */
   UsageStats(
     startDate: string,
     endDate: string,
     browserId?: string
-  ): Promise<BusinessHandlerResult<UsageStatItem[]>> {
-    return businessHandler<UsageStatItem[]>(
-      adapt<UsageStatItem[]>(
+  ): Promise<BusinessHandlerResult<UsageStatsResponse>> {
+    return businessHandler<UsageStatsResponse>(
+      adapt<UsageStatsResponse>(
         时长与会员权益Service.listUsageStatsApiV1RpaBrowserMembershipUsageStatsPost({
           body: {
             start_date: startDate,
@@ -222,10 +291,14 @@ class MembershipApi {
 
   // ============ 支付（Casdoor 收银台，入账只认服务端对账，见计划书 §3.3） ============
 
-  /** 上架的支付商品列表（含 Casdoor 收银台购买 URL；buy_url 为空表示服务端未启用支付） */
-  PaymentProducts(): Promise<BusinessHandlerResult<PaymentProductItem[]>> {
-    return businessHandler<PaymentProductItem[]>(
-      adapt<PaymentProductItem[]>(
+  /**
+   * 上架的支付商品列表（含 Casdoor 收银台购买 URL；buy_url 为空表示服务端未启用支付）
+   *
+   * 后端 `PaymentProductsResponse` 为包装对象（`{ items: [...] }`），不是裸数组。
+   */
+  PaymentProducts(): Promise<BusinessHandlerResult<PaymentProductsResponse>> {
+    return businessHandler<PaymentProductsResponse>(
+      adapt<PaymentProductsResponse>(
         时长与会员权益Service.listPaymentProductsApiV1RpaBrowserMembershipPaymentProductsPost({
           body: {}
         }) as unknown as Promise<{ data?: unknown; error?: unknown }>,
@@ -238,13 +311,15 @@ class MembershipApi {
   /**
    * 支付完成通知：透传 Casdoor Success URL 跳回的 transactionOwner / transactionName。
    * 后端 notify-payment 完成交易 + get-payment 服务端核验 + 幂等入账。
+   *
+   * 后端 `PaymentConfirmResponse` 为包装对象（`{ granted: [...] }`），不是裸数组。
    */
   NotifyPayment(
     transactionOwner: string,
     transactionName: string
-  ): Promise<BusinessHandlerResult<PaymentGrantedItem[]>> {
-    return businessHandler<PaymentGrantedItem[]>(
-      adapt<PaymentGrantedItem[]>(
+  ): Promise<BusinessHandlerResult<PaymentConfirmResponse>> {
+    return businessHandler<PaymentConfirmResponse>(
+      adapt<PaymentConfirmResponse>(
         时长与会员权益Service.notifyPaymentApiV1RpaBrowserMembershipPaymentNotifyPost({
           body: { transaction_owner: transactionOwner, transaction_name: transactionName }
         }) as unknown as Promise<{ data?: unknown; error?: unknown }>,
@@ -254,10 +329,14 @@ class MembershipApi {
     )
   }
 
-  /** 兜底对账：按用户拉取支付列表补入账（漏点跳转页时也能补） */
-  PaymentConfirm(): Promise<BusinessHandlerResult<PaymentGrantedItem[]>> {
-    return businessHandler<PaymentGrantedItem[]>(
-      adapt<PaymentGrantedItem[]>(
+  /**
+   * 兜底对账：按用户拉取支付列表补入账（漏点跳转页时也能补）
+   *
+   * 后端 `PaymentConfirmResponse` 为包装对象（`{ granted: [...] }`），不是裸数组。
+   */
+  PaymentConfirm(): Promise<BusinessHandlerResult<PaymentConfirmResponse>> {
+    return businessHandler<PaymentConfirmResponse>(
+      adapt<PaymentConfirmResponse>(
         时长与会员权益Service.confirmPaymentsApiV1RpaBrowserMembershipPaymentConfirmPost({
           body: {}
         }) as unknown as Promise<{ data?: unknown; error?: unknown }>,
@@ -306,7 +385,65 @@ class MembershipApi {
       { showSuccessToast: false, errorMessage: '获取兑换码列表失败' }
     )
   }
+
+  // ============ 管理端：签到奖励配置（app/data/sign_in_rewards.json，require_admin） ============
+
+  /**
+   * 读取当前签到奖励配置
+   *
+   * 数值字段均以 str 返回（见后端 `SignRewardConfigResponse`）。
+   */
+  GetSignRewardConfig(): Promise<BusinessHandlerResult<SignRewardConfigResponse>> {
+    return businessHandler<SignRewardConfigResponse>(
+      adapt<SignRewardConfigResponse>(
+        // 该只读接口后端不接收请求体（SDK 类型为 `body?: never`）
+        管理员管理Service.getSignRewardConfigApiAdminRpaMembershipSignInRewardsGetPost() as unknown as Promise<{
+          data?: unknown
+          error?: unknown
+        }>,
+        '读取签到奖励配置失败'
+      ),
+      { showSuccessToast: false, errorMessage: '读取签到奖励配置失败' }
+    )
+  }
+
+  /**
+   * 整体覆盖保存签到奖励配置（保存后即时生效，无需重启）
+   *
+   * 约束与后端一致：数值一律 str 传输；`tiers` 必须按 `days` 升序且 days 不重复，
+   * 否则后端返回 INVALID_PARAM（异常文案由后端给出）。
+   */
+  UpdateSignRewardConfig(
+    payload: SignRewardConfigPayload
+  ): Promise<BusinessHandlerResult<SignRewardConfigResponse>> {
+    return businessHandler<SignRewardConfigResponse>(
+      adapt<SignRewardConfigResponse>(
+        管理员管理Service.updateSignRewardConfigApiAdminRpaMembershipSignInRewardsUpdatePost({
+          body: payload
+        }) as unknown as Promise<{ data?: unknown; error?: unknown }>,
+        '保存签到奖励配置失败'
+      ),
+      { errorMessage: '保存签到奖励配置失败' }
+    )
+  }
 }
 
-export type { DurationAccountResponse, MonthCardInfo, RedeemResponse, SignInResponse, UsageStatItem }
+export type {
+  DurationAccountResponse,
+  MonthCardInfo,
+  RedeemResponse,
+  SignInCalendarResponse,
+  SignInResponse,
+  SignMakeupResponse,
+  SignOverviewResponse,
+  SignRewardExchangeResponse,
+  SignRewardConfigPayload,
+  SignRewardConfigResponse,
+  UsageStatItem,
+  UsageStatsResponse,
+  PaymentProductItem,
+  PaymentProductsResponse,
+  PaymentGrantedItem,
+  PaymentConfirmResponse
+}
 export default new MembershipApi()

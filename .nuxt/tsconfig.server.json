@@ -29,17 +29,8 @@
       "@@/*": [
         "../*"
       ],
-      "@unhead/vue": [
-        "../node_modules/@unhead/vue"
-      ],
       "@nuxt/devtools": [
         "../node_modules/@nuxt/devtools"
-      ],
-      "@vue/runtime-core": [
-        "../node_modules/@vue/runtime-core"
-      ],
-      "@vue/compiler-sfc": [
-        "../node_modules/@vue/compiler-sfc"
       ],
       "@nuxt/schema": [
         "../node_modules/@nuxt/schema"
@@ -47,8 +38,26 @@
       "nuxt": [
         "../node_modules/nuxt"
       ],
-      "nuxt-site-config": [
-        "../node_modules/nuxt-site-config"
+      "@unhead/vue": [
+        "../node_modules/@unhead/vue"
+      ],
+      "@vue/runtime-core": [
+        "../node_modules/@vue/runtime-core"
+      ],
+      "@vue/compiler-sfc": [
+        "../node_modules/@vue/compiler-sfc"
+      ],
+      "/home/minato/BilibiliExplosion/Vue3FrontEndDemoExercise/node_modules/nuxt-site-config/dist/module.mjs": [
+        "../node_modules/nuxt-site-config/dist/module"
+      ],
+      "defu": [
+        "../node_modules/defu"
+      ],
+      "consola": [
+        "../node_modules/consola"
+      ],
+      "#nuxtseo/h3": [
+        "../node_modules/h3/dist/index"
       ],
       "nitropack/types": [
         "../node_modules/nitropack/types"
@@ -59,20 +68,11 @@
       "nitropack": [
         "../node_modules/nitropack"
       ],
-      "defu": [
-        "../node_modules/defu"
-      ],
       "h3": [
         "../node_modules/h3"
       ],
-      "consola": [
-        "../node_modules/consola"
-      ],
       "crossws": [
         "../node_modules/crossws"
-      ],
-      "#nuxtseo/h3": [
-        "../node_modules/h3/dist/index"
       ],
       "#shared": [
         "../shared"
@@ -131,23 +131,41 @@
       "#sitemap/*": [
         "../node_modules/@nuxtjs/sitemap/dist/runtime/*"
       ],
+      "#sitemap/server": [
+        "../node_modules/@nuxtjs/sitemap/dist/runtime/server"
+      ],
+      "#sitemap/server/*": [
+        "../node_modules/@nuxtjs/sitemap/dist/runtime/server/*"
+      ],
+      "#unhead/composables": [
+        "../node_modules/nuxt/dist/head/runtime/composables"
+      ],
+      "#site-config/app": [
+        "../node_modules/nuxt-site-config/dist/runtime/app"
+      ],
+      "#site-config/app/*": [
+        "../node_modules/nuxt-site-config/dist/runtime/app/*"
+      ],
+      "#site-config/server": [
+        "../node_modules/nuxt-site-config/dist/runtime/server"
+      ],
+      "#site-config/server/*": [
+        "../node_modules/nuxt-site-config/dist/runtime/server/*"
+      ],
       "#site-config": [
         "../node_modules/nuxt-site-config/dist/runtime"
       ],
       "#site-config/*": [
         "../node_modules/nuxt-site-config/dist/runtime/*"
       ],
-      "#unhead/composables": [
-        "../node_modules/nuxt/dist/head/runtime/composables"
+      "#robots/server": [
+        "../node_modules/@nuxtjs/sitemap/dist/runtime/server/robots-polyfill"
+      ],
+      "#robots/server/*": [
+        "../node_modules/@nuxtjs/sitemap/dist/runtime/server/robots-polyfill/*"
       ],
       "#nuxtseo/content": [
         "../node_modules/nuxtseo-shared/dist/runtime/content/none"
-      ],
-      "#internal/nuxt-robots": [
-        "../node_modules/@nuxtjs/sitemap/dist/runtime/server/robots-polyfill"
-      ],
-      "#internal/nuxt-robots/*": [
-        "../node_modules/@nuxtjs/sitemap/dist/runtime/server/robots-polyfill/*"
       ],
       "#app/island-hash": [
         "../node_modules/nuxt/dist/app/island-hash"
@@ -186,9 +204,10 @@
     "../node_modules/nuxt/node_modules",
     "../node_modules/@pinia/nuxt/node_modules",
     "../node_modules/@element-plus/nuxt/node_modules",
-    "../node_modules/nuxt-site-config/node_modules",
     "../node_modules/@nuxtjs/sitemap/node_modules",
+    "../node_modules/@nuxt/devtools/node_modules",
     "../node_modules/@nuxt/telemetry/node_modules",
+    "../node_modules/nuxt-site-config/node_modules",
     "../dist"
   ]
 }

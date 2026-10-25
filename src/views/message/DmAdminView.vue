@@ -106,7 +106,7 @@
               :row-height="56"
               :header-height="44"
               :footer-height="total > pageSize ? 64 : 0"
-              row-key="msgkey"
+              row-key="msgkey_str"
               fixed
             >
               <template #header-cell="{ column }">
@@ -127,7 +127,7 @@
                 <template v-if="column.key === 'selection'">
                   <div class="flex h-full items-center justify-center">
                     <el-checkbox
-                      :model-value="selectedKeys.has(rowData.msgkey)"
+                      :model-value="selectedKeys.has(rowData.msgkey_str ?? '')"
                       @change="(v: unknown) => toggleRow(rowData, v)"
                     />
                   </div>
@@ -347,7 +347,7 @@ const stats = reactive<DmStatsData>({
 // 多选批量封禁 / 解封（el-table-v2 无内置选择列，使用 Set 维护选中 msgkey；违规用户取发送方 mid）
 const selectedKeys = ref<Set<string>>(new Set())
 const selectedRows = computed<DmAuditRow[]>(() =>
-  items.value.filter((i) => selectedKeys.value.has(i.msgkey))
+  items.value.filter((i) => selectedKeys.value.has(i.msgkey_str ?? ''))
 )
 const banDialogVisible = ref(false)
 const adminStore = useMessageAdminStore()
@@ -355,21 +355,21 @@ const adminStore = useMessageAdminStore()
 // 审核原因弹窗（驳回 / 下架时必填，支持默认原因自动补全）
 const reasonDialogVisible = ref(false)
 const banFromReasonVisible = ref(false)
-const banFromReasonMids = ref<number[]>([])
+const banFromReasonMids = ref<string[]>([])
 const pendingOp = ref<'' | 'pass' | 'reject' | 'hidden' | 'restore'>('')
 // 本次待审核行（批量 = 选中行；行内单条 = 该行），原因弹窗确认后执行
 const pendingRows = ref<DmAuditRow[]>([])
 const reasonDialogLabel = ref('驳回')
 // 弹窗内逐条列出的待审核条目
 const reasonDialogItems = ref<
-  { id: string; preview?: string; mid?: number | null; brief?: DmAuditRow['sender'] }[]
+  { id: string; preview?: string; mid?: string | null; brief?: DmAuditRow['sender'] }[]
 >([])
 // 私信封禁 / 解封权限：dm 域处置位（BAN=1；root 恒有）
 const canBan = computed(
   () => adminStore.status.is_root || hasBizPerm(adminStore.status.biz_perms, 'dm', 1)
 )
 const selectedMids = computed(() =>
-  selectedRows.value.map((r) => r.sender_mid).filter((m): m is number => Boolean(m))
+  selectedRows.value.map((r) => r.sender_mid_str ?? '').filter((m): m is string => Boolean(m))
 )
 
 // el-table-v2 列定义（含自定义选择列）；全部列固定宽度，总列宽 1690px 显著超出常规容器宽度，
@@ -383,25 +383,25 @@ const dmColumns: Column<DmAuditRow>[] = [
   { key: 'type', title: t('message.colType'), width: 90 },
   { key: 'talker', title: t('message.colReceiver'), width: 110 },
   { key: 'ctime', title: t('message.colTime'), width: 180 },
-  { key: 'msgkey', title: t('message.colMsgkey'), width: 160, dataKey: 'msgkey' },
+  { key: 'msgkey', title: t('message.colMsgkey'), width: 160, dataKey: 'msgkey_str' },
   // 行内操作列（与 MomentAuditListView 同构）：状态机决定可用动作
   { key: 'action', title: '操作', width: 180, fixed: TableV2FixedDir.RIGHT }
 ]
 
 function toggleRow(row: DmAuditRow, val: unknown) {
   const next = new Set(selectedKeys.value)
-  if (val) next.add(row.msgkey)
-  else next.delete(row.msgkey)
+  if (val) next.add(row.msgkey_str ?? '')
+  else next.delete(row.msgkey_str ?? '')
   selectedKeys.value = next
 }
 
 const allSelected = computed(
-  () => items.value.length > 0 && items.value.every((i) => selectedKeys.value.has(i.msgkey))
+  () => items.value.length > 0 && items.value.every((i) => selectedKeys.value.has(i.msgkey_str ?? ''))
 )
 function toggleSelectAll(val: unknown) {
   const next = new Set(selectedKeys.value)
-  if (val) items.value.forEach((i) => next.add(i.msgkey))
-  else items.value.forEach((i) => next.delete(i.msgkey))
+  if (val) items.value.forEach((i) => next.add(i.msgkey_str ?? ''))
+  else items.value.forEach((i) => next.delete(i.msgkey_str ?? ''))
   selectedKeys.value = next
 }
 
@@ -519,7 +519,7 @@ function singleAudit(row: DmAuditRow, op: 'pass' | 'reject' | 'restore') {
     reasonDialogLabel.value = DM_OP_REASON_LABEL[op] ?? '驳回'
     pendingRows.value = [row]
     reasonDialogItems.value = [
-      { id: row.msgkey, preview: row.message, mid: row.sender_mid, brief: row.sender }
+      { id: row.msgkey_str ?? '', preview: row.message, mid: row.sender_mid_str ?? null, brief: row.sender }
     ]
     reasonDialogVisible.value = true
     return
@@ -538,9 +538,9 @@ async function batchAudit(op: 'pass' | 'reject' | 'hidden' | 'restore') {
     reasonDialogLabel.value = DM_OP_REASON_LABEL[op] ?? '驳回'
     pendingRows.value = rows
     reasonDialogItems.value = rows.map((r) => ({
-      id: r.msgkey,
+      id: r.msgkey_str ?? '',
       preview: r.message,
-      mid: r.sender_mid,
+      mid: r.sender_mid_str ?? null,
       brief: r.sender
     }))
     reasonDialogVisible.value = true
@@ -551,7 +551,7 @@ async function batchAudit(op: 'pass' | 'reject' | 'hidden' | 'restore') {
 }
 
 // 审核弹窗内点击「封禁涉及用户」：打开封禁弹窗
-function onReasonBan(mids: number[]) {
+function onReasonBan(mids: string[]) {
   banFromReasonMids.value = mids
   banFromReasonVisible.value = true
 }
@@ -581,7 +581,7 @@ async function doAudit(
     await businessHandler<{ failed?: string[] }>(
       MessageDmAdminService.bulkAuditDmApiV1MessageDmAdminAuditBatchPost({
         body: {
-          msgkeys: rows.map((r) => r.msgkey),
+          msgkeys: rows.map((r) => r.msgkey_str ?? ''),
           op,
           notes: reasons ?? undefined
         }
@@ -593,8 +593,8 @@ async function doAudit(
           // 审核成功后就地更新对应行状态，避免整表重新加载导致闪烁
           const failed = new Set(result.data.failed ?? [])
           rows.forEach((row) => {
-            if (!failed.has(row.msgkey)) {
-              const target = items.value.find((it) => it.msgkey === row.msgkey)
+            if (!failed.has(row.msgkey_str ?? '')) {
+              const target = items.value.find((it) => (it.msgkey_str ?? '') === (row.msgkey_str ?? ''))
               if (target) target.audit_state = newState
             }
           })

@@ -1,19 +1,20 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { h, ref, onMounted } from 'vue'
 import { Warning, Goods } from '@element-plus/icons-vue'
-import { ElMessageBox } from 'element-plus'
+import { ElCheckbox, ElMessageBox } from 'element-plus'
 import BiliPageHeader from '@/components/CommonCompo/Bili-Container-Compo/BiliPageHeader.vue'
 import FlexContainer from '@/components/CommonCompo/Bili-Container-Compo/FlexContainer.vue'
 import CenteredContainer from '@/components/CommonCompo/Bili-Container-Compo/CenteredContainer.vue'
-import { 工作流管理Service, 插件挂载管理Service, 自定义操作管理Service } from '@/api/browser/hey-api'
+import { 工作流管理Service, 自定义操作管理Service } from '@/api/browser/hey-api'
 import { useUserNavStore } from '@/stores/user_nav'
 import biliMessage from '@/utils/message'
+import { pickBackendMsg } from '@/utils/backendErrorMsg'
 import ResourceInteractionBar from '@/components/interaction/ResourceInteractionBar.vue'
 import ReportDialog from '@/components/moment/ReportDialog.vue'
 import { InteractionBizTypeEnum } from '@/api/notify/moment-api'
 import type { FilterType, SortBy, SortOrder } from '@/api/browser/hey-api'
 
-type TabType = 'actions' | 'plugins' | 'workflows'
+type TabType = 'actions' | 'workflows'
 
 const userNavStore = useUserNavStore()
 
@@ -24,7 +25,6 @@ const total = ref(0)
 const loading = ref(false)
 
 const actionsList = ref<unknown[]>([])
-const pluginsList = ref<unknown[]>([])
 const workflowsList = ref<unknown[]>([])
 
 const sortBy = ref<SortBy>('updated_at')
@@ -68,35 +68,6 @@ const loadActionsList = async () => {
   }
 }
 
-const loadPluginsList = async () => {
-  loading.value = true
-  try {
-    const response = await 插件挂载管理Service.listPluginsApiV1RpaBrowserControlPluginsListPost({
-      body: {
-        page: currentPage.value,
-        per_page: pageSize.value,
-        filter_type: filterType.value,
-        sort_by: sortBy.value,
-        sort_order: sortOrder.value
-      },
-      headers: {
-        'x-bili-mid': userNavStore.user_nav.uid,
-        'x-bili-level': userNavStore.user_nav.level_info.current_level
-      }
-    })
-
-    if (response?.code === 0 && response?.data) {
-      const data = response.data as { items?: unknown[]; total?: number }
-      pluginsList.value = data.items || []
-      total.value = data.total || 0
-    }
-  } catch (error) {
-    biliMessage.error('获取插件列表失败')
-  } finally {
-    loading.value = false
-  }
-}
-
 const loadWorkflowsList = async () => {
   loading.value = true
   try {
@@ -131,30 +102,52 @@ const loadData = async () => {
     case 'actions':
       await loadActionsList()
       break
-    case 'plugins':
-      await loadPluginsList()
-      break
     case 'workflows':
       await loadWorkflowsList()
       break
   }
 }
 
+/** Fork 时是否开启上游自动同步（弹窗内勾选，随 Fork 请求提交） */
+const forkAutoSync = ref(false)
+
+/** Fork 确认弹窗内的自动同步勾选项（VNode 形式挂在 confirm 的 message 上） */
+const forkAutoSyncNode = () =>
+  h('div', { class: 'fork-auto-sync mt-2' }, [
+    h(
+      ElCheckbox,
+      {
+        modelValue: forkAutoSync.value,
+        'onUpdate:modelValue': (v: boolean) => {
+          forkAutoSync.value = v
+        },
+      },
+      () => '开启上游自动同步（上游更新后自动同步到我的副本；有本地修改时会跳过并通知）'
+    ),
+  ])
+
 const handleForkAction = async (actionId: string) => {
+  forkAutoSync.value = false
   try {
-    await ElMessageBox.confirm('确定要Fork这个动作吗？', '提示', {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
-      type: 'info',
-      lockScroll: false
-    })
+    await ElMessageBox.confirm(
+      forkAutoSyncNode(),
+      'Fork 动作',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'info',
+        lockScroll: false
+      }
+    )
 
     const response = await 自定义操作管理Service.forkCustomActionApiV1RpaBrowserControlCustomActionsForkPost({
-      body: { action_id: actionId },
+      body: { action_id: actionId, auto_sync_upstream: forkAutoSync.value },
       headers: {
         'x-bili-mid': userNavStore.user_nav.uid,
         'x-bili-level': userNavStore.user_nav.level_info.current_level
-      }
+      },
+      // 失败走非 2xx 响应，开启 throwOnError 以便 catch 直接拿到后端 { code, msg, data }
+      throwOnError: true,
     })
 
     if (response?.code === 0) {
@@ -165,56 +158,34 @@ const handleForkAction = async (actionId: string) => {
     }
   } catch (error: unknown) {
     if (error !== 'cancel') {
-      biliMessage.error('Fork失败')
-    }
-  }
-}
-
-const handleForkPlugin = async (pluginId: number) => {
-  try {
-    await ElMessageBox.confirm('确定要Fork这个插件吗？', '提示', {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
-      type: 'info',
-      lockScroll: false
-    })
-
-    const response = await 插件挂载管理Service.forkPluginApiV1RpaBrowserControlPluginsForkPost({
-      body: { id: pluginId },
-      headers: {
-        'x-bili-mid': userNavStore.user_nav.uid,
-        'x-bili-level': userNavStore.user_nav.level_info.current_level
-      }
-    })
-
-    if (response?.code === 0) {
-      biliMessage.success('Fork成功')
-      loadData()
-    } else {
-      biliMessage.error(response?.msg || 'Fork失败')
-    }
-  } catch (error: unknown) {
-    if (error !== 'cancel') {
-      biliMessage.error('Fork失败')
+      // 优先直接展示后端 msg；无 msg 或默认 500 才用兜底文案
+      biliMessage.error(pickBackendMsg(error) || 'Fork失败')
     }
   }
 }
 
 const handleForkWorkflow = async (workflowId: number) => {
+  forkAutoSync.value = false
   try {
-    await ElMessageBox.confirm('确定要Fork这个工作流吗？', '提示', {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
-      type: 'info',
-      lockScroll: false
-    })
+    await ElMessageBox.confirm(
+      forkAutoSyncNode(),
+      'Fork 工作流',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'info',
+        lockScroll: false
+      }
+    )
 
     const response = await 工作流管理Service.forkWorkflowApiV1RpaBrowserControlWorkflowsForkPost({
-      body: { id: workflowId },
+      body: { id: workflowId, auto_sync_upstream: forkAutoSync.value },
       headers: {
         'x-bili-mid': userNavStore.user_nav.uid,
         'x-bili-level': userNavStore.user_nav.level_info.current_level
-      }
+      },
+      // 失败走非 2xx 响应，开启 throwOnError 以便 catch 直接拿到后端 { code, msg, data }
+      throwOnError: true,
     })
 
     if (response?.code === 0) {
@@ -225,31 +196,29 @@ const handleForkWorkflow = async (workflowId: number) => {
     }
   } catch (error: unknown) {
     if (error !== 'cancel') {
-      biliMessage.error('Fork失败')
+      // 优先直接展示后端 msg；无 msg 或默认 500 才用兜底文案
+      biliMessage.error(pickBackendMsg(error) || 'Fork失败')
     }
   }
 }
 
-/** 统一举报：打开 be-message 统一举报弹窗（rpa_action / rpa_plugin / rpa_workflow） */
+/** 统一举报：打开 be-message 统一举报弹窗（rpa_action / rpa_workflow） */
 const reportDialogVisible = ref(false)
 const reportTarget = ref<{ bizType: InteractionBizTypeEnum; bizId: string }>({
   bizType: InteractionBizTypeEnum.RPA_ACTION,
   bizId: '',
 })
 
-const handleReport = (item: unknown, type: 'action' | 'plugin' | 'workflow') => {
-  const obj = item as { action_id?: string; id?: number | string }
+const handleReport = (item: unknown, type: 'action' | 'workflow') => {
+  const obj = item as { id?: number | string }
   let bizType: InteractionBizTypeEnum
-  let bizId = ''
+  // action 与 workflow 的互动态 / 举报统一以数字主键 id 为 bizId
+  // （action 的 action_id 形如 ca_xxx，是业务键，非互动体系的 bizId）
+  const bizId = String(obj.id ?? '')
   if (type === 'action') {
     bizType = InteractionBizTypeEnum.RPA_ACTION
-    bizId = String(obj.action_id ?? '')
-  } else if (type === 'plugin') {
-    bizType = InteractionBizTypeEnum.RPA_PLUGIN
-    bizId = String(obj.id ?? '')
   } else {
     bizType = InteractionBizTypeEnum.RPA_WORKFLOW
-    bizId = String(obj.id ?? '')
   }
   if (!bizId) {
     biliMessage.error('举报资源信息缺失，无法举报')
@@ -282,13 +251,12 @@ onMounted(() => {
 
 <template>
   <FlexContainer>
-    <BiliPageHeader title="社区广场" description="发现和分享自定义动作、插件和工作流">
+    <BiliPageHeader title="社区广场" hide-title description="发现和分享自定义动作与工作流">
     </BiliPageHeader>
 
     <div class="mt-4 flex items-center gap-4 flex-wrap">
       <el-radio-group v-model="activeTab" @change="handleTabChange">
         <el-radio-button value="actions">自定义动作</el-radio-button>
-        <el-radio-button value="plugins">插件</el-radio-button>
         <el-radio-button value="workflows">工作流</el-radio-button>
       </el-radio-group>
 
@@ -326,7 +294,7 @@ onMounted(() => {
               </el-text>
 
               <div class="flex items-center gap-4 text-sm text-text-secondary">
-                <ResourceInteractionBar biz-type="rpa_action" :biz-id="item.action_id" />
+                <ResourceInteractionBar biz-type="rpa_action" :biz-id="String(item.id)" />
                 <div class="flex items-center gap-1">
                   <el-icon><ForkSpoon /></el-icon>
                   <span>{{ item.forks_count || 0 }}</span>
@@ -338,39 +306,6 @@ onMounted(() => {
               <div class="flex items-center gap-2 mt-2">
                 <el-button size="small" type="primary" @click="handleForkAction(item.action_id)">Fork</el-button>
                 <el-button size="small" type="warning" @click="handleReport(item, 'action')">举报</el-button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div v-else-if="activeTab === 'plugins' && pluginsList.length > 0" class="w-full">
-        <div class="grid gap-4" style="grid-template-columns: repeat(auto-fill, minmax(350px, 1fr))">
-          <div v-for="item in pluginsList" :key="item.id"
-            class="rounded-xl  p-5 border border-border-light hover:border-primary transition-all duration-300">
-            <div class="flex flex-col gap-3">
-              <div class="flex items-center justify-between">
-                <el-text class="text-lg font-semibold truncate flex-1 mr-2">{{ item.name }}</el-text>
-                <el-tag size="small" type="info">{{ item.hook_type || 'plugin' }}</el-tag>
-              </div>
-
-              <el-text class="text-sm text-text-secondary line-clamp-2">
-                {{ item.description || '无描述' }}
-              </el-text>
-
-              <div class="flex items-center gap-4 text-sm text-text-secondary">
-                <ResourceInteractionBar biz-type="rpa_plugin" :biz-id="String(item.id)" />
-                <div class="flex items-center gap-1">
-                  <el-icon><Goods /></el-icon>
-                  <span>{{ item.forks_count || 0 }}</span>
-                </div>
-                <div class="flex-1"></div>
-                <span class="text-xs">{{ new Date(item.created_at).toLocaleDateString() }}</span>
-              </div>
-
-              <div class="flex items-center gap-2 mt-2">
-                <el-button size="small" type="primary" @click="handleForkPlugin(item.id)">Fork</el-button>
-                <el-button size="small" type="warning" @click="handleReport(item, 'plugin')">举报</el-button>
               </div>
             </div>
           </div>
@@ -417,7 +352,7 @@ onMounted(() => {
       </CenteredContainer>
 
       <div v-if="total > 0" class="mt-6 flex justify-center">
-        <el-pagination
+        <BiliPagination
           v-model:current-page="currentPage"
           :page-size="pageSize"
           :total="total"

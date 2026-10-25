@@ -1,8 +1,15 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
-import { Delete, Setting, Plus } from '@element-plus/icons-vue'
+import { Delete, Setting, Plus, Top, Bottom } from '@element-plus/icons-vue'
 import ActionCard from './ActionCard.vue'
-import type { JsonSchema, JsonSchemaNode } from './debugbox-types'
+import ObjectArrayEditor from './ObjectArrayEditor.vue'
+import { schemaRequired, toJsonSchemaNode } from '@/utils/jsonSchema'
+import type { ActionVariableSpec, JsonSchema, JsonSchemaNode } from './debugbox-types'
+import {
+  buildDefaultItem,
+  moveItem,
+  validateFieldValue,
+} from '@/utils/actionParamsArray'
 
 defineOptions({
   name: 'ActionParamsForm'
@@ -146,6 +153,38 @@ const resolveNestedProperties = (prop: JsonSchemaNode): Record<string, JsonSchem
   return resolved
 }
 
+// ─── 对象数组（array of object）：解析 schema 后交给通用编辑器 ───────────────
+//
+// 具体交互与样式见 ObjectArrayEditor.vue / docs/frontend_requirements/动作参数数组编辑器.md
+
+/** 解析 array 的 items，只有「对象且有 properties」才走数组编辑器 */
+const resolveArrayItemSchema = (prop: JsonSchemaNode): JsonSchemaNode | null => {
+  if (!prop || prop.type !== 'array') return null
+  const items = toJsonSchemaNode(prop.items)
+  if (!items) return null
+  const defs = props.jsonSchema?.$defs || {}
+  const resolved = resolveRef(items, defs)
+  if (resolved?.type !== 'object' || !resolved.properties) return null
+  return resolved
+}
+
+const isObjectArray = (prop: JsonSchemaNode): boolean => resolveArrayItemSchema(prop) !== null
+
+/** 数组每一项的子字段（已解析 $ref / anyOf） */
+const arrayItemProperties = (prop: JsonSchemaNode): Record<string, JsonSchemaNode> => {
+  const items = resolveArrayItemSchema(prop)
+  return items ? resolveNestedProperties(items) : {}
+}
+
+/** 数组每一项的必填子字段 */
+const arrayItemRequiredList = (prop: JsonSchemaNode): string[] =>
+  schemaRequired(resolveArrayItemSchema(prop))
+
+const getArrayItems = (key: unknown): Record<string, unknown>[] => {
+  const value = formData.value[String(key)]
+  return Array.isArray(value) ? (value as Record<string, unknown>[]) : []
+}
+
 /** 判断字段是否为 Unix 时间戳（用于渲染 datetime picker） */
 const isTimestampField = (key: string, prop: JsonSchemaNode): boolean => {
   if (prop.type !== 'integer' && prop.type !== 'number') return false
@@ -165,6 +204,65 @@ const tsToDate = (val: unknown): Date | null => {
 const dateToTs = (date: Date | null): number | null => {
   if (!date) return null
   return Math.floor(date.getTime() / 1000)
+}
+
+// ── 参数值读写辅助 ───────────────────────────────────────
+// `formData` 是 Record<string, unknown>，模板直接取值会被推成 unknown（el-input 不接受）；
+// 这里统一窄化，避免每处都写断言。
+const paramRaw = (key: unknown): unknown => formData.value[String(key)]
+
+const paramObject = (key: unknown): Record<string, unknown> => {
+  const value = paramRaw(key)
+  return value && typeof value === 'object' && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : {}
+}
+
+const nestedValue = (key: unknown, subKey: string): unknown => {
+  const value = paramObject(key)[subKey]
+  return value === undefined ? null : value
+}
+
+const nestedSelectValue = (key: unknown, subKey: string): string | number | null => {
+  const value = nestedValue(key, subKey)
+  return typeof value === 'string' || typeof value === 'number' ? value : null
+}
+
+const nestedNumberValue = (key: unknown, subKey: string): number | null => {
+  const value = nestedValue(key, subKey)
+  const num = typeof value === 'number' ? value : Number(value)
+  return Number.isFinite(num) ? num : null
+}
+
+const nestedTextValue = (key: unknown, subKey: string): string => {
+  const value = nestedValue(key, subKey)
+  return value === null || value === undefined ? '' : String(value)
+}
+
+const setNestedValue = (key: unknown, subKey: string, value: unknown) => {
+  formData.value[String(key)] = { ...paramObject(key), [subKey]: value }
+}
+
+const setParamValue = (key: unknown, value: unknown) => {
+  formData.value[String(key)] = value
+}
+
+const asSelectValue = (key: unknown): string | number | null => {
+  const value = paramRaw(key)
+  return typeof value === 'string' || typeof value === 'number' ? value : null
+}
+
+const asBoolValue = (key: unknown): boolean => paramRaw(key) === true
+
+const asNumberValue = (key: unknown): number | null => {
+  const value = paramRaw(key)
+  const num = typeof value === 'number' ? value : Number(value)
+  return Number.isFinite(num) ? num : null
+}
+
+const asTextValue = (key: unknown): string => {
+  const value = paramRaw(key)
+  return value === null || value === undefined ? '' : String(value)
 }
 
 const getTypeLabel = (type: string) => {
@@ -208,6 +306,9 @@ const initFormData = () => {
       } else if (prop.type === 'object' && prop.additionalProperties) {
         // Dict 类型（如 headers/params/body_form）：初始化为空对象
         data[key] = prop.default !== undefined ? prop.default : {}
+      } else if (prop.type === 'array') {
+        // 数组（如 LLM 模型池 fallbacks）：初始化为数组，避免渲染成 [object Object]
+        data[key] = Array.isArray(prop.default) ? prop.default : []
       } else {
         data[key] = prop.default !== undefined ? prop.default : ''
       }
@@ -280,7 +381,7 @@ watch(
 )
 
 const localInputVarKeys = ref<string[]>(Object.keys(props.inputVars))
-const localInputVarValues = ref<unknown[]>(Object.values(props.inputVars))
+const localInputVarValues = ref<string[]>(Object.values(props.inputVars).map(v => (v === null || v === undefined ? '' : String(v))))
 const localOutputVars = ref<string[]>([...props.outputVars])
 
 const localInputVars = computed(() => {
@@ -299,7 +400,9 @@ watch(
     if (JSON.stringify(keys) !== JSON.stringify(localInputVarKeys.value) || 
         JSON.stringify(values) !== JSON.stringify(localInputVarValues.value)) {
       localInputVarKeys.value = keys
-      localInputVarValues.value = values
+      localInputVarValues.value = values.map(v =>
+        v === null || v === undefined ? '' : String(v),
+      )
     }
   },
   { deep: true }
@@ -336,6 +439,49 @@ const addInputVar = () => {
   localInputVarKeys.value = [...localInputVarKeys.value, key]
   localInputVarValues.value = [...localInputVarValues.value, '']
 }
+
+// ── 变量契约（后端动作自描述，随 json_schema 透传） ────────────────
+
+/** 动作声明的输入变量契约：逐项渲染绑定行，值仍走 input_vars 键值对 */
+const declaredInputVariables = computed<ActionVariableSpec[]>(
+  () => props.jsonSchema?.input_variables || []
+)
+/** 动作声明的输出变量契约：仅作提示（实际写入名由 output_vars 决定） */
+const declaredOutputVariables = computed<ActionVariableSpec[]>(
+  () => props.jsonSchema?.output_variables || []
+)
+
+const getDeclaredVarValue = (name: string): unknown => {
+  const idx = localInputVarKeys.value.indexOf(name)
+  return idx >= 0 ? localInputVarValues.value[idx] : ''
+}
+
+const setDeclaredVarValue = (name: string, value: string) => {
+  const idx = localInputVarKeys.value.indexOf(name)
+  if (idx >= 0) {
+    const values = [...localInputVarValues.value]
+    values[idx] = value
+    localInputVarValues.value = values
+  } else {
+    localInputVarKeys.value = [...localInputVarKeys.value, name]
+    localInputVarValues.value = [...localInputVarValues.value, value]
+  }
+}
+
+/** 复杂类型变量（array / object）：调试面板里用 JSON 文本域输入 */
+const isComplexVarType = (type?: string): boolean => type === 'array' || type === 'object'
+
+const isDeclaredVarValueEmpty = (name: string): boolean => {
+  const value = getDeclaredVarValue(name)
+  return value === undefined || value === null || String(value) === ''
+}
+
+const isDeclaredVarMissing = (spec: ActionVariableSpec): boolean =>
+  Boolean(spec.required) && isDeclaredVarValueEmpty(spec.name)
+
+const hasMissingRequiredVar = computed(() =>
+  declaredInputVariables.value.some(isDeclaredVarMissing)
+)
 
 const removeInputVar = (index: number) => {
   localInputVarKeys.value = localInputVarKeys.value.filter((_, i) => i !== index)
@@ -510,8 +656,57 @@ const isJsonField = (key: string, prop: JsonSchemaNode): boolean => {
       <div class="text-xs text-text-secondary">
         传入外部变量值，在参数中通过 <code class="px-1 py-0.5 bg-fill rounded">&#123;&#123;变量名&#125;&#125;</code> 引用
       </div>
-      
-      <div v-if="localInputVarKeys.length === 0" class="text-center py-3 text-sm text-text-secondary bg-fill-light rounded border border-dashed border-border">
+
+      <!-- 变量契约绑定行：动作自描述需要哪些变量（后端 /actions/registered 下发） -->
+      <div
+        v-for="spec in declaredInputVariables"
+        :key="`declared-var-${spec.name}`"
+        class="action-params-form__declared-var flex items-start gap-2 p-2 bg-fill-light rounded border border-border"
+      >
+        <el-tooltip :content="spec.description || spec.name" placement="top">
+          <span class="action-params-form__declared-var-name text-sm font-medium text-text-regular whitespace-nowrap">
+            {{ spec.name }}
+            <span v-if="spec.required" class="text-red-500">*</span>
+          </span>
+        </el-tooltip>
+        <span class="text-xs text-text-secondary shrink-0">({{ getTypeLabel(String(spec.type ?? '')) }})</span>
+        <span class="text-xs text-text-secondary shrink-0">→</span>
+        <el-input
+          v-if="isComplexVarType(spec.type)"
+          class="action-params-form__declared-var-json min-w-0 flex-1"
+          :model-value="String(getDeclaredVarValue(spec.name) ?? '')"
+          type="textarea"
+          :rows="3"
+          :placeholder="
+            spec.type === 'array' ? 'JSON 数组，例如 []' : 'JSON 对象，例如 {}'
+          "
+          @update:model-value="(val: string) => setDeclaredVarValue(spec.name, val)"
+        />
+        <el-select
+          v-else-if="spec.type === 'boolean'"
+          class="action-params-form__declared-var-boolean w-32 shrink-0"
+          :model-value="String(getDeclaredVarValue(spec.name) ?? '') || null"
+          placeholder="请选择"
+          clearable
+          @update:model-value="(val: string) => setDeclaredVarValue(spec.name, val ?? '')"
+        >
+          <el-option label="是（true）" value="true" />
+          <el-option label="否（false）" value="false" />
+        </el-select>
+        <el-input
+          v-else
+          class="action-params-form__declared-var-value min-w-0 flex-1"
+          :model-value="String(getDeclaredVarValue(spec.name) ?? '')"
+          :type="spec.type === 'number' ? 'number' : 'text'"
+          placeholder="变量值"
+          @update:model-value="(val: string) => setDeclaredVarValue(spec.name, val)"
+        />
+      </div>
+      <div v-if="hasMissingRequiredVar" class="action-params-form__required-hint text-xs text-red-500">
+        必填变量未赋值，执行时变量替换会失败
+      </div>
+
+      <div v-if="localInputVarKeys.length === 0 && declaredInputVariables.length === 0" class="text-center py-3 text-sm text-text-secondary bg-fill-light rounded border border-dashed border-border">
         暂无输入变量
       </div>
       
@@ -545,6 +740,19 @@ const isJsonField = (key: string, prop: JsonSchemaNode): boolean => {
       </div>
       <div class="text-xs text-text-secondary">
         声明当前步骤执行后需要保存的变量名，后续步骤可通过 <code class="px-1 py-0.5 bg-fill rounded">&#123;&#123;变量名&#125;&#125;</code> 引用
+      </div>
+
+      <!-- 输出变量契约提示：本动作产出哪些槽位，便于给 output_vars 起名 -->
+      <div
+        v-if="declaredOutputVariables.length > 0"
+        class="action-params-form__output-contract text-xs text-text-secondary bg-primary-light-9 rounded px-2 py-1.5 leading-relaxed"
+      >
+        本动作产出：
+        <template v-for="(spec, i) in declaredOutputVariables" :key="`out-spec-${spec.name}`">
+          <code class="px-1 py-0.5 bg-fill rounded">{{ spec.name }}</code>
+          <span v-if="spec.description" class="ml-1">{{ spec.description }}</span>
+          <span v-if="i < declaredOutputVariables.length - 1">、</span>
+        </template>
       </div>
       
       <div v-if="localOutputVars.length === 0" class="text-center py-3 text-sm text-text-secondary bg-fill-light rounded border border-dashed border-border">
@@ -580,7 +788,7 @@ const isJsonField = (key: string, prop: JsonSchemaNode): boolean => {
         <div class="flex items-center gap-1">
           <span class="text-sm font-medium text-text-regular">{{ prop.title || key }}</span>
           <span v-if="requiredFields.has(key)" class="text-red-500 text-sm">*</span>
-          <span class="text-xs text-text-secondary ml-2">({{ getTypeLabel(prop.type) }})</span>
+          <span class="text-xs text-text-secondary ml-2">({{ getTypeLabel(String(prop.type ?? '')) }})</span>
         </div>
         
         <div v-if="prop.type === 'object' && prop.properties">
@@ -596,8 +804,8 @@ const isJsonField = (key: string, prop: JsonSchemaNode): boolean => {
               <!-- 枚举字段：下拉选择 -->
               <el-select
                 v-if="subProp.enum && subProp.enum.length > 0"
-                :model-value="formData[key]?.[subKey] ?? null"
-                @update:model-value="val => { if (!formData[key]) formData[key] = {}; formData[key][subKey] = (val === '' || val === undefined) ? null : val }"
+                :model-value="nestedSelectValue(key, String(subKey))"
+                @update:model-value="val => setNestedValue(key, String(subKey), val === '' || val === undefined ? null : val)"
                 style="width: 100%"
                 :clearable="!(prop.required || []).includes(String(subKey))"
                 :placeholder="subProp.description || `请选择${subKey}`"
@@ -612,8 +820,8 @@ const isJsonField = (key: string, prop: JsonSchemaNode): boolean => {
               <!-- 时间戳字段：datetime picker -->
               <el-date-picker
                 v-else-if="isTimestampField(String(subKey), subProp)"
-                :model-value="tsToDate(formData[key]?.[subKey])"
-                @update:model-value="val => { if (!formData[key]) formData[key] = {}; formData[key][subKey] = dateToTs(val) }"
+                :model-value="tsToDate(nestedValue(key, String(subKey)))"
+                @update:model-value="val => setNestedValue(key, String(subKey), dateToTs(val))"
                 type="datetime"
                 style="width: 100%"
                 :placeholder="subProp.description || `请选择${subKey}`"
@@ -622,24 +830,24 @@ const isJsonField = (key: string, prop: JsonSchemaNode): boolean => {
               <!-- 数字字段 -->
               <el-input
                 v-else-if="subProp.type === 'number' || subProp.type === 'integer'"
-                :model-value="formData[key]?.[subKey]"
-                @update:model-value="val => { if (!formData[key]) formData[key] = {}; formData[key][subKey] = val === '' ? null : Number(val) }"
+                :model-value="nestedNumberValue(key, String(subKey))"
+                @update:model-value="val => setNestedValue(key, String(subKey), val === '' ? null : Number(val))"
                 type="number"
                 :placeholder="subProp.description"
               />
               <!-- 布尔字段 -->
               <el-switch
                 v-else-if="subProp.type === 'boolean'"
-                :model-value="formData[key]?.[subKey] ?? false"
-                @update:model-value="val => { if (!formData[key]) formData[key] = {}; formData[key][subKey] = val }"
+                :model-value="nestedValue(key, String(subKey)) === true"
+                @update:model-value="val => setNestedValue(key, String(subKey), val)"
                 active-text="是"
                 inactive-text="否"
               />
               <!-- 文本字段 -->
               <el-input
                 v-else
-                :model-value="formData[key]?.[subKey]"
-                @update:model-value="val => { if (!formData[key]) formData[key] = {}; formData[key][subKey] = val }"
+                :model-value="nestedTextValue(key, String(subKey))"
+                @update:model-value="val => setNestedValue(key, String(subKey), val)"
                 :placeholder="subProp.description || `请输入${subKey}`"
               />
             </div>
@@ -675,17 +883,27 @@ const isJsonField = (key: string, prop: JsonSchemaNode): boolean => {
         </div>
 
         <div v-else>
+          <template v-if="isObjectArray(prop)">
+            <ObjectArrayEditor
+              :model-value="getArrayItems(key)"
+              :properties="arrayItemProperties(prop)"
+              :required="arrayItemRequiredList(prop)"
+              @update:model-value="val => formData[key] = val"
+            />
+          </template>
+          <template v-else>
           <el-switch
             v-if="prop.type === 'boolean'"
-            v-model="formData[key]"
+            :model-value="asBoolValue(key)"
+            @update:model-value="val => setParamValue(key, val)"
             active-text="是"
             inactive-text="否"
           />
           
           <el-date-picker
             v-else-if="isTimestampField(String(key), prop)"
-            :model-value="tsToDate(formData[key])"
-            @update:model-value="val => formData[key] = dateToTs(val)"
+            :model-value="tsToDate(paramRaw(key))"
+            @update:model-value="val => setParamValue(key, dateToTs(val))"
             type="datetime"
             style="width: 100%"
             :placeholder="prop.description || `请选择${key}`"
@@ -694,8 +912,8 @@ const isJsonField = (key: string, prop: JsonSchemaNode): boolean => {
 
           <el-select
             v-else-if="prop.enum && prop.enum.length > 0"
-            :model-value="formData[key]"
-            @update:model-value="val => formData[key] = (val === '' || val === undefined) ? null : val"
+            :model-value="asSelectValue(key)"
+            @update:model-value="val => setParamValue(key, val === '' || val === undefined ? null : val)"
             style="width: 100%"
             :clearable="!requiredFields.has(String(key))"
           >
@@ -709,7 +927,8 @@ const isJsonField = (key: string, prop: JsonSchemaNode): boolean => {
 
           <el-input-number
             v-else-if="prop.type === 'number' || prop.type === 'integer'"
-            v-model="formData[key]"
+            :model-value="asNumberValue(key)"
+            @update:model-value="val => setParamValue(key, val)"
             :min="prop.minimum"
             :max="prop.maximum"
             style="width: 100%"
@@ -731,13 +950,15 @@ const isJsonField = (key: string, prop: JsonSchemaNode): boolean => {
 
           <el-input
             v-else
-            v-model="formData[key]"
+            :model-value="asTextValue(key)"
+            @update:model-value="val => setParamValue(key, val)"
             type="textarea"
             :rows="prop.maxLength && prop.maxLength > 500 ? 3 : 1"
             :placeholder="prop.description || `请输入${key}`"
             :maxlength="prop.maxLength"
             show-word-limit
           />
+          </template>
         </div>
         
         <div v-if="prop.description" class="text-xs text-text-secondary">

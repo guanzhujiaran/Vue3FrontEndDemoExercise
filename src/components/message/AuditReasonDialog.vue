@@ -69,8 +69,8 @@ export interface AuditReasonItem {
   id: string
   /** 内容预览文本 */
   preview?: string
-  /** 发布者 mid */
-  mid?: number | null
+  /** 发布者 mid（雪花 ID，字符串形态避免精度丢失） */
+  mid?: string | null
   /** 发布者信息（用户详情卡片数据） */
   brief?: CommentUserBrief | null
 }
@@ -88,7 +88,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   'update:modelValue': [value: boolean]
   confirm: [reasons: Record<string, string>]
-  ban: [mids: number[]]
+  ban: [mids: string[]]
 }>()
 
 const { reasons: defaultReasons, removeReason, ensureSaved } = useAuditReasons()
@@ -114,7 +114,8 @@ const targetTextI18n = computed(() => (props.targetText ? (targetTextMap[props.t
 const reasons = ref<Record<string, string>>({})
 
 const involvedMids = computed(() => {
-  const set = new Set<number>()
+  // mid 是雪花 ID：用字符串去重，避免 JS Number 丢精度
+  const set = new Set<string>()
   for (const it of props.items) {
     if (it.mid) set.add(it.mid)
   }

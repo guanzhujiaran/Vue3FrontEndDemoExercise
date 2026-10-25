@@ -54,10 +54,11 @@ function avatarOf(item: CommentItem): string {
 }
 
 /** 时间展示：今天以内显示时分，更早显示日期时间 */
-function formatTime(ctime?: string): string {
+function formatTime(ctime?: string | number): string {
   if (!ctime) return ''
-  const d = new Date(ctime)
-  if (isNaN(d.getTime())) return ctime
+  const d =
+    typeof ctime === 'number' ? new Date(ctime * 1000) : new Date(ctime)
+  if (isNaN(d.getTime())) return String(ctime)
   // 本页参与 SSR：原来用 toDateString() 判「今天」+ 无时区格式化，
   // 构建机与用户浏览器的时区/locale 不同就会渲染出不同字符串 → hydration mismatch。
   // 统一走固定时区/locale 的工具函数。

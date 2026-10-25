@@ -1,1 +1,1 @@
-export declare const $fetch: import('nitropack/types').$Fetch
+export declare const $fetch: import('nuxt/app').TypedFetch

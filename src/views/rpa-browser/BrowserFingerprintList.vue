@@ -259,7 +259,7 @@ onMounted(() => {
 
 <template>
   <FlexContainer class="min-h-0">
-    <BiliPageHeader title="浏览器指纹管理" description="管理你的浏览器指纹列表" tag-text="浏览器指纹">
+    <BiliPageHeader title="浏览器指纹管理" hide-title description="管理你的浏览器指纹列表" tag-text="浏览器指纹">
       <template #extra>
         <div class="flex items-center gap-2">
           <el-button :icon="SetUp" @click="router.push({ name: RouteName.RPA_BROWSER_WORKFLOW_MANAGEMENT })">
@@ -285,14 +285,14 @@ onMounted(() => {
         <!-- 卡片区域内部滚动（BiliScrollbar 自带快速滚动按钮）：分页随内容滚动，
              内容不足一屏时占满一屏，超出时需滚动到最底部才能看到分页 -->
         <BiliScrollbar class="flex-1 min-h-0" inner-class="flex flex-col min-h-full">
-          <div class="fingerprint-list__cards flex-1 min-h-0 grid gap-6 pr-1"
+          <div class="fingerprint-list__cards flex-1 min-h-0 grid content-start gap-6 pr-1"
             style="grid-template-columns: repeat(auto-fill, minmax(380px, 1fr))">
             <FingerprintCard v-for="item in fingerprintList" :key="item.browser_id_str || item.browser_id" :item="item"
               @open="handleOpenStream" @detail="showBrowserIdDetail" @rename="handleRename" @edit="handleEdit"
               @remove="handleDelete" />
           </div>
 
-          <el-pagination class="fingerprint-list__pagination flex justify-center mt-3 shrink-0"
+          <BiliPagination class="fingerprint-list__pagination flex justify-center mt-3 shrink-0" hide-on-single-page
             v-model:current-page="currentPage" :page-size="pageSize" :total="total"
             layout="prev, pager, next, total" @current-change="handlePageChange" />
         </BiliScrollbar>

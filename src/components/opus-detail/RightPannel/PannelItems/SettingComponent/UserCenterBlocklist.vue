@@ -12,13 +12,13 @@
         <el-table-column label="用户" min-width="240">
           <template #default="{ row }">
             <div class="flex items-center gap-2">
-              <el-avatar :size="32" :src="row.user?.avatar || BiliImg.face.noface" />
+              <el-avatar :size="32" :src="row.user?.face || BiliImg.face.noface" />
               <div class="min-w-0 leading-tight">
                 <div
                   class="truncate"
                   :class="row.user ? 'text-text-primary' : 'text-text-placeholder'"
                 >
-                  {{ row.user?.uname || '账号已注销' }}
+                  {{ row.user?.name || '账号已注销' }}
                 </div>
                 <div class="text-xs text-text-placeholder">mid：{{ row.mid }}</div>
               </div>
@@ -41,7 +41,7 @@
     </section>
 
     <footer class="bili-blocklist__pager flex justify-end">
-      <el-pagination
+      <BiliPagination
         v-model:current-page="pageNum"
         :page-size="pageSize"
         :total="total"

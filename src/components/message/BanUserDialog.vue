@@ -98,7 +98,8 @@ const { t } = useI18n()
 
 const props = defineProps<{
   modelValue: boolean
-  mids: number[]
+  /** 目标 mid 列表（雪花 ID，字符串形态避免精度丢失） */
+  mids: string[]
 }>()
 
 const emit = defineEmits<{

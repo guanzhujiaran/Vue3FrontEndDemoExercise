@@ -129,7 +129,7 @@ function ensureBrief(): void {
 function handleClick(): void {
   const mid = midNumber.value
   if (!props.toSpace || !mid) return
-  const to = { name: 'MOMENT_USER_SPACE', params: { mid: String(mid) } }
+  const to = { name: 'MOMENT_USER_SPACE_HOME', params: { mid: String(mid) } }
   if (props.openInNewTab) openRouteInNewTab(router, to)
   else router.push(to)
 }

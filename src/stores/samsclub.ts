@@ -1,5 +1,6 @@
 import { ref } from 'vue'
 import { defineStore } from 'pinia'
+import { browserPersistStorage } from '@/utils/persistStorage'
 export const useSamsclubStore = defineStore(
   'samsclub',
   () => {
@@ -18,7 +19,7 @@ export const useSamsclubStore = defineStore(
   {
     persist: {
       key: 'samsclub',
-      storage: localStorage
+      storage: browserPersistStorage
     }
   }
 )

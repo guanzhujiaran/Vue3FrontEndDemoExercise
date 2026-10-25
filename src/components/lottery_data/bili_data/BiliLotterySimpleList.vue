@@ -36,6 +36,22 @@
           </span>
         </div>
 
+        <!-- ID + 开奖倒计时同一行（倒计时靠右；挂载后才渲染具体值，避免 SSR 首帧与客户端差几秒导致水合不一致） -->
+        <div
+          v-if="item.normalized.id || (countdownReady && item.normalized.endTime)"
+          class="lottery-simple-list__id-row mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-text-placeholder"
+        >
+          <span v-if="item.normalized.id" class="lottery-simple-list__id">ID: {{ item.normalized.id }}</span>
+          <span
+            v-if="countdownReady && item.normalized.endTime"
+            class="lottery-simple-list__countdown ml-auto flex items-center gap-1 font-medium"
+            :class="countdownClass(item.normalized.endTime)"
+          >
+            <el-icon><Timer /></el-icon>
+            {{ countdownText(item.normalized.endTime) }}
+          </span>
+        </div>
+
         <!-- 抽奖名称 -->
         <p
           class="line-clamp-2 font-medium text-text-primary text-sm leading-relaxed wrap-break-word"
@@ -43,8 +59,6 @@
         >
           {{ item.normalized.title }}
         </p>
-
-        <div v-if="item.normalized.id" class="lottery-simple-list__id mt-2 text-xs text-text-placeholder">ID: {{ item.normalized.id }}</div>
 
         <!-- 跳转连接（点击链接不触发卡片弹窗） -->
         <div class="mt-3 flex flex-wrap items-center gap-3" @click.stop>
@@ -143,7 +157,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, reactive, watch } from 'vue'
+import { computed, onMounted, onUnmounted, ref, reactive, watch } from 'vue'
+import { Timer } from '@element-plus/icons-vue'
 import BiliLotteryCard from '@/components/lottery_data/bili_data/BiliLotteryCard.vue'
 import { LINK_REL, LINK_REFERRER_POLICY } from '@/utils/PageOpen/linkPolicy'
 import BiliStatusIcon from '@/components/CommonCompo/Bili-Status-Compo/BiliStatusIcon.vue'
@@ -178,6 +193,45 @@ const parsedData = computed<SimpleListItem[]>(() =>
 
 const getKey = (item: SimpleListItem, idx: number): string =>
   `${item.normalized.id ?? 'noid'}-${idx}`
+
+// ============ 开奖倒计时 ============
+// 每秒推进的“当前时间”（秒级）；挂载后才渲染具体倒计时值，
+// 避免 SSR 首帧与客户端 hydration 相差几秒导致文本不一致。
+const nowSec = ref(Math.floor(Date.now() / 1000))
+const countdownReady = ref(false)
+let countdownTimer: number | undefined
+
+/** 距开奖文本：x天x小时 / x小时x分 / x分钟；已过开奖时间显示「已开奖」 */
+function countdownText(endTime: number): string {
+  const diff = endTime - nowSec.value
+  if (diff <= 0) return '已开奖'
+  const days = Math.floor(diff / 86400)
+  const hours = Math.floor((diff % 86400) / 3600)
+  const minutes = Math.floor((diff % 3600) / 60)
+  if (days > 0) return `距开奖 ${days}天${hours}小时`
+  if (hours > 0) return `距开奖 ${hours}小时${minutes}分`
+  return `距开奖 ${minutes}分钟`
+}
+
+/** 倒计时配色：1 小时内红色告急、当天内橙色提醒、更久常规色、已开奖灰色 */
+function countdownClass(endTime: number): string {
+  const diff = endTime - nowSec.value
+  if (diff <= 0) return 'text-text-placeholder'
+  if (diff < 3600) return 'text-danger'
+  if (diff < 86400) return 'text-warning'
+  return 'text-text-secondary'
+}
+
+onMounted(() => {
+  countdownReady.value = true
+  countdownTimer = window.setInterval(() => {
+    nowSec.value = Math.floor(Date.now() / 1000)
+  }, 1000)
+})
+
+onUnmounted(() => {
+  if (countdownTimer) clearInterval(countdownTimer)
+})
 
 const detailVisible = ref(false)
 const selectedRaw = ref<any>(null)

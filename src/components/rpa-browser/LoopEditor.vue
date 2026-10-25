@@ -12,9 +12,10 @@ const themeStore = useThemeStore()
  * LoopEditor —— 循环参数配置编辑器
  *
  * 功能：
- *   1. 循环来源选择（固定次数 / 变量引用）
- *   2. 循环变量命名（loop_item / loop_index）
- *   3. 参数映射（将循环项的字段映射到循环体内步骤的参数）
+ *   1. 循环名称（支持 {{变量}} 模板，逐轮解析，标识本循环在干什么）
+ *   2. 循环来源选择（固定次数 / 变量引用）
+ *   3. 循环变量命名（loop_item / loop_index）
+ *   4. 参数映射（将循环项的字段映射到循环体内步骤的参数）
  */
 
 const props = defineProps<{
@@ -30,6 +31,9 @@ const config = computed({
   set: (val) => emit('update:modelValue', val),
 })
 
+/** 名称输入框占位文案（绑定传入，避免模板里出现 {{}} 被当插值解析） */
+const NAME_PLACEHOLDER = '如：遍历动态列表、处理 {{loop_item.title}}'
+
 const sourceOptions = [
   { value: 'fixed_count' as const, label: '固定次数' },
   { value: 'variable' as const, label: '从变量获取列表' },
@@ -38,6 +42,11 @@ const sourceOptions = [
 
 function setSource(source: LoopConfig['loopSource']) {
   config.value = { ...config.value, loopSource: source }
+}
+
+/** 循环名称：原样写入（含 {{变量}} 模板），由后端按每轮作用域解析 */
+function setLoopName(val: string) {
+  config.value = { ...config.value, name: val }
 }
 
 function setCount(val: number | string) {
@@ -113,6 +122,20 @@ function updateMapping(index: number, field: keyof LoopParamMapping, val: string
 
 <template>
   <div class="loop-editor space-y-3">
+    <!-- 循环名称（可选，支持 {{变量}} 模板，运行时逐轮解析） -->
+    <div>
+      <label class="loop-editor__name-label text-xs font-medium text-text-regular mb-1.5 block">循环名称</label>
+      <el-input
+        class="loop-editor__name"
+        :model-value="config.name"
+        @update:model-value="setLoopName"
+        :placeholder="NAME_PLACEHOLDER"
+      />
+      <span v-pre class="loop-editor__name-hint text-xs text-text-secondary mt-1 block">
+        支持 {{变量}} 模板，每轮按当前循环项解析，运行消息与进度条会显示；留空则显示为「循环」
+      </span>
+    </div>
+
     <!-- 循环来源 -->
     <div>
       <label class="text-xs font-medium text-(--el-text-color-regular) mb-1.5 block">循环来源</label>

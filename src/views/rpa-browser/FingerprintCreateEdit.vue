@@ -140,7 +140,7 @@ onMounted(() => {
 
 <template>
   <FlexContainer class="fingerprint-cyber-container">
-    <BiliPageHeader :title="isEdit ? '编辑指纹' : '创建指纹'" description="配置你的数字身份">
+    <BiliPageHeader :title="isEdit ? '编辑指纹' : '创建指纹'" hide-title description="配置你的数字身份">
       <template #extra>
         <el-button :icon="ArrowLeft" @click="handleBack" class="cyber-btn">返回</el-button>
       </template>

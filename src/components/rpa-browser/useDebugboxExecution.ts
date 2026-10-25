@@ -3,6 +3,7 @@ import { 执行引擎Service } from '@/api/browser/hey-api'
 import type { ActionPreviewResponse, WorkflowStepRequest } from '@/api/browser/hey-api'
 import { useUserNavStore } from '@/stores/user_nav'
 import biliMessage from '@/utils/message'
+import { pickBackendMsg } from '@/utils/backendErrorMsg'
 import type { DroppedItem, OperationFeedback, OperationKind, ActionResultResponse, StepResultItem, NestedPreviewNode, BranchPathStep } from './debugbox-types'
 
 export function useDebugboxExecution(
@@ -55,6 +56,16 @@ export function useDebugboxExecution(
   }
 
   /**
+   * catch 到的错误 → 展示文案。
+   *
+   * SDK 调用带 throwOnError:true 时，非 2xx 响应（如 execute 审批拒绝 403）抛出的是
+   * 后端响应体 { code, msg, data }，优先直接展示后端 msg；无 msg 或默认 500 才用 fallback。
+   */
+  function formatCatchError(error: unknown, fallback: string): string {
+    return pickBackendMsg(error) || fallback
+  }
+
+  /**
    * 把复合操作的子步骤并入 params.steps
    *
    * 后端只认 `params.steps`：CompositeAction 从 params 提取步骤，
@@ -98,6 +109,8 @@ export function useDebugboxExecution(
     try {
       const response = await 执行引擎Service.executeActionApiV1RpaBrowserControlActionsExecutePost({
         query: { browser_id: browserId }, body, headers: userNavStore.user_header,
+        // 失败走非 2xx 响应（如 execute 审批拒绝 403），开启 throwOnError 以便 catch 拿到后端 msg
+        throwOnError: true,
       })
       if (response?.code !== 0) {
         const msg = formatApiError(response, '执行失败')
@@ -116,7 +129,7 @@ export function useDebugboxExecution(
         setOperationFeedback(item.id, 'execute', false, msg, result ?? { error: msg })
       }
     } catch (error: unknown) {
-      const msg = error instanceof Error ? error.message : '网络异常，执行失败'
+      const msg = formatCatchError(error, '网络异常，执行失败')
       biliMessage.error(msg)
       setOperationFeedback(item.id, 'execute', false, msg, { error: msg })
     } finally {
@@ -135,6 +148,8 @@ export function useDebugboxExecution(
     try {
       const response = await 执行引擎Service.previewActionParamsApiV1RpaBrowserControlActionsPreviewPost({
         query: { browser_id: browserId }, body: { action_id: item.action_id, params: getActionParams(item), input_vars: getInputVars(item) }, headers: userNavStore.user_header,
+        // 失败走非 2xx 响应，开启 throwOnError 以便 catch 拿到后端 msg
+        throwOnError: true,
       })
       if (response?.code !== 0) {
         const msg = formatApiError(response, '预览失败')
@@ -147,7 +162,7 @@ export function useDebugboxExecution(
       biliMessage.success('预览成功')
       setOperationFeedback(item.id, 'preview', true, found, result ?? {})
     } catch (error: unknown) {
-      const msg = error instanceof Error ? error.message : '网络异常，预览失败'
+      const msg = formatCatchError(error, '网络异常，预览失败')
       biliMessage.error(msg)
       setOperationFeedback(item.id, 'preview', false, msg, { error: msg })
     } finally {
@@ -166,6 +181,8 @@ export function useDebugboxExecution(
     try {
       const response = await 执行引擎Service.validateActionParamsApiV1RpaBrowserControlActionsValidatePost({
         query: { browser_id: browserId }, body: { action_id: item.action_id, params: getActionParams(item), input_vars: getInputVars(item) }, headers: userNavStore.user_header,
+        // 失败走非 2xx 响应，开启 throwOnError 以便 catch 拿到后端 msg
+        throwOnError: true,
       })
       if (response?.code !== 0) {
         const msg = formatApiError(response, '参数验证失败')
@@ -187,7 +204,7 @@ export function useDebugboxExecution(
         setOperationFeedback(item.id, 'validate', false, msg, result ?? { error: msg })
       }
     } catch (error: unknown) {
-      const msg = error instanceof Error ? error.message : '网络异常，验证失败'
+      const msg = formatCatchError(error, '网络异常，验证失败')
       biliMessage.error(msg)
       setOperationFeedback(item.id, 'validate', false, msg, { error: msg })
     } finally {
@@ -220,6 +237,8 @@ export function useDebugboxExecution(
 
       const response = await 执行引擎Service.executeWorkflowApiV1RpaBrowserControlWorkflowsExecutePost({
         query: { browser_id: browserId }, body: { steps, variables: {}, input_data: {}, output_vars: [] }, headers: userNavStore.user_header,
+        // 失败走非 2xx 响应（如 execute 审批拒绝 403），开启 throwOnError 以便 catch 拿到后端 msg
+        throwOnError: true,
       })
 
       if (response?.code === 0) {
@@ -253,7 +272,7 @@ export function useDebugboxExecution(
         for (const item of selectedItems) setOperationFeedback(item.id, 'execute', false, msg, { error: msg })
       }
     } catch (e) {
-      const msg = e instanceof Error ? e.message : '网络异常'
+      const msg = formatCatchError(e, '网络异常')
       biliMessage.error(msg)
       for (const item of selectedItems) setOperationFeedback(item.id, 'execute', false, msg, { error: msg })
     } finally {
@@ -276,6 +295,8 @@ export function useDebugboxExecution(
       }))
       const response = await 执行引擎Service.executeWorkflowApiV1RpaBrowserControlWorkflowsExecutePost({
         query: { browser_id: browserId }, body: { steps, variables: {}, input_data: {}, output_vars: [] }, headers: userNavStore.user_header,
+        // 失败走非 2xx 响应（如 execute 审批拒绝 403），开启 throwOnError 以便 catch 拿到后端 msg
+        throwOnError: true,
       })
       if (response?.code === 0) {
         const result = response.data as { results?: Array<{ success: boolean; data?: unknown; action_id: string; action_name?: string; error?: string | null; execution_time?: number; variables?: Record<string, unknown>; replaced_params?: Record<string, unknown> }>; summary?: { total: number; success: number; failed: number } } | undefined
@@ -302,7 +323,7 @@ export function useDebugboxExecution(
         biliMessage.error(formatApiError(response, '分支执行失败'))
       }
     } catch (e) {
-      biliMessage.error(e instanceof Error ? e.message : '网络异常')
+      biliMessage.error(formatCatchError(e, '网络异常'))
     } finally {
       branchOperating.value[branchKey] = false
     }
@@ -339,6 +360,8 @@ export function useDebugboxExecution(
     try {
       const response = await 执行引擎Service.executeActionApiV1RpaBrowserControlActionsExecutePost({
         query: { browser_id: browserId }, body: { action_id: child.action_id, params: withStepChildren(child), input_vars: getInputVars(child), output_vars: getOutputVars(child) }, headers: userNavStore.user_header,
+        // 失败走非 2xx 响应（如 execute 审批拒绝 403），开启 throwOnError 以便 catch 拿到后端 msg
+        throwOnError: true,
       })
       if (response?.code !== 0) {
         const msg = formatApiError(response, '执行失败')
@@ -357,7 +380,7 @@ export function useDebugboxExecution(
         setOperationFeedback(childKey, 'execute', false, msg, result ?? { error: msg })
       }
     } catch (error: unknown) {
-      const msg = error instanceof Error ? error.message : '网络异常'
+      const msg = formatCatchError(error, '网络异常')
       biliMessage.error(msg)
       setOperationFeedback(childKey, 'execute', false, msg, { error: msg })
     } finally {
@@ -374,6 +397,8 @@ export function useDebugboxExecution(
     try {
       const response = await 执行引擎Service.previewActionParamsApiV1RpaBrowserControlActionsPreviewPost({
         query: { browser_id: browserId }, body: { action_id: child.action_id, params: getActionParams(child), input_vars: getInputVars(child) }, headers: userNavStore.user_header,
+        // 失败走非 2xx 响应，开启 throwOnError 以便 catch 拿到后端 msg
+        throwOnError: true,
       })
       if (response?.code !== 0) {
         const msg = formatApiError(response, '预览失败')
@@ -384,7 +409,8 @@ export function useDebugboxExecution(
       const found = result?.found_params?.length ? `已解析变量: ${result.found_params.join(', ')}` : '预览完成'
       setOperationFeedback(childKey, 'preview', true, found, result ?? {})
     } catch (e) {
-      setOperationFeedback(childKey, 'preview', false, '网络异常', { error: '网络异常' })
+      const msg = formatCatchError(e, '网络异常')
+      setOperationFeedback(childKey, 'preview', false, msg, { error: msg })
     } finally {
       branchOperating.value[childKey] = false
     }
@@ -399,6 +425,8 @@ export function useDebugboxExecution(
     try {
       const response = await 执行引擎Service.validateActionParamsApiV1RpaBrowserControlActionsValidatePost({
         query: { browser_id: browserId }, body: { action_id: child.action_id, params: getActionParams(child), input_vars: getInputVars(child) }, headers: userNavStore.user_header,
+        // 失败走非 2xx 响应，开启 throwOnError 以便 catch 拿到后端 msg
+        throwOnError: true,
       })
       if (response?.code !== 0) {
         setOperationFeedback(childKey, 'validate', false, '验证失败', { error: '验证失败' })
@@ -415,7 +443,8 @@ export function useDebugboxExecution(
         setOperationFeedback(childKey, 'validate', false, parts.join('；') || '参数验证失败', result ?? { error: '参数验证失败' })
       }
     } catch (e) {
-      setOperationFeedback(childKey, 'validate', false, '网络异常', { error: '网络异常' })
+      const msg = formatCatchError(e, '网络异常')
+      setOperationFeedback(childKey, 'validate', false, msg, { error: msg })
     } finally {
       branchOperating.value[childKey] = false
     }

@@ -235,7 +235,7 @@ const emit = defineEmits<{
     /** 2.22.0 多话题（[{topicId}]，最多 5 个） */
     topics?: { topicId: number }[]
     images?: string[]
-    atNameToMid?: Record<string, number>
+    atNameToMid?: Record<string, string>
     attachResource?: MomentAttachResource
   }]
   success: [dynId: string]
@@ -257,10 +257,10 @@ const submitLabel = computed(() => {
 })
 
 /** @ 提及候选：远程搜索用户 */
-const mentionOptions = ref<Array<{ value: string; avatar?: string; mid?: number }>>([])
+const mentionOptions = ref<Array<{ value: string; avatar?: string; mid?: string }>>([])
 const mentionLoading = ref(false)
 /** 已选中的 @昵称 → mid 映射（提交时供服务端归一化） */
-const atNameToMid = ref<Record<string, number>>({})
+const atNameToMid = ref<Record<string, string>>({})
 
 async function handleMentionSearch(pattern: string) {
   if (!pattern.trim()) {
@@ -272,11 +272,11 @@ async function handleMentionSearch(pattern: string) {
     const res = await commentApi.searchAt(pattern.trim(), 20)
     if (res && res.code === 0 && res.data) {
       mentionOptions.value = (res.data as CommentUserBrief[])
-        .filter((u) => u.mid != null)
+        .filter((u) => u.mid_str != null)
         .map((u) => ({
-          value: u.uname || `用户${u.mid}`,
-          avatar: u.avatar || undefined,
-          mid: u.mid
+          value: String(u.uname || `用户${String(u.mid_str)}`),
+          avatar: u.avatar != null ? String(u.avatar) : undefined,
+          mid: u.mid_str != null ? String(u.mid_str) : undefined
         }))
     }
   } finally {
@@ -348,8 +348,9 @@ async function searchTopics(query: string) {
 }
 
 /** 从正文提取所有 @昵称，映射到 mid（优先用 el-mention 选中的映射） */
-function buildAtNameToMid(): Record<string, number> {
-  const map: Record<string, number> = { ...atNameToMid.value }
+/** @昵称 → mid 映射；mid 是雪花 ID，用字符串传（后端 StrInt 归一为 int） */
+function buildAtNameToMid(): Record<string, string> {
+  const map: Record<string, string> = { ...atNameToMid.value }
   // 正则匹配正文里的 @昵称（不含空格/换行）
   const re = /@([^\s@#]+)/g
   let m: RegExpExecArray | null
@@ -389,7 +390,7 @@ async function handleSubmit() {
       })
       if (res) {
         showPublishSuccessBox('转发成功，等待审核')
-        emit('success', res.dynIdStr)
+        emit('success', res.dynId_str ?? '')
         visible.value = false
       }
       return
@@ -417,7 +418,7 @@ async function handleSubmit() {
       const res = await createMoment(body)
       if (res) {
         showPublishSuccessBox('动态已发布，审核通过后公开展示')
-        emit('success', res.dynIdStr)
+        emit('success', res.dynId_str ?? '')
         visible.value = false
       }
       return

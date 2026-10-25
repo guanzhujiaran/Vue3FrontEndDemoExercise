@@ -1,6 +1,7 @@
 import type { CreateClientConfig } from './hey-api/client.gen'
 import { useLocaleStore } from '@/stores/locale'
 import { useUserNavStore } from '@/stores/user_nav'
+import { withStrIds, RESPONSE_ID_FIELDS } from '@/utils/idString'
 
 /** SSR 下服务端没有同源概念，必须用绝对地址；浏览器仍走同源相对路径（见 bili_lottery_data/runtime_config.ts 说明） */
 /**
@@ -17,6 +18,14 @@ export const createClientConfig: CreateClientConfig = (config) => ({
   responseStyle: 'data',
   // JWT 已改为 HttpOnly Cookie，浏览器自动随请求携带（credentials 保证跨域也携带）
   credentials: 'include',
+  // 雪花 ID 统一字符串化：后端出参为 int 数值 + `xxxStr` / `xxx_str` 派生字符串版，
+  // JS Number 无法精确承载 19 位 ID。在这里（客户端唯一响应出口）归一一次，
+  // 组件层拿到的全是字符串，`:key` / `===` / Set 去重 / 路由 query / 二次入参都不丢精度。
+  onResponse: ({ response }) => {
+    if (response._data && typeof response._data === 'object') {
+      response._data = withStrIds(response._data, RESPONSE_ID_FIELDS)
+    }
+  },
   onRequest: ({ options }) => {
     // 注入当前语言，供后端 fastapi-i18n 按 Accept-Language 返回对应语言文案
     const LocaleStore = useLocaleStore()

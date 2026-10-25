@@ -881,41 +881,6 @@ export type FilterParamMeta = {
 };
 
 /**
- * GetLotteryDetailReq
- *
- * 按 lottery_id 获取单个抽奖卡片详情的请求体。
- */
-export type GetLotteryDetailReq = {
-    /**
-     * Lottery Id
-     *
-     * lotdata 主键 lottery_id（对外互动资源 ID）
-     */
-    lottery_id: number;
-};
-
-/**
- * GetOthersLotDynDetailReq
- *
- * 按 dynId 获取单个第三方抽奖动态详情的请求体（2.61.0）。
- *
- * 第三方抽奖动态没有 `lottery_id`，互动 / 详情一律以 `dynId` 定位
- * （对应 be-message 的 `others_lot_dyn` 资源类型，bizType=15）。
- *
- * `dyn_id` 是 19 位雪花 ID，超过 JS `Number` 安全整数范围：前端 / 网关一旦
- * 经过 JS Number 就会丢精度（`...52360` → `...52400`）导致查询 404，
- * 故入参用 `StrInt` 接受字符串，由后端归一为 int（前端统一以字符串传）。
- */
-export type GetOthersLotDynDetailReq = {
-    /**
-     * Dyn Id
-     *
-     * 第三方抽奖动态 dynId（biliopusdb.t_lotdyninfo.dynId；雪花 ID，支持字符串传参避免 JS 精度丢失）
-     */
-    dyn_id: number | string;
-};
-
-/**
  * GlobalSchedulerStatusModel
  *
  * 全局调度器完整状态
@@ -1215,91 +1180,6 @@ export type LotdataResp = {
 };
 
 /**
- * LotteryAdvancedQueryParams
- *
- * 抽奖高级查询参数，包含分页、筛选、排序
- *
- * 移除了意义不明的 limit_time 参数，改用更直观的 start_ts/end_ts 时间范围筛选，
- * 新增 sort_by/sort_order 排序控制，与主流查询体验一致。
- *
- * 字段上的 json_schema_extra 同时作为前端筛选 UI 的元数据来源，
- * 与 api_GetLotteryFilterParams 响应的 FilterParamMeta 一一对应。
- */
-export type LotteryAdvancedQueryParams = {
-    /**
-     * Page Num
-     *
-     * 页码，从 1 开始，最小值为 1
-     */
-    page_num?: number;
-    /**
-     * Page Size
-     *
-     * 每页数量，最小值为 1
-     */
-    page_size?: number;
-    /**
-     * Start Ts
-     *
-     * 开奖时间起始（Unix秒时间戳）
-     */
-    start_ts?: number | null;
-    /**
-     * End Ts
-     *
-     * 开奖时间结束（Unix秒时间戳）
-     */
-    end_ts?: number | null;
-    /**
-     * Sender Uid
-     *
-     * UP主UID
-     */
-    sender_uid?: number | null;
-    /**
-     * Min Participants
-     *
-     * 最小参与人数
-     */
-    min_participants?: number | null;
-    /**
-     * Max Participants
-     *
-     * 最大参与人数
-     */
-    max_participants?: number | null;
-    /**
-     * Status
-     *
-     * 抽奖状态: unfinished/finished/canceled
-     */
-    status?: string | null;
-    /**
-     * Is Grand Prize
-     *
-     * 是否大奖: True-是, False-否, None-不过滤
-     */
-    is_grand_prize?: boolean | null;
-    /**
-     * Keyword
-     *
-     * 关键词搜索
-     */
-    keyword?: string | null;
-    /**
-     * 排序字段: lottery_time/participants/first_prize/created_at
-     */
-    sort_by?: LotteryDataSortEnum | null;
-    /**
-     * 排序方向: asc/desc
-     */
-    sort_order?: SortOrderEnum | null;
-    created_at_preset?: TimePresetEnum | null;
-    pub_time_preset?: TimePresetEnum | null;
-    [key: string]: unknown;
-};
-
-/**
  * LotteryArticleResp
  */
 export type LotteryArticleResp = {
@@ -1356,6 +1236,34 @@ export const LotteryDataSortEnum = {
 export type LotteryDataSortEnum = typeof LotteryDataSortEnum[keyof typeof LotteryDataSortEnum];
 
 /**
+ * LotteryDataSummaryResp
+ *
+ * 管理端 bili-crawler 数据汇总响应。
+ */
+export type LotteryDataSummaryResp = {
+    /**
+     * Generated At
+     */
+    generated_at: number;
+    /**
+     * Latest Created At
+     */
+    latest_created_at?: number | null;
+    /**
+     * Rows
+     */
+    rows?: Array<LotterySummaryRow>;
+    /**
+     * Trend
+     */
+    trend?: Array<LotteryTrendPoint>;
+    /**
+     * Upcoming
+     */
+    upcoming?: Array<UpcomingLotteryItem>;
+};
+
+/**
  * LotteryDetailResp
  *
  * 单条抽奖卡片详情响应（前端卡片详情页按 lottery_id 拉取完整卡片数据）。
@@ -1395,27 +1303,6 @@ export type LotteryFilterParamsResp = {
 };
 
 /**
- * LotteryPaginationParams
- *
- * 抽奖分页参数，继承自通用页码分页参数
- */
-export type LotteryPaginationParams = {
-    /**
-     * Page Num
-     *
-     * 页码，从 1 开始，最小值为 1
-     */
-    page_num?: number;
-    /**
-     * Page Size
-     *
-     * 每页数量，最小值为 1
-     */
-    page_size?: number;
-    [key: string]: unknown;
-};
-
-/**
  * LotterySearchPaginationParams
  *
  * 抽奖搜索分页参数，包含 keyword
@@ -1440,6 +1327,95 @@ export type LotterySearchPaginationParams = {
      */
     keyword: string;
     [key: string]: unknown;
+};
+
+/**
+ * LotterySummaryRow
+ *
+ * 管理端数据汇总的单个统计行（一个数据源 / 一种抽奖类型）。
+ *
+ * 字段为 ``None`` 表示该数据源不具备该统计所需的字段（例如话题抽奖活动表没有收录时间，
+ * 无法计算「昨日/本周/本月新增」），前端以「—」展示。
+ */
+export type LotterySummaryRow = {
+    /**
+     * Key
+     */
+    key: string;
+    /**
+     * Type Name
+     */
+    type_name: string;
+    /**
+     * Source
+     */
+    source: string;
+    /**
+     * Total
+     */
+    total?: number;
+    /**
+     * Not Drawn
+     */
+    not_drawn?: number | null;
+    /**
+     * Drawing Soon 24H
+     */
+    drawing_soon_24h?: number | null;
+    /**
+     * Pending Result
+     */
+    pending_result?: number | null;
+    /**
+     * Grand Prize
+     */
+    grand_prize?: number | null;
+    /**
+     * New Yesterday
+     */
+    new_yesterday?: number | null;
+    /**
+     * New Prev Day
+     */
+    new_prev_day?: number | null;
+    /**
+     * New This Week
+     */
+    new_this_week?: number | null;
+    /**
+     * New This Month
+     */
+    new_this_month?: number | null;
+    /**
+     * Participants Avg
+     */
+    participants_avg?: number | null;
+    /**
+     * Participants Max
+     */
+    participants_max?: number | null;
+    /**
+     * Participants Total
+     */
+    participants_total?: number | null;
+};
+
+/**
+ * LotteryTrendPoint
+ *
+ * 近 N 天每日新增趋势点；counts 的 key 与 LotterySummaryRow.key 对应。
+ */
+export type LotteryTrendPoint = {
+    /**
+     * Date
+     */
+    date: string;
+    /**
+     * Counts
+     */
+    counts?: {
+        [key: string]: number;
+    };
 };
 
 /**
@@ -2299,6 +2275,21 @@ export type StandardResponseLotteryArticleResp = {
 };
 
 /**
+ * StandardResponse[LotteryDataSummaryResp]
+ */
+export type StandardResponseLotteryDataSummaryResp = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: LotteryDataSummaryResp | null;
+};
+
+/**
  * StandardResponse[LotteryDetailResp]
  */
 export type StandardResponseLotteryDetailResp = {
@@ -2575,12 +2566,13 @@ export type StandardResponseStr = {
  *
  * 设置项（pydantic 字段，通过 PluginConfig.plugin_kwargs 传入）：
  * push_result: 爬虫运行结束时是否推送统计结果摘要。
+ * 仅在本次运行存在最终失败任务（爬虫出问题）时才推送，正常运行不推送。
  */
 export type StatsPlugin = {
     /**
      * Push Result
      *
-     * 爬虫运行结束(on_run_end)时是否推送统计结果摘要
+     * 爬虫运行结束(on_run_end)时是否推送统计结果摘要；仅在本次运行存在最终失败任务（爬虫出问题）时才推送，正常运行不推送
      */
     push_result?: boolean;
     /**
@@ -2948,6 +2940,46 @@ export const TimePresetEnum = {
  * - last_365_days: 365d
  */
 export type TimePresetEnum = typeof TimePresetEnum[keyof typeof TimePresetEnum];
+
+/**
+ * UpcomingLotteryItem
+ *
+ * 即将开奖的明细（按 lottery_time 升序取最近若干条，仅限 24 小时内）。
+ */
+export type UpcomingLotteryItem = {
+    /**
+     * Lottery Id
+     */
+    lottery_id: number;
+    /**
+     * Business Id
+     */
+    business_id?: number | null;
+    /**
+     * Business Type
+     */
+    business_type: number;
+    /**
+     * Key
+     */
+    key?: string;
+    /**
+     * Type Name
+     */
+    type_name: string;
+    /**
+     * Lottery Time
+     */
+    lottery_time: number;
+    /**
+     * Participants
+     */
+    participants?: number | null;
+    /**
+     * Sender Uid
+     */
+    sender_uid?: number | null;
+};
 
 /**
  * ValidationError
@@ -4301,12 +4333,13 @@ export type StandardResponseListAddTopicLotteryRespWritable = {
  *
  * 设置项（pydantic 字段，通过 PluginConfig.plugin_kwargs 传入）：
  * push_result: 爬虫运行结束时是否推送统计结果摘要。
+ * 仅在本次运行存在最终失败任务（爬虫出问题）时才推送，正常运行不推送。
  */
 export type StatsPluginWritable = {
     /**
      * Push Result
      *
-     * 爬虫运行结束(on_run_end)时是否推送统计结果摘要
+     * 爬虫运行结束(on_run_end)时是否推送统计结果摘要；仅在本次运行存在最终失败任务（爬虫出问题）时才推送，正常运行不推送
      */
     push_result?: boolean;
     [key: string]: unknown;
@@ -4496,132 +4529,547 @@ export type WorkerModelWritable = {
     [key: string]: unknown;
 };
 
-export type GetReserveLotteryApiV1LotteryDatabaseBiliGetReserveLotteryPostData = {
-    body: LotteryAdvancedQueryParams;
+export type GetReserveLotteryApiV1LotteryDatabaseBiliGetReserveLotteryGetData = {
+    body?: never;
     path?: never;
-    query?: never;
+    query?: {
+        /**
+         * Page Num
+         *
+         * 页码，从 1 开始，最小值为 1
+         */
+        page_num?: number;
+        /**
+         * Page Size
+         *
+         * 每页数量，最小值为 1
+         */
+        page_size?: number;
+        /**
+         * Start Ts
+         *
+         * 开奖起始时间（Unix 秒）
+         */
+        start_ts?: number | null;
+        /**
+         * End Ts
+         *
+         * 开奖结束时间（Unix 秒）
+         */
+        end_ts?: number | null;
+        /**
+         * Sender Uid
+         *
+         * UP主UID
+         */
+        sender_uid?: number | null;
+        /**
+         * Min Participants
+         *
+         * 最小参与人数
+         */
+        min_participants?: number | null;
+        /**
+         * Max Participants
+         *
+         * 最大参与人数
+         */
+        max_participants?: number | null;
+        /**
+         * Status
+         *
+         * 抽奖状态: unfinished/finished/canceled/deleted/unknown；不传默认 unfinished（仅返回未开奖且未超时）
+         */
+        status?: string | null;
+        /**
+         * Is Grand Prize
+         *
+         * 是否大奖: true/false，不传不过滤
+         */
+        is_grand_prize?: boolean | null;
+        /**
+         * Keyword
+         *
+         * 关键词
+         */
+        keyword?: string | null;
+        /**
+         * Sort By
+         *
+         * 排序字段
+         */
+        sort_by?: LotteryDataSortEnum | null;
+        /**
+         * Sort Order
+         *
+         * 排序方向
+         */
+        sort_order?: SortOrderEnum | null;
+        /**
+         * Created At Preset
+         *
+         * 收录时间快捷筛选: 1d/3d/5d/7d/14d/30d...
+         */
+        created_at_preset?: TimePresetEnum | null;
+        /**
+         * Pub Time Preset
+         *
+         * 发布时间快捷筛选: 1d/3d/5d/7d/14d/30d...
+         */
+        pub_time_preset?: TimePresetEnum | null;
+        /**
+         * T
+         *
+         * 防缓存时间戳（前端传当前毫秒时间戳 Date.now()）；后端不使用该值，仅用于让每次 URL 不同以绕过浏览器/CDN 缓存
+         */
+        t?: number | null;
+    };
     url: '/api/v1/lottery_database/bili/GetReserveLottery';
 };
 
-export type GetReserveLotteryApiV1LotteryDatabaseBiliGetReserveLotteryPostErrors = {
+export type GetReserveLotteryApiV1LotteryDatabaseBiliGetReserveLotteryGetErrors = {
     /**
      * Validation Error
      */
     422: HttpValidationError;
 };
 
-export type GetReserveLotteryApiV1LotteryDatabaseBiliGetReserveLotteryPostError = GetReserveLotteryApiV1LotteryDatabaseBiliGetReserveLotteryPostErrors[keyof GetReserveLotteryApiV1LotteryDatabaseBiliGetReserveLotteryPostErrors];
+export type GetReserveLotteryApiV1LotteryDatabaseBiliGetReserveLotteryGetError = GetReserveLotteryApiV1LotteryDatabaseBiliGetReserveLotteryGetErrors[keyof GetReserveLotteryApiV1LotteryDatabaseBiliGetReserveLotteryGetErrors];
 
-export type GetReserveLotteryApiV1LotteryDatabaseBiliGetReserveLotteryPostResponses = {
+export type GetReserveLotteryApiV1LotteryDatabaseBiliGetReserveLotteryGetResponses = {
     /**
      * Successful Response
      */
     200: StandardResponseResponsePaginationItemsReserveInfoResp;
 };
 
-export type GetReserveLotteryApiV1LotteryDatabaseBiliGetReserveLotteryPostResponse = GetReserveLotteryApiV1LotteryDatabaseBiliGetReserveLotteryPostResponses[keyof GetReserveLotteryApiV1LotteryDatabaseBiliGetReserveLotteryPostResponses];
+export type GetReserveLotteryApiV1LotteryDatabaseBiliGetReserveLotteryGetResponse = GetReserveLotteryApiV1LotteryDatabaseBiliGetReserveLotteryGetResponses[keyof GetReserveLotteryApiV1LotteryDatabaseBiliGetReserveLotteryGetResponses];
 
-export type GetOfficialLotteryApiV1LotteryDatabaseBiliGetOfficialLotteryPostData = {
-    body: LotteryAdvancedQueryParams;
+export type GetOfficialLotteryApiV1LotteryDatabaseBiliGetOfficialLotteryGetData = {
+    body?: never;
     path?: never;
-    query?: never;
+    query?: {
+        /**
+         * Page Num
+         *
+         * 页码，从 1 开始，最小值为 1
+         */
+        page_num?: number;
+        /**
+         * Page Size
+         *
+         * 每页数量，最小值为 1
+         */
+        page_size?: number;
+        /**
+         * Start Ts
+         *
+         * 开奖起始时间（Unix 秒）
+         */
+        start_ts?: number | null;
+        /**
+         * End Ts
+         *
+         * 开奖结束时间（Unix 秒）
+         */
+        end_ts?: number | null;
+        /**
+         * Sender Uid
+         *
+         * UP主UID
+         */
+        sender_uid?: number | null;
+        /**
+         * Min Participants
+         *
+         * 最小参与人数
+         */
+        min_participants?: number | null;
+        /**
+         * Max Participants
+         *
+         * 最大参与人数
+         */
+        max_participants?: number | null;
+        /**
+         * Status
+         *
+         * 抽奖状态: unfinished/finished/canceled/deleted/unknown；不传默认 unfinished（仅返回未开奖且未超时）
+         */
+        status?: string | null;
+        /**
+         * Is Grand Prize
+         *
+         * 是否大奖: true/false，不传不过滤
+         */
+        is_grand_prize?: boolean | null;
+        /**
+         * Keyword
+         *
+         * 关键词
+         */
+        keyword?: string | null;
+        /**
+         * Sort By
+         *
+         * 排序字段
+         */
+        sort_by?: LotteryDataSortEnum | null;
+        /**
+         * Sort Order
+         *
+         * 排序方向
+         */
+        sort_order?: SortOrderEnum | null;
+        /**
+         * Created At Preset
+         *
+         * 收录时间快捷筛选: 1d/3d/5d/7d/14d/30d...
+         */
+        created_at_preset?: TimePresetEnum | null;
+        /**
+         * Pub Time Preset
+         *
+         * 发布时间快捷筛选: 1d/3d/5d/7d/14d/30d...
+         */
+        pub_time_preset?: TimePresetEnum | null;
+        /**
+         * T
+         *
+         * 防缓存时间戳（前端传当前毫秒时间戳 Date.now()）；后端不使用该值，仅用于让每次 URL 不同以绕过浏览器/CDN 缓存
+         */
+        t?: number | null;
+    };
     url: '/api/v1/lottery_database/bili/GetOfficialLottery';
 };
 
-export type GetOfficialLotteryApiV1LotteryDatabaseBiliGetOfficialLotteryPostErrors = {
+export type GetOfficialLotteryApiV1LotteryDatabaseBiliGetOfficialLotteryGetErrors = {
     /**
      * Validation Error
      */
     422: HttpValidationError;
 };
 
-export type GetOfficialLotteryApiV1LotteryDatabaseBiliGetOfficialLotteryPostError = GetOfficialLotteryApiV1LotteryDatabaseBiliGetOfficialLotteryPostErrors[keyof GetOfficialLotteryApiV1LotteryDatabaseBiliGetOfficialLotteryPostErrors];
+export type GetOfficialLotteryApiV1LotteryDatabaseBiliGetOfficialLotteryGetError = GetOfficialLotteryApiV1LotteryDatabaseBiliGetOfficialLotteryGetErrors[keyof GetOfficialLotteryApiV1LotteryDatabaseBiliGetOfficialLotteryGetErrors];
 
-export type GetOfficialLotteryApiV1LotteryDatabaseBiliGetOfficialLotteryPostResponses = {
+export type GetOfficialLotteryApiV1LotteryDatabaseBiliGetOfficialLotteryGetResponses = {
     /**
      * Successful Response
      */
     200: StandardResponseResponsePaginationItemsOfficialLotteryResp;
 };
 
-export type GetOfficialLotteryApiV1LotteryDatabaseBiliGetOfficialLotteryPostResponse = GetOfficialLotteryApiV1LotteryDatabaseBiliGetOfficialLotteryPostResponses[keyof GetOfficialLotteryApiV1LotteryDatabaseBiliGetOfficialLotteryPostResponses];
+export type GetOfficialLotteryApiV1LotteryDatabaseBiliGetOfficialLotteryGetResponse = GetOfficialLotteryApiV1LotteryDatabaseBiliGetOfficialLotteryGetResponses[keyof GetOfficialLotteryApiV1LotteryDatabaseBiliGetOfficialLotteryGetResponses];
 
-export type GetChargeLotteryApiV1LotteryDatabaseBiliGetChargeLotteryPostData = {
-    body: LotteryAdvancedQueryParams;
+export type GetChargeLotteryApiV1LotteryDatabaseBiliGetChargeLotteryGetData = {
+    body?: never;
     path?: never;
-    query?: never;
+    query?: {
+        /**
+         * Page Num
+         *
+         * 页码，从 1 开始，最小值为 1
+         */
+        page_num?: number;
+        /**
+         * Page Size
+         *
+         * 每页数量，最小值为 1
+         */
+        page_size?: number;
+        /**
+         * Start Ts
+         *
+         * 开奖起始时间（Unix 秒）
+         */
+        start_ts?: number | null;
+        /**
+         * End Ts
+         *
+         * 开奖结束时间（Unix 秒）
+         */
+        end_ts?: number | null;
+        /**
+         * Sender Uid
+         *
+         * UP主UID
+         */
+        sender_uid?: number | null;
+        /**
+         * Min Participants
+         *
+         * 最小参与人数
+         */
+        min_participants?: number | null;
+        /**
+         * Max Participants
+         *
+         * 最大参与人数
+         */
+        max_participants?: number | null;
+        /**
+         * Status
+         *
+         * 抽奖状态: unfinished/finished/canceled/deleted/unknown；不传默认 unfinished（仅返回未开奖且未超时）
+         */
+        status?: string | null;
+        /**
+         * Is Grand Prize
+         *
+         * 是否大奖: true/false，不传不过滤
+         */
+        is_grand_prize?: boolean | null;
+        /**
+         * Keyword
+         *
+         * 关键词
+         */
+        keyword?: string | null;
+        /**
+         * Sort By
+         *
+         * 排序字段
+         */
+        sort_by?: LotteryDataSortEnum | null;
+        /**
+         * Sort Order
+         *
+         * 排序方向
+         */
+        sort_order?: SortOrderEnum | null;
+        /**
+         * Created At Preset
+         *
+         * 收录时间快捷筛选: 1d/3d/5d/7d/14d/30d...
+         */
+        created_at_preset?: TimePresetEnum | null;
+        /**
+         * Pub Time Preset
+         *
+         * 发布时间快捷筛选: 1d/3d/5d/7d/14d/30d...
+         */
+        pub_time_preset?: TimePresetEnum | null;
+        /**
+         * T
+         *
+         * 防缓存时间戳（前端传当前毫秒时间戳 Date.now()）；后端不使用该值，仅用于让每次 URL 不同以绕过浏览器/CDN 缓存
+         */
+        t?: number | null;
+    };
     url: '/api/v1/lottery_database/bili/GetChargeLottery';
 };
 
-export type GetChargeLotteryApiV1LotteryDatabaseBiliGetChargeLotteryPostErrors = {
+export type GetChargeLotteryApiV1LotteryDatabaseBiliGetChargeLotteryGetErrors = {
     /**
      * Validation Error
      */
     422: HttpValidationError;
 };
 
-export type GetChargeLotteryApiV1LotteryDatabaseBiliGetChargeLotteryPostError = GetChargeLotteryApiV1LotteryDatabaseBiliGetChargeLotteryPostErrors[keyof GetChargeLotteryApiV1LotteryDatabaseBiliGetChargeLotteryPostErrors];
+export type GetChargeLotteryApiV1LotteryDatabaseBiliGetChargeLotteryGetError = GetChargeLotteryApiV1LotteryDatabaseBiliGetChargeLotteryGetErrors[keyof GetChargeLotteryApiV1LotteryDatabaseBiliGetChargeLotteryGetErrors];
 
-export type GetChargeLotteryApiV1LotteryDatabaseBiliGetChargeLotteryPostResponses = {
+export type GetChargeLotteryApiV1LotteryDatabaseBiliGetChargeLotteryGetResponses = {
     /**
      * Successful Response
      */
     200: StandardResponseResponsePaginationItemsChargeLotteryResp;
 };
 
-export type GetChargeLotteryApiV1LotteryDatabaseBiliGetChargeLotteryPostResponse = GetChargeLotteryApiV1LotteryDatabaseBiliGetChargeLotteryPostResponses[keyof GetChargeLotteryApiV1LotteryDatabaseBiliGetChargeLotteryPostResponses];
+export type GetChargeLotteryApiV1LotteryDatabaseBiliGetChargeLotteryGetResponse = GetChargeLotteryApiV1LotteryDatabaseBiliGetChargeLotteryGetResponses[keyof GetChargeLotteryApiV1LotteryDatabaseBiliGetChargeLotteryGetResponses];
 
-export type GetLiveLotteryApiV1LotteryDatabaseBiliGetLiveLotteryPostData = {
-    body: LotteryPaginationParams;
+export type GetLiveLotteryApiV1LotteryDatabaseBiliGetLiveLotteryGetData = {
+    body?: never;
     path?: never;
-    query?: never;
+    query?: {
+        /**
+         * Page Num
+         *
+         * 页码，从 1 开始，最小值为 1
+         */
+        page_num?: number;
+        /**
+         * Page Size
+         *
+         * 每页数量，最小值为 1
+         */
+        page_size?: number;
+        /**
+         * T
+         *
+         * 防缓存时间戳（前端传当前毫秒时间戳 Date.now()）；后端不使用该值，仅用于让每次 URL 不同以绕过浏览器/CDN 缓存
+         */
+        t?: number | null;
+    };
     url: '/api/v1/lottery_database/bili/GetLiveLottery';
 };
 
-export type GetLiveLotteryApiV1LotteryDatabaseBiliGetLiveLotteryPostErrors = {
+export type GetLiveLotteryApiV1LotteryDatabaseBiliGetLiveLotteryGetErrors = {
     /**
      * Validation Error
      */
     422: HttpValidationError;
 };
 
-export type GetLiveLotteryApiV1LotteryDatabaseBiliGetLiveLotteryPostError = GetLiveLotteryApiV1LotteryDatabaseBiliGetLiveLotteryPostErrors[keyof GetLiveLotteryApiV1LotteryDatabaseBiliGetLiveLotteryPostErrors];
+export type GetLiveLotteryApiV1LotteryDatabaseBiliGetLiveLotteryGetError = GetLiveLotteryApiV1LotteryDatabaseBiliGetLiveLotteryGetErrors[keyof GetLiveLotteryApiV1LotteryDatabaseBiliGetLiveLotteryGetErrors];
 
-export type GetLiveLotteryApiV1LotteryDatabaseBiliGetLiveLotteryPostResponses = {
+export type GetLiveLotteryApiV1LotteryDatabaseBiliGetLiveLotteryGetResponses = {
     /**
      * Successful Response
      */
     200: StandardResponseResponsePaginationItemsLiveLotteryResp;
 };
 
-export type GetLiveLotteryApiV1LotteryDatabaseBiliGetLiveLotteryPostResponse = GetLiveLotteryApiV1LotteryDatabaseBiliGetLiveLotteryPostResponses[keyof GetLiveLotteryApiV1LotteryDatabaseBiliGetLiveLotteryPostResponses];
+export type GetLiveLotteryApiV1LotteryDatabaseBiliGetLiveLotteryGetResponse = GetLiveLotteryApiV1LotteryDatabaseBiliGetLiveLotteryGetResponses[keyof GetLiveLotteryApiV1LotteryDatabaseBiliGetLiveLotteryGetResponses];
 
-export type GetTopicLotteryApiV1LotteryDatabaseBiliGetTopicLotteryPostData = {
-    body: LotteryAdvancedQueryParams;
+export type GetTopicLotteryApiV1LotteryDatabaseBiliGetTopicLotteryGetData = {
+    body?: never;
     path?: never;
-    query?: never;
+    query?: {
+        /**
+         * Page Num
+         *
+         * 页码，从 1 开始，最小值为 1
+         */
+        page_num?: number;
+        /**
+         * Page Size
+         *
+         * 每页数量，最小值为 1
+         */
+        page_size?: number;
+        /**
+         * Start Ts
+         *
+         * 开奖起始时间（Unix 秒）
+         */
+        start_ts?: number | null;
+        /**
+         * End Ts
+         *
+         * 开奖结束时间（Unix 秒）
+         */
+        end_ts?: number | null;
+        /**
+         * Sender Uid
+         *
+         * UP主UID
+         */
+        sender_uid?: number | null;
+        /**
+         * Min Participants
+         *
+         * 最小参与人数
+         */
+        min_participants?: number | null;
+        /**
+         * Max Participants
+         *
+         * 最大参与人数
+         */
+        max_participants?: number | null;
+        /**
+         * Status
+         *
+         * 抽奖状态: unfinished/finished/canceled/deleted/unknown；不传默认 unfinished（仅返回未开奖且未超时）
+         */
+        status?: string | null;
+        /**
+         * Is Grand Prize
+         *
+         * 是否大奖: true/false，不传不过滤
+         */
+        is_grand_prize?: boolean | null;
+        /**
+         * Keyword
+         *
+         * 关键词
+         */
+        keyword?: string | null;
+        /**
+         * Sort By
+         *
+         * 排序字段
+         */
+        sort_by?: LotteryDataSortEnum | null;
+        /**
+         * Sort Order
+         *
+         * 排序方向
+         */
+        sort_order?: SortOrderEnum | null;
+        /**
+         * Created At Preset
+         *
+         * 收录时间快捷筛选: 1d/3d/5d/7d/14d/30d...
+         */
+        created_at_preset?: TimePresetEnum | null;
+        /**
+         * Pub Time Preset
+         *
+         * 发布时间快捷筛选: 1d/3d/5d/7d/14d/30d...
+         */
+        pub_time_preset?: TimePresetEnum | null;
+        /**
+         * T
+         *
+         * 防缓存时间戳（前端传当前毫秒时间戳 Date.now()）；后端不使用该值，仅用于让每次 URL 不同以绕过浏览器/CDN 缓存
+         */
+        t?: number | null;
+    };
     url: '/api/v1/lottery_database/bili/GetTopicLottery';
 };
 
-export type GetTopicLotteryApiV1LotteryDatabaseBiliGetTopicLotteryPostErrors = {
+export type GetTopicLotteryApiV1LotteryDatabaseBiliGetTopicLotteryGetErrors = {
     /**
      * Validation Error
      */
     422: HttpValidationError;
 };
 
-export type GetTopicLotteryApiV1LotteryDatabaseBiliGetTopicLotteryPostError = GetTopicLotteryApiV1LotteryDatabaseBiliGetTopicLotteryPostErrors[keyof GetTopicLotteryApiV1LotteryDatabaseBiliGetTopicLotteryPostErrors];
+export type GetTopicLotteryApiV1LotteryDatabaseBiliGetTopicLotteryGetError = GetTopicLotteryApiV1LotteryDatabaseBiliGetTopicLotteryGetErrors[keyof GetTopicLotteryApiV1LotteryDatabaseBiliGetTopicLotteryGetErrors];
 
-export type GetTopicLotteryApiV1LotteryDatabaseBiliGetTopicLotteryPostResponses = {
+export type GetTopicLotteryApiV1LotteryDatabaseBiliGetTopicLotteryGetResponses = {
     /**
      * Successful Response
      */
     200: StandardResponseResponsePaginationItemsTopicLotteryResp;
 };
 
-export type GetTopicLotteryApiV1LotteryDatabaseBiliGetTopicLotteryPostResponse = GetTopicLotteryApiV1LotteryDatabaseBiliGetTopicLotteryPostResponses[keyof GetTopicLotteryApiV1LotteryDatabaseBiliGetTopicLotteryPostResponses];
+export type GetTopicLotteryApiV1LotteryDatabaseBiliGetTopicLotteryGetResponse = GetTopicLotteryApiV1LotteryDatabaseBiliGetTopicLotteryGetResponses[keyof GetTopicLotteryApiV1LotteryDatabaseBiliGetTopicLotteryGetResponses];
 
-export type GetAllLotteryApiV1LotteryDatabaseBiliGetAllLotteryPostData = {
+export type GetLotteryDataSummaryApiV1LotteryDatabaseBiliGetLotteryDataSummaryGetData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * T
+         *
+         * 防缓存时间戳（前端传当前毫秒时间戳 Date.now()）；后端不使用该值，仅用于让每次 URL 不同以绕过浏览器/CDN 缓存
+         */
+        t?: number | null;
+    };
+    url: '/api/v1/lottery_database/bili/GetLotteryDataSummary';
+};
+
+export type GetLotteryDataSummaryApiV1LotteryDatabaseBiliGetLotteryDataSummaryGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetLotteryDataSummaryApiV1LotteryDatabaseBiliGetLotteryDataSummaryGetError = GetLotteryDataSummaryApiV1LotteryDatabaseBiliGetLotteryDataSummaryGetErrors[keyof GetLotteryDataSummaryApiV1LotteryDatabaseBiliGetLotteryDataSummaryGetErrors];
+
+export type GetLotteryDataSummaryApiV1LotteryDatabaseBiliGetLotteryDataSummaryGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseLotteryDataSummaryResp;
+};
+
+export type GetLotteryDataSummaryApiV1LotteryDatabaseBiliGetLotteryDataSummaryGetResponse = GetLotteryDataSummaryApiV1LotteryDatabaseBiliGetLotteryDataSummaryGetResponses[keyof GetLotteryDataSummaryApiV1LotteryDatabaseBiliGetLotteryDataSummaryGetResponses];
+
+export type GetAllLotteryApiV1LotteryDatabaseBiliGetAllLotteryGetData = {
     body?: never;
     path?: never;
     query?: {
@@ -4673,27 +5121,33 @@ export type GetAllLotteryApiV1LotteryDatabaseBiliGetAllLotteryPostData = {
          * 每页数量，最大 1000，默认 1000，最小值为 1
          */
         page_size?: number;
+        /**
+         * T
+         *
+         * 防缓存时间戳（前端传当前毫秒时间戳 Date.now()）；后端不使用该值，仅用于让每次 URL 不同以绕过浏览器/CDN 缓存
+         */
+        t?: number | null;
     };
     url: '/api/v1/lottery_database/bili/GetAllLottery';
 };
 
-export type GetAllLotteryApiV1LotteryDatabaseBiliGetAllLotteryPostErrors = {
+export type GetAllLotteryApiV1LotteryDatabaseBiliGetAllLotteryGetErrors = {
     /**
      * Validation Error
      */
     422: HttpValidationError;
 };
 
-export type GetAllLotteryApiV1LotteryDatabaseBiliGetAllLotteryPostError = GetAllLotteryApiV1LotteryDatabaseBiliGetAllLotteryPostErrors[keyof GetAllLotteryApiV1LotteryDatabaseBiliGetAllLotteryPostErrors];
+export type GetAllLotteryApiV1LotteryDatabaseBiliGetAllLotteryGetError = GetAllLotteryApiV1LotteryDatabaseBiliGetAllLotteryGetErrors[keyof GetAllLotteryApiV1LotteryDatabaseBiliGetAllLotteryGetErrors];
 
-export type GetAllLotteryApiV1LotteryDatabaseBiliGetAllLotteryPostResponses = {
+export type GetAllLotteryApiV1LotteryDatabaseBiliGetAllLotteryGetResponses = {
     /**
      * Successful Response
      */
     200: StandardResponseAllLotteryResp;
 };
 
-export type GetAllLotteryApiV1LotteryDatabaseBiliGetAllLotteryPostResponse = GetAllLotteryApiV1LotteryDatabaseBiliGetAllLotteryPostResponses[keyof GetAllLotteryApiV1LotteryDatabaseBiliGetAllLotteryPostResponses];
+export type GetAllLotteryApiV1LotteryDatabaseBiliGetAllLotteryGetResponse = GetAllLotteryApiV1LotteryDatabaseBiliGetAllLotteryGetResponses[keyof GetAllLotteryApiV1LotteryDatabaseBiliGetAllLotteryGetResponses];
 
 export type AddDynamicLotteryApiV1LotteryDatabaseBiliAddDynamicLotteryPostData = {
     body: AddDynamicLotteryReq;
@@ -4870,7 +5324,7 @@ export type SearchLotteryByKeywordApiV1LotteryDatabaseBiliSearchLotteryByKeyword
 
 export type SearchLotteryByKeywordApiV1LotteryDatabaseBiliSearchLotteryByKeywordPostResponse = SearchLotteryByKeywordApiV1LotteryDatabaseBiliSearchLotteryByKeywordPostResponses[keyof SearchLotteryByKeywordApiV1LotteryDatabaseBiliSearchLotteryByKeywordPostResponses];
 
-export type GetSingleScrapyStatusApiV1LotteryDatabaseBiliGetSingleScrapyStatusPostData = {
+export type GetSingleScrapyStatusApiV1LotteryDatabaseBiliGetSingleScrapyStatusGetData = {
     body?: never;
     path?: never;
     query: {
@@ -4878,27 +5332,33 @@ export type GetSingleScrapyStatusApiV1LotteryDatabaseBiliGetSingleScrapyStatusPo
          * 爬虫类型
          */
         scrapy_name: ScrapyTypeEnum;
+        /**
+         * T
+         *
+         * 防缓存时间戳（前端传当前毫秒时间戳 Date.now()）；后端不使用该值，仅用于让每次 URL 不同以绕过浏览器/CDN 缓存
+         */
+        t?: number | null;
     };
     url: '/api/v1/lottery_database/bili/GetSingleScrapyStatus';
 };
 
-export type GetSingleScrapyStatusApiV1LotteryDatabaseBiliGetSingleScrapyStatusPostErrors = {
+export type GetSingleScrapyStatusApiV1LotteryDatabaseBiliGetSingleScrapyStatusGetErrors = {
     /**
      * Validation Error
      */
     422: HttpValidationError;
 };
 
-export type GetSingleScrapyStatusApiV1LotteryDatabaseBiliGetSingleScrapyStatusPostError = GetSingleScrapyStatusApiV1LotteryDatabaseBiliGetSingleScrapyStatusPostErrors[keyof GetSingleScrapyStatusApiV1LotteryDatabaseBiliGetSingleScrapyStatusPostErrors];
+export type GetSingleScrapyStatusApiV1LotteryDatabaseBiliGetSingleScrapyStatusGetError = GetSingleScrapyStatusApiV1LotteryDatabaseBiliGetSingleScrapyStatusGetErrors[keyof GetSingleScrapyStatusApiV1LotteryDatabaseBiliGetSingleScrapyStatusGetErrors];
 
-export type GetSingleScrapyStatusApiV1LotteryDatabaseBiliGetSingleScrapyStatusPostResponses = {
+export type GetSingleScrapyStatusApiV1LotteryDatabaseBiliGetSingleScrapyStatusGetResponses = {
     /**
      * Successful Response
      */
     200: StandardResponseUnionStatsPluginProgressStatusRespNoneType;
 };
 
-export type GetSingleScrapyStatusApiV1LotteryDatabaseBiliGetSingleScrapyStatusPostResponse = GetSingleScrapyStatusApiV1LotteryDatabaseBiliGetSingleScrapyStatusPostResponses[keyof GetSingleScrapyStatusApiV1LotteryDatabaseBiliGetSingleScrapyStatusPostResponses];
+export type GetSingleScrapyStatusApiV1LotteryDatabaseBiliGetSingleScrapyStatusGetResponse = GetSingleScrapyStatusApiV1LotteryDatabaseBiliGetSingleScrapyStatusGetResponses[keyof GetSingleScrapyStatusApiV1LotteryDatabaseBiliGetSingleScrapyStatusGetResponses];
 
 export type GetAllLotScrapyStatusApiV1LotteryDatabaseBiliGetAllLotScrapyStatusGetData = {
     body?: never;
@@ -4916,8 +5376,8 @@ export type GetAllLotScrapyStatusApiV1LotteryDatabaseBiliGetAllLotScrapyStatusGe
 
 export type GetAllLotScrapyStatusApiV1LotteryDatabaseBiliGetAllLotScrapyStatusGetResponse = GetAllLotScrapyStatusApiV1LotteryDatabaseBiliGetAllLotScrapyStatusGetResponses[keyof GetAllLotScrapyStatusApiV1LotteryDatabaseBiliGetAllLotScrapyStatusGetResponses];
 
-export type GetOthersLotDynListApiV1LotteryDatabaseBiliGetOthersLotDynListPostData = {
-    body: LotteryPaginationParams;
+export type GetOthersLotDynListApiV1LotteryDatabaseBiliGetOthersLotDynListGetData = {
+    body?: never;
     path?: never;
     query?: {
         sort_by?: OthersLotDynSortEnum;
@@ -4950,27 +5410,45 @@ export type GetOthersLotDynListApiV1LotteryDatabaseBiliGetOthersLotDynListPostDa
          * Created At End
          */
         created_at_end?: number | null;
+        /**
+         * Page Num
+         *
+         * 页码，从 1 开始，最小值为 1
+         */
+        page_num?: number;
+        /**
+         * Page Size
+         *
+         * 每页数量，最小值为 1
+         */
+        page_size?: number;
+        /**
+         * T
+         *
+         * 防缓存时间戳（前端传当前毫秒时间戳 Date.now()）；后端不使用该值，仅用于让每次 URL 不同以绕过浏览器/CDN 缓存
+         */
+        t?: number | null;
     };
     url: '/api/v1/lottery_database/bili/GetOthersLotDynList';
 };
 
-export type GetOthersLotDynListApiV1LotteryDatabaseBiliGetOthersLotDynListPostErrors = {
+export type GetOthersLotDynListApiV1LotteryDatabaseBiliGetOthersLotDynListGetErrors = {
     /**
      * Validation Error
      */
     422: HttpValidationError;
 };
 
-export type GetOthersLotDynListApiV1LotteryDatabaseBiliGetOthersLotDynListPostError = GetOthersLotDynListApiV1LotteryDatabaseBiliGetOthersLotDynListPostErrors[keyof GetOthersLotDynListApiV1LotteryDatabaseBiliGetOthersLotDynListPostErrors];
+export type GetOthersLotDynListApiV1LotteryDatabaseBiliGetOthersLotDynListGetError = GetOthersLotDynListApiV1LotteryDatabaseBiliGetOthersLotDynListGetErrors[keyof GetOthersLotDynListApiV1LotteryDatabaseBiliGetOthersLotDynListGetErrors];
 
-export type GetOthersLotDynListApiV1LotteryDatabaseBiliGetOthersLotDynListPostResponses = {
+export type GetOthersLotDynListApiV1LotteryDatabaseBiliGetOthersLotDynListGetResponses = {
     /**
      * Successful Response
      */
     200: StandardResponseResponsePaginationItemsOthersLotDynItem;
 };
 
-export type GetOthersLotDynListApiV1LotteryDatabaseBiliGetOthersLotDynListPostResponse = GetOthersLotDynListApiV1LotteryDatabaseBiliGetOthersLotDynListPostResponses[keyof GetOthersLotDynListApiV1LotteryDatabaseBiliGetOthersLotDynListPostResponses];
+export type GetOthersLotDynListApiV1LotteryDatabaseBiliGetOthersLotDynListGetResponse = GetOthersLotDynListApiV1LotteryDatabaseBiliGetOthersLotDynListGetResponses[keyof GetOthersLotDynListApiV1LotteryDatabaseBiliGetOthersLotDynListGetResponses];
 
 export type GetLotteryFilterParamsApiV1LotteryDatabaseBiliGetLotteryFilterParamsGetData = {
     body?: never;
@@ -4988,55 +5466,77 @@ export type GetLotteryFilterParamsApiV1LotteryDatabaseBiliGetLotteryFilterParams
 
 export type GetLotteryFilterParamsApiV1LotteryDatabaseBiliGetLotteryFilterParamsGetResponse = GetLotteryFilterParamsApiV1LotteryDatabaseBiliGetLotteryFilterParamsGetResponses[keyof GetLotteryFilterParamsApiV1LotteryDatabaseBiliGetLotteryFilterParamsGetResponses];
 
-export type GetLotteryDetailApiV1LotteryDatabaseBiliGetLotteryDetailPostData = {
-    body: GetLotteryDetailReq;
+export type GetLotteryDetailApiV1LotteryDatabaseBiliGetLotteryDetailGetData = {
+    body?: never;
     path?: never;
-    query?: never;
+    query: {
+        /**
+         * Lottery Id
+         *
+         * lotdata 主键 lottery_id（对外互动资源 ID）
+         */
+        lottery_id: number;
+        /**
+         * T
+         *
+         * 防缓存时间戳（前端传当前毫秒时间戳 Date.now()）；后端不使用该值，仅用于让每次 URL 不同以绕过浏览器/CDN 缓存
+         */
+        t?: number | null;
+    };
     url: '/api/v1/lottery_database/bili/GetLotteryDetail';
 };
 
-export type GetLotteryDetailApiV1LotteryDatabaseBiliGetLotteryDetailPostErrors = {
+export type GetLotteryDetailApiV1LotteryDatabaseBiliGetLotteryDetailGetErrors = {
     /**
      * Validation Error
      */
     422: HttpValidationError;
 };
 
-export type GetLotteryDetailApiV1LotteryDatabaseBiliGetLotteryDetailPostError = GetLotteryDetailApiV1LotteryDatabaseBiliGetLotteryDetailPostErrors[keyof GetLotteryDetailApiV1LotteryDatabaseBiliGetLotteryDetailPostErrors];
+export type GetLotteryDetailApiV1LotteryDatabaseBiliGetLotteryDetailGetError = GetLotteryDetailApiV1LotteryDatabaseBiliGetLotteryDetailGetErrors[keyof GetLotteryDetailApiV1LotteryDatabaseBiliGetLotteryDetailGetErrors];
 
-export type GetLotteryDetailApiV1LotteryDatabaseBiliGetLotteryDetailPostResponses = {
+export type GetLotteryDetailApiV1LotteryDatabaseBiliGetLotteryDetailGetResponses = {
     /**
      * Successful Response
      */
     200: StandardResponseLotteryDetailResp;
 };
 
-export type GetLotteryDetailApiV1LotteryDatabaseBiliGetLotteryDetailPostResponse = GetLotteryDetailApiV1LotteryDatabaseBiliGetLotteryDetailPostResponses[keyof GetLotteryDetailApiV1LotteryDatabaseBiliGetLotteryDetailPostResponses];
+export type GetLotteryDetailApiV1LotteryDatabaseBiliGetLotteryDetailGetResponse = GetLotteryDetailApiV1LotteryDatabaseBiliGetLotteryDetailGetResponses[keyof GetLotteryDetailApiV1LotteryDatabaseBiliGetLotteryDetailGetResponses];
 
-export type GetOthersLotDynDetailApiV1LotteryDatabaseBiliGetOthersLotDynDetailPostData = {
-    body: GetOthersLotDynDetailReq;
+export type GetOthersLotDynDetailApiV1LotteryDatabaseBiliGetOthersLotDynDetailGetData = {
+    body?: never;
     path?: never;
-    query?: never;
+    query: {
+        /**
+         * Dyn Id
+         */
+        dyn_id: number | string;
+        /**
+         * T
+         */
+        t?: number | null;
+    };
     url: '/api/v1/lottery_database/bili/GetOthersLotDynDetail';
 };
 
-export type GetOthersLotDynDetailApiV1LotteryDatabaseBiliGetOthersLotDynDetailPostErrors = {
+export type GetOthersLotDynDetailApiV1LotteryDatabaseBiliGetOthersLotDynDetailGetErrors = {
     /**
      * Validation Error
      */
     422: HttpValidationError;
 };
 
-export type GetOthersLotDynDetailApiV1LotteryDatabaseBiliGetOthersLotDynDetailPostError = GetOthersLotDynDetailApiV1LotteryDatabaseBiliGetOthersLotDynDetailPostErrors[keyof GetOthersLotDynDetailApiV1LotteryDatabaseBiliGetOthersLotDynDetailPostErrors];
+export type GetOthersLotDynDetailApiV1LotteryDatabaseBiliGetOthersLotDynDetailGetError = GetOthersLotDynDetailApiV1LotteryDatabaseBiliGetOthersLotDynDetailGetErrors[keyof GetOthersLotDynDetailApiV1LotteryDatabaseBiliGetOthersLotDynDetailGetErrors];
 
-export type GetOthersLotDynDetailApiV1LotteryDatabaseBiliGetOthersLotDynDetailPostResponses = {
+export type GetOthersLotDynDetailApiV1LotteryDatabaseBiliGetOthersLotDynDetailGetResponses = {
     /**
      * Successful Response
      */
     200: StandardResponseOthersLotDynItem;
 };
 
-export type GetOthersLotDynDetailApiV1LotteryDatabaseBiliGetOthersLotDynDetailPostResponse = GetOthersLotDynDetailApiV1LotteryDatabaseBiliGetOthersLotDynDetailPostResponses[keyof GetOthersLotDynDetailApiV1LotteryDatabaseBiliGetOthersLotDynDetailPostResponses];
+export type GetOthersLotDynDetailApiV1LotteryDatabaseBiliGetOthersLotDynDetailGetResponse = GetOthersLotDynDetailApiV1LotteryDatabaseBiliGetOthersLotDynDetailGetResponses[keyof GetOthersLotDynDetailApiV1LotteryDatabaseBiliGetOthersLotDynDetailGetResponses];
 
 export type LotteryHofApiV1LotteryDatabaseBiliLotteryHofLotTypeGetData = {
     body?: never;

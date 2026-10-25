@@ -438,17 +438,17 @@ export const normalizeLotteryData = (data: AnyLotteryData): NormalizedLottery =>
   } else if ('dynId' in actualData && 'dynamicUrl' in actualData) {
     // 第三方抽奖动态（OthersLotDynItem）
     const dynData = actualData as OthersLotDynItem
-    const dynIdStr = dynData.dynId_str || String(dynData.dynId)
-    normalized.id = dynIdStr
+    const dynId_str = dynData.dynId_str || String(dynData.dynId)
+    normalized.id = dynId_str
     normalized.type = 'THIRD_PARTY'
     normalized.displayType = '第三方抽奖'
     normalized.title = dynData.authorName
       ? `${dynData.authorName} 的抽奖动态`
-      : `第三方抽奖 #${dynIdStr}`
+      : `第三方抽奖 #${dynId_str}`
     normalized.startTime = dynData.pubTime ? new Date(dynData.pubTime).getTime() / 1000 : null
     normalized.participants = null
     normalized.senderInfo = { uid: dynData.up_uid_str || String(dynData.up_uid ?? ''), name: dynData.authorName }
-    normalized.sourceLink = getBiliOpusUrl(dynIdStr)
+    normalized.sourceLink = getBiliOpusUrl(dynId_str)
     normalized.resultLink = dynData.dynamicUrl || null
     normalized.businessType = null
     normalized.prizes = []

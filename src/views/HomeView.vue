@@ -6,6 +6,8 @@ import biliMessage, { ElMessageBox } from '@/utils/message'
 import { CoffeeCup } from '@element-plus/icons-vue'
 import SubmitFeedbackModal from '@/components/lottery_data/bili_data/SubmitFeedbackModal.vue'
 import HomeLatestComments from '@/components/home/HomeLatestComments.vue'
+import UpcomingLotteryMarquee from '@/components/lottery_data/bili_data/UpcomingLotteryMarquee.vue'
+import HotLotteryList from '@/components/lottery_data/bili_data/HotLotteryList.vue'
 import { processRoutesForHome } from '@/utils/routeUtils'
 import { openGlobalLoginModalKey } from '@/models/inject/inject_type.ts'
 import { KeysEnum, useInject } from '@/models/base/provide_model.ts'
@@ -132,10 +134,26 @@ const handleLogoutClick = () => {
       </div>
     </section>
 
+    <!-- 不蒜子访问统计（全站 PV / UV）：hero 横幅下方第一个元素 -->
+    <footer class="busuanzi-footer shrink-0 border-y border-border-lighter py-2 text-center text-sm text-text-secondary">
+      {{ t('home.busuanziPv') }} <span id="busuanzi_site_pv" class="busuanzi-footer__pv">{{ t('network.detecting') }}</span> {{ t('home.busuanziTimes') }} ·
+      {{ t('home.busuanziUv') }} <span id="busuanzi_site_uv" class="busuanzi-footer__uv">{{ t('network.detecting') }}</span> {{ t('home.busuanziPeople') }}
+    </footer>
+
     <div class="mt-8 flex justify-center gap-10" v-if="isLoggedIn"></div>
 
     <!-- 最新评论（扁平多行多列网格，置于功能导航区上方） -->
     <HomeLatestComments />
+
+    <!-- 即将开奖 + 热门抽奖：并排布局（左侧即将开奖含抽奖数据统计，右侧热门抽奖竖排） -->
+    <section class="home-lottery-panels mx-5 mt-6 grid grid-cols-1 gap-4 lg:mx-10 lg:grid-cols-3">
+      <div class="home-lottery-panels__upcoming rounded-lg border border-border-light bg-bg p-4 lg:col-span-2">
+        <UpcomingLotteryMarquee />
+      </div>
+      <div class="home-lottery-panels__hot rounded-lg border border-border-light bg-bg p-4">
+        <HotLotteryList :limit="6" />
+      </div>
+    </section>
 
     <!-- 功能导航区 -->
     <section class="mx-5 py-10 lg:mx-10 sm:px-0 sm:mx-0">
@@ -271,12 +289,6 @@ const handleLogoutClick = () => {
         <el-text class="text-xs text-text-secondary" tag="p">Made with ❤ by 斯卡蒂天下第一T_T</el-text>
       </div>
     </div>
-  </footer>
-
-  <!-- 不蒜子访问统计（全站 PV / UV） -->
-  <footer class="busuanzi-footer shrink-0 py-3 text-center text-sm text-text-secondary">
-    {{ t('home.busuanziPv') }} <span id="busuanzi_site_pv" class="busuanzi-footer__pv">{{ t('network.detecting') }}</span> {{ t('home.busuanziTimes') }} ·
-    {{ t('home.busuanziUv') }} <span id="busuanzi_site_uv" class="busuanzi-footer__uv">{{ t('network.detecting') }}</span> {{ t('home.busuanziPeople') }}
   </footer>
 
   <!-- 首页"提交反馈"弹窗，由顶部按钮触发，不渲染内置按钮 -->

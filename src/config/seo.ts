@@ -148,6 +148,27 @@ export const ROUTE_SEO: Record<string, RouteSeoOverride> = {
     description: 'B站用户空间：TA 发布的动态、收藏与互动记录，关注感兴趣的用户。',
     keywords: ['B站用户空间', 'UP主主页', '用户动态'],
     ogType: 'website'
+  },
+  // 2.58.0：空间 tab 路由化后，4 条子路由各自输出 SEO 描述
+  MOMENT_USER_SPACE_HOME: {
+    description: 'B站用户空间主页：TA 的资料、关注与粉丝数据总览。',
+    keywords: ['B站用户空间', 'UP主主页', '用户资料'],
+    ogType: 'website'
+  },
+  MOMENT_USER_SPACE_DYNAMIC: {
+    description: 'B站用户空间动态：查看该用户发布的全部动态内容与互动数据。',
+    keywords: ['B站动态', '用户动态', 'UP主动态'],
+    ogType: 'website'
+  },
+  MOMENT_USER_SPACE_FAVORITES: {
+    description: 'B站用户空间收藏：该用户公开的收藏夹与收藏内容。',
+    keywords: ['B站收藏', '用户收藏夹', 'UP主收藏'],
+    ogType: 'website'
+  },
+  MOMENT_USER_SPACE_SETTINGS: {
+    description: 'B站用户空间设置：管理主页展示项与收藏可见性。',
+    keywords: ['空间设置', '收藏设置', 'B站设置'],
+    ogType: 'website'
   }
 }
 

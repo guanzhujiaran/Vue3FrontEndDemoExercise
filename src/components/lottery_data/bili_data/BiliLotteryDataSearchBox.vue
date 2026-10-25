@@ -177,7 +177,7 @@ const handleCloseDrawer = () => {
           class="flex justify-center overflow-x-auto py-8 mt-4 border-t border-border-lighter"
           v-if="total > pageSize"
         >
-          <el-pagination
+          <BiliPagination
             class="mx-auto flex-wrap justify-center gap-y-2"
             v-model:current-page="currentPage"
             :page-size="pageSize"

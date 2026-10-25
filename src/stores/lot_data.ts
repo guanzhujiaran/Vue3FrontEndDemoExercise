@@ -1,6 +1,7 @@
 import { ref } from 'vue'
 import { defineStore } from 'pinia'
 import { type LotDataWrapperProps, ParentLotDataTab } from '@/models/api/lottery/lotdata.ts'
+import { browserPersistStorage } from '@/utils/persistStorage'
 
 export const useLotDataStore = defineStore(
   'lot-data-setting',
@@ -17,7 +18,7 @@ export const useLotDataStore = defineStore(
   {
     persist: {
       key: 'lot-data-setting',
-      storage: localStorage
+      storage: browserPersistStorage
     }
   }
 )

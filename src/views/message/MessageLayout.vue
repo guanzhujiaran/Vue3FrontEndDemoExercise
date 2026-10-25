@@ -24,12 +24,13 @@
 
 <script setup lang="ts">
 import { computed, reactive, type Ref } from 'vue'
-import { ChatDotRound, ChatLineRound, Promotion, Pointer, Bell, Setting } from '@element-plus/icons-vue'
+import { ChatDotRound, ChatLineRound, Promotion, Pointer, Bell, BellFilled, Setting } from '@element-plus/icons-vue'
 import { useMessageUnreadStore } from '@/stores/message_unread'
 import { useHeartbeat } from '@/composables/useHeartbeat'
 import { fetchUnreadSummary, type UnreadSummary } from '@/api/notify/message-api'
 import { useInject, KeysEnum } from '@/models/base/provide_model.ts'
 import type { UserNavModel } from '@/models/user/user_model.ts'
+import { RouteName } from '@/models/router/index.ts'
 import BiliErrorRouteTo from '@/components/CommonCompo/Bili-Feedback-Compo/BiliErrorRouteTo.vue'
 import BiliSideNavLayout from '@/components/CommonCompo/Bili-Container-Compo/BiliSideNavLayout.vue'
 import { BiliErrorRouteToTxt } from '@/assets/text/BiliErrorTxt.ts'
@@ -57,7 +58,8 @@ const messagePageCacheNames = [
   'AtListView',
   'LikeListView',
   'NotifyListView',
-  'MessageSettingsView'
+  'MessageSettingsView',
+  'PushSettingsView'
 ]
 
 // 各模块未读数统一在此持有，仅通过 msg_feed/unread 拉取一次，再经 v-model 下发
@@ -74,7 +76,8 @@ const navGroups = computed(() => [
       { name: 'MESSAGE_ATS', title: t('message.navAts'), icon: Promotion, badge: true, badgeValue: unread.at ?? 0 },
       { name: 'MESSAGE_LIKES', title: t('message.navLikes'), icon: Pointer, badge: true, badgeValue: unread.like ?? 0 },
       { name: 'MESSAGE_NOTIFY', title: t('message.navNotify'), icon: Bell, badge: true, badgeValue: unread.notify ?? 0 },
-      { name: 'MESSAGE_SETTINGS', title: t('message.navSettings'), icon: Setting, badge: false, badgeValue: 0 }
+      { name: 'MESSAGE_SETTINGS', title: t('message.navSettings'), icon: Setting, badge: false, badgeValue: 0 },
+      { name: RouteName.MESSAGE_PUSH_SETTINGS, title: '推送设置', icon: BellFilled, badge: false, badgeValue: 0 }
     ]
   }
 ])

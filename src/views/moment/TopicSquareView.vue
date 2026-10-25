@@ -81,7 +81,7 @@
         </div>
       </div>
       <div class="topic-square__pagination flex justify-center py-4">
-        <el-pagination
+        <BiliPagination
           v-if="total > pageSize"
           layout="prev, pager, next"
           :total="total"

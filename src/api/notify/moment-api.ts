@@ -3,8 +3,8 @@
  *
  * 仅在此处调用 hey-api 生成的 SDK，业务视图/组件统一调用本文件的封装函数。
  */
-import { AuditService, AvatarAuditService, FavoriteService, FolderCoverAuditService, InteractionBizTypeEnum, MessageFollowService, MomentAuditService, ResourceAuditStatusEnum, MomentFeedService, MomentService, MomentTopicAuditService, PptrUserGatewayService, ReportService } from '@/api/community/hey-api'
-import { request, authHeaders, type RequestOptions } from '@/api/http'
+import { AuditService, AvatarAuditService, CommunitySpaceService, FavoriteService, FolderCoverAuditService, InteractionBizTypeEnum, MessageFollowService, MomentAuditService, ResourceAuditStatusEnum, MomentFeedService, MomentService, MomentTopicAuditService, PptrUserGatewayService, ReportService } from '@/api/community/hey-api'
+import { request, requestOk, authHeaders, type RequestOptions } from '@/api/http'
 
 import type {
   MomentFeedResp,
@@ -64,15 +64,21 @@ import type {
   FavoriteItemListResp,
   FavoriteListItem,
   FavoriteDynFoldersResp,
-  FavoriteSettingReq,
-  FavoriteSettingResp,
   InteractionStatusResp,
   InteractionStatusItem,
+  HotLotteryResp,
+  HotLotteryItem,
   FolderCoverAuditListResp,
   FolderCoverAuditItem,
   FolderCoverAuditApproveReq,
   FolderCoverAuditRejectReq,
   SpaceInfoResp,
+  SpaceTimelineResp,
+  SpaceViewHistoryResp,
+  FollowListResp,
+  FollowTagResp,
+  SpacePrivacyFlags,
+  SpacePrivacyUpdateReq,
   StandardResponseSpaceInfoResp,
 } from '@/api/community/hey-api'
 
@@ -329,6 +335,30 @@ export async function fetchInteractionStatusOne(
   )
 }
 
+// ---- 热门抽奖榜（基于 be-message 浏览记录）----
+
+/**
+ * 热门抽奖榜：`GET /api/v1/community/interaction/hot-lotteries`。
+ *
+ * 口径：窗口内浏览记录（TInteractionViewLog，bizType=lottery）按资源聚合
+ * sum(viewCount) 降序；抽奖本体在 be-bilibili-crawler，需按 bizId 回捞详情。
+ */
+export async function fetchHotLotteries(
+  params: { windowDays?: number; limit?: number } = {}
+): Promise<HotLotteryResp | null> {
+  return request<HotLotteryResp | null>(
+    () =>
+      MomentService.interactionHotLotteriesApiV1CommunityInteractionHotLotteriesGet({
+        query: {
+          window_days: params.windowDays ?? 7,
+          limit: params.limit ?? 10,
+        },
+      }),
+    null,
+    { showErrorToast: false }
+  )
+}
+
 // ---- Report ----
 
 export async function reportMoment(
@@ -546,7 +576,7 @@ export async function fetchTopicFeed(
           sort: params.sort ?? 'hot',
         },
       }),
-    { topicId: Number(topicId), topicName: '', items: [], hasMore: false, topicIdStr: String(topicId) }
+    { topicId: Number(topicId), topicName: '', items: [], hasMore: false, topicId_str: String(topicId) }
   )
 }
 
@@ -631,6 +661,187 @@ export async function fetchFollowRelation(target_mid: number): Promise<FollowRel
         query: { target_mid },
       }),
     null
+  )
+}
+
+// ---- Space Timeline / View History（个人空间主页行为记录，2.58.0 P2）----
+
+/**
+ * 空间行为时间线（我的主页与 TA 主页共用）。
+ *
+ * 后端按网关鉴权解析 viewer：viewer == mid 返回全部三类条目，viewer != mid 或
+ * 未登录则按空间主人的隐私开关整类过滤（关注 / 点赞 / 收藏）。游标分页。
+ */
+export async function fetchSpaceTimeline(
+  mid: number | string,
+  params: { cursor?: string | null; page_size?: number } = {}
+): Promise<SpaceTimelineResp> {
+  return request<SpaceTimelineResp>(
+    () =>
+      CommunitySpaceService.spaceTimelineApiV1CommunitySpaceTimelineGet({
+        query: {
+          mid,
+          cursor: params.cursor ?? null,
+          page_size: params.page_size ?? 20,
+        },
+      }),
+    { items: [], has_more: false, cursor: null }
+  )
+}
+
+/**
+ * 我的浏览历史（仅本人可读，后端校验 mid == 登录用户）。游标分页。
+ */
+export async function fetchSpaceViewHistory(
+  mid: number | string,
+  params: { cursor?: string | null; page_size?: number } = {}
+): Promise<SpaceViewHistoryResp> {
+  return request<SpaceViewHistoryResp>(
+    () =>
+      CommunitySpaceService.spaceViewHistoryApiV1CommunitySpaceViewHistoryGet({
+        query: {
+          mid,
+          cursor: params.cursor ?? null,
+          page_size: params.page_size ?? 20,
+        },
+      }),
+    { items: [], has_more: false, cursor: null }
+  )
+}
+
+/**
+ * TA 主页粉丝列表（对标 B 站 /x/relation/fans）。
+ *
+ * 后端按 viewer 身份门控：viewer == mid 直接返回，访客 / 未登录仅在 TA 打开
+ * `show_fans_list` 时返回，关闭时整类为空；最多回看最新 500 个粉丝。
+ */
+export async function fetchSpaceFans(
+  mid: number | string,
+  params: { page_num?: number; page_size?: number } = {}
+): Promise<FollowListResp> {
+  return request<FollowListResp>(
+    () =>
+      CommunitySpaceService.spaceFansApiV1CommunitySpaceFansGet({
+        query: {
+          mid,
+          page_num: params.page_num ?? 1,
+          page_size: params.page_size ?? 20,
+        },
+      }),
+    { items: [], total: 0, page_num: 1, page_size: 20 }
+  )
+}
+
+// ---- 关注 / 粉丝 详情页（对标 B 站 x/relation/followings|fans|tags）----
+
+/** 关注列表响应兜底（接口失败时保持列表可渲染） */
+const EMPTY_FOLLOW_LIST: FollowListResp = { items: [], total: 0, page_num: 1, page_size: 24 }
+
+/**
+ * 关注列表（对标 B 站 `/x/relation/followings`）。
+ *
+ * - `vmid` 缺省=当前登录用户；传他人 mid 时后端只放行前 5 页（超出返回空 `items`、
+ *   `total` 仍为真实总数），可见性窗口由后端强制，前端只负责不渲染第 6 页；
+ * - `tagid` 分组过滤仅自己视角有效（`-10` 特别关注 / `0` 默认分组 / `>0` 自建分组）；
+ * - 访问者身份由网关注入，前端不传。
+ */
+export async function fetchFollowings(
+  params: { vmid?: number | string; pn?: number; ps?: number; tagid?: number | null } = {}
+): Promise<FollowListResp> {
+  return request<FollowListResp>(
+    () =>
+      MessageFollowService.listFollowingsApiV1MessageFollowFollowingsGet({
+        query: {
+          vmid: params.vmid ?? null,
+          pn: params.pn ?? 1,
+          ps: params.ps ?? 24,
+          tagid: params.tagid ?? null,
+        },
+      }),
+    EMPTY_FOLLOW_LIST
+  )
+}
+
+/** 粉丝列表（对标 B 站 `/x/relation/fans`），参数语义与 `fetchFollowings` 一致 */
+export async function fetchFans(
+  params: { vmid?: number | string; pn?: number; ps?: number } = {}
+): Promise<FollowListResp> {
+  return request<FollowListResp>(
+    () =>
+      MessageFollowService.listFansApiV1MessageFollowFansGet({
+        query: {
+          vmid: params.vmid ?? null,
+          pn: params.pn ?? 1,
+          ps: params.ps ?? 24,
+        },
+      }),
+    EMPTY_FOLLOW_LIST
+  )
+}
+
+/** 我的关注分组列表（特别关注 `-10` → 默认分组 `0` → 自建分组，仅自己可见） */
+export async function fetchFollowTags(): Promise<FollowTagResp[]> {
+  return request<FollowTagResp[]>(
+    () => MessageFollowService.listFollowTagsApiV1MessageFollowTagsGet(),
+    []
+  )
+}
+
+/** 新建关注分组（名称 1~20 字、不重名、最多 20 个） */
+export async function createFollowTag(
+  name: string,
+  tip?: string,
+  options?: RequestOptions
+): Promise<FollowTagResp | null> {
+  return request<FollowTagResp | null>(
+    () =>
+      MessageFollowService.createFollowTagApiV1MessageFollowTagsPost({
+        body: { name, tip: tip ?? null },
+      }),
+    null,
+    options
+  )
+}
+
+/** 删除自建分组（连带清空成员关系；系统分组后端会拒绝） */
+export async function deleteFollowTag(
+  tagId: number,
+  options?: RequestOptions
+): Promise<boolean> {
+  // 响应 data 为空（StandardResponse[None]），用 requestOk 只要「业务码为 0」的成功标志
+  return requestOk(
+    () =>
+      MessageFollowService.deleteFollowTagApiV1MessageFollowTagsTagIdDelete({
+        path: { tag_id: tagId },
+      }),
+    options
+  )
+}
+
+/** 某用户当前所属的分组 id 列表（分组弹窗预填；`0` 默认分组不参与） */
+export async function fetchAssignedFollowTags(targetMid: number | string): Promise<number[]> {
+  return request<number[]>(
+    () =>
+      MessageFollowService.getAssignedFollowTagsApiV1MessageFollowTagsAssignedGet({
+        query: { target_mid: targetMid },
+      }),
+    []
+  )
+}
+
+/** 覆盖式设置某关注对象的分组（空数组 = 移出全部分组） */
+export async function assignFollowTags(
+  targetMid: number | string,
+  tagIds: number[],
+  options?: RequestOptions
+): Promise<number[] | null> {
+  return request<number[] | null>(
+    () =>
+      MessageFollowService.assignFollowTagApiV1MessageFollowTagsAssignPost({
+        body: { target_mid: targetMid, tag_ids: tagIds },
+      }),
+    null,
+    options
   )
 }
 
@@ -737,6 +948,39 @@ export async function fetchUserSpaceInfo(mid: number | string): Promise<Standard
   } catch {
     return { code: -1, msg: '服务器出错，请稍后重试', data: null }
   }
+}
+
+// ---- Space Privacy (空间资料可见性设置，2.58.0) ----
+
+/** 读自己的空间对外可见性开关（仅本人，无需过滤） */
+export async function fetchMySpacePrivacy(): Promise<SpacePrivacyFlags | null> {
+  const r = (await PptrUserGatewayService.getMySpacePrivacyApiV1UserSpacePrivacyGet()) as {
+    code?: number | string
+    data?: SpacePrivacyFlags | null
+  } | null
+  if (!r) return null
+  const code = typeof r.code === 'number' ? r.code : 0
+  return code === 0 ? (r.data ?? null) : null
+}
+
+/**
+ * 写自己的空间对外可见性开关。
+ *
+ * 后端是**全量覆盖**（不是 PATCH），所以必须把五个开关一次性带全；
+ * 收藏不在本接口内 —— 2026-10-08 起改为逐夹 `isPublic`（走收藏夹 create / update）。
+ */
+export async function updateMySpacePrivacy(
+  body: SpacePrivacyUpdateReq
+): Promise<SpacePrivacyFlags | null> {
+  const r = (await PptrUserGatewayService.updateMySpacePrivacyApiV1UserSpacePrivacyPost({
+    body,
+  })) as {
+    code?: number | string
+    data?: SpacePrivacyFlags | null
+  } | null
+  if (!r) return null
+  const code = typeof r.code === 'number' ? r.code : 0
+  return code === 0 ? (r.data ?? null) : null
 }
 
 // ---- Audit (Admin) ----
@@ -980,7 +1224,7 @@ export async function folderCoverAuditReject(
 
 // ---- Favorite (收藏夹系统) ----
 
-/** 创建收藏夹 */
+/** 创建收藏夹（`isPublic` 缺省 true=公开） */
 export async function createFavoriteFolder(
   data: FavoriteFolderCreateReq
 ): Promise<FavoriteFolderResp | null> {
@@ -993,7 +1237,7 @@ export async function createFavoriteFolder(
   )
 }
 
-/** 更新收藏夹（名称/描述/封面） */
+/** 更新收藏夹（名称/描述/封面/可见性） */
 export async function updateFavoriteFolder(
   data: FavoriteFolderUpdateReq
 ): Promise<null> {
@@ -1019,7 +1263,7 @@ export async function deleteFavoriteFolder(
   )
 }
 
-/** 我的收藏夹列表 */
+/** 我的收藏夹列表（含 `isPublic`；本人视角返回全部夹） */
 export async function fetchFavoriteFolders(): Promise<FavoriteFolderResp[]> {
   return request<FavoriteFolderResp[]>(
     () =>
@@ -1089,7 +1333,7 @@ export async function fetchFavoriteDynIds(
           pageSize: params.pageSize ?? 20,
         },
       }),
-    { folderId, total: 0, items: [] }
+    { folderId: 0, folderId_str: folderId, total: 0, items: [] }
   )
 }
 
@@ -1112,7 +1356,7 @@ export async function fetchFavoriteItems(
           pageSize: params.pageSize ?? 20,
         },
       }),
-    { folderId, total: 0, items: [] }
+    { folderId: 0, folderId_str: folderId, total: 0, items: [] }
   )
 }
 
@@ -1136,32 +1380,7 @@ export async function fetchDynFavoriteFolders(
   )
 }
 
-/** 主页是否显示收藏 */
-export async function fetchFavoriteSetting(): Promise<FavoriteSettingResp | null> {
-  return request<FavoriteSettingResp | null>(
-    () =>
-      FavoriteService.getSettingApiV1FavoriteSettingGet({
-      }),
-    null
-  )
-}
-
-/** 设置主页是否显示收藏 */
-export async function setFavoriteSetting(
-  showFavorites: boolean,
-  options?: RequestOptions
-): Promise<FavoriteSettingResp | null> {
-  return request<FavoriteSettingResp | null>(
-    () =>
-      FavoriteService.setSettingApiV1FavoriteSettingPost({
-        body: { showFavorites } as FavoriteSettingReq,
-      }),
-    null,
-    options
-  )
-}
-
-/** 某用户主页公开的收藏夹列表（无需登录；不公开返回 null） */
+/** 某用户主页公开的收藏夹列表（无需登录；2026-10-08 起按逐夹 `isPublic` 过滤，无公开夹返回空数组） */
 export async function fetchUserFavoriteFolders(
   mid: number | string
 ): Promise<FavoriteFolderResp[] | null> {
@@ -1226,14 +1445,16 @@ export const AuditBizType = {
 
 /** 通用审核统计（按 bizType 业务域，传 InteractionBizTypeEnum 数值；SDK 类型待同步先断言透传） */
 export async function fetchAuditStatisticsByBiz(
-  bizType: number
+  bizType: number,
+  options?: RequestOptions
 ): Promise<AuditStatisticsData> {
   return request<AuditStatisticsData>(
     () =>
       MomentAuditService.auditStatisticsApiV1CommunityAuditStatisticsGet({
         query: { bizType } as never,
       }),
-    { total: 0, byStatus: {}, byType: [] }
+    { total: 0, byStatus: {}, byType: [] },
+    options
   )
 }
 
@@ -1279,10 +1500,10 @@ export type {
   FavoriteItemListResp,
   FavoriteListItem,
   FavoriteDynFoldersResp,
-  FavoriteSettingReq,
-  FavoriteSettingResp,
   InteractionStatusResp,
   InteractionStatusItem,
+  HotLotteryResp,
+  HotLotteryItem,
   SpaceInfoResp,
   MomentLikerListResp,
   MomentForwardListResp,

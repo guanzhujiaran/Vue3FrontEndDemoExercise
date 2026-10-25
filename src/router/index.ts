@@ -454,6 +454,19 @@ const routes: CustomRouteRecordRaw[] = [
         }
       },
       {
+        path: 'detail/:browserId',
+        name: RouteName.RPA_BROWSER_DETAIL,
+        component: () => import('@/views/rpa-browser/BrowserDetail.vue'),
+        meta: {
+          title: RouteName.RPA_BROWSER_DETAIL,
+          icon: IconConnection,
+          description: '浏览器指纹详情与关联工作流',
+          order: 3,
+          showInHome: false,
+          isHeaderShow: false
+        }
+      },
+      {
         path: 'stream/:browserId',
         name: RouteName.RPA_BROWSER_STREAM,
         component: () => import('@/views/rpa-browser/BrowserStream.vue'),
@@ -504,6 +517,19 @@ const routes: CustomRouteRecordRaw[] = [
           icon: IconConnection,
           description: '提交公开审批申请并查看我的审批进度',
           order: 9,
+          showInHome: false,
+          isHeaderShow: false
+        }
+      },
+      {
+        path: 'workflows/resources',
+        name: RouteName.RPA_BROWSER_RESOURCE_RECORD,
+        component: () => import('@/views/rpa-browser/WorkflowResourceRecordView.vue'),
+        meta: {
+          title: RouteName.RPA_BROWSER_RESOURCE_RECORD,
+          icon: IconDataAnalysis,
+          description: '查看工作流已处理（去重）数据与业务主键',
+          order: 8,
           showInHome: false,
           isHeaderShow: false
         }
@@ -624,6 +650,12 @@ const routes: CustomRouteRecordRaw[] = [
         name: 'MESSAGE_SETTINGS',
         component: () => import('@/views/message/MessageSettingsView.vue'),
         meta: { title: '消息设置' }
+      },
+      {
+        path: 'push-settings',
+        name: RouteName.MESSAGE_PUSH_SETTINGS,
+        component: () => import('@/views/message/PushSettingsView.vue'),
+        meta: { title: '推送设置' }
       }
     ]
   },
@@ -785,6 +817,13 @@ const routes: CustomRouteRecordRaw[] = [
         meta: { title: '启动队列', requiresAdmin: true, hidden: true }
       },
       {
+        // 全量工作流管理（跨作者查看 / 启停 / 运行 / 删除）：仅消息管理端 root 可见
+        path: 'rpa/workflow',
+        name: 'ADMIN_RPA_WORKFLOW',
+        component: () => import('@/views/rpa-browser/admin/WorkflowAdmin.vue'),
+        meta: { title: '工作流管理', requiresMessageRoot: true, hidden: true }
+      },
+      {
         path: 'message-notify',
         name: 'ADMIN_MESSAGE_NOTIFY',
         component: () => import('@/views/message/NotifyAdminView.vue'),
@@ -904,6 +943,17 @@ const routes: CustomRouteRecordRaw[] = [
         meta: {
           title: 'RPC 调试',
           requiresMessageRoot: true,
+          hidden: true
+        }
+      },
+      {
+        // bili-crawler 数据汇总：按抽奖类型统计未开奖/新增等，管理端可见
+        path: 'bili-crawler-summary',
+        name: 'ADMIN_BILI_CRAWLER_SUMMARY',
+        component: () => import('@/views/admin/BiliCrawlerSummaryView.vue'),
+        meta: {
+          title: '数据汇总',
+          requiresAdmin: true,
           hidden: true
         }
       }

@@ -39,6 +39,7 @@
             :status="status"
             @avatar-click="openUserSpace(detail)"
             @thumb="handleThumb"
+            @status-change="handleCardFavoriteChange"
             @report="handleReport"
             @remove="handleRemove"
             @comment="switchToComment"
@@ -57,7 +58,7 @@
                 class="moment-detail__comment bg-bg-overlay rounded-lg border border-border-light p-4"
               >
                 <LotteryCommentSection
-                  :oid="detail.dynIdStr"
+          :oid="detail.dynId_str ?? ''"
                   :type="InteractionBizTypeEnum.DYNAMIC"
                   :up-mid="detail.mid"
                   :focus-rpid="focusRpid"
@@ -165,28 +166,31 @@
       class="moment-detail__toolbar fixed right-8 top-1/2 -translate-y-1/2 z-50 flex flex-col items-center gap-2 rounded-full bg-bg-overlay shadow-lg border border-border-light px-2 py-4"
     >
       <!-- 点赞 -->
-      <div class="moment-detail__toolbar-item flex flex-col items-center gap-0.5 cursor-pointer" @click="handleThumb(detail.dynIdStr)">
-        <el-icon :size="22" class="hover:text-primary" :class="{ 'text-primary': isLiked }">
-          <LikeIcon />
-        </el-icon>
+      <div class="moment-detail__toolbar-item flex flex-col items-center gap-0.5 cursor-pointer" @click="handleThumb(detail.dynId_str ?? '')">
+        <BiliIcon name="like" size="w-[22px] h-[22px]" class="hover:text-primary" :class="{ 'text-msg-pink': isLiked }" />
         <span class="text-xs text-text-placeholder">{{ formatNum(statLikeCount) }}</span>
       </div>
 
       <!-- 收藏 -->
-      <div class="moment-detail__toolbar-item flex flex-col items-center gap-0.5 cursor-pointer" @click="showFavoriteDialog = true">
-        <el-icon :size="22" class="hover:text-primary"><FavoriteIcon /></el-icon>
+      <div
+        class="moment-detail__toolbar-item flex flex-col items-center gap-0.5 cursor-pointer"
+        :class="{ 'text-warning': isFavorited }"
+        :aria-pressed="isFavorited"
+        @click="showFavoriteDialog = true"
+      >
+        <BiliIcon name="favorite" size="w-[22px] h-[22px]" class="hover:text-primary" />
         <span class="text-xs text-text-placeholder">{{ formatNum(statFavoriteCount) }}</span>
       </div>
 
       <!-- 转发 -->
       <div class="moment-detail__toolbar-item flex flex-col items-center gap-0.5 cursor-pointer" @click="showRepostDialog = true">
-        <el-icon :size="22" class="hover:text-primary"><ForwardIcon /></el-icon>
+        <BiliIcon name="forward" size="w-[22px] h-[22px]" class="hover:text-primary" />
         <span class="text-xs text-text-placeholder">{{ formatNum(statRepostCount) }}</span>
       </div>
 
       <!-- 评论 -->
       <div class="moment-detail__toolbar-item flex flex-col items-center gap-0.5 cursor-pointer" @click="switchToComment">
-        <el-icon :size="22" class="hover:text-primary"><CommentIcon /></el-icon>
+        <BiliIcon name="comment" size="w-[22px] h-[22px]" class="hover:text-primary" />
         <span class="text-xs text-text-placeholder">{{ formatNum(statCommentCount) }}</span>
       </div>
 
@@ -224,10 +228,7 @@
 import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { View } from '@element-plus/icons-vue'
-import LikeIcon from '@/assets/svgs/dynamic/detail/side_toolbar/like.svg?component'
-import FavoriteIcon from '@/assets/svgs/dynamic/detail/side_toolbar/favorite.svg?component'
-import ForwardIcon from '@/assets/svgs/dynamic/detail/side_toolbar/forward.svg?component'
-import CommentIcon from '@/assets/svgs/dynamic/detail/side_toolbar/comment.svg?component'
+import BiliIcon from '@/components/CommonCompo/BiliIcon.vue'
 import {
   fetchMomentDetail,
   fetchInteractionStatusOne,
@@ -249,7 +250,12 @@ import MomentFavoriteDialog from '@/components/moment/MomentFavoriteDialog.vue'
 import ReportDialog from '@/components/moment/ReportDialog.vue'
 import { BiliImg } from '@/assets/img/BiliImg'
 import { usePageSeo } from '@/composables/usePageSeo.ts'
+import { useInteractionMachine } from '@/composables/useInteractionMachine'
+import type { FavoriteChangedPayload } from '@/utils/interaction/favoriteSync'
+import biliMessage from '@/utils/message'
 import { SITE_URL } from '@/config/seo.ts'
+// 2.58.0：相对时间抽到公共工具（原先是本页私有函数，个人空间主页也要用）
+import { formatRelativeTime } from '@/utils/dateFormat.ts'
 
 defineOptions({ name: 'MomentDetailView' })
 
@@ -326,12 +332,41 @@ const activeSubHasMore = computed(() => {
 })
 
 // 互动状态（2.41.0：详情不返回 stat，统一走 /interaction/status 查询）
+// 点赞 / 收藏各自跑一台状态机（见 utils/interaction/interactionMachine.ts），
+// 状态机是唯一可写入口，status 对象只作为「向子组件透传」的展示载体。
 const status = ref<InteractionStatusItem | null>(null)
+
+/** 点赞状态机（active=我是否已赞，count=赞数） */
+const likeMachine = useInteractionMachine()
+/** 收藏状态机（active=我是否已收藏，count=收藏数） */
+const favMachine = useInteractionMachine()
+
+/** 把状态机的最新值回写到 status（保持子组件 / 计数展示与状态机一致） */
+function syncStatusFromMachines() {
+  if (!status.value) return
+  status.value.isLike = likeMachine.active.value
+  status.value.likeCount = likeMachine.count.value
+  status.value.isFavorite = favMachine.active.value
+  status.value.favoriteCount = favMachine.count.value
+}
+
 async function loadStatus(id: string = momentId) {
+  likeMachine.syncStart()
+  favMachine.syncStart()
   try {
-    status.value = await fetchInteractionStatusOne(InteractionBizTypeEnum.DYNAMIC, id)
+    const item = await fetchInteractionStatusOne(InteractionBizTypeEnum.DYNAMIC, id)
+    if (!item) {
+      likeMachine.syncFail()
+      favMachine.syncFail()
+      return
+    }
+    status.value = item
+    likeMachine.sync(Boolean(item.isLike), item.likeCount ?? 0)
+    favMachine.sync(Boolean(item.isFavorite), item.favoriteCount ?? 0)
+    syncStatusFromMachines()
   } catch {
-    status.value = null
+    likeMachine.syncFail()
+    favMachine.syncFail()
   }
 }
 
@@ -345,15 +380,17 @@ const commentCountLabel = computed(() => {
 const likeCountLabel = computed(() => (statLikeCount.value ? ` ${statLikeCount.value}` : ''))
 const repostCountLabel = computed(() => (statRepostCount.value ? ` ${statRepostCount.value}` : ''))
 
-/** 悬浮工具栏统计（来自统一 status 接口） */
-const statLikeCount = computed(() => status.value?.likeCount || 0)
+/** 悬浮工具栏统计（来自统一 status 接口 + 点赞/收藏状态机） */
+const statLikeCount = computed(() => likeMachine.count.value)
 const statCommentCount = computed(() => status.value?.commentCount || 0)
 const statRepostCount = computed(() => status.value?.repostCount || 0)
 const statViewCount = computed(() => status.value?.viewCount || 0)
-const statFavoriteCount = computed(() => status.value?.favoriteCount || 0)
+const statFavoriteCount = computed(() => favMachine.count.value)
 
-/** 当前用户是否已赞（统一 status 接口 isLike） */
-const isLiked = computed(() => Boolean(status.value?.isLike))
+/** 当前用户是否已赞（点赞状态机） */
+const isLiked = computed(() => likeMachine.active.value)
+/** 当前用户是否已收藏（收藏状态机；激活态用颜色区分，仓库暂无 favorite_active.svg） */
+const isFavorited = computed(() => favMachine.active.value)
 
 /** 详情页作者 / 正文摘要（转发弹窗用） */
 const detailAuthor = computed(() =>
@@ -415,6 +452,9 @@ watch(
     loading.value = true
     detail.value = null
     status.value = null
+    // 切换资源：复位两台状态机，避免上一条动态的赞/收藏态闪回
+    likeMachine.reset()
+    favMachine.reset()
     resetSubLists()
     activeTab.value = 'comment'
     detail.value = await fetchMomentDetail(String(newId))
@@ -502,42 +542,33 @@ function loadMoreSubList() {
 }
 
 /** 相对时间格式化（对标 B 站：刚刚 / N分钟前 / N小时前 / 昨天 / 日期） */
-function formatRelativeTime(t?: string | null) {
-  if (!t) return ''
-  const ts = new Date(t).getTime()
-  if (Number.isNaN(ts)) return ''
-  const diff = Date.now() - ts
-  const minute = 60 * 1000
-  const hour = 60 * minute
-  const day = 24 * hour
-  if (diff < minute) return '刚刚'
-  if (diff < hour) return `${Math.floor(diff / minute)}分钟前`
-  if (diff < day) return `${Math.floor(diff / hour)}小时前`
-  if (diff < 2 * day) return '昨天'
-  const d = new Date(ts)
-  const now = new Date()
-  if (d.getFullYear() === now.getFullYear()) {
-    return `${d.getMonth() + 1}月${d.getDate()}日`
-  }
-  return `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日`
-}
-
 function openUserSpace(item: { mid?: number | null }) {
   if (item.mid) {
-    router.push({ name: 'MOMENT_USER_SPACE', params: { mid: String(item.mid) } })
+    router.push({ name: 'MOMENT_USER_SPACE_HOME', params: { mid: String(item.mid) } })
   }
 }
 
-async function handleThumb(dynIdStr: string) {
+/** 点赞：走状态机乐观更新，失败自动回滚 */
+async function handleThumb(dynId_str: string) {
   if (!detail.value) return
-  const up = isLiked.value ? 2 : 1
-  const res = await thumbMoment(dynIdStr, up)
-  if (res && status.value) {
-    // 2.41.0：乐观更新统一 status 接口数据
-    status.value.isLike = up === 1
-    status.value.likeCount = Math.max(0, (status.value.likeCount || 0) + (up === 1 ? 1 : -1))
+  if (!likeMachine.toggle()) return // 阶段不允许（如上一请求在途），忽略本次点击
+  syncStatusFromMachines()
+  const up = likeMachine.active.value ? 1 : 2
+  try {
+    const res = await thumbMoment(dynId_str, up)
+    if (!res) {
+      likeMachine.toggleFail('点赞失败')
+      syncStatusFromMachines()
+      return
+    }
+    likeMachine.toggleOk(res.likeCount, res.isLike)
+    syncStatusFromMachines()
     // 赞列表已加载过则刷新（让自己的赞即时出现/消失），未加载过保持懒加载
     if (subLists.like.loaded) void loadSubList('like', momentId, true)
+  } catch {
+    likeMachine.toggleFail('点赞失败')
+    syncStatusFromMachines()
+    biliMessage.error('操作失败，请稍后重试')
   }
 }
 
@@ -545,8 +576,8 @@ async function handleThumb(dynIdStr: string) {
 const reportDialogVisible = ref(false)
 const reportDynId = ref<string>('')
 
-function handleReport(dynIdStr: string) {
-  reportDynId.value = dynIdStr // str 直接传递，避免雪花 ID 精度丢失
+function handleReport(dynId_str: string) {
+  reportDynId.value = dynId_str // str 直接传递，避免雪花 ID 精度丢失
   reportDialogVisible.value = true
 }
 
@@ -588,8 +619,22 @@ function handleRepostSuccess() {
   if (subLists.forward.loaded) void loadSubList('forward', momentId, true)
 }
 
-/** 收藏变更：重查统一 status 以更新收藏数 */
-async function handleFavoriteChanged() {
-  await loadStatus()
+/**
+ * 收藏变更（悬浮工具栏弹窗触发）：弹窗已带回最新收藏态，直接写状态机，
+ * 无需整页重查互动态接口——这正是此前「取消收藏后按钮不刷新」的根因。
+ */
+function handleFavoriteChanged(payload: FavoriteChangedPayload) {
+  applyFavoritePayload(payload)
+}
+
+/** 卡片内 MomentCard 的收藏夹弹窗变更：与悬浮工具栏走同一套同步逻辑 */
+function handleCardFavoriteChange(_dynId_str: string, payload: FavoriteChangedPayload) {
+  applyFavoritePayload(payload)
+}
+
+/** 把弹窗上抛的收藏态写入收藏状态机，并回写 status 供卡片内按钮同步高亮 */
+function applyFavoritePayload(payload: FavoriteChangedPayload) {
+  favMachine.apply(payload.isFavorite, payload.favoriteCount)
+  syncStatusFromMachines()
 }
 </script>

@@ -8,9 +8,8 @@
  */
 import { V1BiliService } from '@/api/bili_lottery_data/hey-api'
 import type {
-  LotteryAdvancedQueryParams,
-  LotteryPaginationParams,
   LotterySearchPaginationParams,
+  GetReserveLotteryApiV1LotteryDatabaseBiliGetReserveLotteryGetData,
   AddDynamicLotteryReq,
   BulkAddDynamicLotteryReq,
   BulkAddOthersLotDynReq,
@@ -26,11 +25,10 @@ import type {
 import type { OthersLotPrizeInfo } from '@/models/api/lottery/lottery_card'
 
 export type {
-  LotteryPaginationParams,
-  LotteryAdvancedQueryParams,
   LotterySearchPaginationParams,
 }
 import type { RootObject } from '@/models/api/base_model.ts'
+import { client } from '@/api/bili_lottery_data/hey-api/client.gen'
 import type { LotDataView, ScrapyStatusResp, ScrapyStatus, OfficialScrapyStatus } from '@/models/api/lottery/lotdata'
 
 // ==================== 响应类型定义（兼容旧接口） ====================
@@ -176,6 +174,23 @@ export interface OthersLotDynItem {
   extra_fields?: Record<string, any> | null
 }
 
+/**
+ * 抽奖列表 GET 查询参数（预约/官方/充电/话题共用）。
+ *
+ * 接口 GET 化后，后端用显式标量 query 参数承接、不再把入参模型写进 OpenAPI，
+ * SDK 里也就没有了 LotteryAdvancedQueryParams 类型；这里直接从生成的
+ * GetReserveLottery query 契约推导（去掉防缓存参数 t），与后端参数保持同步。
+ */
+type _LotteryListQuery = NonNullable<
+  GetReserveLotteryApiV1LotteryDatabaseBiliGetReserveLotteryGetData['query']
+>
+export type LotteryAdvancedQueryParams = Omit<_LotteryListQuery, 't'>
+
+export interface LotteryPaginationParams {
+  page_num?: number
+  page_size?: number
+}
+
 export interface OthersLotDynListParams extends LotteryPaginationParams {
   sort_by?: string
   sort_order?: string
@@ -215,6 +230,55 @@ export interface LotteryFilterParamsResp {
   endpoints: EndpointFilterMeta[]
 }
 
+// ==================== 管理端数据汇总（GetLotteryDataSummary） ====================
+
+/** 汇总表的一行：一个数据源 / 一种抽奖类型；字段为 null 表示该数据源不具备该统计口径 */
+export interface LotterySummaryRow {
+  key: string
+  type_name: string
+  source: string
+  total: number
+  not_drawn: number | null
+  drawing_soon_24h: number | null
+  pending_result: number | null
+  grand_prize: number | null
+  new_yesterday: number | null
+  new_prev_day: number | null
+  new_this_week: number | null
+  new_this_month: number | null
+  participants_avg: number | null
+  participants_max: number | null
+  participants_total: number | null
+}
+
+/** 近 N 天每日新增趋势点；counts 的 key 与 LotterySummaryRow.key 对应 */
+export interface LotteryTrendPoint {
+  date: string
+  counts: Record<string, number>
+}
+
+/** 即将开奖明细项（仅限 24 小时内开奖） */
+export interface UpcomingLotteryItem {
+  lottery_id: number | string
+  business_id: number | string | null
+  business_type: number
+  /** 抽奖类型标识：official/reserve/charge，用于前端按抽奖类型筛选 */
+  key: string
+  type_name: string
+  lottery_time: number
+  participants: number | null
+  sender_uid: number | string | null
+}
+
+/** 管理端 bili-crawler 数据汇总响应 */
+export interface LotteryDataSummaryResp {
+  generated_at: number
+  latest_created_at: number | null
+  rows: LotterySummaryRow[]
+  trend: LotteryTrendPoint[]
+  upcoming: UpcomingLotteryItem[]
+}
+
 // ==================== API 类定义（基于 hey-api 生成客户端） ====================
 
 class LotteryDataBaseApi {
@@ -223,8 +287,9 @@ class LotteryDataBaseApi {
   async getReserveLottery(
     params: LotteryAdvancedQueryParams
   ): Promise<RootObject<LotDataView<ReserveInfoResp>>> {
-    const res = await V1BiliService.getReserveLotteryApiV1LotteryDatabaseBiliGetReserveLotteryPost({
-      body: params as any,
+    const res = await V1BiliService.getReserveLotteryApiV1LotteryDatabaseBiliGetReserveLotteryGet({
+      // 已改为 GET：筛选参数走 query，附带 t=当前时间戳防止浏览器缓存
+      query: { ...params, t: Date.now() },
     })
     return res as any
   }
@@ -232,8 +297,8 @@ class LotteryDataBaseApi {
   async getOfficialLottery(
     params: LotteryAdvancedQueryParams
   ): Promise<RootObject<LotDataView<OfficialLotteryResp>>> {
-    const res = await V1BiliService.getOfficialLotteryApiV1LotteryDatabaseBiliGetOfficialLotteryPost({
-      body: params as any,
+    const res = await V1BiliService.getOfficialLotteryApiV1LotteryDatabaseBiliGetOfficialLotteryGet({
+      query: { ...params, t: Date.now() },
     })
     return res as any
   }
@@ -241,8 +306,8 @@ class LotteryDataBaseApi {
   async getChargeLottery(
     params: LotteryAdvancedQueryParams
   ): Promise<RootObject<LotDataView<ChargeLotteryResp>>> {
-    const res = await V1BiliService.getChargeLotteryApiV1LotteryDatabaseBiliGetChargeLotteryPost({
-      body: params as any,
+    const res = await V1BiliService.getChargeLotteryApiV1LotteryDatabaseBiliGetChargeLotteryGet({
+      query: { ...params, t: Date.now() },
     })
     return res as any
   }
@@ -250,8 +315,8 @@ class LotteryDataBaseApi {
   async getLiveLottery(
     params: LotteryAdvancedQueryParams
   ): Promise<RootObject<LotDataView<LiveLotteryResp>>> {
-    const res = await V1BiliService.getLiveLotteryApiV1LotteryDatabaseBiliGetLiveLotteryPost({
-      body: params as any,
+    const res = await V1BiliService.getLiveLotteryApiV1LotteryDatabaseBiliGetLiveLotteryGet({
+      query: { ...params, t: Date.now() },
     })
     return res as any
   }
@@ -259,8 +324,8 @@ class LotteryDataBaseApi {
   async getTopicLottery(
     params: LotteryAdvancedQueryParams
   ): Promise<RootObject<LotDataView<TopicLotteryResp>>> {
-    const res = await V1BiliService.getTopicLotteryApiV1LotteryDatabaseBiliGetTopicLotteryPost({
-      body: params as any,
+    const res = await V1BiliService.getTopicLotteryApiV1LotteryDatabaseBiliGetTopicLotteryGet({
+      query: { ...params, t: Date.now() },
     })
     return res as any
   }
@@ -273,14 +338,16 @@ class LotteryDataBaseApi {
     pub_time_start: number | null = null,
     pub_time_end: number | null = null,
   ): Promise<RootObject<AllLotteryResp>> {
-    const res = await V1BiliService.getAllLotteryApiV1LotteryDatabaseBiliGetAllLotteryPost({
+    const res = await V1BiliService.getAllLotteryApiV1LotteryDatabaseBiliGetAllLotteryGet({
       query: {
-        created_at_preset,
+        created_at_preset: created_at_preset as TimePresetEnum | null,
         created_at_start,
         created_at_end,
-        pub_time_preset,
+        pub_time_preset: pub_time_preset as TimePresetEnum | null,
         pub_time_start,
         pub_time_end,
+        // 防浏览器缓存时间戳
+        t: Date.now(),
       },
     })
     return res as any
@@ -295,8 +362,9 @@ class LotteryDataBaseApi {
   async getLotteryDetailById(
     lottery_id: string | number
   ): Promise<RootObject<LotteryDetailResp | null>> {
-    const res = await V1BiliService.getLotteryDetailApiV1LotteryDatabaseBiliGetLotteryDetailPost({
-      body: { lottery_id: Number(lottery_id) },
+    const res = await V1BiliService.getLotteryDetailApiV1LotteryDatabaseBiliGetLotteryDetailGet({
+      // 已改为 GET：lottery_id 走 query，附带 t 时间戳防浏览器缓存
+      query: { lottery_id: Number(lottery_id), t: Date.now() },
     })
     return res as any
   }
@@ -315,9 +383,9 @@ class LotteryDataBaseApi {
   async getOthersLotDynDetailById(
     dynId: string | number
   ): Promise<RootObject<OthersLotDynItem | null>> {
-    const res = await V1BiliService.getOthersLotDynDetailApiV1LotteryDatabaseBiliGetOthersLotDynDetailPost({
-      // 以字符串提交：dyn_id 是 19 位雪花 ID，Number() 会丢精度导致后端查不到
-      body: { dyn_id: String(dynId) },
+    const res = await V1BiliService.getOthersLotDynDetailApiV1LotteryDatabaseBiliGetOthersLotDynDetailGet({
+      // 已改为 GET：dyn_id 以字符串走 query（19 位雪花 ID，Number() 会丢精度导致后端查不到），附带 t 防缓存
+      query: { dyn_id: String(dynId), t: Date.now() },
     })
     return res as any
   }
@@ -389,9 +457,11 @@ class LotteryDataBaseApi {
     params: OthersLotDynListParams
   ): Promise<RootObject<LotDataView<OthersLotDynItem>>> {
     const { page_num, page_size, sort_by, sort_order, is_lot, created_at_preset, pub_time_preset, pub_time_start, pub_time_end, created_at_start, created_at_end } = params
-    const res = await V1BiliService.getOthersLotDynListApiV1LotteryDatabaseBiliGetOthersLotDynListPost({
-      body: { page_num, page_size },
+    const res = await V1BiliService.getOthersLotDynListApiV1LotteryDatabaseBiliGetOthersLotDynListGet({
+      // 已改为 GET：分页 + 筛选参数全部走 query，附带 t=当前时间戳防止浏览器缓存
       query: {
+        page_num,
+        page_size,
         sort_by: sort_by as OthersLotDynSortEnum,
         sort_order: sort_order as OthersLotDynSortOrderEnum,
         is_lot: is_lot ?? undefined,
@@ -401,6 +471,7 @@ class LotteryDataBaseApi {
         pub_time_end: pub_time_end ?? undefined,
         created_at_start: created_at_start ?? undefined,
         created_at_end: created_at_end ?? undefined,
+        t: Date.now(),
       },
     })
     return res as any
@@ -425,10 +496,29 @@ class LotteryDataBaseApi {
   async get_single_scrapy_status(
     scrapy_name: ScrapyTypeEnum
   ): Promise<RootObject<ScrapyStatus | OfficialScrapyStatus | null>> {
-    const res = await V1BiliService.getSingleScrapyStatusApiV1LotteryDatabaseBiliGetSingleScrapyStatusPost({
-      query: { scrapy_name },
+    const res = await V1BiliService.getSingleScrapyStatusApiV1LotteryDatabaseBiliGetSingleScrapyStatusGet({
+      query: { scrapy_name, t: Date.now() },
     })
     return res as any
+  }
+
+  // ==================== 管理端数据汇总 ====================
+
+  /**
+   * 管理端「bili-crawler 数据汇总」：按抽奖类型统计未开奖数、昨日/本周/本月新增、
+   * 累计总量、24h 内即将开奖、待抓结果积压、大奖数、参与人数分布、近 14 天新增趋势、
+   * 即将开奖明细，并额外汇总话题 / 直播 / 第三方动态抽奖。
+   *
+   * 该接口尚未纳入 hey-api 生成的 SDK，故直接用生成的底层 client 发请求；
+   * `runtime_config.ts` 已设置 `responseStyle: 'data'`，promise 直接 resolve 响应体。
+   */
+  async getLotterySummary(): Promise<RootObject<LotteryDataSummaryResp>> {
+    const res = await client.get({
+      url: '/api/v1/lottery_database/bili/GetLotteryDataSummary',
+      // 附带 t=当前时间戳防止浏览器/CDN 缓存
+      query: { t: Date.now() },
+    })
+    return res as unknown as RootObject<LotteryDataSummaryResp>
   }
 
   // ==================== 兼容旧版的方法（已废弃） ====================

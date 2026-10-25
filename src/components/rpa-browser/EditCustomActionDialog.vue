@@ -4,10 +4,12 @@ import { Minus } from '@element-plus/icons-vue'
 import { 自定义操作管理Service } from '@/api/browser/hey-api'
 import { useUserNavStore } from '@/stores/user_nav'
 import biliMessage from '@/utils/message'
+import { pickBackendMsg } from '@/utils/backendErrorMsg'
 import DebugBox from './DebugBox.vue'
 import ActionIconPicker from './ActionIconPicker.vue'
 import MinimizeBar from './MinimizeBar.vue'
 import type { DroppedItem } from './debugbox-types'
+import { stepsToDroppedItems } from '@/utils/rpa/jsonImport'
 
 interface Props {
   modelValue: boolean
@@ -41,45 +43,6 @@ const isMinimized = ref(false)
 /** el-dialog 实际显示：外部打开且未最小化时才显示 */
 const dialogVisible = computed(() => props.modelValue && !isMinimized.value)
 
-/** 将后端 steps 反序列化为前端可编辑的 DroppedItem[] */
-function convertStepsToItems(steps: Record<string, unknown>[]): DroppedItem[] {
-  return steps.map((step, i) => {
-    const sp = { ...((step.params || {}) as Record<string, unknown>) }
-    let trueBranch: DroppedItem[] | undefined
-    let falseBranch: DroppedItem[] | undefined
-    let loopBody: DroppedItem[] | undefined
-    if (sp.TrueBranch && Array.isArray(sp.TrueBranch)) {
-      trueBranch = convertStepsToItems(sp.TrueBranch as Record<string, unknown>[])
-      delete sp.TrueBranch
-    }
-    if (sp.FalseBranch && Array.isArray(sp.FalseBranch)) {
-      falseBranch = convertStepsToItems(sp.FalseBranch as Record<string, unknown>[])
-      delete sp.FalseBranch
-    }
-    if (sp.loopBranch && Array.isArray(sp.loopBranch)) {
-      loopBody = convertStepsToItems(sp.loopBranch as Record<string, unknown>[])
-      delete sp.loopBranch
-    }
-    // 提取后端返回的 action_detail（自定义操作的实时数据库信息）
-    const actionDetail = step.action_detail as Record<string, unknown> | undefined
-    return {
-      id: `edit-step-${i}-${Date.now()}`,
-      name: (actionDetail?.name as string) || (step.name as string) || (step.action_id as string) || `步骤${i + 1}`,
-      action_id: (step.action_id as string) || '',
-      action_type: (step.action_type as string) || (step.action_id as string) || '',
-      description: (actionDetail?.description as string) || (step.description as string) || '',
-      type: 'action',
-      formData: { ...sp },
-      input_vars: (step.input_vars || {}) as Record<string, unknown>,
-      output_vars: (step.output_vars || []) as string[],
-      config_params: {},
-      trueBranch, falseBranch, loopBody,
-      // 附加数据库实时信息，供 ActionCard 展示
-      action_detail: actionDetail,
-    }
-  })
-}
-
 watch(() => props.modelValue, (visible) => {
   if (visible && props.actionDetail) {
     isMinimized.value = false
@@ -90,7 +53,7 @@ watch(() => props.modelValue, (visible) => {
     editingIconId.value = (props.actionDetail.icon_id as number) ?? 0
     tagInputValue.value = ''
     const steps = props.actionDetail.steps
-    editItems.value = steps && Array.isArray(steps) ? convertStepsToItems(steps as Record<string, unknown>[]) : []
+    editItems.value = steps && Array.isArray(steps) ? stepsToDroppedItems(steps as Record<string, unknown>[]) : []
     dialogKey.value++
   }
 }, { immediate: true })
@@ -150,20 +113,24 @@ async function handleSave() {
         icon_id: editingIconId.value,
       },
       headers: userNavStore.user_header,
+      // 后端审批拒绝等失败走非 2xx 响应，默认（throwOnError:false）会丢弃响应体导致
+      // 只能展示兜底文案；开启后 catch 中可直接拿到后端 { code, msg, data }
+      throwOnError: true,
     })
     if (response?.code === 0) {
       biliMessage.success('自定义操作更新成功')
       emit('saved')
       emit('update:modelValue', false)
     } else {
-      const msg = (response?.msg as string) || `更新失败 (code: ${response?.code})`
+      const msg = (response?.msg as string) || '更新失败'
       console.error('[EditCustomActionDialog] 自定义操作更新失败:', response.data)
       biliMessage.error(msg)
     }
   } catch (error: unknown) {
-    const msg = error instanceof Error ? error.message : String(error)
+    // 优先直接展示后端 msg（如「该操作需要先提交并通过审批」）；无 msg 或默认 500 才用兜底文案
+    const backendMsg = pickBackendMsg(error)
     console.error('[EditCustomActionDialog] 自定义操作更新异常:', error)
-    biliMessage.error(msg ? `更新失败: ${msg}` : '网络异常，更新失败')
+    biliMessage.error(backendMsg || '网络异常，更新失败')
   } finally {
     saving.value = false
   }
@@ -235,7 +202,7 @@ async function handleSave() {
         <label class="text-xs text-color-secondary">动作图标</label>
         <ActionIconPicker v-model:series="editingIconSeries" v-model:id="editingIconId" />
       </div>
-      <div class="h-[60vh] border border-border rounded">
+      <div class="h-[60vh] border border-border rounded flex flex-col overflow-hidden">
         <DebugBox
           :key="dialogKey"
           ref="debugBoxRef"

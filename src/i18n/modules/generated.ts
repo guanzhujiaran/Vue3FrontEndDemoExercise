@@ -418,8 +418,8 @@ export const lotteryNs = {
     noCardDetail: '未获取到卡片详情',
     missingLotteryId: '缺少抽奖 ID',
     enterViaCommentBtn:
-      '请通过抽奖列表中的「评论区」按钮进入本页面以查看完整卡片，评论区仍可正常浏览。',
-    enterViaCommentBtnShort: '请通过抽奖列表中的「评论区」按钮进入本页面。'
+      '请在链接中携带有效的抽奖 ID（如 id=xxx 或 lottery_id=xxx），即可查看完整卡片，评论区仍可正常浏览。',
+    enterViaCommentBtnShort: '请在链接中携带有效的抽奖 ID（id 或 lottery_id）。'
   },
   en: {
     biliLotteryData: 'Bilibili Lottery Data',
@@ -429,8 +429,8 @@ export const lotteryNs = {
     noCardDetail: 'Card details not found',
     missingLotteryId: 'Missing lottery ID',
     enterViaCommentBtn:
-      'Please enter this page via the "Comment" button in the lottery list to view the full card. The comment section is still available.',
-    enterViaCommentBtnShort: 'Please enter this page via the "Comment" button in the lottery list.'
+      'Provide a valid lottery ID in the link (e.g. id=xxx or lottery_id=xxx) to view the full card. The comment section is still available.',
+    enterViaCommentBtnShort: 'Provide a valid lottery ID in the link (id or lottery_id).'
   },
   'zh-TW': {
     biliLotteryData: 'B站抽獎資料',
@@ -439,8 +439,8 @@ export const lotteryNs = {
     noCardDetail: '未獲取到卡片詳情',
     missingLotteryId: '缺少抽獎 ID',
     enterViaCommentBtn:
-      '請透過抽獎清單中的「評論區」按鈕進入本頁面以查看完整卡片，評論區仍可正常瀏覽。',
-    enterViaCommentBtnShort: '請透過抽獎清單中的「評論區」按鈕進入本頁面。'
+      '請在連結中攜帶有效的抽獎 ID（如 id=xxx 或 lottery_id=xxx），即可查看完整卡片，評論區仍可正常瀏覽。',
+    enterViaCommentBtnShort: '請在連結中攜帶有效的抽獎 ID（id 或 lottery_id）。'
   },
   ja: {
     biliLotteryData: 'B站くじデータ',
@@ -449,8 +449,8 @@ export const lotteryNs = {
     noCardDetail: 'カード詳細が取得できませんでした',
     missingLotteryId: 'くじ ID が不足しています',
     enterViaCommentBtn:
-      '抽選リストの「コメント」ボタンからこのページに入って完全なカードを表示してください。コメント欄は引き続き利用可能です。',
-    enterViaCommentBtnShort: '抽選リストの「コメント」ボタンからこのページに入ってください。'
+      'リンクに有効なくじ ID（id=xxx または lottery_id=xxx）を含めると、完全なカードが表示されます。コメント欄は引き続き利用可能です。',
+    enterViaCommentBtnShort: 'リンクに有効なくじ ID（id または lottery_id）を含めてください。'
   },
   ko: {
     biliLotteryData: 'B站 추첨 데이터',
@@ -459,8 +459,8 @@ export const lotteryNs = {
     noCardDetail: '카드 상세를 가져오지 못했습니다',
     missingLotteryId: '추첨 ID 누락',
     enterViaCommentBtn:
-      '전체 카드를 보려면 추첨 목록의 "댓글" 버튼을 통해 이 페이지로 들어가세요. 댓글 섹션은 계속 이용 가능합니다.',
-    enterViaCommentBtnShort: '추첨 목록의 "댓글" 버튼을 통해 이 페이지로 들어가세요.'
+      '링크에 유효한 추첨 ID(예: id=xxx 또는 lottery_id=xxx)를 포함하면 전체 카드를 볼 수 있습니다. 댓글 섹션은 계속 이용 가능합니다.',
+    enterViaCommentBtnShort: '링크에 유효한 추첨 ID(id 또는 lottery_id)를 포함하세요.'
   }
 }
 
@@ -606,6 +606,8 @@ export const messageNs = {
     settingsAt: "{'@'}我的消息提醒",
     settingsAtTip: "（接收谁的{'@'}消息提醒）",
     settingsLike: '收到的赞消息提醒',
+    settingsPush: '外部推送',
+    settingsPushTip: '（站内关闭时，站外不再推送）',
     on: '开启',
     off: '关闭',
     allPeople: '所有人',
@@ -895,6 +897,8 @@ export const messageNs = {
     settingsAt: "{'@'}Mention Reminder",
     settingsAtTip: "(Whose {'@'} reminders to receive)",
     settingsLike: 'Like Reminder',
+    settingsPush: 'External push',
+    settingsPushTip: '(External push is disabled when the in-site switch is off)',
     on: 'On',
     off: 'Off',
     allPeople: 'Everyone',
@@ -1184,6 +1188,8 @@ export const messageNs = {
     settingsAt: "{'@'}我的訊息提醒",
     settingsAtTip: "（接收誰的{'@'}訊息提醒）",
     settingsLike: '收到的讚訊息提醒',
+    settingsPush: '外部推送',
+    settingsPushTip: '（站內關閉時，站外不再推送）',
     on: '開啟',
     off: '關閉',
     allPeople: '所有人',
@@ -1473,6 +1479,8 @@ export const messageNs = {
     settingsAt: "{'@'}の通知",
     settingsAtTip: "（誰の {'@'} 通知を受け取るか）",
     settingsLike: 'いいねの通知',
+    settingsPush: '外部プッシュ',
+    settingsPushTip: '（サイト内通知がオフの場合、外部には配信されません）',
     on: 'オン',
     off: 'オフ',
     allPeople: 'すべての人',
@@ -1764,6 +1772,8 @@ export const messageNs = {
     settingsAt: "{'@'}멘션 알림",
     settingsAtTip: "(누구의 {'@'} 알림을 받을지)",
     settingsLike: '받은 좋아요 알림',
+    settingsPush: '외부 푸시',
+    settingsPushTip: '(사이트 내 알림이 꺼져 있으면 외부로 전송되지 않습니다)',
     on: '켜기',
     off: '끄기',
     allPeople: '모든 사람',

@@ -222,10 +222,10 @@ const biliRankUserAtariDetailTip = computed(
           </div>
         </div>
       </div>
-      <el-pagination hide-on-single-page
+      <BiliPagination hide-on-single-page
         class="prize-pagination flex mx-auto items-center mb-4 p-3 rounded-lg bg-bg/50 backdrop-blur-sm border border-border-light/30"
         size="small" :total="data.total" :page-size="props.limit" v-model:current-page="currentPage"
-        layout="prev, pager, next,total" :background="false" v-if="data && data.total > 0"></el-pagination>
+        layout="prev, pager, next,total" :background="false" v-if="data && data.total > 0"></BiliPagination>
     </div>
   </div>
 

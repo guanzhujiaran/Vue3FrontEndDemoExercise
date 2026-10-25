@@ -93,7 +93,12 @@ async function fetchActions(append = false) {
     { successMessage: '', errorMessage: '获取动作列表失败', showSuccessToast: false }
   )
   if (result.success && result.data) {
-    const items = (result.data.items || []) as ActionOption[]
+    // action_id 语义上始终是字符串（雪花 ID 超出 JS 安全整数范围），
+    // 后端/SDK 若返回 number，这里统一转字符串，避免精度丢失与回显比较失败
+    const items = ((result.data.items || []) as unknown as Record<string, unknown>[]).map((item) => ({
+      ...item,
+      action_id: item.action_id != null ? String(item.action_id) : '',
+    })) as ActionOption[]
     actionList.value = append ? [...actionList.value, ...items] : items
     totalCount.value = result.data.total || 0
     currentPage.value = page

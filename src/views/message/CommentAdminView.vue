@@ -132,7 +132,7 @@
               :row-height="72"
               :header-height="44"
               :footer-height="total > pageSize ? 64 : 0"
-              row-key="rpid"
+              row-key="rpid_str"
               fixed
             >
               <template #header-cell="{ column }">
@@ -153,7 +153,7 @@
                 <template v-if="column.key === 'selection'">
                   <div class="flex h-full items-center justify-center">
                     <el-checkbox
-                      :model-value="selectedKeys.has(rowData.rpid)"
+                      :model-value="selectedKeys.has(rowData.rpid_str ?? '')"
                       @change="(v: unknown) => toggleRow(rowData, v)"
                     />
                   </div>
@@ -322,43 +322,43 @@ const stats = reactive<CommentStatsData>({
 // 多选批量封禁 / 解封（el-table-v2 无内置选择列，使用 Set 维护选中 rpid）
 const selectedKeys = ref<Set<string>>(new Set())
 const selectedRows = computed<CommentAuditRow[]>(() =>
-  items.value.filter((i) => selectedKeys.value.has(i.rpid))
+  items.value.filter((i) => selectedKeys.value.has(i.rpid_str ?? ''))
 )
 const banDialogVisible = ref(false)
 const adminStore = useMessageAdminStore()
 
 function toggleRow(row: CommentAuditRow, val: unknown) {
   const next = new Set(selectedKeys.value)
-  if (val) next.add(row.rpid)
-  else next.delete(row.rpid)
+  if (val) next.add(row.rpid_str ?? '')
+  else next.delete(row.rpid_str ?? '')
   selectedKeys.value = next
 }
 
 const allSelected = computed(
-  () => items.value.length > 0 && items.value.every((i) => selectedKeys.value.has(i.rpid))
+  () => items.value.length > 0 && items.value.every((i) => selectedKeys.value.has(i.rpid_str ?? ''))
 )
 function toggleSelectAll(val: unknown) {
   const next = new Set(selectedKeys.value)
-  if (val) items.value.forEach((i) => next.add(i.rpid))
-  else items.value.forEach((i) => next.delete(i.rpid))
+  if (val) items.value.forEach((i) => next.add(i.rpid_str ?? ''))
+  else items.value.forEach((i) => next.delete(i.rpid_str ?? ''))
   selectedKeys.value = next
 }
 
 // 审核原因弹窗（驳回 / 下架时必填，支持默认原因自动补全）
 const reasonDialogVisible = ref(false)
 const banFromReasonVisible = ref(false)
-const banFromReasonMids = ref<number[]>([])
+const banFromReasonMids = ref<string[]>([])
 const pendingOp = ref<'' | 'pass' | 'reject' | 'hidden' | 'restore'>('')
 // 弹窗内逐条列出的待审核条目
 const reasonDialogItems = ref<
-  { id: string; preview?: string; mid?: number | null; brief?: CommentAuditRow['member'] }[]
+  { id: string; preview?: string; mid?: string | null; brief?: CommentAuditRow['member'] }[]
 >([])
 // 评论封禁 / 解封权限：comment 域处置位（BAN=1；root 恒有）
 const canBan = computed(
   () => adminStore.status.is_root || hasBizPerm(adminStore.status.biz_perms, 'comment', 1)
 )
 const selectedMids = computed(() =>
-  selectedRows.value.map((r) => r.mid).filter((m): m is number => Boolean(m))
+  selectedRows.value.map((r) => r.mid_str ?? '').filter((m): m is string => Boolean(m))
 )
 
 // el-table-v2 列定义（含自定义选择列）；全部列固定宽度，总列宽 1870px 显著超出常规容器宽度，
@@ -373,7 +373,7 @@ const commentColumns: Column<CommentAuditRow>[] = [
   { key: 'plat_device', title: t('message.colPlatDevice'), width: 200 },
   { key: 'like', title: t('message.colLike'), width: 80 },
   { key: 'ctime', title: t('message.colTime'), width: 200 },
-  { key: 'rpid', title: t('message.colRpid'), width: 150, dataKey: 'rpid' },
+  { key: 'rpid', title: t('message.colRpid'), width: 150, dataKey: 'rpid_str' },
   { key: 'oid', title: t('message.colOid'), width: 140, dataKey: 'oid' }
 ]
 
@@ -471,9 +471,9 @@ async function batchAudit(op: 'pass' | 'reject' | 'hidden' | 'restore') {
     // 暂存操作，弹窗内逐条列出条目并各自选择原因，确认后再逐条执行
     pendingOp.value = op
     reasonDialogItems.value = rows.map((r) => ({
-      id: r.rpid,
+      id: r.rpid_str ?? '',
       preview: r.message,
-      mid: r.mid,
+      mid: r.mid_str ?? null,
       brief: r.member
     }))
     reasonDialogVisible.value = true
@@ -484,7 +484,7 @@ async function batchAudit(op: 'pass' | 'reject' | 'hidden' | 'restore') {
 }
 
 // 审核弹窗内点击「封禁涉及用户」：打开封禁弹窗
-function onReasonBan(mids: number[]) {
+function onReasonBan(mids: string[]) {
   banFromReasonMids.value = mids
   banFromReasonVisible.value = true
 }
@@ -512,7 +512,7 @@ async function doAudit(
     await businessHandler<{ failed?: string[] }>(
       CommentAdminService.bulkAuditCommentApiV1CommentAdminAuditBatchPost({
         body: {
-          rpids: rows.map((r) => r.rpid),
+          rpids: rows.map((r) => r.rpid_str ?? ''),
           op,
           notes: reasons ?? undefined
         }
@@ -524,8 +524,8 @@ async function doAudit(
           // 审核成功后就地更新对应行状态，避免整表重新加载导致闪烁
           const failed = new Set(result.data.failed ?? [])
           rows.forEach((row) => {
-            if (!failed.has(row.rpid)) {
-              const target = items.value.find((it) => it.rpid === row.rpid)
+            if (!failed.has(row.rpid_str ?? '')) {
+              const target = items.value.find((it) => (it.rpid_str ?? '') === (row.rpid_str ?? ''))
               if (target) target.state = newState
             }
           })

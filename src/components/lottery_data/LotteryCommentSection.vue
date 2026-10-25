@@ -70,17 +70,19 @@ const newComment = ref('')
 const topMentionRef = ref<InstanceType<typeof LotteryCommentMention> | null>(null)
 
 /** @ 提及可选用户：初始为评论列表（含楼中楼）用户，输入 @ 关键字后远程搜索覆盖 */
-const mentionOptions = ref<Array<{ value: string; avatar?: string; mid?: number }>>([])
+const mentionOptions = ref<Array<{ value: string; avatar?: string; mid?: string }>>([])
 /** 收集评论列表中的用户（按 mid 去重）作为初始提及候选 */
 function collectMentionUsers() {
-  const seen = new Set<number>()
-  const list: Array<{ value: string; avatar?: string; mid?: number }> = []
+  // mid 是雪花 ID：用后端派生的字符串版 mid_str，避免 JS Number 丢精度
+  const seen = new Set<string>()
+  const list: Array<{ value: string; avatar?: string; mid?: string }> = []
   const collect = (item: CommentItem) => {
     // SDK 重新生成后 CommentUserBrief 为松散索引类型（[key: string]: unknown），此处显式收窄
-    const m = item.member as { mid?: number; uname?: string; avatar?: string } | null | undefined
-    if (m?.mid != null && !seen.has(m.mid)) {
-      seen.add(m.mid)
-      list.push({ value: m.uname || `用户${m.mid}`, avatar: m.avatar || undefined, mid: m.mid })
+    const m = item.member as { mid_str?: string | null; uname?: string; avatar?: string } | null | undefined
+    const mid = m?.mid_str != null ? String(m.mid_str) : ''
+    if (mid && !seen.has(mid)) {
+      seen.add(mid)
+      list.push({ value: m?.uname || `用户${mid}`, avatar: m?.avatar || undefined, mid })
     }
     item.replies?.forEach(collect)
   }
@@ -127,7 +129,7 @@ const loadMain = async () => {
     total.value = data.total ?? 0
     allCount.value = data.all_count ?? 0
     // 仅当后端确实命中并置顶了目标时才记录聚焦目标，用于滚动定位
-    focusTargetRpid.value = data.focus_rpid || null
+    focusTargetRpid.value = data.focus_rpid_str || null
     // 后端在匿名访问时返回 viewer_is_anonymous=true（SDK 尚未同步字段前通过 any 兜底读取）；
     // 优先级：后端标记 > 父组件 forceAnonymous > 本地登录态
     const fromServer = (data as { viewer_is_anonymous?: boolean })?.viewer_is_anonymous
@@ -147,28 +149,28 @@ const loadMain = async () => {
 const findItem = (rpid: string): CommentItem | null => {
   const search = (list: CommentItem[]): CommentItem | null => {
     for (const it of list) {
-      if (it.rpid === rpid) return it
+      if ((it.rpid_str ?? '') === rpid) return it
       const found = search(it.replies || [])
       if (found) return found
     }
     return null
   }
-  if (topComment.value && topComment.value.rpid === rpid) return topComment.value
+  if (topComment.value && (topComment.value.rpid_str ?? '') === rpid) return topComment.value
   return search(commentList.value)
 }
 
 const removeItem = (rpid: string) => {
   // 仅当被删的是一级评论（顶层）时才扣减 total；楼中楼子评论的删除不应影响一级列表计数
-  const wasTop = commentList.value.some((it) => String(it.rpid) === String(rpid))
+  const wasTop = commentList.value.some((it) => (it.rpid_str ?? '') === rpid)
   const filterList = (list: CommentItem[]): CommentItem[] =>
     list
-      .filter((it) => String(it.rpid) !== String(rpid))
+      .filter((it) => (it.rpid_str ?? '') !== rpid)
       .map((it) => {
         it.replies = filterList(it.replies || [])
         return it
       })
   commentList.value = filterList(commentList.value)
-  if (topComment.value?.rpid === rpid) topComment.value = null
+  if ((topComment.value?.rpid_str ?? '') === rpid) topComment.value = null
   if (wasTop) total.value = Math.max(0, total.value - 1)
   allCount.value = Math.max(0, allCount.value - 1)
 }
@@ -185,28 +187,34 @@ const buildNewComment = (
   parent: string,
   replyTo: CommentUserBrief | null
 ): CommentItem => {
-  // 大雪花 uid 用 Number 会丢精度，这里以字符串 uidStr 为可靠标识（与后端 CommentUserBrief.midStr 对齐），
-  // mid 字段仅按 SDK number 约束给值；后续对该用户的定位/举报请优先用 midStr / 字符串 id 传参
-  const uidStr = currentMid.value != null ? String(currentMid.value) : ''
+  // 大雪花 uid 用 Number 会丢精度，这里以字符串 uid_str 为可靠标识（与后端 CommentUserBrief.mid_str 对齐），
+  // mid 字段仅按 SDK number 约束给值；后续对该用户的定位/举报请优先用字符串 id 传参
+  const uid_str = currentMid.value != null ? String(currentMid.value) : ''
   const uid = Number(currentMid.value) || 0
   const nav = userNavStore.user_nav
   return {
-    rpid: data.rpid,
-    oid: String(props.oid),
+    rpid: 0,
+    rpid_str: data.rpid_str ?? '',
+    oid: 0,
+    oid_str: String(props.oid),
     type: props.type as InteractionBizTypeEnum,
     mid: uid,
-    midStr: uidStr || null,
+    mid_str: uid_str || null,
     member: {
       mid: uid,
-      midStr: uidStr || null,
+      // CommentUserBrief 继承 UserBriefOut（@auto_str(suffix="_str")）→ mid_str
+      mid_str: uid_str || null,
       uname: nav.user_name || null,
       avatar: userAvatar.value,
       level: Number(nav.level_info.current_level) || 0,
       vip_status: null
     },
-    root,
-    parent,
-    dialog: root === '0' ? data.rpid : root,
+    root: 0,
+    root_str: root,
+    parent: 0,
+    parent_str: parent,
+    dialog: 0,
+    dialog_str: root === '0' ? (data.rpid_str ?? '0') : root,
     floor: 0,
     reply_to: replyTo,
     message,
@@ -288,7 +296,7 @@ const handlers: CommentHandlers = {
   },
   expandReplies: async (item: CommentItem, page: number) => {
     const result = await businessHandler(
-      commentApi.listReply(item.rpid, props.oid, props.type, page, 10),
+      commentApi.listReply(item.rpid_str ?? '', props.oid, props.type, page, 10),
       { showSuccessToast: false }
     )
     if (!result.success || !result.data) return { items: [], total: 0 }
@@ -450,12 +458,12 @@ const scrollToFocus = () => {
     />
     <!-- 评论列表 -->
     <ul v-else-if="displayList.length" class="lottery-comment-section__list m-0 p-0 list-none divide-y divide-border-light">
-      <li v-for="item in displayList" :key="item.rpid" class="lottery-comment-section__list-item">
+      <li v-for="item in displayList" :key="item.rpid_str ?? ''" class="lottery-comment-section__list-item">
         <LotteryCommentItem
           :item="item"
           :up-mid="upMid"
           :current-mid="currentMid"
-          :focused="focusTargetRpid === item.rpid"
+          :focused="focusTargetRpid === (item.rpid_str ?? '')"
           :focused-rpid="focusTargetRpid"
         />
       </li>
@@ -484,7 +492,7 @@ const scrollToFocus = () => {
 
     <!-- 底部分页 -->
     <div v-if="total > 0" class="flex justify-center py-6">
-      <el-pagination
+      <BiliPagination
         size="small"
         background
         hide-on-single-page

@@ -100,7 +100,8 @@ async function handlePublish(payload: {
   content: string
   topics?: { topicId: number }[]
   images?: string[]
-  atNameToMid?: Record<string, number>
+  /** @昵称 → mid 映射；mid 是雪花 ID，用字符串传 */
+  atNameToMid?: Record<string, string>
   attachResource?: MomentAttachResource
 }) {
   // 复用统一编辑器节点构建工具：纯文本 → WORDS/AT + 图片 LINK 节点（2.22.0 正文不再解析 #话题#）

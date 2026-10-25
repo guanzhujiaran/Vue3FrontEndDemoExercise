@@ -24,7 +24,7 @@
         </slot>
       </div>
       <!-- 分页控件在加载时仍保留，方便继续翻页 -->
-      <el-pagination
+      <BiliPagination
         v-if="!error && props.data.length > 0"
         class="pagination flex-wrap justify-center gap-y-2" size="large" background :layout="paginationLayout"
         :total="props.total" v-model:current-page="current_page" :pager-count="5" />

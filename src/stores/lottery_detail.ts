@@ -2,6 +2,7 @@ import { ref } from 'vue'
 import { defineStore } from 'pinia'
 import type { AnyLotteryData } from '@/models/api/lottery/lottery_card.ts'
 import { InteractionBizTypeEnum, type CommentType } from '@/api/lottery_comment.ts'
+import { browserPersistStorage } from '@/utils/persistStorage'
 
 /**
  * 抽奖评论区在新评论系统 (/api/v1/comment/*) 中使用的 type 值。
@@ -46,7 +47,7 @@ export const useLotteryDetailStore = defineStore(
   {
     persist: {
       key: 'lottery-detail',
-      storage: localStorage
+      storage: browserPersistStorage
     }
   }
 )

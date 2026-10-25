@@ -29,7 +29,9 @@
     <meta charset="UTF-8" />
     <!-- 全站不发送 Referer：避免把带 token / query 的页面地址泄露给站外，同时满足防盗链资源访问要求 -->
     <meta name="referrer" content="no-referrer" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- viewport-fit=cover：配合布局里的 env(safe-area-inset-*) 适配刘海屏；
+         initial-scale=1 保证移动端首屏按设备实际宽度渲染（不缩放、不裁切） -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="format-detection" content="telephone=no" />
     <meta name="author" content="爆破哔哩哔哩弹幕视频网" />
     <meta name="application-name" content="爆破哔哩哔哩弹幕视频网" />

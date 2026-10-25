@@ -1,4 +1,5 @@
 import biliMessage, { ElNotification } from './message'
+import { pickBackendMsg } from './backendErrorMsg'
 import type { RootObject } from '@/models/api/base_model'
 
 /**
@@ -108,7 +109,10 @@ export const businessHandler = async <T>(
     const response = await asyncFn
 
     // 检查业务代码
-    if (response.code === 0) {
+    // 注意：后端 add_error_status_middleware 会把「HTTP 200 + 非 0 业务码」统一改写成
+    // 非 200 状态码，hey-api responseStyle:'data' 下非 2xx 会 resolve undefined，
+    // 这里必须空值安全（undefined → 走业务失败分支），否则读 .code 抛 TypeError
+    if (response?.code === 0) {
       // 业务成功
       if (showSuccessToast && successMessage) {
         biliMessage.success(successMessage)
@@ -131,7 +135,7 @@ export const businessHandler = async <T>(
       }
     } else {
       // 业务失败
-      const errorMsg = response.msg || errorMessage
+      const errorMsg = response?.msg || errorMessage
 
       console.error(`[businessHandler] 业务错误: ${errorMsg}`, '响应数据:', response)
 
@@ -161,15 +165,15 @@ export const businessHandler = async <T>(
     // 网络错误或其他异常
     console.error('[businessHandler] 网络/异常错误:', error)
 
-    // error 可能是 axios error 回调返回的 { code, msg } 对象，msg 中已包含请求信息
+    // 优先直接展示后端 msg：hey-api throwOnError:true 抛出的是后端响应体 { code, msg, data }
+    // （含审批拒绝 403 等业务语义）；无 msg 或为后端默认 500 兜底文案时才回退兜底文案
+    const backendMsg = pickBackendMsg(error)
     let errorMsg: string
-    if (error?.msg) {
-      // axios error 回调已格式化好 msg（含请求信息）
-      errorMsg = error.msg
+    if (backendMsg) {
+      errorMsg = backendMsg
     } else if (errorMessage && error?.message) {
       errorMsg = `${errorMessage}: ${error.message}`
     } else {
-      debugger
       errorMsg = errorMessage || error?.message || '请求失败'
     }
 

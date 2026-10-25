@@ -1,6 +1,7 @@
 /// <reference types="@pinia/nuxt" />
 /// <reference types="@element-plus/nuxt" />
 /// <reference types="@nuxtjs/sitemap" />
+/// <reference types="@nuxt/devtools" />
 /// <reference types="@nuxt/telemetry" />
 /// <reference path="types/nitro-layouts.d.ts" />
 /// <reference path="types/builder-env.d.ts" />
@@ -12,7 +13,6 @@
 /// <reference path="../node_modules/@nuxt/nitro-server/dist/augments.d.mts" />
 /// <reference types="@pinia/nuxt" />
 /// <reference path="types/nuxtseo-nitro.d.ts" />
-/// <reference path="module/nuxt-site-config.d.ts" />
 /// <reference path="types/nuxt-sitemap-augments.d.ts" />
 /// <reference path="types/layouts.d.ts" />
 /// <reference types="vue-router" />
@@ -22,6 +22,8 @@
 /// <reference path="imports.d.ts" />
 /// <reference path="types/imports.d.ts" />
 /// <reference path="schema/nuxt.schema.d.ts" />
+/// <reference path="module/nuxt-site-config.d.ts" />
+/// <reference path="types/nitro-internal-api.d.ts" />
 /// <reference path="types/nitro.d.ts" />
 
 export {}

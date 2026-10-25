@@ -3,7 +3,7 @@
 import type { RequestResult } from '../client';
 import { client } from '../client.gen';
 import type { Options } from '../sdk.gen';
-import type { AddFavoriteApiV1FavoriteAddPostData, AddFavoriteApiV1FavoriteAddPostErrors, AddFavoriteApiV1FavoriteAddPostResponses, CreateFolderApiV1FavoriteFolderCreatePostData, CreateFolderApiV1FavoriteFolderCreatePostErrors, CreateFolderApiV1FavoriteFolderCreatePostResponses, DeleteFolderApiV1FavoriteFolderDeletePostData, DeleteFolderApiV1FavoriteFolderDeletePostErrors, DeleteFolderApiV1FavoriteFolderDeletePostResponses, DynFoldersApiV1FavoriteDynFoldersGetData, DynFoldersApiV1FavoriteDynFoldersGetErrors, DynFoldersApiV1FavoriteDynFoldersGetResponses, GetSettingApiV1FavoriteSettingGetData, GetSettingApiV1FavoriteSettingGetErrors, GetSettingApiV1FavoriteSettingGetResponses, ListFavoriteItemsApiV1FavoriteItemsGetData, ListFavoriteItemsApiV1FavoriteItemsGetErrors, ListFavoriteItemsApiV1FavoriteItemsGetResponses, ListFavoritesApiV1FavoriteListGetData, ListFavoritesApiV1FavoriteListGetErrors, ListFavoritesApiV1FavoriteListGetResponses, ListFoldersApiV1FavoriteFolderListGetData, ListFoldersApiV1FavoriteFolderListGetErrors, ListFoldersApiV1FavoriteFolderListGetResponses, PublicDynamicsApiV1FavoriteUserDynamicsGetData, PublicDynamicsApiV1FavoriteUserDynamicsGetErrors, PublicDynamicsApiV1FavoriteUserDynamicsGetResponses, PublicFoldersApiV1FavoriteUserFoldersGetData, PublicFoldersApiV1FavoriteUserFoldersGetErrors, PublicFoldersApiV1FavoriteUserFoldersGetResponses, RemoveFavoriteApiV1FavoriteRemovePostData, RemoveFavoriteApiV1FavoriteRemovePostErrors, RemoveFavoriteApiV1FavoriteRemovePostResponses, SetSettingApiV1FavoriteSettingPostData, SetSettingApiV1FavoriteSettingPostErrors, SetSettingApiV1FavoriteSettingPostResponses, UpdateFolderApiV1FavoriteFolderUpdatePostData, UpdateFolderApiV1FavoriteFolderUpdatePostErrors, UpdateFolderApiV1FavoriteFolderUpdatePostResponses } from '../types.gen';
+import type { AddFavoriteApiV1FavoriteAddPostData, AddFavoriteApiV1FavoriteAddPostErrors, AddFavoriteApiV1FavoriteAddPostResponses, CreateFolderApiV1FavoriteFolderCreatePostData, CreateFolderApiV1FavoriteFolderCreatePostErrors, CreateFolderApiV1FavoriteFolderCreatePostResponses, DeleteFolderApiV1FavoriteFolderDeletePostData, DeleteFolderApiV1FavoriteFolderDeletePostErrors, DeleteFolderApiV1FavoriteFolderDeletePostResponses, DynFoldersApiV1FavoriteDynFoldersGetData, DynFoldersApiV1FavoriteDynFoldersGetErrors, DynFoldersApiV1FavoriteDynFoldersGetResponses, ListFavoriteItemsApiV1FavoriteItemsGetData, ListFavoriteItemsApiV1FavoriteItemsGetErrors, ListFavoriteItemsApiV1FavoriteItemsGetResponses, ListFavoritesApiV1FavoriteListGetData, ListFavoritesApiV1FavoriteListGetErrors, ListFavoritesApiV1FavoriteListGetResponses, ListFoldersApiV1FavoriteFolderListGetData, ListFoldersApiV1FavoriteFolderListGetErrors, ListFoldersApiV1FavoriteFolderListGetResponses, PublicDynamicsApiV1FavoriteUserDynamicsGetData, PublicDynamicsApiV1FavoriteUserDynamicsGetErrors, PublicDynamicsApiV1FavoriteUserDynamicsGetResponses, PublicFoldersApiV1FavoriteUserFoldersGetData, PublicFoldersApiV1FavoriteUserFoldersGetErrors, PublicFoldersApiV1FavoriteUserFoldersGetResponses, RemoveFavoriteApiV1FavoriteRemovePostData, RemoveFavoriteApiV1FavoriteRemovePostErrors, RemoveFavoriteApiV1FavoriteRemovePostResponses, UpdateFolderApiV1FavoriteFolderUpdatePostData, UpdateFolderApiV1FavoriteFolderUpdatePostErrors, UpdateFolderApiV1FavoriteFolderUpdatePostResponses } from '../types.gen';
 
 export class FavoriteService {
     /**
@@ -122,32 +122,6 @@ export class FavoriteService {
             responseStyle: 'data',
             url: '/api/v1/favorite/dyn/folders',
             ...options
-        });
-    }
-    
-    /**
-     * 主页是否显示收藏
-     */
-    public static getSettingApiV1FavoriteSettingGet<ThrowOnError extends boolean = false>(options?: Options<GetSettingApiV1FavoriteSettingGetData, ThrowOnError>): RequestResult<GetSettingApiV1FavoriteSettingGetResponses, GetSettingApiV1FavoriteSettingGetErrors, ThrowOnError, 'data'> {
-        return (options?.client ?? client).get<GetSettingApiV1FavoriteSettingGetResponses, GetSettingApiV1FavoriteSettingGetErrors, ThrowOnError, 'data'>({
-            responseStyle: 'data',
-            url: '/api/v1/favorite/setting',
-            ...options
-        });
-    }
-    
-    /**
-     * 设置主页是否显示收藏
-     */
-    public static setSettingApiV1FavoriteSettingPost<ThrowOnError extends boolean = false>(options: Options<SetSettingApiV1FavoriteSettingPostData, ThrowOnError>): RequestResult<SetSettingApiV1FavoriteSettingPostResponses, SetSettingApiV1FavoriteSettingPostErrors, ThrowOnError, 'data'> {
-        return (options.client ?? client).post<SetSettingApiV1FavoriteSettingPostResponses, SetSettingApiV1FavoriteSettingPostErrors, ThrowOnError, 'data'>({
-            responseStyle: 'data',
-            url: '/api/v1/favorite/setting',
-            ...options,
-            headers: {
-                'Content-Type': 'application/json',
-                ...options.headers
-            }
         });
     }
     

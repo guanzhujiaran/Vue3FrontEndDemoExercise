@@ -76,11 +76,11 @@ async function onDeactivate() {
       //    只有网关 /api/v1/user/logout 会下发清除该 Cookie 的响应；
       // 2) 注销流程只删业务数据、不写 JWT 黑名单，不登出会残留「账号已不存在
       //    但仍可发请求」的幽灵登录态。
-      try {
-        await userApi.Logout(true)
-      } catch (error) {
+      // businessHandler 不 reject，失败时只返回 { success: false }，故显式判断
+      const logoutResult = await userApi.Logout(true)
+      if (!logoutResult.success) {
         // 清 Cookie 失败也要继续清本地登录态，不能把用户留在已注销的界面上
-        console.error('注销后退出登录失败:', error)
+        console.error('注销后退出登录失败:', logoutResult.msg)
       }
       userNavStore.delete_user_nav()
       jwtStore.delete_jwt_token()

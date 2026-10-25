@@ -13,9 +13,9 @@ export type ActionExecuteRequest = {
     /**
      * Action Id
      *
-     * 操作ID
+     * 操作ID：内置动作为名字符串，复合动作为雪花 int
      */
-    action_id: string;
+    action_id: number | string;
     /**
      * Params
      *
@@ -63,15 +63,21 @@ export type ActionForkRequest = {
     /**
      * Action Id
      *
-     * 原操作的 action_id
+     * 原操作的雪花 action_id
      */
-    action_id: string;
+    action_id: number;
     /**
      * New Name
      *
      * 新名称，如果不提供则使用原名称 + ' (Fork)'
      */
     new_name?: string | null;
+    /**
+     * Auto Sync Upstream
+     *
+     * 是否开启上游自动同步（默认关闭）
+     */
+    auto_sync_upstream?: boolean;
 };
 
 /**
@@ -83,7 +89,7 @@ export type ActionForkResponse = {
     /**
      * Action Id
      */
-    action_id: string;
+    action_id: number;
     /**
      * Name
      */
@@ -91,17 +97,32 @@ export type ActionForkResponse = {
     /**
      * Forked From
      *
-     * Fork 自哪个操作
+     * Fork 自哪个操作（雪花 action_id）
      */
-    forked_from: string;
+    forked_from: number;
 };
 
 /**
  * ActionLogByExecutionRequest
  *
- * 按执行批次查询完整链路
+ * 按执行批次查询步骤链路（分页）
+ *
+ * 一次长循环运行的步骤日志可达数千条，全量返回既拖慢响应也撑爆前端渲染，
+ * 因此与 `action-logs/list` 用同一套 `page` / `per_page` 口径分页。
  */
 export type ActionLogByExecutionRequest = {
+    /**
+     * Page
+     *
+     * 页码，从 1 开始
+     */
+    page?: number;
+    /**
+     * Per Page
+     *
+     * 每页数量（默认 50）
+     */
+    per_page?: number;
     /**
      * Execution Id
      *
@@ -169,7 +190,7 @@ export type ActionLogDeleteRequest = {
 /**
  * ActionLogDetailResponse
  *
- * 日志详情响应（当前与列表项一致，便于后续扩展）
+ * 单条日志详情：在列表项基础上附带重字段（入参/结果/变量/执行日志）
  */
 export type ActionLogDetailResponse = {
     /**
@@ -231,28 +252,6 @@ export type ActionLogDetailResponse = {
      */
     success: boolean;
     /**
-     * Params
-     */
-    params?: {
-        [key: string]: unknown;
-    } | null;
-    /**
-     * Result Data
-     */
-    result_data?: {
-        [key: string]: unknown;
-    } | null;
-    /**
-     * Variables
-     */
-    variables?: {
-        [key: string]: unknown;
-    } | null;
-    /**
-     * Logs
-     */
-    logs?: Array<string>;
-    /**
      * Error Message
      */
     error_message?: string | null;
@@ -268,72 +267,6 @@ export type ActionLogDetailResponse = {
      * Finished At
      */
     finished_at?: string | null;
-};
-
-/**
- * ActionLogItemResponse
- *
- * 单条日志记录响应
- */
-export type ActionLogItemResponse = {
-    /**
-     * Id
-     */
-    id?: number | null;
-    /**
-     * Log Id
-     */
-    log_id: string;
-    /**
-     * Mid
-     */
-    mid: string;
-    /**
-     * Execution Id
-     */
-    execution_id: string;
-    /**
-     * Parent Execution Id
-     */
-    parent_execution_id?: string | null;
-    /**
-     * Depth
-     */
-    depth: number;
-    /**
-     * Action Id
-     */
-    action_id: string;
-    /**
-     * Action Name
-     */
-    action_name: string;
-    /**
-     * Action Type
-     */
-    action_type: string;
-    source: ActionLogSourceEnum;
-    /**
-     * Workflow Id
-     */
-    workflow_id?: string | null;
-    /**
-     * Browser Id
-     */
-    browser_id: string;
-    /**
-     * Session Id
-     */
-    session_id: string;
-    /**
-     * Page Url
-     */
-    page_url: string;
-    status: ActionLogStatusEnum;
-    /**
-     * Success
-     */
-    success: boolean;
     /**
      * Params
      */
@@ -356,22 +289,6 @@ export type ActionLogItemResponse = {
      * Logs
      */
     logs?: Array<string>;
-    /**
-     * Error Message
-     */
-    error_message?: string | null;
-    /**
-     * Execution Time
-     */
-    execution_time: number;
-    /**
-     * Started At
-     */
-    started_at: string;
-    /**
-     * Finished At
-     */
-    finished_at?: string | null;
 };
 
 /**
@@ -594,6 +511,18 @@ export type ActionMetadataResponse = {
     json_schema: {
         [key: string]: unknown;
     };
+    /**
+     * Input Variables
+     *
+     * 输入变量契约：动作运行时消费的 {{变量}} 清单
+     */
+    input_variables?: Array<VariableSpec>;
+    /**
+     * Output Variables
+     *
+     * 输出变量契约：动作执行产出的变量槽位清单
+     */
+    output_variables?: Array<VariableSpec>;
 };
 
 /**
@@ -605,9 +534,9 @@ export type ActionPreviewRequest = {
     /**
      * Action Id
      *
-     * 操作ID
+     * 操作ID：内置动作为名字符串，复合动作为雪花 int
      */
-    action_id: string;
+    action_id: number | string;
     /**
      * Params
      *
@@ -635,7 +564,7 @@ export type ActionPreviewResponse = {
     /**
      * Action Id
      */
-    action_id: string;
+    action_id: number | string;
     /**
      * Action Name
      */
@@ -701,7 +630,7 @@ export type ActionResultResponse = {
     /**
      * Action Id
      */
-    action_id?: string;
+    action_id?: number | string;
     /**
      * Action Name
      */
@@ -725,6 +654,56 @@ export type ActionResultResponse = {
 };
 
 /**
+ * ActionSyncRequest
+ *
+ * 同步自定义操作到上游最新版本请求
+ */
+export type ActionSyncRequest = {
+    /**
+     * Action Id
+     *
+     * 当前 Fork 副本的雪花 action_id
+     */
+    action_id: number;
+};
+
+/**
+ * ActionSyncResponse
+ *
+ * 同步自定义操作响应
+ */
+export type ActionSyncResponse = {
+    /**
+     * Action Id
+     */
+    action_id: number;
+    /**
+     * Updated
+     *
+     * 内容已更新的动作名称列表
+     */
+    updated?: Array<string>;
+    /**
+     * Created
+     *
+     * 新 Fork 的动作名称列表
+     */
+    created?: Array<string>;
+    /**
+     * Unavailable
+     *
+     * 上游已不可用的动作 ID 列表
+     */
+    unavailable?: Array<number>;
+    /**
+     * Local Overwritten
+     *
+     * 本次同步是否覆盖了本地修改（动作内容）
+     */
+    local_overwritten?: boolean;
+};
+
+/**
  * ActionValidateRequest
  *
  * 验证参数请求
@@ -733,9 +712,9 @@ export type ActionValidateRequest = {
     /**
      * Action Id
      *
-     * 操作ID
+     * 操作ID：内置动作为名字符串，复合动作为雪花 int
      */
-    action_id: string;
+    action_id: number | string;
     /**
      * Params
      *
@@ -767,7 +746,7 @@ export type ActionValidateResponse = {
     /**
      * Action Id
      */
-    action_id: string;
+    action_id: number | string;
     /**
      * Action Name
      */
@@ -1479,56 +1458,6 @@ export type BasePaginationRespCompositeActionListItemResponse = {
 };
 
 /**
- * BasePaginationResp[PluginListItemResponse]
- */
-export type BasePaginationRespPluginListItemResponse = {
-    /**
-     * Page
-     *
-     * 页码
-     */
-    page?: number;
-    /**
-     * Per Page
-     *
-     * 每页数量
-     */
-    per_page?: number;
-    /**
-     * Total
-     *
-     * 总记录数
-     */
-    total?: number;
-    /**
-     * Items
-     *
-     * 当前页数据
-     */
-    items?: Array<unknown>;
-    /**
-     * Pages
-     */
-    readonly pages: number;
-    /**
-     * Has Next
-     */
-    readonly has_next: boolean;
-    /**
-     * Has Prev
-     */
-    readonly has_prev: boolean;
-    /**
-     * Next Page
-     */
-    readonly next_page: number;
-    /**
-     * Prev Page
-     */
-    readonly prev_page: number;
-};
-
-/**
  * BasePaginationResp[RedemptionCodeItem]
  */
 export type BasePaginationRespRedemptionCodeItem = {
@@ -1629,9 +1558,109 @@ export type BasePaginationRespUserBrowserInfo = {
 };
 
 /**
+ * BasePaginationResp[WorkflowAdminListItemResponse]
+ */
+export type BasePaginationRespWorkflowAdminListItemResponse = {
+    /**
+     * Page
+     *
+     * 页码
+     */
+    page?: number;
+    /**
+     * Per Page
+     *
+     * 每页数量
+     */
+    per_page?: number;
+    /**
+     * Total
+     *
+     * 总记录数
+     */
+    total?: number;
+    /**
+     * Items
+     *
+     * 当前页数据
+     */
+    items?: Array<unknown>;
+    /**
+     * Pages
+     */
+    readonly pages: number;
+    /**
+     * Has Next
+     */
+    readonly has_next: boolean;
+    /**
+     * Has Prev
+     */
+    readonly has_prev: boolean;
+    /**
+     * Next Page
+     */
+    readonly next_page: number;
+    /**
+     * Prev Page
+     */
+    readonly prev_page: number;
+};
+
+/**
  * BasePaginationResp[WorkflowListItemResponse]
  */
 export type BasePaginationRespWorkflowListItemResponse = {
+    /**
+     * Page
+     *
+     * 页码
+     */
+    page?: number;
+    /**
+     * Per Page
+     *
+     * 每页数量
+     */
+    per_page?: number;
+    /**
+     * Total
+     *
+     * 总记录数
+     */
+    total?: number;
+    /**
+     * Items
+     *
+     * 当前页数据
+     */
+    items?: Array<unknown>;
+    /**
+     * Pages
+     */
+    readonly pages: number;
+    /**
+     * Has Next
+     */
+    readonly has_next: boolean;
+    /**
+     * Has Prev
+     */
+    readonly has_prev: boolean;
+    /**
+     * Next Page
+     */
+    readonly next_page: number;
+    /**
+     * Prev Page
+     */
+    readonly prev_page: number;
+};
+
+/**
+ * BasePaginationResp[WorkflowResourceRecordItemResponse]
+ */
+export type BasePaginationRespWorkflowResourceRecordItemResponse = {
     /**
      * Page
      *
@@ -2831,10 +2860,20 @@ export type BrowserSessionStatus = {
  * - GET_TEXT: get_text
  * - GET_WINDOW: get_window
  * - FETCH_EXTERNAL_DATA: fetch_external_data
+ * - MARK_RESOURCE_RESULT: mark_resource_result
+ * - RANDOM_PICK: random_pick
  * - PRINT: print
+ * - SHUFFLE_LIST: shuffle_list
+ * - SORT_LIST: sort_list
+ * - BILI_RESERVE: bili_reserve
+ * - PICK_LINE: pick_line
+ * - NOTIFY: notify
+ * - OPEN_PAGE: open_page
+ * - CLOSE_PAGE: close_page
  * - LOOP: loop
  * - COMPOSITE: composite
  * - IF_ELSE: if_else
+ * - PARALLEL: parallel
  */
 export const BuiltinActionType = {
     /**
@@ -2886,9 +2925,45 @@ export const BuiltinActionType = {
      */
     FETCH_EXTERNAL_DATA: 'fetch_external_data',
     /**
+     * MARK_RESOURCE_RESULT
+     */
+    MARK_RESOURCE_RESULT: 'mark_resource_result',
+    /**
+     * RANDOM_PICK
+     */
+    RANDOM_PICK: 'random_pick',
+    /**
      * PRINT
      */
     PRINT: 'print',
+    /**
+     * SHUFFLE_LIST
+     */
+    SHUFFLE_LIST: 'shuffle_list',
+    /**
+     * SORT_LIST
+     */
+    SORT_LIST: 'sort_list',
+    /**
+     * BILI_RESERVE
+     */
+    BILI_RESERVE: 'bili_reserve',
+    /**
+     * PICK_LINE
+     */
+    PICK_LINE: 'pick_line',
+    /**
+     * NOTIFY
+     */
+    NOTIFY: 'notify',
+    /**
+     * OPEN_PAGE
+     */
+    OPEN_PAGE: 'open_page',
+    /**
+     * CLOSE_PAGE
+     */
+    CLOSE_PAGE: 'close_page',
     /**
      * LOOP
      */
@@ -2900,7 +2975,11 @@ export const BuiltinActionType = {
     /**
      * IF_ELSE
      */
-    IF_ELSE: 'if_else'
+    IF_ELSE: 'if_else',
+    /**
+     * PARALLEL
+     */
+    PARALLEL: 'parallel'
 } as const;
 
 /**
@@ -2919,10 +2998,20 @@ export const BuiltinActionType = {
  * - GET_TEXT: get_text
  * - GET_WINDOW: get_window
  * - FETCH_EXTERNAL_DATA: fetch_external_data
+ * - MARK_RESOURCE_RESULT: mark_resource_result
+ * - RANDOM_PICK: random_pick
  * - PRINT: print
+ * - SHUFFLE_LIST: shuffle_list
+ * - SORT_LIST: sort_list
+ * - BILI_RESERVE: bili_reserve
+ * - PICK_LINE: pick_line
+ * - NOTIFY: notify
+ * - OPEN_PAGE: open_page
+ * - CLOSE_PAGE: close_page
  * - LOOP: loop
  * - COMPOSITE: composite
  * - IF_ELSE: if_else
+ * - PARALLEL: parallel
  */
 export type BuiltinActionType = typeof BuiltinActionType[keyof typeof BuiltinActionType];
 
@@ -3271,9 +3360,15 @@ export type CompositeActionCreateRequest = {
     /**
      * Log Enabled
      *
-     * 是否采集该操作的执行日志
+     * 是否采集该操作的执行日志（不传=未设置，听从工作流/项目开关）
      */
-    log_enabled?: boolean;
+    log_enabled?: boolean | null;
+    /**
+     * Log Debug
+     *
+     * 调试模式（不传=未设置）：True=强制全量采集（入参/结果/变量全记、成功也记、不截断）
+     */
+    log_debug?: boolean | null;
     /**
      * Log Record Params
      *
@@ -3321,9 +3416,9 @@ export type CompositeActionDeleteRequest = {
     /**
      * Action Id
      *
-     * 操作的 action_id（如 ca_xxx）
+     * 操作的雪花 action_id
      */
-    action_id: string;
+    action_id: number;
 };
 
 /**
@@ -3333,9 +3428,29 @@ export type CompositeActionDeleteRequest = {
  */
 export type CompositeActionDetailResponse = {
     /**
+     * Has Upstream Update
+     */
+    has_upstream_update?: boolean;
+    /**
+     * Upstream Updated At
+     */
+    upstream_updated_at?: number | null;
+    /**
+     * Last Synced At
+     */
+    last_synced_at?: number | null;
+    /**
+     * Auto Sync Upstream
+     */
+    auto_sync_upstream?: boolean;
+    /**
+     * Local Steps Modified
+     */
+    local_steps_modified?: boolean;
+    /**
      * Action Id
      */
-    action_id: string;
+    action_id: number;
     /**
      * Name
      */
@@ -3389,6 +3504,18 @@ export type CompositeActionDetailResponse = {
      */
     output_vars: Array<string>;
     /**
+     * Input Variables
+     *
+     * 聚合步骤树得到的输入变量契约（消费 − 内部自产）
+     */
+    input_variables?: Array<VariableSpec>;
+    /**
+     * Output Variables
+     *
+     * 聚合步骤树得到的输出变量契约（产出槽位）
+     */
+    output_variables?: Array<VariableSpec>;
+    /**
      * Is Enabled
      */
     is_enabled: boolean;
@@ -3415,7 +3542,11 @@ export type CompositeActionDetailResponse = {
     /**
      * Log Enabled
      */
-    log_enabled?: boolean;
+    log_enabled?: boolean | null;
+    /**
+     * Log Debug
+     */
+    log_debug?: boolean | null;
     /**
      * Log Record Params
      */
@@ -3479,9 +3610,9 @@ export type CompositeActionGetRequest = {
     /**
      * Action Id
      *
-     * 操作的 action_id（如 ca_xxx）
+     * 操作的雪花 action_id
      */
-    action_id: string;
+    action_id: number;
 };
 
 /**
@@ -3543,9 +3674,9 @@ export type CompositeActionUpdateRequest = {
     /**
      * Action Id
      *
-     * 操作的 action_id（如 ca_xxx）
+     * 操作的雪花 action_id
      */
-    action_id: string;
+    action_id: number;
     /**
      * Name
      *
@@ -3647,6 +3778,12 @@ export type CompositeActionUpdateRequest = {
      */
     log_enabled?: boolean | null;
     /**
+     * Log Debug
+     *
+     * 调试模式：True=强制全量采集（入参/结果/变量全记、成功也记、不截断）
+     */
+    log_debug?: boolean | null;
+    /**
      * Log Record Params
      *
      * 是否记录变量替换后的入参
@@ -3682,6 +3819,24 @@ export type CompositeActionUpdateRequest = {
      * 日志保留天数，0 表示永久
      */
     log_retention_days?: number | null;
+    /**
+     * Auto Sync Upstream
+     *
+     * 是否开启上游自动同步（不传表示不修改；仅 Fork 资源有意义）
+     */
+    auto_sync_upstream?: boolean | null;
+    /**
+     * Browser Ids
+     *
+     * 执行目标浏览器ID列表（不传表示不修改；传空列表=回到单浏览器模式）
+     */
+    browser_ids?: Array<number> | null;
+    /**
+     * Concurrent Exec
+     *
+     * 多浏览器时是否并发执行（不传表示不修改）
+     */
+    concurrent_exec?: boolean | null;
 };
 
 /**
@@ -3830,6 +3985,314 @@ export type CreateSessionResponse = {
 };
 
 /**
+ * DebugActionDetail
+ *
+ * 动作全量定义（DB 当前真值，steps 可直接改后再落库）。
+ */
+export type DebugActionDetail = {
+    /**
+     * Action Id
+     *
+     * 操作的雪花 action_id
+     */
+    action_id: string;
+    /**
+     * Name
+     *
+     * 操作名称
+     */
+    name: string;
+    /**
+     * Description
+     *
+     * 操作描述
+     */
+    description?: string;
+    /**
+     * Step Count
+     *
+     * 顶层步骤数
+     */
+    step_count?: number;
+    /**
+     * Steps
+     *
+     * 步骤列表
+     */
+    steps?: Array<JsonValue>;
+    /**
+     * Input Vars
+     *
+     * 输入变量定义
+     */
+    input_vars?: Array<JsonValue>;
+    /**
+     * Output Vars
+     *
+     * 输出变量名
+     */
+    output_vars?: Array<string>;
+    /**
+     * Parameters Schema
+     *
+     * 参数定义
+     */
+    parameters_schema?: Array<JsonValue>;
+    /**
+     * Is Public
+     *
+     * 是否公开
+     */
+    is_public?: boolean;
+    /**
+     * Is Enabled
+     *
+     * 是否启用
+     */
+    is_enabled?: boolean;
+    /**
+     * Updated At
+     *
+     * 最后更新时间
+     */
+    updated_at?: string | null;
+};
+
+/**
+ * DebugActionItem
+ *
+ * 动作列表项（MCP 工具输出用，字段精简）。
+ */
+export type DebugActionItem = {
+    /**
+     * Action Id
+     *
+     * 操作的雪花 action_id
+     */
+    action_id: string;
+    /**
+     * Name
+     *
+     * 操作名称
+     */
+    name: string;
+    /**
+     * Steps Count
+     *
+     * 顶层步骤数
+     */
+    steps_count?: number;
+    /**
+     * Is Enabled
+     *
+     * 是否启用
+     */
+    is_enabled?: boolean;
+    /**
+     * Is Public
+     *
+     * 是否公开
+     */
+    is_public?: boolean;
+    /**
+     * Updated At
+     *
+     * 最后更新时间
+     */
+    updated_at?: string | null;
+};
+
+/**
+ * DebugActionListData
+ *
+ * 动作列表输出。
+ */
+export type DebugActionListData = {
+    /**
+     * Total
+     *
+     * 命中总数
+     */
+    total?: number;
+    /**
+     * Items
+     *
+     * 动作列表
+     */
+    items?: Array<DebugActionItem>;
+};
+
+/**
+ * DebugExecuteData
+ *
+ * 执行输出（单个动作或内联步骤统一结构）。
+ */
+export type DebugExecuteData = {
+    /**
+     * Success
+     *
+     * 整体是否成功
+     */
+    success: boolean;
+    /**
+     * Execution Id
+     *
+     * 本次执行批次 ID，可下钻步骤日志
+     */
+    execution_id?: string;
+    /**
+     * Results
+     *
+     * 逐步骤结果
+     */
+    results?: Array<ActionResultResponse>;
+    /**
+     * 执行前的静态校验报告（内置动作不校验时为 null）
+     */
+    validation?: ValidationReport | null;
+    /**
+     * Blocked By Validation
+     *
+     * 是否因静态校验不通过而被拦截（未执行）
+     */
+    blocked_by_validation?: boolean;
+};
+
+/**
+ * DebugRunData
+ *
+ * 运行工作流（等待终态）输出。
+ */
+export type DebugRunData = {
+    /**
+     * Run Id
+     *
+     * 运行 ID
+     */
+    run_id: string;
+    /**
+     * Workflow Id
+     *
+     * 工作流雪花 ID
+     */
+    workflow_id: string;
+    /**
+     * Status
+     *
+     * 终态：success/failed/interrupted/cancelled
+     */
+    status?: string;
+    /**
+     * Finished
+     *
+     * 是否已到终态（false=等待超时）
+     */
+    finished?: boolean;
+    /**
+     * Execution Id
+     *
+     * 执行批次 ID，可喂给 rpa_get_run_logs
+     */
+    execution_id?: string;
+    /**
+     * Total
+     *
+     * 总步骤数
+     */
+    total?: number;
+    /**
+     * Success Count
+     *
+     * 成功步骤数
+     */
+    success_count?: number;
+    /**
+     * Failed Count
+     *
+     * 失败步骤数
+     */
+    failed_count?: number;
+    /**
+     * Error Message
+     *
+     * 运行级错误信息
+     */
+    error_message?: string | null;
+    /**
+     * Duration Ms
+     *
+     * 运行耗时（毫秒）
+     */
+    duration_ms?: number;
+    /**
+     * Waited Seconds
+     *
+     * 本次等待耗时（秒）
+     */
+    waited_seconds?: number;
+};
+
+/**
+ * DebugSaveData
+ *
+ * 落库输出（含回读一致性校验）。
+ */
+export type DebugSaveData = {
+    /**
+     * Mode
+     *
+     * update（更新已有动作）/ import（新建）
+     */
+    mode: string;
+    /**
+     * Action Id
+     *
+     * 落库后的 action_id
+     */
+    action_id?: string | null;
+    /**
+     * Name
+     *
+     * 动作名称
+     */
+    name?: string;
+    /**
+     * Step Count
+     *
+     * 写入的顶层步骤数
+     */
+    step_count?: number;
+    /**
+     * Action Ids
+     *
+     * 写入的步骤 action_id 序列
+     */
+    action_ids?: Array<string>;
+    /**
+     * Dry Run
+     *
+     * 是否仅预演未写库
+     */
+    dry_run?: boolean;
+    /**
+     * Verified
+     *
+     * 回读后 JSON 与 DB 是否一致（dry_run 时为 null）
+     */
+    verified?: boolean | null;
+    /**
+     * Db Action Ids
+     *
+     * 回读 DB 得到的步骤 action_id 序列
+     */
+    db_action_ids?: Array<string>;
+    /**
+     * 写入前静态校验
+     */
+    validation?: ValidationReport | null;
+};
+
+/**
  * DeleteSettingsRequest
  *
  * 删除默认设置请求（占位符）
@@ -3859,9 +4322,21 @@ export type DurationAccountResponse = {
     /**
      * Balance Seconds
      *
-     * 剩余时长（秒）
+     * 剩余总时长（秒）= 赠送 + 付费
      */
     balance_seconds: string;
+    /**
+     * Granted Balance Seconds
+     *
+     * 赠送时长余额（秒，签到/活动，每月初清零）
+     */
+    granted_balance_seconds: string;
+    /**
+     * Paid Balance Seconds
+     *
+     * 付费时长余额（秒，时长卡/购买，永久保留）
+     */
+    paid_balance_seconds: string;
     /**
      * Total Granted Seconds
      *
@@ -3889,10 +4364,58 @@ export type DurationAccountResponse = {
 /**
  * EmptyRequest
  *
- * 空请求体占位
+ * 空请求体占位（所有 POST 语义但无入参的接口统一复用）
  */
 export type EmptyRequest = {
     [key: string]: unknown;
+};
+
+/**
+ * ExecuteDebugRequest
+ *
+ * 执行动作或内联步骤（默认先做静态校验）。
+ *
+ * ``browser_id`` 由 query 参数提供（服务端据此校验浏览器归属）。
+ */
+export type ExecuteDebugRequest = {
+    /**
+     * Action Id
+     *
+     * 已保存动作 ID：内置动作为名字符串，复合动作为雪花 id 字符串
+     */
+    action_id?: string | null;
+    /**
+     * Steps
+     *
+     * 内联步骤（不落库直接试跑）；与 action_id 二选一
+     */
+    steps?: Array<LoosePayload> | null;
+    /**
+     * 操作参数（action_id 模式）
+     */
+    params?: LoosePayload | null;
+    /**
+     * 变量池
+     */
+    variables?: LoosePayload | null;
+    /**
+     * Output Vars
+     *
+     * 输出变量名称列表
+     */
+    output_vars?: Array<string>;
+    /**
+     * Page Index
+     *
+     * 目标标签页索引
+     */
+    page_index?: number | null;
+    /**
+     * Force
+     *
+     * 跳过静态校验强制执行
+     */
+    force?: boolean;
 };
 
 /**
@@ -3904,9 +4427,9 @@ export type ExecuteStepRequest = {
     /**
      * Action Id
      *
-     * 操作ID
+     * 操作ID：内置动作为名字符串，复合动作为雪花 int
      */
-    action_id: string;
+    action_id: number | string;
     /**
      * Params
      *
@@ -3950,7 +4473,7 @@ export type ExecuteStepResponse = {
     /**
      * Action Id
      */
-    action_id: string;
+    action_id: number | string;
     /**
      * Action Name
      */
@@ -4080,6 +4603,20 @@ export type GenerateCodesResponse = {
 };
 
 /**
+ * GetActionRequest
+ *
+ * 导出动作定义。
+ */
+export type GetActionRequest = {
+    /**
+     * Action Id
+     *
+     * 操作的雪花 action_id（字符串，避免精度丢失）
+     */
+    action_id: string;
+};
+
+/**
  * GetPageInfoRequest
  *
  * 获取页面信息请求
@@ -4148,7 +4685,17 @@ export type InputVarDefinition = {
      * 变量描述
      */
     description?: string;
+    /**
+     * Items Schema
+     *
+     * 数组类型变量的元素结构（JSON Schema，自包含、不含 $ref）：前端据此渲染结构化编辑器；为空时退化为 JSON 文本域
+     */
+    items_schema?: {
+        [key: string]: unknown;
+    } | null;
 };
+
+export type JsonValue = unknown;
 
 /**
  * LaunchQueueStateEnum
@@ -4266,6 +4813,10 @@ export type LaunchQueueTypeEnum = typeof LaunchQueueTypeEnum[keyof typeof Launch
  * LedgerListRequest
  *
  * 时长流水分页请求
+ *
+ * change_types 为逗号分隔的变动类型（见 LedgerChangeType）：
+ * 留空 = 不过滤（全部）；`consume` = 仅消耗；
+ * `sign_in,activity,redeem,purchase,adjust` = 仅获得。非法取值由 pydantic 校验拦截。
  */
 export type LedgerListRequest = {
     /**
@@ -4280,6 +4831,12 @@ export type LedgerListRequest = {
      * 每页数量
      */
     per_page?: number;
+    /**
+     * Change Types
+     *
+     * 变动类型过滤，逗号分隔；空=全部
+     */
+    change_types?: string;
 };
 
 /**
@@ -4355,6 +4912,32 @@ export type LiftBanRequest = {
 };
 
 /**
+ * ListActionsRequest
+ *
+ * 按名称搜索动作。
+ */
+export type ListActionsRequest = {
+    /**
+     * Keyword
+     *
+     * 名称关键字（模糊匹配）
+     */
+    keyword?: string | null;
+    /**
+     * Page
+     *
+     * 页码
+     */
+    page?: number;
+    /**
+     * Per Page
+     *
+     * 每页数量
+     */
+    per_page?: number;
+};
+
+/**
  * ListCodesRequest
  *
  * 兑换码分页查询请求
@@ -4418,6 +5001,20 @@ export const LogicOperator = {
  * - NOT: NOT
  */
 export type LogicOperator = typeof LogicOperator[keyof typeof LogicOperator];
+
+/**
+ * LoosePayload
+ *
+ * 任意 JSON 对象（字段由动作 DSL 决定，不做约束）。
+ *
+ * 为什么不直接用 ``JsonValue``：它的 schema 是自引用的 ``$ref``，
+ * MCP 客户端/转换器会把请求参数退化成单一类型（string / array），
+ * 导致 ``steps``、``content`` 这类对象入参在参数校验阶段就被拒。
+ * 这里显式声明为 object（``additionalProperties: true``）。
+ */
+export type LoosePayload = {
+    [key: string]: unknown;
+};
 
 /**
  * MemorySnapshot
@@ -4846,7 +5443,7 @@ export type NotificationConfigCreate = {
     /**
      * Mid
      */
-    mid: string;
+    mid?: string | null;
     /**
      * Browser Id
      */
@@ -5314,15 +5911,6 @@ export type ParamsCondition = {
 };
 
 /**
- * PaymentConfirmRequest
- *
- * 支付对账确认请求（占位；入账只按登录用户对账，不信任任何前端参数）
- */
-export type PaymentConfirmRequest = {
-    [key: string]: unknown;
-};
-
-/**
  * PaymentConfirmResponse
  *
  * 支付对账结果响应
@@ -5561,253 +6149,93 @@ export const PlatformEnum = {
 export type PlatformEnum = typeof PlatformEnum[keyof typeof PlatformEnum];
 
 /**
- * PluginConfig
+ * RecentActionLogItem
  *
- * 工作流插件配置 - 单个插件的运行时配置
+ * 动作日志摘要项。
  */
-export type PluginConfig = {
+export type RecentActionLogItem = {
     /**
-     * Plugin Id
+     * Log Id
      *
-     * 插件ID
+     * 日志 ID（可查详情）
      */
-    plugin_id: string;
+    log_id?: string;
     /**
-     * Config Params
+     * Execution Id
      *
-     * 插件配置参数
+     * 执行批次 ID
      */
-    config_params?: {
-        [key: string]: unknown;
-    };
+    execution_id?: string;
     /**
-     * Hook Type
+     * Action Name
      *
-     * 钩子类型: before_action/after_action/on_success/on_error/on_timeout
+     * 动作名称
      */
-    hook_type: string;
+    action_name?: string;
     /**
-     * Priority
+     * Status
      *
-     * 优先级
+     * 执行状态
      */
-    priority?: number;
+    status?: string;
+    /**
+     * Success
+     *
+     * 是否成功
+     */
+    success?: boolean;
+    /**
+     * Error Message
+     *
+     * 错误信息
+     */
+    error_message?: string | null;
+    /**
+     * Execution Time
+     *
+     * 耗时（秒）
+     */
+    execution_time?: number;
 };
 
 /**
- * PluginCreateRequest
+ * RecentActionLogsData
  *
- * 创建插件挂载请求 - 与 UserPlugin 数据库模型对齐
+ * 动作日志摘要列表。
  */
-export type PluginCreateRequest = {
+export type RecentActionLogsData = {
     /**
-     * Name
+     * Total
      *
-     * 插件名称
+     * 总条数
      */
-    name: string;
+    total?: number;
     /**
-     * Hook Type
+     * Items
      *
-     * 钩子类型: before_action, after_action, on_success, on_error, on_timeout
+     * 日志列表
      */
-    hook_type: string;
-    /**
-     * Custom Action Id
-     *
-     * 要执行的自定义动作ID
-     */
-    custom_action_id: string;
-    /**
-     * Description
-     *
-     * 描述
-     */
-    description?: string;
-    /**
-     * Priority
-     *
-     * 优先级
-     */
-    priority?: number;
-    /**
-     * Is Public
-     *
-     * 是否公开
-     */
-    is_public?: boolean;
+    items?: Array<RecentActionLogItem>;
 };
 
 /**
- * PluginDetailResponse
+ * RecentActionLogsRequest
  *
- * 插件详情响应
+ * 查某动作最近的执行日志。
  */
-export type PluginDetailResponse = {
+export type RecentActionLogsRequest = {
     /**
-     * Id
-     */
-    id: number;
-    /**
-     * Plugin Id
-     */
-    plugin_id: string;
-    /**
-     * Name
-     */
-    name: string;
-    /**
-     * Hook Type
-     */
-    hook_type: string;
-    /**
-     * Custom Action Id
-     */
-    custom_action_id: string;
-    /**
-     * Description
-     */
-    description: string;
-    /**
-     * Is Enabled
-     */
-    is_enabled: boolean;
-    /**
-     * Priority
-     */
-    priority: number;
-    /**
-     * Is Public
-     */
-    is_public: boolean;
-    /**
-     * Forks Count
-     */
-    forks_count?: number;
-    /**
-     * Forked From Id
-     */
-    forked_from_id?: number | null;
-};
-
-/**
- * PluginForkRequest
- *
- * Fork 插件请求
- */
-export type PluginForkRequest = {
-    /**
-     * Id
+     * Action Id
      *
-     * 原插件ID
+     * 操作 ID（内置动作名或雪花 id 字符串）
      */
-    id: number;
+    action_id: string;
     /**
-     * New Name
+     * Limit
      *
-     * 新名称，如果不提供则使用原名称 + ' (Fork)'
+     * 返回条数
      */
-    new_name?: string | null;
-};
-
-/**
- * PluginForkResponse
- *
- * Fork 插件响应
- */
-export type PluginForkResponse = {
-    /**
-     * Id
-     */
-    id: number;
-    /**
-     * Plugin Id
-     */
-    plugin_id: string;
-    /**
-     * Name
-     */
-    name: string;
-    /**
-     * Forked From
-     *
-     * Fork 自哪个插件
-     */
-    forked_from: string;
-};
-
-/**
- * PluginListRequest
- *
- * 获取插件列表请求
- */
-export type PluginListRequest = {
-    /**
-     * Page
-     *
-     * 页码，从 1 开始
-     */
-    page?: number;
-    /**
-     * Per Page
-     *
-     * 每页数量
-     */
-    per_page?: number;
-    /**
-     * 筛选类型
-     */
-    filter_type?: FilterType;
-    /**
-     * 排序字段
-     */
-    sort_by?: SortBy;
-    /**
-     * 排序方向
-     */
-    sort_order?: SortOrder;
-};
-
-/**
- * PluginUpdateRequest
- *
- * 更新插件挂载请求
- */
-export type PluginUpdateRequest = {
-    /**
-     * Id
-     *
-     * 插件ID
-     */
-    id: number;
-    /**
-     * Name
-     */
-    name?: string | null;
-    /**
-     * Description
-     */
-    description?: string | null;
-    /**
-     * Hook Type
-     */
-    hook_type?: string | null;
-    /**
-     * Custom Action Id
-     */
-    custom_action_id?: string | null;
-    /**
-     * Priority
-     */
-    priority?: number | null;
-    /**
-     * Is Enabled
-     */
-    is_enabled?: boolean | null;
-    /**
-     * Is Public
-     */
-    is_public?: boolean | null;
+    limit?: number;
 };
 
 /**
@@ -5991,6 +6419,194 @@ export type RpcMethodInfoResponse = {
 };
 
 /**
+ * RunLogReport
+ *
+ * 一次运行 / 一次执行的步骤日志汇总。
+ */
+export type RunLogReport = {
+    /**
+     * Execution Id
+     *
+     * 执行批次 ID
+     */
+    execution_id?: string;
+    /**
+     * Total
+     *
+     * 该批次日志总条数
+     */
+    total?: number;
+    /**
+     * Fetched
+     *
+     * 实际拉取的条数
+     */
+    fetched?: number;
+    /**
+     * Truncated
+     *
+     * 是否因上限被截断
+     */
+    truncated?: boolean;
+    /**
+     * Status Counts
+     *
+     * 按状态聚合的条数
+     */
+    status_counts?: Array<StatusCount>;
+    /**
+     * Tree
+     *
+     * 按 depth 缩进的调用链文本
+     */
+    tree?: string;
+    /**
+     * Failed
+     *
+     * 失败项明细（含 params / logs 摘要）
+     */
+    failed?: Array<JsonValue>;
+    /**
+     * Recovery Hints
+     *
+     * 「改哪一步」的候选提示
+     */
+    recovery_hints?: Array<RunRecovery>;
+};
+
+/**
+ * RunLogsRequest
+ *
+ * 按运行 / 执行批次查步骤日志。
+ */
+export type RunLogsRequest = {
+    /**
+     * Run Id
+     *
+     * 运行 ID（自动取其 execution_id）
+     */
+    run_id?: string | null;
+    /**
+     * Execution Id
+     *
+     * 执行批次 ID
+     */
+    execution_id?: string | null;
+    /**
+     * Max Items
+     *
+     * 最多拉取的日志条数
+     */
+    max_items?: number;
+    /**
+     * Only Failed
+     *
+     * 只返回失败步骤
+     */
+    only_failed?: boolean;
+    /**
+     * Detail Limit
+     *
+     * 失败项下钻详情的条数上限
+     */
+    detail_limit?: number;
+};
+
+/**
+ * RunRecovery
+ *
+ * 从日志中推断的「改哪一步」提示。
+ */
+export type RunRecovery = {
+    /**
+     * Action Name
+     *
+     * 失败动作名
+     */
+    action_name?: string;
+    /**
+     * Action Id
+     *
+     * 失败动作 ID
+     */
+    action_id?: string;
+    /**
+     * Order
+     *
+     * 该动作在执行链路中的出现序号（0 基）
+     */
+    order?: number;
+    /**
+     * Depth
+     *
+     * 调用深度
+     */
+    depth?: number;
+    /**
+     * Candidate Path
+     *
+     * 候选 steps 路径，如 steps[3]（可能是循环体内的相对路径）
+     */
+    candidate_path?: string;
+    /**
+     * Ambiguous
+     *
+     * 是否无法唯一定位（同名重复 / 处于循环体内）
+     */
+    ambiguous?: boolean;
+    /**
+     * Error Message
+     *
+     * 失败信息（截断）
+     */
+    error_message?: string;
+};
+
+/**
+ * RunWorkflowRequest
+ *
+ * 运行工作流并等待终态。
+ */
+export type RunWorkflowRequest = {
+    /**
+     * Workflow Id
+     *
+     * 工作流雪花 ID（字符串，避免精度丢失）
+     */
+    workflow_id: string;
+    /**
+     * Timeout Seconds
+     *
+     * 最长等待秒数
+     */
+    timeout_seconds?: number;
+};
+
+/**
+ * SaveActionRequest
+ *
+ * 落库动作定义（同名 upsert），落库后自动回读比对。
+ */
+export type SaveActionRequest = {
+    /**
+     * 完整动作定义（动作 JSON 内容：name / steps / input_vars / ...）
+     */
+    content: LoosePayload;
+    /**
+     * Action Id
+     *
+     * 指定要更新的动作（雪花 id 字符串）；不传则按 name 匹配
+     */
+    action_id?: string | null;
+    /**
+     * Dry Run
+     *
+     * 仅预演，不写库
+     */
+    dry_run?: boolean;
+};
+
+/**
  * SessionLifecycleState
  *
  * 枚举选项：
@@ -6042,12 +6658,115 @@ export const SessionLifecycleState = {
 export type SessionLifecycleState = typeof SessionLifecycleState[keyof typeof SessionLifecycleState];
 
 /**
- * SignInRequest
+ * SignInCalendarDay
  *
- * 签到请求（占位，保持 POST 语义）
+ * 签到日历单日条目
  */
-export type SignInRequest = {
-    [key: string]: unknown;
+export type SignInCalendarDay = {
+    /**
+     * Date
+     *
+     * 日期 YYYY-MM-DD
+     */
+    date: string;
+    /**
+     * Signed
+     *
+     * 当天是否已签到
+     */
+    signed: boolean;
+    /**
+     * Reward Seconds
+     *
+     * 当天签到奖励（秒）；未签到为 0
+     */
+    reward_seconds: string;
+    /**
+     * Continuous Days
+     *
+     * 历史字段：截至当天的连续签到天数（只读保留）
+     */
+    continuous_days: string;
+    /**
+     * Is Makeup
+     *
+     * 当天是否为补签
+     */
+    is_makeup?: boolean;
+    /**
+     * Can Makeup
+     *
+     * 当天是否可补登（当月 / 早于今天 / 未签到）
+     */
+    can_makeup?: boolean;
+};
+
+/**
+ * SignInCalendarRequest
+ *
+ * 签到日历查询请求
+ */
+export type SignInCalendarRequest = {
+    /**
+     * Month
+     *
+     * 查询月份 YYYY-MM（可选，缺省为当前月）
+     */
+    month?: string | null;
+};
+
+/**
+ * SignInCalendarResponse
+ *
+ * 签到日历响应（当月逐日补齐，数值以 str 传递）
+ */
+export type SignInCalendarResponse = {
+    /**
+     * Month
+     *
+     * 查询月份 YYYY-MM
+     */
+    month: string;
+    /**
+     * Days
+     *
+     * 当月 1 号至月末逐日条目
+     */
+    days?: Array<SignInCalendarDay>;
+    /**
+     * Signed Days
+     *
+     * 当月已签到天数
+     */
+    signed_days: string;
+    /**
+     * Total Reward Seconds
+     *
+     * 当月签到合计奖励（秒）
+     */
+    total_reward_seconds: string;
+    /**
+     * Current Continuous Days
+     *
+     * 历史字段：最新连续签到天数（无记录为 0）
+     */
+    current_continuous_days: string;
+    /**
+     * Total Sign Days
+     *
+     * 累计签到天数（含补签）
+     */
+    total_sign_days?: string;
+    /**
+     * Makeup Cards
+     *
+     * 持有补登卡数量
+     */
+    makeup_cards?: string;
+    /**
+     * 下一个未达成的档位；全部达成时为 null
+     */
+    next_milestone?: SignMilestoneInfo | null;
 };
 
 /**
@@ -6059,13 +6778,13 @@ export type SignInResponse = {
     /**
      * Reward Seconds
      *
-     * 本次奖励秒数
+     * 本次奖励秒数（固定时长 + 命中的里程碑额外奖励）
      */
     reward_seconds: string;
     /**
      * Continuous Days
      *
-     * 连续签到天数
+     * 累计签到天数（历史字段名保留，语义为累计）
      */
     continuous_days: string;
     /**
@@ -6074,6 +6793,498 @@ export type SignInResponse = {
      * 签到后余额（秒）
      */
     balance_seconds: string;
+    /**
+     * Total Sign Days
+     *
+     * 本次签到后的累计签到天数
+     */
+    total_sign_days?: string;
+    /**
+     * Makeup Cards
+     *
+     * 当前持有补登卡数量
+     */
+    makeup_cards?: string;
+    /**
+     * Next Tier
+     *
+     * 下一个未达成档位；全部达成为空串
+     */
+    next_tier?: string;
+};
+
+/**
+ * SignMakeupRequest
+ *
+ * 补签请求
+ */
+export type SignMakeupRequest = {
+    /**
+     * Date
+     *
+     * 补签日期 YYYY-MM-DD（仅未签到的过去日期）
+     */
+    date: string;
+};
+
+/**
+ * SignMakeupResponse
+ *
+ * 补签结果响应
+ */
+export type SignMakeupResponse = {
+    /**
+     * Date
+     *
+     * 补签日期
+     */
+    date: string;
+    /**
+     * Reward Seconds
+     *
+     * 本次发放时长（秒）
+     */
+    reward_seconds: string;
+    /**
+     * Total Sign Days
+     *
+     * 补签后的累计签到天数
+     */
+    total_sign_days: string;
+    /**
+     * Makeup Cards
+     *
+     * 补签后剩余补登卡数量
+     */
+    makeup_cards: string;
+    /**
+     * Balance Seconds
+     *
+     * 补签后时长余额（秒）
+     */
+    balance_seconds: string;
+};
+
+/**
+ * SignMilestoneInfo
+ *
+ * 下一个未达成档位信息
+ */
+export type SignMilestoneInfo = {
+    /**
+     * Tier
+     *
+     * 档位标识: 7d / 14d / 28d
+     */
+    tier: string;
+    /**
+     * Days
+     *
+     * 该档位所需累计签到天数
+     */
+    days: string;
+    /**
+     * Remaining
+     *
+     * 还差的天数
+     */
+    remaining: string;
+    /**
+     * Reward Seconds
+     *
+     * 该档位发放时长（秒）
+     */
+    reward_seconds: string;
+    /**
+     * Makeup Cards
+     *
+     * 该档位发放补登卡数量
+     */
+    makeup_cards: string;
+};
+
+/**
+ * SignOverviewMakeupCards
+ *
+ * 签到概览 - 补登卡
+ */
+export type SignOverviewMakeupCards = {
+    /**
+     * Balance
+     *
+     * 持有补登卡数量
+     */
+    balance: string;
+    /**
+     * Max
+     *
+     * 补登卡持有上限（配置）
+     */
+    max: string;
+};
+
+/**
+ * SignOverviewRedemptionStatus
+ *
+ * 签到概览 - 档位兑换状态
+ */
+export type SignOverviewRedemptionStatus = {
+    /**
+     * Total Sign Days
+     *
+     * 当前累计签到天数
+     */
+    total_sign_days: string;
+    /**
+     * Remaining Days
+     *
+     * 距下一档位还差天数
+     */
+    remaining_days?: string;
+    /**
+     * Tiers
+     *
+     * 各档位状态
+     */
+    tiers?: Array<SignOverviewTierItem>;
+};
+
+/**
+ * SignOverviewResponse
+ *
+ * 签到概览响应（结构对齐外部抓包，资产项按本项目：时长 + 补登卡）
+ */
+export type SignOverviewResponse = {
+    /**
+     * 累计签到与可补登信息
+     */
+    streak: SignOverviewStreak;
+    /**
+     * 补登卡持有情况
+     */
+    makeup_cards: SignOverviewMakeupCards;
+    /**
+     * 档位兑换状态
+     */
+    redemption_status: SignOverviewRedemptionStatus;
+    /**
+     * Launch Date
+     *
+     * 玩法上线日期（配置）
+     */
+    launch_date: string;
+    /**
+     * Timezone
+     *
+     * 签到判定时区（配置）
+     */
+    timezone: string;
+};
+
+/**
+ * SignOverviewStreak
+ *
+ * 签到概览 - 累计与可补登信息
+ */
+export type SignOverviewStreak = {
+    /**
+     * Days
+     *
+     * 累计签到天数（断签不清零）
+     */
+    days: string;
+    /**
+     * Month Total Days
+     *
+     * 当月已签到天数（含补签）
+     */
+    month_total_days: string;
+    /**
+     * Month Consumed Days
+     *
+     * 当月补签（消耗补登卡）天数
+     */
+    month_consumed_days: string;
+    /**
+     * Next Tier
+     *
+     * 下一个未达成档位；全部达成为空串
+     */
+    next_tier?: string;
+    /**
+     * Next Tier Remaining
+     *
+     * 距下一档位还差天数
+     */
+    next_tier_remaining?: string;
+    /**
+     * Makeup Dates
+     *
+     * 当前可补登的日期 YYYY-MM-DD
+     */
+    makeup_dates?: Array<string>;
+};
+
+/**
+ * SignOverviewTierItem
+ *
+ * 签到概览 - 档位状态条目
+ */
+export type SignOverviewTierItem = {
+    /**
+     * Tier
+     *
+     * 档位标识: 7d / 14d / 28d
+     */
+    tier: string;
+    /**
+     * Name
+     *
+     * 档位名称
+     */
+    name: string;
+    /**
+     * Days
+     *
+     * 解锁所需累计签到天数
+     */
+    days: string;
+    /**
+     * Reward Seconds
+     *
+     * 发放时长（秒）
+     */
+    reward_seconds: string;
+    /**
+     * Makeup Cards
+     *
+     * 发放补登卡数量
+     */
+    makeup_cards: string;
+    /**
+     * Status
+     *
+     * locked=未解锁 / unlocked=可兑换 / exchanged=已兑换
+     */
+    status: string;
+    /**
+     * Exchanged
+     *
+     * 是否已兑换
+     */
+    exchanged: boolean;
+};
+
+/**
+ * SignRewardConfigPayload
+ *
+ * 签到奖励配置整体覆盖保存请求（数值 str 传输）
+ */
+export type SignRewardConfigPayload = {
+    /**
+     * Launch Date
+     *
+     * 玩法上线日期 YYYY-MM-DD
+     */
+    launch_date?: string;
+    /**
+     * Timezone
+     *
+     * 签到判定时区
+     */
+    timezone?: string;
+    /**
+     * Daily Reward Seconds
+     *
+     * 每日签到固定奖励（秒）
+     */
+    daily_reward_seconds: string;
+    /**
+     * Makeup Card Max
+     *
+     * 补登卡持有上限
+     */
+    makeup_card_max: string;
+    /**
+     * Makeup Window Days
+     *
+     * 补签窗口天数；0=仅限当月
+     */
+    makeup_window_days?: string;
+    /**
+     * Tiers
+     *
+     * 档位列表（按天数升序）
+     */
+    tiers: Array<SignRewardTierPayload>;
+};
+
+/**
+ * SignRewardConfigResponse
+ *
+ * 签到奖励配置响应（数值以 str 传递，避免前端大整数精度问题）
+ *
+ * 与内部模型 ``SignRewardConfig`` 解耦：内部字段调整不会直接变成 API breaking。
+ */
+export type SignRewardConfigResponse = {
+    /**
+     * Launch Date
+     *
+     * 玩法上线日期 YYYY-MM-DD
+     */
+    launch_date: string;
+    /**
+     * Timezone
+     *
+     * 签到判定时区
+     */
+    timezone: string;
+    /**
+     * Daily Reward Seconds
+     *
+     * 每日签到固定奖励（秒）
+     */
+    daily_reward_seconds: string;
+    /**
+     * Makeup Card Max
+     *
+     * 补登卡持有上限
+     */
+    makeup_card_max: string;
+    /**
+     * Makeup Window Days
+     *
+     * 补签窗口天数；0=仅限当月
+     */
+    makeup_window_days: string;
+    /**
+     * Tiers
+     *
+     * 档位列表（按天数升序）
+     */
+    tiers?: Array<SignRewardTierResponse>;
+};
+
+/**
+ * SignRewardExchangeRequest
+ *
+ * 奖励档位兑换请求
+ */
+export type SignRewardExchangeRequest = {
+    /**
+     * Tier
+     *
+     * 档位标识: 7d / 14d / 28d
+     */
+    tier: string;
+};
+
+/**
+ * SignRewardExchangeResponse
+ *
+ * 奖励档位兑换结果响应
+ */
+export type SignRewardExchangeResponse = {
+    /**
+     * Tier
+     *
+     * 档位标识
+     */
+    tier: string;
+    /**
+     * Name
+     *
+     * 档位名称
+     */
+    name: string;
+    /**
+     * Reward Seconds
+     *
+     * 发放时长（秒）
+     */
+    reward_seconds: string;
+    /**
+     * Makeup Cards
+     *
+     * 实际发放补登卡数量（受上限封顶）
+     */
+    makeup_cards: string;
+    /**
+     * Total Sign Days
+     *
+     * 兑换时的累计签到天数
+     */
+    total_sign_days: string;
+    /**
+     * Balance Seconds
+     *
+     * 兑换后时长余额（秒）
+     */
+    balance_seconds: string;
+};
+
+/**
+ * SignRewardTierPayload
+ *
+ * 档位配置（str 传输，保存时转 int）
+ */
+export type SignRewardTierPayload = {
+    /**
+     * Tier
+     *
+     * 档位标识: 7d / 14d / 28d
+     */
+    tier: string;
+    /**
+     * Days
+     *
+     * 解锁所需累计签到天数
+     */
+    days: string;
+    /**
+     * Reward Seconds
+     *
+     * 发放时长（秒）
+     */
+    reward_seconds: string;
+    /**
+     * Makeup Cards
+     *
+     * 发放补登卡数量
+     */
+    makeup_cards: string;
+};
+
+/**
+ * SignRewardTierResponse
+ *
+ * 档位配置响应（数值以 str 传递）
+ */
+export type SignRewardTierResponse = {
+    /**
+     * Tier
+     *
+     * 档位标识: 7d / 14d / 28d
+     */
+    tier: string;
+    /**
+     * Days
+     *
+     * 解锁所需累计签到天数
+     */
+    days: string;
+    /**
+     * Reward Seconds
+     *
+     * 发放时长（秒）
+     */
+    reward_seconds: string;
+    /**
+     * Makeup Cards
+     *
+     * 发放补登卡数量
+     */
+    makeup_cards: string;
 };
 
 /**
@@ -6203,6 +7414,21 @@ export type StandardResponseActionPreviewResponse = {
      */
     msg?: string;
     data?: ActionPreviewResponse | null;
+};
+
+/**
+ * StandardResponse[ActionSyncResponse]
+ */
+export type StandardResponseActionSyncResponse = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: ActionSyncResponse | null;
 };
 
 /**
@@ -6356,21 +7582,6 @@ export type StandardResponseBasePaginationRespCompositeActionListItemResponse = 
 };
 
 /**
- * StandardResponse[BasePaginationResp[PluginListItemResponse]]
- */
-export type StandardResponseBasePaginationRespPluginListItemResponse = {
-    /**
-     * Code
-     */
-    code?: number;
-    /**
-     * Msg
-     */
-    msg?: string;
-    data?: BasePaginationRespPluginListItemResponse | null;
-};
-
-/**
  * StandardResponse[BasePaginationResp[RedemptionCodeItem]]
  */
 export type StandardResponseBasePaginationRespRedemptionCodeItem = {
@@ -6401,6 +7612,21 @@ export type StandardResponseBasePaginationRespUserBrowserInfo = {
 };
 
 /**
+ * StandardResponse[BasePaginationResp[WorkflowAdminListItemResponse]]
+ */
+export type StandardResponseBasePaginationRespWorkflowAdminListItemResponse = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: BasePaginationRespWorkflowAdminListItemResponse | null;
+};
+
+/**
  * StandardResponse[BasePaginationResp[WorkflowListItemResponse]]
  */
 export type StandardResponseBasePaginationRespWorkflowListItemResponse = {
@@ -6413,6 +7639,21 @@ export type StandardResponseBasePaginationRespWorkflowListItemResponse = {
      */
     msg?: string;
     data?: BasePaginationRespWorkflowListItemResponse | null;
+};
+
+/**
+ * StandardResponse[BasePaginationResp[WorkflowResourceRecordItemResponse]]
+ */
+export type StandardResponseBasePaginationRespWorkflowResourceRecordItemResponse = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: BasePaginationRespWorkflowResourceRecordItemResponse | null;
 };
 
 /**
@@ -6656,6 +7897,21 @@ export type StandardResponseCloseSessionResponse = {
 };
 
 /**
+ * StandardResponse[CompositeActionCreateRequest]
+ */
+export type StandardResponseCompositeActionCreateRequest = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: CompositeActionCreateRequest | null;
+};
+
+/**
  * StandardResponse[CompositeActionDetailResponse]
  */
 export type StandardResponseCompositeActionDetailResponse = {
@@ -6683,6 +7939,81 @@ export type StandardResponseCreateSessionResponse = {
      */
     msg?: string;
     data?: CreateSessionResponse | null;
+};
+
+/**
+ * StandardResponse[DebugActionDetail]
+ */
+export type StandardResponseDebugActionDetail = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: DebugActionDetail | null;
+};
+
+/**
+ * StandardResponse[DebugActionListData]
+ */
+export type StandardResponseDebugActionListData = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: DebugActionListData | null;
+};
+
+/**
+ * StandardResponse[DebugExecuteData]
+ */
+export type StandardResponseDebugExecuteData = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: DebugExecuteData | null;
+};
+
+/**
+ * StandardResponse[DebugRunData]
+ */
+export type StandardResponseDebugRunData = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: DebugRunData | null;
+};
+
+/**
+ * StandardResponse[DebugSaveData]
+ */
+export type StandardResponseDebugSaveData = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: DebugSaveData | null;
 };
 
 /**
@@ -6743,24 +8074,6 @@ export type StandardResponseLedgerListResponse = {
      */
     msg?: string;
     data?: LedgerListResponse | null;
-};
-
-/**
- * StandardResponse[List[ActionLogItemResponse]]
- */
-export type StandardResponseListActionLogItemResponse = {
-    /**
-     * Code
-     */
-    code?: number;
-    /**
-     * Msg
-     */
-    msg?: string;
-    /**
-     * Data
-     */
-    data?: Array<ActionLogItemResponse> | null;
 };
 
 /**
@@ -6908,9 +8221,9 @@ export type StandardResponsePermissionQuotaResp = {
 };
 
 /**
- * StandardResponse[PluginDetailResponse]
+ * StandardResponse[RecentActionLogsData]
  */
-export type StandardResponsePluginDetailResponse = {
+export type StandardResponseRecentActionLogsData = {
     /**
      * Code
      */
@@ -6919,22 +8232,7 @@ export type StandardResponsePluginDetailResponse = {
      * Msg
      */
     msg?: string;
-    data?: PluginDetailResponse | null;
-};
-
-/**
- * StandardResponse[PluginForkResponse]
- */
-export type StandardResponsePluginForkResponse = {
-    /**
-     * Code
-     */
-    code?: number;
-    /**
-     * Msg
-     */
-    msg?: string;
-    data?: PluginForkResponse | null;
+    data?: RecentActionLogsData | null;
 };
 
 /**
@@ -6968,6 +8266,36 @@ export type StandardResponseResourceSearchResponse = {
 };
 
 /**
+ * StandardResponse[RunLogReport]
+ */
+export type StandardResponseRunLogReport = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: RunLogReport | null;
+};
+
+/**
+ * StandardResponse[SignInCalendarResponse]
+ */
+export type StandardResponseSignInCalendarResponse = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: SignInCalendarResponse | null;
+};
+
+/**
  * StandardResponse[SignInResponse]
  */
 export type StandardResponseSignInResponse = {
@@ -6983,6 +8311,66 @@ export type StandardResponseSignInResponse = {
 };
 
 /**
+ * StandardResponse[SignMakeupResponse]
+ */
+export type StandardResponseSignMakeupResponse = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: SignMakeupResponse | null;
+};
+
+/**
+ * StandardResponse[SignOverviewResponse]
+ */
+export type StandardResponseSignOverviewResponse = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: SignOverviewResponse | null;
+};
+
+/**
+ * StandardResponse[SignRewardConfigResponse]
+ */
+export type StandardResponseSignRewardConfigResponse = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: SignRewardConfigResponse | null;
+};
+
+/**
+ * StandardResponse[SignRewardExchangeResponse]
+ */
+export type StandardResponseSignRewardExchangeResponse = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: SignRewardExchangeResponse | null;
+};
+
+/**
  * StandardResponse[TagItemResp]
  */
 export type StandardResponseTagItemResp = {
@@ -6995,21 +8383,6 @@ export type StandardResponseTagItemResp = {
      */
     msg?: string;
     data?: TagItemResp | null;
-};
-
-/**
- * StandardResponse[TestNotificationResponse]
- */
-export type StandardResponseTestNotificationResponse = {
-    /**
-     * Code
-     */
-    code?: number;
-    /**
-     * Msg
-     */
-    msg?: string;
-    data?: TestNotificationResponse | null;
 };
 
 /**
@@ -7118,6 +8491,36 @@ export type StandardResponseUserBrowserDefaultSettingResponse = {
 };
 
 /**
+ * StandardResponse[ValidationReport]
+ */
+export type StandardResponseValidationReport = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: ValidationReport | null;
+};
+
+/**
+ * StandardResponse[WorkflowCreateRequest]
+ */
+export type StandardResponseWorkflowCreateRequest = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: WorkflowCreateRequest | null;
+};
+
+/**
  * StandardResponse[WorkflowCreateResponse]
  */
 export type StandardResponseWorkflowCreateResponse = {
@@ -7193,6 +8596,36 @@ export type StandardResponseWorkflowForkResponse = {
 };
 
 /**
+ * StandardResponse[WorkflowResourceRecordDeleteResponse]
+ */
+export type StandardResponseWorkflowResourceRecordDeleteResponse = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: WorkflowResourceRecordDeleteResponse | null;
+};
+
+/**
+ * StandardResponse[WorkflowResourceRecordItemResponse]
+ */
+export type StandardResponseWorkflowResourceRecordItemResponse = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: WorkflowResourceRecordItemResponse | null;
+};
+
+/**
  * StandardResponse[WorkflowRunLogDetailResponse]
  */
 export type StandardResponseWorkflowRunLogDetailResponse = {
@@ -7208,6 +8641,21 @@ export type StandardResponseWorkflowRunLogDetailResponse = {
 };
 
 /**
+ * StandardResponse[WorkflowRunStopResponse]
+ */
+export type StandardResponseWorkflowRunStopResponse = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: WorkflowRunStopResponse | null;
+};
+
+/**
  * StandardResponse[WorkflowStepExecuteResponse]
  */
 export type StandardResponseWorkflowStepExecuteResponse = {
@@ -7220,6 +8668,21 @@ export type StandardResponseWorkflowStepExecuteResponse = {
      */
     msg?: string;
     data?: WorkflowStepExecuteResponse | null;
+};
+
+/**
+ * StandardResponse[WorkflowSyncResponse]
+ */
+export type StandardResponseWorkflowSyncResponse = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: WorkflowSyncResponse | null;
 };
 
 /**
@@ -7297,21 +8760,55 @@ export type StandardResponseListRpcMethodInfoResponse = {
 };
 
 /**
- * StandardResponse[str]
+ * StatusCount
+ *
+ * 按执行状态聚合的条数（避免对外暴露裸 dict）。
  */
-export type StandardResponseStr = {
+export type StatusCount = {
     /**
-     * Code
+     * Status
+     *
+     * 执行状态：success / failed / timeout
      */
-    code?: number;
+    status: string;
     /**
-     * Msg
+     * Count
+     *
+     * 该状态的日志条数
      */
-    msg?: string;
+    count: number;
+};
+
+/**
+ * StepIssue
+ *
+ * 单条静态校验问题（带可在 JSON 里定位的路径）。
+ */
+export type StepIssue = {
     /**
-     * Data
+     * Path
+     *
+     * 步骤在 steps 中的位置，如 steps[2].children[0]
      */
-    data?: string | null;
+    path: string;
+    /**
+     * Action Id
+     *
+     * 该步骤的 action_id
+     */
+    action_id?: string;
+    /**
+     * Message
+     *
+     * 校验失败原因
+     */
+    message: string;
+    /**
+     * Hint
+     *
+     * 修复建议
+     */
+    hint?: string;
 };
 
 /**
@@ -7327,7 +8824,7 @@ export type StepPreviewItem = {
     /**
      * Action Id
      */
-    action_id: string;
+    action_id: number | string;
     /**
      * Original Params
      */
@@ -7549,76 +9046,6 @@ export type TagWithCount = {
      * Count
      */
     count: number;
-};
-
-/**
- * TestNotificationRequest
- *
- * 测试推送通知的请求模型
- */
-export type TestNotificationRequest = {
-    /**
-     * Title
-     *
-     * 通知标题
-     */
-    title?: string;
-    /**
-     * Content
-     *
-     * 通知内容
-     */
-    content?: string;
-    /**
-     * Browser Id
-     *
-     * 浏览器实例ID
-     */
-    browser_id?: string | null;
-};
-
-/**
- * TestNotificationResponse
- *
- * 测试推送通知的响应模型
- */
-export type TestNotificationResponse = {
-    /**
-     * Success
-     *
-     * 测试是否成功
-     */
-    success: boolean;
-    /**
-     * Message
-     *
-     * 测试结果消息
-     */
-    message: string;
-    /**
-     * Config Found
-     *
-     * 是否找到通知配置
-     */
-    config_found: boolean;
-    /**
-     * Browser Id
-     *
-     * 使用的浏览器实例ID
-     */
-    browser_id?: string | null;
-    /**
-     * Config Source
-     *
-     * 配置来源：'browser' 或 'global'
-     */
-    config_source?: string | null;
-    /**
-     * Sent Channels
-     *
-     * 成功发送的推送渠道列表
-     */
-    sent_channels?: Array<string>;
 };
 
 /**
@@ -7882,6 +9309,26 @@ export type UserBrowserDefaultSettingResponse = {
 };
 
 /**
+ * ValidateStepsRequest
+ *
+ * 静态校验：内联 steps 或已保存动作，二选一。
+ */
+export type ValidateStepsRequest = {
+    /**
+     * Steps
+     *
+     * 待校验的步骤数组（与动作 JSON 的 steps 同结构）
+     */
+    steps?: Array<LoosePayload> | null;
+    /**
+     * Action Id
+     *
+     * 校验已保存的动作（雪花 action_id 字符串）
+     */
+    action_id?: string | null;
+};
+
+/**
  * ValidationError
  */
 export type ValidationError = {
@@ -7907,6 +9354,94 @@ export type ValidationError = {
     ctx?: {
         [key: string]: unknown;
     };
+};
+
+/**
+ * ValidationReport
+ *
+ * 步骤静态校验结果。
+ */
+export type ValidationReport = {
+    /**
+     * Ok
+     *
+     * 是否通过（解析 + 编译都成功）
+     */
+    ok: boolean;
+    /**
+     * Step Count
+     *
+     * 顶层步骤数
+     */
+    step_count?: number;
+    /**
+     * Total Steps
+     *
+     * 含 children 的步骤总数
+     */
+    total_steps?: number;
+    /**
+     * Action Ids
+     *
+     * 顶层步骤的 action_id 序列（便于核对）
+     */
+    action_ids?: Array<string>;
+    /**
+     * Issues
+     *
+     * 问题清单
+     */
+    issues?: Array<StepIssue>;
+    /**
+     * Compiled Nodes
+     *
+     * Pipeline 编译出的节点数
+     */
+    compiled_nodes?: number;
+    /**
+     * Notes
+     *
+     * 补充说明（如降级提示）
+     */
+    notes?: Array<string>;
+};
+
+/**
+ * VariableSpec
+ *
+ * 变量契约定义：声明动作消费/产出的变量槽位（动作元数据的一部分）
+ */
+export type VariableSpec = {
+    /**
+     * Name
+     *
+     * 变量名（支持点路径，如 item.dynId）
+     */
+    name: string;
+    /**
+     * Type
+     *
+     * 变量类型
+     */
+    type?: 'string' | 'number' | 'boolean' | 'array' | 'object';
+    /**
+     * Required
+     *
+     * 是否必填（缺失时执行报错）
+     */
+    required?: boolean;
+    /**
+     * Description
+     *
+     * 变量说明
+     */
+    description?: string;
+    /**
+     * Default
+     *
+     * 缺省值
+     */
+    default?: unknown | null;
 };
 
 /**
@@ -8115,6 +9650,78 @@ export type WebRtcVisibilityRequest = {
 };
 
 /**
+ * WorkflowAdminListRequest
+ *
+ * 管理端工作流列表请求（root 全量视图）
+ */
+export type WorkflowAdminListRequest = {
+    /**
+     * Page
+     *
+     * 页码，从 1 开始
+     */
+    page?: number;
+    /**
+     * Per Page
+     *
+     * 每页数量
+     */
+    per_page?: number;
+    /**
+     * Name
+     *
+     * 按名称模糊搜索
+     */
+    name?: string | null;
+    /**
+     * Mid
+     *
+     * 按作者 mid 过滤
+     */
+    mid?: number | null;
+    /**
+     * Is Public
+     *
+     * 按公开状态过滤
+     */
+    is_public?: boolean | null;
+    /**
+     * Is Enabled
+     *
+     * 按启用状态过滤
+     */
+    is_enabled?: boolean | null;
+    /**
+     * 排序字段
+     */
+    sort_by?: SortBy;
+    /**
+     * 排序方向
+     */
+    sort_order?: SortOrder;
+};
+
+/**
+ * WorkflowAdminSetEnabledRequest
+ *
+ * 管理端启停工作流请求
+ */
+export type WorkflowAdminSetEnabledRequest = {
+    /**
+     * Id
+     *
+     * 工作流数据库ID
+     */
+    id: number;
+    /**
+     * Is Enabled
+     *
+     * 目标启用状态
+     */
+    is_enabled: boolean;
+};
+
+/**
  * WorkflowCreateRequest
  *
  * 创建工作流请求 - 工作流是调度外壳，只引用已有动作
@@ -8129,9 +9736,9 @@ export type WorkflowCreateRequest = {
     /**
      * Custom Action Id
      *
-     * 要引用的自定义动作ID（多对一共享）
+     * 要引用的自定义动作ID（雪花 int，多对一共享）
      */
-    custom_action_id?: string | null;
+    custom_action_id?: number | null;
     /**
      * Description
      *
@@ -8165,11 +9772,55 @@ export type WorkflowCreateRequest = {
      */
     is_public?: boolean;
     /**
-     * Enabled Plugins
+     * Notify On Start
      *
-     * 关联的插件列表
+     * 开始执行时是否发送通知
      */
-    enabled_plugins?: Array<PluginConfig> | null;
+    notify_on_start?: boolean;
+    /**
+     * Notify On End
+     *
+     * 结束时是否发送通知（成功/失败）
+     */
+    notify_on_end?: boolean;
+    /**
+     * Log Enabled
+     *
+     * 执行时是否记录步骤级操作日志（不传=未设置，听从动作/项目开关；可在运行记录中下钻，仅保留最近7天）
+     */
+    log_enabled?: boolean | null;
+    /**
+     * Log Debug
+     *
+     * 调试模式（不传=未设置）：开启后本次运行强制全量采集——入参/结果/变量全记、成功也记、payload 不截断；与 log_enabled 独立，debug 隐含开启
+     */
+    log_debug?: boolean | null;
+    /**
+     * Resume On Restart
+     *
+     * 服务重启/异常退出后是否自动恢复本次被中断的运行（至少一次语义）
+     */
+    resume_on_restart?: boolean;
+    /**
+     * Browser Ids
+     *
+     * 执行目标浏览器ID列表；为空=仅用 browser_id（单浏览器）
+     */
+    browser_ids?: Array<number> | null;
+    /**
+     * Concurrent Exec
+     *
+     * 多浏览器时是否并发执行（False=按列表顺序串行）
+     */
+    concurrent_exec?: boolean;
+    /**
+     * Variables
+     *
+     * 输入变量值 {name: value}：运行期覆盖被引用动作声明的变量默认值；变量定义以动作契约/声明为准，工作流只存值
+     */
+    variables?: {
+        [key: string]: unknown;
+    };
 };
 
 /**
@@ -8185,7 +9836,7 @@ export type WorkflowCreateResponse = {
     /**
      * Workflow Id
      */
-    workflow_id: string;
+    workflow_id: number;
     /**
      * Name
      */
@@ -8205,13 +9856,33 @@ export type WorkflowCreateResponse = {
  */
 export type WorkflowDetailResponse = {
     /**
+     * Has Upstream Update
+     */
+    has_upstream_update?: boolean;
+    /**
+     * Upstream Updated At
+     */
+    upstream_updated_at?: number | null;
+    /**
+     * Last Synced At
+     */
+    last_synced_at?: number | null;
+    /**
+     * Auto Sync Upstream
+     */
+    auto_sync_upstream?: boolean;
+    /**
+     * Local Steps Modified
+     */
+    local_steps_modified?: boolean;
+    /**
      * Id
      */
     id: number;
     /**
      * Workflow Id
      */
-    workflow_id: string;
+    workflow_id: number;
     /**
      * Name
      */
@@ -8219,7 +9890,7 @@ export type WorkflowDetailResponse = {
     /**
      * Custom Action Id
      */
-    custom_action_id?: string | null;
+    custom_action_id?: number | null;
     /**
      * Description
      */
@@ -8279,11 +9950,45 @@ export type WorkflowDetailResponse = {
      */
     next_run_at?: string | null;
     /**
-     * Enabled Plugins
-     *
-     * 关联的插件列表
+     * Notify On Start
      */
-    enabled_plugins?: Array<PluginConfig>;
+    notify_on_start?: boolean;
+    /**
+     * Notify On End
+     */
+    notify_on_end?: boolean;
+    /**
+     * Log Enabled
+     */
+    log_enabled?: boolean | null;
+    /**
+     * Log Debug
+     */
+    log_debug?: boolean | null;
+    /**
+     * Resume On Restart
+     */
+    resume_on_restart?: boolean;
+    /**
+     * Browser Ids
+     *
+     * 执行目标浏览器ID列表；为空=单浏览器
+     */
+    browser_ids?: Array<number> | null;
+    /**
+     * Concurrent Exec
+     *
+     * 多浏览器时是否并发执行
+     */
+    concurrent_exec?: boolean;
+    /**
+     * Variables
+     *
+     * 输入变量值 {name: value}
+     */
+    variables?: {
+        [key: string]: unknown;
+    };
     /**
      * Created At
      */
@@ -8307,7 +10012,7 @@ export type WorkflowDuplicateResponse = {
     /**
      * Workflow Id
      */
-    workflow_id: string;
+    workflow_id: number;
     /**
      * Name
      */
@@ -8335,15 +10040,15 @@ export type WorkflowExecuteRequest = {
     /**
      * Action Id
      *
-     * 要执行的自定义操作ID（可选）
+     * 要执行的自定义操作ID（雪花 int，可选）
      */
-    action_id?: string | null;
+    action_id?: number | null;
     /**
      * Workflow Id
      *
-     * 工作流ID（用于关联插件）
+     * 工作流ID（雪花 int）
      */
-    workflow_id?: string | null;
+    workflow_id?: number | null;
     /**
      * Steps
      *
@@ -8450,6 +10155,12 @@ export type WorkflowForkRequest = {
      * 新名称，如果不提供则使用原名称 + ' (Fork)'
      */
     new_name?: string | null;
+    /**
+     * Auto Sync Upstream
+     *
+     * 是否开启上游自动同步（默认关闭）
+     */
+    auto_sync_upstream?: boolean;
 };
 
 /**
@@ -8465,7 +10176,7 @@ export type WorkflowForkResponse = {
     /**
      * Workflow Id
      */
-    workflow_id: string;
+    workflow_id: number;
     /**
      * Name
      */
@@ -8473,9 +10184,9 @@ export type WorkflowForkResponse = {
     /**
      * Forked From
      *
-     * Fork 自哪个工作流
+     * Fork 自哪个工作流（雪花 int）
      */
-    forked_from: string;
+    forked_from: number;
 };
 
 /**
@@ -8508,6 +10219,285 @@ export type WorkflowListRequest = {
      * 排序方向
      */
     sort_order?: SortOrder;
+    /**
+     * Browser Id
+     *
+     * 按执行目标浏览器过滤（不传不过滤）；与 filter_type 条件叠加
+     */
+    browser_id?: number | null;
+};
+
+/**
+ * WorkflowResourceRecordCreateRequest
+ *
+ * 手工新增/更新一条「已处理资源」记录请求
+ *
+ * 用途：修正去重数据（例如某条动态实际没参与却被误记，先删掉；或确认已线下参与，
+ * 需要提前把它加入去重集合）。写入走 upsert（唯一键 = 工作流 + 浏览器 + 类型 + 业务主键），
+ * 已存在时更新状态并累加 `process_count`。
+ */
+export type WorkflowResourceRecordCreateRequest = {
+    /**
+     * Workflow Id
+     *
+     * 工作流ID
+     */
+    workflow_id: number;
+    /**
+     * Resource Type
+     *
+     * 资源类型命名空间（需与取数去重的 resource_type 一致）
+     */
+    resource_type: string;
+    /**
+     * Resource Id
+     *
+     * 资源业务主键（如动态 dynId、预约 sid）
+     */
+    resource_id: string;
+    /**
+     * Browser Id
+     *
+     * 执行浏览器ID；不传=使用工作流配置的浏览器（去重按浏览器隔离）
+     */
+    browser_id?: number | null;
+    /**
+     * Status
+     *
+     * 处理状态: success/skipped/failed；不传=success（success/skipped 参与去重）
+     */
+    status?: string | null;
+    /**
+     * Fail Reason
+     *
+     * 备注/跳过原因（success 时不保存）
+     */
+    fail_reason?: string | null;
+    /**
+     * Extra
+     *
+     * 附加快照信息（可选，存入记录的 extra 字段）
+     */
+    extra?: {
+        [key: string]: unknown;
+    } | null;
+};
+
+/**
+ * WorkflowResourceRecordDeleteRequest
+ *
+ * 删除「已处理资源」记录请求（支持单条 / 勾选批量 / 按运行清理）
+ *
+ * 安全约束：除 `workflow_id` 外必须至少给一个条件，服务端会拒绝无条件全量删除；
+ * `dry_run=true` 只返回将删除的条数，供前端二次确认。
+ */
+export type WorkflowResourceRecordDeleteRequest = {
+    /**
+     * Workflow Id
+     *
+     * 工作流ID
+     */
+    workflow_id: number;
+    /**
+     * Ids
+     *
+     * 记录主键列表（列表页勾选后删除）
+     */
+    ids?: Array<number> | null;
+    /**
+     * Browser Id
+     *
+     * 按浏览器过滤
+     */
+    browser_id?: number | null;
+    /**
+     * Resource Type
+     *
+     * 按资源类型过滤
+     */
+    resource_type?: string | null;
+    /**
+     * Status
+     *
+     * 按状态过滤: success/skipped/failed
+     */
+    status?: string | null;
+    /**
+     * Resource Id
+     *
+     * 按业务主键精确匹配（非模糊）
+     */
+    resource_id?: string | null;
+    /**
+     * Run Id
+     *
+     * 按所属运行ID过滤（清理某一轮运行写入的记录）
+     */
+    run_id?: string | null;
+    /**
+     * Dry Run
+     *
+     * true=只统计将删除的条数，不实际删除
+     */
+    dry_run?: boolean;
+};
+
+/**
+ * WorkflowResourceRecordDeleteResponse
+ *
+ * 删除已处理资源记录的结果
+ *
+ * `deleted` 在 `dry_run=true` 时表示「将会删除」的条数。
+ */
+export type WorkflowResourceRecordDeleteResponse = {
+    /**
+     * Deleted
+     */
+    deleted?: number;
+    /**
+     * Dry Run
+     */
+    dry_run?: boolean;
+};
+
+/**
+ * WorkflowResourceRecordItemResponse
+ *
+ * 工作流已处理资源记录列表项
+ *
+ * `id` 为记录主键（自增），`resource_id` 为业务主键（动态ID/预约ID等）。
+ */
+export type WorkflowResourceRecordItemResponse = {
+    /**
+     * Id
+     */
+    id: number;
+    /**
+     * Workflow Id
+     */
+    workflow_id: number;
+    /**
+     * Browser Id
+     */
+    browser_id?: number;
+    /**
+     * Resource Type
+     */
+    resource_type: string;
+    /**
+     * Resource Id
+     */
+    resource_id: string;
+    /**
+     * Status
+     */
+    status: string;
+    /**
+     * Process Count
+     */
+    process_count?: number;
+    /**
+     * Fail Reason
+     */
+    fail_reason?: string | null;
+    /**
+     * Run Id
+     */
+    run_id?: string | null;
+    /**
+     * Extra
+     */
+    extra?: {
+        [key: string]: unknown;
+    } | null;
+    /**
+     * First Processed At
+     */
+    first_processed_at?: string | null;
+    /**
+     * Last Processed At
+     */
+    last_processed_at?: string | null;
+};
+
+/**
+ * WorkflowResourceRecordListRequest
+ *
+ * 工作流已处理资源记录查询请求
+ */
+export type WorkflowResourceRecordListRequest = {
+    /**
+     * Page
+     *
+     * 页码，从 1 开始
+     */
+    page?: number;
+    /**
+     * Per Page
+     *
+     * 每页数量
+     */
+    per_page?: number;
+    /**
+     * Workflow Id
+     *
+     * 工作流ID
+     */
+    workflow_id: number;
+    /**
+     * Browser Id
+     *
+     * 按浏览器过滤；不传=该工作流全部浏览器
+     */
+    browser_id?: number | null;
+    /**
+     * Resource Type
+     *
+     * 资源类型命名空间
+     */
+    resource_type?: string | null;
+    /**
+     * Status
+     *
+     * 处理状态: success/skipped/failed；不传=全部
+     */
+    status?: string | null;
+    /**
+     * Resource Id
+     *
+     * 业务主键，支持模糊匹配（LIKE %keyword%）
+     */
+    resource_id?: string | null;
+    /**
+     * Run Id
+     *
+     * 所属运行ID（精确）
+     */
+    run_id?: string | null;
+    /**
+     * Process Count Min
+     *
+     * 处理次数下限（含）
+     */
+    process_count_min?: number | null;
+    /**
+     * Process Count Max
+     *
+     * 处理次数上限（含）
+     */
+    process_count_max?: number | null;
+    /**
+     * Processed From
+     *
+     * 最近处理时间起始（含）
+     */
+    processed_from?: string | null;
+    /**
+     * Processed To
+     *
+     * 最近处理时间截止（含）
+     */
+    processed_to?: string | null;
 };
 
 /**
@@ -8527,11 +10517,11 @@ export type WorkflowRunLogDetailResponse = {
     /**
      * Workflow Id
      */
-    workflow_id: string;
+    workflow_id: number;
     /**
      * Browser Id
      */
-    browser_id?: string;
+    browser_id?: number;
     /**
      * Trigger Source
      */
@@ -8572,6 +10562,66 @@ export type WorkflowRunLogDetailResponse = {
      * Finished At
      */
     finished_at?: string | null;
+    /**
+     * Completed Steps
+     */
+    completed_steps?: number;
+    /**
+     * Current Step Index
+     */
+    current_step_index?: number;
+    /**
+     * Current Step Name
+     */
+    current_step_name?: string;
+    /**
+     * Loop Action Name
+     */
+    loop_action_name?: string;
+    /**
+     * Loop Index
+     */
+    loop_index?: number;
+    /**
+     * Loop Total
+     */
+    loop_total?: number;
+    /**
+     * Loop Body Completed
+     */
+    loop_body_completed?: number;
+    /**
+     * Loop Body Total
+     */
+    loop_body_total?: number;
+    /**
+     * Loop Body Step Name
+     */
+    loop_body_step_name?: string;
+    /**
+     * Progress Updated At
+     */
+    progress_updated_at?: number | null;
+    /**
+     * Queue Position
+     */
+    queue_position?: number;
+    /**
+     * Resumable
+     */
+    resumable?: boolean;
+    /**
+     * Resume Of
+     */
+    resume_of?: string | null;
+    /**
+     * Resume Count
+     */
+    resume_count?: number;
+    /**
+     * Checkpoint Step
+     */
+    checkpoint_step?: number;
 };
 
 /**
@@ -8583,9 +10633,9 @@ export type WorkflowRunLogListRequest = {
     /**
      * Workflow Id
      *
-     * 工作流ID
+     * 工作流ID（雪花 int）
      */
-    workflow_id: string;
+    workflow_id: number;
     /**
      * Page
      *
@@ -8618,6 +10668,99 @@ export type WorkflowRunNowRequest = {
      * 运行目标浏览器ID，不传则使用工作流上配置的 browser_id
      */
     browser_id?: number | null;
+};
+
+/**
+ * WorkflowRunResumeRequest
+ *
+ * 继续运行（断点恢复）请求
+ */
+export type WorkflowRunResumeRequest = {
+    /**
+     * Run Id
+     *
+     * 被中断的运行ID
+     */
+    run_id: string;
+};
+
+/**
+ * WorkflowRunStopRequest
+ *
+ * 停止正在运行的工作流请求
+ */
+export type WorkflowRunStopRequest = {
+    /**
+     * Run Id
+     *
+     * 运行ID（run_id）
+     */
+    run_id: string;
+};
+
+/**
+ * WorkflowRunStopResponse
+ *
+ * 停止工作流运行响应（立刻停止 + 同步停止定期执行）。
+ *
+ * 见 ``docs/工作流停止计划书.md``：停止不再等步骤边界 / 宽限期，而是直接
+ * ``task.cancel()`` 中断；同时关闭该工作流的定期执行（cron 任务被移除）。
+ */
+export type WorkflowRunStopResponse = {
+    /**
+     * Run Id
+     *
+     * 运行ID
+     */
+    run_id: string;
+    /**
+     * Status
+     *
+     * 该运行当前 / 最终状态
+     */
+    status: string;
+    /**
+     * Stopping
+     *
+     * 是否已下发停止
+     */
+    stopping?: boolean;
+    /**
+     * Forced
+     *
+     * 是否直接强制中断执行 task
+     */
+    forced?: boolean;
+    /**
+     * Already Finished
+     *
+     * 该运行此前已结束
+     */
+    already_finished?: boolean;
+    /**
+     * Queue Cancelled
+     *
+     * 该运行当时在排队，已被取消
+     */
+    queue_cancelled?: boolean;
+    /**
+     * Reaped
+     *
+     * 僵尸运行记录已被清理
+     */
+    reaped?: boolean;
+    /**
+     * Schedule Stopped
+     *
+     * 本次是否关闭了该工作流的定期执行
+     */
+    schedule_stopped?: boolean;
+    /**
+     * Cancelled Runs
+     *
+     * 一并停止的同工作流其它运行ID
+     */
+    cancelled_runs?: Array<string>;
 };
 
 /**
@@ -8677,7 +10820,7 @@ export type WorkflowStepExecuteResponse = {
     /**
      * Action Id
      */
-    action_id: string;
+    action_id: number | string;
     /**
      * Result
      */
@@ -8710,9 +10853,9 @@ export type WorkflowStepRequest = {
     /**
      * Action Id
      *
-     * 操作ID，如 click, input, llm, my_composite_action
+     * 操作ID：内置动作为名字符串(如 click/input/llm)，复合动作为雪花 int
      */
-    action_id: string;
+    action_id: number | string;
     /**
      * Action Type
      *
@@ -8796,6 +10939,62 @@ export type WorkflowStepRequest = {
 };
 
 /**
+ * WorkflowSyncRequest
+ *
+ * 同步工作流到上游最新版本请求
+ */
+export type WorkflowSyncRequest = {
+    /**
+     * Id
+     *
+     * 当前 Fork 副本的工作流 ID
+     */
+    id: number;
+};
+
+/**
+ * WorkflowSyncResponse
+ *
+ * 同步工作流响应
+ */
+export type WorkflowSyncResponse = {
+    /**
+     * Workflow Id
+     */
+    workflow_id: number;
+    /**
+     * Updated
+     *
+     * 内容已更新的动作名称列表
+     */
+    updated?: Array<string>;
+    /**
+     * Created
+     *
+     * 新 Fork 的动作名称列表
+     */
+    created?: Array<string>;
+    /**
+     * Unavailable
+     *
+     * 上游已不可用的动作 ID 列表
+     */
+    unavailable?: Array<string>;
+    /**
+     * Workflow Config Updated
+     *
+     * 工作流触发配置是否有更新
+     */
+    workflow_config_updated?: boolean;
+    /**
+     * Local Overwritten
+     *
+     * 本次同步是否覆盖了本地修改（触发配置或动作内容）
+     */
+    local_overwritten?: boolean;
+};
+
+/**
  * WorkflowUpdateRequest
  *
  * 更新工作流请求
@@ -8816,9 +11015,9 @@ export type WorkflowUpdateRequest = {
     /**
      * Custom Action Id
      *
-     * 要引用的自定义动作ID
+     * 要引用的自定义动作ID（雪花 int）
      */
-    custom_action_id?: string | null;
+    custom_action_id?: number | null;
     /**
      * Description
      *
@@ -8858,11 +11057,69 @@ export type WorkflowUpdateRequest = {
      */
     is_enabled?: boolean | null;
     /**
-     * Enabled Plugins
+     * Notify On Start
      *
-     * 关联的插件列表
+     * 开始执行时是否发送通知（不传表示不修改）
      */
-    enabled_plugins?: Array<PluginConfig> | null;
+    notify_on_start?: boolean | null;
+    /**
+     * Notify On End
+     *
+     * 结束时是否发送通知（不传表示不修改）
+     */
+    notify_on_end?: boolean | null;
+    /**
+     * Log Enabled
+     *
+     * 执行时是否记录步骤级操作日志（不传表示不修改）
+     */
+    log_enabled?: boolean | null;
+    /**
+     * Log Debug
+     *
+     * 调试模式：强制全量采集（不传表示不修改）
+     */
+    log_debug?: boolean | null;
+    /**
+     * Resume On Restart
+     *
+     * 服务重启后是否自动恢复本次被中断的运行（不传表示不修改）
+     */
+    resume_on_restart?: boolean | null;
+    /**
+     * Auto Sync Upstream
+     *
+     * 是否开启上游自动同步（不传表示不修改；仅 Fork 资源有意义）
+     */
+    auto_sync_upstream?: boolean | null;
+    /**
+     * Browser Ids
+     *
+     * 执行目标浏览器ID列表（不传表示不修改；传空列表=回到单浏览器模式）
+     */
+    browser_ids?: Array<number> | null;
+    /**
+     * Concurrent Exec
+     *
+     * 多浏览器时是否并发执行（不传表示不修改）
+     */
+    concurrent_exec?: boolean | null;
+    /**
+     * Variables
+     *
+     * 输入变量值 {name: value}（整体替换；不传表示不修改；与 variables_patch 互斥）
+     */
+    variables?: {
+        [key: string]: unknown;
+    } | null;
+    /**
+     * Variables Patch
+     *
+     * 输入变量增量更新 {name: value}：只覆盖给出的键，值为 null 表示删除该键；与 variables 互斥（见 docs/工作流变量增量更新计划书.md）
+     */
+    variables_patch?: {
+        [key: string]: unknown;
+    } | null;
 };
 
 /**
@@ -9116,36 +11373,6 @@ export type BasePaginationRespCompositeActionListItemResponseWritable = {
 };
 
 /**
- * BasePaginationResp[PluginListItemResponse]
- */
-export type BasePaginationRespPluginListItemResponseWritable = {
-    /**
-     * Page
-     *
-     * 页码
-     */
-    page?: number;
-    /**
-     * Per Page
-     *
-     * 每页数量
-     */
-    per_page?: number;
-    /**
-     * Total
-     *
-     * 总记录数
-     */
-    total?: number;
-    /**
-     * Items
-     *
-     * 当前页数据
-     */
-    items?: Array<unknown>;
-};
-
-/**
  * BasePaginationResp[RedemptionCodeItem]
  */
 export type BasePaginationRespRedemptionCodeItemWritable = {
@@ -9206,9 +11433,69 @@ export type BasePaginationRespUserBrowserInfoWritable = {
 };
 
 /**
+ * BasePaginationResp[WorkflowAdminListItemResponse]
+ */
+export type BasePaginationRespWorkflowAdminListItemResponseWritable = {
+    /**
+     * Page
+     *
+     * 页码
+     */
+    page?: number;
+    /**
+     * Per Page
+     *
+     * 每页数量
+     */
+    per_page?: number;
+    /**
+     * Total
+     *
+     * 总记录数
+     */
+    total?: number;
+    /**
+     * Items
+     *
+     * 当前页数据
+     */
+    items?: Array<unknown>;
+};
+
+/**
  * BasePaginationResp[WorkflowListItemResponse]
  */
 export type BasePaginationRespWorkflowListItemResponseWritable = {
+    /**
+     * Page
+     *
+     * 页码
+     */
+    page?: number;
+    /**
+     * Per Page
+     *
+     * 每页数量
+     */
+    per_page?: number;
+    /**
+     * Total
+     *
+     * 总记录数
+     */
+    total?: number;
+    /**
+     * Items
+     *
+     * 当前页数据
+     */
+    items?: Array<unknown>;
+};
+
+/**
+ * BasePaginationResp[WorkflowResourceRecordItemResponse]
+ */
+export type BasePaginationRespWorkflowResourceRecordItemResponseWritable = {
     /**
      * Page
      *
@@ -9482,7 +11769,7 @@ export type DeleteSettingsRequestWritable = {
 /**
  * EmptyRequest
  *
- * 空请求体占位
+ * 空请求体占位（所有 POST 语义但无入参的接口统一复用）
  */
 export type EmptyRequestWritable = {
     [key: string]: unknown;
@@ -9530,6 +11817,20 @@ export type LedgerListResponseWritable = {
 };
 
 /**
+ * LoosePayload
+ *
+ * 任意 JSON 对象（字段由动作 DSL 决定，不做约束）。
+ *
+ * 为什么不直接用 ``JsonValue``：它的 schema 是自引用的 ``$ref``，
+ * MCP 客户端/转换器会把请求参数退化成单一类型（string / array），
+ * 导致 ``steps``、``content`` 这类对象入参在参数校验阶段就被拒。
+ * 这里显式声明为 object（``additionalProperties: true``）。
+ */
+export type LoosePayloadWritable = {
+    [key: string]: unknown;
+};
+
+/**
  * PagesListResponse
  *
  * 页面列表响应模型
@@ -9541,24 +11842,6 @@ export type PagesListResponseWritable = {
      * 页面列表
      */
     pages?: Array<PageInfo>;
-};
-
-/**
- * PaymentConfirmRequest
- *
- * 支付对账确认请求（占位；入账只按登录用户对账，不信任任何前端参数）
- */
-export type PaymentConfirmRequestWritable = {
-    [key: string]: unknown;
-};
-
-/**
- * SignInRequest
- *
- * 签到请求（占位，保持 POST 语义）
- */
-export type SignInRequestWritable = {
-    [key: string]: unknown;
 };
 
 /**
@@ -9652,21 +11935,6 @@ export type StandardResponseBasePaginationRespCompositeActionListItemResponseWri
 };
 
 /**
- * StandardResponse[BasePaginationResp[PluginListItemResponse]]
- */
-export type StandardResponseBasePaginationRespPluginListItemResponseWritable = {
-    /**
-     * Code
-     */
-    code?: number;
-    /**
-     * Msg
-     */
-    msg?: string;
-    data?: BasePaginationRespPluginListItemResponseWritable | null;
-};
-
-/**
  * StandardResponse[BasePaginationResp[RedemptionCodeItem]]
  */
 export type StandardResponseBasePaginationRespRedemptionCodeItemWritable = {
@@ -9697,6 +11965,21 @@ export type StandardResponseBasePaginationRespUserBrowserInfoWritable = {
 };
 
 /**
+ * StandardResponse[BasePaginationResp[WorkflowAdminListItemResponse]]
+ */
+export type StandardResponseBasePaginationRespWorkflowAdminListItemResponseWritable = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: BasePaginationRespWorkflowAdminListItemResponseWritable | null;
+};
+
+/**
  * StandardResponse[BasePaginationResp[WorkflowListItemResponse]]
  */
 export type StandardResponseBasePaginationRespWorkflowListItemResponseWritable = {
@@ -9709,6 +11992,21 @@ export type StandardResponseBasePaginationRespWorkflowListItemResponseWritable =
      */
     msg?: string;
     data?: BasePaginationRespWorkflowListItemResponseWritable | null;
+};
+
+/**
+ * StandardResponse[BasePaginationResp[WorkflowResourceRecordItemResponse]]
+ */
+export type StandardResponseBasePaginationRespWorkflowResourceRecordItemResponseWritable = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: BasePaginationRespWorkflowResourceRecordItemResponseWritable | null;
 };
 
 /**
@@ -10510,77 +12808,6 @@ export type DeleteNotifyConfigRouterApiV1RpaBrowserNotifyConfDeletePostResponses
 
 export type DeleteNotifyConfigRouterApiV1RpaBrowserNotifyConfDeletePostResponse = DeleteNotifyConfigRouterApiV1RpaBrowserNotifyConfDeletePostResponses[keyof DeleteNotifyConfigRouterApiV1RpaBrowserNotifyConfDeletePostResponses];
 
-export type TestNotifyRouterApiV1RpaBrowserNotifyTestPostData = {
-    body: TestNotificationRequest;
-    headers?: {
-        /**
-         * X-Bili-Mid
-         */
-        'x-bili-mid'?: string | null;
-        /**
-         * X-Bili-Level
-         */
-        'x-bili-level'?: string | null;
-        /**
-         * X-Bili-Role
-         */
-        'x-bili-role'?: string;
-        /**
-         * X-Bili-Permissions
-         */
-        'x-bili-permissions'?: string | null;
-        /**
-         * X-Bili-User-Name
-         */
-        'x-bili-user-name'?: string;
-        /**
-         * X-Bili-Uname
-         */
-        'x-bili-uname'?: string;
-        /**
-         * X-Bili-Sign
-         */
-        'x-bili-sign'?: string;
-        /**
-         * X-Bili-Sex
-         */
-        'x-bili-sex'?: string;
-        /**
-         * X-Bili-Email
-         */
-        'x-bili-email'?: string;
-        /**
-         * X-Bili-Vip-Status
-         */
-        'x-bili-vip-status'?: string;
-        /**
-         * X-Bili-Vip-Type
-         */
-        'x-bili-vip-type'?: string;
-    };
-    path?: never;
-    query?: never;
-    url: '/api/v1/rpa/browser/notify/test';
-};
-
-export type TestNotifyRouterApiV1RpaBrowserNotifyTestPostErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type TestNotifyRouterApiV1RpaBrowserNotifyTestPostError = TestNotifyRouterApiV1RpaBrowserNotifyTestPostErrors[keyof TestNotifyRouterApiV1RpaBrowserNotifyTestPostErrors];
-
-export type TestNotifyRouterApiV1RpaBrowserNotifyTestPostResponses = {
-    /**
-     * Successful Response
-     */
-    200: StandardResponseTestNotificationResponse;
-};
-
-export type TestNotifyRouterApiV1RpaBrowserNotifyTestPostResponse = TestNotifyRouterApiV1RpaBrowserNotifyTestPostResponses[keyof TestNotifyRouterApiV1RpaBrowserNotifyTestPostResponses];
-
 export type GetUserDefaultSettingsApiV1RpaBrowserDefaultSettingsGetPostData = {
     body: GetSettingsRequestWritable;
     headers?: {
@@ -10958,7 +13185,7 @@ export type GetMembershipAccountApiV1RpaBrowserMembershipGetAccountPostResponses
 export type GetMembershipAccountApiV1RpaBrowserMembershipGetAccountPostResponse = GetMembershipAccountApiV1RpaBrowserMembershipGetAccountPostResponses[keyof GetMembershipAccountApiV1RpaBrowserMembershipGetAccountPostResponses];
 
 export type SignInApiV1RpaBrowserMembershipSignInPostData = {
-    body: SignInRequestWritable;
+    body: EmptyRequestWritable;
     headers?: {
         /**
          * X-Bili-Mid
@@ -11027,6 +13254,290 @@ export type SignInApiV1RpaBrowserMembershipSignInPostResponses = {
 };
 
 export type SignInApiV1RpaBrowserMembershipSignInPostResponse = SignInApiV1RpaBrowserMembershipSignInPostResponses[keyof SignInApiV1RpaBrowserMembershipSignInPostResponses];
+
+export type GetSignInOverviewApiV1RpaBrowserMembershipSignInOverviewPostData = {
+    body: EmptyRequestWritable;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/rpa/browser/membership/sign_in/overview';
+};
+
+export type GetSignInOverviewApiV1RpaBrowserMembershipSignInOverviewPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetSignInOverviewApiV1RpaBrowserMembershipSignInOverviewPostError = GetSignInOverviewApiV1RpaBrowserMembershipSignInOverviewPostErrors[keyof GetSignInOverviewApiV1RpaBrowserMembershipSignInOverviewPostErrors];
+
+export type GetSignInOverviewApiV1RpaBrowserMembershipSignInOverviewPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseSignOverviewResponse;
+};
+
+export type GetSignInOverviewApiV1RpaBrowserMembershipSignInOverviewPostResponse = GetSignInOverviewApiV1RpaBrowserMembershipSignInOverviewPostResponses[keyof GetSignInOverviewApiV1RpaBrowserMembershipSignInOverviewPostResponses];
+
+export type GetSignInCalendarApiV1RpaBrowserMembershipSignInCalendarPostData = {
+    body: SignInCalendarRequest;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/rpa/browser/membership/sign_in/calendar';
+};
+
+export type GetSignInCalendarApiV1RpaBrowserMembershipSignInCalendarPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetSignInCalendarApiV1RpaBrowserMembershipSignInCalendarPostError = GetSignInCalendarApiV1RpaBrowserMembershipSignInCalendarPostErrors[keyof GetSignInCalendarApiV1RpaBrowserMembershipSignInCalendarPostErrors];
+
+export type GetSignInCalendarApiV1RpaBrowserMembershipSignInCalendarPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseSignInCalendarResponse;
+};
+
+export type GetSignInCalendarApiV1RpaBrowserMembershipSignInCalendarPostResponse = GetSignInCalendarApiV1RpaBrowserMembershipSignInCalendarPostResponses[keyof GetSignInCalendarApiV1RpaBrowserMembershipSignInCalendarPostResponses];
+
+export type MakeupSignInApiV1RpaBrowserMembershipSignInMakeupPostData = {
+    body: SignMakeupRequest;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/rpa/browser/membership/sign_in/makeup';
+};
+
+export type MakeupSignInApiV1RpaBrowserMembershipSignInMakeupPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type MakeupSignInApiV1RpaBrowserMembershipSignInMakeupPostError = MakeupSignInApiV1RpaBrowserMembershipSignInMakeupPostErrors[keyof MakeupSignInApiV1RpaBrowserMembershipSignInMakeupPostErrors];
+
+export type MakeupSignInApiV1RpaBrowserMembershipSignInMakeupPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseSignMakeupResponse;
+};
+
+export type MakeupSignInApiV1RpaBrowserMembershipSignInMakeupPostResponse = MakeupSignInApiV1RpaBrowserMembershipSignInMakeupPostResponses[keyof MakeupSignInApiV1RpaBrowserMembershipSignInMakeupPostResponses];
+
+export type ExchangeSignRewardApiV1RpaBrowserMembershipSignInRewardExchangePostData = {
+    body: SignRewardExchangeRequest;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/rpa/browser/membership/sign_in/reward_exchange';
+};
+
+export type ExchangeSignRewardApiV1RpaBrowserMembershipSignInRewardExchangePostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ExchangeSignRewardApiV1RpaBrowserMembershipSignInRewardExchangePostError = ExchangeSignRewardApiV1RpaBrowserMembershipSignInRewardExchangePostErrors[keyof ExchangeSignRewardApiV1RpaBrowserMembershipSignInRewardExchangePostErrors];
+
+export type ExchangeSignRewardApiV1RpaBrowserMembershipSignInRewardExchangePostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseSignRewardExchangeResponse;
+};
+
+export type ExchangeSignRewardApiV1RpaBrowserMembershipSignInRewardExchangePostResponse = ExchangeSignRewardApiV1RpaBrowserMembershipSignInRewardExchangePostResponses[keyof ExchangeSignRewardApiV1RpaBrowserMembershipSignInRewardExchangePostResponses];
 
 export type RedeemCodeApiV1RpaBrowserMembershipRedeemPostData = {
     body: RedeemRequest;
@@ -11313,7 +13824,7 @@ export type ListPaymentProductsApiV1RpaBrowserMembershipPaymentProductsPostRespo
 export type ListPaymentProductsApiV1RpaBrowserMembershipPaymentProductsPostResponse = ListPaymentProductsApiV1RpaBrowserMembershipPaymentProductsPostResponses[keyof ListPaymentProductsApiV1RpaBrowserMembershipPaymentProductsPostResponses];
 
 export type ConfirmPaymentsApiV1RpaBrowserMembershipPaymentConfirmPostData = {
-    body: PaymentConfirmRequestWritable;
+    body: EmptyRequestWritable;
     headers?: {
         /**
          * X-Bili-Mid
@@ -11540,6 +14051,148 @@ export type CreateCustomActionApiV1RpaBrowserControlCustomActionsCreatePostRespo
 };
 
 export type CreateCustomActionApiV1RpaBrowserControlCustomActionsCreatePostResponse = CreateCustomActionApiV1RpaBrowserControlCustomActionsCreatePostResponses[keyof CreateCustomActionApiV1RpaBrowserControlCustomActionsCreatePostResponses];
+
+export type ImportCustomActionApiV1RpaBrowserControlCustomActionsImportPostData = {
+    body: CompositeActionCreateRequest;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/rpa/browser/control/custom-actions/import';
+};
+
+export type ImportCustomActionApiV1RpaBrowserControlCustomActionsImportPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ImportCustomActionApiV1RpaBrowserControlCustomActionsImportPostError = ImportCustomActionApiV1RpaBrowserControlCustomActionsImportPostErrors[keyof ImportCustomActionApiV1RpaBrowserControlCustomActionsImportPostErrors];
+
+export type ImportCustomActionApiV1RpaBrowserControlCustomActionsImportPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseCompositeActionDetailResponse;
+};
+
+export type ImportCustomActionApiV1RpaBrowserControlCustomActionsImportPostResponse = ImportCustomActionApiV1RpaBrowserControlCustomActionsImportPostResponses[keyof ImportCustomActionApiV1RpaBrowserControlCustomActionsImportPostResponses];
+
+export type ExportCustomActionApiV1RpaBrowserControlCustomActionsExportPostData = {
+    body: CompositeActionGetRequest;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/rpa/browser/control/custom-actions/export';
+};
+
+export type ExportCustomActionApiV1RpaBrowserControlCustomActionsExportPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ExportCustomActionApiV1RpaBrowserControlCustomActionsExportPostError = ExportCustomActionApiV1RpaBrowserControlCustomActionsExportPostErrors[keyof ExportCustomActionApiV1RpaBrowserControlCustomActionsExportPostErrors];
+
+export type ExportCustomActionApiV1RpaBrowserControlCustomActionsExportPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseCompositeActionCreateRequest;
+};
+
+export type ExportCustomActionApiV1RpaBrowserControlCustomActionsExportPostResponse = ExportCustomActionApiV1RpaBrowserControlCustomActionsExportPostResponses[keyof ExportCustomActionApiV1RpaBrowserControlCustomActionsExportPostResponses];
 
 export type ListCustomActionsApiV1RpaBrowserControlCustomActionsListPostData = {
     body: CompositeActionListRequest;
@@ -12109,6 +14762,77 @@ export type ForkCustomActionApiV1RpaBrowserControlCustomActionsForkPostResponses
 
 export type ForkCustomActionApiV1RpaBrowserControlCustomActionsForkPostResponse = ForkCustomActionApiV1RpaBrowserControlCustomActionsForkPostResponses[keyof ForkCustomActionApiV1RpaBrowserControlCustomActionsForkPostResponses];
 
+export type SyncCustomActionApiV1RpaBrowserControlCustomActionsSyncPostData = {
+    body: ActionSyncRequest;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/rpa/browser/control/custom_actions/sync';
+};
+
+export type SyncCustomActionApiV1RpaBrowserControlCustomActionsSyncPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type SyncCustomActionApiV1RpaBrowserControlCustomActionsSyncPostError = SyncCustomActionApiV1RpaBrowserControlCustomActionsSyncPostErrors[keyof SyncCustomActionApiV1RpaBrowserControlCustomActionsSyncPostErrors];
+
+export type SyncCustomActionApiV1RpaBrowserControlCustomActionsSyncPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseActionSyncResponse;
+};
+
+export type SyncCustomActionApiV1RpaBrowserControlCustomActionsSyncPostResponse = SyncCustomActionApiV1RpaBrowserControlCustomActionsSyncPostResponses[keyof SyncCustomActionApiV1RpaBrowserControlCustomActionsSyncPostResponses];
+
 export type GetActionForksApiV1RpaBrowserControlCustomActionsIdForksGetData = {
     body?: never;
     path: {
@@ -12615,6 +15339,153 @@ export type CreateWorkflowApiV1RpaBrowserControlWorkflowsCreatePostResponses = {
 
 export type CreateWorkflowApiV1RpaBrowserControlWorkflowsCreatePostResponse = CreateWorkflowApiV1RpaBrowserControlWorkflowsCreatePostResponses[keyof CreateWorkflowApiV1RpaBrowserControlWorkflowsCreatePostResponses];
 
+export type ImportWorkflowApiV1RpaBrowserControlWorkflowsImportPostData = {
+    body: WorkflowCreateRequest;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/rpa/browser/control/workflows/import';
+};
+
+export type ImportWorkflowApiV1RpaBrowserControlWorkflowsImportPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ImportWorkflowApiV1RpaBrowserControlWorkflowsImportPostError = ImportWorkflowApiV1RpaBrowserControlWorkflowsImportPostErrors[keyof ImportWorkflowApiV1RpaBrowserControlWorkflowsImportPostErrors];
+
+export type ImportWorkflowApiV1RpaBrowserControlWorkflowsImportPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseWorkflowCreateResponse;
+};
+
+export type ImportWorkflowApiV1RpaBrowserControlWorkflowsImportPostResponse = ImportWorkflowApiV1RpaBrowserControlWorkflowsImportPostResponses[keyof ImportWorkflowApiV1RpaBrowserControlWorkflowsImportPostResponses];
+
+export type ExportWorkflowApiV1RpaBrowserControlWorkflowsExportPostData = {
+    /**
+     * Request
+     */
+    body: {
+        [key: string]: unknown;
+    };
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/rpa/browser/control/workflows/export';
+};
+
+export type ExportWorkflowApiV1RpaBrowserControlWorkflowsExportPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ExportWorkflowApiV1RpaBrowserControlWorkflowsExportPostError = ExportWorkflowApiV1RpaBrowserControlWorkflowsExportPostErrors[keyof ExportWorkflowApiV1RpaBrowserControlWorkflowsExportPostErrors];
+
+export type ExportWorkflowApiV1RpaBrowserControlWorkflowsExportPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseWorkflowCreateRequest;
+};
+
+export type ExportWorkflowApiV1RpaBrowserControlWorkflowsExportPostResponse = ExportWorkflowApiV1RpaBrowserControlWorkflowsExportPostResponses[keyof ExportWorkflowApiV1RpaBrowserControlWorkflowsExportPostResponses];
+
 export type ListWorkflowsApiV1RpaBrowserControlWorkflowsListPostData = {
     body?: WorkflowListRequest;
     headers?: {
@@ -13056,6 +15927,77 @@ export type ForkWorkflowApiV1RpaBrowserControlWorkflowsForkPostResponses = {
 
 export type ForkWorkflowApiV1RpaBrowserControlWorkflowsForkPostResponse = ForkWorkflowApiV1RpaBrowserControlWorkflowsForkPostResponses[keyof ForkWorkflowApiV1RpaBrowserControlWorkflowsForkPostResponses];
 
+export type SyncWorkflowApiV1RpaBrowserControlWorkflowsSyncPostData = {
+    body: WorkflowSyncRequest;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/rpa/browser/control/workflows/sync';
+};
+
+export type SyncWorkflowApiV1RpaBrowserControlWorkflowsSyncPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type SyncWorkflowApiV1RpaBrowserControlWorkflowsSyncPostError = SyncWorkflowApiV1RpaBrowserControlWorkflowsSyncPostErrors[keyof SyncWorkflowApiV1RpaBrowserControlWorkflowsSyncPostErrors];
+
+export type SyncWorkflowApiV1RpaBrowserControlWorkflowsSyncPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseWorkflowSyncResponse;
+};
+
+export type SyncWorkflowApiV1RpaBrowserControlWorkflowsSyncPostResponse = SyncWorkflowApiV1RpaBrowserControlWorkflowsSyncPostResponses[keyof SyncWorkflowApiV1RpaBrowserControlWorkflowsSyncPostResponses];
+
 export type GetWorkflowForksApiV1RpaBrowserControlWorkflowsIdForksGetData = {
     body?: never;
     headers?: {
@@ -13288,6 +16230,77 @@ export type RunSavedWorkflowApiV1RpaBrowserControlWorkflowsRunPostResponses = {
 
 export type RunSavedWorkflowApiV1RpaBrowserControlWorkflowsRunPostResponse = RunSavedWorkflowApiV1RpaBrowserControlWorkflowsRunPostResponses[keyof RunSavedWorkflowApiV1RpaBrowserControlWorkflowsRunPostResponses];
 
+export type StopWorkflowRunApiV1RpaBrowserControlWorkflowsRunsStopPostData = {
+    body: WorkflowRunStopRequest;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/rpa/browser/control/workflows/runs/stop';
+};
+
+export type StopWorkflowRunApiV1RpaBrowserControlWorkflowsRunsStopPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type StopWorkflowRunApiV1RpaBrowserControlWorkflowsRunsStopPostError = StopWorkflowRunApiV1RpaBrowserControlWorkflowsRunsStopPostErrors[keyof StopWorkflowRunApiV1RpaBrowserControlWorkflowsRunsStopPostErrors];
+
+export type StopWorkflowRunApiV1RpaBrowserControlWorkflowsRunsStopPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseWorkflowRunStopResponse;
+};
+
+export type StopWorkflowRunApiV1RpaBrowserControlWorkflowsRunsStopPostResponse = StopWorkflowRunApiV1RpaBrowserControlWorkflowsRunsStopPostResponses[keyof StopWorkflowRunApiV1RpaBrowserControlWorkflowsRunsStopPostResponses];
+
 export type ListWorkflowRunsApiV1RpaBrowserControlWorkflowsRunsPostData = {
     body: WorkflowRunLogListRequest;
     headers?: {
@@ -13358,6 +16371,219 @@ export type ListWorkflowRunsApiV1RpaBrowserControlWorkflowsRunsPostResponses = {
 };
 
 export type ListWorkflowRunsApiV1RpaBrowserControlWorkflowsRunsPostResponse = ListWorkflowRunsApiV1RpaBrowserControlWorkflowsRunsPostResponses[keyof ListWorkflowRunsApiV1RpaBrowserControlWorkflowsRunsPostResponses];
+
+export type ListWorkflowResourcesApiV1RpaBrowserControlWorkflowsResourcesListPostData = {
+    body: WorkflowResourceRecordListRequest;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/rpa/browser/control/workflows/resources/list';
+};
+
+export type ListWorkflowResourcesApiV1RpaBrowserControlWorkflowsResourcesListPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ListWorkflowResourcesApiV1RpaBrowserControlWorkflowsResourcesListPostError = ListWorkflowResourcesApiV1RpaBrowserControlWorkflowsResourcesListPostErrors[keyof ListWorkflowResourcesApiV1RpaBrowserControlWorkflowsResourcesListPostErrors];
+
+export type ListWorkflowResourcesApiV1RpaBrowserControlWorkflowsResourcesListPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseBasePaginationRespWorkflowResourceRecordItemResponse;
+};
+
+export type ListWorkflowResourcesApiV1RpaBrowserControlWorkflowsResourcesListPostResponse = ListWorkflowResourcesApiV1RpaBrowserControlWorkflowsResourcesListPostResponses[keyof ListWorkflowResourcesApiV1RpaBrowserControlWorkflowsResourcesListPostResponses];
+
+export type CreateWorkflowResourceApiV1RpaBrowserControlWorkflowsResourcesCreatePostData = {
+    body: WorkflowResourceRecordCreateRequest;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/rpa/browser/control/workflows/resources/create';
+};
+
+export type CreateWorkflowResourceApiV1RpaBrowserControlWorkflowsResourcesCreatePostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type CreateWorkflowResourceApiV1RpaBrowserControlWorkflowsResourcesCreatePostError = CreateWorkflowResourceApiV1RpaBrowserControlWorkflowsResourcesCreatePostErrors[keyof CreateWorkflowResourceApiV1RpaBrowserControlWorkflowsResourcesCreatePostErrors];
+
+export type CreateWorkflowResourceApiV1RpaBrowserControlWorkflowsResourcesCreatePostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseWorkflowResourceRecordItemResponse;
+};
+
+export type CreateWorkflowResourceApiV1RpaBrowserControlWorkflowsResourcesCreatePostResponse = CreateWorkflowResourceApiV1RpaBrowserControlWorkflowsResourcesCreatePostResponses[keyof CreateWorkflowResourceApiV1RpaBrowserControlWorkflowsResourcesCreatePostResponses];
+
+export type DeleteWorkflowResourcesApiV1RpaBrowserControlWorkflowsResourcesDeletePostData = {
+    body: WorkflowResourceRecordDeleteRequest;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/rpa/browser/control/workflows/resources/delete';
+};
+
+export type DeleteWorkflowResourcesApiV1RpaBrowserControlWorkflowsResourcesDeletePostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type DeleteWorkflowResourcesApiV1RpaBrowserControlWorkflowsResourcesDeletePostError = DeleteWorkflowResourcesApiV1RpaBrowserControlWorkflowsResourcesDeletePostErrors[keyof DeleteWorkflowResourcesApiV1RpaBrowserControlWorkflowsResourcesDeletePostErrors];
+
+export type DeleteWorkflowResourcesApiV1RpaBrowserControlWorkflowsResourcesDeletePostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseWorkflowResourceRecordDeleteResponse;
+};
+
+export type DeleteWorkflowResourcesApiV1RpaBrowserControlWorkflowsResourcesDeletePostResponse = DeleteWorkflowResourcesApiV1RpaBrowserControlWorkflowsResourcesDeletePostResponses[keyof DeleteWorkflowResourcesApiV1RpaBrowserControlWorkflowsResourcesDeletePostResponses];
 
 export type GetWorkflowRunApiV1RpaBrowserControlWorkflowsRunsGetPostData = {
     /**
@@ -13435,220 +16661,7 @@ export type GetWorkflowRunApiV1RpaBrowserControlWorkflowsRunsGetPostResponses = 
 
 export type GetWorkflowRunApiV1RpaBrowserControlWorkflowsRunsGetPostResponse = GetWorkflowRunApiV1RpaBrowserControlWorkflowsRunsGetPostResponses[keyof GetWorkflowRunApiV1RpaBrowserControlWorkflowsRunsGetPostResponses];
 
-export type ListPluginsApiV1RpaBrowserControlPluginsListPostData = {
-    body: PluginListRequest;
-    headers?: {
-        /**
-         * X-Bili-Mid
-         */
-        'x-bili-mid'?: string | null;
-        /**
-         * X-Bili-Level
-         */
-        'x-bili-level'?: string | null;
-        /**
-         * X-Bili-Role
-         */
-        'x-bili-role'?: string;
-        /**
-         * X-Bili-Permissions
-         */
-        'x-bili-permissions'?: string | null;
-        /**
-         * X-Bili-User-Name
-         */
-        'x-bili-user-name'?: string;
-        /**
-         * X-Bili-Uname
-         */
-        'x-bili-uname'?: string;
-        /**
-         * X-Bili-Sign
-         */
-        'x-bili-sign'?: string;
-        /**
-         * X-Bili-Sex
-         */
-        'x-bili-sex'?: string;
-        /**
-         * X-Bili-Email
-         */
-        'x-bili-email'?: string;
-        /**
-         * X-Bili-Vip-Status
-         */
-        'x-bili-vip-status'?: string;
-        /**
-         * X-Bili-Vip-Type
-         */
-        'x-bili-vip-type'?: string;
-    };
-    path?: never;
-    query?: never;
-    url: '/api/v1/rpa/browser/control/plugins/list';
-};
-
-export type ListPluginsApiV1RpaBrowserControlPluginsListPostErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type ListPluginsApiV1RpaBrowserControlPluginsListPostError = ListPluginsApiV1RpaBrowserControlPluginsListPostErrors[keyof ListPluginsApiV1RpaBrowserControlPluginsListPostErrors];
-
-export type ListPluginsApiV1RpaBrowserControlPluginsListPostResponses = {
-    /**
-     * Successful Response
-     */
-    200: StandardResponseBasePaginationRespPluginListItemResponse;
-};
-
-export type ListPluginsApiV1RpaBrowserControlPluginsListPostResponse = ListPluginsApiV1RpaBrowserControlPluginsListPostResponses[keyof ListPluginsApiV1RpaBrowserControlPluginsListPostResponses];
-
-export type CreatePluginApiV1RpaBrowserControlPluginsCreatePostData = {
-    body: PluginCreateRequest;
-    headers?: {
-        /**
-         * X-Bili-Mid
-         */
-        'x-bili-mid'?: string | null;
-        /**
-         * X-Bili-Level
-         */
-        'x-bili-level'?: string | null;
-        /**
-         * X-Bili-Role
-         */
-        'x-bili-role'?: string;
-        /**
-         * X-Bili-Permissions
-         */
-        'x-bili-permissions'?: string | null;
-        /**
-         * X-Bili-User-Name
-         */
-        'x-bili-user-name'?: string;
-        /**
-         * X-Bili-Uname
-         */
-        'x-bili-uname'?: string;
-        /**
-         * X-Bili-Sign
-         */
-        'x-bili-sign'?: string;
-        /**
-         * X-Bili-Sex
-         */
-        'x-bili-sex'?: string;
-        /**
-         * X-Bili-Email
-         */
-        'x-bili-email'?: string;
-        /**
-         * X-Bili-Vip-Status
-         */
-        'x-bili-vip-status'?: string;
-        /**
-         * X-Bili-Vip-Type
-         */
-        'x-bili-vip-type'?: string;
-    };
-    path?: never;
-    query?: never;
-    url: '/api/v1/rpa/browser/control/plugins/create';
-};
-
-export type CreatePluginApiV1RpaBrowserControlPluginsCreatePostErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type CreatePluginApiV1RpaBrowserControlPluginsCreatePostError = CreatePluginApiV1RpaBrowserControlPluginsCreatePostErrors[keyof CreatePluginApiV1RpaBrowserControlPluginsCreatePostErrors];
-
-export type CreatePluginApiV1RpaBrowserControlPluginsCreatePostResponses = {
-    /**
-     * Successful Response
-     */
-    200: StandardResponsePluginDetailResponse;
-};
-
-export type CreatePluginApiV1RpaBrowserControlPluginsCreatePostResponse = CreatePluginApiV1RpaBrowserControlPluginsCreatePostResponses[keyof CreatePluginApiV1RpaBrowserControlPluginsCreatePostResponses];
-
-export type UpdatePluginApiV1RpaBrowserControlPluginsUpdatePostData = {
-    body: PluginUpdateRequest;
-    headers?: {
-        /**
-         * X-Bili-Mid
-         */
-        'x-bili-mid'?: string | null;
-        /**
-         * X-Bili-Level
-         */
-        'x-bili-level'?: string | null;
-        /**
-         * X-Bili-Role
-         */
-        'x-bili-role'?: string;
-        /**
-         * X-Bili-Permissions
-         */
-        'x-bili-permissions'?: string | null;
-        /**
-         * X-Bili-User-Name
-         */
-        'x-bili-user-name'?: string;
-        /**
-         * X-Bili-Uname
-         */
-        'x-bili-uname'?: string;
-        /**
-         * X-Bili-Sign
-         */
-        'x-bili-sign'?: string;
-        /**
-         * X-Bili-Sex
-         */
-        'x-bili-sex'?: string;
-        /**
-         * X-Bili-Email
-         */
-        'x-bili-email'?: string;
-        /**
-         * X-Bili-Vip-Status
-         */
-        'x-bili-vip-status'?: string;
-        /**
-         * X-Bili-Vip-Type
-         */
-        'x-bili-vip-type'?: string;
-    };
-    path?: never;
-    query?: never;
-    url: '/api/v1/rpa/browser/control/plugins/update';
-};
-
-export type UpdatePluginApiV1RpaBrowserControlPluginsUpdatePostErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type UpdatePluginApiV1RpaBrowserControlPluginsUpdatePostError = UpdatePluginApiV1RpaBrowserControlPluginsUpdatePostErrors[keyof UpdatePluginApiV1RpaBrowserControlPluginsUpdatePostErrors];
-
-export type UpdatePluginApiV1RpaBrowserControlPluginsUpdatePostResponses = {
-    /**
-     * Successful Response
-     */
-    200: StandardResponseStr;
-};
-
-export type UpdatePluginApiV1RpaBrowserControlPluginsUpdatePostResponse = UpdatePluginApiV1RpaBrowserControlPluginsUpdatePostResponses[keyof UpdatePluginApiV1RpaBrowserControlPluginsUpdatePostResponses];
-
-export type DeletePluginApiV1RpaBrowserControlPluginsDeletePostData = {
+export type WorkflowRunEventsApiV1RpaBrowserControlWorkflowsRunsEventsGetData = {
     body?: never;
     headers?: {
         /**
@@ -13699,33 +16712,31 @@ export type DeletePluginApiV1RpaBrowserControlPluginsDeletePostData = {
     path?: never;
     query: {
         /**
-         * Id
+         * Run Id
          */
-        id: number;
+        run_id: string;
     };
-    url: '/api/v1/rpa/browser/control/plugins/delete';
+    url: '/api/v1/rpa/browser/control/workflows/runs/events';
 };
 
-export type DeletePluginApiV1RpaBrowserControlPluginsDeletePostErrors = {
+export type WorkflowRunEventsApiV1RpaBrowserControlWorkflowsRunsEventsGetErrors = {
     /**
      * Validation Error
      */
     422: HttpValidationError;
 };
 
-export type DeletePluginApiV1RpaBrowserControlPluginsDeletePostError = DeletePluginApiV1RpaBrowserControlPluginsDeletePostErrors[keyof DeletePluginApiV1RpaBrowserControlPluginsDeletePostErrors];
+export type WorkflowRunEventsApiV1RpaBrowserControlWorkflowsRunsEventsGetError = WorkflowRunEventsApiV1RpaBrowserControlWorkflowsRunsEventsGetErrors[keyof WorkflowRunEventsApiV1RpaBrowserControlWorkflowsRunsEventsGetErrors];
 
-export type DeletePluginApiV1RpaBrowserControlPluginsDeletePostResponses = {
+export type WorkflowRunEventsApiV1RpaBrowserControlWorkflowsRunsEventsGetResponses = {
     /**
-     * Successful Response
+     * 工作流运行进度 SSE 事件流（text/event-stream 长连接）
      */
-    200: StandardResponseStr;
+    200: unknown;
 };
 
-export type DeletePluginApiV1RpaBrowserControlPluginsDeletePostResponse = DeletePluginApiV1RpaBrowserControlPluginsDeletePostResponses[keyof DeletePluginApiV1RpaBrowserControlPluginsDeletePostResponses];
-
-export type ForkPluginApiV1RpaBrowserControlPluginsForkPostData = {
-    body: PluginForkRequest;
+export type ResumeWorkflowRunApiV1RpaBrowserControlWorkflowsRunsResumePostData = {
+    body: WorkflowRunResumeRequest;
     headers?: {
         /**
          * X-Bili-Mid
@@ -13774,111 +16785,26 @@ export type ForkPluginApiV1RpaBrowserControlPluginsForkPostData = {
     };
     path?: never;
     query?: never;
-    url: '/api/v1/rpa/browser/control/plugins/fork';
+    url: '/api/v1/rpa/browser/control/workflows/runs/resume';
 };
 
-export type ForkPluginApiV1RpaBrowserControlPluginsForkPostErrors = {
+export type ResumeWorkflowRunApiV1RpaBrowserControlWorkflowsRunsResumePostErrors = {
     /**
      * Validation Error
      */
     422: HttpValidationError;
 };
 
-export type ForkPluginApiV1RpaBrowserControlPluginsForkPostError = ForkPluginApiV1RpaBrowserControlPluginsForkPostErrors[keyof ForkPluginApiV1RpaBrowserControlPluginsForkPostErrors];
+export type ResumeWorkflowRunApiV1RpaBrowserControlWorkflowsRunsResumePostError = ResumeWorkflowRunApiV1RpaBrowserControlWorkflowsRunsResumePostErrors[keyof ResumeWorkflowRunApiV1RpaBrowserControlWorkflowsRunsResumePostErrors];
 
-export type ForkPluginApiV1RpaBrowserControlPluginsForkPostResponses = {
+export type ResumeWorkflowRunApiV1RpaBrowserControlWorkflowsRunsResumePostResponses = {
     /**
      * Successful Response
      */
-    200: StandardResponsePluginForkResponse;
+    200: StandardResponseDict;
 };
 
-export type ForkPluginApiV1RpaBrowserControlPluginsForkPostResponse = ForkPluginApiV1RpaBrowserControlPluginsForkPostResponses[keyof ForkPluginApiV1RpaBrowserControlPluginsForkPostResponses];
-
-export type GetPluginForksApiV1RpaBrowserControlPluginsIdForksGetData = {
-    body?: never;
-    headers?: {
-        /**
-         * X-Bili-Mid
-         */
-        'x-bili-mid'?: string | null;
-        /**
-         * X-Bili-Level
-         */
-        'x-bili-level'?: string | null;
-        /**
-         * X-Bili-Role
-         */
-        'x-bili-role'?: string;
-        /**
-         * X-Bili-Permissions
-         */
-        'x-bili-permissions'?: string | null;
-        /**
-         * X-Bili-User-Name
-         */
-        'x-bili-user-name'?: string;
-        /**
-         * X-Bili-Uname
-         */
-        'x-bili-uname'?: string;
-        /**
-         * X-Bili-Sign
-         */
-        'x-bili-sign'?: string;
-        /**
-         * X-Bili-Sex
-         */
-        'x-bili-sex'?: string;
-        /**
-         * X-Bili-Email
-         */
-        'x-bili-email'?: string;
-        /**
-         * X-Bili-Vip-Status
-         */
-        'x-bili-vip-status'?: string;
-        /**
-         * X-Bili-Vip-Type
-         */
-        'x-bili-vip-type'?: string;
-    };
-    path: {
-        /**
-         * Id
-         */
-        id: number;
-    };
-    query?: {
-        /**
-         * Skip
-         */
-        skip?: number;
-        /**
-         * Limit
-         */
-        limit?: number;
-    };
-    url: '/api/v1/rpa/browser/control/plugins/{id}/forks';
-};
-
-export type GetPluginForksApiV1RpaBrowserControlPluginsIdForksGetErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type GetPluginForksApiV1RpaBrowserControlPluginsIdForksGetError = GetPluginForksApiV1RpaBrowserControlPluginsIdForksGetErrors[keyof GetPluginForksApiV1RpaBrowserControlPluginsIdForksGetErrors];
-
-export type GetPluginForksApiV1RpaBrowserControlPluginsIdForksGetResponses = {
-    /**
-     * Successful Response
-     */
-    200: StandardResponseBasePaginationRespPluginListItemResponse;
-};
-
-export type GetPluginForksApiV1RpaBrowserControlPluginsIdForksGetResponse = GetPluginForksApiV1RpaBrowserControlPluginsIdForksGetResponses[keyof GetPluginForksApiV1RpaBrowserControlPluginsIdForksGetResponses];
+export type ResumeWorkflowRunApiV1RpaBrowserControlWorkflowsRunsResumePostResponse = ResumeWorkflowRunApiV1RpaBrowserControlWorkflowsRunsResumePostResponses[keyof ResumeWorkflowRunApiV1RpaBrowserControlWorkflowsRunsResumePostResponses];
 
 export type ListActionLogsApiV1RpaBrowserControlActionLogsListPostData = {
     body: ActionLogListRequest;
@@ -14093,7 +17019,7 @@ export type ListActionLogsByExecutionApiV1RpaBrowserControlActionLogsByExecution
     /**
      * Successful Response
      */
-    200: StandardResponseListActionLogItemResponse;
+    200: StandardResponseBasePaginationRespActionLogItemResponse;
 };
 
 export type ListActionLogsByExecutionApiV1RpaBrowserControlActionLogsByExecutionPostResponse = ListActionLogsByExecutionApiV1RpaBrowserControlActionLogsByExecutionPostResponses[keyof ListActionLogsByExecutionApiV1RpaBrowserControlActionLogsByExecutionPostResponses];
@@ -14315,6 +17241,584 @@ export type StatsActionLogsApiV1RpaBrowserControlActionLogsStatsPostResponses = 
 };
 
 export type StatsActionLogsApiV1RpaBrowserControlActionLogsStatsPostResponse = StatsActionLogsApiV1RpaBrowserControlActionLogsStatsPostResponses[keyof StatsActionLogsApiV1RpaBrowserControlActionLogsStatsPostResponses];
+
+export type RpaListActionsData = {
+    body: ListActionsRequest;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/rpa/browser/control/debug/actions/list';
+};
+
+export type RpaListActionsErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type RpaListActionsError = RpaListActionsErrors[keyof RpaListActionsErrors];
+
+export type RpaListActionsResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseDebugActionListData;
+};
+
+export type RpaListActionsResponse = RpaListActionsResponses[keyof RpaListActionsResponses];
+
+export type RpaGetActionData = {
+    body: GetActionRequest;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/rpa/browser/control/debug/actions/get';
+};
+
+export type RpaGetActionErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type RpaGetActionError = RpaGetActionErrors[keyof RpaGetActionErrors];
+
+export type RpaGetActionResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseDebugActionDetail;
+};
+
+export type RpaGetActionResponse = RpaGetActionResponses[keyof RpaGetActionResponses];
+
+export type RpaGetActionLogsData = {
+    body: RecentActionLogsRequest;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/rpa/browser/control/debug/action-logs/recent';
+};
+
+export type RpaGetActionLogsErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type RpaGetActionLogsError = RpaGetActionLogsErrors[keyof RpaGetActionLogsErrors];
+
+export type RpaGetActionLogsResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseRecentActionLogsData;
+};
+
+export type RpaGetActionLogsResponse = RpaGetActionLogsResponses[keyof RpaGetActionLogsResponses];
+
+export type RpaValidateStepsData = {
+    body: ValidateStepsRequest;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/rpa/browser/control/debug/actions/validate';
+};
+
+export type RpaValidateStepsErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type RpaValidateStepsError = RpaValidateStepsErrors[keyof RpaValidateStepsErrors];
+
+export type RpaValidateStepsResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseValidationReport;
+};
+
+export type RpaValidateStepsResponse = RpaValidateStepsResponses[keyof RpaValidateStepsResponses];
+
+export type RpaExecuteActionData = {
+    body: ExecuteDebugRequest;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string;
+    };
+    path?: never;
+    query: {
+        /**
+         * Browser Id
+         */
+        browser_id: string;
+    };
+    url: '/api/v1/rpa/browser/control/debug/actions/execute';
+};
+
+export type RpaExecuteActionErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type RpaExecuteActionError = RpaExecuteActionErrors[keyof RpaExecuteActionErrors];
+
+export type RpaExecuteActionResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseDebugExecuteData;
+};
+
+export type RpaExecuteActionResponse = RpaExecuteActionResponses[keyof RpaExecuteActionResponses];
+
+export type RpaSaveActionData = {
+    body: SaveActionRequest;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/rpa/browser/control/debug/actions/save';
+};
+
+export type RpaSaveActionErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type RpaSaveActionError = RpaSaveActionErrors[keyof RpaSaveActionErrors];
+
+export type RpaSaveActionResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseDebugSaveData;
+};
+
+export type RpaSaveActionResponse = RpaSaveActionResponses[keyof RpaSaveActionResponses];
+
+export type RpaRunWorkflowData = {
+    body: RunWorkflowRequest;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string;
+    };
+    path?: never;
+    query: {
+        /**
+         * Browser Id
+         */
+        browser_id: string;
+    };
+    url: '/api/v1/rpa/browser/control/debug/workflows/run-and-wait';
+};
+
+export type RpaRunWorkflowErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type RpaRunWorkflowError = RpaRunWorkflowErrors[keyof RpaRunWorkflowErrors];
+
+export type RpaRunWorkflowResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseDebugRunData;
+};
+
+export type RpaRunWorkflowResponse = RpaRunWorkflowResponses[keyof RpaRunWorkflowResponses];
+
+export type RpaGetRunLogsData = {
+    body: RunLogsRequest;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/rpa/browser/control/debug/runs/logs';
+};
+
+export type RpaGetRunLogsErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type RpaGetRunLogsError = RpaGetRunLogsErrors[keyof RpaGetRunLogsErrors];
+
+export type RpaGetRunLogsResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseRunLogReport;
+};
+
+export type RpaGetRunLogsResponse = RpaGetRunLogsResponses[keyof RpaGetRunLogsResponses];
 
 export type OpenPageApiV1RpaBrowserControlOperationOpenPagePostData = {
     body: OpenPageRequest;
@@ -17972,3 +21476,581 @@ export type ListMembershipCodesApiAdminRpaMembershipCodesListPostResponses = {
 };
 
 export type ListMembershipCodesApiAdminRpaMembershipCodesListPostResponse = ListMembershipCodesApiAdminRpaMembershipCodesListPostResponses[keyof ListMembershipCodesApiAdminRpaMembershipCodesListPostResponses];
+
+export type GetSignRewardConfigApiAdminRpaMembershipSignInRewardsGetPostData = {
+    body?: never;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/admin/rpa/membership/sign_in/rewards/get';
+};
+
+export type GetSignRewardConfigApiAdminRpaMembershipSignInRewardsGetPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetSignRewardConfigApiAdminRpaMembershipSignInRewardsGetPostError = GetSignRewardConfigApiAdminRpaMembershipSignInRewardsGetPostErrors[keyof GetSignRewardConfigApiAdminRpaMembershipSignInRewardsGetPostErrors];
+
+export type GetSignRewardConfigApiAdminRpaMembershipSignInRewardsGetPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseSignRewardConfigResponse;
+};
+
+export type GetSignRewardConfigApiAdminRpaMembershipSignInRewardsGetPostResponse = GetSignRewardConfigApiAdminRpaMembershipSignInRewardsGetPostResponses[keyof GetSignRewardConfigApiAdminRpaMembershipSignInRewardsGetPostResponses];
+
+export type UpdateSignRewardConfigApiAdminRpaMembershipSignInRewardsUpdatePostData = {
+    body: SignRewardConfigPayload;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/admin/rpa/membership/sign_in/rewards/update';
+};
+
+export type UpdateSignRewardConfigApiAdminRpaMembershipSignInRewardsUpdatePostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type UpdateSignRewardConfigApiAdminRpaMembershipSignInRewardsUpdatePostError = UpdateSignRewardConfigApiAdminRpaMembershipSignInRewardsUpdatePostErrors[keyof UpdateSignRewardConfigApiAdminRpaMembershipSignInRewardsUpdatePostErrors];
+
+export type UpdateSignRewardConfigApiAdminRpaMembershipSignInRewardsUpdatePostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseSignRewardConfigResponse;
+};
+
+export type UpdateSignRewardConfigApiAdminRpaMembershipSignInRewardsUpdatePostResponse = UpdateSignRewardConfigApiAdminRpaMembershipSignInRewardsUpdatePostResponses[keyof UpdateSignRewardConfigApiAdminRpaMembershipSignInRewardsUpdatePostResponses];
+
+export type ListWorkflowsAdminApiAdminRpaWorkflowListPostData = {
+    body: WorkflowAdminListRequest;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/admin/rpa/workflow/list';
+};
+
+export type ListWorkflowsAdminApiAdminRpaWorkflowListPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ListWorkflowsAdminApiAdminRpaWorkflowListPostError = ListWorkflowsAdminApiAdminRpaWorkflowListPostErrors[keyof ListWorkflowsAdminApiAdminRpaWorkflowListPostErrors];
+
+export type ListWorkflowsAdminApiAdminRpaWorkflowListPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseBasePaginationRespWorkflowAdminListItemResponse;
+};
+
+export type ListWorkflowsAdminApiAdminRpaWorkflowListPostResponse = ListWorkflowsAdminApiAdminRpaWorkflowListPostResponses[keyof ListWorkflowsAdminApiAdminRpaWorkflowListPostResponses];
+
+export type GetWorkflowAdminApiAdminRpaWorkflowGetPostData = {
+    /**
+     * Request
+     */
+    body: {
+        [key: string]: unknown;
+    };
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/admin/rpa/workflow/get';
+};
+
+export type GetWorkflowAdminApiAdminRpaWorkflowGetPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetWorkflowAdminApiAdminRpaWorkflowGetPostError = GetWorkflowAdminApiAdminRpaWorkflowGetPostErrors[keyof GetWorkflowAdminApiAdminRpaWorkflowGetPostErrors];
+
+export type GetWorkflowAdminApiAdminRpaWorkflowGetPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseWorkflowDetailResponse;
+};
+
+export type GetWorkflowAdminApiAdminRpaWorkflowGetPostResponse = GetWorkflowAdminApiAdminRpaWorkflowGetPostResponses[keyof GetWorkflowAdminApiAdminRpaWorkflowGetPostResponses];
+
+export type UpdateWorkflowAdminApiAdminRpaWorkflowUpdatePostData = {
+    body: WorkflowUpdateRequest;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/admin/rpa/workflow/update';
+};
+
+export type UpdateWorkflowAdminApiAdminRpaWorkflowUpdatePostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type UpdateWorkflowAdminApiAdminRpaWorkflowUpdatePostError = UpdateWorkflowAdminApiAdminRpaWorkflowUpdatePostErrors[keyof UpdateWorkflowAdminApiAdminRpaWorkflowUpdatePostErrors];
+
+export type UpdateWorkflowAdminApiAdminRpaWorkflowUpdatePostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseWorkflowDetailResponse;
+};
+
+export type UpdateWorkflowAdminApiAdminRpaWorkflowUpdatePostResponse = UpdateWorkflowAdminApiAdminRpaWorkflowUpdatePostResponses[keyof UpdateWorkflowAdminApiAdminRpaWorkflowUpdatePostResponses];
+
+export type SetWorkflowEnabledAdminApiAdminRpaWorkflowSetEnabledPostData = {
+    body: WorkflowAdminSetEnabledRequest;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/admin/rpa/workflow/set-enabled';
+};
+
+export type SetWorkflowEnabledAdminApiAdminRpaWorkflowSetEnabledPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type SetWorkflowEnabledAdminApiAdminRpaWorkflowSetEnabledPostError = SetWorkflowEnabledAdminApiAdminRpaWorkflowSetEnabledPostErrors[keyof SetWorkflowEnabledAdminApiAdminRpaWorkflowSetEnabledPostErrors];
+
+export type SetWorkflowEnabledAdminApiAdminRpaWorkflowSetEnabledPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseWorkflowDetailResponse;
+};
+
+export type SetWorkflowEnabledAdminApiAdminRpaWorkflowSetEnabledPostResponse = SetWorkflowEnabledAdminApiAdminRpaWorkflowSetEnabledPostResponses[keyof SetWorkflowEnabledAdminApiAdminRpaWorkflowSetEnabledPostResponses];
+
+export type DeleteWorkflowAdminApiAdminRpaWorkflowDeletePostData = {
+    /**
+     * Request
+     */
+    body: {
+        [key: string]: unknown;
+    };
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/admin/rpa/workflow/delete';
+};
+
+export type DeleteWorkflowAdminApiAdminRpaWorkflowDeletePostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type DeleteWorkflowAdminApiAdminRpaWorkflowDeletePostError = DeleteWorkflowAdminApiAdminRpaWorkflowDeletePostErrors[keyof DeleteWorkflowAdminApiAdminRpaWorkflowDeletePostErrors];
+
+export type DeleteWorkflowAdminApiAdminRpaWorkflowDeletePostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseDict;
+};
+
+export type DeleteWorkflowAdminApiAdminRpaWorkflowDeletePostResponse = DeleteWorkflowAdminApiAdminRpaWorkflowDeletePostResponses[keyof DeleteWorkflowAdminApiAdminRpaWorkflowDeletePostResponses];
+
+export type ListWorkflowRunsAdminApiAdminRpaWorkflowRunsPostData = {
+    body: WorkflowRunLogListRequest;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/admin/rpa/workflow/runs';
+};
+
+export type ListWorkflowRunsAdminApiAdminRpaWorkflowRunsPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ListWorkflowRunsAdminApiAdminRpaWorkflowRunsPostError = ListWorkflowRunsAdminApiAdminRpaWorkflowRunsPostErrors[keyof ListWorkflowRunsAdminApiAdminRpaWorkflowRunsPostErrors];
+
+export type ListWorkflowRunsAdminApiAdminRpaWorkflowRunsPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseBasePaginationRespWorkflowRunLogItemResponse;
+};
+
+export type ListWorkflowRunsAdminApiAdminRpaWorkflowRunsPostResponse = ListWorkflowRunsAdminApiAdminRpaWorkflowRunsPostResponses[keyof ListWorkflowRunsAdminApiAdminRpaWorkflowRunsPostResponses];

@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { watch } from 'vue'
+import { browserPersistStorage } from '@/utils/persistStorage'
 
 export type SizeTheme = 'xs' | 'sm' | 'base' | 'lg' | 'xl'
 
@@ -45,7 +46,7 @@ export const useUserPrefStore = defineStore(
   {
     persist: {
       key: 'user-pref-store',
-      storage: localStorage
+      storage: browserPersistStorage
     }
   }
 )

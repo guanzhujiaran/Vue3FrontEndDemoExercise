@@ -8,7 +8,8 @@ import type { CommentUserBrief } from '@/api/community/hey-api'
 export interface MentionOption {
   value: string
   avatar?: string
-  mid?: number
+  /** 雪花 ID 字符串版（后端 CommentUserBrief.mid_str），避免 JS Number 丢精度 */
+  mid?: string
 }
 
 const props = withDefaults(
@@ -32,7 +33,7 @@ const emit = defineEmits<{
 
 const options = ref<MentionOption[]>([])
 const loading = ref(false)
-const atNameToMid = ref<Record<string, number>>({})
+const atNameToMid = ref<Record<string, string>>({})
 
 /** 用本地候选初始化，并在候选变化时同步（不覆盖用户已触发的远程搜索结果，除非回到空搜索） */
 function syncLocal() {
@@ -56,11 +57,11 @@ async function handleSearch(pattern: string) {
     const res = await commentApi.searchAt(pattern.trim(), 20)
     if (res && res.code === 0 && res.data) {
       options.value = (res.data as CommentUserBrief[])
-        .filter((u) => u.mid != null)
+        .filter((u) => u.mid_str != null)
         .map((u) => ({
-          value: u.uname || `用户${u.mid}`,
-          avatar: u.avatar || undefined,
-          mid: u.mid
+          value: String(u.uname || `用户${String(u.mid_str)}`),
+          avatar: u.avatar != null ? String(u.avatar) : undefined,
+          mid: u.mid_str != null ? String(u.mid_str) : undefined
         }))
     }
   } finally {
@@ -68,14 +69,14 @@ async function handleSearch(pattern: string) {
   }
 }
 
-function onSelect(opt: { value?: string; mid?: number }) {
+function onSelect(opt: { value?: string; mid?: string }) {
   if (!opt?.value || opt.mid == null) return
   atNameToMid.value[opt.value] = opt.mid
 }
 
 /** 提交前从正文提取所有 @昵称，补全未记录的映射（尽量匹配已搜索/已渲染的用户） */
-function buildAtNameToMid(message: string): Record<string, number> {
-  const map: Record<string, number> = { ...atNameToMid.value }
+function buildAtNameToMid(message: string): Record<string, string> {
+  const map: Record<string, string> = { ...atNameToMid.value }
   const re = /@([^\s@#]+)/g
   let m: RegExpExecArray | null
   while ((m = re.exec(message || '')) !== null) {

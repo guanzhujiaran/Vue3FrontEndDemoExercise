@@ -41,17 +41,17 @@ const subTotal = ref(0)
 const subPageSize = 10
 
 const isOwn = computed(
-  () => !!props.currentMid && String(props.currentMid) === String(props.item.mid)
+  () => !!props.currentMid && props.currentMid === (props.item.mid_str ?? '')
 )
 const isUp = computed(
-  () => !!props.upMid && String(props.upMid) === String(props.item.mid)
+  () => !!props.upMid && props.upMid === (props.item.mid_str ?? '')
 )
 
 /**
  * 是否为一级评论（只有一级评论有楼中楼；楼中楼恒两层，不再向下嵌套入口）。
  * `root` 后端为字符串 `"0"`，这里用 `String()` 归一，避免 number/string 差异导致入口消失。
  */
-const isRootComment = computed(() => String(props.item.root ?? '0') === '0')
+const isRootComment = computed(() => (props.item.root_str ?? '0') === '0')
 
 /** 折叠态预览：复用后端已返回的 `replies`（`comment_sub_preview_count` 条），展开态改由分页列表渲染 */
 const previewReplies = computed<CommentItem[]>(() => {
@@ -91,8 +91,8 @@ const memberLevel = computed(() =>
 )
 const replyToMid = computed(() => {
   const r = props.item.reply_to as Record<string, unknown> | null | undefined
-  const mid = r?.mid
-  return typeof mid === 'string' || typeof mid === 'number' ? mid : undefined
+  const mid = r?.mid_str ?? r?.mid
+  return typeof mid === 'string' ? mid : undefined
 })
 /** 总页数：至少 1 页，避免 0 页导致分页器无页码可点 */
 const subTotalPages = computed(() => Math.max(1, Math.ceil(subTotal.value / subPageSize)))
@@ -131,31 +131,32 @@ const renderedSegments = computed(() => {
   return segments
 })
 
-const formatTime = (t: string) => {
-  const d = new Date(t)
-  if (isNaN(d.getTime())) return t
+const formatTime = (t: string | number) => {
+  // 后端返回秒级时间戳（int32）；兼容旧 ISO 字符串与 Date 对象
+  const d = typeof t === 'number' ? new Date(t * 1000) : new Date(t)
+  if (isNaN(d.getTime())) return String(t)
   // 固定时区/locale：列表页会参与 SSR，只指定 locale 不够（时区仍随环境变化）
   return formatDateTime(d)
 }
 
 const onLike = () => {
-  handlers.like({ rpid: props.item.rpid, nextAction: props.item.action === 1 ? 0 : 1 })
+  handlers.like({ rpid: props.item.rpid_str ?? '', nextAction: props.item.action === 1 ? 0 : 1 })
 }
 const onHate = () => {
-  handlers.like({ rpid: props.item.rpid, nextAction: props.item.action === 2 ? 0 : 2 })
+  handlers.like({ rpid: props.item.rpid_str ?? '', nextAction: props.item.action === 2 ? 0 : 2 })
 }
 const router = useRouter()
 
 const onDelete = async () => {
   // Section 的 del 内部会先弹确认框；仅当后端删除成功才通知父级同步移除
-  const res = await handlers.del(props.item.rpid)
-  if (res?.success) emit('deleted', String(props.item.rpid))
+  const res = await handlers.del(props.item.rpid_str ?? '')
+  if (res?.success) emit('deleted', props.item.rpid_str ?? '')
 }
 
 /** 点击头像 / 用户名跳转用户空间 */
 function goUserSpace() {
   if (props.item.mid) {
-    router.push({ name: 'MOMENT_USER_SPACE', params: { mid: String(props.item.mid) } })
+    router.push({ name: 'MOMENT_USER_SPACE_HOME', params: { mid: props.item.mid_str ?? '' } })
   }
 }
 
@@ -184,8 +185,8 @@ const reportCommentRpid = ref<string>('')
 
 /** 举报评论：打开统一举报弹窗（bizType=comment，bizId=rpid str 直接传递） */
 function onReport() {
-  if (!props.item?.rpid) return
-  reportCommentRpid.value = props.item.rpid
+  if (!props.item?.rpid_str) return
+  reportCommentRpid.value = props.item.rpid_str
   reportDialogVisible.value = true
 }
 
@@ -195,11 +196,13 @@ const replyMentionRef = ref<InstanceType<typeof LotteryCommentMention> | null>(n
 const submitReply = async () => {
   const msg = replyContent.value.trim()
   if (!msg) return
-  const root = String(props.item.root ?? '0') === '0' ? props.item.rpid : (props.item.root || props.item.rpid)
+  // root/parent/rpid 一律读字符串版（后端 @auto_str 派生），避免 19 位 ID 丢精度
+  const itemRoot = props.item.root_str ?? '0'
+  const root = itemRoot === '0' ? (props.item.rpid_str ?? '0') : itemRoot
   const atMap = replyMentionRef.value?.buildAtNameToMid(msg) || {}
   await handlers.reply({
     root,
-    parent: props.item.rpid,
+    parent: props.item.rpid_str ?? '0',
     message: msg,
     atNameToMid: Object.keys(atMap).length ? atMap : undefined,
     // 被回复者即当前评论作者，直接传入可保证楼中楼回复稳定显示「回复 @xxx」
@@ -427,13 +430,13 @@ watch(
         class="lottery-comment-item__sub-collapsed mt-2 border-l border-border-light pl-3"
       >
         <ul v-if="previewReplies.length" class="lottery-comment-item__sub-preview-list m-0 list-none space-y-0 p-0">
-          <li v-for="sub in previewReplies" :key="sub.rpid">
+          <li v-for="sub in previewReplies" :key="sub.rpid_str ?? ''">
             <LotteryCommentItem
               :item="sub"
               :depth="(depth || 0) + 1"
               :up-mid="upMid"
               :current-mid="currentMid"
-              :focused="focusedRpid === sub.rpid"
+              :focused="focusedRpid === (sub.rpid_str ?? '')"
               @deleted="onSubDeleted"
             />
           </li>
@@ -451,13 +454,13 @@ watch(
 
       <!-- 展开态子回复列表：分页加载当前页 subItems -->
       <ul v-if="subExpanded && subItems.length" class="lottery-comment-item__sub-list mt-2 m-0 list-none space-y-0 border-l border-border-light pl-3 p-0">
-        <li v-for="sub in subItems" :key="sub.rpid">
+        <li v-for="sub in subItems" :key="sub.rpid_str ?? ''">
           <LotteryCommentItem
             :item="sub"
             :depth="(depth || 0) + 1"
             :up-mid="upMid"
             :current-mid="currentMid"
-            :focused="focusedRpid === sub.rpid"
+            :focused="focusedRpid === (sub.rpid_str ?? '')"
             @deleted="onSubDeleted"
           />
         </li>

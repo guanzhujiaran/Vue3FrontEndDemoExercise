@@ -1,6 +1,7 @@
 import { ref } from 'vue'
 import { defineStore } from 'pinia'
 import { Device, Theme } from '@/models/store/device_system.ts'
+import { browserPersistStorage } from '@/utils/persistStorage'
 
 export const useDeviceSystemStore = defineStore(
   'device-system',
@@ -12,7 +13,7 @@ export const useDeviceSystemStore = defineStore(
   {
     persist: {
       key: 'device-system',
-      storage: localStorage
+      storage: browserPersistStorage
     }
   }
 )

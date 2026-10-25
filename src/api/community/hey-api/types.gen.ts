@@ -30,6 +30,10 @@ export type AdminItem = {
      * Created At
      */
     created_at?: string | null;
+    /**
+     * Mid Str
+     */
+    readonly mid_str: string | null;
 };
 
 /**
@@ -75,7 +79,13 @@ export type AuditActionResp = {
     /**
      * Bizid
      */
-    bizId: number;
+    bizId: string;
+    /**
+     * Bizidstr
+     *
+     * bizId 字符串形式（兼容旧前端，等同 bizId）
+     */
+    bizIdStr?: string | null;
     /**
      * Data
      *
@@ -84,10 +94,6 @@ export type AuditActionResp = {
     data?: {
         [key: string]: unknown;
     } | null;
-    /**
-     * Bizidstr
-     */
-    readonly bizIdStr: string | null;
 };
 
 /**
@@ -201,9 +207,9 @@ export type AuditSourceInfo = {
         [key: string]: string;
     };
     /**
-     * Up Midstr
+     * Up Mid Str
      */
-    readonly up_midStr: string | null;
+    readonly up_mid_str: string | null;
 };
 
 /**
@@ -367,9 +373,9 @@ export type AvatarAuditItem = {
      */
     createdAt?: string | null;
     /**
-     * Midstr
+     * Mid Str
      */
-    readonly midStr: string | null;
+    readonly mid_str: string | null;
 };
 
 /**
@@ -567,7 +573,7 @@ export type BanItem = {
     /**
      * Banned Until
      */
-    banned_until: string | null;
+    banned_until: number | null;
     /**
      * Operator Mid
      */
@@ -576,19 +582,19 @@ export type BanItem = {
     /**
      * Created At
      */
-    created_at: string;
+    created_at: number;
     /**
      * Updated At
      */
-    updated_at: string;
+    updated_at: number;
     /**
-     * Midstr
+     * Mid Str
      */
-    readonly midStr: string | null;
+    readonly mid_str: string | null;
     /**
-     * Operator Midstr
+     * Operator Mid Str
      */
-    readonly operator_midStr: string | null;
+    readonly operator_mid_str: string | null;
 };
 
 /**
@@ -639,15 +645,15 @@ export type BanServiceStatus = {
     /**
      * Banned Until
      */
-    banned_until?: string | null;
+    banned_until?: number | null;
     /**
      * Operator Mid
      */
     operator_mid?: number | null;
     /**
-     * Operator Midstr
+     * Operator Mid Str
      */
-    readonly operator_midStr: string | null;
+    readonly operator_mid_str: string | null;
 };
 
 /**
@@ -699,9 +705,9 @@ export type BanStatusResp = {
         [key: string]: BanServiceStatus;
     };
     /**
-     * Midstr
+     * Mid Str
      */
-    readonly midStr: string | null;
+    readonly mid_str: string | null;
 };
 
 /**
@@ -785,9 +791,9 @@ export type CommentActionReq = {
     /**
      * Rpid
      *
-     * 评论id（字符串）
+     * 评论id（雪花ID，前端传字符串，后端归一为 int）
      */
-    rpid: string;
+    rpid: number | string;
     /**
      * 0取消 / 1点赞 / 2点踩
      */
@@ -801,7 +807,7 @@ export type CommentActionResp = {
     /**
      * Rpid
      */
-    rpid: string;
+    rpid: number;
     action?: CommentActionEnum;
     /**
      * Like Count
@@ -811,6 +817,10 @@ export type CommentActionResp = {
      * Hate Count
      */
     hate_count?: number;
+    /**
+     * Rpid Str
+     */
+    readonly rpid_str: string | null;
 };
 
 /**
@@ -822,9 +832,9 @@ export type CommentAddReq = {
     /**
      * Oid
      *
-     * 业务实体id（字符串）
+     * 业务实体id（前端传字符串，后端归一为 int）
      */
-    oid: string;
+    oid: number | string;
     /**
      * 业务实体类型
      */
@@ -832,15 +842,15 @@ export type CommentAddReq = {
     /**
      * Root
      *
-     * 根评论rpid；发一级评论传 '0'
+     * 根评论rpid；发一级评论传 0
      */
-    root?: string;
+    root?: number | string;
     /**
      * Parent
      *
-     * 父评论rpid；发一级评论传 '0'
+     * 父评论rpid；发一级评论传 0
      */
-    parent?: string;
+    parent?: number | string;
     /**
      * Message
      *
@@ -862,10 +872,10 @@ export type CommentAddReq = {
     /**
      * At Name To Mid
      *
-     * 被@用户：昵称 → mid 映射
+     * 被@用户：昵称 → mid 映射（前端传字符串 mid）
      */
     at_name_to_mid?: {
-        [key: string]: number;
+        [key: string]: number | string;
     };
     /**
      * Emote Meta
@@ -890,17 +900,17 @@ export type CommentAddResp = {
     /**
      * Rpid
      *
-     * 新评论id（字符串）
+     * 新评论id（雪花ID；字符串版见 rpid_str）
      */
-    rpid: string;
+    rpid: number;
     /**
      * Root
      */
-    root?: string;
+    root?: number;
     /**
      * Parent
      */
-    parent?: string;
+    parent?: number;
     state?: ResourceAuditStatusEnum;
     /**
      * Need Audit
@@ -908,10 +918,95 @@ export type CommentAddResp = {
      * 是否进入待审核（仅作者本人可见）
      */
     need_audit?: boolean;
+    /**
+     * Rpid Str
+     */
+    readonly rpid_str: string | null;
+    /**
+     * Root Str
+     */
+    readonly root_str: string | null;
+    /**
+     * Parent Str
+     */
+    readonly parent_str: string | null;
 };
 
+/**
+ * CommentAuditItem
+ *
+ * 审核队列中的一条评论。
+ *
+ * 原始 IP 属明文信息（决策 C3：出参打码、管理员明文），以 ``Private(admin_only=True)``
+ * 标记，非管理员视角下由序列化器自动剥离。
+ */
 export type CommentAuditItem = {
-    [key: string]: unknown;
+    /**
+     * Rpid
+     */
+    rpid: number;
+    /**
+     * Oid
+     */
+    oid: number;
+    type: InteractionBizTypeEnum;
+    /**
+     * Mid
+     */
+    mid: number;
+    /**
+     * Message
+     */
+    message: string;
+    state: ResourceAuditStatusEnum;
+    /**
+     * Like Count
+     */
+    like_count?: number;
+    /**
+     * Ctime
+     */
+    ctime: number;
+    /**
+     * Ip V4
+     */
+    ip_v4?: unknown;
+    /**
+     * Ip V6
+     */
+    ip_v6?: unknown;
+    /**
+     * Plat
+     *
+     * 来源平台
+     */
+    plat?: string | null;
+    /**
+     * Device
+     *
+     * 来源设备
+     */
+    device?: string | null;
+    /**
+     * 内容来源，管理端可点击直达原始评论区
+     */
+    source?: AuditSourceInfo | null;
+    /**
+     * 发布者信息（管理端：含私有字段），装配时直连 pptr 只读取回
+     */
+    member?: UserBriefOut | null;
+    /**
+     * Rpid Str
+     */
+    readonly rpid_str: string | null;
+    /**
+     * Oid Str
+     */
+    readonly oid_str: string | null;
+    /**
+     * Mid Str
+     */
+    readonly mid_str: string | null;
 };
 
 /**
@@ -957,9 +1052,9 @@ export type CommentAuditReq = {
     /**
      * Rpid
      *
-     * 待处理评论id（字符串）
+     * 待处理评论id（前端传字符串，后端归一为 int）
      */
-    rpid: string;
+    rpid: number | string;
     /**
      * Op
      *
@@ -1043,7 +1138,7 @@ export type CommentCountResp = {
     /**
      * Oid
      */
-    oid: string;
+    oid: number;
     type: InteractionBizTypeEnum;
     /**
      * Root Count
@@ -1054,6 +1149,10 @@ export type CommentCountResp = {
      */
     all_count?: number;
     state?: CommentSubjectStateEnum;
+    /**
+     * Oid Str
+     */
+    readonly oid_str: string | null;
 };
 
 /**
@@ -1063,9 +1162,9 @@ export type CommentDelReq = {
     /**
      * Rpid
      *
-     * 待删除的评论id（字符串）
+     * 待删除的评论id（前端传字符串，后端归一为 int）
      */
-    rpid: string;
+    rpid: number | string;
 };
 
 /**
@@ -1077,15 +1176,15 @@ export type CommentItem = {
     /**
      * Rpid
      *
-     * 评论id（字符串）
+     * 评论id（雪花ID；字符串版见 rpid_str）
      */
-    rpid: string;
+    rpid: number;
     /**
      * Oid
      *
-     * 所属业务实体id（字符串）
+     * 所属业务实体id（雪花ID；字符串版见 oid_str）
      */
-    oid: string;
+    oid: number;
     type: InteractionBizTypeEnum;
     /**
      * Mid
@@ -1100,21 +1199,21 @@ export type CommentItem = {
     /**
      * Root
      *
-     * 根评论rpid，'0' 表示一级评论
+     * 根评论rpid，0 表示一级评论；字符串版见 root_str
      */
-    root?: string;
+    root?: number;
     /**
      * Parent
      *
-     * 父评论rpid，'0' 表示一级评论
+     * 父评论rpid，0 表示一级评论；字符串版见 parent_str
      */
-    parent?: string;
+    parent?: number;
     /**
      * Dialog
      *
-     * 楼中楼会话串id
+     * 楼中楼会话串id（字符串版见 dialog_str）
      */
-    dialog?: string;
+    dialog?: number;
     /**
      * Floor
      *
@@ -1146,10 +1245,10 @@ export type CommentItem = {
     /**
      * At Name To Mid
      *
-     * 被@用户：昵称 → mid 映射
+     * 被@用户：昵称 → mid 映射（前端传字符串 mid）
      */
     at_name_to_mid?: {
-        [key: string]: number;
+        [key: string]: number | string;
     };
     /**
      * At Name To Mid Str
@@ -1231,9 +1330,9 @@ export type CommentItem = {
     /**
      * Ctime
      *
-     * 发布时间
+     * 发布时间（秒级时间戳）
      */
-    ctime: string;
+    ctime: number;
     /**
      * Replies
      *
@@ -1241,9 +1340,29 @@ export type CommentItem = {
      */
     replies?: Array<CommentItem>;
     /**
-     * Midstr
+     * Rpid Str
      */
-    readonly midStr: string | null;
+    readonly rpid_str: string | null;
+    /**
+     * Oid Str
+     */
+    readonly oid_str: string | null;
+    /**
+     * Mid Str
+     */
+    readonly mid_str: string | null;
+    /**
+     * Root Str
+     */
+    readonly root_str: string | null;
+    /**
+     * Parent Str
+     */
+    readonly parent_str: string | null;
+    /**
+     * Dialog Str
+     */
+    readonly dialog_str: string | null;
 };
 
 /**
@@ -1318,19 +1437,23 @@ export type CommentListResp = {
      *
      * 本次请求携带 focus_rpid 时回填，指向最终要定位的评论（可能是一级评论本身，也可能是楼中楼中的某条子评论）。
      */
-    focus_rpid?: string | null;
+    focus_rpid?: number | null;
     /**
      * Focus Root
      *
      * focus_rpid 所属的根评论 rpid。当 focus 目标是楼中楼时，根评论会被提到列表顶部，前端据此展开楼中楼并滚动到 focus_rpid。
      */
-    focus_root?: string | null;
+    focus_root?: number | null;
     /**
      * Viewer Is Anonymous
      *
      * 当前请求是否为匿名访问（viewer_mid 缺失）。匿名时服务端已强制限制 page_size=10，前端应渲染登录引导蒙层。
      */
     viewer_is_anonymous?: boolean;
+    /**
+     * Focus Rpid Str
+     */
+    readonly focus_rpid_str: string | null;
 };
 
 /**
@@ -1356,9 +1479,9 @@ export type CommentReportReq = {
     /**
      * Rpid
      *
-     * 被举报评论id（字符串）
+     * 被举报评论id（前端传字符串，后端归一为 int）
      */
-    rpid: string;
+    rpid: number | string;
     /**
      * 举报原因类型（复用 MomentReportReasonEnum）
      */
@@ -1380,9 +1503,9 @@ export type CommentReportResp = {
     /**
      * Rpid
      *
-     * 被举报评论id（字符串）
+     * 被举报评论id（雪花ID；字符串版见 rpid_str）
      */
-    rpid: string;
+    rpid: number;
     /**
      * Reported
      *
@@ -1395,6 +1518,10 @@ export type CommentReportResp = {
      * 本次举报后是否已触发转审核（state→auditing）
      */
     switched_to_auditing?: boolean;
+    /**
+     * Rpid Str
+     */
+    readonly rpid_str: string | null;
 };
 
 /**
@@ -1430,15 +1557,15 @@ export type CommentSourceResp = {
     /**
      * Rpid
      */
-    rpid: string;
+    rpid: number;
     /**
      * Root
      */
-    root?: string;
+    root?: number;
     /**
      * Parent
      */
-    parent?: string;
+    parent?: number;
     state?: ResourceAuditStatusEnum;
     source: AuditSourceInfo;
     /**
@@ -1457,6 +1584,18 @@ export type CommentSourceResp = {
      * 评论区评论总数（含楼中楼）
      */
     all_count?: number;
+    /**
+     * Rpid Str
+     */
+    readonly rpid_str: string | null;
+    /**
+     * Root Str
+     */
+    readonly root_str: string | null;
+    /**
+     * Parent Str
+     */
+    readonly parent_str: string | null;
 };
 
 /**
@@ -1506,9 +1645,9 @@ export type CommentSubListResp = {
     /**
      * Root
      *
-     * 所属根评论rpid
+     * 所属根评论rpid（字符串版见 root_str）
      */
-    root?: string;
+    root?: number;
     /**
      * Total
      *
@@ -1523,6 +1662,10 @@ export type CommentSubListResp = {
      * Page Size
      */
     page_size?: number;
+    /**
+     * Root Str
+     */
+    readonly root_str: string | null;
 };
 
 /**
@@ -1558,9 +1701,9 @@ export type CommentTopReq = {
     /**
      * Oid
      *
-     * 业务实体id（字符串）
+     * 业务实体id（前端传字符串，后端归一为 int）
      */
-    oid: string;
+    oid: number | string;
     /**
      * 业务实体类型
      */
@@ -1568,9 +1711,9 @@ export type CommentTopReq = {
     /**
      * Rpid
      *
-     * 要置顶 / 取消置顶的评论id（字符串，必须是根评论）
+     * 要置顶 / 取消置顶的评论id，必须是根评论
      */
-    rpid: string;
+    rpid: number | string;
     /**
      * Top
      *
@@ -1586,17 +1729,118 @@ export type CommentTopResp = {
     /**
      * Top Rpid
      *
-     * 当前置顶评论id
+     * 当前置顶评论id（字符串版见 top_rpid_str）
      */
-    top_rpid?: string | null;
+    top_rpid?: number | null;
     /**
      * Success
      */
     success?: boolean;
+    /**
+     * Top Rpid Str
+     */
+    readonly top_rpid_str: string | null;
 };
 
+/**
+ * CommentUserBrief
+ *
+ * 评论卡片上展示的用户信息（直连 pptr Postgres 只读取得，本服务不冗余）。
+ *
+ * 评论是他人可见内容，故沿用 :class:`UserBriefOut`：昵称 / 头像 / 等级等公开字段
+ * 照常输出，``vip_due_date`` / ``exp`` / ``role`` / ``email`` 等私域字段由
+ * ``VisibilityMixin`` 在**序列化期**按访问者身份自动剥离（仅本人 / 管理员可见），
+ * 装配层**无需**再手动投影。
+ */
 export type CommentUserBrief = {
-    [key: string]: unknown;
+    /**
+     * Mid
+     */
+    mid: number;
+    /**
+     * Name
+     */
+    name?: string | null;
+    /**
+     * Face
+     */
+    face?: string | null;
+    /**
+     * Uname
+     */
+    uname?: string | null;
+    /**
+     * Avatar
+     */
+    avatar?: string | null;
+    /**
+     * Level
+     */
+    level?: number;
+    /**
+     * Vip Status
+     */
+    vip_status?: string | null;
+    /**
+     * Vip Type
+     */
+    vip_type?: number;
+    /**
+     * Sex
+     */
+    sex?: string | null;
+    /**
+     * Sign
+     */
+    sign?: string | null;
+    /**
+     * Follower Count
+     */
+    follower_count?: number;
+    /**
+     * Following Count
+     */
+    following_count?: number;
+    /**
+     * Like Count
+     */
+    like_count?: number;
+    /**
+     * Nameplate Name
+     */
+    nameplate_name?: string | null;
+    /**
+     * Nameplate Image
+     */
+    nameplate_image?: string | null;
+    /**
+     * Nameplate Level
+     */
+    nameplate_level?: string | null;
+    /**
+     * Official Title
+     */
+    official_title?: string | null;
+    /**
+     * Vip Due Date
+     */
+    vip_due_date?: unknown;
+    /**
+     * Exp
+     */
+    exp?: unknown;
+    /**
+     * Role
+     */
+    role?: unknown;
+    /**
+     * Email
+     */
+    email?: unknown;
+    /**
+     * Mid Str
+     */
+    readonly mid_str: string | null;
 };
 
 /**
@@ -1628,9 +1872,9 @@ export type DmAuditItem = {
     /**
      * Msgkey
      *
-     * 消息全局唯一键（字符串）
+     * 消息全局唯一键（雪花ID；字符串版见 msgkey_str）
      */
-    msgkey: string;
+    msgkey: number;
     /**
      * Sender Mid
      *
@@ -1672,7 +1916,7 @@ export type DmAuditItem = {
     /**
      * Created At
      */
-    created_at?: string | null;
+    created_at?: number | null;
     /**
      * 内容来源，管理端可点击直达该会话上下文
      */
@@ -1682,13 +1926,17 @@ export type DmAuditItem = {
      */
     sender?: UserBriefOut | null;
     /**
-     * Sender Midstr
+     * Msgkey Str
      */
-    readonly sender_midStr: string | null;
+    readonly msgkey_str: string | null;
     /**
-     * Talker Midstr
+     * Sender Mid Str
      */
-    readonly talker_midStr: string | null;
+    readonly sender_mid_str: string | null;
+    /**
+     * Talker Mid Str
+     */
+    readonly talker_mid_str: string | null;
 };
 
 /**
@@ -1734,9 +1982,9 @@ export type DmAuditReq = {
     /**
      * Msgkey
      *
-     * 待处理私信 msgkey（字符串）
+     * 待处理私信 msgkey（前端传字符串）
      */
-    msgkey: string;
+    msgkey: number | string;
     /**
      * Op
      *
@@ -1834,7 +2082,7 @@ export type DmMessageItem = {
     /**
      * Msgkey
      */
-    msgkey: string;
+    msgkey: number;
     /**
      * Sender Uid
      */
@@ -1860,14 +2108,14 @@ export type DmMessageItem = {
     /**
      * Created At
      */
-    created_at?: string | null;
+    created_at?: number | null;
     audit_state?: ResourceAuditStatusEnum;
     /**
      * Recalled At
      *
-     * 撤回时间（仅撤回后非空）
+     * 撤回时间（仅撤回后非空，秒级时间戳）
      */
-    recalled_at?: string | null;
+    recalled_at?: number | null;
     /**
      * Recalled By
      *
@@ -1875,9 +2123,13 @@ export type DmMessageItem = {
      */
     recalled_by?: number | null;
     /**
-     * Sender Uidstr
+     * Msgkey Str
      */
-    readonly sender_uidStr: string | null;
+    readonly msgkey_str: string | null;
+    /**
+     * Sender Uid Str
+     */
+    readonly sender_uid_str: string | null;
 };
 
 /**
@@ -1911,6 +2163,10 @@ export type DmMessageListResp = {
      * Session Key
      */
     session_key?: string;
+    /**
+     * Talker Mid Str
+     */
+    readonly talker_mid_str: string | null;
 };
 
 /**
@@ -2002,9 +2258,9 @@ export type DmRecallReq = {
     /**
      * Msgkey
      *
-     * 要撤回的 msgkey
+     * 要撤回的 msgkey（前端传字符串）
      */
-    msgkey: string;
+    msgkey: number | string;
 };
 
 /**
@@ -2072,9 +2328,9 @@ export type DmSendResp = {
     /**
      * Msgkey
      *
-     * 消息全局唯一键（字符串形式，避免 JS 精度丢失）
+     * 消息全局唯一键（雪花ID；字符串版见 msgkey_str）
      */
-    msgkey: string;
+    msgkey: number;
     /**
      * Session Key
      *
@@ -2099,6 +2355,10 @@ export type DmSendResp = {
      * 内容是否走异步落库（False 表示已同步兜底写入）
      */
     content_async?: boolean;
+    /**
+     * Msgkey Str
+     */
+    readonly msgkey_str: string | null;
 };
 
 /**
@@ -2135,13 +2395,13 @@ export type DmSessionContextResp = {
      */
     total?: number;
     /**
-     * Sender Midstr
+     * Sender Mid Str
      */
-    readonly sender_midStr: string | null;
+    readonly sender_mid_str: string | null;
     /**
-     * Talker Midstr
+     * Talker Mid Str
      */
-    readonly talker_midStr: string | null;
+    readonly talker_mid_str: string | null;
 };
 
 /**
@@ -2181,7 +2441,7 @@ export type DmSessionItem = {
     /**
      * Last Msgkey
      */
-    last_msgkey?: string | null;
+    last_msgkey?: number | null;
     /**
      * Last Content Preview
      */
@@ -2222,15 +2482,19 @@ export type DmSessionItem = {
     /**
      * Updated At
      */
-    updated_at?: string | null;
+    updated_at?: number | null;
     /**
-     * Talker Midstr
+     * Talker Mid Str
      */
-    readonly talker_midStr: string | null;
+    readonly talker_mid_str: string | null;
     /**
-     * Last Sender Uidstr
+     * Last Msgkey Str
      */
-    readonly last_sender_uidStr: string | null;
+    readonly last_msgkey_str: string | null;
+    /**
+     * Last Sender Uid Str
+     */
+    readonly last_sender_uid_str: string | null;
 };
 
 /**
@@ -2374,9 +2638,9 @@ export type DmTopResp = {
      */
     affected?: number;
     /**
-     * Talker Midstr
+     * Talker Mid Str
      */
-    readonly talker_midStr: string | null;
+    readonly talker_mid_str: string | null;
 };
 
 /**
@@ -2449,13 +2713,13 @@ export type EventAggregateItem = {
     /**
      * Latest At
      *
-     * 分组内最新事件时间
+     * 分组内最新事件时间（秒级时间戳）
      */
-    latest_at?: string | null;
+    latest_at?: number | null;
     /**
-     * Latest Event Idstr
+     * Latest Event Id Str
      */
-    readonly latest_event_idStr: string | null;
+    readonly latest_event_id_str: string | null;
 };
 
 /**
@@ -2549,19 +2813,19 @@ export type EventMsgfeedContent = {
     /**
      * Resource Id
      */
-    resource_id?: string;
+    resource_id?: number;
     /**
      * Root Id
      */
-    root_id?: string;
+    root_id?: number;
     /**
      * Source Id
      */
-    source_id?: string;
+    source_id?: number;
     /**
      * Target Id
      */
-    target_id?: string;
+    target_id?: number;
     /**
      * Title
      */
@@ -2615,17 +2879,33 @@ export type EventMsgfeedContent = {
      */
     ctime: number;
     /**
-     * Item Idstr
+     * Item Id Str
      */
-    readonly item_idStr: string | null;
+    readonly item_id_str: string | null;
     /**
-     * Source Midstr
+     * Resource Id Str
      */
-    readonly source_midStr: string | null;
+    readonly resource_id_str: string | null;
     /**
-     * Target Midstr
+     * Root Id Str
      */
-    readonly target_midStr: string | null;
+    readonly root_id_str: string | null;
+    /**
+     * Source Id Str
+     */
+    readonly source_id_str: string | null;
+    /**
+     * Target Id Str
+     */
+    readonly target_id_str: string | null;
+    /**
+     * Source Mid Str
+     */
+    readonly source_mid_str: string | null;
+    /**
+     * Target Mid Str
+     */
+    readonly target_mid_str: string | null;
     /**
      * Business Name
      *
@@ -2654,7 +2934,7 @@ export type EventMsgfeedCursor = {
     /**
      * Time
      */
-    time?: string | null;
+    time?: number | null;
 };
 
 /**
@@ -2756,9 +3036,9 @@ export type EventReportReq = {
     /**
      * Mid
      *
-     * 接收提醒的用户mid
+     * 接收提醒的用户mid（雪花ID，前端传字符串，后端归一为 int）
      */
-    mid: number;
+    mid: number | string;
     /**
      * 事件类型：like / reply / at
      */
@@ -2812,9 +3092,9 @@ export type EventReportResp = {
      */
     duplicated?: boolean;
     /**
-     * Event Idstr
+     * Event Id Str
      */
-    readonly event_idStr: string | null;
+    readonly event_id_str: string | null;
 };
 
 /**
@@ -2893,6 +3173,10 @@ export type EventUserBrief = {
      * Follow
      */
     follow?: boolean;
+    /**
+     * Mid Str
+     */
+    readonly mid_str: string | null;
 };
 
 /**
@@ -2911,15 +3195,15 @@ export type FavoriteAddReq = {
     /**
      * Bizid
      *
-     * 资源id（字符串；动态时=动态id，雪花ID）
+     * 资源id（动态时=动态id，雪花ID；前端传字符串）
      */
-    bizId: string;
+    bizId: number | string;
     /**
      * Folderid
      *
-     * 收藏夹id（字符串，雪花ID；缺省/空则收藏到默认收藏夹）
+     * 收藏夹id（缺省/空则收藏到默认收藏夹）
      */
-    folderId?: string | null;
+    folderId?: number | string | null;
 };
 
 /**
@@ -2935,15 +3219,15 @@ export type FavoriteAddResp = {
     /**
      * Bizid
      *
-     * 资源id（字符串）
+     * 资源id（雪花ID；字符串版见 bizId_str）
      */
-    bizId: string;
+    bizId: number;
     /**
      * Folderid
      *
-     * 收藏夹id（字符串）
+     * 收藏夹id（雪花ID；字符串版见 folderId_str）
      */
-    folderId: string;
+    folderId: number;
     /**
      * Favorited
      *
@@ -2956,6 +3240,14 @@ export type FavoriteAddResp = {
      * 该资源最新收藏数（用户去重）
      */
     favoriteCount?: number;
+    /**
+     * Bizid Str
+     */
+    readonly bizId_str: string | null;
+    /**
+     * Folderid Str
+     */
+    readonly folderId_str: string | null;
 };
 
 /**
@@ -2971,15 +3263,19 @@ export type FavoriteDynFoldersResp = {
     /**
      * Bizid
      *
-     * 资源id（字符串）
+     * 资源id（雪花ID；字符串版见 bizId_str）
      */
-    bizId: string;
+    bizId: number;
     /**
      * Folderids
      *
      * 已收藏该资源的收藏夹id列表
      */
     folderIds?: Array<string>;
+    /**
+     * Bizid Str
+     */
+    readonly bizId_str: string | null;
 };
 
 /**
@@ -3006,6 +3302,12 @@ export type FavoriteFolderCreateReq = {
      * 封面图片链接（仅存URL，不转存图片）
      */
     coverUrl?: string | null;
+    /**
+     * Ispublic
+     *
+     * 是否公开（True=他人可见,False=仅本人可见）
+     */
+    isPublic?: boolean;
 };
 
 /**
@@ -3017,9 +3319,9 @@ export type FavoriteFolderDeleteReq = {
     /**
      * Folderid
      *
-     * 收藏夹id（字符串，雪花ID）
+     * 收藏夹id（雪花ID，前端传字符串）
      */
-    folderId: string;
+    folderId: number | string;
 };
 
 /**
@@ -3031,9 +3333,9 @@ export type FavoriteFolderResp = {
     /**
      * Folderid
      *
-     * 收藏夹id（字符串）
+     * 收藏夹id（雪花ID；字符串版见 folderId_str）
      */
-    folderId: string;
+    folderId: number;
     /**
      * Name
      *
@@ -3059,6 +3361,12 @@ export type FavoriteFolderResp = {
      */
     isDefault?: boolean;
     /**
+     * Ispublic
+     *
+     * 是否公开（False=仅本人可见）
+     */
+    isPublic?: boolean;
+    /**
      * Favoritecount
      *
      * 该夹收藏的动态数
@@ -3070,6 +3378,10 @@ export type FavoriteFolderResp = {
      * 封面审核状态：有 pending 审核时为 'pending'，否则为 null（2.28.0）
      */
     coverAuditStatus?: string | null;
+    /**
+     * Folderid Str
+     */
+    readonly folderId_str: string | null;
 };
 
 /**
@@ -3081,9 +3393,9 @@ export type FavoriteFolderUpdateReq = {
     /**
      * Folderid
      *
-     * 收藏夹id（字符串，雪花ID）
+     * 收藏夹id（雪花ID，前端传字符串）
      */
-    folderId: string;
+    folderId: number | string;
     /**
      * Name
      *
@@ -3102,6 +3414,12 @@ export type FavoriteFolderUpdateReq = {
      * 封面图片链接（传空字符串清除）
      */
     coverUrl?: string | null;
+    /**
+     * Ispublic
+     *
+     * 是否公开（None=不改；True=公开,False=仅本人可见）
+     */
+    isPublic?: boolean | null;
 };
 
 /**
@@ -3113,9 +3431,9 @@ export type FavoriteItemListResp = {
     /**
      * Folderid
      *
-     * 收藏夹id（字符串）
+     * 收藏夹id（雪花ID；字符串版见 folderId_str）
      */
-    folderId: string;
+    folderId: number;
     /**
      * Total
      *
@@ -3128,6 +3446,10 @@ export type FavoriteItemListResp = {
      * 当前页资源明细
      */
     items?: Array<FavoriteListItem>;
+    /**
+     * Folderid Str
+     */
+    readonly folderId_str: string | null;
 };
 
 /**
@@ -3143,9 +3465,13 @@ export type FavoriteListItem = {
     /**
      * Bizid
      *
-     * 资源id（字符串）
+     * 资源id（雪花ID；字符串版见 bizId_str）
      */
-    bizId: string;
+    bizId: number;
+    /**
+     * Bizid Str
+     */
+    readonly bizId_str: string | null;
 };
 
 /**
@@ -3159,9 +3485,9 @@ export type FavoriteListResp = {
     /**
      * Folderid
      *
-     * 收藏夹id（字符串）
+     * 收藏夹id（雪花ID；字符串版见 folderId_str）
      */
-    folderId: string;
+    folderId: number;
     /**
      * Total
      *
@@ -3174,6 +3500,10 @@ export type FavoriteListResp = {
      * 当前页资源明细（bizType+bizId 对）
      */
     items?: Array<FavoriteListItem>;
+    /**
+     * Folderid Str
+     */
+    readonly folderId_str: string | null;
 };
 
 /**
@@ -3189,43 +3519,166 @@ export type FavoriteRemoveReq = {
     /**
      * Bizid
      *
-     * 资源id（字符串；动态时=动态id）
+     * 资源id（动态时=动态id；前端传字符串）
      */
-    bizId: string;
+    bizId: number | string;
     /**
      * Folderid
      *
-     * 收藏夹id（字符串，雪花ID）
+     * 收藏夹id（雪花ID，前端传字符串）
      */
-    folderId: string;
+    folderId: number | string;
 };
 
 /**
- * FavoriteSettingReq
+ * FeedEventReportItem
  *
- * 设置主页是否显示收藏。
+ * 前端上报的单条 Feed 行为（click / dwell）。
+ *
+ * 64 位资源 id 统一用 ``StrInt`` 接收（前端 str 传参，避免精度丢失）。
  */
-export type FavoriteSettingReq = {
+export type FeedEventReportItem = {
     /**
-     * Showfavorites
+     * Bizid
      *
-     * 主页是否显示收藏tab：True=显示,False=隐藏
+     * 资源 id（动态=dynId）
      */
-    showFavorites?: boolean;
+    bizId: number | string;
+    /**
+     * Event
+     *
+     * 事件类型：click=点击进详情 / dwell=停留（impression 由服务端写）
+     */
+    event: string;
+    /**
+     * Position
+     *
+     * 卡片在列表中的位次（0 起，可选）
+     */
+    position?: number | null;
+    /**
+     * Valuems
+     *
+     * dwell 事件的停留毫秒数
+     */
+    valueMs?: number | null;
 };
 
 /**
- * FavoriteSettingResp
+ * FeedEventReportReq
  *
- * 主页收藏可见性。
+ * 批量 Feed 行为上报请求（匿名可上报）。
  */
-export type FavoriteSettingResp = {
+export type FeedEventReportReq = {
     /**
-     * Showfavorites
+     * Events
      *
-     * 主页是否显示收藏tab
+     * 事件列表（单批上限 100 条）
      */
-    showFavorites?: boolean;
+    events?: Array<FeedEventReportItem>;
+    /**
+     * Scene
+     *
+     * Feed 场景：comprehensive / topic
+     */
+    scene?: string;
+    /**
+     * Uniqid
+     *
+     * 客户端唯一 ID（未登录时用于标识观众）
+     */
+    uniqId?: string | null;
+};
+
+/**
+ * FeedMLConfig
+ *
+ * 推荐「机器学习三件套」的运行时开关与权重。
+ *
+ * 三件套（LightGBM 精排 / ALS 协同召回 / LinUCB 上下文探索）**默认全关**，
+ * 需训练产出模型后由管理端在本项打开；权重可随时热调以便灰度：
+ *
+ * - ``ranker_enabled`` + ``ranker_blend_weight``：LightGBM 与 EdgeRank 分的融合
+ * （``weight`` 是模型话语权，0=纯规则）；
+ * - ``als_enabled`` + ``als_limit``：ALS 协同召回一路及其条数上限；
+ * - ``linucb_enabled`` + ``linucb_weight`` + ``linucb_alpha``：上下文老虎机探索
+ * （``weight`` 探索强度、``alpha`` 探索系数）。
+ */
+export type FeedMlConfig = {
+    /**
+     * Ranker Enabled
+     *
+     * LightGBM 精排开关（需先产出模型文件）
+     */
+    ranker_enabled?: boolean;
+    /**
+     * Ranker Blend Weight
+     *
+     * 模型分话语权（0=纯 EdgeRank）
+     */
+    ranker_blend_weight?: number;
+    /**
+     * Als Enabled
+     *
+     * ALS 协同召回开关（需先产出索引文件）
+     */
+    als_enabled?: boolean;
+    /**
+     * Als Limit
+     *
+     * ALS 召回条数上限
+     */
+    als_limit?: number;
+    /**
+     * Linucb Enabled
+     *
+     * LinUCB 上下文探索开关（需先回放训练臂参数）
+     */
+    linucb_enabled?: boolean;
+    /**
+     * Linucb Weight
+     *
+     * 探索分叠加强度（0=关闭）
+     */
+    linucb_weight?: number;
+    /**
+     * Linucb Alpha
+     *
+     * UCB 探索系数（越大越探索）
+     */
+    linucb_alpha?: number;
+};
+
+/**
+ * FeedMLStatusResp
+ *
+ * 推荐机器学习状态响应（只读）。
+ */
+export type FeedMlStatusResp = {
+    /**
+     * 当前生效的运行时配置（feed_ml 配置项，未配置时为 settings 默认）
+     */
+    config: FeedMlConfig;
+    /**
+     * LightGBM 精排模型
+     */
+    ranker: MlModelStatus;
+    /**
+     * ALS 协同召回索引
+     */
+    als: MlModelStatus;
+    /**
+     * Linucbarms
+     *
+     * LinUCB 臂参数行数（0=未回放训练）
+     */
+    linucbArms?: number;
+    /**
+     * Eventsamples
+     *
+     * 曝光事件条数（样本构建的原料，< 千条时模型不可信）
+     */
+    eventSamples?: number;
 };
 
 /**
@@ -3291,9 +3744,9 @@ export type FolderCoverAuditItem = {
     /**
      * Folderid
      *
-     * 所属收藏夹 id（字符串）
+     * 所属收藏夹 id（雪花ID；字符串版见 folderId_str）
      */
-    folderId: string;
+    folderId: number;
     /**
      * Mid
      *
@@ -3331,9 +3784,13 @@ export type FolderCoverAuditItem = {
      */
     createdAt?: string | null;
     /**
-     * Midstr
+     * Folderid Str
      */
-    readonly midStr: string | null;
+    readonly folderId_str: string | null;
+    /**
+     * Mid Str
+     */
+    readonly mid_str: string | null;
 };
 
 /**
@@ -3377,9 +3834,9 @@ export type FolderCoverAuditMineResp = {
     /**
      * Folderid
      *
-     * 所属收藏夹 id（字符串）
+     * 所属收藏夹 id（雪花ID；字符串版见 folderId_str）
      */
-    folderId: string;
+    folderId: number;
     /**
      * Newcover
      *
@@ -3416,6 +3873,10 @@ export type FolderCoverAuditMineResp = {
      * 审核时间（ISO）
      */
     auditedAt?: string | null;
+    /**
+     * Folderid Str
+     */
+    readonly folderId_str: string | null;
 };
 
 /**
@@ -3473,9 +3934,9 @@ export type FollowCountResp = {
      */
     mutual_count?: number;
     /**
-     * Midstr
+     * Mid Str
      */
-    readonly midStr: string | null;
+    readonly mid_str: string | null;
 };
 
 /**
@@ -3493,9 +3954,9 @@ export type FollowListItem = {
     /**
      * Created At
      *
-     * 关系建立时间
+     * 关系建立时间（秒级时间戳）
      */
-    created_at: string;
+    created_at: number;
     /**
      * Mutual
      *
@@ -3503,13 +3964,13 @@ export type FollowListItem = {
      */
     mutual?: boolean;
     /**
-     * 对方公开展示信息（他人可见字段；注销或回查失败时为 null）
+     * 对方展示信息（注销或回查失败时为 null）
      */
-    user?: UserBriefOut | null;
+    user?: FollowUserBrief | null;
     /**
-     * Midstr
+     * Mid Str
      */
-    readonly midStr: string | null;
+    readonly mid_str: string | null;
 };
 
 /**
@@ -3574,13 +4035,13 @@ export type FollowOpResp = {
      */
     blocked?: boolean;
     /**
-     * Midstr
+     * Mid Str
      */
-    readonly midStr: string | null;
+    readonly mid_str: string | null;
     /**
-     * Target Midstr
+     * Target Mid Str
      */
-    readonly target_midStr: string | null;
+    readonly target_mid_str: string | null;
 };
 
 /**
@@ -3639,13 +4100,13 @@ export type FollowRelationResp = {
      */
     blocked_by?: boolean;
     /**
-     * Midstr
+     * Mid Str
      */
-    readonly midStr: string | null;
+    readonly mid_str: string | null;
     /**
-     * Target Midstr
+     * Target Mid Str
      */
-    readonly target_midStr: string | null;
+    readonly target_mid_str: string | null;
 };
 
 /**
@@ -3687,6 +4148,136 @@ export const FollowStatusEnum = { /**
 export type FollowStatusEnum = typeof FollowStatusEnum[keyof typeof FollowStatusEnum];
 
 /**
+ * FollowTagAssignReq
+ *
+ * 把某个关注对象写入 / 移出分组（覆盖式：以本次提交的分组集合为准）。
+ */
+export type FollowTagAssignReq = {
+    /**
+     * Target Mid
+     *
+     * 被分组的用户 mid
+     */
+    target_mid: number | string;
+    /**
+     * Tag Ids
+     *
+     * 该用户所属分组 id 集合（空数组=移出全部分组）；-10 表示特别关注
+     */
+    tag_ids?: Array<number>;
+};
+
+/**
+ * FollowTagCreateReq
+ *
+ * 新建关注分组请求。
+ */
+export type FollowTagCreateReq = {
+    /**
+     * Name
+     *
+     * 分组名（B 站上限 20 字）
+     */
+    name: string;
+    /**
+     * Tip
+     *
+     * 分组简介（选填）
+     */
+    tip?: string | null;
+};
+
+/**
+ * FollowTagResp
+ *
+ * 分组项（形状对齐 B 站 `data: [{tagid, name, count, tip}]`）。
+ */
+export type FollowTagResp = {
+    /**
+     * Tagid
+     *
+     * 分组 id：-10 特别关注 / 0 默认分组 / >0 自建分组
+     */
+    tagid: number;
+    /**
+     * Name
+     *
+     * 分组名
+     */
+    name: string;
+    /**
+     * Count
+     *
+     * 该分组下的关注数
+     */
+    count?: number;
+    /**
+     * Tip
+     *
+     * 分组简介（系统分组为内置说明，无则空串）
+     */
+    tip?: string;
+};
+
+/**
+ * FollowUserBrief
+ *
+ * 关注 / 粉丝 / 黑名单列表里的**用户卡片**（对标 B 站 `x/relation/followings` 的 list 项）。
+ *
+ * 只保留卡片渲染需要的展示字段，不再直接复用 `UserBriefOut` —— 后者还带铭牌 / 官标 /
+ * 关注数等列表用不到的字段（且含私域字段，靠序列化期裁剪），对列表来说太重。
+ * 数据仍由 `PptrUser.get_many` 批量回查（一次 IN，无 N+1）；注销 / 回查失败时为 `None`。
+ */
+export type FollowUserBrief = {
+    /**
+     * Mid
+     *
+     * 对方用户 mid
+     */
+    mid: number;
+    /**
+     * Name
+     *
+     * 昵称
+     */
+    name?: string | null;
+    /**
+     * Face
+     *
+     * 头像链接
+     */
+    face?: string | null;
+    /**
+     * Sign
+     *
+     * 个性签名
+     */
+    sign?: string | null;
+    /**
+     * Level
+     *
+     * 等级（0~6）
+     */
+    level?: number;
+    /**
+     * Vip Status
+     *
+     * 大会员状态
+     */
+    vip_status?: string | null;
+    /**
+     * Vip Type
+     *
+     * 大会员类型
+     */
+    vip_type?: number;
+    /**
+     * Mid Str
+     */
+    readonly mid_str: string | null;
+};
+
+/**
  * GrantAdminReq
  */
 export type GrantAdminReq = {
@@ -3716,6 +4307,79 @@ export type HttpValidationError = {
      * Detail
      */
     detail?: Array<ValidationError>;
+};
+
+/**
+ * HotLotteryItem
+ *
+ * 热门抽奖榜单单项（基于浏览记录聚合）。
+ *
+ * 抽奖本体在 be-bilibili-crawler，本服务只产出「热度榜 id + 计数」，
+ * 前端按 ``bizId`` 回捞抽奖详情渲染。
+ */
+export type HotLotteryItem = {
+    /**
+     * Bizid
+     *
+     * 抽奖卡片 id（lottery_id，字符串承载）
+     */
+    bizId: string;
+    /**
+     * Recentviewcount
+     *
+     * 统计窗口内的浏览次数（浏览记录 sum(viewCount)）
+     */
+    recentViewCount?: number;
+    /**
+     * Viewcount
+     *
+     * 累计浏览次数（TInteractionStat）
+     */
+    viewCount?: number;
+    /**
+     * Likecount
+     *
+     * 累计点赞数
+     */
+    likeCount?: number;
+    /**
+     * Favoritecount
+     *
+     * 累计收藏数
+     */
+    favoriteCount?: number;
+    /**
+     * Commentcount
+     *
+     * 评论数（评论系统实时计数）
+     */
+    commentCount?: number;
+};
+
+/**
+ * HotLotteryResp
+ *
+ * 热门抽奖榜响应。
+ */
+export type HotLotteryResp = {
+    /**
+     * Items
+     *
+     * 热门抽奖（按窗口内浏览热度降序）
+     */
+    items?: Array<HotLotteryItem>;
+    /**
+     * Windowdays
+     *
+     * 浏览记录统计窗口（天）
+     */
+    windowDays: number;
+    /**
+     * Generatedat
+     *
+     * 榜单生成时间（Unix 秒）
+     */
+    generatedAt: number;
 };
 
 /**
@@ -3941,9 +4605,9 @@ export type InteractionResource = {
     /**
      * Bizid
      *
-     * 资源 id（动态时 = dynId）
+     * 资源 id（字符串：动态=dynId，rpa_action=action_id，rpa_workflow=workflow_id 等）
      */
-    bizId: number;
+    bizId: string;
     /**
      * Authormid
      *
@@ -3992,6 +4656,14 @@ export type InteractionResource = {
      * 后端下发的跳转目标 route:{name}?{query}（事件提醒等读取侧随资源返回；见计划书 §2.10 / §5.11）
      */
     jumpTarget?: string | null;
+    /**
+     * Authormid Str
+     */
+    readonly authorMid_str: string | null;
+    /**
+     * Ownermid Str
+     */
+    readonly ownerMid_str: string | null;
 };
 
 /**
@@ -4094,6 +4766,46 @@ export type InteractionStatusResp = {
 };
 
 /**
+ * MLModelStatus
+ *
+ * 单个模型文件的状态。
+ */
+export type MlModelStatus = {
+    /**
+     * Ready
+     *
+     * 模型/索引文件是否存在（在线可加载）
+     */
+    ready?: boolean;
+    /**
+     * Path
+     *
+     * 文件路径
+     */
+    path?: string;
+    /**
+     * Sizebytes
+     *
+     * 文件大小（字节），0=不存在
+     */
+    sizeBytes?: number;
+    /**
+     * Trainedat
+     *
+     * 文件最后修改时间（视为训练产出时间，秒级时间戳）
+     */
+    trainedAt?: number | null;
+    /**
+     * Metrics
+     *
+     * 上次离线训练指标（样本数 / NDCG / AUC 等，训练脚本产出）
+     */
+    metrics?: {
+        [key: string]: unknown;
+    } | null;
+};
+
+/**
  * MessageSettingResp
  *
  * 用户当前的消息设置。
@@ -4128,6 +4840,18 @@ export type MessageSettingResp = {
      */
     push_enabled?: boolean;
     /**
+     * Push Reply
+     */
+    push_reply?: boolean;
+    /**
+     * Push At
+     */
+    push_at?: boolean;
+    /**
+     * Push Like
+     */
+    push_like?: boolean;
+    /**
      * Dnd Start Hour
      */
     dnd_start_hour?: number | null;
@@ -4138,11 +4862,11 @@ export type MessageSettingResp = {
     /**
      * Updated At
      */
-    updated_at?: string | null;
+    updated_at?: number | null;
     /**
-     * Midstr
+     * Mid Str
      */
-    readonly midStr: string | null;
+    readonly mid_str: string | null;
 };
 
 /**
@@ -4187,6 +4911,24 @@ export type MessageSettingUpdateReq = {
      * 是否推送到外部渠道
      */
     push_enabled?: boolean | null;
+    /**
+     * Push Reply
+     *
+     * 回复/评论是否推送到外部渠道
+     */
+    push_reply?: boolean | null;
+    /**
+     * Push At
+     *
+     * @提醒是否推送到外部渠道
+     */
+    push_at?: boolean | null;
+    /**
+     * Push Like
+     *
+     * 点赞是否推送到外部渠道
+     */
+    push_like?: boolean | null;
     /**
      * Dnd Start Hour
      *
@@ -4268,9 +5010,9 @@ export type MomentAtUserItem = {
      */
     remark?: string | null;
     /**
-     * Midstr
+     * Mid Str
      */
-    readonly midStr: string | null;
+    readonly mid_str: string | null;
 };
 
 /**
@@ -4345,12 +5087,6 @@ export type MomentAuditItem = {
      */
     dynId: number;
     /**
-     * Dynidstr
-     *
-     * 动态 ID（字符串，避免精度丢失）
-     */
-    dynIdStr: string;
-    /**
      * Mid
      *
      * 发布者 UID
@@ -4411,13 +5147,17 @@ export type MomentAuditItem = {
      */
     topicId?: number | null;
     /**
-     * Midstr
+     * Dynid Str
      */
-    readonly midStr: string | null;
+    readonly dynId_str: string | null;
     /**
-     * Topicidstr
+     * Mid Str
      */
-    readonly topicIdStr: string | null;
+    readonly mid_str: string | null;
+    /**
+     * Topicid Str
+     */
+    readonly topicId_str: string | null;
 };
 
 /**
@@ -4446,8 +5186,83 @@ export type MomentAuditListResp = {
     page_size?: number;
 };
 
+/**
+ * MomentAuditLogItem
+ *
+ * 单条审核流转记录（管理后台流水）。
+ *
+ * 操作人身份属管理端内部信息，以 ``Private(admin_only=True)`` 标记：作者本人视角
+ * 只能看到流转结论，看不到是谁操作的。本模型无归属 mid，故 ``_owner_mid_field`` 置空。
+ */
 export type MomentAuditLogItem = {
-    [key: string]: unknown;
+    /**
+     * Pk
+     *
+     * 记录主键
+     */
+    pk: number;
+    /**
+     * Dynid
+     *
+     * 被审核动态 ID
+     */
+    dynId: number;
+    /**
+     * Operatormid
+     *
+     * 操作人 MID
+     */
+    operatorMid: unknown;
+    /**
+     * Operatorrole
+     *
+     * 操作人角色枚举值（MomentAuditLogOperatorRoleEnum：1=author/2=admin）
+     */
+    operatorRole: unknown;
+    /**
+     * Fromstatus
+     *
+     * 流转前状态枚举值（ResourceAuditStatusEnum）
+     */
+    fromStatus?: number | null;
+    /**
+     * Tostatus
+     *
+     * 流转后状态枚举值（ResourceAuditStatusEnum）
+     */
+    toStatus: number;
+    /**
+     * Actiontype
+     *
+     * 操作类型枚举值（MomentAuditLogActionEnum：create/edit/approve/reject/resubmit/delete）
+     */
+    actionType: number;
+    /**
+     * Rejectreason
+     *
+     * 驳回原因（仅 reject）
+     */
+    rejectReason?: string | null;
+    /**
+     * Remark
+     *
+     * 其他备注
+     */
+    remark?: string | null;
+    /**
+     * Createdtime
+     *
+     * 操作时间（ISO）
+     */
+    createdTime?: string | null;
+    /**
+     * Dynid Str
+     */
+    readonly dynId_str: string | null;
+    /**
+     * Operatormid Str
+     */
+    readonly operatorMid_str: string | null;
 };
 
 /**
@@ -4581,21 +5396,13 @@ export type MomentCreateCheckReq = {
  */
 export type MomentCreateCheckResp = {
     /**
-     * Setting
-     *
      * 发布设置（MVP 留空扩展）
      */
-    setting?: {
-        [key: string]: unknown;
-    };
+    setting?: MomentPublishSetting;
     /**
-     * Permission
-     *
-     * 权限信息（MVP 留空扩展）
+     * 权限信息
      */
-    permission?: {
-        [key: string]: unknown;
-    };
+    permission: MomentPublishPermission;
     /**
      * Allowedscenes
      *
@@ -4683,12 +5490,6 @@ export type MomentCreateResp = {
      */
     dynId: number;
     /**
-     * Dynidstr
-     *
-     * 动态 ID（字符串，避免精度丢失）
-     */
-    dynIdStr: string;
-    /**
      * Auditstatus
      *
      * 审核状态成员名字符串：AUDITING/NORMAL/REJECTED/HIDDEN
@@ -4700,6 +5501,10 @@ export type MomentCreateResp = {
      * 动态类型字符串：WORD/FORWARD
      */
     dynType: string;
+    /**
+     * Dynid Str
+     */
+    readonly dynId_str: string | null;
 };
 
 /**
@@ -4717,12 +5522,6 @@ export type MomentDetailResp = {
      * 动态 ID（int）
      */
     dynId: number;
-    /**
-     * Dynidstr
-     *
-     * 动态 ID（字符串，避免精度丢失）
-     */
-    dynIdStr: string;
     /**
      * Dyntype
      *
@@ -4784,9 +5583,13 @@ export type MomentDetailResp = {
      */
     modules?: Array<MomentModule>;
     /**
-     * Midstr
+     * Dynid Str
      */
-    readonly midStr: string | null;
+    readonly dynId_str: string | null;
+    /**
+     * Mid Str
+     */
+    readonly mid_str: string | null;
 };
 
 /**
@@ -4846,12 +5649,6 @@ export type MomentDislikeResp = {
      */
     bizId: number;
     /**
-     * Bizidstr
-     *
-     * 资源 ID（字符串，避免精度丢失）
-     */
-    bizIdStr: string;
-    /**
      * Isdislike
      *
      * 操作后当前用户是否已点踩
@@ -4863,6 +5660,10 @@ export type MomentDislikeResp = {
      * 操作后点踩数
      */
     dislikeCount?: number;
+    /**
+     * Bizid Str
+     */
+    readonly bizId_str: string | null;
 };
 
 /**
@@ -4877,12 +5678,6 @@ export type MomentFeedItem = {
      * 动态 ID（int）
      */
     dynId: number;
-    /**
-     * Dynidstr
-     *
-     * 动态 ID（字符串，避免精度丢失）
-     */
-    dynIdStr: string;
     /**
      * Dyntype
      *
@@ -4944,9 +5739,13 @@ export type MomentFeedItem = {
      */
     modules?: Array<MomentModule>;
     /**
-     * Midstr
+     * Dynid Str
      */
-    readonly midStr: string | null;
+    readonly dynId_str: string | null;
+    /**
+     * Mid Str
+     */
+    readonly mid_str: string | null;
 };
 
 /**
@@ -5035,13 +5834,13 @@ export type MomentForwardItem = {
      */
     text?: string | null;
     /**
-     * Dynidstr
+     * Dynid Str
      */
-    readonly dynIdStr: string | null;
+    readonly dynId_str: string | null;
     /**
-     * Midstr
+     * Mid Str
      */
-    readonly midStr: string | null;
+    readonly mid_str: string | null;
 };
 
 /**
@@ -5129,13 +5928,13 @@ export type MomentLikerItem = {
     /**
      * Like Time
      *
-     * 点赞时间（ISO8601；服务端从 TResourceLike.created_at 取）
+     * 点赞时间（秒级时间戳；服务端从 TResourceLike.created_at 取）
      */
-    like_time?: string | null;
+    like_time?: number | null;
     /**
-     * Midstr
+     * Mid Str
      */
-    readonly midStr: string | null;
+    readonly mid_str: string | null;
 };
 
 /**
@@ -5265,9 +6064,9 @@ export type MomentModule = {
     /**
      * Bizid
      *
-     * 附加卡资源 ID（字符串）
+     * 附加卡资源 ID（雪花ID；字符串版见 bizId_str）
      */
-    bizId?: string | null;
+    bizId?: number | null;
     /**
      * Name
      *
@@ -5293,17 +6092,21 @@ export type MomentModule = {
      */
     isLike?: boolean | null;
     /**
-     * Midstr
+     * Mid Str
      */
-    readonly midStr: string | null;
+    readonly mid_str: string | null;
     /**
-     * Srcdynidstr
+     * Srcdynid Str
      */
-    readonly srcDynIdStr: string | null;
+    readonly srcDynId_str: string | null;
     /**
-     * Topicidstr
+     * Topicid Str
      */
-    readonly topicIdStr: string | null;
+    readonly topicId_str: string | null;
+    /**
+     * Bizid Str
+     */
+    readonly bizId_str: string | null;
 };
 
 /**
@@ -5355,6 +6158,33 @@ export type MomentPoiResp = {
 };
 
 /**
+ * MomentPublishPermission
+ *
+ * 发布权限信息（MVP 只回操作者 mid）。
+ */
+export type MomentPublishPermission = {
+    /**
+     * Mid
+     *
+     * 操作者 mid
+     */
+    mid: number;
+    /**
+     * Mid Str
+     */
+    readonly mid_str: string | null;
+};
+
+/**
+ * MomentPublishSetting
+ *
+ * 发布设置（MVP 留空：强类型占位，扩展时在此加字段而不是往裸 dict 里塞键）。
+ */
+export type MomentPublishSetting = {
+    [key: string]: unknown;
+};
+
+/**
  * MomentRemoveReq
  *
  * 删除动态请求（软删）。
@@ -5381,15 +6211,13 @@ export type MomentRemoveResp = {
      */
     dynId: number;
     /**
-     * Dynidstr
-     *
-     * 动态 ID（字符串）
-     */
-    dynIdStr: string;
-    /**
      * Success
      */
     success?: boolean;
+    /**
+     * Dynid Str
+     */
+    readonly dynId_str: string | null;
 };
 
 /**
@@ -5441,15 +6269,13 @@ export type MomentReportResp = {
      */
     bizId: number;
     /**
-     * Bizidstr
-     *
-     * 资源 ID（字符串，避免精度丢失）
-     */
-    bizIdStr: string;
-    /**
      * Success
      */
     success?: boolean;
+    /**
+     * Bizid Str
+     */
+    readonly bizId_str: string | null;
 };
 
 /**
@@ -5485,12 +6311,6 @@ export type MomentRepostResp = {
      */
     dynId: number;
     /**
-     * Dynidstr
-     *
-     * 动态 ID（字符串，避免精度丢失）
-     */
-    dynIdStr: string;
-    /**
      * Auditstatus
      *
      * 审核状态成员名字符串：AUDITING/NORMAL/REJECTED/HIDDEN
@@ -5502,6 +6322,10 @@ export type MomentRepostResp = {
      * 动态类型字符串：WORD/FORWARD
      */
     dynType: string;
+    /**
+     * Dynid Str
+     */
+    readonly dynId_str: string | null;
 };
 
 /**
@@ -5555,17 +6379,15 @@ export type MomentShareResp = {
      */
     bizId: number;
     /**
-     * Bizidstr
-     *
-     * 资源 ID（字符串，避免精度丢失）
-     */
-    bizIdStr: string;
-    /**
      * Sharecount
      *
      * 操作后分享数
      */
     shareCount?: number;
+    /**
+     * Bizid Str
+     */
+    readonly bizId_str: string | null;
 };
 
 /**
@@ -5611,12 +6433,6 @@ export type MomentThumbResp = {
      */
     bizId: number;
     /**
-     * Bizidstr
-     *
-     * 资源 ID（字符串，避免精度丢失）
-     */
-    bizIdStr: string;
-    /**
      * Islike
      *
      * 操作后当前用户是否已赞
@@ -5628,6 +6444,10 @@ export type MomentThumbResp = {
      * 操作后点赞数
      */
     likeCount?: number;
+    /**
+     * Bizid Str
+     */
+    readonly bizId_str: string | null;
 };
 
 /**
@@ -5657,17 +6477,15 @@ export type MomentTopResp = {
      */
     dynId: number;
     /**
-     * Dynidstr
-     *
-     * 动态 ID（字符串）
-     */
-    dynIdStr: string;
-    /**
      * Istop
      *
      * 是否置顶：0=否,1=是
      */
     isTop: number;
+    /**
+     * Dynid Str
+     */
+    readonly dynId_str: string | null;
 };
 
 /**
@@ -5745,13 +6563,13 @@ export type MomentTopicAuditItem = {
      */
     createdAt?: string | null;
     /**
-     * Topicidstr
+     * Topicid Str
      */
-    readonly topicIdStr: string | null;
+    readonly topicId_str: string | null;
     /**
-     * Creatormidstr
+     * Creatormid Str
      */
-    readonly creatorMidStr: string | null;
+    readonly creatorMid_str: string | null;
 };
 
 /**
@@ -5857,9 +6675,9 @@ export type MomentTopicCreateResp = {
      */
     auditStatus: string;
     /**
-     * Topicidstr
+     * Topicid Str
      */
-    readonly topicIdStr: string | null;
+    readonly topicId_str: string | null;
 };
 
 /**
@@ -5970,9 +6788,9 @@ export type MomentTopicFeedResp = {
      */
     updateNum?: number;
     /**
-     * Topicidstr
+     * Topicid Str
      */
-    readonly topicIdStr: string | null;
+    readonly topicId_str: string | null;
 };
 
 /**
@@ -6030,9 +6848,9 @@ export type MomentTopicInfo = {
      */
     isHot?: number;
     /**
-     * Topicidstr
+     * Topicid Str
      */
-    readonly topicIdStr: string | null;
+    readonly topicId_str: string | null;
 };
 
 /**
@@ -6090,9 +6908,9 @@ export type MomentTopicMineItem = {
      */
     createdAt?: string | null;
     /**
-     * Topicidstr
+     * Topicid Str
      */
-    readonly topicIdStr: string | null;
+    readonly topicId_str: string | null;
 };
 
 /**
@@ -6150,9 +6968,9 @@ export type MomentTopicRefOutput = {
      */
     topicName?: string | null;
     /**
-     * Topicidstr
+     * Topicid Str
      */
-    readonly topicIdStr: string | null;
+    readonly topicId_str: string | null;
 };
 
 /**
@@ -6293,11 +7111,11 @@ export type NotifyAdminItem = {
     /**
      * Publish At
      */
-    publish_at: string;
+    publish_at: number;
     /**
      * Expire At
      */
-    expire_at?: string | null;
+    expire_at?: number | null;
     /**
      * Creator Mid
      */
@@ -6309,11 +7127,11 @@ export type NotifyAdminItem = {
     /**
      * Created At
      */
-    created_at: string;
+    created_at: number;
     /**
-     * Creator Midstr
+     * Creator Mid Str
      */
-    readonly creator_midStr: string | null;
+    readonly creator_mid_str: string | null;
 };
 
 /**
@@ -6438,11 +7256,11 @@ export type NotifyItem = {
     /**
      * Publish At
      */
-    publish_at: string;
+    publish_at: number;
     /**
      * Expire At
      */
-    expire_at?: string | null;
+    expire_at?: number | null;
     /**
      * Is Read
      */
@@ -6450,7 +7268,7 @@ export type NotifyItem = {
     /**
      * Read At
      */
-    read_at?: string | null;
+    read_at?: number | null;
     /**
      * Dispatched
      */
@@ -6711,9 +7529,9 @@ export type PptrUserInfoUpdateResult = {
     /**
      * Uid
      *
-     * 被更新的用户ID
+     * 被更新的用户ID（数值；字符串版见 uid_str）
      */
-    uid?: string;
+    uid?: number;
     /**
      * Updated
      *
@@ -6732,6 +7550,10 @@ export type PptrUserInfoUpdateResult = {
      * 头像字段处理结果：'pending'（已提交审核，未即时生效）/ 'none'（本次未修改头像）
      */
     avatar_status?: string | null;
+    /**
+     * Uid Str
+     */
+    readonly uid_str: string | null;
 };
 
 /**
@@ -6742,14 +7564,15 @@ export type PptrUserInfoUpdateResult = {
  * 此为 pptr 等级信息的唯一权威定义，pptr_user_rpc 同样复用本类（rpc 场景下会
  * 额外传入 uid / updated_at）。
  *
- * int 字段在网络上以字符串传输（_IntStrMixin），规避 JS Number 精度问题；
+ * 雪花 ID（uid）出参为 int + 自动派生的 `uid_str`（防 JS Number 精度丢失）；
+ * 等级 / 经验是普通数值，出参保持 number，由前端自行按需格式化。
  * Python 侧一律拿到 int 做计算。
  */
 export type PptrUserLevelInfo = {
     /**
      * Uid
      *
-     * 用户 UID（可空，search 场景无需）
+     * 用户 UID（可空，search 场景无需；前端请用 uid_str）
      */
     uid?: number | null;
     /**
@@ -6782,6 +7605,10 @@ export type PptrUserLevelInfo = {
      * TUserLevel.updatedAt（ISO），用于每日经验幂等判断
      */
     updated_at?: string;
+    /**
+     * Uid Str
+     */
+    readonly uid_str: string | null;
 };
 
 /**
@@ -6791,14 +7618,16 @@ export type PptrUserLevelInfo = {
  *
  * 对齐 pptr 旧 `UserLevelService.get_user_nav_with_level` 的出参结构：
  * 调用时会顺带触发「每日首次登录加经验」（幂等，由 be-message 侧判定）。
+ *
+ * 字符串版 ID 字段由 `@auto_str` 自动派生，后缀为 `_str`（与出参 snake_case 风格一致）。
  */
 export type PptrUserNavData = {
     /**
      * Uid
      *
-     * 用户ID（字符串，防精度丢失）
+     * 用户ID（雪花ID数值；前端请用同级的 uid_str 字符串版）
      */
-    uid?: string;
+    uid?: number;
     /**
      * User Name
      *
@@ -6825,6 +7654,10 @@ export type PptrUserNavData = {
      * JWT 续期时注入的新 token（非当天签发的 token 需刷新）
      */
     jwt_token?: string | null;
+    /**
+     * Uid Str
+     */
+    readonly uid_str: string | null;
 };
 
 /**
@@ -6855,12 +7688,14 @@ export type PptrUserRoleInfo = {
  * 命名上与 RPC 侧的 `PptrSetUserRoleParams`（bili_common.models.pptr_user_rpc）区分：
  * 本模型是**网关 HTTP 接口**的入参（含 target_uid，操作者身份来自 x-bili-* 头），
  * RPC 侧那个是 be-message 内部落库用的参数。
+ *
+ * `target_uid` 为**字符串入参**（前端只传 str，避免 JS 精度丢失），后端自行转 int。
  */
 export type PptrUserRoleSetParams = {
     /**
      * Target Uid
      *
-     * 目标用户UID
+     * 目标用户UID（字符串，后端转 int）
      */
     target_uid: string;
     /**
@@ -6880,9 +7715,9 @@ export type PptrUserRoleSetResult = {
     /**
      * Target Uid
      *
-     * 目标用户UID
+     * 目标用户UID（数值；字符串版见 target_uid_str）
      */
-    target_uid?: string;
+    target_uid?: number;
     /**
      * Target User Name
      *
@@ -6907,24 +7742,32 @@ export type PptrUserRoleSetResult = {
      * 角色中文描述
      */
     role_description?: string;
+    /**
+     * Target Uid Str
+     */
+    readonly target_uid_str: string | null;
 };
 
 /**
  * PptrUserSearchItem
  *
  * 搜索用户返回的单条记录（对齐前端 PptrUserSearchItem）。
+ *
+ * `mid` 与 `uid` 是同一个雪花 ID（BIGINT），出参为 int 数值 + 自动派生的
+ * `mid_str` / `uid_str` 字符串版；**前端只能用字符串版**，避免 JS 精度丢失。
+ * `regtime` 是毫秒时间戳，保持 number。
  */
 export type PptrUserSearchItem = {
     /**
      * Mid
      *
-     * 用户ID（int 内部使用，网络序列化为字符串防精度丢失）
+     * 用户ID（int 内部使用，前端请用 mid_str 字符串版）
      */
     mid?: number;
     /**
      * Uid
      *
-     * 用户ID（同 mid）
+     * 用户ID（同 mid；前端请用 uid_str 字符串版）
      */
     uid?: number;
     /**
@@ -6972,6 +7815,14 @@ export type PptrUserSearchItem = {
     level_info?: PptrUserLevelInfo;
     vip?: PptrUserVipInfo;
     role_info?: PptrUserRoleInfo;
+    /**
+     * Mid Str
+     */
+    readonly mid_str: string | null;
+    /**
+     * Uid Str
+     */
+    readonly uid_str: string | null;
 };
 
 /**
@@ -7001,6 +7852,9 @@ export type PptrUserSearchResult = {
  * PptrUserVipInfo
  *
  * 大会员信息（对齐 pptr search 出参）。
+ *
+ * vip_* 均为状态枚举 / 秒级时间戳，不是雪花 ID，出参保持 number。
+ * 保留装饰器是为了后续新增雪花 ID 字段时自动派生字符串版。
  */
 export type PptrUserVipInfo = {
     /**
@@ -7407,7 +8261,7 @@ export type ReportItem = {
     /**
      * Bizid
      */
-    bizId: number;
+    bizId: string;
     /**
      * Accusedmid
      */
@@ -7485,21 +8339,17 @@ export type ReportItem = {
      */
     resource?: InteractionResource | null;
     /**
-     * Bizidstr
+     * Accusedmid Str
      */
-    readonly bizIdStr: string | null;
+    readonly accusedMid_str: string | null;
     /**
-     * Accusedmidstr
+     * Reportmid Str
      */
-    readonly accusedMidStr: string | null;
+    readonly reportMid_str: string | null;
     /**
-     * Reportmidstr
+     * Auditadminmid Str
      */
-    readonly reportMidStr: string | null;
-    /**
-     * Auditadminmidstr
-     */
-    readonly auditAdminMidStr: string | null;
+    readonly auditAdminMid_str: string | null;
 };
 
 /**
@@ -7693,9 +8543,9 @@ export type ResourceDetail = {
     /**
      * Bizid
      *
-     * 资源 id
+     * 资源业务 id
      */
-    bizId: number;
+    bizId: string;
     /**
      * Name
      *
@@ -7841,7 +8691,7 @@ export type RpaTagItemResp = {
     /**
      * Createdby
      *
-     * 创建者 mid
+     * 创建者 mid（字符串版见 createdBy_str）
      */
     createdBy?: number | null;
     /**
@@ -7862,6 +8712,10 @@ export type RpaTagItemResp = {
      * 创建时间（ISO）
      */
     createdAt?: string | null;
+    /**
+     * Createdby Str
+     */
+    readonly createdBy_str: string | null;
 };
 
 /**
@@ -8087,7 +8941,7 @@ export type SpaceInfoResp = {
     /**
      * Birthday
      */
-    birthday?: string;
+    birthday?: number;
     official?: SpaceOfficial;
     vip?: SpaceVipWrap;
     /**
@@ -8113,9 +8967,26 @@ export type SpaceInfoResp = {
     follow_stat?: SpaceFollowStat;
     upstat?: SpaceUpStat;
     /**
-     * Midstr
+     * Email
      */
-    readonly midStr: string | null;
+    email?: string | null;
+    /**
+     * Last Login At
+     */
+    last_login_at?: number | null;
+    /**
+     * Ip Location
+     */
+    ip_location?: string | null;
+    /**
+     * View Count
+     */
+    view_count?: number;
+    privacy_flags?: SpacePrivacyFlags;
+    /**
+     * Mid Str
+     */
+    readonly mid_str: string | null;
 };
 
 /**
@@ -8143,6 +9014,250 @@ export type SpaceOfficial = {
 };
 
 /**
+ * SpacePrivacyFlags
+ *
+ * 空间对外可见性开关（2.58.0）。
+ *
+ * 两类语义，前端消费方式不同：
+ *
+ * - **敏感原文类**（``show_personal_info``）：后端在 `viewer != mid` 且开关关闭时
+ * **直接不下发对应字段**（不是null），前端无需区分「无权限」与「无数据」；
+ * - **列表/条目类**（``show_follow_list`` / ``show_like_list`` /
+ * ``show_fans_list``）：后端在关闭时让该类型内容**整类不出现**。
+ *
+ * 注：**收藏不在本模型内** —— 2026-10-08 起「收藏」改为**逐个收藏夹**
+ * `is_public`（`TFavoriteFolder.is_public`），不再有全局开关。
+ */
+export type SpacePrivacyFlags = {
+    /**
+     * Show Personal Info
+     *
+     * 个人资料：性别/生日/邮箱是否对外
+     */
+    show_personal_info?: boolean;
+    /**
+     * Show Timeline
+     *
+     * 时间线是否对外（总开关，默认开启，关闭后他人看不到任何条目）
+     */
+    show_timeline?: boolean;
+    /**
+     * Show Follow List
+     *
+     * 时间线「我关注了谁」条目是否对外
+     */
+    show_follow_list?: boolean;
+    /**
+     * Show Like List
+     *
+     * 时间线「我点赞了什么」条目是否对外
+     */
+    show_like_list?: boolean;
+    /**
+     * Show Fans List
+     *
+     * 粉丝列表是否对外
+     */
+    show_fans_list?: boolean;
+};
+
+/**
+ * SpacePrivacyUpdateReq
+ *
+ * 空间可见性开关更新请求（当前登录用户自己的设置，2.58.0）。
+ *
+ * 四个开关整体提交（全量覆盖），不做 PATCH 语义 —— 前端设置页一次保存全部开关，
+ * 避免「部分更新」与「默认值」混淆。
+ */
+export type SpacePrivacyUpdateReq = {
+    /**
+     * Show Personal Info
+     *
+     * 个人资料：性别/生日/邮箱是否对外
+     */
+    show_personal_info?: boolean;
+    /**
+     * Show Timeline
+     *
+     * 时间线是否对外（总开关，默认开启，关闭后他人看不到任何条目）
+     */
+    show_timeline?: boolean;
+    /**
+     * Show Follow List
+     *
+     * 时间线「我关注了谁」条目是否对外
+     */
+    show_follow_list?: boolean;
+    /**
+     * Show Like List
+     *
+     * 时间线「我点赞了什么」条目是否对外
+     */
+    show_like_list?: boolean;
+    /**
+     * Show Fans List
+     *
+     * 粉丝列表是否对外
+     */
+    show_fans_list?: boolean;
+};
+
+/**
+ * SpaceTimelineItem
+ *
+ * 行为时间线单条记录（2.58.0 计划书 §3.3）。
+ *
+ * 反映「当前有效状态」而非操作流水：取消点赞 / 取关 / 取消收藏后，对应条目
+ * 因明细行被物理删除而自然消失。出参字段统一为：
+ *
+ * - `act_type`：follow / like / favorite；
+ * - follow：`target_mid/name/face` = 被关注用户；
+ * - like / favorite：`target_mid/name/face` = 资源作者（dynamic 才有），
+ * `target_text` = 动态正文摘要；favorite 额外带 `target_folder_name`；
+ * - `target_resource`：内层资源卡（2.59.0 新增，dynamic 时带完整 `moment`）。
+ */
+export type SpaceTimelineItem = {
+    /**
+     * Act Type
+     *
+     * 行为类型：follow 关注 / like 点赞 / favorite 收藏
+     */
+    act_type: string;
+    /**
+     * Target Mid
+     *
+     * 目标用户 mid（follow=被关注者；like/favorite=资源作者，非 dynamic 可能为空）
+     */
+    target_mid?: number | null;
+    /**
+     * Target Name
+     *
+     * 目标用户展示名（对方注销或回查失败时为 null）
+     */
+    target_name?: string | null;
+    /**
+     * Target Face
+     *
+     * 目标用户头像 URL
+     */
+    target_face?: string | null;
+    /**
+     * Target Text
+     *
+     * 动态正文摘要（仅 like / favorite 的 dynamic 资源有）
+     */
+    target_text?: string | null;
+    /**
+     * Target Dyn Id
+     *
+     * 动态 id（仅 like / favorite 的 dynamic 资源有，前端点进 MOMENT_DETAIL）
+     */
+    target_dyn_id?: number | null;
+    /**
+     * Target Folder Name
+     *
+     * 收藏夹名称（仅 favorite 有）
+     */
+    target_folder_name?: string | null;
+    /**
+     * Acted At
+     *
+     * 行为发生时间（秒级时间戳）
+     */
+    acted_at: number;
+    /**
+     * 内层资源卡：dynamic 带完整 moment；非 dynamic 带 name/cover/jump_url；follow 为 null
+     */
+    target_resource?: SpaceTimelineResource | null;
+    /**
+     * Target Mid Str
+     */
+    readonly target_mid_str: string | null;
+    /**
+     * Target Dyn Id Str
+     */
+    readonly target_dyn_id_str: string | null;
+};
+
+/**
+ * SpaceTimelineResource
+ *
+ * 时间线条目对应的**资源卡**（2.59.0，前端卡片化方案 A）。
+ *
+ * 时间线条目从「一行文本」升级为「外层操作卡 + 内层资源卡」后，前端不再自己
+ * 判断资源类型、也不用二次请求：
+ *
+ * - `biz_type` / `biz_id`：资源定位（`biz_id_str` 由 `@auto_str` 自动派生，
+ * 19 位雪花 id 前端只能按字符串用）；
+ * - `name` / `cover` / `jump_url`：非 dynamic 资源实时回查的展示信息，
+ * RPC 弱依赖失败时降级为 `None`（前端不渲染封面 / 标题）；
+ * - `moment`：仅 dynamic 资源有值，内容为**完整动态出参**，前端直接喂
+ * `MomentCard` 渲染（批量内联，不产生 N+1 请求）。
+ */
+export type SpaceTimelineResource = {
+    /**
+     * Biz Type
+     *
+     * 资源类型文字：dynamic / lottery / rpa_* / user
+     */
+    biz_type: string;
+    /**
+     * Biz Id
+     *
+     * 资源 id（dynamic 时 = dynId）
+     */
+    biz_id: number;
+    /**
+     * Name
+     *
+     * 资源标题（非 dynamic 回查，缺失为 None）
+     */
+    name?: string | null;
+    /**
+     * Cover
+     *
+     * 资源封面图（非 dynamic 回查，缺失为 None）
+     */
+    cover?: string | null;
+    /**
+     * Jump Url
+     *
+     * 站外跳转链接（回查不到为 None）
+     */
+    jump_url?: string | null;
+    /**
+     * dynamic 资源的完整动态出参（非 dynamic 为 None）
+     */
+    moment?: MomentDetailResp | null;
+    /**
+     * Biz Id Str
+     */
+    readonly biz_id_str: string | null;
+};
+
+/**
+ * SpaceTimelineResp
+ *
+ * 行为时间线分页响应（游标 = 本页最后一条的 acted_at）。
+ */
+export type SpaceTimelineResp = {
+    /**
+     * Items
+     */
+    items?: Array<SpaceTimelineItem>;
+    /**
+     * Has More
+     */
+    has_more?: boolean;
+    /**
+     * Cursor
+     *
+     * 下一页游标（ISO 时间），has_more=false 时为空
+     */
+    cursor?: string | null;
+};
+
+/**
  * SpaceUpStat
  *
  * 空间动态统计（2.32.0：内联自 `GET /api/v1/community/upstat`）。
@@ -8162,6 +9277,70 @@ export type SpaceUpStat = {
      * 这些动态被点赞的总数
      */
     like_count?: number;
+};
+
+/**
+ * SpaceViewHistoryItem
+ *
+ * 浏览历史单条记录（数据源 `TInteractionViewLog`，每用户每资源一行合并）。
+ */
+export type SpaceViewHistoryItem = {
+    /**
+     * Biz Type
+     *
+     * 资源类型文字（dynamic / lottery / rpa_* / user）
+     */
+    biz_type: string;
+    /**
+     * Biz Id
+     *
+     * 资源 id（dynamic 时 = dynId）
+     */
+    biz_id: number;
+    /**
+     * Title
+     *
+     * 资源标题/正文摘要（当前仅 dynamic 回查，其余 bizType 待 P3）
+     */
+    title?: string | null;
+    /**
+     * Last View At
+     *
+     * 最后访问时间（秒级时间戳）
+     */
+    last_view_at: number;
+    /**
+     * View Count
+     *
+     * 该用户对该资源的累计浏览次数
+     */
+    view_count?: number;
+    /**
+     * Biz Id Str
+     */
+    readonly biz_id_str: string | null;
+};
+
+/**
+ * SpaceViewHistoryResp
+ *
+ * 浏览历史分页响应（游标 = 本页最后一条的 last_view_at）。
+ */
+export type SpaceViewHistoryResp = {
+    /**
+     * Items
+     */
+    items?: Array<SpaceViewHistoryItem>;
+    /**
+     * Has More
+     */
+    has_more?: boolean;
+    /**
+     * Cursor
+     *
+     * 下一页游标（ISO 时间），has_more=false 时为空
+     */
+    cursor?: string | null;
 };
 
 /**
@@ -8848,9 +10027,9 @@ export type StandardResponseFavoriteListResp = {
 };
 
 /**
- * StandardResponse[FavoriteSettingResp]
+ * StandardResponse[FeedMLStatusResp]
  */
-export type StandardResponseFavoriteSettingResp = {
+export type StandardResponseFeedMlStatusResp = {
     /**
      * Code
      */
@@ -8859,7 +10038,7 @@ export type StandardResponseFavoriteSettingResp = {
      * Msg
      */
     msg?: string;
-    data?: FavoriteSettingResp | null;
+    data?: FeedMlStatusResp | null;
 };
 
 /**
@@ -8935,6 +10114,36 @@ export type StandardResponseFollowRelationResp = {
      */
     msg?: string;
     data?: FollowRelationResp | null;
+};
+
+/**
+ * StandardResponse[FollowTagResp]
+ */
+export type StandardResponseFollowTagResp = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: FollowTagResp | null;
+};
+
+/**
+ * StandardResponse[HotLotteryResp]
+ */
+export type StandardResponseHotLotteryResp = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: HotLotteryResp | null;
 };
 
 /**
@@ -9358,6 +10567,24 @@ export type StandardResponseMomentTopicSquareResp = {
 };
 
 /**
+ * StandardResponse[NoneType]
+ */
+export type StandardResponseNoneType = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    /**
+     * Data
+     */
+    data?: null;
+};
+
+/**
  * StandardResponse[NotifyAdminItem]
  */
 export type StandardResponseNotifyAdminItem = {
@@ -9553,6 +10780,51 @@ export type StandardResponseSpaceInfoResp = {
 };
 
 /**
+ * StandardResponse[SpacePrivacyFlags]
+ */
+export type StandardResponseSpacePrivacyFlags = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: SpacePrivacyFlags | null;
+};
+
+/**
+ * StandardResponse[SpaceTimelineResp]
+ */
+export type StandardResponseSpaceTimelineResp = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: SpaceTimelineResp | null;
+};
+
+/**
+ * StandardResponse[SpaceViewHistoryResp]
+ */
+export type StandardResponseSpaceViewHistoryResp = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: SpaceViewHistoryResp | null;
+};
+
+/**
  * StandardResponse[SysConfigItem]
  */
 export type StandardResponseSysConfigItem = {
@@ -9598,21 +10870,6 @@ export type StandardResponseUnionAvatarAuditMineRespNoneType = {
 };
 
 /**
- * StandardResponse[Union[FavoriteListResp, NoneType]]
- */
-export type StandardResponseUnionFavoriteListRespNoneType = {
-    /**
-     * Code
-     */
-    code?: number;
-    /**
-     * Msg
-     */
-    msg?: string;
-    data?: FavoriteListResp | null;
-};
-
-/**
  * StandardResponse[Union[FolderCoverAuditMineResp, NoneType]]
  */
 export type StandardResponseUnionFolderCoverAuditMineRespNoneType = {
@@ -9625,24 +10882,6 @@ export type StandardResponseUnionFolderCoverAuditMineRespNoneType = {
      */
     msg?: string;
     data?: FolderCoverAuditMineResp | null;
-};
-
-/**
- * StandardResponse[Union[list[FavoriteFolderResp], NoneType]]
- */
-export type StandardResponseUnionListFavoriteFolderRespNoneType = {
-    /**
-     * Code
-     */
-    code?: number;
-    /**
-     * Msg
-     */
-    msg?: string;
-    /**
-     * Data
-     */
-    data?: Array<FavoriteFolderResp> | null;
 };
 
 /**
@@ -9813,6 +11052,24 @@ export type StandardResponseListFavoriteFolderResp = {
 };
 
 /**
+ * StandardResponse[list[FollowTagResp]]
+ */
+export type StandardResponseListFollowTagResp = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    /**
+     * Data
+     */
+    data?: Array<FollowTagResp> | null;
+};
+
+/**
  * StandardResponse[list[MomentDetailResp]]
  */
 export type StandardResponseListMomentDetailResp = {
@@ -9867,6 +11124,24 @@ export type StandardResponseListUserBriefOut = {
 };
 
 /**
+ * StandardResponse[list[int]]
+ */
+export type StandardResponseListInt = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    /**
+     * Data
+     */
+    data?: Array<number> | null;
+};
+
+/**
  * StandardResponse[str]
  */
 export type StandardResponseStr = {
@@ -9910,21 +11185,25 @@ export type SysConfigItem = {
     /**
      * Updatedby
      *
-     * 最后修改者 mid
+     * 最后修改者 mid（字符串版见 updatedBy_str）
      */
     updatedBy?: number;
     /**
      * Updated At
      *
-     * 最后更新时间
+     * 最后更新时间（秒级时间戳）
      */
-    updated_at?: string | null;
+    updated_at?: number | null;
     /**
      * Isdefault
      *
      * 是否仍是 settings 默认值（未写入 DB）
      */
     isDefault?: boolean;
+    /**
+     * Updatedby Str
+     */
+    readonly updatedBy_str: string | null;
 };
 
 /**
@@ -10128,9 +11407,9 @@ export type UserActLogItem = {
     /**
      * Time
      *
-     * 行为发生时间（timezone-aware）
+     * 行为发生时间（秒级时间戳）
      */
-    time: string;
+    time: number;
     /**
      * Ip
      *
@@ -10188,7 +11467,7 @@ export type UserActivityResp = {
     /**
      * Last Active At
      */
-    last_active_at: string;
+    last_active_at: number;
     /**
      * Active Count
      */
@@ -10200,13 +11479,108 @@ export type UserActivityResp = {
      */
     is_active?: boolean;
     /**
-     * Midstr
+     * Mid Str
      */
-    readonly midStr: string | null;
+    readonly mid_str: string | null;
 };
 
+/**
+ * UserBriefOut
+ *
+ * 用户展示简档：他人可见字段 + 本人 / 管理员可见的私域字段。
+ *
+ * 私域字段在他人视角下由序列化器自动剥离，装配层**不需要**（也不应该）
+ * 再手动投影。
+ */
 export type UserBriefOut = {
-    [key: string]: unknown;
+    /**
+     * Mid
+     */
+    mid: number;
+    /**
+     * Name
+     */
+    name?: string | null;
+    /**
+     * Face
+     */
+    face?: string | null;
+    /**
+     * Uname
+     */
+    uname?: string | null;
+    /**
+     * Avatar
+     */
+    avatar?: string | null;
+    /**
+     * Level
+     */
+    level?: number;
+    /**
+     * Vip Status
+     */
+    vip_status?: string | null;
+    /**
+     * Vip Type
+     */
+    vip_type?: number;
+    /**
+     * Sex
+     */
+    sex?: string | null;
+    /**
+     * Sign
+     */
+    sign?: string | null;
+    /**
+     * Follower Count
+     */
+    follower_count?: number;
+    /**
+     * Following Count
+     */
+    following_count?: number;
+    /**
+     * Like Count
+     */
+    like_count?: number;
+    /**
+     * Nameplate Name
+     */
+    nameplate_name?: string | null;
+    /**
+     * Nameplate Image
+     */
+    nameplate_image?: string | null;
+    /**
+     * Nameplate Level
+     */
+    nameplate_level?: string | null;
+    /**
+     * Official Title
+     */
+    official_title?: string | null;
+    /**
+     * Vip Due Date
+     */
+    vip_due_date?: unknown;
+    /**
+     * Exp
+     */
+    exp?: unknown;
+    /**
+     * Role
+     */
+    role?: unknown;
+    /**
+     * Email
+     */
+    email?: unknown;
+    /**
+     * Mid Str
+     */
+    readonly mid_str: string | null;
 };
 
 /**
@@ -10230,9 +11604,9 @@ export type UserExpRecordItem = {
     /**
      * Time
      *
-     * 经验增加时间（timezone-aware）
+     * 经验增加时间（秒级时间戳）
      */
-    time: string;
+    time: number;
     /**
      * Action Type
      *
@@ -10330,6 +11704,34 @@ export type UnbanRes = {
 };
 
 /**
+ * AdminItem
+ */
+export type AdminItemWritable = {
+    /**
+     * Mid
+     */
+    mid: number;
+    /**
+     * Granted By
+     */
+    granted_by: number;
+    /**
+     * Biz Perms
+     */
+    biz_perms: {
+        [key: string]: number;
+    };
+    /**
+     * Note
+     */
+    note: string | null;
+    /**
+     * Created At
+     */
+    created_at?: string | null;
+};
+
+/**
  * AdminStatusResponse
  *
  * 当前登录用户的角色/权限状态（任意登录用户可查）。
@@ -10356,27 +11758,6 @@ export type AdminStatusResponseWritable = {
      * Mid
      */
     mid?: number;
-};
-
-/**
- * AuditActionResp
- *
- * 通用审核动作响应：回显定位键，操作结果细节由各资源自行返回。
- */
-export type AuditActionRespWritable = {
-    bizType: InteractionBizTypeEnum;
-    /**
-     * Bizid
-     */
-    bizId: number;
-    /**
-     * Data
-     *
-     * 资源类返回的审核结果（各资源形态不同）
-     */
-    data?: {
-        [key: string]: unknown;
-    } | null;
 };
 
 /**
@@ -10543,7 +11924,7 @@ export type BanItemWritable = {
     /**
      * Banned Until
      */
-    banned_until: string | null;
+    banned_until: number | null;
     /**
      * Operator Mid
      */
@@ -10552,11 +11933,11 @@ export type BanItemWritable = {
     /**
      * Created At
      */
-    created_at: string;
+    created_at: number;
     /**
      * Updated At
      */
-    updated_at: string;
+    updated_at: number;
 };
 
 /**
@@ -10607,7 +11988,7 @@ export type BanServiceStatusWritable = {
     /**
      * Banned Until
      */
-    banned_until?: string | null;
+    banned_until?: number | null;
     /**
      * Operator Mid
      */
@@ -10641,6 +12022,173 @@ export type BanStatusRespWritable = {
 };
 
 /**
+ * CommentActionResp
+ */
+export type CommentActionRespWritable = {
+    /**
+     * Rpid
+     */
+    rpid: number;
+    action?: CommentActionEnum;
+    /**
+     * Like Count
+     */
+    like_count?: number;
+    /**
+     * Hate Count
+     */
+    hate_count?: number;
+};
+
+/**
+ * CommentAddResp
+ */
+export type CommentAddRespWritable = {
+    /**
+     * Rpid
+     *
+     * 新评论id（雪花ID；字符串版见 rpid_str）
+     */
+    rpid: number;
+    /**
+     * Root
+     */
+    root?: number;
+    /**
+     * Parent
+     */
+    parent?: number;
+    state?: ResourceAuditStatusEnum;
+    /**
+     * Need Audit
+     *
+     * 是否进入待审核（仅作者本人可见）
+     */
+    need_audit?: boolean;
+};
+
+/**
+ * CommentAuditItem
+ *
+ * 审核队列中的一条评论。
+ *
+ * 原始 IP 属明文信息（决策 C3：出参打码、管理员明文），以 ``Private(admin_only=True)``
+ * 标记，非管理员视角下由序列化器自动剥离。
+ */
+export type CommentAuditItemWritable = {
+    /**
+     * Rpid
+     */
+    rpid: number;
+    /**
+     * Oid
+     */
+    oid: number;
+    type: InteractionBizTypeEnum;
+    /**
+     * Mid
+     */
+    mid: number;
+    /**
+     * Message
+     */
+    message: string;
+    state: ResourceAuditStatusEnum;
+    /**
+     * Like Count
+     */
+    like_count?: number;
+    /**
+     * Ctime
+     */
+    ctime: number;
+    /**
+     * Ip V4
+     */
+    ip_v4?: unknown;
+    /**
+     * Ip V6
+     */
+    ip_v6?: unknown;
+    /**
+     * Plat
+     *
+     * 来源平台
+     */
+    plat?: string | null;
+    /**
+     * Device
+     *
+     * 来源设备
+     */
+    device?: string | null;
+    /**
+     * 内容来源，管理端可点击直达原始评论区
+     */
+    source?: AuditSourceInfoWritable | null;
+    /**
+     * 发布者信息（管理端：含私有字段），装配时直连 pptr 只读取回
+     */
+    member?: UserBriefOutWritable | null;
+};
+
+/**
+ * CommentAuditListResp
+ */
+export type CommentAuditListRespWritable = {
+    /**
+     * Items
+     */
+    items?: Array<CommentAuditItemWritable>;
+    /**
+     * Total
+     */
+    total?: number;
+    /**
+     * Page Num
+     */
+    page_num?: number;
+    /**
+     * Page Size
+     */
+    page_size?: number;
+    /**
+     * States
+     *
+     * 本次实际生效的状态过滤（非 root 恒为待审核）
+     */
+    states?: Array<ResourceAuditStatusEnum>;
+    /**
+     * Can View All States
+     *
+     * 当前管理员是否可查看全部状态（仅 root 为 True）
+     */
+    can_view_all_states?: boolean;
+};
+
+/**
+ * CommentCountResp
+ *
+ * 评论区计数。
+ */
+export type CommentCountRespWritable = {
+    /**
+     * Oid
+     */
+    oid: number;
+    type: InteractionBizTypeEnum;
+    /**
+     * Root Count
+     */
+    root_count?: number;
+    /**
+     * All Count
+     */
+    all_count?: number;
+    state?: CommentSubjectStateEnum;
+};
+
+/**
  * CommentItem
  *
  * 一条评论的完整视图模型。
@@ -10649,15 +12197,15 @@ export type CommentItemWritable = {
     /**
      * Rpid
      *
-     * 评论id（字符串）
+     * 评论id（雪花ID；字符串版见 rpid_str）
      */
-    rpid: string;
+    rpid: number;
     /**
      * Oid
      *
-     * 所属业务实体id（字符串）
+     * 所属业务实体id（雪花ID；字符串版见 oid_str）
      */
-    oid: string;
+    oid: number;
     type: InteractionBizTypeEnum;
     /**
      * Mid
@@ -10668,25 +12216,25 @@ export type CommentItemWritable = {
     /**
      * 发布者信息快照，快照缺失时为 null
      */
-    member?: CommentUserBrief | null;
+    member?: CommentUserBriefWritable | null;
     /**
      * Root
      *
-     * 根评论rpid，'0' 表示一级评论
+     * 根评论rpid，0 表示一级评论；字符串版见 root_str
      */
-    root?: string;
+    root?: number;
     /**
      * Parent
      *
-     * 父评论rpid，'0' 表示一级评论
+     * 父评论rpid，0 表示一级评论；字符串版见 parent_str
      */
-    parent?: string;
+    parent?: number;
     /**
      * Dialog
      *
-     * 楼中楼会话串id
+     * 楼中楼会话串id（字符串版见 dialog_str）
      */
-    dialog?: string;
+    dialog?: number;
     /**
      * Floor
      *
@@ -10696,7 +12244,7 @@ export type CommentItemWritable = {
     /**
      * 被回复者，楼中楼展示「回复 @xxx」
      */
-    reply_to?: CommentUserBrief | null;
+    reply_to?: CommentUserBriefWritable | null;
     /**
      * Message
      *
@@ -10714,14 +12262,14 @@ export type CommentItemWritable = {
      *
      * 被@用户信息数组（对齐 B 站 content.members）
      */
-    at_users?: Array<CommentUserBrief>;
+    at_users?: Array<CommentUserBriefWritable>;
     /**
      * At Name To Mid
      *
-     * 被@用户：昵称 → mid 映射
+     * 被@用户：昵称 → mid 映射（前端传字符串 mid）
      */
     at_name_to_mid?: {
-        [key: string]: number;
+        [key: string]: number | string;
     };
     /**
      * At Name To Mid Str
@@ -10803,9 +12351,9 @@ export type CommentItemWritable = {
     /**
      * Ctime
      *
-     * 发布时间
+     * 发布时间（秒级时间戳）
      */
-    ctime: string;
+    ctime: number;
     /**
      * Replies
      *
@@ -10886,19 +12434,45 @@ export type CommentListRespWritable = {
      *
      * 本次请求携带 focus_rpid 时回填，指向最终要定位的评论（可能是一级评论本身，也可能是楼中楼中的某条子评论）。
      */
-    focus_rpid?: string | null;
+    focus_rpid?: number | null;
     /**
      * Focus Root
      *
      * focus_rpid 所属的根评论 rpid。当 focus 目标是楼中楼时，根评论会被提到列表顶部，前端据此展开楼中楼并滚动到 focus_rpid。
      */
-    focus_root?: string | null;
+    focus_root?: number | null;
     /**
      * Viewer Is Anonymous
      *
      * 当前请求是否为匿名访问（viewer_mid 缺失）。匿名时服务端已强制限制 page_size=10，前端应渲染登录引导蒙层。
      */
     viewer_is_anonymous?: boolean;
+};
+
+/**
+ * CommentReportResp
+ *
+ * 举报评论响应。
+ */
+export type CommentReportRespWritable = {
+    /**
+     * Rpid
+     *
+     * 被举报评论id（雪花ID；字符串版见 rpid_str）
+     */
+    rpid: number;
+    /**
+     * Reported
+     *
+     * 本次是否新增举报（True=首次，False=当日/重复已报）
+     */
+    reported?: boolean;
+    /**
+     * Switched To Auditing
+     *
+     * 本次举报后是否已触发转审核（state→auditing）
+     */
+    switched_to_auditing?: boolean;
 };
 
 /**
@@ -10910,15 +12484,15 @@ export type CommentSourceRespWritable = {
     /**
      * Rpid
      */
-    rpid: string;
+    rpid: number;
     /**
      * Root
      */
-    root?: string;
+    root?: number;
     /**
      * Parent
      */
-    parent?: string;
+    parent?: number;
     state?: ResourceAuditStatusEnum;
     source: AuditSourceInfoWritable;
     /**
@@ -10940,6 +12514,40 @@ export type CommentSourceRespWritable = {
 };
 
 /**
+ * CommentStatsResp
+ *
+ * 评论区全局统计（管理端）。
+ */
+export type CommentStatsRespWritable = {
+    /**
+     * Total Comments
+     */
+    total_comments?: number;
+    /**
+     * Total Root
+     */
+    total_root?: number;
+    /**
+     * Total Subjects
+     */
+    total_subjects?: number;
+    /**
+     * Today New
+     */
+    today_new?: number;
+    /**
+     * Top Authors
+     */
+    top_authors?: Array<UserBriefOutWritable>;
+    /**
+     * State Counts
+     */
+    state_counts?: {
+        [key: string]: number;
+    };
+};
+
+/**
  * CommentSubListResp
  *
  * 楼中楼（子评论）列表。
@@ -10952,9 +12560,9 @@ export type CommentSubListRespWritable = {
     /**
      * Root
      *
-     * 所属根评论rpid
+     * 所属根评论rpid（字符串版见 root_str）
      */
-    root?: string;
+    root?: number;
     /**
      * Total
      *
@@ -10972,6 +12580,119 @@ export type CommentSubListRespWritable = {
 };
 
 /**
+ * CommentTopResp
+ */
+export type CommentTopRespWritable = {
+    /**
+     * Top Rpid
+     *
+     * 当前置顶评论id（字符串版见 top_rpid_str）
+     */
+    top_rpid?: number | null;
+    /**
+     * Success
+     */
+    success?: boolean;
+};
+
+/**
+ * CommentUserBrief
+ *
+ * 评论卡片上展示的用户信息（直连 pptr Postgres 只读取得，本服务不冗余）。
+ *
+ * 评论是他人可见内容，故沿用 :class:`UserBriefOut`：昵称 / 头像 / 等级等公开字段
+ * 照常输出，``vip_due_date`` / ``exp`` / ``role`` / ``email`` 等私域字段由
+ * ``VisibilityMixin`` 在**序列化期**按访问者身份自动剥离（仅本人 / 管理员可见），
+ * 装配层**无需**再手动投影。
+ */
+export type CommentUserBriefWritable = {
+    /**
+     * Mid
+     */
+    mid: number;
+    /**
+     * Name
+     */
+    name?: string | null;
+    /**
+     * Face
+     */
+    face?: string | null;
+    /**
+     * Uname
+     */
+    uname?: string | null;
+    /**
+     * Avatar
+     */
+    avatar?: string | null;
+    /**
+     * Level
+     */
+    level?: number;
+    /**
+     * Vip Status
+     */
+    vip_status?: string | null;
+    /**
+     * Vip Type
+     */
+    vip_type?: number;
+    /**
+     * Sex
+     */
+    sex?: string | null;
+    /**
+     * Sign
+     */
+    sign?: string | null;
+    /**
+     * Follower Count
+     */
+    follower_count?: number;
+    /**
+     * Following Count
+     */
+    following_count?: number;
+    /**
+     * Like Count
+     */
+    like_count?: number;
+    /**
+     * Nameplate Name
+     */
+    nameplate_name?: string | null;
+    /**
+     * Nameplate Image
+     */
+    nameplate_image?: string | null;
+    /**
+     * Nameplate Level
+     */
+    nameplate_level?: string | null;
+    /**
+     * Official Title
+     */
+    official_title?: string | null;
+    /**
+     * Vip Due Date
+     */
+    vip_due_date?: unknown;
+    /**
+     * Exp
+     */
+    exp?: unknown;
+    /**
+     * Role
+     */
+    role?: unknown;
+    /**
+     * Email
+     */
+    email?: unknown;
+};
+
+/**
  * DmAuditItem
  *
  * 私信审核队列中的一条消息。
@@ -10980,9 +12701,9 @@ export type DmAuditItemWritable = {
     /**
      * Msgkey
      *
-     * 消息全局唯一键（字符串）
+     * 消息全局唯一键（雪花ID；字符串版见 msgkey_str）
      */
-    msgkey: string;
+    msgkey: number;
     /**
      * Sender Mid
      *
@@ -11024,7 +12745,7 @@ export type DmAuditItemWritable = {
     /**
      * Created At
      */
-    created_at?: string | null;
+    created_at?: number | null;
     /**
      * 内容来源，管理端可点击直达该会话上下文
      */
@@ -11032,7 +12753,7 @@ export type DmAuditItemWritable = {
     /**
      * 发送者信息（管理端：含私有字段），装配时直连 pptr 只读取回
      */
-    sender?: UserBriefOut | null;
+    sender?: UserBriefOutWritable | null;
 };
 
 /**
@@ -11078,7 +12799,7 @@ export type DmMessageItemWritable = {
     /**
      * Msgkey
      */
-    msgkey: string;
+    msgkey: number;
     /**
      * Sender Uid
      */
@@ -11104,14 +12825,14 @@ export type DmMessageItemWritable = {
     /**
      * Created At
      */
-    created_at?: string | null;
+    created_at?: number | null;
     audit_state?: ResourceAuditStatusEnum;
     /**
      * Recalled At
      *
-     * 撤回时间（仅撤回后非空）
+     * 撤回时间（仅撤回后非空，秒级时间戳）
      */
-    recalled_at?: string | null;
+    recalled_at?: number | null;
     /**
      * Recalled By
      *
@@ -11151,6 +12872,42 @@ export type DmMessageListRespWritable = {
      * Session Key
      */
     session_key?: string;
+};
+
+/**
+ * DmSendResp
+ */
+export type DmSendRespWritable = {
+    /**
+     * Msgkey
+     *
+     * 消息全局唯一键（雪花ID；字符串版见 msgkey_str）
+     */
+    msgkey: number;
+    /**
+     * Session Key
+     *
+     * 会话键
+     */
+    session_key: string;
+    /**
+     * Msg Ts
+     *
+     * 消息毫秒时间戳
+     */
+    msg_ts: number;
+    /**
+     * Filtered
+     *
+     * 是否因对方关闭陌生人私信而被过滤（不会送达）
+     */
+    filtered?: boolean;
+    /**
+     * Content Async
+     *
+     * 内容是否走异步落库（False 表示已同步兜底写入）
+     */
+    content_async?: boolean;
 };
 
 /**
@@ -11213,7 +12970,7 @@ export type DmSessionItemWritable = {
     /**
      * Last Msgkey
      */
-    last_msgkey?: string | null;
+    last_msgkey?: number | null;
     /**
      * Last Content Preview
      */
@@ -11254,7 +13011,7 @@ export type DmSessionItemWritable = {
     /**
      * Updated At
      */
-    updated_at?: string | null;
+    updated_at?: number | null;
 };
 
 /**
@@ -11381,7 +13138,7 @@ export type EventAggregateItemWritable = {
      *
      * 最近的若干触发者（用于头像堆叠展示），仅含 mid，昵称 / 头像读取时回查
      */
-    actors?: Array<EventUserBrief>;
+    actors?: Array<EventUserBriefWritable>;
     /**
      * Latest Event Id
      *
@@ -11397,9 +13154,9 @@ export type EventAggregateItemWritable = {
     /**
      * Latest At
      *
-     * 分组内最新事件时间
+     * 分组内最新事件时间（秒级时间戳）
      */
-    latest_at?: string | null;
+    latest_at?: number | null;
 };
 
 /**
@@ -11493,19 +13250,19 @@ export type EventMsgfeedContentWritable = {
     /**
      * Resource Id
      */
-    resource_id?: string;
+    resource_id?: number;
     /**
      * Root Id
      */
-    root_id?: string;
+    root_id?: number;
     /**
      * Source Id
      */
-    source_id?: string;
+    source_id?: number;
     /**
      * Target Id
      */
-    target_id?: string;
+    target_id?: number;
     /**
      * Title
      */
@@ -11573,7 +13330,7 @@ export type EventMsgfeedItemWritable = {
     /**
      * Users
      */
-    users: Array<EventUserBrief>;
+    users: Array<EventUserBriefWritable>;
     item: EventMsgfeedContentWritable;
     /**
      * Counts
@@ -11619,6 +13376,225 @@ export type EventReportRespWritable = {
 };
 
 /**
+ * EventUserBrief
+ *
+ * 事件触发者 / 互动用户简况。
+ *
+ * 仅含 mid + 读取时回查得到的昵称 / 头像 / 粉丝数 / 关注态，
+ * 不冗余携带触发者 name / avatar 快照。
+ */
+export type EventUserBriefWritable = {
+    /**
+     * Mid
+     */
+    mid: number;
+    /**
+     * Nickname
+     */
+    nickname?: string | null;
+    /**
+     * Avatar
+     */
+    avatar?: string | null;
+    /**
+     * Fans
+     */
+    fans?: number;
+    /**
+     * Follow
+     */
+    follow?: boolean;
+};
+
+/**
+ * FavoriteAddResp
+ *
+ * 收藏响应（2.55.0 全面通用化）。
+ */
+export type FavoriteAddRespWritable = {
+    /**
+     * 资源类型（InteractionBizTypeEnum 值）
+     */
+    bizType?: InteractionBizTypeEnum;
+    /**
+     * Bizid
+     *
+     * 资源id（雪花ID；字符串版见 bizId_str）
+     */
+    bizId: number;
+    /**
+     * Folderid
+     *
+     * 收藏夹id（雪花ID；字符串版见 folderId_str）
+     */
+    folderId: number;
+    /**
+     * Favorited
+     *
+     * 本次是否新增收藏（False=已在同夹收藏过）
+     */
+    favorited?: boolean;
+    /**
+     * Favoritecount
+     *
+     * 该资源最新收藏数（用户去重）
+     */
+    favoriteCount?: number;
+};
+
+/**
+ * FavoriteDynFoldersResp
+ *
+ * 某资源被当前用户收藏在哪些收藏夹（2.55.0 全面通用化）。
+ */
+export type FavoriteDynFoldersRespWritable = {
+    /**
+     * 资源类型（InteractionBizTypeEnum 值）
+     */
+    bizType?: InteractionBizTypeEnum;
+    /**
+     * Bizid
+     *
+     * 资源id（雪花ID；字符串版见 bizId_str）
+     */
+    bizId: number;
+    /**
+     * Folderids
+     *
+     * 已收藏该资源的收藏夹id列表
+     */
+    folderIds?: Array<string>;
+};
+
+/**
+ * FavoriteFolderResp
+ *
+ * 收藏夹信息。
+ */
+export type FavoriteFolderRespWritable = {
+    /**
+     * Folderid
+     *
+     * 收藏夹id（雪花ID；字符串版见 folderId_str）
+     */
+    folderId: number;
+    /**
+     * Name
+     *
+     * 收藏夹名称
+     */
+    name: string;
+    /**
+     * Description
+     *
+     * 收藏夹描述
+     */
+    description?: string | null;
+    /**
+     * Coverurl
+     *
+     * 封面图片链接（仅存审核通过后公开的封面）
+     */
+    coverUrl?: string | null;
+    /**
+     * Isdefault
+     *
+     * 是否默认收藏夹
+     */
+    isDefault?: boolean;
+    /**
+     * Ispublic
+     *
+     * 是否公开（False=仅本人可见）
+     */
+    isPublic?: boolean;
+    /**
+     * Favoritecount
+     *
+     * 该夹收藏的动态数
+     */
+    favoriteCount?: number;
+    /**
+     * Coverauditstatus
+     *
+     * 封面审核状态：有 pending 审核时为 'pending'，否则为 null（2.28.0）
+     */
+    coverAuditStatus?: string | null;
+};
+
+/**
+ * FavoriteItemListResp
+ *
+ * 某收藏夹下资源明细（2.17.0 新增）。
+ */
+export type FavoriteItemListRespWritable = {
+    /**
+     * Folderid
+     *
+     * 收藏夹id（雪花ID；字符串版见 folderId_str）
+     */
+    folderId: number;
+    /**
+     * Total
+     *
+     * 该夹收藏总数
+     */
+    total?: number;
+    /**
+     * Items
+     *
+     * 当前页资源明细
+     */
+    items?: Array<FavoriteListItemWritable>;
+};
+
+/**
+ * FavoriteListItem
+ *
+ * 某收藏夹下的一条资源（2.17.0 新增）。
+ */
+export type FavoriteListItemWritable = {
+    /**
+     * 资源类型（InteractionBizTypeEnum 值）
+     */
+    bizType: InteractionBizTypeEnum;
+    /**
+     * Bizid
+     *
+     * 资源id（雪花ID；字符串版见 bizId_str）
+     */
+    bizId: number;
+};
+
+/**
+ * FavoriteListResp
+ *
+ * 某收藏夹下资源列表（2.55.0 全面通用化：bizType+bizId 对）。
+ *
+ * 不再提供 `dynIds` 兼容字段——前端按 `items` 自行过滤 `bizType=dynamic` 项。
+ */
+export type FavoriteListRespWritable = {
+    /**
+     * Folderid
+     *
+     * 收藏夹id（雪花ID；字符串版见 folderId_str）
+     */
+    folderId: number;
+    /**
+     * Total
+     *
+     * 该夹收藏总数
+     */
+    total?: number;
+    /**
+     * Items
+     *
+     * 当前页资源明细（bizType+bizId 对）
+     */
+    items?: Array<FavoriteListItemWritable>;
+};
+
+/**
  * FolderCoverAuditItem
  *
  * 管理端待审核队列中的单条封面申请（含作者昵称，来自 pptr 回查）。
@@ -11633,9 +13609,9 @@ export type FolderCoverAuditItemWritable = {
     /**
      * Folderid
      *
-     * 所属收藏夹 id（字符串）
+     * 所属收藏夹 id（雪花ID；字符串版见 folderId_str）
      */
-    folderId: string;
+    folderId: number;
     /**
      * Mid
      *
@@ -11701,6 +13677,62 @@ export type FolderCoverAuditListRespWritable = {
 };
 
 /**
+ * FolderCoverAuditMineResp
+ *
+ * 用户侧「某收藏夹封面审核状态」响应（无记录时接口返回 data=null）。
+ */
+export type FolderCoverAuditMineRespWritable = {
+    /**
+     * Pk
+     *
+     * 审核记录主键
+     */
+    pk: number;
+    /**
+     * Folderid
+     *
+     * 所属收藏夹 id（雪花ID；字符串版见 folderId_str）
+     */
+    folderId: number;
+    /**
+     * Newcover
+     *
+     * 申请的新封面 URL
+     */
+    newCover: string;
+    /**
+     * Oldcover
+     *
+     * 旧封面 URL
+     */
+    oldCover?: string | null;
+    /**
+     * Auditstatus
+     *
+     * 审核状态（统一枚举 .name）：AUDITING=待审 / NORMAL=已通过 / REJECTED=已驳回
+     */
+    auditStatus: string;
+    /**
+     * Auditreason
+     *
+     * 驳回原因（REJECTED 时有值）
+     */
+    auditReason?: string | null;
+    /**
+     * Createdat
+     *
+     * 提交时间（ISO）
+     */
+    createdAt?: string | null;
+    /**
+     * Auditedat
+     *
+     * 审核时间（ISO）
+     */
+    auditedAt?: string | null;
+};
+
+/**
  * FollowCountResp
  *
  * 关注 / 粉丝计数。
@@ -11745,9 +13777,9 @@ export type FollowListItemWritable = {
     /**
      * Created At
      *
-     * 关系建立时间
+     * 关系建立时间（秒级时间戳）
      */
-    created_at: string;
+    created_at: number;
     /**
      * Mutual
      *
@@ -11755,9 +13787,9 @@ export type FollowListItemWritable = {
      */
     mutual?: boolean;
     /**
-     * 对方公开展示信息（他人可见字段；注销或回查失败时为 null）
+     * 对方展示信息（注销或回查失败时为 null）
      */
-    user?: UserBriefOut | null;
+    user?: FollowUserBriefWritable | null;
 };
 
 /**
@@ -11881,6 +13913,132 @@ export type FollowRelationRespWritable = {
 };
 
 /**
+ * FollowUserBrief
+ *
+ * 关注 / 粉丝 / 黑名单列表里的**用户卡片**（对标 B 站 `x/relation/followings` 的 list 项）。
+ *
+ * 只保留卡片渲染需要的展示字段，不再直接复用 `UserBriefOut` —— 后者还带铭牌 / 官标 /
+ * 关注数等列表用不到的字段（且含私域字段，靠序列化期裁剪），对列表来说太重。
+ * 数据仍由 `PptrUser.get_many` 批量回查（一次 IN，无 N+1）；注销 / 回查失败时为 `None`。
+ */
+export type FollowUserBriefWritable = {
+    /**
+     * Mid
+     *
+     * 对方用户 mid
+     */
+    mid: number;
+    /**
+     * Name
+     *
+     * 昵称
+     */
+    name?: string | null;
+    /**
+     * Face
+     *
+     * 头像链接
+     */
+    face?: string | null;
+    /**
+     * Sign
+     *
+     * 个性签名
+     */
+    sign?: string | null;
+    /**
+     * Level
+     *
+     * 等级（0~6）
+     */
+    level?: number;
+    /**
+     * Vip Status
+     *
+     * 大会员状态
+     */
+    vip_status?: string | null;
+    /**
+     * Vip Type
+     *
+     * 大会员类型
+     */
+    vip_type?: number;
+};
+
+/**
+ * InteractionResource
+ *
+ * 互动目标资源的**统一表示**（2.47.0；非 DB 表）。
+ *
+ * 各互动操作子类的 ``get_resource()`` 统一返回本模型，把具体资源
+ * （`TMoment` / RPC 详情等）折叠成统一字段，供基类统一做
+ * 存在性（``exists``）/ 可互动性（``interactable``）/ 作者关系
+ * （``author_mid``，关注 / 黑名单校验）判断，以及 ``after_execute`` hook
+ * 取作者 / 内容。
+ */
+export type InteractionResourceWritable = {
+    /**
+     * 资源类型
+     */
+    bizType: InteractionBizTypeEnum;
+    /**
+     * Bizid
+     *
+     * 资源 id（字符串：动态=dynId，rpa_action=action_id，rpa_workflow=workflow_id 等）
+     */
+    bizId: string;
+    /**
+     * Authormid
+     *
+     * 资源作者 mid（未知/非动态资源可为空）
+     */
+    authorMid?: number | null;
+    /**
+     * Ownermid
+     *
+     * 资源所有者 mid（DAC `OWNER_ONLY` 校验依据；未知时经 RPC/子类覆盖判断）
+     */
+    ownerMid?: number | null;
+    /**
+     * Exists
+     *
+     * 资源是否存在
+     */
+    exists?: boolean;
+    /**
+     * Interactable
+     *
+     * 是否可互动（如动态需 normal 未软删；收藏语义允许 auditing）
+     */
+    interactable?: boolean;
+    /**
+     * Title
+     *
+     * 附加展示字段（可选，通知等使用）
+     */
+    title?: string | null;
+    /**
+     * Content
+     *
+     * 内容摘要（可选，通知等使用）
+     */
+    content?: string | null;
+    /**
+     * Cover
+     *
+     * 封面图（动态首图 / 资源卡封面，可选）
+     */
+    cover?: string | null;
+    /**
+     * Jumptarget
+     *
+     * 后端下发的跳转目标 route:{name}?{query}（事件提醒等读取侧随资源返回；见计划书 §2.10 / §5.11）
+     */
+    jumpTarget?: string | null;
+};
+
+/**
  * MessageSettingResp
  *
  * 用户当前的消息设置。
@@ -11915,6 +14073,18 @@ export type MessageSettingRespWritable = {
      */
     push_enabled?: boolean;
     /**
+     * Push Reply
+     */
+    push_reply?: boolean;
+    /**
+     * Push At
+     */
+    push_at?: boolean;
+    /**
+     * Push Like
+     */
+    push_like?: boolean;
+    /**
      * Dnd Start Hour
      */
     dnd_start_hour?: number | null;
@@ -11925,7 +14095,7 @@ export type MessageSettingRespWritable = {
     /**
      * Updated At
      */
-    updated_at?: string | null;
+    updated_at?: number | null;
 };
 
 /**
@@ -12011,7 +14181,7 @@ export type MomentAuditDetailRespWritable = {
      *
      * 审核流转历史
      */
-    logs?: Array<MomentAuditLogItem>;
+    logs?: Array<MomentAuditLogItemWritable>;
 };
 
 /**
@@ -12026,12 +14196,6 @@ export type MomentAuditItemWritable = {
      * 动态 ID（int）
      */
     dynId: number;
-    /**
-     * Dynidstr
-     *
-     * 动态 ID（字符串，避免精度丢失）
-     */
-    dynIdStr: string;
     /**
      * Mid
      *
@@ -12121,6 +14285,149 @@ export type MomentAuditListRespWritable = {
 };
 
 /**
+ * MomentAuditLogItem
+ *
+ * 单条审核流转记录（管理后台流水）。
+ *
+ * 操作人身份属管理端内部信息，以 ``Private(admin_only=True)`` 标记：作者本人视角
+ * 只能看到流转结论，看不到是谁操作的。本模型无归属 mid，故 ``_owner_mid_field`` 置空。
+ */
+export type MomentAuditLogItemWritable = {
+    /**
+     * Pk
+     *
+     * 记录主键
+     */
+    pk: number;
+    /**
+     * Dynid
+     *
+     * 被审核动态 ID
+     */
+    dynId: number;
+    /**
+     * Operatormid
+     *
+     * 操作人 MID
+     */
+    operatorMid: unknown;
+    /**
+     * Operatorrole
+     *
+     * 操作人角色枚举值（MomentAuditLogOperatorRoleEnum：1=author/2=admin）
+     */
+    operatorRole: unknown;
+    /**
+     * Fromstatus
+     *
+     * 流转前状态枚举值（ResourceAuditStatusEnum）
+     */
+    fromStatus?: number | null;
+    /**
+     * Tostatus
+     *
+     * 流转后状态枚举值（ResourceAuditStatusEnum）
+     */
+    toStatus: number;
+    /**
+     * Actiontype
+     *
+     * 操作类型枚举值（MomentAuditLogActionEnum：create/edit/approve/reject/resubmit/delete）
+     */
+    actionType: number;
+    /**
+     * Rejectreason
+     *
+     * 驳回原因（仅 reject）
+     */
+    rejectReason?: string | null;
+    /**
+     * Remark
+     *
+     * 其他备注
+     */
+    remark?: string | null;
+    /**
+     * Createdtime
+     *
+     * 操作时间（ISO）
+     */
+    createdTime?: string | null;
+};
+
+/**
+ * MomentAuditLogListResp
+ *
+ * 审核记录流水响应。
+ */
+export type MomentAuditLogListRespWritable = {
+    /**
+     * Items
+     */
+    items?: Array<MomentAuditLogItemWritable>;
+    /**
+     * Total
+     */
+    total?: number;
+    /**
+     * Page Num
+     */
+    page_num?: number;
+    /**
+     * Page Size
+     */
+    page_size?: number;
+};
+
+/**
+ * MomentCreateCheckResp
+ *
+ * 发布页预校验响应。
+ */
+export type MomentCreateCheckRespWritable = {
+    /**
+     * 发布设置（MVP 留空扩展）
+     */
+    setting?: MomentPublishSettingWritable;
+    /**
+     * 权限信息
+     */
+    permission: MomentPublishPermissionWritable;
+    /**
+     * Allowedscenes
+     *
+     * 允许的动态场景
+     */
+    allowedScenes?: Array<string>;
+};
+
+/**
+ * MomentCreateResp
+ *
+ * 创建动态响应。
+ */
+export type MomentCreateRespWritable = {
+    /**
+     * Dynid
+     *
+     * 动态 ID（int）
+     */
+    dynId: number;
+    /**
+     * Auditstatus
+     *
+     * 审核状态成员名字符串：AUDITING/NORMAL/REJECTED/HIDDEN
+     */
+    auditStatus: string;
+    /**
+     * Dyntype
+     *
+     * 动态类型字符串：WORD/FORWARD
+     */
+    dynType: string;
+};
+
+/**
  * MomentDetailResp
  *
  * 动态详情响应（单条完整卡片）。
@@ -12135,12 +14442,6 @@ export type MomentDetailRespWritable = {
      * 动态 ID（int）
      */
     dynId: number;
-    /**
-     * Dynidstr
-     *
-     * 动态 ID（字符串，避免精度丢失）
-     */
-    dynIdStr: string;
     /**
      * Dyntype
      *
@@ -12204,6 +14505,36 @@ export type MomentDetailRespWritable = {
 };
 
 /**
+ * MomentDislikeResp
+ *
+ * 点踩响应（2.35.0）。
+ */
+export type MomentDislikeRespWritable = {
+    /**
+     * 资源类型（InteractionBizTypeEnum 值）
+     */
+    bizType?: InteractionBizTypeEnum;
+    /**
+     * Bizid
+     *
+     * 资源 ID（int）
+     */
+    bizId: number;
+    /**
+     * Isdislike
+     *
+     * 操作后当前用户是否已点踩
+     */
+    isDislike?: boolean;
+    /**
+     * Dislikecount
+     *
+     * 操作后点踩数
+     */
+    dislikeCount?: number;
+};
+
+/**
  * MomentFeedItem
  *
  * Feed 流 / 详情中的单条动态卡片。
@@ -12215,12 +14546,6 @@ export type MomentFeedItemWritable = {
      * 动态 ID（int）
      */
     dynId: number;
-    /**
-     * Dynidstr
-     *
-     * 动态 ID（字符串，避免精度丢失）
-     */
-    dynIdStr: string;
     /**
      * Dyntype
      *
@@ -12429,9 +14754,9 @@ export type MomentLikerItemWritable = {
     /**
      * Like Time
      *
-     * 点赞时间（ISO8601；服务端从 TResourceLike.created_at 取）
+     * 点赞时间（秒级时间戳；服务端从 TResourceLike.created_at 取）
      */
-    like_time?: string | null;
+    like_time?: number | null;
 };
 
 /**
@@ -12561,9 +14886,9 @@ export type MomentModuleWritable = {
     /**
      * Bizid
      *
-     * 附加卡资源 ID（字符串）
+     * 附加卡资源 ID（雪花ID；字符串版见 bizId_str）
      */
-    bizId?: string | null;
+    bizId?: number | null;
     /**
      * Name
      *
@@ -12588,6 +14913,169 @@ export type MomentModuleWritable = {
      * 当前用户是否已赞
      */
     isLike?: boolean | null;
+};
+
+/**
+ * MomentPublishPermission
+ *
+ * 发布权限信息（MVP 只回操作者 mid）。
+ */
+export type MomentPublishPermissionWritable = {
+    /**
+     * Mid
+     *
+     * 操作者 mid
+     */
+    mid: number;
+};
+
+/**
+ * MomentPublishSetting
+ *
+ * 发布设置（MVP 留空：强类型占位，扩展时在此加字段而不是往裸 dict 里塞键）。
+ */
+export type MomentPublishSettingWritable = {
+    [key: string]: unknown;
+};
+
+/**
+ * MomentRemoveResp
+ *
+ * 删除动态响应。
+ */
+export type MomentRemoveRespWritable = {
+    /**
+     * Dynid
+     *
+     * 动态 ID（int）
+     */
+    dynId: number;
+    /**
+     * Success
+     */
+    success?: boolean;
+};
+
+/**
+ * MomentReportResp
+ *
+ * 举报响应（2.56.0 通用化）。
+ */
+export type MomentReportRespWritable = {
+    /**
+     * 资源类型（InteractionBizTypeEnum 值）
+     */
+    bizType?: InteractionBizTypeEnum;
+    /**
+     * Bizid
+     *
+     * 资源 ID（int）
+     */
+    bizId: number;
+    /**
+     * Success
+     */
+    success?: boolean;
+};
+
+/**
+ * MomentRepostResp
+ *
+ * 转发动态响应。
+ */
+export type MomentRepostRespWritable = {
+    /**
+     * Dynid
+     *
+     * 动态 ID（int）
+     */
+    dynId: number;
+    /**
+     * Auditstatus
+     *
+     * 审核状态成员名字符串：AUDITING/NORMAL/REJECTED/HIDDEN
+     */
+    auditStatus: string;
+    /**
+     * Dyntype
+     *
+     * 动态类型字符串：WORD/FORWARD
+     */
+    dynType: string;
+};
+
+/**
+ * MomentShareResp
+ *
+ * 分享上报响应（2.35.0；2.56.0 通用化）。
+ */
+export type MomentShareRespWritable = {
+    /**
+     * 资源类型（InteractionBizTypeEnum 值）
+     */
+    bizType?: InteractionBizTypeEnum;
+    /**
+     * Bizid
+     *
+     * 资源 ID（int）
+     */
+    bizId: number;
+    /**
+     * Sharecount
+     *
+     * 操作后分享数
+     */
+    shareCount?: number;
+};
+
+/**
+ * MomentThumbResp
+ *
+ * 点赞响应（2.17.0 泛化）。
+ */
+export type MomentThumbRespWritable = {
+    /**
+     * 资源类型（InteractionBizTypeEnum 值）
+     */
+    bizType?: InteractionBizTypeEnum;
+    /**
+     * Bizid
+     *
+     * 资源 ID（int）
+     */
+    bizId: number;
+    /**
+     * Islike
+     *
+     * 操作后当前用户是否已赞
+     */
+    isLike?: boolean;
+    /**
+     * Likecount
+     *
+     * 操作后点赞数
+     */
+    likeCount?: number;
+};
+
+/**
+ * MomentTopResp
+ *
+ * 置顶 / 取消置顶响应。
+ */
+export type MomentTopRespWritable = {
+    /**
+     * Dynid
+     *
+     * 动态 ID（int）
+     */
+    dynId: number;
+    /**
+     * Istop
+     *
+     * 是否置顶：0=否,1=是
+     */
+    isTop: number;
 };
 
 /**
@@ -12961,11 +15449,11 @@ export type NotifyAdminItemWritable = {
     /**
      * Publish At
      */
-    publish_at: string;
+    publish_at: number;
     /**
      * Expire At
      */
-    expire_at?: string | null;
+    expire_at?: number | null;
     /**
      * Creator Mid
      */
@@ -12977,7 +15465,7 @@ export type NotifyAdminItemWritable = {
     /**
      * Created At
      */
-    created_at: string;
+    created_at: number;
 };
 
 /**
@@ -13005,6 +15493,264 @@ export type NotifyAdminListRespWritable = {
 };
 
 /**
+ * PptrUserInfoUpdateResult
+ *
+ * 用户信息更新结果。
+ */
+export type PptrUserInfoUpdateResultWritable = {
+    /**
+     * Uid
+     *
+     * 被更新的用户ID（数值；字符串版见 uid_str）
+     */
+    uid?: number;
+    /**
+     * Updated
+     *
+     * 是否更新成功
+     */
+    updated?: boolean;
+    /**
+     * Uname Recorded
+     *
+     * 昵称发生变更并已写入昵称历史表 TUserNameRecord
+     */
+    uname_recorded?: boolean;
+    /**
+     * Avatar Status
+     *
+     * 头像字段处理结果：'pending'（已提交审核，未即时生效）/ 'none'（本次未修改头像）
+     */
+    avatar_status?: string | null;
+};
+
+/**
+ * PptrUserLevelInfo
+ *
+ * 成长等级信息（对齐 pptr search 出参）。
+ *
+ * 此为 pptr 等级信息的唯一权威定义，pptr_user_rpc 同样复用本类（rpc 场景下会
+ * 额外传入 uid / updated_at）。
+ *
+ * 雪花 ID（uid）出参为 int + 自动派生的 `uid_str`（防 JS Number 精度丢失）；
+ * 等级 / 经验是普通数值，出参保持 number，由前端自行按需格式化。
+ * Python 侧一律拿到 int 做计算。
+ */
+export type PptrUserLevelInfoWritable = {
+    /**
+     * Uid
+     *
+     * 用户 UID（可空，search 场景无需；前端请用 uid_str）
+     */
+    uid?: number | null;
+    /**
+     * Current Level
+     *
+     * 当前等级
+     */
+    current_level?: number;
+    /**
+     * Current Exp
+     *
+     * 当前累积经验
+     */
+    current_exp?: number;
+    /**
+     * Current Min
+     *
+     * 当前等级起始经验
+     */
+    current_min?: number;
+    /**
+     * Next Exp
+     *
+     * 距下一级还需经验（下一级门槛经验 - 当前累积经验），满级为 0
+     */
+    next_exp?: number;
+    /**
+     * Updated At
+     *
+     * TUserLevel.updatedAt（ISO），用于每日经验幂等判断
+     */
+    updated_at?: string;
+};
+
+/**
+ * PptrUserNavData
+ *
+ * `GET /api/v1/user/nav` 的响应数据。
+ *
+ * 对齐 pptr 旧 `UserLevelService.get_user_nav_with_level` 的出参结构：
+ * 调用时会顺带触发「每日首次登录加经验」（幂等，由 be-message 侧判定）。
+ *
+ * 字符串版 ID 字段由 `@auto_str` 自动派生，后缀为 `_str`（与出参 snake_case 风格一致）。
+ */
+export type PptrUserNavDataWritable = {
+    /**
+     * Uid
+     *
+     * 用户ID（雪花ID数值；前端请用同级的 uid_str 字符串版）
+     */
+    uid?: number;
+    /**
+     * User Name
+     *
+     * 展示名：优先昵称 uname，缺失时回落注册名
+     */
+    user_name?: string;
+    role_info?: PptrUserRoleInfo;
+    /**
+     * Face
+     *
+     * 头像URL；无头像时为 null，由前端回落到默认头像
+     */
+    face?: string | null;
+    level_info?: PptrUserLevelInfoWritable;
+    /**
+     * Email
+     *
+     * 邮箱（脱敏）
+     */
+    email?: string | null;
+    /**
+     * Jwt Token
+     *
+     * JWT 续期时注入的新 token（非当天签发的 token 需刷新）
+     */
+    jwt_token?: string | null;
+};
+
+/**
+ * PptrUserRoleSetResult
+ *
+ * 角色设置结果。
+ */
+export type PptrUserRoleSetResultWritable = {
+    /**
+     * Target Uid
+     *
+     * 目标用户UID（数值；字符串版见 target_uid_str）
+     */
+    target_uid?: number;
+    /**
+     * Target User Name
+     *
+     * 目标用户注册名
+     */
+    target_user_name?: string;
+    /**
+     * Role
+     *
+     * 设置后的角色标识
+     */
+    role?: string;
+    /**
+     * Role Name
+     *
+     * 角色中文名
+     */
+    role_name?: string;
+    /**
+     * Role Description
+     *
+     * 角色中文描述
+     */
+    role_description?: string;
+};
+
+/**
+ * PptrUserSearchItem
+ *
+ * 搜索用户返回的单条记录（对齐前端 PptrUserSearchItem）。
+ *
+ * `mid` 与 `uid` 是同一个雪花 ID（BIGINT），出参为 int 数值 + 自动派生的
+ * `mid_str` / `uid_str` 字符串版；**前端只能用字符串版**，避免 JS 精度丢失。
+ * `regtime` 是毫秒时间戳，保持 number。
+ */
+export type PptrUserSearchItemWritable = {
+    /**
+     * Mid
+     *
+     * 用户ID（int 内部使用，前端请用 mid_str 字符串版）
+     */
+    mid?: number;
+    /**
+     * Uid
+     *
+     * 用户ID（同 mid；前端请用 uid_str 字符串版）
+     */
+    uid?: number;
+    /**
+     * User Name
+     *
+     * 注册默认名
+     */
+    user_name?: string | null;
+    /**
+     * Uname
+     *
+     * 昵称
+     */
+    uname?: string | null;
+    /**
+     * Email
+     *
+     * 邮箱（脱敏）
+     */
+    email?: string | null;
+    /**
+     * Avatar
+     *
+     * 头像URL
+     */
+    avatar?: string | null;
+    /**
+     * Sign
+     *
+     * 个性签名
+     */
+    sign?: string | null;
+    /**
+     * Sex
+     *
+     * 性别
+     */
+    sex?: string | null;
+    /**
+     * Regtime
+     *
+     * 注册时间(ms)
+     */
+    regtime?: number | null;
+    level_info?: PptrUserLevelInfoWritable;
+    vip?: PptrUserVipInfo;
+    role_info?: PptrUserRoleInfo;
+};
+
+/**
+ * PptrUserSearchResult
+ *
+ * 用户搜索接口的响应体：当前页列表 + 是否还有更多。
+ *
+ * 采用 cursor（offset）分页：前端根据 `has_more` 自行决定是否继续下拉加载，
+ * 无需服务端统计 total。
+ */
+export type PptrUserSearchResultWritable = {
+    /**
+     * Items
+     *
+     * 当前页用户列表
+     */
+    items?: Array<PptrUserSearchItemWritable>;
+    /**
+     * Has More
+     *
+     * 是否还有下一页，前端据此下拉加载更多
+     */
+    has_more?: boolean;
+};
+
+/**
  * ReportItem
  *
  * 统一举报记录展示项。
@@ -13018,7 +15764,7 @@ export type ReportItemWritable = {
     /**
      * Bizid
      */
-    bizId: number;
+    bizId: string;
     /**
      * Accusedmid
      */
@@ -13094,7 +15840,7 @@ export type ReportItemWritable = {
     /**
      * 被举报资源快照（标题 / 封面 / 跳转目标；exists=false 表示内容已删除或不可见）
      */
-    resource?: InteractionResource | null;
+    resource?: InteractionResourceWritable | null;
 };
 
 /**
@@ -13119,6 +15865,88 @@ export type ReportListRespWritable = {
      * Pagesize
      */
     pageSize: number;
+};
+
+/**
+ * RpaTagItemResp
+ *
+ * 标签条目（供前端渲染）。pubTime / createdAt 序列化为 ISO 字符串或 None。
+ */
+export type RpaTagItemRespWritable = {
+    /**
+     * Id
+     *
+     * 标签 id
+     */
+    id: number;
+    /**
+     * Name
+     *
+     * 标签名称
+     */
+    name: string;
+    /**
+     * Color
+     *
+     * 标签颜色
+     */
+    color?: string;
+    /**
+     * Createdby
+     *
+     * 创建者 mid（字符串版见 createdBy_str）
+     */
+    createdBy?: number | null;
+    /**
+     * Auditstatus
+     *
+     * 审核状态：auditing / normal / rejected
+     */
+    auditStatus: string;
+    /**
+     * Pubtime
+     *
+     * 审核通过上架时间（ISO）
+     */
+    pubTime?: string | null;
+    /**
+     * Createdat
+     *
+     * 创建时间（ISO）
+     */
+    createdAt?: string | null;
+};
+
+/**
+ * RpaTagListResp
+ *
+ * 列出标签响应。
+ */
+export type RpaTagListRespWritable = {
+    /**
+     * Page
+     *
+     * 页码
+     */
+    page: number;
+    /**
+     * Perpage
+     *
+     * 每页条数
+     */
+    perPage: number;
+    /**
+     * Total
+     *
+     * 总数
+     */
+    total: number;
+    /**
+     * Items
+     *
+     * 标签列表
+     */
+    items?: Array<RpaTagItemRespWritable>;
 };
 
 /**
@@ -13178,7 +16006,7 @@ export type SpaceInfoRespWritable = {
     /**
      * Birthday
      */
-    birthday?: string;
+    birthday?: number;
     official?: SpaceOfficial;
     vip?: SpaceVipWrap;
     /**
@@ -13203,6 +16031,241 @@ export type SpaceInfoRespWritable = {
     is_self?: boolean;
     follow_stat?: SpaceFollowStat;
     upstat?: SpaceUpStat;
+    /**
+     * Email
+     */
+    email?: string | null;
+    /**
+     * Last Login At
+     */
+    last_login_at?: number | null;
+    /**
+     * Ip Location
+     */
+    ip_location?: string | null;
+    /**
+     * View Count
+     */
+    view_count?: number;
+    privacy_flags?: SpacePrivacyFlags;
+};
+
+/**
+ * SpaceTimelineItem
+ *
+ * 行为时间线单条记录（2.58.0 计划书 §3.3）。
+ *
+ * 反映「当前有效状态」而非操作流水：取消点赞 / 取关 / 取消收藏后，对应条目
+ * 因明细行被物理删除而自然消失。出参字段统一为：
+ *
+ * - `act_type`：follow / like / favorite；
+ * - follow：`target_mid/name/face` = 被关注用户；
+ * - like / favorite：`target_mid/name/face` = 资源作者（dynamic 才有），
+ * `target_text` = 动态正文摘要；favorite 额外带 `target_folder_name`；
+ * - `target_resource`：内层资源卡（2.59.0 新增，dynamic 时带完整 `moment`）。
+ */
+export type SpaceTimelineItemWritable = {
+    /**
+     * Act Type
+     *
+     * 行为类型：follow 关注 / like 点赞 / favorite 收藏
+     */
+    act_type: string;
+    /**
+     * Target Mid
+     *
+     * 目标用户 mid（follow=被关注者；like/favorite=资源作者，非 dynamic 可能为空）
+     */
+    target_mid?: number | null;
+    /**
+     * Target Name
+     *
+     * 目标用户展示名（对方注销或回查失败时为 null）
+     */
+    target_name?: string | null;
+    /**
+     * Target Face
+     *
+     * 目标用户头像 URL
+     */
+    target_face?: string | null;
+    /**
+     * Target Text
+     *
+     * 动态正文摘要（仅 like / favorite 的 dynamic 资源有）
+     */
+    target_text?: string | null;
+    /**
+     * Target Dyn Id
+     *
+     * 动态 id（仅 like / favorite 的 dynamic 资源有，前端点进 MOMENT_DETAIL）
+     */
+    target_dyn_id?: number | null;
+    /**
+     * Target Folder Name
+     *
+     * 收藏夹名称（仅 favorite 有）
+     */
+    target_folder_name?: string | null;
+    /**
+     * Acted At
+     *
+     * 行为发生时间（秒级时间戳）
+     */
+    acted_at: number;
+    /**
+     * 内层资源卡：dynamic 带完整 moment；非 dynamic 带 name/cover/jump_url；follow 为 null
+     */
+    target_resource?: SpaceTimelineResourceWritable | null;
+};
+
+/**
+ * SpaceTimelineResource
+ *
+ * 时间线条目对应的**资源卡**（2.59.0，前端卡片化方案 A）。
+ *
+ * 时间线条目从「一行文本」升级为「外层操作卡 + 内层资源卡」后，前端不再自己
+ * 判断资源类型、也不用二次请求：
+ *
+ * - `biz_type` / `biz_id`：资源定位（`biz_id_str` 由 `@auto_str` 自动派生，
+ * 19 位雪花 id 前端只能按字符串用）；
+ * - `name` / `cover` / `jump_url`：非 dynamic 资源实时回查的展示信息，
+ * RPC 弱依赖失败时降级为 `None`（前端不渲染封面 / 标题）；
+ * - `moment`：仅 dynamic 资源有值，内容为**完整动态出参**，前端直接喂
+ * `MomentCard` 渲染（批量内联，不产生 N+1 请求）。
+ */
+export type SpaceTimelineResourceWritable = {
+    /**
+     * Biz Type
+     *
+     * 资源类型文字：dynamic / lottery / rpa_* / user
+     */
+    biz_type: string;
+    /**
+     * Biz Id
+     *
+     * 资源 id（dynamic 时 = dynId）
+     */
+    biz_id: number;
+    /**
+     * Name
+     *
+     * 资源标题（非 dynamic 回查，缺失为 None）
+     */
+    name?: string | null;
+    /**
+     * Cover
+     *
+     * 资源封面图（非 dynamic 回查，缺失为 None）
+     */
+    cover?: string | null;
+    /**
+     * Jump Url
+     *
+     * 站外跳转链接（回查不到为 None）
+     */
+    jump_url?: string | null;
+    /**
+     * dynamic 资源的完整动态出参（非 dynamic 为 None）
+     */
+    moment?: MomentDetailRespWritable | null;
+};
+
+/**
+ * SpaceTimelineResp
+ *
+ * 行为时间线分页响应（游标 = 本页最后一条的 acted_at）。
+ */
+export type SpaceTimelineRespWritable = {
+    /**
+     * Items
+     */
+    items?: Array<SpaceTimelineItemWritable>;
+    /**
+     * Has More
+     */
+    has_more?: boolean;
+    /**
+     * Cursor
+     *
+     * 下一页游标（ISO 时间），has_more=false 时为空
+     */
+    cursor?: string | null;
+};
+
+/**
+ * SpaceViewHistoryItem
+ *
+ * 浏览历史单条记录（数据源 `TInteractionViewLog`，每用户每资源一行合并）。
+ */
+export type SpaceViewHistoryItemWritable = {
+    /**
+     * Biz Type
+     *
+     * 资源类型文字（dynamic / lottery / rpa_* / user）
+     */
+    biz_type: string;
+    /**
+     * Biz Id
+     *
+     * 资源 id（dynamic 时 = dynId）
+     */
+    biz_id: number;
+    /**
+     * Title
+     *
+     * 资源标题/正文摘要（当前仅 dynamic 回查，其余 bizType 待 P3）
+     */
+    title?: string | null;
+    /**
+     * Last View At
+     *
+     * 最后访问时间（秒级时间戳）
+     */
+    last_view_at: number;
+    /**
+     * View Count
+     *
+     * 该用户对该资源的累计浏览次数
+     */
+    view_count?: number;
+};
+
+/**
+ * SpaceViewHistoryResp
+ *
+ * 浏览历史分页响应（游标 = 本页最后一条的 last_view_at）。
+ */
+export type SpaceViewHistoryRespWritable = {
+    /**
+     * Items
+     */
+    items?: Array<SpaceViewHistoryItemWritable>;
+    /**
+     * Has More
+     */
+    has_more?: boolean;
+    /**
+     * Cursor
+     *
+     * 下一页游标（ISO 时间），has_more=false 时为空
+     */
+    cursor?: string | null;
+};
+
+/**
+ * StandardResponse[AdminItem]
+ */
+export type StandardResponseAdminItemWritable = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: AdminItemWritable | null;
 };
 
 /**
@@ -13218,21 +16281,6 @@ export type StandardResponseAdminStatusResponseWritable = {
      */
     msg?: string;
     data?: AdminStatusResponseWritable | null;
-};
-
-/**
- * StandardResponse[AuditActionResp]
- */
-export type StandardResponseAuditActionRespWritable = {
-    /**
-     * Code
-     */
-    code?: number;
-    /**
-     * Msg
-     */
-    msg?: string;
-    data?: AuditActionRespWritable | null;
 };
 
 /**
@@ -13281,6 +16329,81 @@ export type StandardResponseBanStatusRespWritable = {
 };
 
 /**
+ * StandardResponse[CommentActionResp]
+ */
+export type StandardResponseCommentActionRespWritable = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: CommentActionRespWritable | null;
+};
+
+/**
+ * StandardResponse[CommentAddResp]
+ */
+export type StandardResponseCommentAddRespWritable = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: CommentAddRespWritable | null;
+};
+
+/**
+ * StandardResponse[CommentAuditItem]
+ */
+export type StandardResponseCommentAuditItemWritable = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: CommentAuditItemWritable | null;
+};
+
+/**
+ * StandardResponse[CommentAuditListResp]
+ */
+export type StandardResponseCommentAuditListRespWritable = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: CommentAuditListRespWritable | null;
+};
+
+/**
+ * StandardResponse[CommentCountResp]
+ */
+export type StandardResponseCommentCountRespWritable = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: CommentCountRespWritable | null;
+};
+
+/**
  * StandardResponse[CommentItem]
  */
 export type StandardResponseCommentItemWritable = {
@@ -13326,6 +16449,21 @@ export type StandardResponseCommentListRespWritable = {
 };
 
 /**
+ * StandardResponse[CommentReportResp]
+ */
+export type StandardResponseCommentReportRespWritable = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: CommentReportRespWritable | null;
+};
+
+/**
  * StandardResponse[CommentSourceResp]
  */
 export type StandardResponseCommentSourceRespWritable = {
@@ -13341,6 +16479,21 @@ export type StandardResponseCommentSourceRespWritable = {
 };
 
 /**
+ * StandardResponse[CommentStatsResp]
+ */
+export type StandardResponseCommentStatsRespWritable = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: CommentStatsRespWritable | null;
+};
+
+/**
  * StandardResponse[CommentSubListResp]
  */
 export type StandardResponseCommentSubListRespWritable = {
@@ -13353,6 +16506,21 @@ export type StandardResponseCommentSubListRespWritable = {
      */
     msg?: string;
     data?: CommentSubListRespWritable | null;
+};
+
+/**
+ * StandardResponse[CommentTopResp]
+ */
+export type StandardResponseCommentTopRespWritable = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: CommentTopRespWritable | null;
 };
 
 /**
@@ -13398,6 +16566,21 @@ export type StandardResponseDmMessageListRespWritable = {
      */
     msg?: string;
     data?: DmMessageListRespWritable | null;
+};
+
+/**
+ * StandardResponse[DmSendResp]
+ */
+export type StandardResponseDmSendRespWritable = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: DmSendRespWritable | null;
 };
 
 /**
@@ -13488,6 +16671,81 @@ export type StandardResponseEventReportRespWritable = {
      */
     msg?: string;
     data?: EventReportRespWritable | null;
+};
+
+/**
+ * StandardResponse[FavoriteAddResp]
+ */
+export type StandardResponseFavoriteAddRespWritable = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: FavoriteAddRespWritable | null;
+};
+
+/**
+ * StandardResponse[FavoriteDynFoldersResp]
+ */
+export type StandardResponseFavoriteDynFoldersRespWritable = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: FavoriteDynFoldersRespWritable | null;
+};
+
+/**
+ * StandardResponse[FavoriteFolderResp]
+ */
+export type StandardResponseFavoriteFolderRespWritable = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: FavoriteFolderRespWritable | null;
+};
+
+/**
+ * StandardResponse[FavoriteItemListResp]
+ */
+export type StandardResponseFavoriteItemListRespWritable = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: FavoriteItemListRespWritable | null;
+};
+
+/**
+ * StandardResponse[FavoriteListResp]
+ */
+export type StandardResponseFavoriteListRespWritable = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: FavoriteListRespWritable | null;
 };
 
 /**
@@ -13641,6 +16899,51 @@ export type StandardResponseMomentAuditListRespWritable = {
 };
 
 /**
+ * StandardResponse[MomentAuditLogListResp]
+ */
+export type StandardResponseMomentAuditLogListRespWritable = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: MomentAuditLogListRespWritable | null;
+};
+
+/**
+ * StandardResponse[MomentCreateCheckResp]
+ */
+export type StandardResponseMomentCreateCheckRespWritable = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: MomentCreateCheckRespWritable | null;
+};
+
+/**
+ * StandardResponse[MomentCreateResp]
+ */
+export type StandardResponseMomentCreateRespWritable = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: MomentCreateRespWritable | null;
+};
+
+/**
  * StandardResponse[MomentDetailResp]
  */
 export type StandardResponseMomentDetailRespWritable = {
@@ -13653,6 +16956,21 @@ export type StandardResponseMomentDetailRespWritable = {
      */
     msg?: string;
     data?: MomentDetailRespWritable | null;
+};
+
+/**
+ * StandardResponse[MomentDislikeResp]
+ */
+export type StandardResponseMomentDislikeRespWritable = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: MomentDislikeRespWritable | null;
 };
 
 /**
@@ -13698,6 +17016,96 @@ export type StandardResponseMomentLikerListRespWritable = {
      */
     msg?: string;
     data?: MomentLikerListRespWritable | null;
+};
+
+/**
+ * StandardResponse[MomentRemoveResp]
+ */
+export type StandardResponseMomentRemoveRespWritable = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: MomentRemoveRespWritable | null;
+};
+
+/**
+ * StandardResponse[MomentReportResp]
+ */
+export type StandardResponseMomentReportRespWritable = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: MomentReportRespWritable | null;
+};
+
+/**
+ * StandardResponse[MomentRepostResp]
+ */
+export type StandardResponseMomentRepostRespWritable = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: MomentRepostRespWritable | null;
+};
+
+/**
+ * StandardResponse[MomentShareResp]
+ */
+export type StandardResponseMomentShareRespWritable = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: MomentShareRespWritable | null;
+};
+
+/**
+ * StandardResponse[MomentThumbResp]
+ */
+export type StandardResponseMomentThumbRespWritable = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: MomentThumbRespWritable | null;
+};
+
+/**
+ * StandardResponse[MomentTopResp]
+ */
+export type StandardResponseMomentTopRespWritable = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: MomentTopRespWritable | null;
 };
 
 /**
@@ -13806,6 +17214,66 @@ export type StandardResponseNotifyAdminListRespWritable = {
 };
 
 /**
+ * StandardResponse[PptrUserInfoUpdateResult]
+ */
+export type StandardResponsePptrUserInfoUpdateResultWritable = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: PptrUserInfoUpdateResultWritable | null;
+};
+
+/**
+ * StandardResponse[PptrUserNavData]
+ */
+export type StandardResponsePptrUserNavDataWritable = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: PptrUserNavDataWritable | null;
+};
+
+/**
+ * StandardResponse[PptrUserRoleSetResult]
+ */
+export type StandardResponsePptrUserRoleSetResultWritable = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: PptrUserRoleSetResultWritable | null;
+};
+
+/**
+ * StandardResponse[PptrUserSearchResult]
+ */
+export type StandardResponsePptrUserSearchResultWritable = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: PptrUserSearchResultWritable | null;
+};
+
+/**
  * StandardResponse[ReportListResp]
  */
 export type StandardResponseReportListRespWritable = {
@@ -13818,6 +17286,36 @@ export type StandardResponseReportListRespWritable = {
      */
     msg?: string;
     data?: ReportListRespWritable | null;
+};
+
+/**
+ * StandardResponse[RpaTagItemResp]
+ */
+export type StandardResponseRpaTagItemRespWritable = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: RpaTagItemRespWritable | null;
+};
+
+/**
+ * StandardResponse[RpaTagListResp]
+ */
+export type StandardResponseRpaTagListRespWritable = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: RpaTagListRespWritable | null;
 };
 
 /**
@@ -13836,6 +17334,81 @@ export type StandardResponseSpaceInfoRespWritable = {
 };
 
 /**
+ * StandardResponse[SpaceTimelineResp]
+ */
+export type StandardResponseSpaceTimelineRespWritable = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: SpaceTimelineRespWritable | null;
+};
+
+/**
+ * StandardResponse[SpaceViewHistoryResp]
+ */
+export type StandardResponseSpaceViewHistoryRespWritable = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: SpaceViewHistoryRespWritable | null;
+};
+
+/**
+ * StandardResponse[SysConfigItem]
+ */
+export type StandardResponseSysConfigItemWritable = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: SysConfigItemWritable | null;
+};
+
+/**
+ * StandardResponse[SysConfigListResp]
+ */
+export type StandardResponseSysConfigListRespWritable = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: SysConfigListRespWritable | null;
+};
+
+/**
+ * StandardResponse[Union[FolderCoverAuditMineResp, NoneType]]
+ */
+export type StandardResponseUnionFolderCoverAuditMineRespNoneTypeWritable = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: FolderCoverAuditMineRespWritable | null;
+};
+
+/**
  * StandardResponse[UserActivityResp]
  */
 export type StandardResponseUserActivityRespWritable = {
@@ -13848,6 +17421,24 @@ export type StandardResponseUserActivityRespWritable = {
      */
     msg?: string;
     data?: UserActivityRespWritable | null;
+};
+
+/**
+ * StandardResponse[list[FavoriteFolderResp]]
+ */
+export type StandardResponseListFavoriteFolderRespWritable = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    /**
+     * Data
+     */
+    data?: Array<FavoriteFolderRespWritable> | null;
 };
 
 /**
@@ -13869,6 +17460,97 @@ export type StandardResponseListMomentDetailRespWritable = {
 };
 
 /**
+ * StandardResponse[list[RpaTagItemResp]]
+ */
+export type StandardResponseListRpaTagItemRespWritable = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    /**
+     * Data
+     */
+    data?: Array<RpaTagItemRespWritable> | null;
+};
+
+/**
+ * StandardResponse[list[UserBriefOut]]
+ */
+export type StandardResponseListUserBriefOutWritable = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    /**
+     * Data
+     */
+    data?: Array<UserBriefOutWritable> | null;
+};
+
+/**
+ * SysConfigItem
+ *
+ * 单个运行时配置项（管理端读）。
+ *
+ * `isDefault=True` 表示该 key 尚未写入 `msg_sys_config`，当前生效的是 settings 默认值
+ * （管理端据此展示「默认值 / 已覆盖」状态，并可把默认值直接改为自定义值）。
+ */
+export type SysConfigItemWritable = {
+    /**
+     * Key
+     */
+    key: string;
+    /**
+     * Value
+     */
+    value: {
+        [key: string]: unknown;
+    };
+    /**
+     * Remark
+     */
+    remark?: string | null;
+    /**
+     * Updatedby
+     *
+     * 最后修改者 mid（字符串版见 updatedBy_str）
+     */
+    updatedBy?: number;
+    /**
+     * Updated At
+     *
+     * 最后更新时间（秒级时间戳）
+     */
+    updated_at?: number | null;
+    /**
+     * Isdefault
+     *
+     * 是否仍是 settings 默认值（未写入 DB）
+     */
+    isDefault?: boolean;
+};
+
+/**
+ * SysConfigListResp
+ *
+ * 运行时配置列表（管理端读）。
+ */
+export type SysConfigListRespWritable = {
+    /**
+     * Items
+     */
+    items?: Array<SysConfigItemWritable>;
+};
+
+/**
  * UserActivityResp
  *
  * 用户活跃度快照（当前是否在线，用于前端轮询节奏）。
@@ -13881,7 +17563,7 @@ export type UserActivityRespWritable = {
     /**
      * Last Active At
      */
-    last_active_at: string;
+    last_active_at: number;
     /**
      * Active Count
      */
@@ -13892,6 +17574,101 @@ export type UserActivityRespWritable = {
      * 当前是否处于活跃窗口内
      */
     is_active?: boolean;
+};
+
+/**
+ * UserBriefOut
+ *
+ * 用户展示简档：他人可见字段 + 本人 / 管理员可见的私域字段。
+ *
+ * 私域字段在他人视角下由序列化器自动剥离，装配层**不需要**（也不应该）
+ * 再手动投影。
+ */
+export type UserBriefOutWritable = {
+    /**
+     * Mid
+     */
+    mid: number;
+    /**
+     * Name
+     */
+    name?: string | null;
+    /**
+     * Face
+     */
+    face?: string | null;
+    /**
+     * Uname
+     */
+    uname?: string | null;
+    /**
+     * Avatar
+     */
+    avatar?: string | null;
+    /**
+     * Level
+     */
+    level?: number;
+    /**
+     * Vip Status
+     */
+    vip_status?: string | null;
+    /**
+     * Vip Type
+     */
+    vip_type?: number;
+    /**
+     * Sex
+     */
+    sex?: string | null;
+    /**
+     * Sign
+     */
+    sign?: string | null;
+    /**
+     * Follower Count
+     */
+    follower_count?: number;
+    /**
+     * Following Count
+     */
+    following_count?: number;
+    /**
+     * Like Count
+     */
+    like_count?: number;
+    /**
+     * Nameplate Name
+     */
+    nameplate_name?: string | null;
+    /**
+     * Nameplate Image
+     */
+    nameplate_image?: string | null;
+    /**
+     * Nameplate Level
+     */
+    nameplate_level?: string | null;
+    /**
+     * Official Title
+     */
+    official_title?: string | null;
+    /**
+     * Vip Due Date
+     */
+    vip_due_date?: unknown;
+    /**
+     * Exp
+     */
+    exp?: unknown;
+    /**
+     * Role
+     */
+    role?: unknown;
+    /**
+     * Email
+     */
+    email?: unknown;
 };
 
 export type HealthHealthGetData = {
@@ -14370,7 +18147,7 @@ export type CommentLatestApiV1CommentLatestGetData = {
         /**
          * Types
          *
-         * 逗号分隔的资源类型文字（dynamic/lottery/rpa_action/rpa_workflow/rpa_browser/rpa_plugin），缺省返回全部可挂评论的类型
+         * 逗号分隔的资源类型文字（dynamic/lottery/rpa_action/rpa_workflow/rpa_browser），缺省返回全部可挂评论的类型
          */
         types?: string | null;
         /**
@@ -16192,6 +19969,44 @@ export type InteractionStatusDetailApiV1CommunityInteractionStatusBizIdGetRespon
 
 export type InteractionStatusDetailApiV1CommunityInteractionStatusBizIdGetResponse = InteractionStatusDetailApiV1CommunityInteractionStatusBizIdGetResponses[keyof InteractionStatusDetailApiV1CommunityInteractionStatusBizIdGetResponses];
 
+export type InteractionHotLotteriesApiV1CommunityInteractionHotLotteriesGetData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Window Days
+         *
+         * 浏览记录统计窗口（天）
+         */
+        window_days?: number;
+        /**
+         * Limit
+         *
+         * 返回条数上限
+         */
+        limit?: number;
+    };
+    url: '/api/v1/community/interaction/hot-lotteries';
+};
+
+export type InteractionHotLotteriesApiV1CommunityInteractionHotLotteriesGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type InteractionHotLotteriesApiV1CommunityInteractionHotLotteriesGetError = InteractionHotLotteriesApiV1CommunityInteractionHotLotteriesGetErrors[keyof InteractionHotLotteriesApiV1CommunityInteractionHotLotteriesGetErrors];
+
+export type InteractionHotLotteriesApiV1CommunityInteractionHotLotteriesGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseHotLotteryResp;
+};
+
+export type InteractionHotLotteriesApiV1CommunityInteractionHotLotteriesGetResponse = InteractionHotLotteriesApiV1CommunityInteractionHotLotteriesGetResponses[keyof InteractionHotLotteriesApiV1CommunityInteractionHotLotteriesGetResponses];
+
 export type ReportApiV1CommunityReportPostData = {
     body: MomentReportReq;
     headers?: {
@@ -17277,6 +21092,53 @@ export type FeedAllApiV1CommunityFeedAllGetResponses = {
 
 export type FeedAllApiV1CommunityFeedAllGetResponse = FeedAllApiV1CommunityFeedAllGetResponses[keyof FeedAllApiV1CommunityFeedAllGetResponses];
 
+export type ReportFeedEventsApiV1CommunityFeedEventsPostData = {
+    body: FeedEventReportReq;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/community/feed/events';
+};
+
+export type ReportFeedEventsApiV1CommunityFeedEventsPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ReportFeedEventsApiV1CommunityFeedEventsPostError = ReportFeedEventsApiV1CommunityFeedEventsPostErrors[keyof ReportFeedEventsApiV1CommunityFeedEventsPostErrors];
+
+export type ReportFeedEventsApiV1CommunityFeedEventsPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseInt;
+};
+
+export type ReportFeedEventsApiV1CommunityFeedEventsPostResponse = ReportFeedEventsApiV1CommunityFeedEventsPostResponses[keyof ReportFeedEventsApiV1CommunityFeedEventsPostResponses];
+
+export type FeedMlStatusApiV1CommunityFeedMlStatusGetData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/community/feed/ml-status';
+};
+
+export type FeedMlStatusApiV1CommunityFeedMlStatusGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseFeedMlStatusResp;
+};
+
+export type FeedMlStatusApiV1CommunityFeedMlStatusGetResponse = FeedMlStatusApiV1CommunityFeedMlStatusGetResponses[keyof FeedMlStatusApiV1CommunityFeedMlStatusGetResponses];
+
 export type FeedFollowingApiV1CommunityFeedFollowingGetData = {
     body?: never;
     headers?: {
@@ -18070,6 +21932,196 @@ export type AuditDetailApiV1CommunityAuditDynIdGetResponses = {
 };
 
 export type AuditDetailApiV1CommunityAuditDynIdGetResponse = AuditDetailApiV1CommunityAuditDynIdGetResponses[keyof AuditDetailApiV1CommunityAuditDynIdGetResponses];
+
+export type SpaceTimelineApiV1CommunitySpaceTimelineGetData = {
+    body?: never;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         *
+         * 可选登录态 viewer mid
+         */
+        'x-bili-mid'?: string | null;
+    };
+    path?: never;
+    query: {
+        /**
+         * Mid
+         *
+         * 目标空间 mid（本人或 TA）
+         */
+        mid: number | string;
+        /**
+         * Cursor
+         *
+         * 上一页返回的游标（ISO 时间）
+         */
+        cursor?: string | null;
+        /**
+         * Page Size
+         */
+        page_size?: number;
+    };
+    url: '/api/v1/community/space/timeline';
+};
+
+export type SpaceTimelineApiV1CommunitySpaceTimelineGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type SpaceTimelineApiV1CommunitySpaceTimelineGetError = SpaceTimelineApiV1CommunitySpaceTimelineGetErrors[keyof SpaceTimelineApiV1CommunitySpaceTimelineGetErrors];
+
+export type SpaceTimelineApiV1CommunitySpaceTimelineGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseSpaceTimelineResp;
+};
+
+export type SpaceTimelineApiV1CommunitySpaceTimelineGetResponse = SpaceTimelineApiV1CommunitySpaceTimelineGetResponses[keyof SpaceTimelineApiV1CommunitySpaceTimelineGetResponses];
+
+export type SpaceFansApiV1CommunitySpaceFansGetData = {
+    body?: never;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         *
+         * 可选登录态 viewer mid
+         */
+        'x-bili-mid'?: string | null;
+    };
+    path?: never;
+    query: {
+        /**
+         * Mid
+         *
+         * 目标空间 mid（查 TA 的粉丝）
+         */
+        mid: number | string;
+        /**
+         * Page Num
+         */
+        page_num?: number;
+        /**
+         * Page Size
+         */
+        page_size?: number;
+    };
+    url: '/api/v1/community/space/fans';
+};
+
+export type SpaceFansApiV1CommunitySpaceFansGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type SpaceFansApiV1CommunitySpaceFansGetError = SpaceFansApiV1CommunitySpaceFansGetErrors[keyof SpaceFansApiV1CommunitySpaceFansGetErrors];
+
+export type SpaceFansApiV1CommunitySpaceFansGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseFollowListResp;
+};
+
+export type SpaceFansApiV1CommunitySpaceFansGetResponse = SpaceFansApiV1CommunitySpaceFansGetResponses[keyof SpaceFansApiV1CommunitySpaceFansGetResponses];
+
+export type SpaceViewHistoryApiV1CommunitySpaceViewHistoryGetData = {
+    body?: never;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Jwt
+         */
+        'x-bili-jwt'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string | null;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string | null;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string | null;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string | null;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string | null;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string | null;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string | null;
+    };
+    path?: never;
+    query: {
+        /**
+         * Mid
+         *
+         * 本人 mid（仅允许查自己的浏览历史）
+         */
+        mid: number | string;
+        /**
+         * Cursor
+         *
+         * 上一页返回的游标（ISO 时间）
+         */
+        cursor?: string | null;
+        /**
+         * Page Size
+         */
+        page_size?: number;
+    };
+    url: '/api/v1/community/space/view-history';
+};
+
+export type SpaceViewHistoryApiV1CommunitySpaceViewHistoryGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type SpaceViewHistoryApiV1CommunitySpaceViewHistoryGetError = SpaceViewHistoryApiV1CommunitySpaceViewHistoryGetErrors[keyof SpaceViewHistoryApiV1CommunitySpaceViewHistoryGetErrors];
+
+export type SpaceViewHistoryApiV1CommunitySpaceViewHistoryGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseSpaceViewHistoryResp;
+};
+
+export type SpaceViewHistoryApiV1CommunitySpaceViewHistoryGetResponse = SpaceViewHistoryApiV1CommunitySpaceViewHistoryGetResponses[keyof SpaceViewHistoryApiV1CommunitySpaceViewHistoryGetResponses];
 
 export type AuditApproveApiV1AuditApprovePostData = {
     body: AuditApproveReq;
@@ -19187,156 +23239,6 @@ export type DynFoldersApiV1FavoriteDynFoldersGetResponses = {
 
 export type DynFoldersApiV1FavoriteDynFoldersGetResponse = DynFoldersApiV1FavoriteDynFoldersGetResponses[keyof DynFoldersApiV1FavoriteDynFoldersGetResponses];
 
-export type GetSettingApiV1FavoriteSettingGetData = {
-    body?: never;
-    headers?: {
-        /**
-         * X-Bili-Mid
-         */
-        'x-bili-mid'?: string | null;
-        /**
-         * X-Bili-Jwt
-         */
-        'x-bili-jwt'?: string | null;
-        /**
-         * X-Bili-Level
-         */
-        'x-bili-level'?: string | null;
-        /**
-         * X-Bili-Role
-         */
-        'x-bili-role'?: string;
-        /**
-         * X-Bili-Permissions
-         */
-        'x-bili-permissions'?: string | null;
-        /**
-         * X-Bili-User-Name
-         */
-        'x-bili-user-name'?: string | null;
-        /**
-         * X-Bili-Uname
-         */
-        'x-bili-uname'?: string | null;
-        /**
-         * X-Bili-Sign
-         */
-        'x-bili-sign'?: string | null;
-        /**
-         * X-Bili-Sex
-         */
-        'x-bili-sex'?: string | null;
-        /**
-         * X-Bili-Email
-         */
-        'x-bili-email'?: string | null;
-        /**
-         * X-Bili-Vip-Status
-         */
-        'x-bili-vip-status'?: string | null;
-        /**
-         * X-Bili-Vip-Type
-         */
-        'x-bili-vip-type'?: string | null;
-    };
-    path?: never;
-    query?: never;
-    url: '/api/v1/favorite/setting';
-};
-
-export type GetSettingApiV1FavoriteSettingGetErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type GetSettingApiV1FavoriteSettingGetError = GetSettingApiV1FavoriteSettingGetErrors[keyof GetSettingApiV1FavoriteSettingGetErrors];
-
-export type GetSettingApiV1FavoriteSettingGetResponses = {
-    /**
-     * Successful Response
-     */
-    200: StandardResponseFavoriteSettingResp;
-};
-
-export type GetSettingApiV1FavoriteSettingGetResponse = GetSettingApiV1FavoriteSettingGetResponses[keyof GetSettingApiV1FavoriteSettingGetResponses];
-
-export type SetSettingApiV1FavoriteSettingPostData = {
-    body: FavoriteSettingReq;
-    headers?: {
-        /**
-         * X-Bili-Mid
-         */
-        'x-bili-mid'?: string | null;
-        /**
-         * X-Bili-Jwt
-         */
-        'x-bili-jwt'?: string | null;
-        /**
-         * X-Bili-Level
-         */
-        'x-bili-level'?: string | null;
-        /**
-         * X-Bili-Role
-         */
-        'x-bili-role'?: string;
-        /**
-         * X-Bili-Permissions
-         */
-        'x-bili-permissions'?: string | null;
-        /**
-         * X-Bili-User-Name
-         */
-        'x-bili-user-name'?: string | null;
-        /**
-         * X-Bili-Uname
-         */
-        'x-bili-uname'?: string | null;
-        /**
-         * X-Bili-Sign
-         */
-        'x-bili-sign'?: string | null;
-        /**
-         * X-Bili-Sex
-         */
-        'x-bili-sex'?: string | null;
-        /**
-         * X-Bili-Email
-         */
-        'x-bili-email'?: string | null;
-        /**
-         * X-Bili-Vip-Status
-         */
-        'x-bili-vip-status'?: string | null;
-        /**
-         * X-Bili-Vip-Type
-         */
-        'x-bili-vip-type'?: string | null;
-    };
-    path?: never;
-    query?: never;
-    url: '/api/v1/favorite/setting';
-};
-
-export type SetSettingApiV1FavoriteSettingPostErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type SetSettingApiV1FavoriteSettingPostError = SetSettingApiV1FavoriteSettingPostErrors[keyof SetSettingApiV1FavoriteSettingPostErrors];
-
-export type SetSettingApiV1FavoriteSettingPostResponses = {
-    /**
-     * Successful Response
-     */
-    200: StandardResponseFavoriteSettingResp;
-};
-
-export type SetSettingApiV1FavoriteSettingPostResponse = SetSettingApiV1FavoriteSettingPostResponses[keyof SetSettingApiV1FavoriteSettingPostResponses];
-
 export type PublicFoldersApiV1FavoriteUserFoldersGetData = {
     body?: never;
     path?: never;
@@ -19364,7 +23266,7 @@ export type PublicFoldersApiV1FavoriteUserFoldersGetResponses = {
     /**
      * Successful Response
      */
-    200: StandardResponseUnionListFavoriteFolderRespNoneType;
+    200: StandardResponseListFavoriteFolderResp;
 };
 
 export type PublicFoldersApiV1FavoriteUserFoldersGetResponse = PublicFoldersApiV1FavoriteUserFoldersGetResponses[keyof PublicFoldersApiV1FavoriteUserFoldersGetResponses];
@@ -19410,7 +23312,7 @@ export type PublicDynamicsApiV1FavoriteUserDynamicsGetResponses = {
     /**
      * Successful Response
      */
-    200: StandardResponseUnionFavoriteListRespNoneType;
+    200: StandardResponseFavoriteListResp;
 };
 
 export type PublicDynamicsApiV1FavoriteUserDynamicsGetResponse = PublicDynamicsApiV1FavoriteUserDynamicsGetResponses[keyof PublicDynamicsApiV1FavoriteUserDynamicsGetResponses];
@@ -22794,7 +26696,7 @@ export type GetCountsApiV1MessageFollowCountGetResponses = {
 
 export type GetCountsApiV1MessageFollowCountGetResponse = GetCountsApiV1MessageFollowCountGetResponses[keyof GetCountsApiV1MessageFollowCountGetResponses];
 
-export type ListFollowingApiV1MessageFollowFollowingListGetData = {
+export type ListFollowingsApiV1MessageFollowFollowingsGetData = {
     body?: never;
     headers?: {
         /**
@@ -22849,36 +26751,52 @@ export type ListFollowingApiV1MessageFollowFollowingListGetData = {
     path?: never;
     query?: {
         /**
-         * Page Num
+         * Pn
+         *
+         * 页码，从 1 开始
          */
-        page_num?: number;
+        pn?: number;
         /**
-         * Page Size
+         * Ps
+         *
+         * 每页条数
          */
-        page_size?: number;
+        ps?: number;
+        /**
+         * Vmid
+         *
+         * 被查看的用户 mid，缺省=自己
+         */
+        vmid?: number | string | null;
+        /**
+         * Tagid
+         *
+         * 按分组过滤：-10 特别关注 / 0 默认分组（未分组）/ >0 自建分组；不传=全部
+         */
+        tagid?: number | null;
     };
-    url: '/api/v1/message/follow/following/list';
+    url: '/api/v1/message/follow/followings';
 };
 
-export type ListFollowingApiV1MessageFollowFollowingListGetErrors = {
+export type ListFollowingsApiV1MessageFollowFollowingsGetErrors = {
     /**
      * Validation Error
      */
     422: HttpValidationError;
 };
 
-export type ListFollowingApiV1MessageFollowFollowingListGetError = ListFollowingApiV1MessageFollowFollowingListGetErrors[keyof ListFollowingApiV1MessageFollowFollowingListGetErrors];
+export type ListFollowingsApiV1MessageFollowFollowingsGetError = ListFollowingsApiV1MessageFollowFollowingsGetErrors[keyof ListFollowingsApiV1MessageFollowFollowingsGetErrors];
 
-export type ListFollowingApiV1MessageFollowFollowingListGetResponses = {
+export type ListFollowingsApiV1MessageFollowFollowingsGetResponses = {
     /**
      * Successful Response
      */
     200: StandardResponseFollowListResp;
 };
 
-export type ListFollowingApiV1MessageFollowFollowingListGetResponse = ListFollowingApiV1MessageFollowFollowingListGetResponses[keyof ListFollowingApiV1MessageFollowFollowingListGetResponses];
+export type ListFollowingsApiV1MessageFollowFollowingsGetResponse = ListFollowingsApiV1MessageFollowFollowingsGetResponses[keyof ListFollowingsApiV1MessageFollowFollowingsGetResponses];
 
-export type ListFollowersApiV1MessageFollowFollowersListGetData = {
+export type ListFansApiV1MessageFollowFansGetData = {
     body?: never;
     headers?: {
         /**
@@ -22933,34 +26851,431 @@ export type ListFollowersApiV1MessageFollowFollowersListGetData = {
     path?: never;
     query?: {
         /**
-         * Page Num
+         * Pn
+         *
+         * 页码，从 1 开始
          */
-        page_num?: number;
+        pn?: number;
         /**
-         * Page Size
+         * Ps
+         *
+         * 每页条数
          */
-        page_size?: number;
+        ps?: number;
+        /**
+         * Vmid
+         *
+         * 被查看的用户 mid，缺省=自己
+         */
+        vmid?: number | string | null;
     };
-    url: '/api/v1/message/follow/followers/list';
+    url: '/api/v1/message/follow/fans';
 };
 
-export type ListFollowersApiV1MessageFollowFollowersListGetErrors = {
+export type ListFansApiV1MessageFollowFansGetErrors = {
     /**
      * Validation Error
      */
     422: HttpValidationError;
 };
 
-export type ListFollowersApiV1MessageFollowFollowersListGetError = ListFollowersApiV1MessageFollowFollowersListGetErrors[keyof ListFollowersApiV1MessageFollowFollowersListGetErrors];
+export type ListFansApiV1MessageFollowFansGetError = ListFansApiV1MessageFollowFansGetErrors[keyof ListFansApiV1MessageFollowFansGetErrors];
 
-export type ListFollowersApiV1MessageFollowFollowersListGetResponses = {
+export type ListFansApiV1MessageFollowFansGetResponses = {
     /**
      * Successful Response
      */
     200: StandardResponseFollowListResp;
 };
 
-export type ListFollowersApiV1MessageFollowFollowersListGetResponse = ListFollowersApiV1MessageFollowFollowersListGetResponses[keyof ListFollowersApiV1MessageFollowFollowersListGetResponses];
+export type ListFansApiV1MessageFollowFansGetResponse = ListFansApiV1MessageFollowFansGetResponses[keyof ListFansApiV1MessageFollowFansGetResponses];
+
+export type ListFollowTagsApiV1MessageFollowTagsGetData = {
+    body?: never;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Jwt
+         */
+        'x-bili-jwt'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string | null;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string | null;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string | null;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string | null;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string | null;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string | null;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string | null;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/message/follow/tags';
+};
+
+export type ListFollowTagsApiV1MessageFollowTagsGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ListFollowTagsApiV1MessageFollowTagsGetError = ListFollowTagsApiV1MessageFollowTagsGetErrors[keyof ListFollowTagsApiV1MessageFollowTagsGetErrors];
+
+export type ListFollowTagsApiV1MessageFollowTagsGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseListFollowTagResp;
+};
+
+export type ListFollowTagsApiV1MessageFollowTagsGetResponse = ListFollowTagsApiV1MessageFollowTagsGetResponses[keyof ListFollowTagsApiV1MessageFollowTagsGetResponses];
+
+export type CreateFollowTagApiV1MessageFollowTagsPostData = {
+    body: FollowTagCreateReq;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Jwt
+         */
+        'x-bili-jwt'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string | null;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string | null;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string | null;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string | null;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string | null;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string | null;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string | null;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/message/follow/tags';
+};
+
+export type CreateFollowTagApiV1MessageFollowTagsPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type CreateFollowTagApiV1MessageFollowTagsPostError = CreateFollowTagApiV1MessageFollowTagsPostErrors[keyof CreateFollowTagApiV1MessageFollowTagsPostErrors];
+
+export type CreateFollowTagApiV1MessageFollowTagsPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseFollowTagResp;
+};
+
+export type CreateFollowTagApiV1MessageFollowTagsPostResponse = CreateFollowTagApiV1MessageFollowTagsPostResponses[keyof CreateFollowTagApiV1MessageFollowTagsPostResponses];
+
+export type DeleteFollowTagApiV1MessageFollowTagsTagIdDeleteData = {
+    body?: never;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Jwt
+         */
+        'x-bili-jwt'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string | null;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string | null;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string | null;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string | null;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string | null;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string | null;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string | null;
+    };
+    path: {
+        /**
+         * Tag Id
+         */
+        tag_id: number;
+    };
+    query?: never;
+    url: '/api/v1/message/follow/tags/{tag_id}';
+};
+
+export type DeleteFollowTagApiV1MessageFollowTagsTagIdDeleteErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type DeleteFollowTagApiV1MessageFollowTagsTagIdDeleteError = DeleteFollowTagApiV1MessageFollowTagsTagIdDeleteErrors[keyof DeleteFollowTagApiV1MessageFollowTagsTagIdDeleteErrors];
+
+export type DeleteFollowTagApiV1MessageFollowTagsTagIdDeleteResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseNoneType;
+};
+
+export type DeleteFollowTagApiV1MessageFollowTagsTagIdDeleteResponse = DeleteFollowTagApiV1MessageFollowTagsTagIdDeleteResponses[keyof DeleteFollowTagApiV1MessageFollowTagsTagIdDeleteResponses];
+
+export type GetAssignedFollowTagsApiV1MessageFollowTagsAssignedGetData = {
+    body?: never;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Jwt
+         */
+        'x-bili-jwt'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string | null;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string | null;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string | null;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string | null;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string | null;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string | null;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string | null;
+    };
+    path?: never;
+    query: {
+        /**
+         * Target Mid
+         *
+         * 目标用户 mid
+         */
+        target_mid: number | string;
+    };
+    url: '/api/v1/message/follow/tags/assigned';
+};
+
+export type GetAssignedFollowTagsApiV1MessageFollowTagsAssignedGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetAssignedFollowTagsApiV1MessageFollowTagsAssignedGetError = GetAssignedFollowTagsApiV1MessageFollowTagsAssignedGetErrors[keyof GetAssignedFollowTagsApiV1MessageFollowTagsAssignedGetErrors];
+
+export type GetAssignedFollowTagsApiV1MessageFollowTagsAssignedGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseListInt;
+};
+
+export type GetAssignedFollowTagsApiV1MessageFollowTagsAssignedGetResponse = GetAssignedFollowTagsApiV1MessageFollowTagsAssignedGetResponses[keyof GetAssignedFollowTagsApiV1MessageFollowTagsAssignedGetResponses];
+
+export type AssignFollowTagApiV1MessageFollowTagsAssignPostData = {
+    body: FollowTagAssignReq;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Jwt
+         */
+        'x-bili-jwt'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string | null;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string | null;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string | null;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string | null;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string | null;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string | null;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string | null;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/message/follow/tags/assign';
+};
+
+export type AssignFollowTagApiV1MessageFollowTagsAssignPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type AssignFollowTagApiV1MessageFollowTagsAssignPostError = AssignFollowTagApiV1MessageFollowTagsAssignPostErrors[keyof AssignFollowTagApiV1MessageFollowTagsAssignPostErrors];
+
+export type AssignFollowTagApiV1MessageFollowTagsAssignPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseListInt;
+};
+
+export type AssignFollowTagApiV1MessageFollowTagsAssignPostResponse = AssignFollowTagApiV1MessageFollowTagsAssignPostResponses[keyof AssignFollowTagApiV1MessageFollowTagsAssignPostResponses];
 
 export type GetSettingApiV1MessageSettingGetData = {
     body?: never;
@@ -25096,8 +29411,8 @@ export type CheckBlocklistApiV1UserBlocklistCheckGetResponses = {
 
 export type CheckBlocklistApiV1UserBlocklistCheckGetResponse = CheckBlocklistApiV1UserBlocklistCheckGetResponses[keyof CheckBlocklistApiV1UserBlocklistCheckGetResponses];
 
-export type DeactivateSelfApiV1UserDeactivatePostData = {
-    body?: never;
+export type DeactivateAccountApiV1UserDeactivatePostData = {
+    body: UserDeactivateReq;
     headers?: {
         /**
          * X-Bili-Mid
@@ -25153,23 +29468,23 @@ export type DeactivateSelfApiV1UserDeactivatePostData = {
     url: '/api/v1/user/deactivate';
 };
 
-export type DeactivateSelfApiV1UserDeactivatePostErrors = {
+export type DeactivateAccountApiV1UserDeactivatePostErrors = {
     /**
      * Validation Error
      */
     422: HttpValidationError;
 };
 
-export type DeactivateSelfApiV1UserDeactivatePostError = DeactivateSelfApiV1UserDeactivatePostErrors[keyof DeactivateSelfApiV1UserDeactivatePostErrors];
+export type DeactivateAccountApiV1UserDeactivatePostError = DeactivateAccountApiV1UserDeactivatePostErrors[keyof DeactivateAccountApiV1UserDeactivatePostErrors];
 
-export type DeactivateSelfApiV1UserDeactivatePostResponses = {
+export type DeactivateAccountApiV1UserDeactivatePostResponses = {
     /**
      * Successful Response
      */
-    200: StandardResponse;
+    200: StandardResponseStr;
 };
 
-export type DeactivateSelfApiV1UserDeactivatePostResponse = DeactivateSelfApiV1UserDeactivatePostResponses[keyof DeactivateSelfApiV1UserDeactivatePostResponses];
+export type DeactivateAccountApiV1UserDeactivatePostResponse = DeactivateAccountApiV1UserDeactivatePostResponses[keyof DeactivateAccountApiV1UserDeactivatePostResponses];
 
 export type SetUserRoleApiV1UserRoleSetPostData = {
     body: PptrUserRoleSetParams;
@@ -25565,6 +29880,156 @@ export type GetSpaceInfoApiV1UserSpaceInfoGetResponses = {
 };
 
 export type GetSpaceInfoApiV1UserSpaceInfoGetResponse = GetSpaceInfoApiV1UserSpaceInfoGetResponses[keyof GetSpaceInfoApiV1UserSpaceInfoGetResponses];
+
+export type GetMySpacePrivacyApiV1UserSpacePrivacyGetData = {
+    body?: never;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Jwt
+         */
+        'x-bili-jwt'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string | null;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string | null;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string | null;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string | null;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string | null;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string | null;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string | null;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/user/space/privacy';
+};
+
+export type GetMySpacePrivacyApiV1UserSpacePrivacyGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetMySpacePrivacyApiV1UserSpacePrivacyGetError = GetMySpacePrivacyApiV1UserSpacePrivacyGetErrors[keyof GetMySpacePrivacyApiV1UserSpacePrivacyGetErrors];
+
+export type GetMySpacePrivacyApiV1UserSpacePrivacyGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseSpacePrivacyFlags;
+};
+
+export type GetMySpacePrivacyApiV1UserSpacePrivacyGetResponse = GetMySpacePrivacyApiV1UserSpacePrivacyGetResponses[keyof GetMySpacePrivacyApiV1UserSpacePrivacyGetResponses];
+
+export type UpdateMySpacePrivacyApiV1UserSpacePrivacyPostData = {
+    body: SpacePrivacyUpdateReq;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Jwt
+         */
+        'x-bili-jwt'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string | null;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string | null;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string | null;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string | null;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string | null;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string | null;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string | null;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/user/space/privacy';
+};
+
+export type UpdateMySpacePrivacyApiV1UserSpacePrivacyPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type UpdateMySpacePrivacyApiV1UserSpacePrivacyPostError = UpdateMySpacePrivacyApiV1UserSpacePrivacyPostErrors[keyof UpdateMySpacePrivacyApiV1UserSpacePrivacyPostErrors];
+
+export type UpdateMySpacePrivacyApiV1UserSpacePrivacyPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseSpacePrivacyFlags;
+};
+
+export type UpdateMySpacePrivacyApiV1UserSpacePrivacyPostResponse = UpdateMySpacePrivacyApiV1UserSpacePrivacyPostResponses[keyof UpdateMySpacePrivacyApiV1UserSpacePrivacyPostResponses];
 
 export type DeactivateUserApiV1UserAdminDeactivatePostData = {
     body?: never;

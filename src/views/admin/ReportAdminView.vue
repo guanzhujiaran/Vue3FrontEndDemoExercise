@@ -210,6 +210,7 @@ import { auditStateText, auditStateTagType, canApprove, canReject } from '@/util
 import { useAuditTabCache } from '@/composables/useAuditTabCache'
 import AdminAuditTabs from '@/components/admin/AdminAuditTabs.vue'
 import PaginationBar from '@/components/message/PaginationBar.vue'
+import { formatDateTime } from '@/utils/dateFormat'
 import AuditOverviewCard from '@/components/admin/AuditOverviewCard.vue'
 import { fetchAuditStatisticsByBiz, type AuditStatisticsData, AuditBizType } from '@/api/notify/moment-api'
 
@@ -265,8 +266,8 @@ const canHide = (row: ReportItem) =>
   row.bizType !== InteractionBizTypeEnum.OTHERS_LOT_DYN &&
   row.bizType !== InteractionBizTypeEnum.USER
 
-const formatTime = (t?: string | null) =>
-  t ? new Date(t).toLocaleString('zh-CN', { hour12: false }) : '-'
+const formatTime = (t?: string | number | null) =>
+  t ? formatDateTime(t) : '-'
 
 const router = useRouter()
 const openResource = (url?: string | null) => jumpToTarget(router, url)

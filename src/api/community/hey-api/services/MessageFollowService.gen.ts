@@ -3,7 +3,7 @@
 import type { RequestResult } from '../client';
 import { client } from '../client.gen';
 import type { Options } from '../sdk.gen';
-import type { BlockUserApiV1MessageFollowBlockPostData, BlockUserApiV1MessageFollowBlockPostErrors, BlockUserApiV1MessageFollowBlockPostResponses, FollowUserApiV1MessageFollowDoPostData, FollowUserApiV1MessageFollowDoPostErrors, FollowUserApiV1MessageFollowDoPostResponses, GetCountsApiV1MessageFollowCountGetData, GetCountsApiV1MessageFollowCountGetErrors, GetCountsApiV1MessageFollowCountGetResponses, GetRelationApiV1MessageFollowRelationGetData, GetRelationApiV1MessageFollowRelationGetErrors, GetRelationApiV1MessageFollowRelationGetResponses, ListFollowersApiV1MessageFollowFollowersListGetData, ListFollowersApiV1MessageFollowFollowersListGetErrors, ListFollowersApiV1MessageFollowFollowersListGetResponses, ListFollowingApiV1MessageFollowFollowingListGetData, ListFollowingApiV1MessageFollowFollowingListGetErrors, ListFollowingApiV1MessageFollowFollowingListGetResponses, UnblockUserApiV1MessageFollowUnblockPostData, UnblockUserApiV1MessageFollowUnblockPostErrors, UnblockUserApiV1MessageFollowUnblockPostResponses, UnfollowUserApiV1MessageFollowUndoPostData, UnfollowUserApiV1MessageFollowUndoPostErrors, UnfollowUserApiV1MessageFollowUndoPostResponses } from '../types.gen';
+import type { AssignFollowTagApiV1MessageFollowTagsAssignPostData, AssignFollowTagApiV1MessageFollowTagsAssignPostErrors, AssignFollowTagApiV1MessageFollowTagsAssignPostResponses, BlockUserApiV1MessageFollowBlockPostData, BlockUserApiV1MessageFollowBlockPostErrors, BlockUserApiV1MessageFollowBlockPostResponses, CreateFollowTagApiV1MessageFollowTagsPostData, CreateFollowTagApiV1MessageFollowTagsPostErrors, CreateFollowTagApiV1MessageFollowTagsPostResponses, DeleteFollowTagApiV1MessageFollowTagsTagIdDeleteData, DeleteFollowTagApiV1MessageFollowTagsTagIdDeleteErrors, DeleteFollowTagApiV1MessageFollowTagsTagIdDeleteResponses, FollowUserApiV1MessageFollowDoPostData, FollowUserApiV1MessageFollowDoPostErrors, FollowUserApiV1MessageFollowDoPostResponses, GetAssignedFollowTagsApiV1MessageFollowTagsAssignedGetData, GetAssignedFollowTagsApiV1MessageFollowTagsAssignedGetErrors, GetAssignedFollowTagsApiV1MessageFollowTagsAssignedGetResponses, GetCountsApiV1MessageFollowCountGetData, GetCountsApiV1MessageFollowCountGetErrors, GetCountsApiV1MessageFollowCountGetResponses, GetRelationApiV1MessageFollowRelationGetData, GetRelationApiV1MessageFollowRelationGetErrors, GetRelationApiV1MessageFollowRelationGetResponses, ListFansApiV1MessageFollowFansGetData, ListFansApiV1MessageFollowFansGetErrors, ListFansApiV1MessageFollowFansGetResponses, ListFollowingsApiV1MessageFollowFollowingsGetData, ListFollowingsApiV1MessageFollowFollowingsGetErrors, ListFollowingsApiV1MessageFollowFollowingsGetResponses, ListFollowTagsApiV1MessageFollowTagsGetData, ListFollowTagsApiV1MessageFollowTagsGetErrors, ListFollowTagsApiV1MessageFollowTagsGetResponses, UnblockUserApiV1MessageFollowUnblockPostData, UnblockUserApiV1MessageFollowUnblockPostErrors, UnblockUserApiV1MessageFollowUnblockPostResponses, UnfollowUserApiV1MessageFollowUndoPostData, UnfollowUserApiV1MessageFollowUndoPostErrors, UnfollowUserApiV1MessageFollowUndoPostResponses } from '../types.gen';
 
 export class MessageFollowService {
     /**
@@ -116,28 +116,120 @@ export class MessageFollowService {
     }
     
     /**
-     * 我的关注列表
+     * 关注列表（缺省 vmid=当前登录用户）
      *
-     * 我关注的人列表（按关注时间倒序），含 `mutual` 标记是否互相关注。
+     * TA 关注的人列表（按关注时间倒序），含 `mutual` 标记是否互相关注。
+     *
+     * 对标 B 站 `GET /x/relation/followings?vmid=&pn=&ps=`（`order` / `order_type`
+     * 排序参数本期不做，见计划书 §4.1）。
+     *
+     * - `vmid` 缺省=当前登录用户（与改造前行为一致）；
+     * - `tagid` 仅自己视角有效（分组是私域数据，他人看不到你如何分组）；
+     * - `vmid` 为他人时受**可见性窗口**约束：最多返回前 5 页（`ps=24` 即最新 120 条），
+     * 超出页码直接返回空列表、`total` 仍为真实总数（见计划书 §4.1）。
      */
-    public static listFollowingApiV1MessageFollowFollowingListGet<ThrowOnError extends boolean = false>(options?: Options<ListFollowingApiV1MessageFollowFollowingListGetData, ThrowOnError>): RequestResult<ListFollowingApiV1MessageFollowFollowingListGetResponses, ListFollowingApiV1MessageFollowFollowingListGetErrors, ThrowOnError, 'data'> {
-        return (options?.client ?? client).get<ListFollowingApiV1MessageFollowFollowingListGetResponses, ListFollowingApiV1MessageFollowFollowingListGetErrors, ThrowOnError, 'data'>({
+    public static listFollowingsApiV1MessageFollowFollowingsGet<ThrowOnError extends boolean = false>(options?: Options<ListFollowingsApiV1MessageFollowFollowingsGetData, ThrowOnError>): RequestResult<ListFollowingsApiV1MessageFollowFollowingsGetResponses, ListFollowingsApiV1MessageFollowFollowingsGetErrors, ThrowOnError, 'data'> {
+        return (options?.client ?? client).get<ListFollowingsApiV1MessageFollowFollowingsGetResponses, ListFollowingsApiV1MessageFollowFollowingsGetErrors, ThrowOnError, 'data'>({
             responseStyle: 'data',
-            url: '/api/v1/message/follow/following/list',
+            url: '/api/v1/message/follow/followings',
             ...options
         });
     }
     
     /**
-     * 我的粉丝列表
+     * 粉丝列表（缺省 vmid=当前登录用户）
      *
-     * 关注我的人列表（按关注时间倒序），含 `mutual` 标记是否互相关注。
+     * 关注 TA 的人列表（按关注时间倒序），含 `mutual` 标记是否互相关注。
+     *
+     * 对标 B 站 `GET /x/relation/fans?vmid=&pn=&ps=`；可见性窗口规则与 `followings` 一致：
+     * 看他人最多 5 页，超出返回空列表。
      */
-    public static listFollowersApiV1MessageFollowFollowersListGet<ThrowOnError extends boolean = false>(options?: Options<ListFollowersApiV1MessageFollowFollowersListGetData, ThrowOnError>): RequestResult<ListFollowersApiV1MessageFollowFollowersListGetResponses, ListFollowersApiV1MessageFollowFollowersListGetErrors, ThrowOnError, 'data'> {
-        return (options?.client ?? client).get<ListFollowersApiV1MessageFollowFollowersListGetResponses, ListFollowersApiV1MessageFollowFollowersListGetErrors, ThrowOnError, 'data'>({
+    public static listFansApiV1MessageFollowFansGet<ThrowOnError extends boolean = false>(options?: Options<ListFansApiV1MessageFollowFansGetData, ThrowOnError>): RequestResult<ListFansApiV1MessageFollowFansGetResponses, ListFansApiV1MessageFollowFansGetErrors, ThrowOnError, 'data'> {
+        return (options?.client ?? client).get<ListFansApiV1MessageFollowFansGetResponses, ListFansApiV1MessageFollowFansGetErrors, ThrowOnError, 'data'>({
             responseStyle: 'data',
-            url: '/api/v1/message/follow/followers/list',
+            url: '/api/v1/message/follow/fans',
             ...options
+        });
+    }
+    
+    /**
+     * 我的关注分组列表
+     *
+     * 我的分组列表（特别关注 → 默认分组 → 自建分组）。
+     *
+     * 对标 B 站 `GET /x/relation/tags`：`data` 直接是数组，元素形如
+     * `{"tagid": -10, "name": "特别关注", "count": 5, "tip": "..."}`。
+     * 分组是私域数据，只返回当前登录用户自己的分组。
+     */
+    public static listFollowTagsApiV1MessageFollowTagsGet<ThrowOnError extends boolean = false>(options?: Options<ListFollowTagsApiV1MessageFollowTagsGetData, ThrowOnError>): RequestResult<ListFollowTagsApiV1MessageFollowTagsGetResponses, ListFollowTagsApiV1MessageFollowTagsGetErrors, ThrowOnError, 'data'> {
+        return (options?.client ?? client).get<ListFollowTagsApiV1MessageFollowTagsGetResponses, ListFollowTagsApiV1MessageFollowTagsGetErrors, ThrowOnError, 'data'>({
+            responseStyle: 'data',
+            url: '/api/v1/message/follow/tags',
+            ...options
+        });
+    }
+    
+    /**
+     * 新建关注分组
+     *
+     * 新建自建分组（名称 1~20 字、不重名、最多 20 个）。
+     */
+    public static createFollowTagApiV1MessageFollowTagsPost<ThrowOnError extends boolean = false>(options: Options<CreateFollowTagApiV1MessageFollowTagsPostData, ThrowOnError>): RequestResult<CreateFollowTagApiV1MessageFollowTagsPostResponses, CreateFollowTagApiV1MessageFollowTagsPostErrors, ThrowOnError, 'data'> {
+        return (options.client ?? client).post<CreateFollowTagApiV1MessageFollowTagsPostResponses, CreateFollowTagApiV1MessageFollowTagsPostErrors, ThrowOnError, 'data'>({
+            responseStyle: 'data',
+            url: '/api/v1/message/follow/tags',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    /**
+     * 删除关注分组
+     *
+     * 删除自建分组（连带清空成员关系）；系统分组（-10 / 0）不可删。
+     */
+    public static deleteFollowTagApiV1MessageFollowTagsTagIdDelete<ThrowOnError extends boolean = false>(options: Options<DeleteFollowTagApiV1MessageFollowTagsTagIdDeleteData, ThrowOnError>): RequestResult<DeleteFollowTagApiV1MessageFollowTagsTagIdDeleteResponses, DeleteFollowTagApiV1MessageFollowTagsTagIdDeleteErrors, ThrowOnError, 'data'> {
+        return (options.client ?? client).delete<DeleteFollowTagApiV1MessageFollowTagsTagIdDeleteResponses, DeleteFollowTagApiV1MessageFollowTagsTagIdDeleteErrors, ThrowOnError, 'data'>({
+            responseStyle: 'data',
+            url: '/api/v1/message/follow/tags/{tag_id}',
+            ...options
+        });
+    }
+    
+    /**
+     * 查询某用户当前所属的分组 id 列表
+     *
+     * 某用户当前被我放在哪些分组（分组设置弹窗预填用；`0` 默认分组不参与）。
+     */
+    public static getAssignedFollowTagsApiV1MessageFollowTagsAssignedGet<ThrowOnError extends boolean = false>(options: Options<GetAssignedFollowTagsApiV1MessageFollowTagsAssignedGetData, ThrowOnError>): RequestResult<GetAssignedFollowTagsApiV1MessageFollowTagsAssignedGetResponses, GetAssignedFollowTagsApiV1MessageFollowTagsAssignedGetErrors, ThrowOnError, 'data'> {
+        return (options.client ?? client).get<GetAssignedFollowTagsApiV1MessageFollowTagsAssignedGetResponses, GetAssignedFollowTagsApiV1MessageFollowTagsAssignedGetErrors, ThrowOnError, 'data'>({
+            responseStyle: 'data',
+            url: '/api/v1/message/follow/tags/assigned',
+            ...options
+        });
+    }
+    
+    /**
+     * 设置某关注对象所属分组（覆盖式）
+     *
+     * 把 target_mid 的分组**覆盖式**设置为 `tag_ids`。
+     *
+     * - 只能操作已关注的人；自建分组必须是自己的；
+     * - `tag_ids` 传空数组 = 移出全部分组（回到默认分组）；
+     * - 返回设置后的分组 id 列表。对标 B 站 `POST /x/relation/tags/addUsers`。
+     */
+    public static assignFollowTagApiV1MessageFollowTagsAssignPost<ThrowOnError extends boolean = false>(options: Options<AssignFollowTagApiV1MessageFollowTagsAssignPostData, ThrowOnError>): RequestResult<AssignFollowTagApiV1MessageFollowTagsAssignPostResponses, AssignFollowTagApiV1MessageFollowTagsAssignPostErrors, ThrowOnError, 'data'> {
+        return (options.client ?? client).post<AssignFollowTagApiV1MessageFollowTagsAssignPostResponses, AssignFollowTagApiV1MessageFollowTagsAssignPostErrors, ThrowOnError, 'data'>({
+            responseStyle: 'data',
+            url: '/api/v1/message/follow/tags/assign',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
         });
     }
 }

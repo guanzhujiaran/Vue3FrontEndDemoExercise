@@ -265,9 +265,23 @@ const handle_show_scrapy_data = (scrapy_data: ScrapyStatus | any) => {
 // ============ 首屏数据：setup 阶段取，SSR / 预渲染的 HTML 才有内容 ============
 /**
  * 爬虫状态列表由服务端在渲染时取好并进入 Nuxt payload，
- * 客户端 hydration 直接复用（不重复请求）；挂载后再拉一次最新（见下方 onMounted）。
+ * 客户端 hydration 直接复用（不重复请求）。
+ *
+ * handler 额外带回 fetchedAt（本次取数的时间戳），供挂载后判断数据是否陈旧：
+ * - SSR 实时渲染：时间戳是秒级前的新数据，无需再请求，避免首屏把接口打两遍；
+ * - 预渲染快照（nuxt generate）：时间戳是构建期时间，早已陈旧，
+ *   挂载后必须拉一次真实状态；
+ * - 纯客户端路由导航：handler 在客户端刚执行完，fetchedAt 很新，同样不重复请求。
  */
-const { data: ssrScrapyData } = await useAsyncData('scrapy-status', () => handle_get_scrapy_status())
+const SCRAPY_STATUS_STALE_MS = 60 * 1000
+const { data: ssrScrapyData } = await useAsyncData('scrapy-status', async () => {
+  try {
+    const value = await handle_get_scrapy_status()
+    return { value, fetchedAt: Date.now() }
+  } catch {
+    return { value: null, fetchedAt: Date.now() }
+  }
+})
 /**
  * 必须无条件写回 payload。
  *
@@ -276,13 +290,17 @@ const { data: ssrScrapyData } = await useAsyncData('scrapy-status', () => handle
  * 服务端渲染真实数据、客户端渲染默认占位，出现大量
  * `Hydration text content mismatch（官方抽奖爬虫 / 动态爬虫）`。
  */
-if (ssrScrapyData.value) data.value = ssrScrapyData.value
+if (ssrScrapyData.value?.value) data.value = ssrScrapyData.value.value
 
 onMounted(() => {
-  // 预渲染页首屏吃的是构建期快照（useAsyncData 命中 payload 时不重新请求），
-  // 挂载后立即拉一次真实状态；自动轮询默认关闭，不能指望它来纠正首屏。
-  // catch 兜底：handle_get_scrapy_status 只有 try/finally，网络异常时会 reject。
-  handle_get_scrapy_status().catch(() => { })
+  // 仅在首屏数据「不存在或已陈旧」（预渲染快照）时才补拉一次真实状态；
+  // SSR 实时数据 / 客户端导航刚取到的数据都不重复请求。
+  // 自动轮询默认关闭，不能指望它来纠正首屏。
+  const fetchedAt = ssrScrapyData.value?.fetchedAt ?? 0
+  const isStale = !ssrScrapyData.value || Date.now() - fetchedAt > SCRAPY_STATUS_STALE_MS
+  if (isStale) {
+    handle_get_scrapy_status().catch(() => { })
+  }
   startAutoRefresh()
 })
 const isAutoRefresh = ref(false)

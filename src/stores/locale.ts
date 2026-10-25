@@ -7,6 +7,7 @@ import en from 'element-plus/es/locale/lang/en'
 import zhTw from 'element-plus/es/locale/lang/zh-tw'
 import ja from 'element-plus/es/locale/lang/ja'
 import ko from 'element-plus/es/locale/lang/ko'
+import { browserPersistStorage } from '@/utils/persistStorage'
 
 const elLocaleMap: Record<SupportedLocale, any> = {
   'zh-CN': zhCn,
@@ -76,7 +77,7 @@ export const useLocaleStore = defineStore(
   {
     persist: {
       key: 'locale-store',
-      storage: localStorage
+      storage: browserPersistStorage
     }
   }
 )

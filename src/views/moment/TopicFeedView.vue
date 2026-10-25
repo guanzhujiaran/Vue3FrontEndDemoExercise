@@ -56,9 +56,9 @@
         <div v-else class="topic-feed__list space-y-4 max-w-2xl mx-auto py-4">
           <MomentCard
             v-for="item in items"
-            :key="item.dynIdStr"
+            :key="item.dynId_str ?? ''"
             :item="item"
-            :status="statusOf(item.dynIdStr)"
+            :status="statusOf(item.dynId_str ?? '')"
             :show-more-actions="true"
             @click="openDetail"
             @src-click="openDetail"
@@ -66,6 +66,7 @@
             @thumb="handleThumb(item)"
             @report="handleReport(item)"
             @remove="handleRemove(item)"
+            @status-change="onCardStatusChangeOf(item)"
           />
         </div>
       </template>
@@ -78,8 +79,10 @@
 import { IMG_REFERRER_POLICY } from '@/utils/PageOpen/linkPolicy'
 import { ref, watch, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { fetchTopicFeed, fetchTopicDetail, fetchInteractionStatus, InteractionBizTypeEnum, thumbMoment } from '@/api/notify/moment-api'
-import type { MomentFeedItem, MomentTopicDetailResp, InteractionStatusItem } from '@/api/notify/moment-api'
+import { fetchTopicFeed, fetchTopicDetail, InteractionBizTypeEnum } from '@/api/notify/moment-api'
+import type { MomentFeedItem, MomentTopicDetailResp } from '@/api/notify/moment-api'
+import type { FavoriteChangedPayload } from '@/utils/interaction/favoriteSync'
+import { useInteractionStatusMap } from '@/composables/useInteractionStatusMap'
 import LoadingMoreContainer from '@/components/CommonCompo/Bili-Container-Compo/LoadingMoreContainer.vue'
 import EmptyState from '@/components/message/EmptyState.vue'
 import MomentCard from '@/components/moment/MomentCard.vue'
@@ -100,23 +103,9 @@ const isMore = ref(true)
 const isError = ref(false)
 let historyOffset: number | undefined
 
-// 2.41.0：卡片统计统一走 /interaction/status 批量接口（卡片不再内置 stat 模块）
-const statusMap = ref<Record<string, InteractionStatusItem>>({})
-async function loadStatus(ids: string[]) {
-  const fresh = ids.filter((id) => !statusMap.value[id])
-  if (!fresh.length) return
-  try {
-    const res = await fetchInteractionStatus(InteractionBizTypeEnum.DYNAMIC, fresh)
-    for (const it of res?.items ?? []) {
-      if (it?.bizId) statusMap.value[it.bizId] = it
-    }
-  } catch {
-    // 弱依赖：失败不阻断展示
-  }
-}
-function statusOf(dynIdStr: string): InteractionStatusItem | null {
-  return statusMap.value[dynIdStr] ?? null
-}
+// 2.41.0：卡片统计统一走 /interaction/status 批量接口（收藏 / 点赞同步收敛到通用仓库）
+const { statusOf, ensure: loadStatus, applyFavorite, toggleLike, clear: clearStatus } =
+  useInteractionStatusMap()
 
 /** 话题详情（对齐 B 站 top_details） */
 const detail = ref<MomentTopicDetailResp | null>(null)
@@ -164,7 +153,7 @@ const handleLoad = async () => {
       items.value.push(...newItems)
     }
     // 2.41.0：批量拉取本页卡片互动统计（统一 status 接口）
-    if (newItems.length) void loadStatus(newItems.map((i) => i.dynIdStr))
+    if (newItems.length) void loadStatus(newItems.map((i) => i.dynId_str ?? ''))
     isMore.value = res.hasMore ?? false
     historyOffset = res.historyOffset ?? undefined
   } catch (e) {
@@ -177,6 +166,7 @@ const handleLoad = async () => {
 
 function onSortChange() {
   items.value = []
+  clearStatus()
   isMore.value = true
   isError.value = false
   historyOffset = undefined
@@ -197,6 +187,7 @@ watch(
   () => route.params.topicId,
   () => {
     items.value = []
+    clearStatus()
     isMore.value = true
     isError.value = false
     historyOffset = undefined
@@ -208,25 +199,24 @@ watch(
 )
 
 function openDetail(item: MomentFeedItem) {
-  router.push({ name: 'MOMENT_DETAIL', params: { momentId: item.dynIdStr } })
+  router.push({ name: 'MOMENT_DETAIL', params: { momentId: item.dynId_str } })
 }
 
 function openUserSpace(item: MomentFeedItem) {
-  router.push({ name: 'MOMENT_USER_SPACE', params: { mid: String(item.mid) } })
+  router.push({ name: 'MOMENT_USER_SPACE_HOME', params: { mid: String(item.mid) } })
 }
 
-async function handleThumb(item: MomentFeedItem) {
-  const up = item.modules?.find((m) => m.moduleType === 'interaction')?.isLike ? 2 : 1
-  const res = await thumbMoment(item.dynIdStr, up)
-  if (res) {
-    const interMod = item.modules?.find((m) => m.moduleType === 'interaction')
-    if (interMod) interMod.isLike = up === 1
-    const st = statusMap.value[item.dynIdStr]
-    if (st) {
-      st.isLike = up === 1
-      st.likeCount = Math.max(0, Number(st.likeCount ?? 0) + (up === 1 ? 1 : -1))
-    }
-  }
+function handleThumb(item: MomentFeedItem) {
+  const interMod = item.modules?.find((m) => m.moduleType === 'interaction')
+  void toggleLike(item.dynId_str ?? '', (isLike) => {
+    if (interMod) interMod.isLike = isLike
+  })
+}
+
+/** 卡片内收藏态变化（收藏夹弹窗操作成功）：浅合并进互动态仓库，卡片按钮即时响应 */
+function onCardStatusChangeOf(item: MomentFeedItem) {
+  return (_dynId: string, payload: FavoriteChangedPayload) =>
+    applyFavorite(item.dynId_str ?? '', payload)
 }
 
 /** 统一举报弹窗（P11-T6） */
@@ -234,12 +224,12 @@ const reportDialogVisible = ref(false)
 const reportDynId = ref<string>('')
 
 function handleReport(item: MomentFeedItem) {
-  reportDynId.value = item.dynIdStr // str 直接传递，避免雪花 ID 精度丢失
+  reportDynId.value = item.dynId_str ?? '' // str 直接传递，避免雪花 ID 精度丢失
   reportDialogVisible.value = true
 }
 
 /** 2.22.1：删除确认与 API 已下沉 MomentCard，父组件仅移除列表项 */
 function handleRemove(item: MomentFeedItem) {
-  items.value = items.value.filter((i) => i.dynIdStr !== item.dynIdStr)
+  items.value = items.value.filter((i) => i.dynId_str !== item.dynId_str)
 }
 </script>

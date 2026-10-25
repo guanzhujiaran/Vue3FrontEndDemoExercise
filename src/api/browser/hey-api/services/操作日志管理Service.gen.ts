@@ -46,7 +46,10 @@ export class 操作日志管理Service {
     /**
      * 按执行批次查询完整链路
      *
-     * 按 execution_id 拉取一次执行的完整链路（按写入顺序，便于还原调用树）
+     * 按 execution_id 分页拉取一次执行的步骤链路（按写入顺序，便于还原调用树）
+     *
+     * 单次运行可达数千条步骤日志，因此强制分页：`total` 为该批次总条数，
+     * `items` 只回当前页（字段与 `action-logs/list` 的轻量项一致）。
      */
     public static listActionLogsByExecutionApiV1RpaBrowserControlActionLogsByExecutionPost<ThrowOnError extends boolean = false>(options: Options<ListActionLogsByExecutionApiV1RpaBrowserControlActionLogsByExecutionPostData, ThrowOnError>): RequestResult<ListActionLogsByExecutionApiV1RpaBrowserControlActionLogsByExecutionPostResponses, ListActionLogsByExecutionApiV1RpaBrowserControlActionLogsByExecutionPostErrors, ThrowOnError, 'data'> {
         return (options.client ?? client).post<ListActionLogsByExecutionApiV1RpaBrowserControlActionLogsByExecutionPostResponses, ListActionLogsByExecutionApiV1RpaBrowserControlActionLogsByExecutionPostErrors, ThrowOnError, 'data'>({

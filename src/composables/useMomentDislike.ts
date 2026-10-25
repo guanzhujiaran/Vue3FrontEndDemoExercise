@@ -16,20 +16,20 @@ import type { InteractionStatusItem } from '@/api/notify/moment-api'
  * - 跨组件存活：卡片随列表重渲染 / 路由切换卸载后，已踩状态不丢失，不会闪回「未踩」。
  */
 
-/** 本地（会话内）点踩态：dynIdStr → 是否已踩，优先于服务端互动态 */
+/** 本地（会话内）点踩态：dynId_str → 是否已踩，优先于服务端互动态 */
 const dislikedMap = reactive<Record<string, boolean>>({})
 
 /** 是否已点踩：本地乐观态优先，回落服务端互动态 `isDislike`（2.62.0 出参） */
 export function isMomentDisliked(
-  dynIdStr: string,
+  dynId_str: string,
   status?: InteractionStatusItem | null
 ): boolean {
-  const local = dislikedMap[dynIdStr]
+  const local = dislikedMap[dynId_str]
   if (local !== undefined) return local
   return Boolean(status?.isDislike)
 }
 
 /** 写入点踩态（点踩 / 取消点踩成功后调用，跨组件共享） */
-export function setMomentDisliked(dynIdStr: string, value: boolean): void {
-  dislikedMap[dynIdStr] = value
+export function setMomentDisliked(dynId_str: string, value: boolean): void {
+  dislikedMap[dynId_str] = value
 }

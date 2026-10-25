@@ -287,7 +287,7 @@
           class="lottery-card__action-like inline-flex items-center gap-1.5 text-text-secondary hover:text-text-primary text-sm cursor-pointer transition-colors"
           type="button"
           @click="handleLike">
-          <component :is="likeActive ? LikeActiveIcon : LikeIcon" class="w-4 h-4 shrink-0" :class="likeActive ? 'text-primary' : ''" />
+          <BiliIcon :name="likeActive ? 'likeActive' : 'like'" class="w-4 h-4 shrink-0" :class="likeActive ? 'text-primary' : ''" />
           <template v-if="likeCount > 0">
             <span :class="likeActive ? 'font-medium text-primary' : 'font-medium'">{{ likeCount }}</span>
           </template>
@@ -300,7 +300,7 @@
           class="lottery-card__action-favorite inline-flex items-center gap-1.5 text-text-secondary hover:text-text-primary text-sm cursor-pointer transition-colors"
           type="button"
           @click="handleFavorite">
-          <component :is="FavoriteIcon" class="w-4 h-4 shrink-0" :class="favActive ? 'text-warning' : ''" />
+          <BiliIcon name="favorite" class="w-4 h-4 shrink-0" :class="favActive ? 'text-warning' : ''" />
           <template v-if="favCount > 0">
             <span :class="favActive ? 'font-medium text-warning' : 'font-medium'">{{ favCount }}</span>
           </template>
@@ -313,7 +313,7 @@
           class="lottery-card__action-forward inline-flex items-center gap-1.5 text-text-secondary hover:text-text-primary text-sm cursor-pointer transition-colors"
           type="button"
           @click="handleForward">
-          <component :is="ForwardIcon" class="w-4 h-4 shrink-0" />
+          <BiliIcon name="forward" class="w-4 h-4 shrink-0" />
           <template v-if="forwardCount > 0">
             <span class="font-medium">{{ forwardCount }}</span>
           </template>
@@ -405,10 +405,7 @@ const attrs = useAttrs()
 import { type GlobalVarsType, ScreenTypeEnum } from '@/models/global_var/global_var_model.ts'
 import { KeysEnum, useInject } from '@/models/base/provide_model.ts'
 import { ChatDotRound, ChatDotSquare, Share, Link } from '@element-plus/icons-vue'
-import LikeIcon from '@/assets/svgs/like.svg?component'
-import LikeActiveIcon from '@/assets/svgs/like_active.svg?component'
-import FavoriteIcon from '@/assets/svgs/dynamic/detail/side_toolbar/favorite.svg?component'
-import ForwardIcon from '@/assets/svgs/dynamic/detail/side_toolbar/forward.svg?component'
+import BiliIcon from '@/components/CommonCompo/BiliIcon.vue'
 import EyeIcon from '@/assets/svgs/space/eye.svg?component'
 
 import { interactionBizTypeOf } from '@/stores/lottery_detail.ts'

@@ -149,7 +149,7 @@ defineExpose({ droppedItems, getSteps })
 </script>
 
 <template>
-  <div class="debug-box-wrapper bg-bg/70 flex-1 flex flex-col" @dragover.prevent @drop="handleDrop">
+  <div class="debug-box-wrapper bg-bg/70 flex-1 min-h-0 flex flex-col" @dragover.prevent @drop="handleDrop">
     <div class="flex-0 shrink-0 p-3 border-b border-border text-(--el-text-color-primary)">
       <h3 class="font-medium text-sm">{{ props.editMode ? '步骤列表' : '调试面板' }}</h3>
       <p class="text-xs text-color-secondary mt-1">
@@ -157,7 +157,7 @@ defineExpose({ droppedItems, getSteps })
       </p>
     </div>
 
-    <el-scrollbar class="debug-box-content p-3">
+    <el-scrollbar class="debug-box-content p-3 flex-1 min-h-0">
       <div v-if="totalCount === 0" class="flex-1 flex flex-col items-center justify-center text-text-secondary">
         <el-icon size="48" class="mb-2 opacity-30">
           <Rank />

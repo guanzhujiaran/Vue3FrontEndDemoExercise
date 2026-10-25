@@ -3,13 +3,17 @@
 import type { RequestResult } from '../client';
 import { client } from '../client.gen';
 import type { Options } from '../sdk.gen';
-import type { ConfirmPaymentsApiV1RpaBrowserMembershipPaymentConfirmPostData, ConfirmPaymentsApiV1RpaBrowserMembershipPaymentConfirmPostErrors, ConfirmPaymentsApiV1RpaBrowserMembershipPaymentConfirmPostResponses, GetMembershipAccountApiV1RpaBrowserMembershipGetAccountPostData, GetMembershipAccountApiV1RpaBrowserMembershipGetAccountPostErrors, GetMembershipAccountApiV1RpaBrowserMembershipGetAccountPostResponses, ListDurationLedgerApiV1RpaBrowserMembershipLedgerListPostData, ListDurationLedgerApiV1RpaBrowserMembershipLedgerListPostErrors, ListDurationLedgerApiV1RpaBrowserMembershipLedgerListPostResponses, ListPaymentProductsApiV1RpaBrowserMembershipPaymentProductsPostData, ListPaymentProductsApiV1RpaBrowserMembershipPaymentProductsPostErrors, ListPaymentProductsApiV1RpaBrowserMembershipPaymentProductsPostResponses, ListUsageStatsApiV1RpaBrowserMembershipUsageStatsPostData, ListUsageStatsApiV1RpaBrowserMembershipUsageStatsPostErrors, ListUsageStatsApiV1RpaBrowserMembershipUsageStatsPostResponses, NotifyPaymentApiV1RpaBrowserMembershipPaymentNotifyPostData, NotifyPaymentApiV1RpaBrowserMembershipPaymentNotifyPostErrors, NotifyPaymentApiV1RpaBrowserMembershipPaymentNotifyPostResponses, RedeemCodeApiV1RpaBrowserMembershipRedeemPostData, RedeemCodeApiV1RpaBrowserMembershipRedeemPostErrors, RedeemCodeApiV1RpaBrowserMembershipRedeemPostResponses, SignInApiV1RpaBrowserMembershipSignInPostData, SignInApiV1RpaBrowserMembershipSignInPostErrors, SignInApiV1RpaBrowserMembershipSignInPostResponses } from '../types.gen';
+import type { ConfirmPaymentsApiV1RpaBrowserMembershipPaymentConfirmPostData, ConfirmPaymentsApiV1RpaBrowserMembershipPaymentConfirmPostErrors, ConfirmPaymentsApiV1RpaBrowserMembershipPaymentConfirmPostResponses, ExchangeSignRewardApiV1RpaBrowserMembershipSignInRewardExchangePostData, ExchangeSignRewardApiV1RpaBrowserMembershipSignInRewardExchangePostErrors, ExchangeSignRewardApiV1RpaBrowserMembershipSignInRewardExchangePostResponses, GetMembershipAccountApiV1RpaBrowserMembershipGetAccountPostData, GetMembershipAccountApiV1RpaBrowserMembershipGetAccountPostErrors, GetMembershipAccountApiV1RpaBrowserMembershipGetAccountPostResponses, GetSignInCalendarApiV1RpaBrowserMembershipSignInCalendarPostData, GetSignInCalendarApiV1RpaBrowserMembershipSignInCalendarPostErrors, GetSignInCalendarApiV1RpaBrowserMembershipSignInCalendarPostResponses, GetSignInOverviewApiV1RpaBrowserMembershipSignInOverviewPostData, GetSignInOverviewApiV1RpaBrowserMembershipSignInOverviewPostErrors, GetSignInOverviewApiV1RpaBrowserMembershipSignInOverviewPostResponses, ListDurationLedgerApiV1RpaBrowserMembershipLedgerListPostData, ListDurationLedgerApiV1RpaBrowserMembershipLedgerListPostErrors, ListDurationLedgerApiV1RpaBrowserMembershipLedgerListPostResponses, ListPaymentProductsApiV1RpaBrowserMembershipPaymentProductsPostData, ListPaymentProductsApiV1RpaBrowserMembershipPaymentProductsPostErrors, ListPaymentProductsApiV1RpaBrowserMembershipPaymentProductsPostResponses, ListUsageStatsApiV1RpaBrowserMembershipUsageStatsPostData, ListUsageStatsApiV1RpaBrowserMembershipUsageStatsPostErrors, ListUsageStatsApiV1RpaBrowserMembershipUsageStatsPostResponses, MakeupSignInApiV1RpaBrowserMembershipSignInMakeupPostData, MakeupSignInApiV1RpaBrowserMembershipSignInMakeupPostErrors, MakeupSignInApiV1RpaBrowserMembershipSignInMakeupPostResponses, NotifyPaymentApiV1RpaBrowserMembershipPaymentNotifyPostData, NotifyPaymentApiV1RpaBrowserMembershipPaymentNotifyPostErrors, NotifyPaymentApiV1RpaBrowserMembershipPaymentNotifyPostResponses, RedeemCodeApiV1RpaBrowserMembershipRedeemPostData, RedeemCodeApiV1RpaBrowserMembershipRedeemPostErrors, RedeemCodeApiV1RpaBrowserMembershipRedeemPostResponses, SignInApiV1RpaBrowserMembershipSignInPostData, SignInApiV1RpaBrowserMembershipSignInPostErrors, SignInApiV1RpaBrowserMembershipSignInPostResponses } from '../types.gen';
 
 export class 时长与会员权益Service {
     /**
      * Get Membership Account
      *
      * 获取当前用户的时长账户概览（余额 / 月卡状态 / 今日签到状态）
+     *
+     * Casdoor 无法跳回 RPA 页面，核销在用户调用相关接口时由服务端主动查询：
+     * 进入会员页即拉一次该用户的 Casdoor 支付单，把已 Paid 未入账的权益幂等
+     * 发放（见计划书 §3.3）。Casdoor 抖动只告警、不阻断账户查询。
      */
     public static getMembershipAccountApiV1RpaBrowserMembershipGetAccountPost<ThrowOnError extends boolean = false>(options: Options<GetMembershipAccountApiV1RpaBrowserMembershipGetAccountPostData, ThrowOnError>): RequestResult<GetMembershipAccountApiV1RpaBrowserMembershipGetAccountPostResponses, GetMembershipAccountApiV1RpaBrowserMembershipGetAccountPostErrors, ThrowOnError, 'data'> {
         return (options.client ?? client).post<GetMembershipAccountApiV1RpaBrowserMembershipGetAccountPostResponses, GetMembershipAccountApiV1RpaBrowserMembershipGetAccountPostErrors, ThrowOnError, 'data'>({
@@ -27,11 +31,82 @@ export class 时长与会员权益Service {
      * Sign In
      *
      * 每日签到（重复签到返回业务码 5005）
+     *
+     * 奖励口径：每天发配置里的固定时长（`sign_in_rewards.json` 的 `daily_reward_seconds`）；
+     * 累计天数只用于档位解锁，签到当天不再自动叠加。
      */
     public static signInApiV1RpaBrowserMembershipSignInPost<ThrowOnError extends boolean = false>(options: Options<SignInApiV1RpaBrowserMembershipSignInPostData, ThrowOnError>): RequestResult<SignInApiV1RpaBrowserMembershipSignInPostResponses, SignInApiV1RpaBrowserMembershipSignInPostErrors, ThrowOnError, 'data'> {
         return (options.client ?? client).post<SignInApiV1RpaBrowserMembershipSignInPostResponses, SignInApiV1RpaBrowserMembershipSignInPostErrors, ThrowOnError, 'data'>({
             responseStyle: 'data',
             url: '/api/v1/rpa/browser/membership/sign_in',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    /**
+     * Get Sign In Overview
+     *
+     * 签到概览：累计天数 / 补登卡 / 档位状态 / 上线与时区（配置）
+     */
+    public static getSignInOverviewApiV1RpaBrowserMembershipSignInOverviewPost<ThrowOnError extends boolean = false>(options: Options<GetSignInOverviewApiV1RpaBrowserMembershipSignInOverviewPostData, ThrowOnError>): RequestResult<GetSignInOverviewApiV1RpaBrowserMembershipSignInOverviewPostResponses, GetSignInOverviewApiV1RpaBrowserMembershipSignInOverviewPostErrors, ThrowOnError, 'data'> {
+        return (options.client ?? client).post<GetSignInOverviewApiV1RpaBrowserMembershipSignInOverviewPostResponses, GetSignInOverviewApiV1RpaBrowserMembershipSignInOverviewPostErrors, ThrowOnError, 'data'>({
+            responseStyle: 'data',
+            url: '/api/v1/rpa/browser/membership/sign_in/overview',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    /**
+     * Get Sign In Calendar
+     *
+     * 查询指定月份的签到日历（整月逐日补齐 + 天数/奖励/下一档位）
+     */
+    public static getSignInCalendarApiV1RpaBrowserMembershipSignInCalendarPost<ThrowOnError extends boolean = false>(options: Options<GetSignInCalendarApiV1RpaBrowserMembershipSignInCalendarPostData, ThrowOnError>): RequestResult<GetSignInCalendarApiV1RpaBrowserMembershipSignInCalendarPostResponses, GetSignInCalendarApiV1RpaBrowserMembershipSignInCalendarPostErrors, ThrowOnError, 'data'> {
+        return (options.client ?? client).post<GetSignInCalendarApiV1RpaBrowserMembershipSignInCalendarPostResponses, GetSignInCalendarApiV1RpaBrowserMembershipSignInCalendarPostErrors, ThrowOnError, 'data'>({
+            responseStyle: 'data',
+            url: '/api/v1/rpa/browser/membership/sign_in/calendar',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    /**
+     * Makeup Sign In
+     *
+     * 补签指定日期（未签到的过去日期，消耗 1 张补登卡）
+     */
+    public static makeupSignInApiV1RpaBrowserMembershipSignInMakeupPost<ThrowOnError extends boolean = false>(options: Options<MakeupSignInApiV1RpaBrowserMembershipSignInMakeupPostData, ThrowOnError>): RequestResult<MakeupSignInApiV1RpaBrowserMembershipSignInMakeupPostResponses, MakeupSignInApiV1RpaBrowserMembershipSignInMakeupPostErrors, ThrowOnError, 'data'> {
+        return (options.client ?? client).post<MakeupSignInApiV1RpaBrowserMembershipSignInMakeupPostResponses, MakeupSignInApiV1RpaBrowserMembershipSignInMakeupPostErrors, ThrowOnError, 'data'>({
+            responseStyle: 'data',
+            url: '/api/v1/rpa/browser/membership/sign_in/makeup',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    /**
+     * Exchange Sign Reward
+     *
+     * 兑换奖励档位（每档每用户仅一次；奖励与门槛取自 JSON 配置）
+     */
+    public static exchangeSignRewardApiV1RpaBrowserMembershipSignInRewardExchangePost<ThrowOnError extends boolean = false>(options: Options<ExchangeSignRewardApiV1RpaBrowserMembershipSignInRewardExchangePostData, ThrowOnError>): RequestResult<ExchangeSignRewardApiV1RpaBrowserMembershipSignInRewardExchangePostResponses, ExchangeSignRewardApiV1RpaBrowserMembershipSignInRewardExchangePostErrors, ThrowOnError, 'data'> {
+        return (options.client ?? client).post<ExchangeSignRewardApiV1RpaBrowserMembershipSignInRewardExchangePostResponses, ExchangeSignRewardApiV1RpaBrowserMembershipSignInRewardExchangePostErrors, ThrowOnError, 'data'>({
+            responseStyle: 'data',
+            url: '/api/v1/rpa/browser/membership/sign_in/reward_exchange',
             ...options,
             headers: {
                 'Content-Type': 'application/json',
@@ -60,7 +135,7 @@ export class 时长与会员权益Service {
     /**
      * List Duration Ledger
      *
-     * 分页查询时长流水（时间倒序）
+     * 分页查询时长流水（时间倒序；change_types 支持按变动类型过滤）
      */
     public static listDurationLedgerApiV1RpaBrowserMembershipLedgerListPost<ThrowOnError extends boolean = false>(options: Options<ListDurationLedgerApiV1RpaBrowserMembershipLedgerListPostData, ThrowOnError>): RequestResult<ListDurationLedgerApiV1RpaBrowserMembershipLedgerListPostResponses, ListDurationLedgerApiV1RpaBrowserMembershipLedgerListPostErrors, ThrowOnError, 'data'> {
         return (options.client ?? client).post<ListDurationLedgerApiV1RpaBrowserMembershipLedgerListPostResponses, ListDurationLedgerApiV1RpaBrowserMembershipLedgerListPostErrors, ThrowOnError, 'data'>({

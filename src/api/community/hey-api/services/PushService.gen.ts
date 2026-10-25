@@ -33,7 +33,13 @@ export class PushService {
     /**
      * 立即发送测试推送
      *
-     * 立即发送一条测试推送（不经过队列），便于前端 / 用户验证渠道配置。
+     * 立即发送一条测试推送（**同步直发、不过队列**），用于验证渠道配置。
+     *
+     * 与 `/push` 的关键区别：本接口**绕过 RabbitMQ**，直接调用底层发送通道并等待
+     * 其返回结果，把真实渠道（``sent_channels``）或真实错误（``msg`` / ``message``）
+     * 回传调用方，便于前端「确认这次请求到底通没通」；不做用户级总开关拦截，
+     * 因为「测试」是用户显式发起的连通性验证。渠道配置取自消息内 ``config``，
+     * 为空时回落全局环境变量配置。
      */
     public static testPushApiV1MessagePushTestPost<ThrowOnError extends boolean = false>(options: Options<TestPushApiV1MessagePushTestPostData, ThrowOnError>): RequestResult<TestPushApiV1MessagePushTestPostResponses, TestPushApiV1MessagePushTestPostErrors, ThrowOnError, 'data'> {
         return (options.client ?? client).post<TestPushApiV1MessagePushTestPostResponses, TestPushApiV1MessagePushTestPostErrors, ThrowOnError, 'data'>({

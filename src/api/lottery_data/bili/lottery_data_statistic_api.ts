@@ -39,7 +39,7 @@ class LotteryDataStatisticApi {
         limit,
       },
     })
-    return res.data as any
+    return res?.data as any
   }
 
   async handle_lottery_result({
@@ -67,7 +67,7 @@ class LotteryDataStatisticApi {
         limit,
       },
     })
-    return res.data as any
+    return res?.data as any
   }
 }
 

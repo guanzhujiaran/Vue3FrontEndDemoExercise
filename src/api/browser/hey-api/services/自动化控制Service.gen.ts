@@ -26,7 +26,7 @@ export class 自动化控制Service {
     /**
      * 关闭页面
      *
-     * 关闭指定页面
+     * 关闭指定页面（被工作流引用的页面不允许关闭）
      */
     public static closePageApiV1RpaBrowserControlOperationClosePagePost<ThrowOnError extends boolean = false>(options: Options<ClosePageApiV1RpaBrowserControlOperationClosePagePostData, ThrowOnError>): RequestResult<ClosePageApiV1RpaBrowserControlOperationClosePagePostResponses, ClosePageApiV1RpaBrowserControlOperationClosePagePostErrors, ThrowOnError, 'data'> {
         return (options.client ?? client).post<ClosePageApiV1RpaBrowserControlOperationClosePagePostResponses, ClosePageApiV1RpaBrowserControlOperationClosePagePostErrors, ThrowOnError, 'data'>({

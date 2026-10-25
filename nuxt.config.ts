@@ -15,6 +15,7 @@ import svgLoader from 'vite-svg-loader'
 import { heyApiPlugin } from '@hey-api/vite-plugin'
 import { type UserParser } from '@hey-api/shared'
 import { SITE_URL, SEO_INDEXABLE_ROUTES } from './src/config/seo_routes'
+import { defineNuxtConfig } from 'nuxt/config'
 
 /**
  * sitemap 条目权重：沿用 gen-sitemap.mjs 时代的分级
@@ -139,7 +140,18 @@ export default defineNuxtConfig({
   // SSG：构建期在 Node 里完成渲染，产出静态 HTML；部署无需常驻 Node 进程
   ssr: true,
   srcDir: 'src',
-  devtools: { enabled: false },
+  devtools: { enabled: true },
+
+  /**
+   * 布局断位常量（public runtimeConfig，可用 NUXT_PUBLIC_* 环境变量覆盖）。
+   * - minLayoutWidth：前端最小内容宽度（px）。轮播 / 网格等按容器宽度是否达到该值
+   *   切换「宽列（4 列）」与「窄列（2 列）」布局，避免窄容器下卡片被挤压变形。
+   */
+  runtimeConfig: {
+    public: {
+      minLayoutWidth: 690
+    }
+  },
 
   modules: ['@pinia/nuxt', '@element-plus/nuxt', '@nuxtjs/sitemap'],
 
@@ -169,8 +181,9 @@ export default defineNuxtConfig({
   elementPlus: { importStyle: false },
 
   css: [
-    'mavon-editor/dist/css/index.css',
-    'md-editor-v3/lib/style.css',
+    // mavon-editor / md-editor-v3 的 CSS 已移除：全项目 src/ 中没有任何地方
+    // import 这两个编辑器，却在 dev 模式被全局注入到每个页面（含 HMR 依赖链），
+    // 平白增加请求与体积。如需重新启用，请在使用组件的页面里按需引入 CSS。
     '~/assets/app-tailwind.css'
   ],
 
@@ -222,6 +235,55 @@ export default defineNuxtConfig({
   vite: {
     // 沿用 VITE_ 前缀，避免改动全项目的 import.meta.env.VITE_* 写法
     envPrefix: ['VITE_', 'NUXT_'],
+
+    /**
+     * 开发态依赖预构建（解决 dev 模式页面加载 10s+ 的核心配置）。
+     *
+     * 背景：Vite dev 不打包，浏览器用原生 ESM 一个模块一个请求地拉依赖。
+     * 实测首页经预构建前会产生 ~1800 个请求、56MB 明文传输，其中
+     * element-plus 源码模块被直出引用 4000+ 次、vue 1700+ 次 —— 这些重型库
+     * 没有被完整预构建成单个 chunk，浏览器要跑几百轮请求瀑布（同域 6 并发限制）。
+     *
+     * 显式 include 后，Vite 在启动时就把这些库各自打成一个 chunk，
+     * 把上千个请求合并成几十个；同时避免「运行时发现新依赖 → 重新预构建
+     * → 整页 reload」导致的首次/改码后偶发卡顿。
+     */
+    optimizeDeps: {
+      include: [
+        // Vue 核心全家桶
+        'vue',
+        'vue-router',
+        'pinia',
+        'pinia-plugin-persistedstate',
+        'vue-i18n',
+        // UI 组件库（首屏最重，源码模块引用次数最高）
+        'element-plus',
+        '@element-plus/icons-vue',
+        '@vueuse/core',
+        '@vueuse/components',
+        // 数据请求 / 状态
+        '@urql/vue',
+        '@urql/core',
+        'graphql',
+        'ofetch',
+        'axios',
+        // 图表
+        'echarts/core',
+        'echarts/charts',
+        'echarts/components',
+        'echarts/renderers',
+        'vue-echarts',
+        // 工具库
+        'crypto-js/aes',
+        'dayjs',
+        'mitt',
+        'sanitize-html',
+        'vue-json-pretty',
+        'casdoor-vue-sdk',
+        '@microsoft/clarity'
+      ]
+    },
+
     // 让服务端渲染也能读到 VITE_*（Vite 默认只注入客户端，见文件顶部说明）。
     //
     // `__SSR_API_TARGET__`：SSR 取数（预渲染）时的后端绝对地址，构建期由

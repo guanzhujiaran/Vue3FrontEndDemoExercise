@@ -7,7 +7,7 @@
       <div class="membership-codes-admin__generate-form flex flex-wrap items-center gap-3">
         <el-select v-model="form.codeType" class="membership-codes-admin__field-type" placeholder="码类型">
           <el-option label="时长卡（直加余额）" value="duration" />
-          <el-option label="月卡（定时任务免扣）" value="month_card" />
+          <el-option label="月卡（定时调度工作流免扣时长）" value="month_card" />
         </el-select>
         <el-input-number
           v-model="form.count"
