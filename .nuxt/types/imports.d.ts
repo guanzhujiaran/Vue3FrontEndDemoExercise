@@ -303,6 +303,7 @@ declare global {
   const ID_FIELDS: typeof import('../../src/utils/idString').ID_FIELDS
   const ID_INJECTION_KEY: typeof import('../../node_modules/element-plus/es/hooks/use-id/index').ID_INJECTION_KEY
   const INLINE_LINK_RE: typeof import('../../src/utils/notifyContent').INLINE_LINK_RE
+  const INTERACTION_STATUS_BATCH_LIMIT: typeof import('../../src/utils/lotteryInteractionStatus').INTERACTION_STATUS_BATCH_LIMIT
   const LOTTERY_COMMENT_TYPE: typeof import('../../src/stores/lottery_detail').LOTTERY_COMMENT_TYPE
   const MAX_MOMENT_CONTENT_LENGTH: typeof import('../../src/utils/momentContent').MAX_MOMENT_CONTENT_LENGTH
   const MAX_MOMENT_IMAGE_COUNT: typeof import('../../src/utils/momentContent').MAX_MOMENT_IMAGE_COUNT
@@ -360,6 +361,7 @@ declare global {
   const defineUseFetchAddon: typeof import('../../node_modules/nuxt/dist/app/composables/addons').defineUseFetchAddon
   const effect: typeof import('vue').effect
   const effectScope: typeof import('vue').effectScope
+  const fetchInteractionStatusMap: typeof import('../../src/utils/lotteryInteractionStatus').fetchInteractionStatusMap
   const formatDate: typeof import('../../src/utils/dateFormat').formatDate
   const formatDateTime: typeof import('../../src/utils/dateFormat').formatDateTime
   const formatJsonText: typeof import('../../src/utils/workflowVarFields').formatJsonText
@@ -380,6 +382,7 @@ declare global {
   const inject: typeof import('vue').inject
   const injectHead: typeof import('../../node_modules/nuxt/dist/app/composables/head').injectHead
   const interactionBizTypeOf: typeof import('../../src/stores/lottery_detail').interactionBizTypeOf
+  const interactionStatusKey: typeof import('../../src/utils/lotteryInteractionStatus').interactionStatusKey
   const isAuditState: typeof import('../../src/utils/commentAudit').isAuditState
   const isBlankValue: typeof import('../../src/utils/actionParamsArray').isBlankValue
   const isDefaultServerErrorMsg: typeof import('../../src/utils/backendErrorMsg').isDefaultServerErrorMsg
@@ -403,6 +406,7 @@ declare global {
   const jumpToTarget: typeof import('../../src/utils/routeJump').jumpToTarget
   const loadPayload: typeof import('../../node_modules/nuxt/dist/app/composables/payload').loadPayload
   const loadUserCard: typeof import('../../src/composables/useUserCardCache').loadUserCard
+  const lotteryCardInteractionTargets: typeof import('../../src/utils/lotteryInteractionStatus').lotteryCardInteractionTargets
   const markRaw: typeof import('vue').markRaw
   const message: typeof import('../../src/utils/message').default
   const mitt: typeof import('../../src/utils/mitt').default
@@ -1021,6 +1025,7 @@ declare module 'vue' {
     readonly ID_FIELDS: UnwrapRef<typeof import('../../src/utils/idString')['ID_FIELDS']>
     readonly ID_INJECTION_KEY: UnwrapRef<typeof import('../../node_modules/element-plus/es/hooks/use-id/index')['ID_INJECTION_KEY']>
     readonly INLINE_LINK_RE: UnwrapRef<typeof import('../../src/utils/notifyContent')['INLINE_LINK_RE']>
+    readonly INTERACTION_STATUS_BATCH_LIMIT: UnwrapRef<typeof import('../../src/utils/lotteryInteractionStatus')['INTERACTION_STATUS_BATCH_LIMIT']>
     readonly LOTTERY_COMMENT_TYPE: UnwrapRef<typeof import('../../src/stores/lottery_detail')['LOTTERY_COMMENT_TYPE']>
     readonly MAX_MOMENT_CONTENT_LENGTH: UnwrapRef<typeof import('../../src/utils/momentContent')['MAX_MOMENT_CONTENT_LENGTH']>
     readonly MAX_MOMENT_IMAGE_COUNT: UnwrapRef<typeof import('../../src/utils/momentContent')['MAX_MOMENT_IMAGE_COUNT']>
@@ -1078,6 +1083,7 @@ declare module 'vue' {
     readonly defineUseFetchAddon: UnwrapRef<typeof import('../../node_modules/nuxt/dist/app/composables/addons')['defineUseFetchAddon']>
     readonly effect: UnwrapRef<typeof import('vue')['effect']>
     readonly effectScope: UnwrapRef<typeof import('vue')['effectScope']>
+    readonly fetchInteractionStatusMap: UnwrapRef<typeof import('../../src/utils/lotteryInteractionStatus')['fetchInteractionStatusMap']>
     readonly formatDate: UnwrapRef<typeof import('../../src/utils/dateFormat')['formatDate']>
     readonly formatDateTime: UnwrapRef<typeof import('../../src/utils/dateFormat')['formatDateTime']>
     readonly formatJsonText: UnwrapRef<typeof import('../../src/utils/workflowVarFields')['formatJsonText']>
@@ -1098,6 +1104,7 @@ declare module 'vue' {
     readonly inject: UnwrapRef<typeof import('vue')['inject']>
     readonly injectHead: UnwrapRef<typeof import('../../node_modules/nuxt/dist/app/composables/head')['injectHead']>
     readonly interactionBizTypeOf: UnwrapRef<typeof import('../../src/stores/lottery_detail')['interactionBizTypeOf']>
+    readonly interactionStatusKey: UnwrapRef<typeof import('../../src/utils/lotteryInteractionStatus')['interactionStatusKey']>
     readonly isAuditState: UnwrapRef<typeof import('../../src/utils/commentAudit')['isAuditState']>
     readonly isBlankValue: UnwrapRef<typeof import('../../src/utils/actionParamsArray')['isBlankValue']>
     readonly isDefaultServerErrorMsg: UnwrapRef<typeof import('../../src/utils/backendErrorMsg')['isDefaultServerErrorMsg']>
@@ -1121,6 +1128,7 @@ declare module 'vue' {
     readonly jumpToTarget: UnwrapRef<typeof import('../../src/utils/routeJump')['jumpToTarget']>
     readonly loadPayload: UnwrapRef<typeof import('../../node_modules/nuxt/dist/app/composables/payload')['loadPayload']>
     readonly loadUserCard: UnwrapRef<typeof import('../../src/composables/useUserCardCache')['loadUserCard']>
+    readonly lotteryCardInteractionTargets: UnwrapRef<typeof import('../../src/utils/lotteryInteractionStatus')['lotteryCardInteractionTargets']>
     readonly markRaw: UnwrapRef<typeof import('vue')['markRaw']>
     readonly message: UnwrapRef<typeof import('../../src/utils/message')['default']>
     readonly mitt: UnwrapRef<typeof import('../../src/utils/mitt')['default']>

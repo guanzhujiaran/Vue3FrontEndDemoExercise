@@ -7,7 +7,7 @@ import type { CountFingerprintRouterApiV1RpaBrowserCountFingerprintPostData, Cou
 
 export class 浏览器指纹管理Service {
     /**
-     * Gen Rand Fingerprint Router
+     * 生成随机浏览器指纹（不落库）
      *
      * 生成随机浏览器指纹信息（不保存到数据库）
      *
@@ -18,7 +18,8 @@ export class 浏览器指纹管理Service {
      * params: 浏览器指纹创建参数，包括浏览器类型、操作系统、设备类型等配置
      *
      * Returns:
-     * dict: 包含随机生成的浏览器指纹信息的字典，包括用户代理、屏幕分辨率、时区、语言等信息
+     * BaseFingerprintBrowserInitParams: 随机生成的指纹参数（UA、屏幕分辨率、
+     * 时区、语言、WebGL 等；不含代理配置）
      *
      * Note:
      * 此接口仅生成临时指纹，不会持久化存储。如需保存指纹，请使用 upsert_fingerprint 接口
@@ -36,7 +37,7 @@ export class 浏览器指纹管理Service {
     }
     
     /**
-     * Upsert Fingerprint Router
+     * 创建或更新浏览器指纹
      *
      * 创建或更新浏览器指纹信息 (upsert)
      *
@@ -71,20 +72,18 @@ export class 浏览器指纹管理Service {
     }
     
     /**
-     * Read Fingerprint Router
+     * 读取浏览器指纹
      *
-     * 读取指定条件的浏览器指纹信息
+     * 读取指定浏览器指纹信息（按 query 的 browser_id 定位）
      *
-     * 根据提供的查询条件从数据库中读取浏览器指纹信息。支持按指纹ID、用户ID等多种条件查询。
-     * 如果找到匹配的指纹信息则返回，否则返回None。
+     * 按浏览器 ID 读取属于当前用户的指纹配置。没有 body 参数；
+     * `browser_id` 即指纹主键，同时用于归属校验（不属于当前用户直接报错）。
      *
      * Args:
-     * params: 浏览器指纹查询参数，包括指纹ID等查询条件
-     * auth_info: 认证信息，从请求头中自动获取
-     * session: 数据库会话
+     * browser_info: 浏览器认证信息（query browser_id，含当前用户 mid）
      *
      * Returns:
-     * Union[BrowserFingerprintQueryResp, None]: 找到的浏览器指纹信息，如果未找到则返回None
+     * Union[BrowserFingerprintQueryResp, None]: 找到的指纹信息，未找到为 None
      *
      * Note:
      * 只能查询属于当前用户的浏览器指纹信息
@@ -98,7 +97,7 @@ export class 浏览器指纹管理Service {
     }
     
     /**
-     * Delete Fingerprint Router
+     * 删除浏览器指纹
      *
      * 删除指定的浏览器指纹信息
      *
@@ -124,7 +123,7 @@ export class 浏览器指纹管理Service {
     }
     
     /**
-     * Count Fingerprint Router
+     * 统计浏览器指纹数量
      *
      * 统计当前用户的浏览器指纹数量
      *
@@ -149,7 +148,7 @@ export class 浏览器指纹管理Service {
     }
     
     /**
-     * List Fingerprint Router
+     * 分页查询浏览器指纹列表
      *
      * 分页列表显示当前用户的浏览器指纹信息
      *
@@ -180,7 +179,7 @@ export class 浏览器指纹管理Service {
     }
     
     /**
-     * Rename Fingerprint Router
+     * 重命名浏览器指纹
      *
      * 重命名浏览器指纹
      *

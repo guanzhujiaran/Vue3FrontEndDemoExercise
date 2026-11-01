@@ -26,7 +26,8 @@ export interface WorkflowResourceRecordItem {
   status: string
   process_count: number
   fail_reason: string | null
-  run_id: string | null
+  /** 执行批次ID（工作流运行场景 = run_id，与操作日志 execution_id 同名同值） */
+  execution_id: string | null
   extra: Record<string, unknown> | null
   first_processed_at: string | null
   last_processed_at: string | null
@@ -43,8 +44,8 @@ export interface WorkflowResourceRecordQuery {
   browser_id?: number
   /** 业务主键（模糊） */
   resource_id?: string
-  /** 所属运行ID（精确） */
-  run_id?: string
+  /** 执行批次ID（精确；= 该次运行的 run_id） */
+  execution_id?: string
   /** 处理次数下限 */
   process_count_min?: number
   /** 处理次数上限 */
@@ -62,6 +63,28 @@ export interface WorkflowResourceRecordPage {
   per_page: number
 }
 
+/** 删除已处理资源记录的请求（除 workflow_id 外至少要给一个条件，服务端强制） */
+export interface WorkflowResourceRecordDeleteQuery {
+  workflow_id: number
+  /** 记录主键（列表页勾选删除） */
+  ids?: number[]
+  /** 执行批次ID（= 该次运行的 run_id）：清理某一轮写入的记录 */
+  execution_id?: string
+  browser_id?: number
+  resource_type?: string
+  /** success / skipped / failed */
+  status?: string
+  /** 业务主键，精确匹配 */
+  resource_id?: string
+  /** true = 只统计将删除的条数（前端二次确认用） */
+  dry_run?: boolean
+}
+
+export interface WorkflowResourceRecordDeleteResult {
+  deleted: number
+  dry_run: boolean
+}
+
 /** 分页查询某工作流的已处理资源记录（按最近处理时间倒序） */
 export function listWorkflowResources(
   query: WorkflowResourceRecordQuery,
@@ -77,7 +100,7 @@ export function listWorkflowResources(
     'status',
     'browser_id',
     'resource_id',
-    'run_id',
+    'execution_id',
     'process_count_min',
     'process_count_max',
     'processed_from',
@@ -98,6 +121,47 @@ export function listWorkflowResources(
     {
       successMessage: '',
       errorMessage: '获取已处理数据失败',
+      showSuccessToast: false,
+    }
+  )
+}
+
+/**
+ * 删除已处理资源记录（删掉后这些资源会重新参与下一轮取数）。
+ *
+ * 约定：调用方必须先用 `dry_run: true` 预览影响面并二次确认，再真正删除。
+ */
+export function deleteWorkflowResources(
+  query: WorkflowResourceRecordDeleteQuery,
+  headers: Record<string, string>
+): Promise<BusinessHandlerResult<WorkflowResourceRecordDeleteResult>> {
+  const payload: Record<string, unknown> = {
+    workflow_id: query.workflow_id,
+  }
+  const optionalKeys = [
+    'ids',
+    'execution_id',
+    'browser_id',
+    'resource_type',
+    'status',
+    'resource_id',
+    'dry_run',
+  ] as const
+  for (const key of optionalKeys) {
+    const value = query[key]
+    if (value !== undefined && value !== null && value !== '') {
+      payload[key] = value
+    }
+  }
+
+  return businessHandler<WorkflowResourceRecordDeleteResult>(
+    工作流管理Service.deleteWorkflowResourcesApiV1RpaBrowserControlWorkflowsResourcesDeletePost({
+      body: payload as any,
+      headers,
+    }) as any,
+    {
+      successMessage: '',
+      errorMessage: '清理资源记录失败',
       showSuccessToast: false,
     }
   )

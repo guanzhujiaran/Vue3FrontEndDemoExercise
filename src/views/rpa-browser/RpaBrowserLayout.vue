@@ -67,7 +67,9 @@ import {
   Setting,
   Stamp,
   Coin,
-  Document
+  Document,
+  Connection,
+  ChatDotRound
 } from '@element-plus/icons-vue'
 import { useInject, KeysEnum } from '@/models/base/provide_model.ts'
 import type { UserNavModel } from '@/models/user/user_model.ts'
@@ -168,6 +170,16 @@ const navGroups = computed<BiliSideNavGroup[]>(() => [
         name: 'RPA_BROWSER_APPROVAL_CENTER',
         title: '审批中心',
         icon: Stamp as Component
+      },
+      {
+        name: RouteName.RPA_BROWSER_MCP_CONFIG,
+        title: RouteName.RPA_BROWSER_MCP_CONFIG,
+        icon: Connection as Component
+      },
+      {
+        name: RouteName.RPA_BROWSER_FEEDBACK,
+        title: RouteName.RPA_BROWSER_FEEDBACK,
+        icon: ChatDotRound as Component
       }
     ]
   }

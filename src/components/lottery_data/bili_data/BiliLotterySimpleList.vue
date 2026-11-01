@@ -62,8 +62,23 @@
 
         <!-- 跳转连接（点击链接不触发卡片弹窗） -->
         <div class="mt-3 flex flex-wrap items-center gap-3" @click.stop>
+          <!-- 预约抽奖没有「源动态」语义，入口改为发起者空间；其余类型保持源动态 -->
           <el-link
-            v-if="item.normalized.sourceLink"
+            v-if="item.normalized.type === 'RESERVATION' && initiatorSpaceUrl(item.normalized)"
+            type="primary"
+            :href="initiatorSpaceUrl(item.normalized)"
+            target="_blank"
+            :rel="LINK_REL"
+            :referrerpolicy="LINK_REFERRER_POLICY"
+            underline="never"
+            icon="user"
+            class="lottery-simple-card__initiator-link text-xs!"
+            @click="handleLinkClick(item.normalized)"
+          >
+            查看发起者
+          </el-link>
+          <el-link
+            v-else-if="item.normalized.sourceLink"
             type="primary"
             :href="item.normalized.sourceLink"
             target="_blank"
@@ -163,13 +178,18 @@ import BiliLotteryCard from '@/components/lottery_data/bili_data/BiliLotteryCard
 import { LINK_REL, LINK_REFERRER_POLICY } from '@/utils/PageOpen/linkPolicy'
 import BiliStatusIcon from '@/components/CommonCompo/Bili-Status-Compo/BiliStatusIcon.vue'
 import { normalizeLotteryData } from '@/utils/lotteryNormalization.ts'
+import { getBiliUserSpaceUrl } from '@/utils/PageOpen/BiliJump.ts'
 import { handleLotteryLinkClick, isLotteryParticipated } from '@/utils/lotteryParticipation'
 import MoreIcon from '@/assets/svgs/more.svg?component'
 import MomentPublishForm from '@/components/moment/MomentPublishForm.vue'
 import MomentFavoriteDialog from '@/components/moment/MomentFavoriteDialog.vue'
-import { fetchInteractionStatus, isNumericBizId, InteractionBizTypeEnum, thumbMoment } from '@/api/notify/moment-api'
+import { isNumericBizId, InteractionBizTypeEnum, thumbMoment } from '@/api/notify/moment-api'
 import type { InteractionStatusItem } from '@/api/notify/moment-api'
 import { interactionBizTypeOf } from '@/stores/lottery_detail.ts'
+import {
+  fetchInteractionStatusMap,
+  interactionStatusKey,
+} from '@/utils/lotteryInteractionStatus'
 
 interface SimpleListItem {
   raw: any
@@ -178,7 +198,16 @@ interface SimpleListItem {
 }
 
 const props = withDefaults(
-  defineProps<{ data: any[] }>(),
+  defineProps<{
+    data?: any[]
+    /**
+     * 父级一次性批量拉取的互动态（key=`${bizType}:${bizId}`）。
+     *
+     * `undefined`=本组件自行批量拉取（默认）；传对象（含空对象）=由父级统一管理，
+     * 本组件不再发请求——首页轮播是「每页一个实例」，各自请求会退化成一串「单个查询」。
+     */
+    initialStatus?: Record<string, InteractionStatusItem> | null
+  }>(),
   { data: () => [] }
 )
 
@@ -248,46 +277,47 @@ const handleLinkClick = (normalized: SimpleListItem['normalized']) => {
   handleLotteryLinkClick(String(normalized.id))
 }
 
+/** 发起者空间链接（预约抽奖入口）：无 uid 时返回空串，由模板 v-if 过滤不渲染 */
+function initiatorSpaceUrl(normalized: SimpleListItem['normalized']): string {
+  const uid = normalized.senderInfo?.uid
+  return uid ? getBiliUserSpaceUrl(String(uid)) : ''
+}
+
 // ============ 点赞 / 收藏 / 转发到动态（2.20.0，批量拉取互动状态）============
 // 互动定位按行类型分流：第三方抽奖动态走 others_lot_dyn（bizId=dynId），
 // 其余抽奖卡片走 lottery（bizId=lottery_id）；状态 key 含 bizType 避免互相覆盖。
 const statusMap = reactive<Record<string, InteractionStatusItem>>({})
 const interactLoading = ref(false)
 
+/** 父级是否接管了互动态拉取（对应 `initialStatus` 的 undefined 语义） */
+const statusManagedByParent = computed(() => props.initialStatus !== undefined)
+
 const itemBizType = (item: SimpleListItem) => interactionBizTypeOf(item.normalized.type)
 const itemBizId = (item: SimpleListItem) => String(item.normalized.id ?? '')
-const statusKey = (bizType: InteractionBizTypeEnum, bizId: string) => `${bizType}:${bizId}`
+const statusKey = interactionStatusKey
+
+/** 父级一次批量拉取的结果注入（轮播多页共用同一份，各实例不再各自请求） */
+watch(
+  () => props.initialStatus,
+  (injected) => {
+    if (injected) Object.assign(statusMap, injected)
+  },
+  { immediate: true }
+)
 
 async function loadAllStatus() {
+  // 父级接管时本组件不发请求：首页轮播每页一个实例，各自请求会退化成一串「单查询」
+  if (statusManagedByParent.value) return
   const targets = parsedData.value
     .map((i) => ({ bizType: itemBizType(i), bizId: itemBizId(i) }))
     // 非数字 ID（旧数据兜底 / 未知类型）进批量接口会被后端整批 400，必须过滤
     .filter((t) => isNumericBizId(t.bizId))
   if (!targets.length) return
-  // 按 bizType 分组，每组一次批量接口
-  const groups = new Map<InteractionBizTypeEnum, string[]>()
-  for (const t of targets) {
-    const arr = groups.get(t.bizType) ?? []
-    if (!arr.includes(t.bizId)) arr.push(t.bizId)
-    groups.set(t.bizType, arr)
-  }
   const seq = ++loadSeq
-  try {
-    const results = await Promise.all(
-      [...groups.entries()].map(async ([bizType, ids]) => ({
-        bizType,
-        res: await fetchInteractionStatus(bizType, ids).catch(() => null)
-      }))
-    )
-    if (seq !== loadSeq) return // 过期响应（期间又切页）丢弃
-    for (const { bizType, res } of results) {
-      for (const item of res?.items ?? []) {
-        if (item?.bizId) statusMap[statusKey(bizType, item.bizId)] = item
-      }
-    }
-  } catch {
-    // 弱依赖：失败不阻断展示
-  }
+  // 分组 + 按后端 50 上限分片统一在工具里处理（超出会被后端静默截断）
+  const fetched = await fetchInteractionStatusMap(targets)
+  if (seq !== loadSeq) return // 过期响应（期间又切页）丢弃
+  Object.assign(statusMap, fetched)
 }
 // 切页（分页/翻页 data 变化）时重新拉取本页互动状态；内容不变去重跳过、空页清空
 let lastLoadedKey = ''
@@ -344,9 +374,18 @@ function handleFavorite(item: SimpleListItem) {
   favDialogVisible.value = true
 }
 
-/** 收藏夹变更后重新拉取最新互动状态 */
+/** 收藏夹变更后重新拉取最新互动状态（父级接管时只回查被操作的那一条） */
 async function handleFavChanged() {
-  await loadAllStatus()
+  if (!statusManagedByParent.value) {
+    await loadAllStatus()
+    return
+  }
+  const item = favItem.value
+  if (!item) return
+  const fetched = await fetchInteractionStatusMap([
+    { bizType: itemBizType(item), bizId: itemBizId(item) },
+  ])
+  Object.assign(statusMap, fetched)
 }
 
 // 转发到动态：弹窗由 MomentPublishForm（attach 资源模式）处理

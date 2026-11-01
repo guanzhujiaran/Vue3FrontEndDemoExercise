@@ -50,12 +50,12 @@ export class 工作流管理Service {
     /**
      * 导出工作流为 JSON
      *
-     * 导出工作流
+     * 导出工作流为 JSON
      *
      * 返回体与「创建 / 导入」请求体字段完全一致，可直接保存为 .json 后再由导入接口还原。
      *
      * Args:
-     * request: {"id": <工作流ID>}
+     * request: {"id": <工作流数据库 ID>}
      */
     public static exportWorkflowApiV1RpaBrowserControlWorkflowsExportPost<ThrowOnError extends boolean = false>(options: Options<ExportWorkflowApiV1RpaBrowserControlWorkflowsExportPostData, ThrowOnError>): RequestResult<ExportWorkflowApiV1RpaBrowserControlWorkflowsExportPostResponses, ExportWorkflowApiV1RpaBrowserControlWorkflowsExportPostErrors, ThrowOnError, 'data'> {
         return (options.client ?? client).post<ExportWorkflowApiV1RpaBrowserControlWorkflowsExportPostResponses, ExportWorkflowApiV1RpaBrowserControlWorkflowsExportPostErrors, ThrowOnError, 'data'>({
@@ -91,10 +91,10 @@ export class 工作流管理Service {
     /**
      * 获取工作流详情
      *
-     * 获取工作流详情
+     * 按工作流数据库 ID 获取详情（触发配置 / 关联动作 / 上游同步状态）。
      *
      * Args:
-     * request: {"id": <工作流ID>}
+     * request: {"id": <工作流数据库 ID>}；`workflow_id`（雪花）不是本接口主键
      */
     public static getWorkflowDetailApiV1RpaBrowserControlWorkflowsGetPost<ThrowOnError extends boolean = false>(options: Options<GetWorkflowDetailApiV1RpaBrowserControlWorkflowsGetPostData, ThrowOnError>): RequestResult<GetWorkflowDetailApiV1RpaBrowserControlWorkflowsGetPostResponses, GetWorkflowDetailApiV1RpaBrowserControlWorkflowsGetPostErrors, ThrowOnError, 'data'> {
         return (options.client ?? client).post<GetWorkflowDetailApiV1RpaBrowserControlWorkflowsGetPostResponses, GetWorkflowDetailApiV1RpaBrowserControlWorkflowsGetPostErrors, ThrowOnError, 'data'>({
@@ -128,10 +128,10 @@ export class 工作流管理Service {
     /**
      * 删除工作流
      *
-     * 删除工作流
+     * 删除工作流（同时摘掉它的定时任务，避免删除后仍被 cron 拉起）。
      *
      * Args:
-     * request: {"id": <工作流ID>}
+     * request: {"id": <工作流数据库 ID>}
      */
     public static deleteWorkflowApiV1RpaBrowserControlWorkflowsDeletePost<ThrowOnError extends boolean = false>(options: Options<DeleteWorkflowApiV1RpaBrowserControlWorkflowsDeletePostData, ThrowOnError>): RequestResult<DeleteWorkflowApiV1RpaBrowserControlWorkflowsDeletePostResponses, DeleteWorkflowApiV1RpaBrowserControlWorkflowsDeletePostErrors, ThrowOnError, 'data'> {
         return (options.client ?? client).post<DeleteWorkflowApiV1RpaBrowserControlWorkflowsDeletePostResponses, DeleteWorkflowApiV1RpaBrowserControlWorkflowsDeletePostErrors, ThrowOnError, 'data'>({
@@ -148,10 +148,10 @@ export class 工作流管理Service {
     /**
      * 复制工作流
      *
-     * 复制工作流
+     * 复制工作流（副本始终为私有，不继承公开状态）。
      *
      * Args:
-     * request: {"id": <工作流ID>, "new_name": <新名称>}
+     * request: {"id": <原工作流数据库 ID>, "new_name": <副本名称，必填>}
      */
     public static duplicateWorkflowApiV1RpaBrowserControlWorkflowsDuplicatePost<ThrowOnError extends boolean = false>(options: Options<DuplicateWorkflowApiV1RpaBrowserControlWorkflowsDuplicatePostData, ThrowOnError>): RequestResult<DuplicateWorkflowApiV1RpaBrowserControlWorkflowsDuplicatePostResponses, DuplicateWorkflowApiV1RpaBrowserControlWorkflowsDuplicatePostErrors, ThrowOnError, 'data'> {
         return (options.client ?? client).post<DuplicateWorkflowApiV1RpaBrowserControlWorkflowsDuplicatePostResponses, DuplicateWorkflowApiV1RpaBrowserControlWorkflowsDuplicatePostErrors, ThrowOnError, 'data'>({
@@ -228,9 +228,11 @@ export class 工作流管理Service {
     /**
      * 单步执行工作流
      *
-     * 单步执行工作流
+     * 单步执行步骤列表中的指定一项（调试用）
      *
-     * 执行工作流中的指定步骤，用于调试和逐步执行
+     * 与「运行工作流」无关：调用方把整份 `steps` 传进来，本接口只执行
+     * `steps[step_index]` 这一项，不读数据库里的工作流定义、也不写运行记录。
+     * 目标浏览器取自 body 的 `browser_id`（数字字符串）与 `page_index`。
      */
     public static executeWorkflowStepApiV1RpaBrowserControlWorkflowsExecuteStepPost<ThrowOnError extends boolean = false>(options: Options<ExecuteWorkflowStepApiV1RpaBrowserControlWorkflowsExecuteStepPostData, ThrowOnError>): RequestResult<ExecuteWorkflowStepApiV1RpaBrowserControlWorkflowsExecuteStepPostResponses, ExecuteWorkflowStepApiV1RpaBrowserControlWorkflowsExecuteStepPostErrors, ThrowOnError, 'data'> {
         return (options.client ?? client).post<ExecuteWorkflowStepApiV1RpaBrowserControlWorkflowsExecuteStepPostResponses, ExecuteWorkflowStepApiV1RpaBrowserControlWorkflowsExecuteStepPostErrors, ThrowOnError, 'data'>({
@@ -250,8 +252,10 @@ export class 工作流管理Service {
      * 立即运行一次已保存的工作流
      *
      * 工作流是调度外壳：此处按工作流引用的动作顺序执行其步骤，并写入运行记录。
-     * 目标浏览器以 **query 的 browser_id 为准**（由 verify_browser_ownership 校验归属），
-     * body 中的 browser_id 仅作兼容保留、不参与决策；未指定浏览器时回落到工作流配置的 browser_id。
+     *
+     * 目标浏览器**必须**通过 query 的 `browser_id` 指定（由 verify_browser_ownership
+     * 校验归属，缺失直接 422）；body 里的 `browser_id` 仅为兼容旧调用保留，不参与决策，
+     * 也不会回落到工作流配置的浏览器。
      *
      * 执行是**异步**的：本接口立即返回 ``run_id``（``status=running``），真正的执行在
      * 后台 task 中进行；前端凭 run_id 轮询运行记录或调用停止接口。
@@ -367,9 +371,9 @@ export class 工作流管理Service {
      * 删除「已处理资源」记录（下次取数会被重新捞起）。
      *
      * 支持三种用法：
-     * - 列表页勾选：传 `ids`；
+     * - 列表页勾选：传 `ids`（记录主键）；
      * - 单条/条件清理：传 `resource_type` + `resource_id`（精确）等；
-     * - 清理某一轮运行的误记：传 `run_id`。
+     * - 清理某一轮执行的误记：传 `execution_id`（执行批次 ID，**不是** run_id）。
      *
      * `dry_run=true` 只返回将删除的条数，供前端二次确认。
      */
@@ -388,7 +392,7 @@ export class 工作流管理Service {
     /**
      * 获取工作流运行记录详情
      *
-     * 按 run_id 获取运行记录详情
+     * 按 run_id 获取运行记录详情（返回体与运行记录列表项同构）。
      *
      * Args:
      * request: {"run_id": "<运行ID>"}

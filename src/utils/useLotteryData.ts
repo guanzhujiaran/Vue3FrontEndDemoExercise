@@ -95,6 +95,12 @@ export const useLotteryData = (lotName: string) => {
           pub_time_preset: extraFilters.value.pub_time_preset ?? null,
         };
 
+        // 预约抽奖：已取消/已失效的预约不在 lotdata.status 上体现，需要额外参数让后端过滤；
+        // 筛选元数据未就绪（无 SSR 快照 / 首次进入）时兜底 true，保证首屏就不出现已取消内容。
+        if (lotName === 'GetReserveLottery') {
+          params.only_available = extraFilters.value.only_available ?? true;
+        }
+
         switch (lotName) {
           case 'GetOfficialLottery':
             resp = await lotteryDataBaseApi.getOfficialLottery(params);

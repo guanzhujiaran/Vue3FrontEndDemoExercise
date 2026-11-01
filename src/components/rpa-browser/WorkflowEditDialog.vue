@@ -63,7 +63,8 @@ const userNavStore = useUserNavStore()
 /**
  * 保存体类型：custom_action_id 按字符串透传——雪花 ID 是 19 位整数，
  * 超出 JS Number 安全整数范围（项目「_str 后缀」约定），由后端自行转 int；
- * 其余字段与 SDK 的 WorkflowCreateRequest 保持一致。
+ * 其余字段与 SDK 的 WorkflowCreateRequest 保持一致（含运行通知 2×2 矩阵 4 个开关，
+ * 见 docs/通知动作与运行告警计划书.md §E）。
  */
 type WorkflowSaveBody = Omit<WorkflowCreateRequest, 'custom_action_id'> & {
   custom_action_id?: string | null
@@ -76,9 +77,12 @@ const isPublic = ref(false)
 const isEnabled = ref(true)
 const triggerType = ref<'manual' | 'cron'>('manual')
 const cronExpression = ref('')
-// 运行通知开关：开始/结束各一条，站内系统通知始终发送、外部推送需在推送设置中配置
-const notifyOnStart = ref(false)
-const notifyOnEnd = ref(true)
+// 运行通知开关「通道 × 时机」2×2：站内 / 站外 各自独立控制「开始 / 结束」
+// （结束 = 成功 / 失败 / 停止；站内无需配置，站外需先在推送设置中配置渠道）
+const notifyInboxOnStart = ref(false)
+const notifyInboxOnEnd = ref(true)
+const notifyPushOnStart = ref(false)
+const notifyPushOnEnd = ref(true)
 // 执行日志开关：开启后按步骤记录入参/结果/耗时（仅保留最近 7 天），可在运行记录中下钻
 const logEnabled = ref(false)
 // 调试模式（用户级 debug，后端 UserWorkflow.log_debug）：全量采集——入参/结果/
@@ -521,8 +525,15 @@ watch(
             ? [Number(props.workflowDetail.browser_id)]
             : []
       concurrentExec.value = props.workflowDetail.concurrent_exec ?? false
-      notifyOnStart.value = props.workflowDetail.notify_on_start ?? false
-      notifyOnEnd.value = props.workflowDetail.notify_on_end ?? true
+      // 通知矩阵：优先读 4 个新字段；存量数据（或旧导出 JSON）只有通道混合开关时
+      // 按「双通道」展开回显，避免把已开启的通知显示成关闭
+      const notifyDetail = props.workflowDetail
+      const legacyOnStart = notifyDetail.notify_on_start ?? false
+      const legacyOnEnd = notifyDetail.notify_on_end ?? true
+      notifyInboxOnStart.value = notifyDetail.notify_inbox_on_start ?? legacyOnStart
+      notifyPushOnStart.value = notifyDetail.notify_push_on_start ?? legacyOnStart
+      notifyInboxOnEnd.value = notifyDetail.notify_inbox_on_end ?? legacyOnEnd
+      notifyPushOnEnd.value = notifyDetail.notify_push_on_end ?? legacyOnEnd
       // log_enabled 为三态：true=显式开 / false=显式关 / null=未设置（跟随动作级/项目级开关），
       // 弹窗只有二元开关，未设置一律按「关」展示，保存后会固化为显式值
       logEnabled.value = props.workflowDetail.log_enabled ?? false
@@ -548,8 +559,10 @@ watch(
       selectedBrowserIds.value =
         browserList.value.length > 0 ? [browserList.value[0].browser_id] : []
       concurrentExec.value = false
-      notifyOnStart.value = false
-      notifyOnEnd.value = true
+      notifyInboxOnStart.value = false
+      notifyInboxOnEnd.value = true
+      notifyPushOnStart.value = false
+      notifyPushOnEnd.value = true
       logEnabled.value = false
       logDebug.value = false
       selectedAction.value = null
@@ -628,8 +641,10 @@ async function handleSave() {
       trigger_type: triggerType.value,
       trigger_config: triggerConfig,
       is_public: isPublic.value,
-      notify_on_start: notifyOnStart.value,
-      notify_on_end: notifyOnEnd.value,
+      notify_inbox_on_start: notifyInboxOnStart.value,
+      notify_inbox_on_end: notifyInboxOnEnd.value,
+      notify_push_on_start: notifyPushOnStart.value,
+      notify_push_on_end: notifyPushOnEnd.value,
       log_enabled: logEnabled.value,
       log_debug: logDebug.value,
       resume_on_restart: resumeOnRestart.value,
@@ -849,24 +864,63 @@ function formatTime(t: string | null) {
         <div v-if="browserError" class="text-xs text-danger">{{ browserError }}</div>
       </div>
 
-      <!-- 运行通知 -->
+      <!-- 运行通知：通道（站内 / 站外）× 时机（开始 / 结束）两行两列 -->
       <div class="workflow-notify-section border border-border rounded p-3 flex flex-col gap-3">
-        <div class="flex items-center gap-2">
+        <div class="workflow-notify-section__header flex items-center gap-2">
           <el-icon class="text-primary"><Bell /></el-icon>
           <span class="text-sm font-medium">运行通知</span>
           <span class="text-xs text-color-secondary">
-            站内系统通知无需配置；外部推送（PushMe 等）需先在推送设置中配置渠道
+            站内与站外分别选择通知时机；站外推送需先在推送设置中配置渠道
           </span>
         </div>
-        <div class="flex items-center gap-6 flex-wrap">
-          <div class="flex items-center gap-2">
-            <label class="text-xs text-color-secondary">开始执行时通知</label>
-            <el-switch v-model="notifyOnStart" inline-prompt active-text="开" inactive-text="关" />
+        <div class="workflow-notify-matrix grid grid-cols-[auto_1fr_1fr] items-center gap-x-4 gap-y-3">
+          <div class="workflow-notify-matrix__row flex flex-col">
+            <span class="text-xs text-text-primary">站内通知</span>
+            <span class="text-xs text-color-secondary">消息中心，无需配置</span>
           </div>
-          <div class="flex items-center gap-2">
-            <label class="text-xs text-color-secondary">结束时通知（成功/失败）</label>
-            <el-switch v-model="notifyOnEnd" inline-prompt active-text="开" inactive-text="关" />
+          <div class="workflow-notify-matrix__cell">
+            <el-checkbox
+              id="workflow-notify-inbox-start"
+              v-model="notifyInboxOnStart"
+              class="workflow-notify-matrix__check"
+            >
+              开始执行
+            </el-checkbox>
           </div>
+          <div class="workflow-notify-matrix__cell">
+            <el-checkbox
+              id="workflow-notify-inbox-end"
+              v-model="notifyInboxOnEnd"
+              class="workflow-notify-matrix__check"
+            >
+              结束（成功 / 失败 / 停止）
+            </el-checkbox>
+          </div>
+          <div class="workflow-notify-matrix__row flex flex-col">
+            <span class="text-xs text-text-primary">站外推送</span>
+            <span class="text-xs text-color-secondary">PushMe 等，需先配置渠道</span>
+          </div>
+          <div class="workflow-notify-matrix__cell">
+            <el-checkbox
+              id="workflow-notify-push-start"
+              v-model="notifyPushOnStart"
+              class="workflow-notify-matrix__check"
+            >
+              开始执行
+            </el-checkbox>
+          </div>
+          <div class="workflow-notify-matrix__cell">
+            <el-checkbox
+              id="workflow-notify-push-end"
+              v-model="notifyPushOnEnd"
+              class="workflow-notify-matrix__check"
+            >
+              结束（成功 / 失败 / 停止）
+            </el-checkbox>
+          </div>
+        </div>
+        <div class="workflow-notify-matrix__hint text-xs text-color-secondary">
+          站内通知仅受账号「接收系统通知」开关约束；站外推送未配置渠道时勾选不生效，免打扰时段由消息服务端统一拦截
         </div>
       </div>
 

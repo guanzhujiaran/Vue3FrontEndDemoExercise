@@ -299,8 +299,8 @@ export const ElAffix: typeof import("../node_modules/element-plus/es/components/
 export const ElAlert: typeof import("../node_modules/element-plus/es/components/alert/index")['ElAlert']
 export const ElAnchor: typeof import("../node_modules/element-plus/es/components/anchor/index")['ElAnchor']
 export const ElAnchorLink: typeof import("../node_modules/element-plus/es/components/anchor/index")['ElAnchorLink']
-export const ElAutoResizer: typeof import("../node_modules/element-plus/es/components/table-v2/index")['ElAutoResizer']
 export const ElAside: typeof import("../node_modules/element-plus/es/components/container/index")['ElAside']
+export const ElAutoResizer: typeof import("../node_modules/element-plus/es/components/table-v2/index")['ElAutoResizer']
 export const ElAutocomplete: typeof import("../node_modules/element-plus/es/components/autocomplete/index")['ElAutocomplete']
 export const ElAvatar: typeof import("../node_modules/element-plus/es/components/avatar/index")['ElAvatar']
 export const ElAvatarGroup: typeof import("../node_modules/element-plus/es/components/avatar/index")['ElAvatarGroup']
@@ -1033,8 +1033,8 @@ export const LazyElAffix: LazyComponent<typeof import("../node_modules/element-p
 export const LazyElAlert: LazyComponent<typeof import("../node_modules/element-plus/es/components/alert/index")['ElAlert']>
 export const LazyElAnchor: LazyComponent<typeof import("../node_modules/element-plus/es/components/anchor/index")['ElAnchor']>
 export const LazyElAnchorLink: LazyComponent<typeof import("../node_modules/element-plus/es/components/anchor/index")['ElAnchorLink']>
-export const LazyElAutoResizer: LazyComponent<typeof import("../node_modules/element-plus/es/components/table-v2/index")['ElAutoResizer']>
 export const LazyElAside: LazyComponent<typeof import("../node_modules/element-plus/es/components/container/index")['ElAside']>
+export const LazyElAutoResizer: LazyComponent<typeof import("../node_modules/element-plus/es/components/table-v2/index")['ElAutoResizer']>
 export const LazyElAutocomplete: LazyComponent<typeof import("../node_modules/element-plus/es/components/autocomplete/index")['ElAutocomplete']>
 export const LazyElAvatar: LazyComponent<typeof import("../node_modules/element-plus/es/components/avatar/index")['ElAvatar']>
 export const LazyElAvatarGroup: LazyComponent<typeof import("../node_modules/element-plus/es/components/avatar/index")['ElAvatarGroup']>

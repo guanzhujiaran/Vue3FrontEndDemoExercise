@@ -211,6 +211,10 @@ const showBrowserIdDetail = (item: UserBrowserInfo) => {
             <span class="text-gray-400 text-sm">代理服务器：</span>
             <span class="text-white">${item.proxy_server || '未配置'}</span>
           </div>
+          ${item.proxy_bypass ? `<div>
+            <span class="text-gray-400 text-sm">代理绕过：</span>
+            <span class="text-white">${item.proxy_bypass}</span>
+          </div>` : ''}
         </div>
 
         <div class="border-t border-gray-700 pt-4">
@@ -234,7 +238,8 @@ const showBrowserIdDetail = (item: UserBrowserInfo) => {
     confirmButtonText: '关闭',
     confirmButtonClass: 'bg-gradient-to-r from-cyan-600 to-purple-600 border-none',
     customClass: 'cyber-modal',
-    width: '500px',
+    // ElMessageBoxOptions 没有 width 字段，宽度只能走 customStyle（组件内联样式优先级最高）
+    customStyle: { width: '500px' },
     lockScroll: false
   })
 }

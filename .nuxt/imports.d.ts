@@ -72,6 +72,7 @@ export { SITE_TIME_ZONE, SITE_LOCALE, formatDateTime, formatDate, formatTimeShor
 export { openEventDetail } from '../src/utils/eventJump';
 export { withStrIds, RESPONSE_ID_FIELDS, ID_FIELDS } from '../src/utils/idString';
 export { isJsonSchemaNode, toJsonSchemaNode, schemaProperties, schemaRequired } from '../src/utils/jsonSchema';
+export { INTERACTION_STATUS_BATCH_LIMIT, interactionStatusKey, lotteryCardInteractionTargets, fetchInteractionStatusMap } from '../src/utils/lotteryInteractionStatus';
 export { formatTimestamp, parsePrizeText, parseExclusiveLevel, normalizeLotteryData } from '../src/utils/lotteryNormalization';
 export { handleLotteryLinkClick, setLotteryParticipation, isLotteryParticipated } from '../src/utils/lotteryParticipation';
 export { default as message } from '../src/utils/message';

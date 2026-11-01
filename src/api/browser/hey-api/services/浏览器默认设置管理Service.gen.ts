@@ -7,26 +7,26 @@ import type { ApplyDefaultSettingsToBrowserApiV1RpaBrowserDefaultSettingsApplyPo
 
 export class 浏览器默认设置管理Service {
     /**
-     * Get User Default Settings
+     * 获取用户默认设置
      *
      * 获取用户的默认设置
      *
      * 如果用户没有设置过默认设置，返回 null
      */
-    public static getUserDefaultSettingsApiV1RpaBrowserDefaultSettingsGetPost<ThrowOnError extends boolean = false>(options: Options<GetUserDefaultSettingsApiV1RpaBrowserDefaultSettingsGetPostData, ThrowOnError>): RequestResult<GetUserDefaultSettingsApiV1RpaBrowserDefaultSettingsGetPostResponses, GetUserDefaultSettingsApiV1RpaBrowserDefaultSettingsGetPostErrors, ThrowOnError, 'data'> {
-        return (options.client ?? client).post<GetUserDefaultSettingsApiV1RpaBrowserDefaultSettingsGetPostResponses, GetUserDefaultSettingsApiV1RpaBrowserDefaultSettingsGetPostErrors, ThrowOnError, 'data'>({
+    public static getUserDefaultSettingsApiV1RpaBrowserDefaultSettingsGetPost<ThrowOnError extends boolean = false>(options?: Options<GetUserDefaultSettingsApiV1RpaBrowserDefaultSettingsGetPostData, ThrowOnError>): RequestResult<GetUserDefaultSettingsApiV1RpaBrowserDefaultSettingsGetPostResponses, GetUserDefaultSettingsApiV1RpaBrowserDefaultSettingsGetPostErrors, ThrowOnError, 'data'> {
+        return (options?.client ?? client).post<GetUserDefaultSettingsApiV1RpaBrowserDefaultSettingsGetPostResponses, GetUserDefaultSettingsApiV1RpaBrowserDefaultSettingsGetPostErrors, ThrowOnError, 'data'>({
             responseStyle: 'data',
             url: '/api/v1/rpa/browser/default-settings/get',
             ...options,
             headers: {
                 'Content-Type': 'application/json',
-                ...options.headers
+                ...options?.headers
             }
         });
     }
     
     /**
-     * Create Or Update User Default Settings
+     * 创建或更新用户默认设置
      *
      * 创建或更新用户的默认设置
      *
@@ -45,26 +45,26 @@ export class 浏览器默认设置管理Service {
     }
     
     /**
-     * Delete User Default Settings
+     * 删除用户默认设置
      *
      * 删除用户的默认设置
      *
      * 成功删除返回 true，如果设置不存在返回 false
      */
-    public static deleteUserDefaultSettingsApiV1RpaBrowserDefaultSettingsDeletePost<ThrowOnError extends boolean = false>(options: Options<DeleteUserDefaultSettingsApiV1RpaBrowserDefaultSettingsDeletePostData, ThrowOnError>): RequestResult<DeleteUserDefaultSettingsApiV1RpaBrowserDefaultSettingsDeletePostResponses, DeleteUserDefaultSettingsApiV1RpaBrowserDefaultSettingsDeletePostErrors, ThrowOnError, 'data'> {
-        return (options.client ?? client).post<DeleteUserDefaultSettingsApiV1RpaBrowserDefaultSettingsDeletePostResponses, DeleteUserDefaultSettingsApiV1RpaBrowserDefaultSettingsDeletePostErrors, ThrowOnError, 'data'>({
+    public static deleteUserDefaultSettingsApiV1RpaBrowserDefaultSettingsDeletePost<ThrowOnError extends boolean = false>(options?: Options<DeleteUserDefaultSettingsApiV1RpaBrowserDefaultSettingsDeletePostData, ThrowOnError>): RequestResult<DeleteUserDefaultSettingsApiV1RpaBrowserDefaultSettingsDeletePostResponses, DeleteUserDefaultSettingsApiV1RpaBrowserDefaultSettingsDeletePostErrors, ThrowOnError, 'data'> {
+        return (options?.client ?? client).post<DeleteUserDefaultSettingsApiV1RpaBrowserDefaultSettingsDeletePostResponses, DeleteUserDefaultSettingsApiV1RpaBrowserDefaultSettingsDeletePostErrors, ThrowOnError, 'data'>({
             responseStyle: 'data',
             url: '/api/v1/rpa/browser/default-settings/delete',
             ...options,
             headers: {
                 'Content-Type': 'application/json',
-                ...options.headers
+                ...options?.headers
             }
         });
     }
     
     /**
-     * Apply Default Settings To Browser
+     * 把默认设置应用到浏览器实例
      *
      * 将用户的默认设置应用到指定的浏览器实例
      *
@@ -79,7 +79,7 @@ export class 浏览器默认设置管理Service {
     }
     
     /**
-     * Get Server Default Settings
+     * 获取服务端默认设置
      *
      * 获取服务端预定义的默认设置
      *

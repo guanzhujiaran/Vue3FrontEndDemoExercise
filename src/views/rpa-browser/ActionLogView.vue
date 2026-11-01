@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { ref, computed, nextTick, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
-  Refresh, Search, Delete, View, WarningFilled,
-  CircleCheckFilled, Clock, QuestionFilled,
+  Refresh, Search, Delete, Loading, View, WarningFilled,
+  CircleCheckFilled, Clock, Connection,
 } from '@element-plus/icons-vue'
 import FlexContainer from '@/components/CommonCompo/Bili-Container-Compo/FlexContainer.vue'
 import BiliPageHeader from '@/components/CommonCompo/Bili-Container-Compo/BiliPageHeader.vue'
@@ -12,6 +12,13 @@ import { useUserNavStore } from '@/stores/user_nav'
 import { businessHandler } from '@/utils/businessHandler'
 import { ElMessageBox } from 'element-plus'
 import { client } from '@/api/browser/hey-api/client.gen'
+
+/**
+ * 页面支持从别处带批次号直达：`?execution_id=<批次>`。
+ *
+ * 典型来源是「已处理数据」表格的「执行批次」列 —— 资源记录的 execution_id
+ * 与日志的 execution_id 同名同值，点过来即可看到写入该资源的那一轮全部步骤。
+ */
 
 // ── 类型 ────────────────────────────────────────────────
 
@@ -34,6 +41,7 @@ interface LogSummary {
   status: string
   success: boolean
   error_message: string | null
+  /** 执行耗时（秒） */
   execution_time: number
   started_at: string
   finished_at: string | null
@@ -62,31 +70,25 @@ interface LogStats {
   }>
 }
 
-type QuickFilterKey = '' | 'failed' | 'workflow'
-
-interface FilterChip {
+/** 顶部概览卡片 */
+interface StatCard {
   key: string
   label: string
+  value: string
+  dotClass: string
+  valueClass: string
 }
 
 // ── 状态 ────────────────────────────────────────────────
 
 const userNavStore = useUserNavStore()
-const route = useRoute()
-const router = useRouter()
 const logList = ref<LogSummary[]>([])
 const total = ref(0)
 const currentPage = ref(1)
 const pageSize = ref(20)
 const loading = ref(false)
+const loadingMore = ref(false)
 const stats = ref<LogStats | null>(null)
-/**
- * 页面根节点：整页滚动由外层 BiliSideNavLayout 的 BiliScrollbar 统一接管
- * （页面内不再放滚动容器，否则内容被压到「视口高度」里，列表可用高度过低）。
- * 翻页后用它把自己滚回布局滚动区的顶部。
- */
-/** FlexContainer 是组件，模板 ref 拿到的是组件实例，根元素在 `$el` 上 */
-const pageRef = ref<{ $el?: HTMLElement } | null>(null)
 
 // 筛选条件
 const filterStatus = ref('')
@@ -95,10 +97,42 @@ const filterSource = ref('')
 const filterActionId = ref('')
 const filterKeyword = ref('')
 const filterBrowserId = ref('')
-/** 执行批次筛选：可手动输入，也可由列表「只看本批次」/ 地址栏 `?execution_id=` 带入 */
+/** 执行批次ID：与「已处理数据」记录的 execution_id 同值，可直接定位同一轮运行 */
 const filterExecutionId = ref('')
-/** 时间范围筛选（按 started_at）：[开始, 结束]，格式 `YYYY-MM-DD HH:mm:ss` */
-const filterTimeRange = ref<[string, string] | null>(null)
+
+const hasMore = computed(() => logList.value.length < total.value)
+
+// ── 执行链路弹窗 ────────────────────────────────────────
+
+const route = useRoute()
+const router = useRouter()
+const chainVisible = ref(false)
+/** 链路弹窗展示的批次号（点击某条日志的「链路」时写入） */
+const chainExecutionId = ref('')
+
+/** 打开某批次的完整执行链路（按写入顺序 + depth 缩进还原调用树） */
+const openChain = (executionId: string) => {
+  if (!executionId) return
+  chainExecutionId.value = executionId
+  chainVisible.value = true
+}
+
+/** 清除批次筛选：同步清掉地址栏 query，避免刷新后又回到过滤态 */
+const clearExecutionFilter = () => {
+  filterExecutionId.value = ''
+  if (route.query.execution_id) {
+    const restQuery = { ...route.query }
+    delete restQuery.execution_id
+    router.replace({ query: restQuery })
+  }
+  handleSearch()
+}
+
+/** 链路里点某一步 → 收起链路并打开该步骤的日志详情 */
+const handleChainSelect = (logId: string) => {
+  chainVisible.value = false
+  openDetail(logId)
+}
 
 // ── 详情弹窗 ────────────────────────────────────────────
 
@@ -107,13 +141,6 @@ const detailRecord = ref<LogDetail | null>(null)
 const detailLoading = ref(false)
 // 执行结果原始 JSON 默认折叠，避免大 payload 直接刷屏
 const showRawJson = ref(false)
-// 折叠区默认展开项：失败记录默认展开「执行过程日志」
-const detailCollapseActive = ref<string[]>([])
-
-// ── 执行链路弹窗 ────────────────────────────────────────
-
-const chainVisible = ref(false)
-const chainExecutionId = ref('')
 
 // ── 选中删除 ────────────────────────────────────────────
 
@@ -125,123 +152,39 @@ const isAllSelected = computed({
   },
 })
 
-// ── 展示辅助 ────────────────────────────────────────────
+/** 是否已勾选该条日志（用于卡片高亮） */
+const isSelected = (logId: string) => selectedLogIds.value.includes(logId)
 
-const apiBase = '/api/v1/rpa/browser/control'
-
-const statusText = (status: string) => {
-  switch (status) {
-    case 'success': return '成功'
-    case 'failed': return '失败'
-    case 'timeout': return '超时'
-    default: return status
+/**
+ * 勾选 / 取消单条日志
+ *
+ * `el-checkbox` 的 `v-model` 类型只声明了单值（boolean/string/number），
+ * 直接绑 `string[]` 通不过类型检查；这里用它支持的 `:model-value` + 事件手动维护集合，
+ * 运行时行为与「数组 v-model」等价。
+ */
+const toggleLogSelection = (logId: string, checked: boolean) => {
+  if (checked) {
+    if (!selectedLogIds.value.includes(logId)) {
+      selectedLogIds.value = [...selectedLogIds.value, logId]
+    }
+    return
   }
+  selectedLogIds.value = selectedLogIds.value.filter((id) => id !== logId)
 }
-
-const sourceText = (source: string) => {
-  switch (source) {
-    case 'action': return '单操作'
-    case 'workflow': return '工作流'
-    case 'plugin': return '插件'
-    default: return source
-  }
-}
-
-const formatTime = (t: string | null) => {
-  if (!t) return '-'
-  return new Date(t).toLocaleString('zh-CN')
-}
-
-const formatDuration = (ms: number) => {
-  if (ms >= 1000) return `${(ms / 1000).toFixed(1)}s`
-  return `${Math.round(ms)}ms`
-}
-
-/** 批次 / ID 类长十六进制串缩短展示，完整值放 title */
-const shortId = (id: string) => (id && id.length > 12 ? `${id.slice(0, 8)}…` : id)
-
-const statusIcon = (status: string) => {
-  switch (status) {
-    case 'success': return CircleCheckFilled
-    case 'failed': return WarningFilled
-    case 'timeout': return Clock
-    default: return CircleCheckFilled
-  }
-}
-
-const statusType = (status: string): 'success' | 'warning' | 'info' | 'danger' => {
-  switch (status) {
-    case 'success': return 'success'
-    case 'failed': return 'danger'
-    case 'timeout': return 'warning'
-    default: return 'info'
-  }
-}
-
-const formatJson = (data: unknown) => {
-  if (!data) return '-'
-  try {
-    return JSON.stringify(data, null, 2)
-  } catch {
-    return String(data)
-  }
-}
-
-// ── 派生状态 ────────────────────────────────────────────
-
-/** 是否有任一筛选条件生效（用于空态文案区分） */
-const hasActiveFilters = computed(
-  () =>
-    !!filterKeyword.value ||
-    !!filterActionId.value ||
-    !!filterBrowserId.value ||
-    !!filterStatus.value ||
-    (filterSuccess.value !== null && filterSuccess.value !== '') ||
-    !!filterSource.value ||
-    !!filterExecutionId.value,
-)
-
-/** 快捷筛选高亮态：与下拉筛选双向同步 */
-const quickActive = computed<QuickFilterKey>(() => {
-  if (filterSuccess.value === 'false') return 'failed'
-  if (filterSource.value === 'workflow') return 'workflow'
-  return ''
-})
-
-/** 时间 chip 文案只保留「月-日 时:分」，避免标签被长日期撑开 */
-const chipTime = (value: string) => (value ? value.slice(5, 16) : '-')
-
-/** 当前筛选条件 chips（仅供展示与单项移除） */
-const activeFilterChips = computed<FilterChip[]>(() => {
-  const chips: FilterChip[] = []
-  if (filterKeyword.value) chips.push({ key: 'keyword', label: `关键字：${filterKeyword.value}` })
-  if (filterActionId.value) chips.push({ key: 'action_id', label: `操作ID：${filterActionId.value}` })
-  if (filterBrowserId.value) chips.push({ key: 'browser_id', label: `浏览器：${filterBrowserId.value}` })
-  if (filterStatus.value) chips.push({ key: 'status', label: `状态：${statusText(filterStatus.value)}` })
-  if (filterSuccess.value !== null && filterSuccess.value !== '') {
-    chips.push({ key: 'success', label: `结果：${filterSuccess.value === 'true' ? '成功' : '失败'}` })
-  }
-  if (filterSource.value) chips.push({ key: 'source', label: `来源：${sourceText(filterSource.value)}` })
-  if (filterExecutionId.value) chips.push({ key: 'execution_id', label: `批次：${filterExecutionId.value}` })
-  if (filterTimeRange.value) {
-    const [from, to] = filterTimeRange.value
-    chips.push({ key: 'time_range', label: `时间：${chipTime(from)} ~ ${chipTime(to)}` })
-  }
-  return chips
-})
-
-/** 失败较多的操作排行（取统计接口的按 action 聚合，点击可筛选） */
-const statsFailedRanking = computed(() =>
-  (stats.value?.items ?? [])
-    .filter((item) => item.failed > 0)
-    .sort((a, b) => b.failed - a.failed)
-    .slice(0, 5),
-)
 
 // ── API 调用 ────────────────────────────────────────────
 
-const loadLogs = async () => {
-  loading.value = true
+const apiBase = '/api/v1/rpa/browser/control'
+
+const loadLogs = async (append = false) => {
+  if (append) {
+    if (loadingMore.value || !hasMore.value) return
+    loadingMore.value = true
+    currentPage.value++
+  } else {
+    loading.value = true
+    currentPage.value = 1
+  }
 
   const body: Record<string, unknown> = {
     page: currentPage.value,
@@ -257,12 +200,6 @@ const loadLogs = async () => {
   if (filterKeyword.value) body.keyword = filterKeyword.value
   if (filterBrowserId.value) body.browser_id = filterBrowserId.value
   if (filterExecutionId.value) body.execution_id = filterExecutionId.value
-  const timeRange = filterTimeRange.value
-  if (timeRange) {
-    // 选择器给的是 `YYYY-MM-DD HH:mm:ss`，后端按 ISO 时间解析 starting_at
-    body.started_after = timeRange[0].replace(' ', 'T')
-    body.started_before = timeRange[1].replace(' ', 'T')
-  }
 
   const result = await businessHandler<{ items?: LogSummary[]; total?: number }>(
     client.post({
@@ -277,10 +214,18 @@ const loadLogs = async () => {
   )
 
   if (result.success && result.data) {
-    logList.value = result.data.items || []
+    const items = result.data.items || []
+    if (append) {
+      logList.value.push(...items)
+    } else {
+      logList.value = items
+    }
     total.value = result.data.total || 0
+  } else if (append) {
+    currentPage.value--
   }
   loading.value = false
+  loadingMore.value = false
 }
 
 const loadStats = async () => {
@@ -300,31 +245,6 @@ const loadStats = async () => {
   }
 }
 
-/**
- * 翻页 / 切换每页条数后回到页面顶部。
- *
- * 页面自身没有滚动容器，滚动发生在布局的 BiliScrollbar 里，因此用
- * `scrollIntoView` 让最近的滚动祖先（布局）把本页滚到顶部。
- */
-const resetScrollToTop = () => {
-  nextTick(() => {
-    pageRef.value?.$el?.scrollIntoView({ block: 'start' })
-  })
-}
-
-const handlePageChange = (page: number) => {
-  currentPage.value = page
-  resetScrollToTop()
-  loadLogs()
-}
-
-const handleSizeChange = (size: number) => {
-  pageSize.value = size
-  currentPage.value = 1
-  resetScrollToTop()
-  loadLogs()
-}
-
 const handleRefresh = () => {
   selectedLogIds.value = []
   loadLogs()
@@ -333,7 +253,6 @@ const handleRefresh = () => {
 
 const handleSearch = () => {
   selectedLogIds.value = []
-  currentPage.value = 1
   loadLogs()
 }
 
@@ -345,85 +264,28 @@ const handleResetFilters = () => {
   filterKeyword.value = ''
   filterBrowserId.value = ''
   filterExecutionId.value = ''
-  filterTimeRange.value = null
-  syncExecutionQuery('')
   handleSearch()
 }
 
-/** 把批次筛选同步到地址栏：刷新 / 分享链接后仍定位到同一批次 */
-const syncExecutionQuery = (executionId: string) => {
-  const query = { ...route.query }
-  if (executionId) query.execution_id = executionId
-  else delete query.execution_id
-  void router.replace({ query })
-}
-
-/** 只看某个执行批次（列表批次标签 / 详情弹窗入口） */
-const filterByExecution = (executionId: string) => {
-  if (!executionId) return
-  filterExecutionId.value = executionId
-  syncExecutionQuery(executionId)
-  // 从详情弹窗触发时顺带关闭弹窗，避免遮住筛选后的列表
-  detailVisible.value = false
-  handleSearch()
-}
-
-/** 快捷筛选：与下拉条件双向同步 */
-const applyQuickFilter = (key: QuickFilterKey) => {
-  if (key === 'failed') {
-    filterSuccess.value = 'false'
-  } else if (key === 'workflow') {
-    filterSource.value = 'workflow'
-  } else {
-    filterSuccess.value = null
-    filterSource.value = ''
+// 触底加载：BiliScrollbar 的 wrapRef 才是真实滚动元素（内部已接入统一滚动封装）
+const listScrollbarRef = ref<{ wrapRef?: HTMLElement }>()
+const handleScroll = () => {
+  const wrap = listScrollbarRef.value?.wrapRef
+  if (!wrap) return
+  const { scrollTop, scrollHeight, clientHeight } = wrap
+  if (scrollHeight - scrollTop - clientHeight < 120 && hasMore.value && !loadingMore.value) {
+    loadLogs(true)
   }
-  filterStatus.value = ''
-  handleSearch()
 }
 
-/** 统计卡点击：只看成功 / 只看失败 / 清除结果类筛选 */
-const filterBySuccess = (success: boolean) => {
-  filterSuccess.value = success ? 'true' : 'false'
-  filterStatus.value = ''
-  handleSearch()
-}
+// ── 查看详情 ────────────────────────────────────────────
 
-const clearResultFilters = () => {
-  filterSuccess.value = null
-  filterStatus.value = ''
-  handleSearch()
-}
-
-/** 失败排行点击：只看某一操作的日志 */
-const filterByAction = (actionId: string) => {
-  filterActionId.value = actionId
-  handleSearch()
-}
-
-/** 移除单项筛选条件 */
-const removeFilter = (key: string) => {
-  switch (key) {
-    case 'keyword': filterKeyword.value = ''; break
-    case 'action_id': filterActionId.value = ''; break
-    case 'browser_id': filterBrowserId.value = ''; break
-    case 'status': filterStatus.value = ''; break
-    case 'success': filterSuccess.value = null; break
-    case 'source': filterSource.value = ''; break
-    case 'execution_id': filterExecutionId.value = ''; syncExecutionQuery(''); break
-    case 'time_range': filterTimeRange.value = null; break
-  }
-  handleSearch()
-}
-
-// ── 详情 / 链路 ─────────────────────────────────────────
-
-const openDetailByLogId = async (logId: string) => {
+/** 按 log_id 打开详情（列表点击、链路下钻共用同一条路径） */
+const openDetail = async (logId: string) => {
   // 列表只回轻量摘要，入参/结果/变量/执行日志等大字段按需单条拉取，
-  // 避免列表分页随行下发数百 KB 的重字段。
+  // 避免列表分页/无限滚动随行下发数百 KB 的重字段。
   detailRecord.value = null
   showRawJson.value = false
-  detailCollapseActive.value = []
   detailVisible.value = true
   detailLoading.value = true
   const result = await businessHandler<LogDetail>(
@@ -439,87 +301,8 @@ const openDetailByLogId = async (logId: string) => {
   )
   if (result.success && result.data) {
     detailRecord.value = result.data
-    // 失败记录默认展开执行过程日志，方便直接定位出错环节
-    detailCollapseActive.value = result.data.success ? [] : ['processLogs']
   }
   detailLoading.value = false
-}
-
-const openDetail = (record: LogSummary) => openDetailByLogId(record.log_id)
-
-const openChain = (executionId: string) => {
-  if (!executionId) return
-  chainExecutionId.value = executionId
-  chainVisible.value = true
-}
-
-/** 链路弹窗点击步骤 → 打开该步骤详情 */
-const onChainSelect = (logId: string) => openDetailByLogId(logId)
-
-/** 单条日志勾选 / 取消勾选 */
-const toggleLogSelect = (logId: string, checked: boolean | string | number) => {
-  if (checked) {
-    selectedLogIds.value.push(logId)
-  } else {
-    selectedLogIds.value = selectedLogIds.value.filter((id) => id !== logId)
-  }
-}
-
-// ── 批量删除 ────────────────────────────────────────────
-
-const handleBatchDelete = async () => {
-  if (!selectedLogIds.value.length) return
-  const result = await businessHandler<{ deleted: number }>(
-    client.post({
-      url: `${apiBase}/action-logs/delete`,
-      body: { log_ids: selectedLogIds.value },
-      headers: {
-        'Content-Type': 'application/json',
-        ...userNavStore.user_header,
-      },
-    }) as unknown as Promise<{ code: number; data?: { deleted: number }; msg?: string }>,
-    { successMessage: `已删除 ${selectedLogIds.value.length} 条日志`, errorMessage: '删除失败' },
-  )
-  if (result.success) {
-    selectedLogIds.value = []
-    currentPage.value = 1
-    loadLogs()
-    loadStats()
-  }
-}
-
-const handleClearAll = async () => {
-  try {
-    await ElMessageBox.confirm(
-      '此操作将清空当前筛选条件下的全部操作日志，且不可恢复。确定要继续吗？',
-      '清空全部日志',
-      {
-        confirmButtonText: '确定清空',
-        cancelButtonText: '取消',
-        type: 'warning',
-        lockScroll: false,
-      },
-    )
-  } catch {
-    return
-  }
-  const result = await businessHandler<{ deleted: number }>(
-    client.post({
-      url: `${apiBase}/action-logs/clear`,
-      body: {},
-      headers: {
-        'Content-Type': 'application/json',
-        ...userNavStore.user_header,
-      },
-    }) as unknown as Promise<{ code: number; data?: { deleted: number }; msg?: string }>,
-    { successMessage: '已清空所有日志', errorMessage: '清空失败' },
-  )
-  if (result.success) {
-    selectedLogIds.value = []
-    currentPage.value = 1
-    loadLogs()
-    loadStats()
-  }
 }
 
 // ── 执行结果可读化 ──────────────────────────────────────
@@ -562,48 +345,246 @@ const resultFields = computed<ResultField[]>(() => {
   return entries.map(([k, v]) => ({ key: k, value: describeValue(v) }))
 })
 
-/** 复合操作的步骤执行摘要（result_data.data.results：每步成败 / 耗时 / 错误） */
-interface CompositeStepSummary {
-  action_id: string
-  action_name: string
-  success: boolean
-  error: string | null
-  execution_time: number
+// ── 批量删除 ────────────────────────────────────────────
+
+const handleBatchDelete = async () => {
+  if (!selectedLogIds.value.length) return
+  const result = await businessHandler<{ deleted: number }>(
+    client.post({
+      url: `${apiBase}/action-logs/delete`,
+      body: { log_ids: selectedLogIds.value },
+      headers: {
+        'Content-Type': 'application/json',
+        ...userNavStore.user_header,
+      },
+    }) as unknown as Promise<{ code: number; data?: { deleted: number }; msg?: string }>,
+    { successMessage: `已删除 ${selectedLogIds.value.length} 条日志`, errorMessage: '删除失败' },
+  )
+  if (result.success) {
+    selectedLogIds.value = []
+    loadLogs()
+    loadStats()
+  }
 }
 
-const compositeSteps = computed<CompositeStepSummary[]>(() => {
-  const rd = detailRecord.value?.result_data
-  if (!rd) return []
-  const data = 'data' in rd ? rd.data : null
-  if (!data || typeof data !== 'object') return []
-  const results = (data as Record<string, unknown>).results
-  if (!Array.isArray(results)) return []
-  return results
-    .filter((r): r is Record<string, unknown> => !!r && typeof r === 'object')
-    .map((r) => ({
-      action_id: String(r.action_id ?? ''),
-      action_name: String(r.action_name ?? '') || String(r.action_id ?? ''),
-      success: Boolean(r.success),
-      error: (r.error as string | null) ?? null,
-      execution_time: Number(r.execution_time ?? 0),
-    }))
-})
+const handleClearAll = async () => {
+  try {
+    await ElMessageBox.confirm(
+      '此操作将清空当前筛选条件下的全部操作日志，且不可恢复。确定要继续吗？',
+      '清空全部日志',
+      {
+        confirmButtonText: '确定清空',
+        cancelButtonText: '取消',
+        type: 'warning',
+        lockScroll: false,
+      },
+    )
+  } catch {
+    return
+  }
+  const result = await businessHandler<{ deleted: number }>(
+    client.post({
+      url: `${apiBase}/action-logs/clear`,
+      body: {},
+      headers: {
+        'Content-Type': 'application/json',
+        ...userNavStore.user_header,
+      },
+    }) as unknown as Promise<{ code: number; data?: { deleted: number }; msg?: string }>,
+    { successMessage: '已清空所有日志', errorMessage: '清空失败' },
+  )
+  if (result.success) {
+    selectedLogIds.value = []
+    loadLogs()
+    loadStats()
+  }
+}
 
-const compositeStepsSuccessCount = computed(
-  () => compositeSteps.value.filter((s) => s.success).length,
+// ── 格式化 / 映射 ───────────────────────────────────────
+
+const formatTime = (t: string | null) => {
+  if (!t) return '-'
+  return new Date(t).toLocaleString('zh-CN')
+}
+
+/** 相对时间：日志场景看「多久之前」比看绝对时间更快，超过一周回落绝对时间 */
+const relativeTime = (t: string | null) => {
+  if (!t) return '-'
+  const ts = new Date(t).getTime()
+  if (Number.isNaN(ts)) return '-'
+  const diff = Date.now() - ts
+  if (diff < 0) return formatTime(t)
+  const minutes = Math.floor(diff / 60_000)
+  if (minutes < 1) return '刚刚'
+  if (minutes < 60) return `${minutes} 分钟前`
+  const hours = Math.floor(minutes / 60)
+  if (hours < 24) return `${hours} 小时前`
+  const days = Math.floor(hours / 24)
+  if (days < 7) return `${days} 天前`
+  return formatTime(t)
+}
+
+/** 长 ID（雪花 id / 会话 id）中段省略，避免把卡片撑成一行数字 */
+const shortId = (id: string | null) => {
+  if (!id) return '-'
+  return id.length > 16 ? `${id.slice(0, 8)}…${id.slice(-6)}` : id
+}
+
+/** 耗时（秒）→ 自适应单位文本 */
+const formatDuration = (seconds: number) => {
+  if (!seconds || seconds <= 0) return '0ms'
+  const ms = seconds * 1000
+  if (ms < 1000) return `${Math.round(ms)}ms`
+  if (ms < 60_000) return `${(ms / 1000).toFixed(2)}s`
+  const s = Math.round(ms / 1000)
+  return `${Math.floor(s / 60)}m${s % 60}s`
+}
+
+/** 耗时配色：慢操作给警示色，便于扫读定位卡住的步骤 */
+const durationClass = (seconds: number) => {
+  if (seconds >= 30) return 'text-danger'
+  if (seconds >= 5) return 'text-warning'
+  return 'text-text-secondary'
+}
+
+const STATUS_ACCENT_CLASS: Record<string, string> = {
+  success: 'bg-success',
+  failed: 'bg-danger',
+  timeout: 'bg-warning',
+}
+
+const statusAccentClass = (status: string) => STATUS_ACCENT_CLASS[status] ?? 'bg-info'
+
+const statusIcon = (status: string) => {
+  switch (status) {
+    case 'success': return CircleCheckFilled
+    case 'failed': return WarningFilled
+    case 'timeout': return Clock
+    default: return CircleCheckFilled
+  }
+}
+
+const statusType = (status: string): 'success' | 'warning' | 'info' | 'danger' => {
+  switch (status) {
+    case 'success': return 'success'
+    case 'failed': return 'danger'
+    case 'timeout': return 'warning'
+    default: return 'info'
+  }
+}
+
+const statusIconClass = (status: string) => {
+  switch (status) {
+    case 'failed': return 'text-danger'
+    case 'timeout': return 'text-warning'
+    default: return 'text-success'
+  }
+}
+
+const statusText = (status: string) => {
+  switch (status) {
+    case 'success': return '成功'
+    case 'failed': return '失败'
+    case 'timeout': return '超时'
+    default: return status
+  }
+}
+
+const sourceText = (source: string) => {
+  switch (source) {
+    case 'action': return '单操作'
+    case 'workflow': return '工作流'
+    case 'plugin': return '插件'
+    default: return source
+  }
+}
+
+/** 卡片边框 / 底色：勾选态优先，其余为 hover 反馈 */
+const itemCardClass = (item: LogSummary) => (
+  isSelected(item.log_id)
+    ? 'border-primary bg-primary-light-9'
+    : 'border-border-light bg-bg hover:border-primary hover:bg-fill-lighter'
 )
 
+/** 成功但带 error_message 的日志是「提示」而非失败，配色区分开 */
+const itemMessageClass = (item: LogSummary) => (
+  item.success ? 'bg-warning-light-9 text-warning' : 'bg-danger-light-9 text-danger'
+)
+
+const formatJson = (data: unknown) => {
+  if (!data) return '-'
+  try {
+    return JSON.stringify(data, null, 2)
+  } catch {
+    return String(data)
+  }
+}
+
+/** 概览卡片：总量 / 成功 / 失败 / 成功率 */
+const statsCards = computed<StatCard[]>(() => {
+  const s = stats.value
+  if (!s) return []
+  const rate = s.total > 0 ? `${Math.round((s.success / s.total) * 100)}%` : '—'
+  return [
+    {
+      key: 'total',
+      label: `近 ${s.days} 天总操作`,
+      value: String(s.total),
+      dotClass: 'bg-primary',
+      valueClass: 'text-text-primary',
+    },
+    {
+      key: 'success',
+      label: '成功',
+      value: String(s.success),
+      dotClass: 'bg-success',
+      valueClass: 'text-success',
+    },
+    {
+      key: 'failed',
+      label: '失败',
+      value: String(s.failed),
+      dotClass: 'bg-danger',
+      valueClass: 'text-danger',
+    },
+    {
+      key: 'rate',
+      label: '成功率',
+      value: rate,
+      dotClass: 'bg-info',
+      valueClass: 'text-text-primary',
+    },
+  ]
+})
+
+/** 从地址栏带入筛选（execution_id / browser_id），别处跳转时免手填 */
+const applyQueryFilters = () => {
+  const { execution_id: executionId, browser_id: browserId } = route.query
+  if (typeof executionId === 'string' && executionId) filterExecutionId.value = executionId
+  if (typeof browserId === 'string' && browserId) filterBrowserId.value = browserId
+}
+
 onMounted(() => {
-  // 支持其他页面带 `?execution_id=` 直接定位到某个执行批次
-  const fromQuery = route.query.execution_id
-  if (typeof fromQuery === 'string' && fromQuery) filterExecutionId.value = fromQuery
+  applyQueryFilters()
   loadLogs()
   loadStats()
 })
+
+// 同一路由复用组件时（例如从表格再次带不同批次跳进来）query 会变但组件不重建
+watch(
+  () => route.query.execution_id,
+  value => {
+    const next = typeof value === 'string' ? value : ''
+    if (next === filterExecutionId.value) return
+    filterExecutionId.value = next
+    selectedLogIds.value = []
+    loadLogs()
+  },
+)
 </script>
 
 <template>
-  <FlexContainer ref="pageRef" class="action-log-view">
+  <FlexContainer class="action-log-view min-h-0">
     <BiliPageHeader title="操作日志" hide-title description="查看浏览器操作的执行历史与详情" tag-text="日志查询">
       <template #extra>
         <div class="action-log-view__actions flex items-center gap-2">
@@ -622,144 +603,52 @@ onMounted(() => {
       </template>
     </BiliPageHeader>
 
-    <!-- 内容卡片按自然高度铺开：整页滚动交给外层布局，页面内不放滚动容器 -->
-    <FlexContainer class="action-log-content mt-4 bg-bg rounded-2xl p-4">
-      <!-- 统计概览（可点击筛选）+ 日志说明 -->
-      <div v-if="stats" class="stats-bar flex items-center gap-3 mb-3 flex-wrap">
-        <el-tag type="info" effect="plain" size="large" class="stats-bar__days">近 {{ stats.days }} 天</el-tag>
-        <el-tag
-          type="primary"
-          effect="plain"
-          size="large"
-          class="stats-bar__tag stats-bar__tag--total cursor-pointer transition-opacity hover:opacity-80"
-          title="点击清除结果类筛选"
-          @click="clearResultFilters"
+    <FlexContainer class="action-log-view__body mt-4 min-h-0 gap-3 rounded-2xl bg-bg p-4">
+      <!-- 概览：单行四格，数字直出便于扫读 -->
+      <div v-if="stats" class="action-log-stats shrink-0 grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <div
+          v-for="card in statsCards"
+          :key="card.key"
+          class="action-log-stats__item rounded-xl border border-border-lighter bg-fill-lighter px-4 py-2.5"
         >
-          总计 {{ stats.total }}
-        </el-tag>
-        <el-tag
-          type="success"
-          effect="plain"
-          size="large"
-          class="stats-bar__tag stats-bar__tag--success cursor-pointer transition-opacity hover:opacity-80"
-          title="点击只看成功"
-          @click="filterBySuccess(true)"
-        >
-          成功 {{ stats.success }}
-        </el-tag>
-        <el-tag
-          type="danger"
-          effect="plain"
-          size="large"
-          class="stats-bar__tag stats-bar__tag--failed cursor-pointer transition-opacity hover:opacity-80"
-          title="点击只看失败"
-          @click="filterBySuccess(false)"
-        >
-          失败 {{ stats.failed }}
-        </el-tag>
-
-        <el-popover placement="bottom-start" :width="380" trigger="click">
-          <template #reference>
-            <el-button class="stats-bar__help" :icon="QuestionFilled">日志说明</el-button>
-          </template>
-          <div class="action-log-help flex flex-col gap-2 text-sm text-text-secondary">
-            <div class="action-log-help__title font-semibold text-text-primary">
-              操作日志是怎么生成、怎么展示的
-            </div>
-            <div class="action-log-help__item">
-              <span class="font-semibold text-text-primary">一条日志 = 一次操作执行</span>：
-              手动运行、工作流步骤、插件钩子各产生一条。
-            </div>
-            <div class="action-log-help__item">
-              <span class="font-semibold text-text-primary">来源</span>：单操作 = 手动运行；
-              工作流 = 工作流中的步骤；插件 = 插件钩子。
-            </div>
-            <div class="action-log-help__item">
-              <span class="font-semibold text-text-primary">执行批次</span>：一次完整运行
-              （手动 / 定时触发）内所有步骤共享同一批次 ID，点击列表里的批次标签可查看完整链路。
-            </div>
-            <div class="action-log-help__item">
-              <span class="font-semibold text-text-primary">嵌套深度</span>：复合操作 / 循环 /
-              分支内部子步骤的层级，0 为顶层步骤。
-            </div>
-            <div class="action-log-help__item">
-              <span class="font-semibold text-text-primary">采集开关</span>：工作流或操作的
-              「执行日志」关闭时不产生日志；开启「仅出错时记录」后，成功的执行不会落库。
-            </div>
-            <div class="action-log-help__item">
-              <span class="font-semibold text-text-primary">详情按需加载</span>：列表只展示摘要，
-              入参 / 结果 / 变量 / 过程日志点「详情」才会拉取。
-            </div>
+          <div class="action-log-stats__label flex items-center gap-1.5 text-xs text-text-secondary">
+            <span class="action-log-stats__dot h-1.5 w-1.5 rounded-full" :class="card.dotClass"></span>
+            {{ card.label }}
           </div>
-        </el-popover>
-      </div>
-
-      <!-- 失败较多的操作（点击筛选） -->
-      <div v-if="statsFailedRanking.length" class="failed-ranking flex items-center gap-2 mb-3 flex-wrap">
-        <span class="failed-ranking__label text-xs text-text-secondary">失败较多的操作</span>
-        <el-tag
-          v-for="item in statsFailedRanking"
-          :key="item.action_id"
-          type="danger"
-          effect="plain"
-          class="failed-ranking__item cursor-pointer transition-opacity hover:opacity-80"
-          :title="`点击只看「${item.action_name}」的日志`"
-          @click="filterByAction(item.action_id)"
-        >
-          {{ item.action_name }} · 失败 {{ item.failed }}/{{ item.total }}
-        </el-tag>
-      </div>
-
-      <!-- 快捷筛选 + 当前筛选 chips -->
-      <div class="quick-filter flex items-center gap-2 mb-3 flex-wrap">
-        <span class="quick-filter__label text-xs text-text-secondary">快捷查看</span>
-        <el-button
-          class="quick-filter__btn quick-filter__btn--all"
-          :type="quickActive === '' ? 'primary' : 'default'"
-          :plain="quickActive !== ''"
-          @click="applyQuickFilter('')"
-        >
-          全部
-        </el-button>
-        <el-button
-          class="quick-filter__btn quick-filter__btn--failed"
-          :type="quickActive === 'failed' ? 'danger' : 'default'"
-          :plain="quickActive !== 'failed'"
-          @click="applyQuickFilter('failed')"
-        >
-          仅看失败
-        </el-button>
-        <el-button
-          class="quick-filter__btn quick-filter__btn--workflow"
-          :type="quickActive === 'workflow' ? 'warning' : 'default'"
-          :plain="quickActive !== 'workflow'"
-          @click="applyQuickFilter('workflow')"
-        >
-          仅看工作流
-        </el-button>
-      </div>
-
-      <div v-if="activeFilterChips.length" class="filter-chips flex items-center gap-2 mb-3 flex-wrap">
-        <span class="filter-chips__label text-xs text-text-secondary">当前筛选</span>
-        <el-tag
-          v-for="chip in activeFilterChips"
-          :key="chip.key"
-          closable
-          class="filter-chips__item"
-          @close="removeFilter(chip.key)"
-        >
-          {{ chip.label }}
-        </el-tag>
-        <el-button class="filter-chips__clear" text type="primary" @click="handleResetFilters">
-          清除全部
-        </el-button>
+          <div class="action-log-stats__value mt-0.5 text-xl font-semibold tabular-nums" :class="card.valueClass">
+            {{ card.value }}
+          </div>
+        </div>
       </div>
 
       <!-- 筛选栏 -->
-      <div class="filter-bar flex items-center gap-3 mb-4 flex-wrap">
+      <!-- 批次过滤条：从「已处理数据」带 execution_id 跳转进来时显示 -->
+      <div
+        v-if="filterExecutionId"
+        class="action-log-view__batch-bar shrink-0 flex items-center gap-2 rounded-lg bg-primary-light-9 px-3 py-1.5 text-xs"
+      >
+        <span class="action-log-view__batch-label text-text-secondary">执行批次</span>
+        <span class="action-log-view__batch-value font-mono text-primary" :title="filterExecutionId">
+          {{ filterExecutionId }}
+        </span>
+        <el-button
+          text
+          type="primary"
+          :icon="Connection"
+          class="action-log-view__batch-chain-btn"
+          @click="openChain(filterExecutionId)"
+        >
+          查看该批次链路
+        </el-button>
+        <el-button text class="action-log-view__batch-clear-btn" @click="clearExecutionFilter">
+          清除批次筛选
+        </el-button>
+      </div>
+
+      <div class="action-log-view__filter shrink-0 flex flex-wrap items-center gap-2">
         <el-input
           v-model="filterKeyword"
-          class="filter-bar__keyword w-55"
+          class="action-log-view__filter-keyword w-52"
           placeholder="搜索操作名/ID/错误"
           :prefix-icon="Search"
           clearable
@@ -768,31 +657,23 @@ onMounted(() => {
         />
         <el-input
           v-model="filterActionId"
-          class="filter-bar__action-id w-45"
-          placeholder="按操作ID筛选"
+          class="action-log-view__filter-action-id w-40"
+          placeholder="操作ID"
           clearable
           @keyup.enter="handleSearch"
           @clear="handleSearch"
         />
         <el-input
           v-model="filterBrowserId"
-          class="filter-bar__browser-id w-40"
-          placeholder="按浏览器ID筛选"
-          clearable
-          @keyup.enter="handleSearch"
-          @clear="handleSearch"
-        />
-        <el-input
-          v-model="filterExecutionId"
-          class="filter-bar__execution-id w-72"
-          placeholder="按批次ID筛选"
+          class="action-log-view__filter-browser-id w-40"
+          placeholder="浏览器ID"
           clearable
           @keyup.enter="handleSearch"
           @clear="handleSearch"
         />
         <el-select
           v-model="filterStatus"
-          class="filter-bar__status w-28"
+          class="action-log-view__filter-status w-28"
           placeholder="状态"
           clearable
           @change="handleSearch"
@@ -803,7 +684,7 @@ onMounted(() => {
         </el-select>
         <el-select
           v-model="filterSuccess"
-          class="filter-bar__success w-28"
+          class="action-log-view__filter-success w-28"
           placeholder="结果"
           clearable
           @change="handleSearch"
@@ -813,7 +694,7 @@ onMounted(() => {
         </el-select>
         <el-select
           v-model="filterSource"
-          class="filter-bar__source w-30"
+          class="action-log-view__filter-source w-28"
           placeholder="来源"
           clearable
           @change="handleSearch"
@@ -821,209 +702,263 @@ onMounted(() => {
           <el-option label="单操作" value="action" />
           <el-option label="工作流" value="workflow" />
         </el-select>
-        <el-date-picker
-          v-model="filterTimeRange"
-          class="filter-bar__time-range w-90"
-          type="datetimerange"
-          value-format="YYYY-MM-DD HH:mm:ss"
-          range-separator="至"
-          start-placeholder="开始时间"
-          end-placeholder="结束时间"
-          unlink-panels
-          @change="handleSearch"
-        />
-        <el-button class="filter-bar__search" :icon="Search" type="primary" @click="handleSearch">
-          查询
-        </el-button>
-        <el-button class="filter-bar__reset" @click="handleResetFilters">重置</el-button>
+        <el-button type="primary" :icon="Search" @click="handleSearch">查询</el-button>
+        <el-button @click="handleResetFilters">重置</el-button>
       </div>
 
-      <!-- 加载骨架 -->
-      <div v-if="loading" class="action-log-skeleton w-full shrink-0">
-        <div v-for="i in 5" :key="i" class="rounded-xl p-4 border border-border-light mb-3">
-          <el-skeleton :rows="2" animated />
+      <!-- 列表工具条：全选 / 已选统计固定在滚动区外，始终可见 -->
+      <div
+        v-if="logList.length"
+        class="action-log-list__toolbar shrink-0 flex items-center justify-between gap-3 border-b border-border-lighter pb-2"
+      >
+        <el-checkbox v-model="isAllSelected" class="action-log-list__select-all">全选已加载</el-checkbox>
+        <div class="action-log-list__summary flex items-center gap-3 text-xs text-text-secondary">
+          <span class="action-log-list__count">
+            已加载 {{ logList.length }} / 共 {{ total }} 条
+            <template v-if="selectedLogIds.length">，已选 {{ selectedLogIds.length }} 条</template>
+          </span>
+          <el-button
+            v-if="selectedLogIds.length"
+            text
+            type="danger"
+            :icon="Delete"
+            @click="handleBatchDelete"
+          >
+            删除选中
+          </el-button>
         </div>
       </div>
 
-      <!-- 空状态：区分「无日志」与「筛选无结果」 -->
-      <div
-        v-else-if="logList.length === 0"
-        class="action-log-empty flex flex-col items-center justify-center my-20 text-text-secondary shrink-0"
+      <!-- 日志列表：内部滚动（统一滚动封装，自带快速滚动按钮） -->
+      <BiliScrollbar
+        ref="listScrollbarRef"
+        class="action-log-list flex-1 min-h-0"
+        @scroll="handleScroll"
       >
-        <el-empty :description="hasActiveFilters ? '没有符合当前筛选条件的日志' : '暂无操作日志'">
-          <el-button v-if="hasActiveFilters" type="primary" @click="handleResetFilters">
-            清除筛选条件
-          </el-button>
-        </el-empty>
-      </div>
-
-      <!-- 日志列表：自然高度铺开，整页滚动由外层 BiliSideNavLayout 统一接管 -->
-      <template v-else>
-        <div class="action-log-toolbar flex items-center justify-between mb-3 shrink-0">
-          <div class="flex items-center gap-3">
-            <el-checkbox v-model="isAllSelected" class="action-log-toolbar__select-all">全选</el-checkbox>
-            <span class="action-log-toolbar__count text-xs text-text-secondary">
-              已选 {{ selectedLogIds.length }} 项 · 本页 {{ logList.length }} / 共 {{ total }} 条
-            </span>
+        <!-- 加载骨架 -->
+        <div v-if="loading" class="action-log-list__skeleton flex flex-col gap-2">
+          <div v-for="i in 5" :key="i" class="rounded-xl border border-border-lighter p-4">
+            <el-skeleton :rows="2" animated />
           </div>
         </div>
 
-        <div class="action-log-list flex flex-col">
-          <div
-            v-for="item in logList"
-            :key="item.log_id"
-            class="log-item rounded-xl p-4 mb-3 border transition-colors"
-            :class="
-              item.success
-                ? 'border-border-light hover:border-primary'
-                : 'border-l-2 border-l-danger border-border-light hover:border-danger'
-            "
-          >
-            <div class="flex items-start gap-4">
-              <!-- 复选框 -->
-              <el-checkbox
-                :model-value="selectedLogIds.includes(item.log_id)"
-                class="log-item__checkbox mt-0.5"
-                @change="(val: boolean | string | number) => toggleLogSelect(item.log_id, val)"
-              />
+        <!-- 空状态 -->
+        <el-empty v-else-if="logList.length === 0" class="action-log-list__empty my-16" description="暂无操作日志" />
+
+        <template v-else>
+          <div class="action-log-list__items flex flex-col gap-2 pr-1">
+            <article
+              v-for="item in logList"
+              :key="item.log_id"
+              class="log-item relative flex items-start gap-3 overflow-hidden rounded-xl border py-3 pl-5 pr-4 cursor-pointer transition-all duration-200"
+              :class="itemCardClass(item)"
+              @click="openDetail(item.log_id)"
+            >
+              <!-- 左侧状态色条：成功/失败/超时一眼区分 -->
+              <span
+                class="log-item__accent absolute inset-y-0 left-0 w-1"
+                :class="statusAccentClass(item.status)"
+              ></span>
+
+              <!-- 复选框（阻止冒泡，避免点选时弹出详情） -->
+              <span class="log-item__check mt-0.5 shrink-0" @click.stop>
+                <el-checkbox
+                  :model-value="isSelected(item.log_id)"
+                  :aria-label="`选择日志 ${item.action_name || item.action_id}`"
+                  @update:model-value="(val: string | number | boolean) => toggleLogSelection(item.log_id, Boolean(val))"
+                />
+              </span>
 
               <!-- 状态图标 -->
-              <el-icon :size="22" class="log-item__status mt-0.5" :color="item.success ? 'var(--el-color-success)' : 'var(--el-color-danger)'">
+              <el-icon class="log-item__status mt-1 shrink-0" :size="18" :class="statusIconClass(item.status)">
                 <component :is="statusIcon(item.status)" />
               </el-icon>
 
               <!-- 主体信息 -->
-              <div class="flex-1 min-w-0">
-                <!-- 头部行 -->
-                <div class="flex items-center justify-between gap-2 mb-1">
-                  <div class="flex items-center gap-2 min-w-0">
-                    <span class="log-item__action-name text-base font-semibold truncate" :title="item.action_name">
-                      {{ item.action_name }}
+              <div class="log-item__main min-w-0 flex-1">
+                <!-- 第一行：操作名 + 状态/来源/层级 + 耗时/时间 -->
+                <div class="log-item__title-row flex items-start justify-between gap-3">
+                  <div class="log-item__title flex min-w-0 items-center gap-2">
+                    <span
+                      class="log-item__name truncate text-base font-semibold text-text-primary"
+                      :title="item.action_name || item.action_id"
+                    >
+                      {{ item.action_name || item.action_id }}
                     </span>
-                    <el-tag class="log-item__status-tag" :type="statusType(item.status)">
+                    <el-tag class="log-item__status-tag shrink-0" :type="statusType(item.status)" effect="light">
                       {{ statusText(item.status) }}
                     </el-tag>
-                    <el-tag class="log-item__source-tag" effect="plain">{{ sourceText(item.source) }}</el-tag>
+                    <el-tag class="log-item__source-tag shrink-0" type="info" effect="plain">
+                      {{ sourceText(item.source) }}
+                    </el-tag>
+                    <el-tag
+                      v-if="item.depth > 0"
+                      class="log-item__depth-tag shrink-0"
+                      type="warning"
+                      effect="plain"
+                    >
+                      第 {{ item.depth }} 层
+                    </el-tag>
                   </div>
-                  <span class="log-item__time text-xs text-text-secondary whitespace-nowrap">
-                    {{ formatTime(item.started_at) }}
+
+                  <div class="log-item__time shrink-0 flex items-center gap-2 text-xs">
+                    <span
+                      class="log-item__duration inline-flex items-center gap-1 rounded-md bg-fill-light px-1.5 py-0.5 tabular-nums"
+                      :class="durationClass(item.execution_time)"
+                    >
+                      <el-icon :size="12"><Clock /></el-icon>{{ formatDuration(item.execution_time) }}
+                    </span>
+                    <span
+                      class="log-item__started-at tabular-nums text-text-secondary"
+                      :title="formatTime(item.started_at)"
+                    >
+                      {{ relativeTime(item.started_at) }}
+                    </span>
+                  </div>
+                </div>
+
+                <!-- 元信息：标签 + 等宽值（长 ID 截断，title 看全量） -->
+                <div class="log-item__meta mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs">
+                  <span class="log-item__meta-item inline-flex min-w-0 items-center gap-1">
+                    <span class="log-item__meta-label shrink-0 text-text-placeholder">操作ID</span>
+                    <span
+                      class="log-item__meta-value truncate rounded bg-fill-light px-1.5 py-0.5 font-mono text-text-regular"
+                      :title="item.action_id"
+                    >
+                      {{ item.action_id }}
+                    </span>
+                  </span>
+                  <span v-if="item.browser_id" class="log-item__meta-item inline-flex items-center gap-1">
+                    <span class="log-item__meta-label text-text-placeholder">浏览器</span>
+                    <span
+                      class="log-item__meta-value rounded bg-fill-light px-1.5 py-0.5 font-mono text-text-regular"
+                      :title="item.browser_id"
+                    >
+                      {{ shortId(item.browser_id) }}
+                    </span>
+                  </span>
+                  <span v-if="item.workflow_id" class="log-item__meta-item inline-flex items-center gap-1">
+                    <span class="log-item__meta-label text-text-placeholder">工作流</span>
+                    <span
+                      class="log-item__meta-value rounded bg-fill-light px-1.5 py-0.5 font-mono text-text-regular"
+                      :title="item.workflow_id"
+                    >
+                      {{ shortId(item.workflow_id) }}
+                    </span>
                   </span>
                 </div>
 
-                <!-- 元信息行 -->
-                <div class="flex items-center gap-3 text-xs text-text-secondary mb-2 flex-wrap">
-                  <span class="log-item__action-id">操作ID: {{ item.action_id }}</span>
-                  <span v-if="item.browser_id" class="log-item__browser-id">浏览器: {{ item.browser_id }}</span>
-                  <span class="log-item__duration">耗时: {{ formatDuration(item.execution_time * 1000) }}</span>
-                  <span v-if="item.workflow_id" class="log-item__workflow-id">工作流: {{ item.workflow_id }}</span>
-                  <el-tag
-                    v-if="item.execution_id"
-                    class="log-item__batch cursor-pointer"
-                    :title="`执行批次 ${item.execution_id}，点击查看完整链路`"
-                    @click="openChain(item.execution_id)"
-                  >
-                    批次: {{ shortId(item.execution_id) }}
-                  </el-tag>
-                  <el-button
-                    v-if="item.execution_id"
-                    class="log-item__filter-batch"
-                    link
-                    type="primary"
-                    :title="`只看该批次（${item.execution_id}）的全部日志`"
-                    @click="filterByExecution(item.execution_id)"
-                  >
-                    只看本批次
-                  </el-button>
-                  <span v-if="item.depth > 0 && item.depth <= 10" class="log-item__depth">嵌套深度: {{ item.depth }}</span>
-                </div>
-
-                <!-- 错误 / 提示信息（失败=错误红；成功但带原因=警告黄，如「预约未生效」） -->
+                <!-- 错误 / 提示：失败用 danger，成功但带信息用 warning -->
                 <div
                   v-if="item.error_message"
-                  class="log-item__error text-xs rounded-lg px-2.5 py-1.5 mt-1 whitespace-pre-wrap break-all"
-                  :class="item.success ? 'text-warning bg-warning-light-9' : 'text-danger bg-danger-light-9'"
+                  class="log-item__error mt-2 flex items-start gap-1.5 rounded-lg px-2.5 py-1.5 text-xs leading-relaxed"
+                  :class="itemMessageClass(item)"
                 >
-                  <span v-if="item.success" class="font-semibold">提示：</span>{{ item.error_message }}
+                  <el-icon class="log-item__error-icon mt-0.5 shrink-0" :size="14"><WarningFilled /></el-icon>
+                  <span class="log-item__error-text line-clamp-2 break-all">{{ item.error_message }}</span>
                 </div>
               </div>
 
-              <!-- 操作按钮 -->
-              <div class="log-item__actions flex items-center gap-1 shrink-0">
-                <el-button class="log-item__detail-btn" :icon="View" @click="openDetail(item)">
+              <!-- 操作入口：详情 / 本批次链路 -->
+              <div class="log-item__actions shrink-0 self-center flex items-center gap-1">
+                <el-tooltip content="查看该批次完整链路" placement="top">
+                  <el-button
+                    class="log-item__chain-btn"
+                    :icon="Connection"
+                    circle
+                    @click.stop="openChain(item.execution_id)"
+                  />
+                </el-tooltip>
+                <el-button
+                  class="log-item__detail-btn"
+                  :icon="View"
+                  @click.stop="openDetail(item.log_id)"
+                >
                   详情
                 </el-button>
               </div>
-            </div>
+            </article>
           </div>
-        </div>
 
-        <!-- 分页：跟在列表后面（整页滚动由外层布局负责，不再吸底） -->
-        <BiliPagination
-          class="action-log-pagination mt-3 flex justify-center"
-          v-model:current-page="currentPage"
-          v-model:page-size="pageSize"
-          :total="total"
-          :page-sizes="[10, 20, 50, 100]"
-          hide-on-single-page
-          layout="sizes, prev, pager, next, total"
-          @current-change="handlePageChange"
-          @size-change="handleSizeChange"
-        />
-      </template>
+          <!-- 触底加载 / 到底提示 -->
+          <div
+            v-if="loadingMore"
+            class="action-log-list__loading flex items-center justify-center gap-2 py-4 text-sm text-text-secondary"
+          >
+            <el-icon class="is-loading" :size="18"><Loading /></el-icon>
+            加载中…
+          </div>
+          <div
+            v-else-if="!hasMore"
+            class="action-log-list__end py-4 text-center text-sm text-text-placeholder"
+          >
+            没有更多了
+          </div>
+          <div v-else class="action-log-list__more flex justify-center py-3">
+            <el-button text type="primary" @click="loadLogs(true)">加载更多</el-button>
+          </div>
+        </template>
+      </BiliScrollbar>
     </FlexContainer>
 
     <!-- 详情弹窗 -->
-    <el-dialog
-      v-model="detailVisible"
-      class="log-detail-dialog"
-      title="日志详情"
-      width="720px"
-      append-to-body
-      :lock-scroll="false"
-    >
+    <el-dialog v-model="detailVisible" title="日志详情" width="720px" class="log-detail-dialog" :lock-scroll="false">
       <el-skeleton v-if="detailLoading" :rows="6" animated class="py-6" />
-      <div v-else-if="detailRecord" class="flex flex-col gap-4">
+      <div v-else-if="detailRecord" class="log-detail flex flex-col gap-4">
         <!-- 基本信息 -->
-        <div class="grid grid-cols-2 gap-3 text-sm">
-          <div><span class="text-text-secondary">操作名称：</span>{{ detailRecord.action_name }}</div>
-          <div><span class="text-text-secondary">操作ID：</span>{{ detailRecord.action_id }}</div>
-          <div><span class="text-text-secondary">状态：</span>
-            <el-tag :type="statusType(detailRecord.status)">{{ statusText(detailRecord.status) }}</el-tag>
+        <div class="log-detail__basic grid grid-cols-2 gap-3 text-sm">
+          <div class="log-detail__field"><span class="text-text-secondary">操作名称：</span>{{ detailRecord.action_name || '-' }}</div>
+          <div class="log-detail__field"><span class="text-text-secondary">操作ID：</span>{{ detailRecord.action_id }}</div>
+          <div class="log-detail__field">
+            <span class="text-text-secondary">状态：</span>
+            <el-tag :type="statusType(detailRecord.status)" effect="light">{{ statusText(detailRecord.status) }}</el-tag>
           </div>
-          <div><span class="text-text-secondary">来源：</span>{{ sourceText(detailRecord.source) }}</div>
-          <div><span class="text-text-secondary">浏览器ID：</span>{{ detailRecord.browser_id || '-' }}</div>
-          <div><span class="text-text-secondary">会话ID：</span>{{ detailRecord.session_id || '-' }}</div>
-          <div><span class="text-text-secondary">执行耗时：</span>{{ formatDuration(detailRecord.execution_time * 1000) }}</div>
-          <div><span class="text-text-secondary">嵌套深度：</span>{{ detailRecord.depth }}</div>
-          <div><span class="text-text-secondary">开始时间：</span>{{ formatTime(detailRecord.started_at) }}</div>
-          <div><span class="text-text-secondary">结束时间：</span>{{ formatTime(detailRecord.finished_at) }}</div>
-          <div v-if="detailRecord.page_url" class="col-span-2">
+          <div class="log-detail__field"><span class="text-text-secondary">来源：</span>{{ sourceText(detailRecord.source) }}</div>
+          <div class="log-detail__field"><span class="text-text-secondary">浏览器ID：</span>{{ detailRecord.browser_id || '-' }}</div>
+          <div class="log-detail__field"><span class="text-text-secondary">会话ID：</span>{{ detailRecord.session_id || '-' }}</div>
+          <div class="log-detail__field"><span class="text-text-secondary">执行耗时：</span>{{ formatDuration(detailRecord.execution_time) }}</div>
+          <div class="log-detail__field"><span class="text-text-secondary">嵌套深度：</span>{{ detailRecord.depth }}</div>
+          <div class="log-detail__field"><span class="text-text-secondary">开始时间：</span>{{ formatTime(detailRecord.started_at) }}</div>
+          <div class="log-detail__field"><span class="text-text-secondary">结束时间：</span>{{ formatTime(detailRecord.finished_at) }}</div>
+          <div v-if="detailRecord.page_url" class="log-detail__field col-span-2">
             <span class="text-text-secondary">页面URL：</span>
             <span class="break-all">{{ detailRecord.page_url }}</span>
           </div>
-          <div v-if="detailRecord.workflow_id" class="col-span-2">
+          <div v-if="detailRecord.workflow_id" class="log-detail__field col-span-2">
             <span class="text-text-secondary">工作流ID：</span>{{ detailRecord.workflow_id }}
           </div>
-          <div v-if="detailRecord.execution_id" class="col-span-2">
+          <div v-if="detailRecord.execution_id" class="log-detail__field col-span-2 flex items-center gap-2">
             <span class="text-text-secondary">执行批次：</span>
-            <el-tag>{{ detailRecord.execution_id }}</el-tag>
+            <el-tag class="log-detail__execution-id">{{ detailRecord.execution_id }}</el-tag>
+            <el-button
+              text
+              type="primary"
+              :icon="Connection"
+              class="log-detail__chain-btn"
+              @click="openChain(detailRecord.execution_id)"
+            >
+              查看该批次链路
+            </el-button>
           </div>
         </div>
 
-        <!-- 错误信息（常显，不折叠） -->
-        <div v-if="detailRecord.error_message">
-          <div class="text-sm font-semibold mb-1 text-danger">错误信息</div>
-          <pre class="log-detail__error-text text-xs bg-danger-light-9 text-danger rounded-lg p-3 overflow-auto whitespace-pre-wrap max-h-50">{{ detailRecord.error_message }}</pre>
+        <!-- 错误信息 -->
+        <div v-if="detailRecord.error_message" class="log-detail__error">
+          <div class="mb-1 text-sm font-semibold text-danger">错误信息</div>
+          <pre class="max-h-50 overflow-auto whitespace-pre-wrap break-all rounded-lg bg-danger-light-9 p-3 text-xs text-danger">{{ detailRecord.error_message }}</pre>
         </div>
 
-        <!-- 折叠区：入参 / 结果 / 变量 / 过程日志 -->
-        <el-collapse v-model="detailCollapseActive">
-          <el-collapse-item v-if="detailRecord.params" title="调用参数" name="params">
-            <pre class="text-xs bg-fill-light rounded-lg p-3 overflow-auto max-h-75">{{ formatJson(detailRecord.params) }}</pre>
+        <!-- 入参 -->
+        <el-collapse v-if="detailRecord.params">
+          <el-collapse-item title="调用参数" name="params">
+            <pre class="max-h-75 overflow-auto whitespace-pre-wrap break-all rounded-lg bg-fill-light p-3 text-xs">{{ formatJson(detailRecord.params) }}</pre>
           </el-collapse-item>
+        </el-collapse>
 
-          <el-collapse-item v-if="detailRecord.result_data" title="执行结果" name="result">
-            <div class="flex items-center gap-2 mb-2 text-xs">
+        <!-- 执行结果：主字段表格化 + 原始 JSON 折叠 -->
+        <el-collapse v-if="detailRecord.result_data">
+          <el-collapse-item title="执行结果" name="result">
+            <div class="mb-2 flex items-center gap-2 text-xs">
               <template v-if="resultSuccess !== null">
                 <span class="text-text-secondary">执行成功：</span>
                 <el-tag :type="resultSuccess ? 'success' : 'danger'">{{ resultSuccess ? '是' : '否' }}</el-tag>
@@ -1031,37 +966,7 @@ onMounted(() => {
               <el-tag v-if="resultTruncated" type="warning" effect="plain">结果过大已截断</el-tag>
             </div>
 
-            <!-- 复合操作：步骤执行摘要表（哪一步失败 / 耗时多少一眼可见） -->
-            <template v-if="compositeSteps.length">
-              <div class="log-detail__steps-summary text-xs text-text-secondary mb-1">
-                步骤摘要：共 {{ compositeSteps.length }} 步，成功 {{ compositeStepsSuccessCount }} 步
-              </div>
-              <el-table :data="compositeSteps" border max-height="260" class="mb-2">
-                <el-table-column label="步骤" min-width="140">
-                  <template #default="{ row }">
-                    <span class="truncate" :title="row.action_id">{{ row.action_name }}</span>
-                  </template>
-                </el-table-column>
-                <el-table-column label="状态" width="80">
-                  <template #default="{ row }">
-                    <el-tag :type="row.success ? 'success' : 'danger'">
-                      {{ row.success ? '成功' : '失败' }}
-                    </el-tag>
-                  </template>
-                </el-table-column>
-                <el-table-column label="耗时" width="90">
-                  <template #default="{ row }">{{ formatDuration(row.execution_time * 1000) }}</template>
-                </el-table-column>
-                <el-table-column label="错误" min-width="180" show-overflow-tooltip>
-                  <template #default="{ row }">
-                    <span v-if="row.error" class="text-danger break-all">{{ row.error }}</span>
-                    <span v-else class="text-text-secondary">-</span>
-                  </template>
-                </el-table-column>
-              </el-table>
-            </template>
-
-            <el-table :data="resultFields" border max-height="260" class="mb-2">
+            <el-table :data="resultFields" border max-height="260" class="log-detail__result-table mb-2">
               <el-table-column prop="key" label="字段" width="220" show-overflow-tooltip />
               <el-table-column prop="value" label="值" show-overflow-tooltip />
             </el-table>
@@ -1069,59 +974,37 @@ onMounted(() => {
             <el-button text type="primary" @click="showRawJson = !showRawJson">
               {{ showRawJson ? '收起原始 JSON' : '查看原始 JSON' }}
             </el-button>
-            <pre v-if="showRawJson" class="text-xs bg-fill-light rounded-lg p-3 overflow-auto whitespace-pre-wrap mt-2 max-h-75">{{ formatJson(detailRecord.result_data) }}</pre>
+            <pre v-if="showRawJson" class="mt-2 max-h-75 overflow-auto whitespace-pre-wrap break-all rounded-lg bg-fill-light p-3 text-xs">{{ formatJson(detailRecord.result_data) }}</pre>
           </el-collapse-item>
+        </el-collapse>
 
-          <!-- 变量快照（仅当实际记录到变量时展示，避免空壳折叠区） -->
-          <el-collapse-item
-            v-if="detailRecord.variables && Object.keys(detailRecord.variables).length"
-            title="变量池快照"
-            name="variables"
-          >
-            <pre class="text-xs bg-fill-light rounded-lg p-3 overflow-auto max-h-75">{{ formatJson(detailRecord.variables) }}</pre>
+        <!-- 变量快照（仅当实际记录到变量时展示，避免空壳折叠区） -->
+        <el-collapse v-if="detailRecord.variables && Object.keys(detailRecord.variables).length">
+          <el-collapse-item title="变量池快照" name="variables">
+            <pre class="max-h-75 overflow-auto whitespace-pre-wrap break-all rounded-lg bg-fill-light p-3 text-xs">{{ formatJson(detailRecord.variables) }}</pre>
           </el-collapse-item>
+        </el-collapse>
 
-          <el-collapse-item
-            v-if="detailRecord.logs?.length"
-            :title="`执行过程日志 (${detailRecord.logs.length})`"
-            name="processLogs"
-          >
-            <div class="text-xs bg-fill-light rounded-lg p-3 overflow-auto max-h-75">
-              <div v-for="(line, idx) in detailRecord.logs" :key="idx" class="py-0.5">{{ line }}</div>
+        <!-- 执行过程日志 -->
+        <el-collapse v-if="detailRecord.logs?.length">
+          <el-collapse-item :title="`执行过程日志 (${detailRecord.logs.length})`" name="processLogs">
+            <div class="max-h-75 overflow-auto rounded-lg bg-fill-light p-3 text-xs bili-thin-scroll">
+              <div v-for="(line, idx) in detailRecord.logs" :key="idx" class="py-0.5 break-all">{{ line }}</div>
             </div>
           </el-collapse-item>
         </el-collapse>
       </div>
       <el-empty v-else description="未找到该日志或加载失败" />
       <template #footer>
-        <div class="log-detail-dialog__footer flex items-center justify-between">
-          <div class="flex items-center gap-2">
-            <el-button
-              v-if="detailRecord?.execution_id"
-              class="log-detail-dialog__chain-btn"
-              :icon="View"
-              @click="openChain(detailRecord.execution_id)"
-            >
-              查看同批次链路
-            </el-button>
-            <el-button
-              v-if="detailRecord?.execution_id"
-              class="log-detail-dialog__filter-batch-btn"
-              @click="filterByExecution(detailRecord.execution_id)"
-            >
-              只看本批次
-            </el-button>
-          </div>
-          <el-button class="log-detail-dialog__close" @click="detailVisible = false">关闭</el-button>
-        </div>
+        <el-button @click="detailVisible = false">关闭</el-button>
       </template>
     </el-dialog>
 
-    <!-- 执行链路弹窗 -->
+    <!-- 执行链路：按写入顺序 + depth 缩进还原同一批次的所有步骤 -->
     <ActionLogChainDialog
       v-model="chainVisible"
       :execution-id="chainExecutionId"
-      @select="onChainSelect"
+      @select="handleChainSelect"
     />
   </FlexContainer>
 </template>

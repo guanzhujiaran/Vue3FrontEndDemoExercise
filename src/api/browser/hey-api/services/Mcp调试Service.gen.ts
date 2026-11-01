@@ -3,18 +3,18 @@
 import type { RequestResult } from '../client';
 import { client } from '../client.gen';
 import type { Options } from '../sdk.gen';
-import type { RpaExecuteActionData, RpaExecuteActionErrors, RpaExecuteActionResponses, RpaGetActionData, RpaGetActionErrors, RpaGetActionLogsData, RpaGetActionLogsErrors, RpaGetActionLogsResponses, RpaGetActionResponses, RpaGetRunLogsData, RpaGetRunLogsErrors, RpaGetRunLogsResponses, RpaListActionsData, RpaListActionsErrors, RpaListActionsResponses, RpaRunWorkflowData, RpaRunWorkflowErrors, RpaRunWorkflowResponses, RpaSaveActionData, RpaSaveActionErrors, RpaSaveActionResponses, RpaValidateStepsData, RpaValidateStepsErrors, RpaValidateStepsResponses } from '../types.gen';
+import type { RpaDebugActionExecuteData, RpaDebugActionExecuteErrors, RpaDebugActionExecuteResponses, RpaDebugActionGetData, RpaDebugActionGetErrors, RpaDebugActionGetResponses, RpaDebugActionLogsData, RpaDebugActionLogsErrors, RpaDebugActionLogsResponses, RpaDebugActionSaveData, RpaDebugActionSaveErrors, RpaDebugActionSaveResponses, RpaDebugActionsListData, RpaDebugActionsListErrors, RpaDebugActionsListResponses, RpaDebugRunLogsData, RpaDebugRunLogsErrors, RpaDebugRunLogsResponses, RpaDebugStepsValidateData, RpaDebugStepsValidateErrors, RpaDebugStepsValidateResponses, RpaDebugWorkflowRunData, RpaDebugWorkflowRunErrors, RpaDebugWorkflowRunResponses } from '../types.gen';
 
 export class Mcp调试Service {
     /**
      * 列出当前用户的自定义动作
      *
-     * 按名称模糊搜索动作，返回 action_id / name / steps_count。
+     * 按名称模糊搜索动作，返回 action_id / name / steps_count / is_enabled / is_public / updated_at。
      *
      * 调试任何动作的第一步：先拿到 action_id（复合动作为雪花 int）。
      */
-    public static rpaListActions<ThrowOnError extends boolean = false>(options: Options<RpaListActionsData, ThrowOnError>): RequestResult<RpaListActionsResponses, RpaListActionsErrors, ThrowOnError, 'data'> {
-        return (options.client ?? client).post<RpaListActionsResponses, RpaListActionsErrors, ThrowOnError, 'data'>({
+    public static rpaDebugActionsList<ThrowOnError extends boolean = false>(options: Options<RpaDebugActionsListData, ThrowOnError>): RequestResult<RpaDebugActionsListResponses, RpaDebugActionsListErrors, ThrowOnError, 'data'> {
+        return (options.client ?? client).post<RpaDebugActionsListResponses, RpaDebugActionsListErrors, ThrowOnError, 'data'>({
             responseStyle: 'data',
             url: '/api/v1/rpa/browser/control/debug/actions/list',
             ...options,
@@ -30,8 +30,8 @@ export class Mcp调试Service {
      *
      * 导出动作的 DB 当前真值（steps 可直接修改后再落库）。
      */
-    public static rpaGetAction<ThrowOnError extends boolean = false>(options: Options<RpaGetActionData, ThrowOnError>): RequestResult<RpaGetActionResponses, RpaGetActionErrors, ThrowOnError, 'data'> {
-        return (options.client ?? client).post<RpaGetActionResponses, RpaGetActionErrors, ThrowOnError, 'data'>({
+    public static rpaDebugActionGet<ThrowOnError extends boolean = false>(options: Options<RpaDebugActionGetData, ThrowOnError>): RequestResult<RpaDebugActionGetResponses, RpaDebugActionGetErrors, ThrowOnError, 'data'> {
+        return (options.client ?? client).post<RpaDebugActionGetResponses, RpaDebugActionGetErrors, ThrowOnError, 'data'>({
             responseStyle: 'data',
             url: '/api/v1/rpa/browser/control/debug/actions/get',
             ...options,
@@ -45,10 +45,10 @@ export class Mcp调试Service {
     /**
      * 查动作最近的执行日志
      *
-     * 查某动作最近 N 条执行日志；返回的 execution_id 可喂给 rpa_get_run_logs。
+     * 查某动作最近 N 条执行日志；返回的 execution_id 可喂给 rpa_debug_run_logs。
      */
-    public static rpaGetActionLogs<ThrowOnError extends boolean = false>(options: Options<RpaGetActionLogsData, ThrowOnError>): RequestResult<RpaGetActionLogsResponses, RpaGetActionLogsErrors, ThrowOnError, 'data'> {
-        return (options.client ?? client).post<RpaGetActionLogsResponses, RpaGetActionLogsErrors, ThrowOnError, 'data'>({
+    public static rpaDebugActionLogs<ThrowOnError extends boolean = false>(options: Options<RpaDebugActionLogsData, ThrowOnError>): RequestResult<RpaDebugActionLogsResponses, RpaDebugActionLogsErrors, ThrowOnError, 'data'> {
+        return (options.client ?? client).post<RpaDebugActionLogsResponses, RpaDebugActionLogsErrors, ThrowOnError, 'data'>({
             responseStyle: 'data',
             url: '/api/v1/rpa/browser/control/debug/action-logs/recent',
             ...options,
@@ -67,8 +67,8 @@ export class Mcp调试Service {
      * 返回的 issues 带 ``steps[i].children[j].params.xxx`` 精确定位路径，
      * 按提示改 JSON 后再次调用即可，没有任何浏览器副作用。
      */
-    public static rpaValidateSteps<ThrowOnError extends boolean = false>(options: Options<RpaValidateStepsData, ThrowOnError>): RequestResult<RpaValidateStepsResponses, RpaValidateStepsErrors, ThrowOnError, 'data'> {
-        return (options.client ?? client).post<RpaValidateStepsResponses, RpaValidateStepsErrors, ThrowOnError, 'data'>({
+    public static rpaDebugStepsValidate<ThrowOnError extends boolean = false>(options: Options<RpaDebugStepsValidateData, ThrowOnError>): RequestResult<RpaDebugStepsValidateResponses, RpaDebugStepsValidateErrors, ThrowOnError, 'data'> {
+        return (options.client ?? client).post<RpaDebugStepsValidateResponses, RpaDebugStepsValidateErrors, ThrowOnError, 'data'>({
             responseStyle: 'data',
             url: '/api/v1/rpa/browser/control/debug/actions/validate',
             ...options,
@@ -88,8 +88,8 @@ export class Mcp调试Service {
      * - ``steps``：直接试跑内联步骤（改完先验，不必先写库）；
      * - 校验不通过时返回 ``blocked_by_validation=true``，不发执行请求（``force=true`` 跳过）。
      */
-    public static rpaExecuteAction<ThrowOnError extends boolean = false>(options: Options<RpaExecuteActionData, ThrowOnError>): RequestResult<RpaExecuteActionResponses, RpaExecuteActionErrors, ThrowOnError, 'data'> {
-        return (options.client ?? client).post<RpaExecuteActionResponses, RpaExecuteActionErrors, ThrowOnError, 'data'>({
+    public static rpaDebugActionExecute<ThrowOnError extends boolean = false>(options: Options<RpaDebugActionExecuteData, ThrowOnError>): RequestResult<RpaDebugActionExecuteResponses, RpaDebugActionExecuteErrors, ThrowOnError, 'data'> {
+        return (options.client ?? client).post<RpaDebugActionExecuteResponses, RpaDebugActionExecuteErrors, ThrowOnError, 'data'>({
             responseStyle: 'data',
             url: '/api/v1/rpa/browser/control/debug/actions/execute',
             ...options,
@@ -109,8 +109,8 @@ export class Mcp调试Service {
      * - 静态校验不通过或 steps 为空时拒绝写库；
      * - ``dry_run=true`` 只返回将执行的模式与摘要。
      */
-    public static rpaSaveAction<ThrowOnError extends boolean = false>(options: Options<RpaSaveActionData, ThrowOnError>): RequestResult<RpaSaveActionResponses, RpaSaveActionErrors, ThrowOnError, 'data'> {
-        return (options.client ?? client).post<RpaSaveActionResponses, RpaSaveActionErrors, ThrowOnError, 'data'>({
+    public static rpaDebugActionSave<ThrowOnError extends boolean = false>(options: Options<RpaDebugActionSaveData, ThrowOnError>): RequestResult<RpaDebugActionSaveResponses, RpaDebugActionSaveErrors, ThrowOnError, 'data'> {
+        return (options.client ?? client).post<RpaDebugActionSaveResponses, RpaDebugActionSaveErrors, ThrowOnError, 'data'>({
             responseStyle: 'data',
             url: '/api/v1/rpa/browser/control/debug/actions/save',
             ...options,
@@ -126,10 +126,10 @@ export class Mcp调试Service {
      *
      * 启动一次工作流运行，服务端轮询运行记录直到终态或超时。
      *
-     * 返回 ``execution_id`` 后即可用 ``rpa_get_run_logs`` 看步骤明细。
+     * 返回 ``execution_id`` 后即可用 ``rpa_debug_run_logs`` 看步骤明细。
      */
-    public static rpaRunWorkflow<ThrowOnError extends boolean = false>(options: Options<RpaRunWorkflowData, ThrowOnError>): RequestResult<RpaRunWorkflowResponses, RpaRunWorkflowErrors, ThrowOnError, 'data'> {
-        return (options.client ?? client).post<RpaRunWorkflowResponses, RpaRunWorkflowErrors, ThrowOnError, 'data'>({
+    public static rpaDebugWorkflowRun<ThrowOnError extends boolean = false>(options: Options<RpaDebugWorkflowRunData, ThrowOnError>): RequestResult<RpaDebugWorkflowRunResponses, RpaDebugWorkflowRunErrors, ThrowOnError, 'data'> {
+        return (options.client ?? client).post<RpaDebugWorkflowRunResponses, RpaDebugWorkflowRunErrors, ThrowOnError, 'data'>({
             responseStyle: 'data',
             url: '/api/v1/rpa/browser/control/debug/workflows/run-and-wait',
             ...options,
@@ -148,8 +148,8 @@ export class Mcp调试Service {
      * 返回 ``tree``（按 depth 缩进的调用链）、``failed``（失败项含 params / logs 摘要）
      * 与 ``recovery_hints``（候选 ``steps[i]`` 路径，``ambiguous=true`` 表示需人工定位）。
      */
-    public static rpaGetRunLogs<ThrowOnError extends boolean = false>(options: Options<RpaGetRunLogsData, ThrowOnError>): RequestResult<RpaGetRunLogsResponses, RpaGetRunLogsErrors, ThrowOnError, 'data'> {
-        return (options.client ?? client).post<RpaGetRunLogsResponses, RpaGetRunLogsErrors, ThrowOnError, 'data'>({
+    public static rpaDebugRunLogs<ThrowOnError extends boolean = false>(options: Options<RpaDebugRunLogsData, ThrowOnError>): RequestResult<RpaDebugRunLogsResponses, RpaDebugRunLogsErrors, ThrowOnError, 'data'> {
+        return (options.client ?? client).post<RpaDebugRunLogsResponses, RpaDebugRunLogsErrors, ThrowOnError, 'data'>({
             responseStyle: 'data',
             url: '/api/v1/rpa/browser/control/debug/runs/logs',
             ...options,

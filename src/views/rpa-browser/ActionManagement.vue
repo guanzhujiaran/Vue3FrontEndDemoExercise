@@ -42,10 +42,18 @@ interface ActionItem {
   forks_count: number
   /** Fork 来源动作的数据库主键（非空表示这是从上游 Fork 的副本，可同步上游最新内容） */
   forked_from_id: number | null
+  /** 作者声明的语义化版本（服务端不自动递增） */
+  version?: string
+  /** 语义内容指纹（展示前 8 位；空 = 存量未计算） */
+  content_hash?: string
   /** 上游是否有新版本可同步（仅 Fork 副本有意义） */
   has_upstream_update?: boolean
   /** 上游最近更新时间（秒级时间戳，转本地时间展示） */
   upstream_updated_at?: number | null
+  /** 上游当前声明的版本号（非 Fork 或上游不可用时为 null） */
+  upstream_version?: string | null
+  /** 上游当前内容指纹（空 = 未计算或非 Fork） */
+  upstream_content_hash?: string
   /** 最近一次同步上游的时间（秒级时间戳；null = 从未同步过） */
   last_synced_at?: number | null
   /** 是否开启上游自动同步（仅 Fork 副本有意义） */
@@ -315,12 +323,25 @@ const handleSaveTags = async () => {
 // ── 同步上游最新版本（仅 Fork 副本可用） ──
 const syncLoadingId = ref<string | null>(null)
 
+/** 内容指纹只展示前 8 位，完整值放在 title 里 */
+const shortHash = (hash?: string) => (hash ? hash.slice(0, 8) : '')
+
 /** 同步图标悬停文案（图标化后的状态说明入口） */
 const syncIconTip = (item: ActionItem) => {
+  const mine = item.version ? `你的副本 v${item.version}` : '你的副本'
   if (item.has_upstream_update) {
-    return item.local_steps_modified ? '上游有更新（有本地修改，同步将覆盖）' : '上游有更新，点击同步'
+    // 上游改了内容却没升版本号：如实说明，不假装"有新版本 1.1.0"
+    const upstream = item.upstream_version
+      ? item.upstream_version === item.version
+        ? `上游内容已变（版本号仍为 v${item.upstream_version}，作者未升级）`
+        : `上游 v${item.upstream_version}`
+      : '上游有新内容'
+    const tip = `${upstream} · ${mine}`
+    return item.local_steps_modified ? `${tip}；有本地修改，同步将覆盖` : `${tip}；点击同步`
   }
-  return item.local_steps_modified ? '已是最新版本（有本地修改）' : '已是最新版本'
+  return item.local_steps_modified
+    ? `已是最新版本（${mine}，有本地修改）`
+    : `已是最新版本（${mine}）`
 }
 
 /** 「更多」下拉菜单命令分发（次级操作收纳，减少卡片按钮数量） */
@@ -567,6 +588,12 @@ onMounted(() => {
               <!-- 元信息 -->
               <div class="action-card__meta flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-400">
                 <span class="shrink-0">步骤: {{ item.steps_count }}</span>
+                <span v-if="item.version" class="action-card__version shrink-0">版本: v{{ item.version }}</span>
+                <span
+                  v-if="item.content_hash"
+                  class="action-card__content-hash shrink-0 font-mono"
+                  :title="`内容指纹: ${item.content_hash}`"
+                >{{ shortHash(item.content_hash) }}</span>
                 <span class="truncate">更新: {{ formatTime(item.updated_at) }}</span>
               </div>
 

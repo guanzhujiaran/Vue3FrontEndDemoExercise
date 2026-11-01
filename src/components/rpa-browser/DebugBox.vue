@@ -417,6 +417,12 @@ defineExpose({ droppedItems, getSteps })
             v-model:id="saveDialogForm.iconId"
           />
         </el-form-item>
+        <el-form-item label="报错页面快照">
+          <div class="flex flex-col debugbox-save-dialog__log-snapshot">
+            <el-switch v-model="saveDialogForm.logPageSnapshot" class="debugbox-save-dialog__log-snapshot-switch" />
+            <span class="text-xs text-text-secondary mt-1">开启后该动作执行失败时，会把页面可交互元素（标签 / 选择器 / 文本）写入操作日志</span>
+          </div>
+        </el-form-item>
       </el-form>
       <template #footer>
         <el-button @click="saveDialogVisible = false">取消</el-button>

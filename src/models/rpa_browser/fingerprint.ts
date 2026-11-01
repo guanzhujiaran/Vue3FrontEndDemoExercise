@@ -24,4 +24,5 @@ export interface UserBrowserInfo {
   accept_lang: string | null
   timezone: string | null
   proxy_server: string | null
+  proxy_bypass: string | null
 }

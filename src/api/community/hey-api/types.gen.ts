@@ -4312,10 +4312,11 @@ export type HttpValidationError = {
 /**
  * HotLotteryItem
  *
- * 热门抽奖榜单单项（基于浏览记录聚合）。
+ * 热门抽奖榜单单项（热度计数 + 卡片数据，2.67.0）。
  *
- * 抽奖本体在 be-bilibili-crawler，本服务只产出「热度榜 id + 计数」，
- * 前端按 ``bizId`` 回捞抽奖详情渲染。
+ * ``card`` 为 be-bilibili-crawler 经 RPC 一次批量回捞的抽奖卡片
+ * （``raw`` + ``extra_info``，形态与 ``GetLotteryDetail`` 的 data 完全一致），
+ * 前端可直接 ``normalizeLotteryData`` 渲染，首页无需再调 detail 域接口。
  */
 export type HotLotteryItem = {
     /**
@@ -4354,6 +4355,10 @@ export type HotLotteryItem = {
      * 评论数（评论系统实时计数）
      */
     commentCount?: number;
+    /**
+     * 抽奖卡片（raw + extra_info；卡片缺失的项服务端已剔除，字段保留供前端防御）
+     */
+    card?: LotteryCard | null;
 };
 
 /**
@@ -4763,6 +4768,218 @@ export type InteractionStatusResp = {
      * 各资源交互态
      */
     items?: Array<InteractionStatusItem>;
+};
+
+/**
+ * LotteryCard
+ *
+ * 单个抽奖卡片（形态与 ``GetLotteryDetail`` 的 data 完全一致）。
+ */
+export type LotteryCard = {
+    /**
+     * 抽奖原始字段
+     */
+    raw: LotteryCardRaw;
+    /**
+     * 附加信息（无记录时为 None）
+     */
+    extra_info?: LotteryCardExtraInfo | null;
+};
+
+/**
+ * LotteryCardExtraInfo
+ *
+ * 抽奖卡片附加信息（与 crawler ``OfficialLotExtraInfoResp`` 同口径）。
+ *
+ * ``is_lot`` / ``need_comment`` / ``need_repost`` 由 ``lottery_type`` 派生
+ * （仅 ``is_grand_prize`` 落库），口径与 crawler 侧 computed_field 完全一致。
+ */
+export type LotteryCardExtraInfo = {
+    /**
+     * Lottery Type
+     *
+     * 抽奖类型（= business_type，前端卡片展示用）
+     */
+    lottery_type?: number | null;
+    /**
+     * Is Grand Prize
+     *
+     * 是否大奖（None=未判断）
+     */
+    is_grand_prize?: boolean | null;
+    /**
+     * Is Lot
+     *
+     * 是否为抽奖（恒 True）
+     */
+    is_lot?: boolean | null;
+    /**
+     * Need Comment
+     *
+     * 是否要求评论（官方抽奖恒 False）
+     */
+    need_comment?: boolean | null;
+    /**
+     * Need Repost
+     *
+     * 是否要求转发（仅 business_type=1 为 True）
+     */
+    need_repost?: boolean | null;
+};
+
+/**
+ * LotteryCardRaw
+ *
+ * 抽奖卡片原始字段（与 crawler ``LotdataResp`` 同名字段对齐）。
+ *
+ * 仅下发前端 ``normalizeLotteryData`` 渲染卡片所需字段，避免整表字段跨服务搬运；
+ * 时间统一为 Unix 秒，ID 另带 ``*_str`` 字符串副本（前端 JS 无法安全表示大整数）。
+ */
+export type LotteryCardRaw = {
+    /**
+     * Lottery Id
+     *
+     * lottery 主键（对外互动资源 bizId）
+     */
+    lottery_id: number;
+    /**
+     * Business Id
+     *
+     * 业务 id（动态 id / 预约 sid）
+     */
+    business_id?: number | null;
+    /**
+     * Business Id Str
+     *
+     * business_id 的字符串副本
+     */
+    business_id_str?: string;
+    /**
+     * Business Type
+     *
+     * 抽奖业务类型（1=动态转发 / 10=预约 / 12=充电）
+     */
+    business_type?: number | null;
+    /**
+     * Status
+     *
+     * 抽奖状态（-1=取消 / 0=未开奖 / 1、2=已开奖）
+     */
+    status?: number | null;
+    /**
+     * Lottery Time
+     *
+     * 开奖时间（Unix 秒）
+     */
+    lottery_time?: number | null;
+    /**
+     * Created At
+     *
+     * 收录时间（ISO 字符串，与 crawler lotdata 响应的 created_at 原样一致）
+     */
+    created_at?: string | null;
+    /**
+     * Participants
+     *
+     * 参与人数
+     */
+    participants?: number | null;
+    /**
+     * Sender Uid
+     *
+     * 发起人 UID
+     */
+    sender_uid?: number | null;
+    /**
+     * Sender Uid Str
+     *
+     * sender_uid 的字符串副本
+     */
+    sender_uid_str?: string;
+    /**
+     * First Prize
+     *
+     * 一等奖数量
+     */
+    first_prize?: number | null;
+    /**
+     * First Prize Cmt
+     *
+     * 一等奖文案（卡片标题）
+     */
+    first_prize_cmt?: string | null;
+    /**
+     * First Prize Pic
+     *
+     * 一等奖图片
+     */
+    first_prize_pic?: string | null;
+    /**
+     * Second Prize
+     *
+     * 二等奖数量
+     */
+    second_prize?: number | null;
+    /**
+     * Second Prize Cmt
+     *
+     * 二等奖文案
+     */
+    second_prize_cmt?: string | null;
+    /**
+     * Second Prize Pic
+     *
+     * 二等奖图片
+     */
+    second_prize_pic?: string | null;
+    /**
+     * Third Prize
+     *
+     * 三等奖数量
+     */
+    third_prize?: number | null;
+    /**
+     * Third Prize Cmt
+     *
+     * 三等奖文案
+     */
+    third_prize_cmt?: string | null;
+    /**
+     * Third Prize Pic
+     *
+     * 三等奖图片
+     */
+    third_prize_pic?: string | null;
+    /**
+     * Need Post
+     *
+     * 是否需要发帖
+     */
+    need_post?: number | null;
+    /**
+     * Vip Batch Sign
+     *
+     * 大会员批次标记
+     */
+    vip_batch_sign?: string | null;
+    /**
+     * Exclusive Level
+     *
+     * 充电专属等级 JSON（前端解析充电要求）
+     */
+    exclusive_level?: string | null;
+    /**
+     * Lottery Result
+     *
+     * 开奖结果
+     */
+    lottery_result?: string | null;
+    /**
+     * Lottery Detail Url
+     *
+     * 抽奖详情链接
+     */
+    lottery_detail_url?: string | null;
 };
 
 /**

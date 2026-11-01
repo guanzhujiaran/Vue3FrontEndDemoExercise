@@ -29,7 +29,8 @@ const formData = ref<BrowserFingerprintUpsertParams>({
   lang: '',
   accept_lang: '',
   timezone: '',
-  proxy_server: ''
+  proxy_server: '',
+  proxy_bypass: ''
 })
 
 const loading = ref(false)
@@ -59,7 +60,8 @@ const loadFingerprintData = async () => {
         lang: data.lang || '',
         accept_lang: data.accept_lang || '',
         timezone: data.timezone || '',
-        proxy_server: data.proxy_server || ''
+        proxy_server: data.proxy_server || '',
+        proxy_bypass: data.proxy_bypass || ''
       }
     } else {
       biliMessage.error(response?.msg || '获取指纹信息失败')
@@ -110,6 +112,15 @@ const handleGenerateRandom = async () => {
 const handleSubmit = async () => {
   loading.value = true
   try {
+    // 代理绕过列表清洗：分号/空格/换行 → 逗号、去重、去首尾空白；空值归一为 undefined（不覆盖后端值）
+    if (formData.value.proxy_bypass) {
+      formData.value.proxy_bypass = formData.value.proxy_bypass
+        .split(/[;,\s]+/)
+        .map((s) => s.trim())
+        .filter(Boolean)
+        .filter((s, i, arr) => arr.indexOf(s) === i)
+        .join(',')
+    }
     const response = await 浏览器指纹管理Service.upsertFingerprintRouterApiV1RpaBrowserUpsertFingerprintPost({
       body: formData.value,
           }) as any  // responseStyle='data' → 直接返回 {code, data, msg}
@@ -174,6 +185,24 @@ onMounted(() => {
 
             <el-form-item label="代理服务器">
               <el-input v-model="formData.proxy_server" placeholder="例如: 127.0.0.1:7890" clearable class="cyber-input" />
+            </el-form-item>
+
+            <el-form-item label="代理绕过">
+              <el-input
+                v-model="formData.proxy_bypass"
+                type="textarea"
+                :rows="2"
+                :disabled="!formData.proxy_server"
+                placeholder="例如: *.bilibili.com,127.0.0.1"
+                clearable
+                class="cyber-input"
+              />
+              <div v-if="formData.proxy_server" class="mt-1 text-xs text-gray-400">
+                命中的域名/IP 不走代理，逗号分隔；只支持域名或 IP，不能带 http 前缀。留空则使用服务端默认配置。
+              </div>
+              <div v-else class="mt-1 text-xs text-gray-500">
+                该浏览器未配置代理，绕过列表不生效
+              </div>
             </el-form-item>
           </el-card>
 

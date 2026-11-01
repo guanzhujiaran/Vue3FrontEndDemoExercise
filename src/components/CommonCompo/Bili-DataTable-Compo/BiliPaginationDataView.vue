@@ -66,13 +66,16 @@ interface Props {
   page_size: number
   // 是否自动处理错误状态，启用后会在错误时自动清空数据
   autoHandleError?: boolean
+  // 挂载时是否弹「加载数据中！」提示：独立面板（首页轮播等）不需要，默认保持原行为
+  showMountToast?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
   data: () => [],
   total: 0,
   page_size: 10,
-  autoHandleError: true
+  autoHandleError: true,
+  showMountToast: true
 })
 
 const empty_msg = defineModel<string>('EmptyMsg', { default: '暂无数据' })
@@ -140,7 +143,7 @@ watch(loading, async (newVal, oldVal) => {
 })
 
 onMounted(() => {
-  biliMessage.info('加载数据中！')
+  if (props.showMountToast) biliMessage.info('加载数据中！')
   emits('onMounted')
 })
 

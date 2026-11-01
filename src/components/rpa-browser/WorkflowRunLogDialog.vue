@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { ref, computed, watch, onBeforeUnmount } from 'vue'
-import { Refresh, RefreshRight } from '@element-plus/icons-vue'
+import { Delete, Refresh, RefreshRight } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { 工作流管理Service, 操作日志管理Service } from '@/api/browser/hey-api'
 import { useUserNavStore } from '@/stores/user_nav'
 import { businessHandler } from '@/utils/businessHandler'
+import { deleteWorkflowResources } from '@/api/browser/workflow_resource_api'
 import WorkflowRunProgressBar from './WorkflowRunProgressBar.vue'
 import {
   subscribeWorkflowRunProgress,
@@ -103,6 +104,13 @@ const progressMap = ref<Record<string, WorkflowRunProgress>>({})
 /** 进行中的 SSE 订阅（run_id -> 取消函数） */
 const subscriptions = new Map<string, () => void>()
 const resumingRunId = ref<string | null>(null)
+/** 正在清理资源记录的行（run_id）：dry_run 预览 + 实际删除期间禁止重复点击 */
+const clearingRunId = ref<string | null>(null)
+/** 资源清理确认弹窗（层级由 el-dialog 的 useZIndex 保证在运行记录弹窗之上） */
+const clearConfirmVisible = ref(false)
+/** 待确认清理的运行行与预览到的条数 */
+const pendingClearRun = ref<RunItem | null>(null)
+const clearAffected = ref(0)
 
 const dialogVisible = computed({
   get: () => props.modelValue,
@@ -312,6 +320,69 @@ async function handleResume(row: RunItem) {
   if (nextRunId) subscribeRunById(nextRunId)
 }
 
+/**
+ * 清理本轮运行写入的已处理资源记录（判定逻辑修正后，让误记为终态的资源重新被捞起）。
+ *
+ * 资源记录的 execution_id 与运行 run_id 同名同值，所以按 execution_id 精确清理即可命中本轮；
+ * 先 `dry_run` 预览影响面，再用本组件内的确认弹窗二次确认后才真正删除。
+ *
+ * 确认用 el-dialog 而不是 ElMessageBox：MessageBox 的 overlay 层级（2003）会低于
+ * 已打开的运行记录弹窗（z-index 由 useZIndex 递增到 2017+），导致确认框被遮罩挡住点不到。
+ */
+async function handleClearRunResources(row: RunItem) {
+  const executionId = row.execution_id || row.run_id
+  if (clearingRunId.value) return
+  if (!executionId) {
+    ElMessage.warning('该运行没有执行批次，无法按批次清理资源记录')
+    return
+  }
+  clearingRunId.value = row.run_id
+  try {
+    const preview = await deleteWorkflowResources(
+      { workflow_id: Number(row.workflow_id), execution_id: executionId, dry_run: true },
+      userNavStore.user_header
+    )
+    if (!preview.success) return
+    const affected = preview.data?.deleted ?? 0
+    if (affected === 0) {
+      ElMessage.info('本轮没有写入任何已处理资源记录')
+      return
+    }
+    pendingClearRun.value = row
+    clearAffected.value = affected
+    clearConfirmVisible.value = true
+  } finally {
+    clearingRunId.value = null
+  }
+}
+
+/** 确认弹窗：执行真正的删除（dry_run=false） */
+async function confirmClearResources() {
+  const row = pendingClearRun.value
+  if (!row) return
+  const executionId = row.execution_id || row.run_id
+  clearingRunId.value = row.run_id
+  try {
+    const done = await deleteWorkflowResources(
+      { workflow_id: Number(row.workflow_id), execution_id: executionId, dry_run: false },
+      userNavStore.user_header
+    )
+    if (done.success) {
+      ElMessage.success(`已清理 ${done.data?.deleted ?? clearAffected.value} 条资源记录`)
+      clearConfirmVisible.value = false
+      pendingClearRun.value = null
+      emit('run-changed')
+    }
+  } finally {
+    clearingRunId.value = null
+  }
+}
+
+/** el-table 插槽 row 为宽松类型，收窄后再走业务逻辑 */
+function handleClearRunResourcesRow(row: unknown) {
+  return handleClearRunResources(row as RunItem)
+}
+
 function handleClose() {
   emit('update:modelValue', false)
 }
@@ -458,25 +529,41 @@ onBeforeUnmount(closeAllSubscriptions)
             <span class="text-xs text-danger break-all">{{ row.error_message || '-' }}</span>
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="110" fixed="right">
+        <el-table-column label="操作" width="210" fixed="right">
           <template #default="{ row }">
-            <el-tooltip
-              v-if="row.status === 'interrupted' && row.resumable"
-              content="从检查点继续执行：当前步骤会重跑，循环内已处理的资源自动跳过"
-              placement="top"
-            >
-              <el-button
-                class="workflow-run-log__resume"
-                type="primary"
-                plain
-                :icon="RefreshRight"
-                :loading="resumingRunId === row.run_id"
-                @click="handleResumeRow(row)"
+            <div class="workflow-run-log__row-actions flex items-center gap-1">
+              <el-tooltip
+                v-if="row.status === 'interrupted' && row.resumable"
+                content="从检查点继续执行：当前步骤会重跑，循环内已处理的资源自动跳过"
+                placement="top"
               >
-                继续
-              </el-button>
-            </el-tooltip>
-            <span v-else class="text-xs text-color-secondary">-</span>
+                <el-button
+                  class="workflow-run-log__resume"
+                  type="primary"
+                  plain
+                  :icon="RefreshRight"
+                  :loading="resumingRunId === row.run_id"
+                  @click="handleResumeRow(row)"
+                >
+                  继续
+                </el-button>
+              </el-tooltip>
+              <el-tooltip
+                content="删除本轮写入的已处理资源记录，让这些资源重新参与下一轮取数（先预览条数再确认）"
+                placement="top"
+              >
+                <el-button
+                  class="workflow-run-log__clear-resources"
+                  text
+                  type="danger"
+                  :icon="Delete"
+                  :loading="clearingRunId === row.run_id"
+                  @click="handleClearRunResourcesRow(row)"
+                >
+                  清理资源
+                </el-button>
+              </el-tooltip>
+            </div>
           </template>
         </el-table-column>
       </el-table>
@@ -491,6 +578,35 @@ onBeforeUnmount(closeAllSubscriptions)
         />
       </div>
     </div>
+
+    <!-- 资源清理确认：删除后这些资源会在下一轮取数时重新被抓取 -->
+    <el-dialog
+      v-model="clearConfirmVisible"
+      title="清理本轮资源记录"
+      width="440px"
+      append-to-body
+      :lock-scroll="false"
+      class="workflow-run-log__clear-confirm"
+    >
+      <el-text class="workflow-run-log__clear-confirm-text text-sm text-text-regular" tag="p">
+        将删除本轮运行写入的
+        <span class="workflow-run-log__clear-confirm-count font-semibold text-danger">{{ clearAffected }}</span>
+        条已处理资源记录，这些资源会在下次运行时重新被抓取。
+      </el-text>
+      <template #footer>
+        <el-button class="workflow-run-log__clear-cancel" @click="clearConfirmVisible = false">
+          取消
+        </el-button>
+        <el-button
+          class="workflow-run-log__clear-submit"
+          type="danger"
+          :loading="clearingRunId !== null"
+          @click="confirmClearResources"
+        >
+          删除 {{ clearAffected }} 条
+        </el-button>
+      </template>
+    </el-dialog>
 
     <template #footer>
       <el-button @click="handleClose">关闭</el-button>

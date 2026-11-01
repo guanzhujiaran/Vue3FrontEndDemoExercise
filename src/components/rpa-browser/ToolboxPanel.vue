@@ -135,8 +135,10 @@ async function searchTags(query: string) {
       body: { keyword: query || null, filter_type: filterType },
       headers: { 'Content-Type': 'application/json', ...userNavStore.user_header },
     })
-    if (res?.code === 0) {
-      tagOptions.value = res.data || []
+    // client.post 的返回是 { data | error } 联合：业务包络在 res.data 里
+    const payload = res?.data
+    if (payload?.code === 0) {
+      tagOptions.value = payload.data || []
     }
   } catch (e) { console.error('searchTags failed', e) }
 }
@@ -297,7 +299,9 @@ async function searchNamesApi(keyword: string): Promise<string[]> {
       body: { keyword: keyword || null, filter_type: filterType },
       headers: { 'Content-Type': 'application/json', ...userNavStore.user_header },
     })
-    if (res?.code === 0) return res.data || []
+    // client.post 的返回是 { data | error } 联合：业务包络在 res.data 里
+    const payload = res?.data
+    if (payload?.code === 0) return payload.data || []
   } catch (e) { console.error('searchNames failed', e) }
   return []
 }
@@ -343,7 +347,16 @@ function onTagChange(value: string) {
 
 // ── 基础操作树 ───────────────────────────────────────
 
-const filteredRegistered = computed<unknown[]>(() => {
+/**
+ * 基础操作树节点
+ *
+ * el-tree-v2 的 `data` 只接受对象数组（`TreeNodeData[]`），原先声明成 `unknown[]`
+ * 会被直接拒绝；节点字段由模板按需断言（`data as Record<string, unknown>`），
+ * 因此这里用宽松的对象记录承载，既能塞进 el-tree-v2，也不锁死字段。
+ */
+type ToolboxTreeNode = Record<string, unknown>
+
+const filteredRegistered = computed<ToolboxTreeNode[]>(() => {
   const q = searchQuery.value.toLowerCase()
   const items = registeredActions.value.map((a) => ({
     id: `action-${a.action_id}`,
@@ -429,11 +442,12 @@ function setToolboxDragGhost(event: DragEvent, action: Record<string, unknown>) 
 // ── 编辑 ─────────────────────────────────────────────
 
 async function handleEditCustomAction(nodeData: Record<string, unknown>) {
-  const id = nodeData.action_id as string
-  if (!id) { ElMessage.warning('无效的操作标识'); return }
+  // 只有自定义（复合）动作有编辑入口，action_id 是雪花 int；内置动作名是字符串，转出来是 NaN
+  const actionId = Number(nodeData.action_id)
+  if (!Number.isFinite(actionId) || actionId <= 0) { ElMessage.warning('无效的操作标识'); return }
   try {
     const res = await 自定义操作管理Service.getCustomActionApiV1RpaBrowserControlCustomActionsGetPost({
-      body: { action_id: id }, headers: userNavStore.user_header,
+      body: { action_id: actionId }, headers: userNavStore.user_header,
     })
     if (res?.code === 0 && res?.data) emit('edit-action', res.data as Record<string, unknown>)
     else ElMessage.error('获取操作详情失败')

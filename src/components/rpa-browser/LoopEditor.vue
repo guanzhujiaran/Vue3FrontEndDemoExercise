@@ -40,7 +40,18 @@ const sourceOptions = [
   { value: 'json_list' as const, label: '直接输入JSON列表' },
 ]
 
-function setSource(source: LoopConfig['loopSource']) {
+/** 可选的循环来源（下发给 el-radio-group 的候选值） */
+const LOOP_SOURCES = ['fixed_count', 'variable', 'json_list'] as const
+
+/**
+ * 切换循环来源
+ *
+ * `el-radio-group` 抛出的事件值是宽泛联合（`string | number | boolean | undefined`），
+ * 这里显式收窄回 `LoopConfig['loopSource']`，非候选值直接忽略。
+ */
+function setSource(val: string | number | boolean | undefined) {
+  const source = LOOP_SOURCES.find((item) => item === val)
+  if (!source) return
   config.value = { ...config.value, loopSource: source }
 }
 
@@ -49,8 +60,8 @@ function setLoopName(val: string) {
   config.value = { ...config.value, name: val }
 }
 
-function setCount(val: number | string) {
-  const num = Number(val)
+function setCount(val: number | string | undefined) {
+  const num = Number(val ?? 0)
   if (num >= 1 && num <= 10000) {
     config.value = { ...config.value, count: num }
   }

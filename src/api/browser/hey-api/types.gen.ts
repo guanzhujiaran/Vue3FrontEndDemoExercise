@@ -105,24 +105,9 @@ export type ActionForkResponse = {
 /**
  * ActionLogByExecutionRequest
  *
- * 按执行批次查询步骤链路（分页）
- *
- * 一次长循环运行的步骤日志可达数千条，全量返回既拖慢响应也撑爆前端渲染，
- * 因此与 `action-logs/list` 用同一套 `page` / `per_page` 口径分页。
+ * 按执行批次查询完整链路
  */
 export type ActionLogByExecutionRequest = {
-    /**
-     * Page
-     *
-     * 页码，从 1 开始
-     */
-    page?: number;
-    /**
-     * Per Page
-     *
-     * 每页数量（默认 50）
-     */
-    per_page?: number;
     /**
      * Execution Id
      *
@@ -134,41 +119,63 @@ export type ActionLogByExecutionRequest = {
 /**
  * ActionLogClearRequest
  *
- * 按条件批量清理日志
+ * 按条件批量清理日志（所有条件为 AND；全部留空等于全清，慎用）
  */
 export type ActionLogClearRequest = {
     /**
      * Action Id
+     *
+     * 只清理该操作的日志（内置动作名或复合动作雪花 id）
      */
     action_id?: string | null;
     /**
      * Execution Id
+     *
+     * 只清理该次执行的日志（运行唯一 id）
      */
     execution_id?: string | null;
     /**
      * Workflow Id
+     *
+     * 只清理该工作流的日志（雪花 id）
      */
     workflow_id?: string | null;
     /**
      * Browser Id
+     *
+     * 只清理该浏览器的日志（雪花 id）
      */
     browser_id?: string | null;
+    /**
+     * 只清理该来源的日志（手动调试 / 工作流执行）
+     */
     source?: ActionLogSourceEnum | null;
+    /**
+     * 只清理该状态的日志（成功 / 失败 / 跳过）
+     */
     status?: ActionLogStatusEnum | null;
     /**
      * Success
+     *
+     * 按执行结果过滤：true 只清成功，false 只清失败
      */
     success?: boolean | null;
     /**
      * Keyword
+     *
+     * 按关键字模糊匹配错误信息 / 动作名
      */
     keyword?: string | null;
     /**
      * Started After
+     *
+     * 只清理开始时间不早于该时刻（ISO8601）的日志
      */
     started_after?: string | null;
     /**
      * Started Before
+     *
+     * 只清理开始时间不晚于该时刻（ISO8601）的日志
      */
     started_before?: string | null;
 };
@@ -292,6 +299,105 @@ export type ActionLogDetailResponse = {
 };
 
 /**
+ * ActionLogGetRequest
+ *
+ * 单条日志详情请求
+ */
+export type ActionLogGetRequest = {
+    /**
+     * Log Id
+     *
+     * 日志唯一 ID（log_id，不是数据库主键 id）
+     */
+    log_id: string;
+};
+
+/**
+ * ActionLogItemResponse
+ *
+ * 列表项（轻量）：不含 params/result_data/variables/logs 等大字段。
+ *
+ * 大字段单行可达数百 KB，列表页/无限滚动若随行下发会瞬间撑爆响应体，
+ * 故列表只回轻量摘要，完整字段由详情接口按 log_id 单独拉取。
+ */
+export type ActionLogItemResponse = {
+    /**
+     * Id
+     */
+    id?: number | null;
+    /**
+     * Log Id
+     */
+    log_id: string;
+    /**
+     * Mid
+     */
+    mid: string;
+    /**
+     * Execution Id
+     */
+    execution_id: string;
+    /**
+     * Parent Execution Id
+     */
+    parent_execution_id?: string | null;
+    /**
+     * Depth
+     */
+    depth: number;
+    /**
+     * Action Id
+     */
+    action_id: string;
+    /**
+     * Action Name
+     */
+    action_name: string;
+    /**
+     * Action Type
+     */
+    action_type: string;
+    source: ActionLogSourceEnum;
+    /**
+     * Workflow Id
+     */
+    workflow_id?: string | null;
+    /**
+     * Browser Id
+     */
+    browser_id: string;
+    /**
+     * Session Id
+     */
+    session_id: string;
+    /**
+     * Page Url
+     */
+    page_url: string;
+    status: ActionLogStatusEnum;
+    /**
+     * Success
+     */
+    success: boolean;
+    /**
+     * Error Message
+     */
+    error_message?: string | null;
+    /**
+     * Execution Time
+     */
+    execution_time: number;
+    /**
+     * Started At
+     */
+    started_at: string;
+    /**
+     * Finished At
+     */
+    finished_at?: string | null;
+};
+
+/**
  * ActionLogListRequest
  *
  * 日志查询请求（支持筛选 + 分页）
@@ -405,6 +511,20 @@ export const ActionLogSourceEnum = {
  * - PLUGIN: plugin
  */
 export type ActionLogSourceEnum = typeof ActionLogSourceEnum[keyof typeof ActionLogSourceEnum];
+
+/**
+ * ActionLogStatsRequest
+ *
+ * 日志统计请求
+ */
+export type ActionLogStatsRequest = {
+    /**
+     * Days
+     *
+     * 统计最近多少天（含今天，默认 7）
+     */
+    days?: number;
+};
 
 /**
  * ActionLogStatsResponse
@@ -1272,6 +1392,12 @@ export type BaseFingerprintBrowserInitParams = {
      */
     '--proxy-server'?: string | null;
     /**
+     * Proxy Bypass
+     *
+     * 代理绕过列表：逗号分隔的 host 规则（如 *.bilibili.com,127.0.0.1），命中的主机直连、不走 proxy_server。只能匹配主机名/IP，不能写完整 URL；未配置时回退到服务端环境变量 browser_proxy_bypass
+     */
+    proxy_bypass?: string | null;
+    /**
      * Patchright Screen Width
      */
     patchright_screen_width?: number;
@@ -1952,6 +2078,12 @@ export type BrowserFingerprintQueryResp = {
      */
     '--proxy-server'?: string | null;
     /**
+     * Proxy Bypass
+     *
+     * 代理绕过列表：逗号分隔的 host 规则（如 *.bilibili.com,127.0.0.1），命中的主机直连、不走 proxy_server。只能匹配主机名/IP，不能写完整 URL；未配置时回退到服务端环境变量 browser_proxy_bypass
+     */
+    proxy_bypass?: string | null;
+    /**
      * Patchright Screen Width
      */
     patchright_screen_width?: number;
@@ -2018,7 +2150,7 @@ export type BrowserFingerprintQueryResp = {
 /**
  * BrowserFingerprintRenameParams
  *
- * 重命名浏览器指纹参数
+ * 重命名浏览器指纹参数（空白名按「未提供」处理）
  */
 export type BrowserFingerprintRenameParams = {
     /**
@@ -2114,11 +2246,17 @@ export type BrowserFingerprintUpsertParams = {
      */
     proxy_server?: string | null;
     /**
+     * Proxy Bypass
+     */
+    proxy_bypass?: string | null;
+    /**
      * Custom Name
      */
     custom_name?: string | null;
     /**
      * Browser Id
+     *
+     * 浏览器 id（雪花 id）；不传表示新建浏览器，传入表示更新该浏览器指纹
      */
     browser_id?: number | string | null;
 };
@@ -3282,6 +3420,12 @@ export type CompositeActionCreateRequest = {
      */
     description?: string;
     /**
+     * Version
+     *
+     * 语义化版本（作者声明，服务端不自动递增）。判断内容是否变化请看 content_hash，见 docs/动作版本与内容指纹计划书.md
+     */
+    version?: string;
+    /**
      * Icon Series
      *
      * 图标系列编号（0 表示默认图标）
@@ -3388,6 +3532,12 @@ export type CompositeActionCreateRequest = {
      */
     log_record_variables?: boolean;
     /**
+     * Log Record Page Snapshot
+     *
+     * 是否记录报错时的页面关键元素快照
+     */
+    log_record_page_snapshot?: boolean;
+    /**
      * Log Only On Error
      *
      * 仅在执行失败时记录
@@ -3448,6 +3598,18 @@ export type CompositeActionDetailResponse = {
      */
     local_steps_modified?: boolean;
     /**
+     * Upstream Version
+     *
+     * 上游当前声明的语义化版本（非 Fork 或上游不可用时为 None）
+     */
+    upstream_version?: string | null;
+    /**
+     * Upstream Content Hash
+     *
+     * 上游当前内容指纹（空=未计算或非 Fork）
+     */
+    upstream_content_hash?: string;
+    /**
      * Action Id
      */
     action_id: number;
@@ -3459,6 +3621,12 @@ export type CompositeActionDetailResponse = {
      * Version
      */
     version: string;
+    /**
+     * Content Hash
+     *
+     * 语义内容指纹（steps/参数/入出参的 sha256）；空=存量未计算
+     */
+    content_hash?: string;
     /**
      * Action Type
      */
@@ -3559,6 +3727,10 @@ export type CompositeActionDetailResponse = {
      * Log Record Variables
      */
     log_record_variables?: boolean;
+    /**
+     * Log Record Page Snapshot
+     */
+    log_record_page_snapshot?: boolean;
     /**
      * Log Only On Error
      */
@@ -3690,6 +3862,12 @@ export type CompositeActionUpdateRequest = {
      */
     description?: string | null;
     /**
+     * Version
+     *
+     * 语义化版本（不传表示不修改；服务端不自动递增）
+     */
+    version?: string | null;
+    /**
      * Icon Series
      *
      * 图标系列编号（不传表示不修改）
@@ -3801,6 +3979,12 @@ export type CompositeActionUpdateRequest = {
      * 是否记录变量池快照
      */
     log_record_variables?: boolean | null;
+    /**
+     * Log Record Page Snapshot
+     *
+     * 是否记录报错时的页面关键元素快照
+     */
+    log_record_page_snapshot?: boolean | null;
     /**
      * Log Only On Error
      *
@@ -4191,7 +4375,7 @@ export type DebugRunData = {
     /**
      * Execution Id
      *
-     * 执行批次 ID，可喂给 rpa_get_run_logs
+     * 执行批次 ID，可喂给 rpa_debug_run_logs
      */
     execution_id?: string;
     /**
@@ -4479,6 +4663,255 @@ export type ExecuteStepResponse = {
      */
     action_name: string;
     result: ActionResultResponse;
+};
+
+/**
+ * FeedbackCategory
+ *
+ * 枚举选项：
+ * - bug: bug
+ * - suggestion: suggestion
+ * - other: other
+ */
+export const FeedbackCategory = {
+    /**
+     * bug
+     */
+    BUG: 'bug',
+    /**
+     * suggestion
+     */
+    SUGGESTION: 'suggestion',
+    /**
+     * other
+     */
+    OTHER: 'other'
+} as const;
+
+/**
+ * FeedbackCategory
+ *
+ * 枚举选项：
+ * - bug: bug
+ * - suggestion: suggestion
+ * - other: other
+ */
+export type FeedbackCategory = typeof FeedbackCategory[keyof typeof FeedbackCategory];
+
+/**
+ * FeedbackItem
+ *
+ * 单条反馈展示模型
+ */
+export type FeedbackItem = {
+    /**
+     * Report Id
+     *
+     * 报告唯一标识
+     */
+    report_id: string;
+    /**
+     * Category
+     *
+     * 分类：bug / suggestion / other
+     */
+    category: string;
+    /**
+     * Title
+     *
+     * 简短标题
+     */
+    title: string;
+    /**
+     * Description
+     *
+     * 详细描述
+     */
+    description: string;
+    /**
+     * Context
+     *
+     * 错误上下文
+     */
+    context?: {
+        [key: string]: unknown;
+    } | null;
+    /**
+     * Status
+     *
+     * 处理状态：pending / resolved / ignored
+     */
+    status: string;
+    /**
+     * Created At
+     *
+     * 提交时间
+     */
+    created_at?: string | null;
+};
+
+/**
+ * FeedbackListRequest
+ *
+ * 查询当前用户反馈列表的请求模型（分页）
+ */
+export type FeedbackListRequest = {
+    /**
+     * Page
+     *
+     * 页码，从 1 开始
+     */
+    page?: number;
+    /**
+     * Per Page
+     *
+     * 每页条数
+     */
+    per_page?: number;
+};
+
+/**
+ * FeedbackListResp
+ *
+ * 反馈列表响应模型（分页）
+ */
+export type FeedbackListResp = {
+    /**
+     * Items
+     *
+     * 反馈列表
+     */
+    items?: Array<FeedbackItem>;
+    /**
+     * Total
+     *
+     * 总条数
+     */
+    total?: number;
+    /**
+     * Page
+     *
+     * 页码
+     */
+    page?: number;
+    /**
+     * Per Page
+     *
+     * 每页条数
+     */
+    per_page?: number;
+};
+
+/**
+ * FeedbackSubmitRequest
+ *
+ * 提交报错 / 反馈的请求模型
+ */
+export type FeedbackSubmitRequest = {
+    /**
+     * 分类：bug(缺陷/报错) / suggestion(改进建议) / other(其他)
+     */
+    category?: FeedbackCategory;
+    /**
+     * Title
+     *
+     * 简短标题
+     */
+    title: string;
+    /**
+     * Description
+     *
+     * 详细描述：错误现象、期望行为、复现步骤等
+     */
+    description: string;
+    /**
+     * Source
+     *
+     * 来源标记：mcp / web
+     */
+    source?: string | null;
+    /**
+     * Action Id
+     *
+     * 相关动作 id
+     */
+    action_id?: number | string | null;
+    /**
+     * Workflow Id
+     *
+     * 相关工作流 id
+     */
+    workflow_id?: number | string | null;
+    /**
+     * Run Id
+     *
+     * 相关运行记录 id
+     */
+    run_id?: string | null;
+    /**
+     * Browser Id
+     *
+     * 相关浏览器 id
+     */
+    browser_id?: number | string | null;
+    /**
+     * Error Message
+     *
+     * 错误摘要
+     */
+    error_message?: string | null;
+    /**
+     * Error Detail
+     *
+     * 错误详情 / 堆栈 / 失败步骤
+     */
+    error_detail?: string | null;
+    /**
+     * Page Url
+     *
+     * 出错时页面 URL
+     */
+    page_url?: string | null;
+    /**
+     * Extra
+     *
+     * 其他键值对（补充上下文）
+     */
+    extra?: {
+        [key: string]: unknown;
+    } | null;
+};
+
+/**
+ * FeedbackSubmitResp
+ *
+ * 提交反馈的响应模型
+ */
+export type FeedbackSubmitResp = {
+    /**
+     * Report Id
+     *
+     * 报告唯一标识
+     */
+    report_id: string;
+    /**
+     * Mid
+     *
+     * 提交者 mid（服务端回填）
+     */
+    mid: string;
+    /**
+     * Created At
+     *
+     * 提交时间
+     */
+    created_at?: string | null;
+    /**
+     * Notified
+     *
+     * 是否已实时推送服主（推送为弱依赖，失败不阻塞提交）
+     */
+    notified?: boolean;
 };
 
 /**
@@ -5446,6 +5879,8 @@ export type NotificationConfigCreate = {
     mid?: string | null;
     /**
      * Browser Id
+     *
+     * 按浏览器覆盖配置时传入的浏览器 id；留空表示用户全局配置
      */
     browser_id?: string | null;
     /**
@@ -6483,13 +6918,13 @@ export type RunLogsRequest = {
     /**
      * Run Id
      *
-     * 运行 ID（自动取其 execution_id）
+     * 运行 ID（与 execution_id 同值）
      */
     run_id?: string | null;
     /**
      * Execution Id
      *
-     * 执行批次 ID
+     * 执行批次 ID（工作流运行里 = run_id）
      */
     execution_id?: string | null;
     /**
@@ -8047,6 +8482,36 @@ export type StandardResponseExecuteStepResponse = {
 };
 
 /**
+ * StandardResponse[FeedbackListResp]
+ */
+export type StandardResponseFeedbackListResp = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: FeedbackListResp | null;
+};
+
+/**
+ * StandardResponse[FeedbackSubmitResp]
+ */
+export type StandardResponseFeedbackSubmitResp = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: FeedbackSubmitResp | null;
+};
+
+/**
  * StandardResponse[GenerateCodesResponse]
  */
 export type StandardResponseGenerateCodesResponse = {
@@ -8074,6 +8539,24 @@ export type StandardResponseLedgerListResponse = {
      */
     msg?: string;
     data?: LedgerListResponse | null;
+};
+
+/**
+ * StandardResponse[List[ActionLogItemResponse]]
+ */
+export type StandardResponseListActionLogItemResponse = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    /**
+     * Data
+     */
+    data?: Array<ActionLogItemResponse> | null;
 };
 
 /**
@@ -9243,7 +9726,7 @@ export type UserBanItemResp = {
 /**
  * UserBrowserDefaultSettingRequest
  *
- * 用户浏览器默认设置请求模型
+ * 用户浏览器默认设置请求模型（空字符串统一按「未提供」处理，不会以 '' 落库）
  */
 export type UserBrowserDefaultSettingRequest = {
     /**
@@ -9728,6 +10211,42 @@ export type WorkflowAdminSetEnabledRequest = {
  */
 export type WorkflowCreateRequest = {
     /**
+     * Notify On Start
+     *
+     * 【已废弃】通道混合的开始通知开关；请改用 notify_inbox_on_start / notify_push_on_start（仅在对应新字段未传时按双通道展开）
+     */
+    notify_on_start?: boolean | null;
+    /**
+     * Notify On End
+     *
+     * 【已废弃】通道混合的结束通知开关；请改用 notify_inbox_on_end / notify_push_on_end（仅在对应新字段未传时按双通道展开）
+     */
+    notify_on_end?: boolean | null;
+    /**
+     * Notify Inbox On Start
+     *
+     * 站内通知：开始执行时是否发送
+     */
+    notify_inbox_on_start?: boolean;
+    /**
+     * Notify Inbox On End
+     *
+     * 站内通知：结束时（成功/失败/停止）是否发送
+     */
+    notify_inbox_on_end?: boolean;
+    /**
+     * Notify Push On Start
+     *
+     * 站外推送：开始执行时是否发送
+     */
+    notify_push_on_start?: boolean;
+    /**
+     * Notify Push On End
+     *
+     * 站外推送：结束时（成功/失败/停止）是否发送
+     */
+    notify_push_on_end?: boolean;
+    /**
      * Name
      *
      * 工作流显示名称（必填）
@@ -9771,18 +10290,6 @@ export type WorkflowCreateRequest = {
      * 是否公开给所有用户
      */
     is_public?: boolean;
-    /**
-     * Notify On Start
-     *
-     * 开始执行时是否发送通知
-     */
-    notify_on_start?: boolean;
-    /**
-     * Notify On End
-     *
-     * 结束时是否发送通知（成功/失败）
-     */
-    notify_on_end?: boolean;
     /**
      * Log Enabled
      *
@@ -9876,6 +10383,18 @@ export type WorkflowDetailResponse = {
      */
     local_steps_modified?: boolean;
     /**
+     * Upstream Version
+     *
+     * 上游当前声明的语义化版本（非 Fork 或上游不可用时为 None）
+     */
+    upstream_version?: string | null;
+    /**
+     * Upstream Content Hash
+     *
+     * 上游当前内容指纹（空=未计算或非 Fork）
+     */
+    upstream_content_hash?: string;
+    /**
      * Id
      */
     id: number;
@@ -9950,11 +10469,39 @@ export type WorkflowDetailResponse = {
      */
     next_run_at?: string | null;
     /**
+     * Notify Inbox On Start
+     *
+     * 站内通知：开始执行时是否发送
+     */
+    notify_inbox_on_start?: boolean;
+    /**
+     * Notify Inbox On End
+     *
+     * 站内通知：结束时（成功/失败/停止）是否发送
+     */
+    notify_inbox_on_end?: boolean;
+    /**
+     * Notify Push On Start
+     *
+     * 站外推送：开始执行时是否发送
+     */
+    notify_push_on_start?: boolean;
+    /**
+     * Notify Push On End
+     *
+     * 站外推送：结束时（成功/失败/停止）是否发送
+     */
+    notify_push_on_end?: boolean;
+    /**
      * Notify On Start
+     *
+     * 【已废弃】开始通知（通道混合，= 两通道取或）
      */
     notify_on_start?: boolean;
     /**
      * Notify On End
+     *
+     * 【已废弃】结束通知（通道混合，= 两通道取或）
      */
     notify_on_end?: boolean;
     /**
@@ -10000,6 +10547,26 @@ export type WorkflowDetailResponse = {
 };
 
 /**
+ * WorkflowDuplicateRequest
+ *
+ * 复制工作流请求
+ */
+export type WorkflowDuplicateRequest = {
+    /**
+     * Id
+     *
+     * 被复制的工作流数据库 ID（雪花 int）
+     */
+    id: number;
+    /**
+     * New Name
+     *
+     * 副本名称（必填，避免与原工作流同名混淆）
+     */
+    new_name: string;
+};
+
+/**
  * WorkflowDuplicateResponse
  *
  * 复制工作流响应
@@ -10034,7 +10601,7 @@ export type WorkflowExecuteRequest = {
     /**
      * Browser Id
      *
-     * 浏览器ID
+     * 仅兼容旧调用保留，不参与决策：目标浏览器取 query 的 browser_id（verify_browser_ownership 校验归属）
      */
     browser_id?: number;
     /**
@@ -10190,6 +10757,23 @@ export type WorkflowForkResponse = {
 };
 
 /**
+ * WorkflowIdRequest
+ *
+ * 按工作流数据库 ID 定位（详情 / 导出 / 删除共用）
+ *
+ * 单独建模型而不用裸 ``dict``：裸 dict 在 OpenAPI 里只能生成无 ``properties``
+ * 的 object，MCP 工具因此拿不到参数（调用只能发空 body）。
+ */
+export type WorkflowIdRequest = {
+    /**
+     * Id
+     *
+     * 工作流数据库 ID（雪花 int，字符串形式也接受）
+     */
+    id: number;
+};
+
+/**
  * WorkflowListRequest
  *
  * 获取工作流列表请求
@@ -10329,11 +10913,11 @@ export type WorkflowResourceRecordDeleteRequest = {
      */
     resource_id?: string | null;
     /**
-     * Run Id
+     * Execution Id
      *
-     * 按所属运行ID过滤（清理某一轮运行写入的记录）
+     * 按执行批次ID过滤（清理某一轮运行写入的记录）
      */
-    run_id?: string | null;
+    execution_id?: string | null;
     /**
      * Dry Run
      *
@@ -10401,9 +10985,9 @@ export type WorkflowResourceRecordItemResponse = {
      */
     fail_reason?: string | null;
     /**
-     * Run Id
+     * Execution Id
      */
-    run_id?: string | null;
+    execution_id?: string | null;
     /**
      * Extra
      */
@@ -10469,11 +11053,11 @@ export type WorkflowResourceRecordListRequest = {
      */
     resource_id?: string | null;
     /**
-     * Run Id
+     * Execution Id
      *
-     * 所属运行ID（精确）
+     * 执行批次ID（精确；= 工作流运行 run_id，与操作日志 execution_id 同名同值）
      */
-    run_id?: string | null;
+    execution_id?: string | null;
     /**
      * Process Count Min
      *
@@ -10501,9 +11085,23 @@ export type WorkflowResourceRecordListRequest = {
 };
 
 /**
+ * WorkflowRunDetailRequest
+ *
+ * 按 run_id 获取运行记录详情请求
+ */
+export type WorkflowRunDetailRequest = {
+    /**
+     * Run Id
+     *
+     * 运行 ID（run_id，运行记录与步骤日志的主键）
+     */
+    run_id: string;
+};
+
+/**
  * WorkflowRunLogDetailResponse
  *
- * 工作流运行记录详情（携带 execution_id 供下钻步骤日志）
+ * 工作流运行记录详情（携带 execution_id = run_id，供下钻步骤日志）
  */
 export type WorkflowRunLogDetailResponse = {
     /**
@@ -10665,7 +11263,7 @@ export type WorkflowRunNowRequest = {
     /**
      * Browser Id
      *
-     * 运行目标浏览器ID，不传则使用工作流上配置的 browser_id
+     * 仅兼容旧调用保留，不参与决策：运行目标浏览器一律取 query 的 browser_id（verify_browser_ownership 校验归属，缺失直接 422）
      */
     browser_id?: number | null;
 };
@@ -11001,6 +11599,42 @@ export type WorkflowSyncResponse = {
  */
 export type WorkflowUpdateRequest = {
     /**
+     * Notify On Start
+     *
+     * 【已废弃】通道混合的开始通知开关；请改用 notify_inbox_on_start / notify_push_on_start（仅在对应新字段未传时按双通道展开）
+     */
+    notify_on_start?: boolean | null;
+    /**
+     * Notify On End
+     *
+     * 【已废弃】通道混合的结束通知开关；请改用 notify_inbox_on_end / notify_push_on_end（仅在对应新字段未传时按双通道展开）
+     */
+    notify_on_end?: boolean | null;
+    /**
+     * Notify Inbox On Start
+     *
+     * 站内通知：开始执行时是否发送（不传表示不修改）
+     */
+    notify_inbox_on_start?: boolean | null;
+    /**
+     * Notify Inbox On End
+     *
+     * 站内通知：结束时是否发送（不传表示不修改）
+     */
+    notify_inbox_on_end?: boolean | null;
+    /**
+     * Notify Push On Start
+     *
+     * 站外推送：开始执行时是否发送（不传表示不修改）
+     */
+    notify_push_on_start?: boolean | null;
+    /**
+     * Notify Push On End
+     *
+     * 站外推送：结束时是否发送（不传表示不修改）
+     */
+    notify_push_on_end?: boolean | null;
+    /**
      * Id
      *
      * 工作流数据库ID
@@ -11056,18 +11690,6 @@ export type WorkflowUpdateRequest = {
      * 是否启用
      */
     is_enabled?: boolean | null;
-    /**
-     * Notify On Start
-     *
-     * 开始执行时是否发送通知（不传表示不修改）
-     */
-    notify_on_start?: boolean | null;
-    /**
-     * Notify On End
-     *
-     * 结束时是否发送通知（不传表示不修改）
-     */
-    notify_on_end?: boolean | null;
     /**
      * Log Enabled
      *
@@ -11254,6 +11876,12 @@ export type BaseFingerprintBrowserInitParamsWritable = {
      * http, socks proxy (password authentication not supported)
      */
     '--proxy-server'?: string | null;
+    /**
+     * Proxy Bypass
+     *
+     * 代理绕过列表：逗号分隔的 host 规则（如 *.bilibili.com,127.0.0.1），命中的主机直连、不走 proxy_server。只能匹配主机名/IP，不能写完整 URL；未配置时回退到服务端环境变量 browser_proxy_bypass
+     */
+    proxy_bypass?: string | null;
     /**
      * Patchright Screen Width
      */
@@ -11655,6 +12283,12 @@ export type BrowserFingerprintQueryRespWritable = {
      * http, socks proxy (password authentication not supported)
      */
     '--proxy-server'?: string | null;
+    /**
+     * Proxy Bypass
+     *
+     * 代理绕过列表：逗号分隔的 host 规则（如 *.bilibili.com,127.0.0.1），命中的主机直连、不走 proxy_server。只能匹配主机名/IP，不能写完整 URL；未配置时回退到服务端环境变量 browser_proxy_bypass
+     */
+    proxy_bypass?: string | null;
     /**
      * Patchright Screen Width
      */
@@ -12277,6 +12911,8 @@ export type ReadFingerprintRouterApiV1RpaBrowserReadFingerprintPostData = {
     query: {
         /**
          * Browser Id
+         *
+         * 目标浏览器 id（雪花 id，纯数字；字符串形式也接受）。必须是当前用户自己的浏览器，否则报「浏览器不属于该用户」。
          */
         browser_id: number | string;
     };
@@ -12353,6 +12989,8 @@ export type DeleteFingerprintRouterApiV1RpaBrowserDeleteFingerprintPostData = {
     query: {
         /**
          * Browser Id
+         *
+         * 目标浏览器 id（雪花 id，纯数字；字符串形式也接受）。必须是当前用户自己的浏览器，否则报「浏览器不属于该用户」。
          */
         browser_id: number | string;
     };
@@ -12571,6 +13209,8 @@ export type RenameFingerprintRouterApiV1RpaBrowserRenameFingerprintPostData = {
     query: {
         /**
          * Browser Id
+         *
+         * 目标浏览器 id（雪花 id，纯数字；字符串形式也接受）。必须是当前用户自己的浏览器，否则报「浏览器不属于该用户」。
          */
         browser_id: number | string;
     };
@@ -12809,7 +13449,7 @@ export type DeleteNotifyConfigRouterApiV1RpaBrowserNotifyConfDeletePostResponses
 export type DeleteNotifyConfigRouterApiV1RpaBrowserNotifyConfDeletePostResponse = DeleteNotifyConfigRouterApiV1RpaBrowserNotifyConfDeletePostResponses[keyof DeleteNotifyConfigRouterApiV1RpaBrowserNotifyConfDeletePostResponses];
 
 export type GetUserDefaultSettingsApiV1RpaBrowserDefaultSettingsGetPostData = {
-    body: GetSettingsRequestWritable;
+    body?: GetSettingsRequestWritable;
     headers?: {
         /**
          * X-Bili-Mid
@@ -12951,7 +13591,7 @@ export type CreateOrUpdateUserDefaultSettingsApiV1RpaBrowserDefaultSettingsCreat
 export type CreateOrUpdateUserDefaultSettingsApiV1RpaBrowserDefaultSettingsCreateOrUpdatePostResponse = CreateOrUpdateUserDefaultSettingsApiV1RpaBrowserDefaultSettingsCreateOrUpdatePostResponses[keyof CreateOrUpdateUserDefaultSettingsApiV1RpaBrowserDefaultSettingsCreateOrUpdatePostResponses];
 
 export type DeleteUserDefaultSettingsApiV1RpaBrowserDefaultSettingsDeletePostData = {
-    body: DeleteSettingsRequestWritable;
+    body?: DeleteSettingsRequestWritable;
     headers?: {
         /**
          * X-Bili-Mid
@@ -13073,6 +13713,8 @@ export type ApplyDefaultSettingsToBrowserApiV1RpaBrowserDefaultSettingsApplyPost
     query: {
         /**
          * Browser Id
+         *
+         * 目标浏览器 id（雪花 id，纯数字；字符串形式也接受）。必须是当前用户自己的浏览器，否则报「浏览器不属于该用户」。
          */
         browser_id: number | string;
     };
@@ -13114,7 +13756,7 @@ export type GetServerDefaultSettingsApiV1RpaBrowserDefaultSettingsServerDefaults
 export type GetServerDefaultSettingsApiV1RpaBrowserDefaultSettingsServerDefaultsGetPostResponse = GetServerDefaultSettingsApiV1RpaBrowserDefaultSettingsServerDefaultsGetPostResponses[keyof GetServerDefaultSettingsApiV1RpaBrowserDefaultSettingsServerDefaultsGetPostResponses];
 
 export type GetMembershipAccountApiV1RpaBrowserMembershipGetAccountPostData = {
-    body: EmptyRequestWritable;
+    body?: EmptyRequestWritable;
     headers?: {
         /**
          * X-Bili-Mid
@@ -13185,7 +13827,7 @@ export type GetMembershipAccountApiV1RpaBrowserMembershipGetAccountPostResponses
 export type GetMembershipAccountApiV1RpaBrowserMembershipGetAccountPostResponse = GetMembershipAccountApiV1RpaBrowserMembershipGetAccountPostResponses[keyof GetMembershipAccountApiV1RpaBrowserMembershipGetAccountPostResponses];
 
 export type SignInApiV1RpaBrowserMembershipSignInPostData = {
-    body: EmptyRequestWritable;
+    body?: EmptyRequestWritable;
     headers?: {
         /**
          * X-Bili-Mid
@@ -13256,7 +13898,7 @@ export type SignInApiV1RpaBrowserMembershipSignInPostResponses = {
 export type SignInApiV1RpaBrowserMembershipSignInPostResponse = SignInApiV1RpaBrowserMembershipSignInPostResponses[keyof SignInApiV1RpaBrowserMembershipSignInPostResponses];
 
 export type GetSignInOverviewApiV1RpaBrowserMembershipSignInOverviewPostData = {
-    body: EmptyRequestWritable;
+    body?: EmptyRequestWritable;
     headers?: {
         /**
          * X-Bili-Mid
@@ -13753,7 +14395,7 @@ export type ListUsageStatsApiV1RpaBrowserMembershipUsageStatsPostResponses = {
 export type ListUsageStatsApiV1RpaBrowserMembershipUsageStatsPostResponse = ListUsageStatsApiV1RpaBrowserMembershipUsageStatsPostResponses[keyof ListUsageStatsApiV1RpaBrowserMembershipUsageStatsPostResponses];
 
 export type ListPaymentProductsApiV1RpaBrowserMembershipPaymentProductsPostData = {
-    body: EmptyRequestWritable;
+    body?: EmptyRequestWritable;
     headers?: {
         /**
          * X-Bili-Mid
@@ -13824,7 +14466,7 @@ export type ListPaymentProductsApiV1RpaBrowserMembershipPaymentProductsPostRespo
 export type ListPaymentProductsApiV1RpaBrowserMembershipPaymentProductsPostResponse = ListPaymentProductsApiV1RpaBrowserMembershipPaymentProductsPostResponses[keyof ListPaymentProductsApiV1RpaBrowserMembershipPaymentProductsPostResponses];
 
 export type ConfirmPaymentsApiV1RpaBrowserMembershipPaymentConfirmPostData = {
-    body: EmptyRequestWritable;
+    body?: EmptyRequestWritable;
     headers?: {
         /**
          * X-Bili-Mid
@@ -13964,6 +14606,148 @@ export type NotifyPaymentApiV1RpaBrowserMembershipPaymentNotifyPostResponses = {
 };
 
 export type NotifyPaymentApiV1RpaBrowserMembershipPaymentNotifyPostResponse = NotifyPaymentApiV1RpaBrowserMembershipPaymentNotifyPostResponses[keyof NotifyPaymentApiV1RpaBrowserMembershipPaymentNotifyPostResponses];
+
+export type FeedbackSubmitRouterApiV1RpaBrowserFeedbackSubmitPostData = {
+    body: FeedbackSubmitRequest;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/rpa/browser/feedback/submit';
+};
+
+export type FeedbackSubmitRouterApiV1RpaBrowserFeedbackSubmitPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type FeedbackSubmitRouterApiV1RpaBrowserFeedbackSubmitPostError = FeedbackSubmitRouterApiV1RpaBrowserFeedbackSubmitPostErrors[keyof FeedbackSubmitRouterApiV1RpaBrowserFeedbackSubmitPostErrors];
+
+export type FeedbackSubmitRouterApiV1RpaBrowserFeedbackSubmitPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseFeedbackSubmitResp;
+};
+
+export type FeedbackSubmitRouterApiV1RpaBrowserFeedbackSubmitPostResponse = FeedbackSubmitRouterApiV1RpaBrowserFeedbackSubmitPostResponses[keyof FeedbackSubmitRouterApiV1RpaBrowserFeedbackSubmitPostResponses];
+
+export type FeedbackListRouterApiV1RpaBrowserFeedbackListPostData = {
+    body: FeedbackListRequest;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/rpa/browser/feedback/list';
+};
+
+export type FeedbackListRouterApiV1RpaBrowserFeedbackListPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type FeedbackListRouterApiV1RpaBrowserFeedbackListPostError = FeedbackListRouterApiV1RpaBrowserFeedbackListPostErrors[keyof FeedbackListRouterApiV1RpaBrowserFeedbackListPostErrors];
+
+export type FeedbackListRouterApiV1RpaBrowserFeedbackListPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseFeedbackListResp;
+};
+
+export type FeedbackListRouterApiV1RpaBrowserFeedbackListPostResponse = FeedbackListRouterApiV1RpaBrowserFeedbackListPostResponses[keyof FeedbackListRouterApiV1RpaBrowserFeedbackListPostResponses];
 
 export type ListRegisteredActionsApiV1RpaBrowserControlActionsRegisteredPostData = {
     body?: never;
@@ -14924,6 +15708,8 @@ export type ExecuteActionApiV1RpaBrowserControlActionsExecutePostData = {
     query: {
         /**
          * Browser Id
+         *
+         * 目标浏览器 id（雪花 id，纯数字；字符串形式也接受）。必须是当前用户自己的浏览器，否则报「浏览器不属于该用户」。
          */
         browser_id: number | string;
     };
@@ -15000,6 +15786,8 @@ export type ExecuteWorkflowApiV1RpaBrowserControlWorkflowsExecutePostData = {
     query: {
         /**
          * Browser Id
+         *
+         * 目标浏览器 id（雪花 id，纯数字；字符串形式也接受）。必须是当前用户自己的浏览器，否则报「浏览器不属于该用户」。
          */
         browser_id: number | string;
     };
@@ -15076,6 +15864,8 @@ export type PreviewActionParamsApiV1RpaBrowserControlActionsPreviewPostData = {
     query: {
         /**
          * Browser Id
+         *
+         * 目标浏览器 id（雪花 id，纯数字；字符串形式也接受）。必须是当前用户自己的浏览器，否则报「浏览器不属于该用户」。
          */
         browser_id: number | string;
     };
@@ -15152,6 +15942,8 @@ export type ValidateActionParamsApiV1RpaBrowserControlActionsValidatePostData = 
     query: {
         /**
          * Browser Id
+         *
+         * 目标浏览器 id（雪花 id，纯数字；字符串形式也接受）。必须是当前用户自己的浏览器，否则报「浏览器不属于该用户」。
          */
         browser_id: number | string;
     };
@@ -15228,6 +16020,8 @@ export type ExecuteActionStepApiV1RpaBrowserControlActionsExecuteStepPostData = 
     query: {
         /**
          * Browser Id
+         *
+         * 目标浏览器 id（雪花 id，纯数字；字符串形式也接受）。必须是当前用户自己的浏览器，否则报「浏览器不属于该用户」。
          */
         browser_id: number | string;
     };
@@ -15411,12 +16205,7 @@ export type ImportWorkflowApiV1RpaBrowserControlWorkflowsImportPostResponses = {
 export type ImportWorkflowApiV1RpaBrowserControlWorkflowsImportPostResponse = ImportWorkflowApiV1RpaBrowserControlWorkflowsImportPostResponses[keyof ImportWorkflowApiV1RpaBrowserControlWorkflowsImportPostResponses];
 
 export type ExportWorkflowApiV1RpaBrowserControlWorkflowsExportPostData = {
-    /**
-     * Request
-     */
-    body: {
-        [key: string]: unknown;
-    };
+    body: WorkflowIdRequest;
     headers?: {
         /**
          * X-Bili-Mid
@@ -15558,12 +16347,7 @@ export type ListWorkflowsApiV1RpaBrowserControlWorkflowsListPostResponses = {
 export type ListWorkflowsApiV1RpaBrowserControlWorkflowsListPostResponse = ListWorkflowsApiV1RpaBrowserControlWorkflowsListPostResponses[keyof ListWorkflowsApiV1RpaBrowserControlWorkflowsListPostResponses];
 
 export type GetWorkflowDetailApiV1RpaBrowserControlWorkflowsGetPostData = {
-    /**
-     * Request
-     */
-    body: {
-        [key: string]: unknown;
-    };
+    body: WorkflowIdRequest;
     headers?: {
         /**
          * X-Bili-Mid
@@ -15705,12 +16489,7 @@ export type UpdateWorkflowApiV1RpaBrowserControlWorkflowsUpdatePostResponses = {
 export type UpdateWorkflowApiV1RpaBrowserControlWorkflowsUpdatePostResponse = UpdateWorkflowApiV1RpaBrowserControlWorkflowsUpdatePostResponses[keyof UpdateWorkflowApiV1RpaBrowserControlWorkflowsUpdatePostResponses];
 
 export type DeleteWorkflowApiV1RpaBrowserControlWorkflowsDeletePostData = {
-    /**
-     * Request
-     */
-    body: {
-        [key: string]: unknown;
-    };
+    body: WorkflowIdRequest;
     headers?: {
         /**
          * X-Bili-Mid
@@ -15781,12 +16560,7 @@ export type DeleteWorkflowApiV1RpaBrowserControlWorkflowsDeletePostResponses = {
 export type DeleteWorkflowApiV1RpaBrowserControlWorkflowsDeletePostResponse = DeleteWorkflowApiV1RpaBrowserControlWorkflowsDeletePostResponses[keyof DeleteWorkflowApiV1RpaBrowserControlWorkflowsDeletePostResponses];
 
 export type DuplicateWorkflowApiV1RpaBrowserControlWorkflowsDuplicatePostData = {
-    /**
-     * Request
-     */
-    body: {
-        [key: string]: unknown;
-    };
+    body: WorkflowDuplicateRequest;
     headers?: {
         /**
          * X-Bili-Mid
@@ -16206,6 +16980,8 @@ export type RunSavedWorkflowApiV1RpaBrowserControlWorkflowsRunPostData = {
     query: {
         /**
          * Browser Id
+         *
+         * 目标浏览器 id（雪花 id，纯数字；字符串形式也接受）。必须是当前用户自己的浏览器，否则报「浏览器不属于该用户」。
          */
         browser_id: number | string;
     };
@@ -16586,12 +17362,7 @@ export type DeleteWorkflowResourcesApiV1RpaBrowserControlWorkflowsResourcesDelet
 export type DeleteWorkflowResourcesApiV1RpaBrowserControlWorkflowsResourcesDeletePostResponse = DeleteWorkflowResourcesApiV1RpaBrowserControlWorkflowsResourcesDeletePostResponses[keyof DeleteWorkflowResourcesApiV1RpaBrowserControlWorkflowsResourcesDeletePostResponses];
 
 export type GetWorkflowRunApiV1RpaBrowserControlWorkflowsRunsGetPostData = {
-    /**
-     * Request
-     */
-    body: {
-        [key: string]: unknown;
-    };
+    body: WorkflowRunDetailRequest;
     headers?: {
         /**
          * X-Bili-Mid
@@ -16878,12 +17649,7 @@ export type ListActionLogsApiV1RpaBrowserControlActionLogsListPostResponses = {
 export type ListActionLogsApiV1RpaBrowserControlActionLogsListPostResponse = ListActionLogsApiV1RpaBrowserControlActionLogsListPostResponses[keyof ListActionLogsApiV1RpaBrowserControlActionLogsListPostResponses];
 
 export type GetActionLogApiV1RpaBrowserControlActionLogsGetPostData = {
-    /**
-     * Request
-     */
-    body: {
-        [key: string]: unknown;
-    };
+    body: ActionLogGetRequest;
     headers?: {
         /**
          * X-Bili-Mid
@@ -17019,7 +17785,7 @@ export type ListActionLogsByExecutionApiV1RpaBrowserControlActionLogsByExecution
     /**
      * Successful Response
      */
-    200: StandardResponseBasePaginationRespActionLogItemResponse;
+    200: StandardResponseListActionLogItemResponse;
 };
 
 export type ListActionLogsByExecutionApiV1RpaBrowserControlActionLogsByExecutionPostResponse = ListActionLogsByExecutionApiV1RpaBrowserControlActionLogsByExecutionPostResponses[keyof ListActionLogsByExecutionApiV1RpaBrowserControlActionLogsByExecutionPostResponses];
@@ -17167,12 +17933,7 @@ export type ClearActionLogsApiV1RpaBrowserControlActionLogsClearPostResponses = 
 export type ClearActionLogsApiV1RpaBrowserControlActionLogsClearPostResponse = ClearActionLogsApiV1RpaBrowserControlActionLogsClearPostResponses[keyof ClearActionLogsApiV1RpaBrowserControlActionLogsClearPostResponses];
 
 export type StatsActionLogsApiV1RpaBrowserControlActionLogsStatsPostData = {
-    /**
-     * Request
-     */
-    body?: {
-        [key: string]: unknown;
-    } | null;
+    body?: ActionLogStatsRequest;
     headers?: {
         /**
          * X-Bili-Mid
@@ -17242,7 +18003,7 @@ export type StatsActionLogsApiV1RpaBrowserControlActionLogsStatsPostResponses = 
 
 export type StatsActionLogsApiV1RpaBrowserControlActionLogsStatsPostResponse = StatsActionLogsApiV1RpaBrowserControlActionLogsStatsPostResponses[keyof StatsActionLogsApiV1RpaBrowserControlActionLogsStatsPostResponses];
 
-export type RpaListActionsData = {
+export type RpaDebugActionsListData = {
     body: ListActionsRequest;
     headers?: {
         /**
@@ -17295,25 +18056,25 @@ export type RpaListActionsData = {
     url: '/api/v1/rpa/browser/control/debug/actions/list';
 };
 
-export type RpaListActionsErrors = {
+export type RpaDebugActionsListErrors = {
     /**
      * Validation Error
      */
     422: HttpValidationError;
 };
 
-export type RpaListActionsError = RpaListActionsErrors[keyof RpaListActionsErrors];
+export type RpaDebugActionsListError = RpaDebugActionsListErrors[keyof RpaDebugActionsListErrors];
 
-export type RpaListActionsResponses = {
+export type RpaDebugActionsListResponses = {
     /**
      * Successful Response
      */
     200: StandardResponseDebugActionListData;
 };
 
-export type RpaListActionsResponse = RpaListActionsResponses[keyof RpaListActionsResponses];
+export type RpaDebugActionsListResponse = RpaDebugActionsListResponses[keyof RpaDebugActionsListResponses];
 
-export type RpaGetActionData = {
+export type RpaDebugActionGetData = {
     body: GetActionRequest;
     headers?: {
         /**
@@ -17366,25 +18127,25 @@ export type RpaGetActionData = {
     url: '/api/v1/rpa/browser/control/debug/actions/get';
 };
 
-export type RpaGetActionErrors = {
+export type RpaDebugActionGetErrors = {
     /**
      * Validation Error
      */
     422: HttpValidationError;
 };
 
-export type RpaGetActionError = RpaGetActionErrors[keyof RpaGetActionErrors];
+export type RpaDebugActionGetError = RpaDebugActionGetErrors[keyof RpaDebugActionGetErrors];
 
-export type RpaGetActionResponses = {
+export type RpaDebugActionGetResponses = {
     /**
      * Successful Response
      */
     200: StandardResponseDebugActionDetail;
 };
 
-export type RpaGetActionResponse = RpaGetActionResponses[keyof RpaGetActionResponses];
+export type RpaDebugActionGetResponse = RpaDebugActionGetResponses[keyof RpaDebugActionGetResponses];
 
-export type RpaGetActionLogsData = {
+export type RpaDebugActionLogsData = {
     body: RecentActionLogsRequest;
     headers?: {
         /**
@@ -17437,25 +18198,25 @@ export type RpaGetActionLogsData = {
     url: '/api/v1/rpa/browser/control/debug/action-logs/recent';
 };
 
-export type RpaGetActionLogsErrors = {
+export type RpaDebugActionLogsErrors = {
     /**
      * Validation Error
      */
     422: HttpValidationError;
 };
 
-export type RpaGetActionLogsError = RpaGetActionLogsErrors[keyof RpaGetActionLogsErrors];
+export type RpaDebugActionLogsError = RpaDebugActionLogsErrors[keyof RpaDebugActionLogsErrors];
 
-export type RpaGetActionLogsResponses = {
+export type RpaDebugActionLogsResponses = {
     /**
      * Successful Response
      */
     200: StandardResponseRecentActionLogsData;
 };
 
-export type RpaGetActionLogsResponse = RpaGetActionLogsResponses[keyof RpaGetActionLogsResponses];
+export type RpaDebugActionLogsResponse = RpaDebugActionLogsResponses[keyof RpaDebugActionLogsResponses];
 
-export type RpaValidateStepsData = {
+export type RpaDebugStepsValidateData = {
     body: ValidateStepsRequest;
     headers?: {
         /**
@@ -17508,25 +18269,25 @@ export type RpaValidateStepsData = {
     url: '/api/v1/rpa/browser/control/debug/actions/validate';
 };
 
-export type RpaValidateStepsErrors = {
+export type RpaDebugStepsValidateErrors = {
     /**
      * Validation Error
      */
     422: HttpValidationError;
 };
 
-export type RpaValidateStepsError = RpaValidateStepsErrors[keyof RpaValidateStepsErrors];
+export type RpaDebugStepsValidateError = RpaDebugStepsValidateErrors[keyof RpaDebugStepsValidateErrors];
 
-export type RpaValidateStepsResponses = {
+export type RpaDebugStepsValidateResponses = {
     /**
      * Successful Response
      */
     200: StandardResponseValidationReport;
 };
 
-export type RpaValidateStepsResponse = RpaValidateStepsResponses[keyof RpaValidateStepsResponses];
+export type RpaDebugStepsValidateResponse = RpaDebugStepsValidateResponses[keyof RpaDebugStepsValidateResponses];
 
-export type RpaExecuteActionData = {
+export type RpaDebugActionExecuteData = {
     body: ExecuteDebugRequest;
     headers?: {
         /**
@@ -17578,31 +18339,33 @@ export type RpaExecuteActionData = {
     query: {
         /**
          * Browser Id
+         *
+         * 目标浏览器 id（雪花 id 的十进制字符串）。必须是当前用户自己的浏览器，否则报「浏览器不属于该用户」。
          */
         browser_id: string;
     };
     url: '/api/v1/rpa/browser/control/debug/actions/execute';
 };
 
-export type RpaExecuteActionErrors = {
+export type RpaDebugActionExecuteErrors = {
     /**
      * Validation Error
      */
     422: HttpValidationError;
 };
 
-export type RpaExecuteActionError = RpaExecuteActionErrors[keyof RpaExecuteActionErrors];
+export type RpaDebugActionExecuteError = RpaDebugActionExecuteErrors[keyof RpaDebugActionExecuteErrors];
 
-export type RpaExecuteActionResponses = {
+export type RpaDebugActionExecuteResponses = {
     /**
      * Successful Response
      */
     200: StandardResponseDebugExecuteData;
 };
 
-export type RpaExecuteActionResponse = RpaExecuteActionResponses[keyof RpaExecuteActionResponses];
+export type RpaDebugActionExecuteResponse = RpaDebugActionExecuteResponses[keyof RpaDebugActionExecuteResponses];
 
-export type RpaSaveActionData = {
+export type RpaDebugActionSaveData = {
     body: SaveActionRequest;
     headers?: {
         /**
@@ -17655,25 +18418,25 @@ export type RpaSaveActionData = {
     url: '/api/v1/rpa/browser/control/debug/actions/save';
 };
 
-export type RpaSaveActionErrors = {
+export type RpaDebugActionSaveErrors = {
     /**
      * Validation Error
      */
     422: HttpValidationError;
 };
 
-export type RpaSaveActionError = RpaSaveActionErrors[keyof RpaSaveActionErrors];
+export type RpaDebugActionSaveError = RpaDebugActionSaveErrors[keyof RpaDebugActionSaveErrors];
 
-export type RpaSaveActionResponses = {
+export type RpaDebugActionSaveResponses = {
     /**
      * Successful Response
      */
     200: StandardResponseDebugSaveData;
 };
 
-export type RpaSaveActionResponse = RpaSaveActionResponses[keyof RpaSaveActionResponses];
+export type RpaDebugActionSaveResponse = RpaDebugActionSaveResponses[keyof RpaDebugActionSaveResponses];
 
-export type RpaRunWorkflowData = {
+export type RpaDebugWorkflowRunData = {
     body: RunWorkflowRequest;
     headers?: {
         /**
@@ -17725,31 +18488,33 @@ export type RpaRunWorkflowData = {
     query: {
         /**
          * Browser Id
+         *
+         * 目标浏览器 id（雪花 id 的十进制字符串）。必须是当前用户自己的浏览器，否则报「浏览器不属于该用户」。
          */
         browser_id: string;
     };
     url: '/api/v1/rpa/browser/control/debug/workflows/run-and-wait';
 };
 
-export type RpaRunWorkflowErrors = {
+export type RpaDebugWorkflowRunErrors = {
     /**
      * Validation Error
      */
     422: HttpValidationError;
 };
 
-export type RpaRunWorkflowError = RpaRunWorkflowErrors[keyof RpaRunWorkflowErrors];
+export type RpaDebugWorkflowRunError = RpaDebugWorkflowRunErrors[keyof RpaDebugWorkflowRunErrors];
 
-export type RpaRunWorkflowResponses = {
+export type RpaDebugWorkflowRunResponses = {
     /**
      * Successful Response
      */
     200: StandardResponseDebugRunData;
 };
 
-export type RpaRunWorkflowResponse = RpaRunWorkflowResponses[keyof RpaRunWorkflowResponses];
+export type RpaDebugWorkflowRunResponse = RpaDebugWorkflowRunResponses[keyof RpaDebugWorkflowRunResponses];
 
-export type RpaGetRunLogsData = {
+export type RpaDebugRunLogsData = {
     body: RunLogsRequest;
     headers?: {
         /**
@@ -17802,23 +18567,23 @@ export type RpaGetRunLogsData = {
     url: '/api/v1/rpa/browser/control/debug/runs/logs';
 };
 
-export type RpaGetRunLogsErrors = {
+export type RpaDebugRunLogsErrors = {
     /**
      * Validation Error
      */
     422: HttpValidationError;
 };
 
-export type RpaGetRunLogsError = RpaGetRunLogsErrors[keyof RpaGetRunLogsErrors];
+export type RpaDebugRunLogsError = RpaDebugRunLogsErrors[keyof RpaDebugRunLogsErrors];
 
-export type RpaGetRunLogsResponses = {
+export type RpaDebugRunLogsResponses = {
     /**
      * Successful Response
      */
     200: StandardResponseRunLogReport;
 };
 
-export type RpaGetRunLogsResponse = RpaGetRunLogsResponses[keyof RpaGetRunLogsResponses];
+export type RpaDebugRunLogsResponse = RpaDebugRunLogsResponses[keyof RpaDebugRunLogsResponses];
 
 export type OpenPageApiV1RpaBrowserControlOperationOpenPagePostData = {
     body: OpenPageRequest;
@@ -17872,6 +18637,8 @@ export type OpenPageApiV1RpaBrowserControlOperationOpenPagePostData = {
     query: {
         /**
          * Browser Id
+         *
+         * 目标浏览器 id（雪花 id，纯数字；字符串形式也接受）。必须是当前用户自己的浏览器，否则报「浏览器不属于该用户」。
          */
         browser_id: number | string;
     };
@@ -17948,6 +18715,8 @@ export type ClosePageApiV1RpaBrowserControlOperationClosePagePostData = {
     query: {
         /**
          * Browser Id
+         *
+         * 目标浏览器 id（雪花 id，纯数字；字符串形式也接受）。必须是当前用户自己的浏览器，否则报「浏览器不属于该用户」。
          */
         browser_id: number | string;
     };
@@ -18024,6 +18793,8 @@ export type SwitchPageApiV1RpaBrowserControlOperationSwitchPagePostData = {
     query: {
         /**
          * Browser Id
+         *
+         * 目标浏览器 id（雪花 id，纯数字；字符串形式也接受）。必须是当前用户自己的浏览器，否则报「浏览器不属于该用户」。
          */
         browser_id: number | string;
     };
@@ -18100,6 +18871,8 @@ export type GetPageInfoApiV1RpaBrowserControlOperationGetPageInfoPostData = {
     query: {
         /**
          * Browser Id
+         *
+         * 目标浏览器 id（雪花 id，纯数字；字符串形式也接受）。必须是当前用户自己的浏览器，否则报「浏览器不属于该用户」。
          */
         browser_id: number | string;
     };
@@ -18176,6 +18949,8 @@ export type ClearLoginStateApiV1RpaBrowserControlOperationClearLoginStatePostDat
     query: {
         /**
          * Browser Id
+         *
+         * 目标浏览器 id（雪花 id，纯数字；字符串形式也接受）。必须是当前用户自己的浏览器，否则报「浏览器不属于该用户」。
          */
         browser_id: number | string;
     };
@@ -18252,6 +19027,8 @@ export type GetBrowserInfoApiV1RpaBrowserControlBrowserInfoPostData = {
     query: {
         /**
          * Browser Id
+         *
+         * 目标浏览器 id（雪花 id，纯数字；字符串形式也接受）。必须是当前用户自己的浏览器，否则报「浏览器不属于该用户」。
          */
         browser_id: number | string;
     };
@@ -18328,6 +19105,8 @@ export type CreateBrowserSessionApiV1RpaBrowserControlCreatePostData = {
     query: {
         /**
          * Browser Id
+         *
+         * 目标浏览器 id（雪花 id，纯数字；字符串形式也接受）。必须是当前用户自己的浏览器，否则报「浏览器不属于该用户」。
          */
         browser_id: number | string;
     };
@@ -18404,6 +19183,8 @@ export type BrowserSessionStatusApiV1RpaBrowserControlStatusPostData = {
     query: {
         /**
          * Browser Id
+         *
+         * 目标浏览器 id（雪花 id，纯数字；字符串形式也接受）。必须是当前用户自己的浏览器，否则报「浏览器不属于该用户」。
          */
         browser_id: number | string;
     };
@@ -18480,6 +19261,8 @@ export type BrowserSessionEventsApiV1RpaBrowserControlEventsGetData = {
     query: {
         /**
          * Browser Id
+         *
+         * 目标浏览器 id（雪花 id，纯数字；字符串形式也接受）。必须是当前用户自己的浏览器，否则报「浏览器不属于该用户」。
          */
         browser_id: number | string;
     };
@@ -18554,6 +19337,8 @@ export type BrowserLaunchQueueStatusApiV1RpaBrowserControlQueueStatusPostData = 
     query: {
         /**
          * Browser Id
+         *
+         * 目标浏览器 id（雪花 id，纯数字；字符串形式也接受）。必须是当前用户自己的浏览器，否则报「浏览器不属于该用户」。
          */
         browser_id: number | string;
     };
@@ -18630,6 +19415,8 @@ export type CloseBrowserSessionApiV1RpaBrowserControlClosePostData = {
     query: {
         /**
          * Browser Id
+         *
+         * 目标浏览器 id（雪花 id，纯数字；字符串形式也接受）。必须是当前用户自己的浏览器，否则报「浏览器不属于该用户」。
          */
         browser_id: number | string;
     };
@@ -18706,6 +19493,8 @@ export type GetPagesListApiV1RpaBrowserControlPagesListPostData = {
     query: {
         /**
          * Browser Id
+         *
+         * 目标浏览器 id（雪花 id，纯数字；字符串形式也接受）。必须是当前用户自己的浏览器，否则报「浏览器不属于该用户」。
          */
         browser_id: number | string;
     };
@@ -18731,12 +19520,7 @@ export type GetPagesListApiV1RpaBrowserControlPagesListPostResponses = {
 export type GetPagesListApiV1RpaBrowserControlPagesListPostResponse = GetPagesListApiV1RpaBrowserControlPagesListPostResponses[keyof GetPagesListApiV1RpaBrowserControlPagesListPostResponses];
 
 export type SwitchPageApiV1RpaBrowserControlPagesSwitchPostData = {
-    /**
-     * Request
-     */
-    body: {
-        [key: string]: unknown;
-    };
+    body: SwitchPageRequest;
     headers?: {
         /**
          * X-Bili-Mid
@@ -18787,6 +19571,8 @@ export type SwitchPageApiV1RpaBrowserControlPagesSwitchPostData = {
     query: {
         /**
          * Browser Id
+         *
+         * 目标浏览器 id（雪花 id，纯数字；字符串形式也接受）。必须是当前用户自己的浏览器，否则报「浏览器不属于该用户」。
          */
         browser_id: number | string;
     };
@@ -18812,12 +19598,7 @@ export type SwitchPageApiV1RpaBrowserControlPagesSwitchPostResponses = {
 export type SwitchPageApiV1RpaBrowserControlPagesSwitchPostResponse = SwitchPageApiV1RpaBrowserControlPagesSwitchPostResponses[keyof SwitchPageApiV1RpaBrowserControlPagesSwitchPostResponses];
 
 export type ClosePageApiV1RpaBrowserControlPagesClosePostData = {
-    /**
-     * Request
-     */
-    body: {
-        [key: string]: unknown;
-    };
+    body: ClosePageRequest;
     headers?: {
         /**
          * X-Bili-Mid
@@ -18868,6 +19649,8 @@ export type ClosePageApiV1RpaBrowserControlPagesClosePostData = {
     query: {
         /**
          * Browser Id
+         *
+         * 目标浏览器 id（雪花 id，纯数字；字符串形式也接受）。必须是当前用户自己的浏览器，否则报「浏览器不属于该用户」。
          */
         browser_id: number | string;
     };
@@ -18952,6 +19735,8 @@ export type CreateWebrtcOfferApiV1RpaBrowserControlWebrtcOfferPostData = {
     query: {
         /**
          * Browser Id
+         *
+         * 目标浏览器 id（雪花 id，纯数字；字符串形式也接受）。自己的浏览器或监管管理员可访问。
          */
         browser_id: number | string;
     };
@@ -19026,6 +19811,8 @@ export type HandleWebrtcAnswerApiV1RpaBrowserControlWebrtcAnswerPostData = {
     query: {
         /**
          * Browser Id
+         *
+         * 目标浏览器 id（雪花 id，纯数字；字符串形式也接受）。自己的浏览器或监管管理员可访问。
          */
         browser_id: number | string;
     };
@@ -19100,6 +19887,8 @@ export type AddIceCandidateApiV1RpaBrowserControlWebrtcIceCandidatePostData = {
     query: {
         /**
          * Browser Id
+         *
+         * 目标浏览器 id（雪花 id，纯数字；字符串形式也接受）。自己的浏览器或监管管理员可访问。
          */
         browser_id: number | string;
     };
@@ -19174,6 +19963,8 @@ export type AddIceCandidatesApiV1RpaBrowserControlWebrtcIceCandidatesPostData = 
     query: {
         /**
          * Browser Id
+         *
+         * 目标浏览器 id（雪花 id，纯数字；字符串形式也接受）。自己的浏览器或监管管理员可访问。
          */
         browser_id: number | string;
     };
@@ -19248,6 +20039,8 @@ export type CloseWebrtcStreamApiV1RpaBrowserControlWebrtcClosePostData = {
     query: {
         /**
          * Browser Id
+         *
+         * 目标浏览器 id（雪花 id，纯数字；字符串形式也接受）。自己的浏览器或监管管理员可访问。
          */
         browser_id: number | string;
     };
@@ -19322,6 +20115,8 @@ export type GetWebrtcStatusApiV1RpaBrowserControlWebrtcStatusPostData = {
     query: {
         /**
          * Browser Id
+         *
+         * 目标浏览器 id（雪花 id，纯数字；字符串形式也接受）。自己的浏览器或监管管理员可访问。
          */
         browser_id: number | string;
     };
@@ -19396,6 +20191,8 @@ export type SetWebrtcQualityApiV1RpaBrowserControlWebrtcQualityPostData = {
     query: {
         /**
          * Browser Id
+         *
+         * 目标浏览器 id（雪花 id，纯数字；字符串形式也接受）。自己的浏览器或监管管理员可访问。
          */
         browser_id: number | string;
     };
@@ -19470,6 +20267,8 @@ export type ReportWebrtcVisibilityApiV1RpaBrowserControlWebrtcVisibilityPostData
     query: {
         /**
          * Browser Id
+         *
+         * 目标浏览器 id（雪花 id，纯数字；字符串形式也接受）。自己的浏览器或监管管理员可访问。
          */
         browser_id: number | string;
     };
@@ -19544,6 +20343,8 @@ export type SetWebrtcPausedApiV1RpaBrowserControlWebrtcPausePostData = {
     query: {
         /**
          * Browser Id
+         *
+         * 目标浏览器 id（雪花 id，纯数字；字符串形式也接受）。自己的浏览器或监管管理员可访问。
          */
         browser_id: number | string;
     };
@@ -19618,6 +20419,8 @@ export type WebrtcViewerHeartbeatApiV1RpaBrowserControlWebrtcHeartbeatPostData =
     query: {
         /**
          * Browser Id
+         *
+         * 目标浏览器 id（雪花 id，纯数字；字符串形式也接受）。自己的浏览器或监管管理员可访问。
          */
         browser_id: number | string;
     };

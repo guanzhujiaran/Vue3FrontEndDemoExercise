@@ -7,8 +7,8 @@
         {{ displayTitle }}
       </el-text>
       <el-tag size="large" type="info" effect="plain" round>24 小时内开奖</el-tag>
-      <span v-if="!loading && items.length" class="text-xs text-text-placeholder">
-        共 {{ items.length }} 场 · 最近一场{{ remainText(soonestTime) }}
+      <span v-if="total" class="text-xs text-text-placeholder">
+        共 {{ total }} 场 · 最近一场{{ remainText(soonestTime) }}
       </span>
     </div>
 
@@ -29,48 +29,45 @@
       </div>
     </div>
 
-    <!-- 加载中 -->
-    <el-text v-if="loading" class="upcoming-lottery-marquee__loading m-0 text-xs text-text-placeholder" tag="p">
-      正在加载即将开奖数据…
-    </el-text>
-
-    <!-- 空态：当前类型 24 小时内没有即将开奖的抽奖 -->
-    <el-text
-      v-else-if="!items.length"
-      class="upcoming-lottery-marquee__empty m-0 text-xs text-text-placeholder"
-      tag="p"
+    <!-- 通用分页数据视图：内置首屏骨架屏 / 翻页 v-loading 遮罩 / 空态 / 错误态（带重试）/ 分页器，
+         与普通抽奖列表同一套外观；内容槽放小卡片列表（每页 = 列数 × 2 行，服务端分页）。 -->
+    <BiliPaginationDataView
+      class="upcoming-lottery-marquee__pager-area"
+      :data="pageItems"
+      :total="total"
+      :page_size="pageSize"
+      v-model:CurrentPage="currentPage"
+      v-model:Loading="loading"
+      v-model:Error="error"
+      :EmptyMsg="`24 小时内暂无即将开奖的${typeLabelSuffix}`"
+      :ErrorMsg="'即将开奖数据加载失败'"
+      :show-mount-toast="false"
+      @on-mounted="onViewMounted"
+      @retry-on-error="loadPage(true)"
     >
-      24 小时内暂无即将开奖的{{ typeLabelSuffix }}
-    </el-text>
-
-    <!-- 轮播：每页 1 行小卡片（每页张数 = 列数，绝不换行），复用抽奖界面的 BiliLotterySimpleList，
-         不限制数量与类型。高度实测自适应（见 syncCarouselHeight）。 -->
-    <el-carousel
-      v-else
-      :key="contentHeight"
-      class="upcoming-lottery-marquee__carousel"
-      :autoplay="pages.length > 1"
-      :interval="5000"
-      arrow="hover"
-      indicator-position="outside"
-      :height="contentHeight"
-    >
-      <el-carousel-item v-for="(page, pageIndex) in pages" :key="pageIndex">
+      <template #contents>
         <BiliLotterySimpleList
           class="upcoming-lottery-marquee__page"
           :class="pageGridClass"
-          :data="page"
+          :data="pageItems"
+          :initial-status="statusMap"
         />
-      </el-carousel-item>
-    </el-carousel>
+      </template>
+    </BiliPaginationDataView>
   </section>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, onUpdated, ref, watch, type Component } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch, type Component } from 'vue'
+import { useRuntimeConfig } from 'nuxt/app'
 import { Timer, DataAnalysis, Warning, Trophy } from '@element-plus/icons-vue'
 import BiliLotterySimpleList from '@/components/lottery_data/bili_data/BiliLotterySimpleList.vue'
-import lotteryDataBaseApi, { type UpcomingLotteryItem } from '@/api/lottery_data/bili/lottery_database_bili_api'
+import lotteryDataBaseApi from '@/api/lottery_data/bili/lottery_database_bili_api'
+import type { InteractionStatusItem } from '@/api/notify/moment-api'
+import {
+  fetchInteractionStatusMap,
+  lotteryCardInteractionTargets,
+} from '@/utils/lotteryInteractionStatus'
 
 /** 抽奖类型标识：与后端 LotterySummaryRow.key / UpcomingLotteryItem.key 对齐 */
 export type UpcomingLotteryType = 'official' | 'reserve' | 'charge' | 'topic' | 'others_dyn'
@@ -88,55 +85,30 @@ const props = withDefaults(
 /** 24 小时窗口（秒） */
 const UPCOMING_WINDOW_SECONDS = 24 * 3600
 
-// 轮播布局：按**容器实际宽度**是否达到前端最小布局宽度（runtimeConfig.public.minLayoutWidth，
-// 默认 690px，可用 NUXT_PUBLIC_MIN_LAYOUT_WIDTH 覆盖）切换 4 列 / 2 列；每页张数 = 列数，
-// 保持 1 行不换行。容器宽度由 syncCarouselHeight 内实测（首页左栏 2/3 宽、管理页全宽不同）。
+// 布局：按**容器实际宽度**是否达到前端最小布局宽度（runtimeConfig.public.minLayoutWidth，
+// 默认 690px，可用 NUXT_PUBLIC_MIN_LAYOUT_WIDTH 覆盖）切换 4 列 / 2 列；
+// 每页 2 行卡片（张数 = 列数 × 2），分页翻阅 24h 内全部抽奖。
+// 容器宽度由 ResizeObserver 实测（首页左栏 2/3 宽、管理页全宽不同）。
 // 首帧统一按窄列渲染（columns 初始 2），挂载后实测更新，SSR 与客户端首帧一致。
 const runtimeConfig = useRuntimeConfig()
 const minLayoutWidth = computed(() => Number(runtimeConfig.public.minLayoutWidth) || 690)
 const columns = ref(2)
-/** 每页张数与列数一致，保持 1 行，高度才稳定 */
-const pageSize = computed(() => columns.value)
+/** 每页张数 = 列数 × 2 行（4 列 8 张 / 2 列 4 张） */
+const pageSize = computed(() => columns.value * 2)
 /** 网格列数 class（Tailwind 无法扫描动态拼接类名，这里预置两种） */
 const pageGridClass = computed(() =>
   columns.value >= 4 ? '[&>div]:grid-cols-4' : '[&>div]:grid-cols-2'
 )
 
-// ============ 轮播高度 / 列数自适应 ============
-// el-carousel 的 item 是绝对定位，容器高度必须显式给出；写死高度会在卡片变高
-// （倒计时行加入后卡片更高）或窄屏出现两行时把下面一排截断，卡片少时又会空悬一大片。
-// 这里实测轮播内容高度与容器宽度：onUpdated 兜住数据到位 / 列数切换等渲染变化，
-// ResizeObserver 兜住容器尺寸变化，两者都走同一 sync 函数，值不变即稳定、不会反复重建。
+// ============ 列数自适应 ============
+// 分页布局是普通文档流，不再需要像以前给 el-carousel 显式算高度；只需实测容器宽度定列数。
 const rootEl = ref<HTMLElement | null>(null)
-const contentHeight = ref('220px')
 let resizeObserver: ResizeObserver | null = null
 
-function syncCarouselLayout() {
-  // 高度：实测轮播内首个小卡片列表的内容高度
-  const list = rootEl.value?.querySelector('.bili-lottery-simple-list') as HTMLElement | null
-  if (list) {
-    const height = list.offsetHeight
-    if (height > 0) contentHeight.value = `${height}px`
-  }
-  // 列数：实测轮播容器宽度是否达到最小布局宽度
-  const carousel = rootEl.value?.querySelector('.el-carousel') as HTMLElement | null
-  if (carousel) {
-    columns.value = carousel.offsetWidth >= minLayoutWidth.value ? 4 : 2
-  }
+function syncColumns() {
+  if (!rootEl.value) return
+  columns.value = rootEl.value.offsetWidth >= minLayoutWidth.value ? 4 : 2
 }
-
-onMounted(() => {
-  syncCarouselLayout()
-  if (rootEl.value) {
-    resizeObserver = new ResizeObserver(() => syncCarouselLayout())
-    resizeObserver.observe(rootEl.value)
-  }
-})
-
-// 组件重新渲染后（详情数据到位、列数/每页张数变化、轮播因 key 重建）同步实测
-onUpdated(() => {
-  syncCarouselLayout()
-})
 
 const TYPE_LABELS: Record<UpcomingLotteryType, string> = {
   official: '官方抽奖',
@@ -146,43 +118,37 @@ const TYPE_LABELS: Record<UpcomingLotteryType, string> = {
   others_dyn: '第三方动态抽奖'
 }
 
+/** 明细加载态（交给通用分页视图：首屏骨架屏 → 翻页 v-loading 遮罩） */
 const loading = ref(true)
-const rawItems = ref<UpcomingLotteryItem[]>([])
-/** 抽奖数据统计（与 upcoming 同一次 summary 查询，null=加载中/失败） */
+/** 明细错误态（交给通用分页视图的错误态 + 重试） */
+const error = ref(false)
+/** 即将开奖统计（summary 只取统计行；明细走独立分页接口） */
 const summaryCounts = ref<Record<string, number | null>>({})
-/** 每张卡的抽奖详情（与抽奖界面一致的数据形态，直接喂给小卡片组件） */
+/** 当前页卡片（服务端分页：一次只持有当前页，不再拉全量） */
 const details = ref<any[]>([])
-/** 每秒推进的“当前时间”，驱动剩余时间倒计时 */
+/** 窗口内总条数（分页接口返回的 total，驱动分页器） */
+const total = ref(0)
+/** 当前页码（页码变化只查当前页，与普通抽奖列表同一范式） */
+const currentPage = ref(1)
+/** 当前页卡片的互动态：一次批量拉取后注入卡片列表（不再每张卡片各发一次） */
+const statusMap = ref<Record<string, InteractionStatusItem> | null>(null)
+/** 每秒推进的“当前时间”，驱动剩余时间倒计时 / 已开奖项隐藏 */
 const nowTs = ref(Math.floor(Date.now() / 1000))
 let timer: ReturnType<typeof setInterval> | null = null
 
-/** 即将开奖：后端已按 24h 窗口返回，这里只做类型兜底过滤，不限制数量 */
-const items = computed(() => {
-  const now = nowTs.value
-  const filtered = rawItems.value.filter((item) => {
-    // 后端已按 24h 窗口过滤，这里再兜底一次，避免缓存/脏数据越过窗口
-    const ts = Number(item.lottery_time)
-    if (!Number.isFinite(ts) || ts <= now) return false
-    if (ts > now + UPCOMING_WINDOW_SECONDS) return false
-    // 类型过滤：未指定类型时展示全部
-    if (props.lotteryType && item.key !== props.lotteryType) return false
-    return true
+/**
+ * 当前页可展示卡片：后端已按 24h 窗口 + 类型过滤，这里只兜底隐藏「已过开奖时间」的项
+ * （倒计时跨过开奖时刻后即时从列表消失，无需重新请求）。
+ */
+const pageItems = computed(() =>
+  details.value.filter((card) => {
+    const ts = Number(card?.raw?.lottery_time ?? 0)
+    return Number.isFinite(ts) && ts > nowTs.value && ts <= nowTs.value + UPCOMING_WINDOW_SECONDS
   })
-  // 按开奖时间升序（最近的在前），全部展示不截断
-  return filtered.slice().sort((a, b) => Number(a.lottery_time) - Number(b.lottery_time))
-})
+)
 
 /** 最近一场的开奖时间（倒计时展示用） */
-const soonestTime = computed(() => items.value[0]?.lottery_time ?? 0)
-
-/** 按页切分详情数据（每页卡片数与列数一致，1 行展示） */
-const pages = computed(() => {
-  const out: any[][] = []
-  for (let i = 0; i < details.value.length; i += pageSize.value) {
-    out.push(details.value.slice(i, i + pageSize.value))
-  }
-  return out
-})
+const soonestTime = computed(() => Number(pageItems.value[0]?.raw?.lottery_time ?? 0))
 
 /** 抽奖数据统计卡（复用 summary 查询结果，口径仅官方/预约/充电三类） */
 interface SummaryCard {
@@ -204,8 +170,8 @@ const summaryCards = computed<SummaryCard[]>(() =>
 )
 
 function summaryText(value: number | null): string {
-  if (value === null) return loading.value ? '…' : '—'
-  return value.toLocaleString('zh-CN')
+  // 统计行未就绪（summary 未返回 / 失败）显示占位，不再借用明细 loading（翻页时会把统计卡刷成省略号）
+  return value === null ? '—' : value.toLocaleString('zh-CN')
 }
 
 const displayTitle = computed(
@@ -224,13 +190,11 @@ function remainText(ts: number): string {
   return `还剩 ${minutes}分`
 }
 
-async function load() {
-  loading.value = true
+/** 抽奖数据统计卡：复用 summary 的统计行（口径仅 lotdata 三类：official/reserve/charge） */
+async function loadSummary() {
   try {
     const resp = await lotteryDataBaseApi.getLotterySummary()
     if (resp.code === 0 && resp.data) {
-      rawItems.value = resp.data.upcoming ?? []
-      // 抽奖数据统计：仅 lotdata 三类（official/reserve/charge），与数据汇总页口径一致
       const rows = (resp.data.rows ?? []).filter((row) =>
         ['official', 'reserve', 'charge'].includes(row.key)
       )
@@ -243,45 +207,102 @@ async function load() {
         grand_prize: sumOf((r) => r.grand_prize)
       }
     } else {
-      rawItems.value = []
       summaryCounts.value = {}
     }
   } catch {
-    // 静默：即将开奖只是旁路信息，拉取失败不影响主页面
-    rawItems.value = []
+    // 静默：统计卡只是旁路信息，拉取失败不影响明细展示
     summaryCounts.value = {}
+  }
+}
+
+/**
+ * 请求签名：页码 + 每页张数 + 类型。挂载时列数实测会让 `pageSize` 从 2 列变 4 列，
+ * watcher 与 onMounted 可能对同一份参数各触发一次（表现为明细 + 互动态各请求两次），
+ * 因此按签名去重：同参数在途 / 已完成都不重复发。
+ */
+let inflightSignature = ''
+let loadedSignature = ''
+
+function requestSignature(): string {
+  return `${currentPage.value}|${pageSize.value}|${props.lotteryType ?? ''}`
+}
+
+/**
+ * 取当前页即将开奖明细（`GetUpcomingLottery`，与普通抽奖列表同一分页范式）。
+ *
+ * 每条明细自带卡片 `raw` + `extra_info`（2.67.0），首页不调用 detail 域接口；
+ * 互动态只对当前页批量查（`/interaction/status`，只读，不累计浏览）。
+ *
+ * @param force 错误页「重试」时忽略签名去重，强制重发。
+ */
+async function loadPage(force = false) {
+  const signature = requestSignature()
+  if (!force && (signature === inflightSignature || signature === loadedSignature)) return
+  inflightSignature = signature
+  error.value = false
+  loading.value = true
+  try {
+    const resp = await lotteryDataBaseApi.getUpcomingLottery({
+      pageNum: currentPage.value,
+      pageSize: pageSize.value,
+      key: props.lotteryType,
+      withinHours: UPCOMING_WINDOW_SECONDS / 3600
+    })
+    if (resp.code === 0 && resp.data) {
+      total.value = resp.data.total ?? 0
+      details.value = (resp.data.items ?? [])
+        .filter((item) => item.raw)
+        .map((item) => ({ raw: item.raw, extra_info: item.extra_info ?? null }))
+      // 数据变少导致当前页越界（例如倒计时跨过边界后条数减少）→ 回到最后一页重查
+      const maxPage = Math.max(1, Math.ceil(total.value / pageSize.value))
+      if (currentPage.value > maxPage) {
+        currentPage.value = maxPage
+        return
+      }
+      loadedSignature = signature
+      statusMap.value = details.value.length
+        ? await fetchInteractionStatusMap(lotteryCardInteractionTargets(details.value))
+        : {}
+    } else {
+      total.value = 0
+      details.value = []
+      statusMap.value = {}
+    }
+  } catch {
+    // 交给通用分页视图的错误态（带重试），不打断首页其它模块
+    error.value = true
+    total.value = 0
+    details.value = []
+    statusMap.value = {}
   } finally {
+    inflightSignature = ''
     loading.value = false
   }
 }
 
-/** 按 upcoming 的 lottery_id 回捞抽奖详情（弱依赖：单个失败只丢该卡） */
-async function loadDetails() {
-  const settled = await Promise.allSettled(
-    items.value.map((item) => lotteryDataBaseApi.getLotteryDetailById(String(item.lottery_id)))
-  )
-  details.value = settled
-    .filter(
-      (r): r is PromiseFulfilledResult<{ code: number; data: unknown }> =>
-        r.status === 'fulfilled' && r.value.code === 0 && !!r.value.data
-    )
-    .map((r) => r.value.data)
+/** 通用分页视图挂载：先实测列数（定每页张数）再首次取数，避免「4 张 → 8 张」各查一次 */
+function onViewMounted() {
+  syncColumns()
+  void loadPage()
 }
 
-// upcoming 列表就绪后回捞详情；items 变化（倒计时跨过 24h 边界被过滤）时同步刷新
-let lastDetailKey = ''
-watch(
-  () => items.value.map((i) => String(i.lottery_id)).join(','),
-  async (key) => {
-    if (key === lastDetailKey) return
-    lastDetailKey = key
-    await loadDetails()
-  },
-  { immediate: true }
-)
+// 页码 / 每页张数（列数变化）/ 类型统一处理：先归一页码，再按参数查一次
+// （签名去重会吞掉「归一页码」引发的二次触发，保证一次操作只发一次请求）
+watch([currentPage, pageSize, () => props.lotteryType], () => {
+  const maxPage = Math.max(1, Math.ceil(total.value / pageSize.value))
+  if (currentPage.value > maxPage) currentPage.value = maxPage
+  void loadPage()
+})
 
 onMounted(() => {
-  void load()
+  // 列数实测（决定每页张数）+ 容器宽度变化跟随
+  syncColumns()
+  if (rootEl.value) {
+    resizeObserver = new ResizeObserver(() => syncColumns())
+    resizeObserver.observe(rootEl.value)
+  }
+  // 统计卡（summary）；明细由通用分页视图的 on-mounted 触发
+  void loadSummary()
   timer = setInterval(() => {
     nowTs.value = Math.floor(Date.now() / 1000)
   }, 1000)

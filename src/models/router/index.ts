@@ -69,6 +69,8 @@ export enum RouteName {
   RPA_BROWSER_RESOURCE_RECORD = '已处理数据',
   RPA_BROWSER_ACTION_LOG = '操作日志',
   RPA_BROWSER_MEMBERSHIP = '时长权益',
+  RPA_BROWSER_MCP_CONFIG = 'MCP配置指南',
+  RPA_BROWSER_FEEDBACK = '报错反馈',
   RPA_BROWSER_ADMIN = 'RPA管理后台',
   // 管理后台（独立模块，不与服务类界面混放）
   ADMIN = '管理后台',

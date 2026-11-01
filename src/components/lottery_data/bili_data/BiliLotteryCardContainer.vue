@@ -10,8 +10,9 @@ import type {
 } from '@/models/api/lottery/lottery_card.ts'
 import { normalizeLotteryData } from '@/utils/lotteryNormalization'
 import { interactionBizTypeOf } from '@/stores/lottery_detail.ts'
-import { fetchInteractionStatus, isNumericBizId, InteractionBizTypeEnum } from '@/api/notify/moment-api'
+import { isNumericBizId, InteractionBizTypeEnum } from '@/api/notify/moment-api'
 import type { InteractionStatusItem } from '@/api/notify/moment-api'
+import { fetchInteractionStatusMap } from '@/utils/lotteryInteractionStatus'
 
 const lotteryDataArr = withDefaults(
   defineProps<{ data: (DynamicLotteryData | ReservationLotteryData | ReserveInfoFlatData)[] }>(),
@@ -98,20 +99,17 @@ watch(
     if (key === lastLoadedKey) return
     lastLoadedKey = key
     try {
-      // 每个 bizType 一次批量请求（弱依赖：单组失败不影响其它组展示）
-      const grouped = [...idsByBizType.value.entries()].map(async ([bizType, ids]) => ({
-        bizType,
-        res: await fetchInteractionStatus(bizType, ids).catch(() => null)
-      }))
-      const results = await Promise.all(grouped)
+      // 按 bizType 分组 + 按后端 50 上限分片统一在工具里处理（超出会被后端静默截断）；
+      // 弱依赖：单个分片失败只丢该片数据，不影响其它卡片展示
+      const fetched = await fetchInteractionStatusMap(
+        [...idsByBizType.value.entries()].flatMap(([bizType, ids]) =>
+          ids.map((bizId) => ({ bizType, bizId }))
+        )
+      )
       if (seq !== loadSeq) return // 过期响应（期间又切页）丢弃
       // 整页替换：清掉旧状态再写入新页
       for (const k of Object.keys(statusMap)) delete statusMap[k]
-      for (const { bizType, res } of results) {
-        for (const item of res?.items ?? []) {
-          if (item?.bizId) statusMap[`${bizType}:${item.bizId}`] = item
-        }
-      }
+      Object.assign(statusMap, fetched)
     } catch {
       lastLoadedKey = '' // 拉取失败：允许下次（切页/内容变化）重试
       // 弱依赖：失败不清空已展示状态

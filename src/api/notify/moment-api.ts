@@ -68,6 +68,8 @@ import type {
   InteractionStatusItem,
   HotLotteryResp,
   HotLotteryItem,
+  LotteryCard,
+  LotteryCardRaw,
   FolderCoverAuditListResp,
   FolderCoverAuditItem,
   FolderCoverAuditApproveReq,
@@ -341,7 +343,9 @@ export async function fetchInteractionStatusOne(
  * 热门抽奖榜：`GET /api/v1/community/interaction/hot-lotteries`。
  *
  * 口径：窗口内浏览记录（TInteractionViewLog，bizType=lottery）按资源聚合
- * sum(viewCount) 降序；抽奖本体在 be-bilibili-crawler，需按 bizId 回捞详情。
+ * sum(viewCount) 降序；2.67.0 起后端一次带回卡片数据（`items[].card` =
+ * `{raw, extra_info}`，与 GetLotteryDetail 的 data 同形态），前端直接交给
+ * 卡片列表渲染，**不再**二次调用抽奖 detail 域接口。
  */
 export async function fetchHotLotteries(
   params: { windowDays?: number; limit?: number } = {}
@@ -1504,6 +1508,8 @@ export type {
   InteractionStatusItem,
   HotLotteryResp,
   HotLotteryItem,
+  LotteryCard,
+  LotteryCardRaw,
   SpaceInfoResp,
   MomentLikerListResp,
   MomentForwardListResp,

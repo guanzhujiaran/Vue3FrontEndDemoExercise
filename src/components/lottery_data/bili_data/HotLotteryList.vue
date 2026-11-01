@@ -31,6 +31,7 @@
       v-else
       class="hot-lottery-list__cards [&>div]:grid-cols-1"
       :data="details"
+      :initial-status="statusMap"
     />
   </section>
 </template>
@@ -40,7 +41,11 @@ import { onMounted, ref } from 'vue'
 import { Trophy } from '@element-plus/icons-vue'
 import BiliLotterySimpleList from '@/components/lottery_data/bili_data/BiliLotterySimpleList.vue'
 import { fetchHotLotteries } from '@/api/notify/moment-api'
-import lotteryDataBaseApi from '@/api/lottery_data/bili/lottery_database_bili_api'
+import type { InteractionStatusItem, LotteryCard } from '@/api/notify/moment-api'
+import {
+  fetchInteractionStatusMap,
+  lotteryCardInteractionTargets,
+} from '@/utils/lotteryInteractionStatus'
 
 const props = withDefaults(
   defineProps<{
@@ -52,28 +57,29 @@ const props = withDefaults(
   { windowDays: 7, limit: 10 }
 )
 
-/** 热度榜拉回的抽奖详情原始数据（直接喂给小卡片组件，保持与抽奖界面一致的数据形态） */
-const details = ref<any[]>([])
+/**
+ * 榜单卡片：榜单接口一次带回 `card`（`raw` + `extra_info`，与 GetLotteryDetail 的 data
+ * 同形态），直接喂给小卡片组件；不再由首页二次调用 detail 域接口回捞。
+ */
+const details = ref<LotteryCard[]>([])
+/** 全榜互动态：一次批量拉取后注入卡片列表，不再由每张卡片各自请求（避免一串「单个查询」） */
+const statusMap = ref<Record<string, InteractionStatusItem> | null>(null)
 const loading = ref(true)
 
 async function load() {
   loading.value = true
   try {
     const resp = await fetchHotLotteries({ windowDays: props.windowDays, limit: props.limit })
-    const items = resp?.items ?? []
-    // 热度榜 id 回捞抽奖详情（弱依赖：单个失败只丢该卡，不影响整榜）
-    const settled = await Promise.allSettled(
-      items.map((item) => lotteryDataBaseApi.getLotteryDetailById(String(item.bizId)))
-    )
-    details.value = settled
-      .filter(
-        (r): r is PromiseFulfilledResult<{ code: number; data: unknown }> =>
-          r.status === 'fulfilled' && r.value.code === 0 && !!r.value.data
-      )
-      .map((r) => r.value.data)
+    // 卡片缺失的项后端已剔除，这里再兜一层（弱依赖降级时不会渲染空壳卡片）
+    details.value = (resp?.items ?? [])
+      .map((item) => item.card)
+      .filter((card): card is LotteryCard => Boolean(card))
+    // 一次批量拉全榜互动态（按 bizType 分组 + 后端 50 上限分片），注入给卡片列表
+    statusMap.value = await fetchInteractionStatusMap(lotteryCardInteractionTargets(details.value))
   } catch {
     // 静默：热门榜是旁路信息，失败不影响主页其他模块
     details.value = []
+    statusMap.value = {}
   } finally {
     loading.value = false
   }

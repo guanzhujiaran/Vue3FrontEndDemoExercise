@@ -7,7 +7,7 @@ import type { DeleteNotifyConfigRouterApiV1RpaBrowserNotifyConfDeletePostData, D
 
 export class 通知配置管理Service {
     /**
-     * Upsert Notify Config Router
+     * 创建或更新推送通知配置
      *
      * 创建或更新推送通知配置（统一Upsert接口）
      *
@@ -40,7 +40,7 @@ export class 通知配置管理Service {
     }
     
     /**
-     * Read Notify Config Router
+     * 读取推送通知配置
      *
      * 读取推送通知配置
      *
@@ -71,7 +71,7 @@ export class 通知配置管理Service {
     }
     
     /**
-     * Delete Notify Config Router
+     * 删除推送通知配置
      *
      * 删除推送通知配置
      *

@@ -7,7 +7,7 @@ import type { ConfirmPaymentsApiV1RpaBrowserMembershipPaymentConfirmPostData, Co
 
 export class 时长与会员权益Service {
     /**
-     * Get Membership Account
+     * 获取时长账户概览
      *
      * 获取当前用户的时长账户概览（余额 / 月卡状态 / 今日签到状态）
      *
@@ -15,57 +15,57 @@ export class 时长与会员权益Service {
      * 进入会员页即拉一次该用户的 Casdoor 支付单，把已 Paid 未入账的权益幂等
      * 发放（见计划书 §3.3）。Casdoor 抖动只告警、不阻断账户查询。
      */
-    public static getMembershipAccountApiV1RpaBrowserMembershipGetAccountPost<ThrowOnError extends boolean = false>(options: Options<GetMembershipAccountApiV1RpaBrowserMembershipGetAccountPostData, ThrowOnError>): RequestResult<GetMembershipAccountApiV1RpaBrowserMembershipGetAccountPostResponses, GetMembershipAccountApiV1RpaBrowserMembershipGetAccountPostErrors, ThrowOnError, 'data'> {
-        return (options.client ?? client).post<GetMembershipAccountApiV1RpaBrowserMembershipGetAccountPostResponses, GetMembershipAccountApiV1RpaBrowserMembershipGetAccountPostErrors, ThrowOnError, 'data'>({
+    public static getMembershipAccountApiV1RpaBrowserMembershipGetAccountPost<ThrowOnError extends boolean = false>(options?: Options<GetMembershipAccountApiV1RpaBrowserMembershipGetAccountPostData, ThrowOnError>): RequestResult<GetMembershipAccountApiV1RpaBrowserMembershipGetAccountPostResponses, GetMembershipAccountApiV1RpaBrowserMembershipGetAccountPostErrors, ThrowOnError, 'data'> {
+        return (options?.client ?? client).post<GetMembershipAccountApiV1RpaBrowserMembershipGetAccountPostResponses, GetMembershipAccountApiV1RpaBrowserMembershipGetAccountPostErrors, ThrowOnError, 'data'>({
             responseStyle: 'data',
             url: '/api/v1/rpa/browser/membership/get_account',
             ...options,
             headers: {
                 'Content-Type': 'application/json',
-                ...options.headers
+                ...options?.headers
             }
         });
     }
     
     /**
-     * Sign In
+     * 每日签到
      *
      * 每日签到（重复签到返回业务码 5005）
      *
      * 奖励口径：每天发配置里的固定时长（`sign_in_rewards.json` 的 `daily_reward_seconds`）；
      * 累计天数只用于档位解锁，签到当天不再自动叠加。
      */
-    public static signInApiV1RpaBrowserMembershipSignInPost<ThrowOnError extends boolean = false>(options: Options<SignInApiV1RpaBrowserMembershipSignInPostData, ThrowOnError>): RequestResult<SignInApiV1RpaBrowserMembershipSignInPostResponses, SignInApiV1RpaBrowserMembershipSignInPostErrors, ThrowOnError, 'data'> {
-        return (options.client ?? client).post<SignInApiV1RpaBrowserMembershipSignInPostResponses, SignInApiV1RpaBrowserMembershipSignInPostErrors, ThrowOnError, 'data'>({
+    public static signInApiV1RpaBrowserMembershipSignInPost<ThrowOnError extends boolean = false>(options?: Options<SignInApiV1RpaBrowserMembershipSignInPostData, ThrowOnError>): RequestResult<SignInApiV1RpaBrowserMembershipSignInPostResponses, SignInApiV1RpaBrowserMembershipSignInPostErrors, ThrowOnError, 'data'> {
+        return (options?.client ?? client).post<SignInApiV1RpaBrowserMembershipSignInPostResponses, SignInApiV1RpaBrowserMembershipSignInPostErrors, ThrowOnError, 'data'>({
             responseStyle: 'data',
             url: '/api/v1/rpa/browser/membership/sign_in',
             ...options,
             headers: {
                 'Content-Type': 'application/json',
-                ...options.headers
+                ...options?.headers
             }
         });
     }
     
     /**
-     * Get Sign In Overview
+     * 获取签到概览
      *
      * 签到概览：累计天数 / 补登卡 / 档位状态 / 上线与时区（配置）
      */
-    public static getSignInOverviewApiV1RpaBrowserMembershipSignInOverviewPost<ThrowOnError extends boolean = false>(options: Options<GetSignInOverviewApiV1RpaBrowserMembershipSignInOverviewPostData, ThrowOnError>): RequestResult<GetSignInOverviewApiV1RpaBrowserMembershipSignInOverviewPostResponses, GetSignInOverviewApiV1RpaBrowserMembershipSignInOverviewPostErrors, ThrowOnError, 'data'> {
-        return (options.client ?? client).post<GetSignInOverviewApiV1RpaBrowserMembershipSignInOverviewPostResponses, GetSignInOverviewApiV1RpaBrowserMembershipSignInOverviewPostErrors, ThrowOnError, 'data'>({
+    public static getSignInOverviewApiV1RpaBrowserMembershipSignInOverviewPost<ThrowOnError extends boolean = false>(options?: Options<GetSignInOverviewApiV1RpaBrowserMembershipSignInOverviewPostData, ThrowOnError>): RequestResult<GetSignInOverviewApiV1RpaBrowserMembershipSignInOverviewPostResponses, GetSignInOverviewApiV1RpaBrowserMembershipSignInOverviewPostErrors, ThrowOnError, 'data'> {
+        return (options?.client ?? client).post<GetSignInOverviewApiV1RpaBrowserMembershipSignInOverviewPostResponses, GetSignInOverviewApiV1RpaBrowserMembershipSignInOverviewPostErrors, ThrowOnError, 'data'>({
             responseStyle: 'data',
             url: '/api/v1/rpa/browser/membership/sign_in/overview',
             ...options,
             headers: {
                 'Content-Type': 'application/json',
-                ...options.headers
+                ...options?.headers
             }
         });
     }
     
     /**
-     * Get Sign In Calendar
+     * 查询签到日历
      *
      * 查询指定月份的签到日历（整月逐日补齐 + 天数/奖励/下一档位）
      */
@@ -82,7 +82,7 @@ export class 时长与会员权益Service {
     }
     
     /**
-     * Makeup Sign In
+     * 补签指定日期
      *
      * 补签指定日期（未签到的过去日期，消耗 1 张补登卡）
      */
@@ -99,7 +99,7 @@ export class 时长与会员权益Service {
     }
     
     /**
-     * Exchange Sign Reward
+     * 兑换签到奖励档位
      *
      * 兑换奖励档位（每档每用户仅一次；奖励与门槛取自 JSON 配置）
      */
@@ -116,7 +116,7 @@ export class 时长与会员权益Service {
     }
     
     /**
-     * Redeem Code
+     * 兑换码兑换
      *
      * 兑换码兑换（时长卡直加余额 / 月卡按天顺延）
      */
@@ -133,7 +133,7 @@ export class 时长与会员权益Service {
     }
     
     /**
-     * List Duration Ledger
+     * 查询时长流水
      *
      * 分页查询时长流水（时间倒序；change_types 支持按变动类型过滤）
      */
@@ -150,7 +150,7 @@ export class 时长与会员权益Service {
     }
     
     /**
-     * List Usage Stats
+     * 查询使用时长统计
      *
      * 按日期区间查询使用时长日统计（手动调试不计费口径单列）
      */
@@ -167,41 +167,41 @@ export class 时长与会员权益Service {
     }
     
     /**
-     * List Payment Products
+     * 查询可售支付商品
      *
      * 可售支付商品列表（实时拉取 Casdoor 并按命名约定解析规格；buy_url 空=未启用）
      */
-    public static listPaymentProductsApiV1RpaBrowserMembershipPaymentProductsPost<ThrowOnError extends boolean = false>(options: Options<ListPaymentProductsApiV1RpaBrowserMembershipPaymentProductsPostData, ThrowOnError>): RequestResult<ListPaymentProductsApiV1RpaBrowserMembershipPaymentProductsPostResponses, ListPaymentProductsApiV1RpaBrowserMembershipPaymentProductsPostErrors, ThrowOnError, 'data'> {
-        return (options.client ?? client).post<ListPaymentProductsApiV1RpaBrowserMembershipPaymentProductsPostResponses, ListPaymentProductsApiV1RpaBrowserMembershipPaymentProductsPostErrors, ThrowOnError, 'data'>({
+    public static listPaymentProductsApiV1RpaBrowserMembershipPaymentProductsPost<ThrowOnError extends boolean = false>(options?: Options<ListPaymentProductsApiV1RpaBrowserMembershipPaymentProductsPostData, ThrowOnError>): RequestResult<ListPaymentProductsApiV1RpaBrowserMembershipPaymentProductsPostResponses, ListPaymentProductsApiV1RpaBrowserMembershipPaymentProductsPostErrors, ThrowOnError, 'data'> {
+        return (options?.client ?? client).post<ListPaymentProductsApiV1RpaBrowserMembershipPaymentProductsPostResponses, ListPaymentProductsApiV1RpaBrowserMembershipPaymentProductsPostErrors, ThrowOnError, 'data'>({
             responseStyle: 'data',
             url: '/api/v1/rpa/browser/membership/payment/products',
             ...options,
             headers: {
                 'Content-Type': 'application/json',
-                ...options.headers
+                ...options?.headers
             }
         });
     }
     
     /**
-     * Confirm Payments
+     * 支付对账确认
      *
      * 支付对账确认：服务端查 Casdoor 真实状态后幂等入账（防伪造跳转）
      */
-    public static confirmPaymentsApiV1RpaBrowserMembershipPaymentConfirmPost<ThrowOnError extends boolean = false>(options: Options<ConfirmPaymentsApiV1RpaBrowserMembershipPaymentConfirmPostData, ThrowOnError>): RequestResult<ConfirmPaymentsApiV1RpaBrowserMembershipPaymentConfirmPostResponses, ConfirmPaymentsApiV1RpaBrowserMembershipPaymentConfirmPostErrors, ThrowOnError, 'data'> {
-        return (options.client ?? client).post<ConfirmPaymentsApiV1RpaBrowserMembershipPaymentConfirmPostResponses, ConfirmPaymentsApiV1RpaBrowserMembershipPaymentConfirmPostErrors, ThrowOnError, 'data'>({
+    public static confirmPaymentsApiV1RpaBrowserMembershipPaymentConfirmPost<ThrowOnError extends boolean = false>(options?: Options<ConfirmPaymentsApiV1RpaBrowserMembershipPaymentConfirmPostData, ThrowOnError>): RequestResult<ConfirmPaymentsApiV1RpaBrowserMembershipPaymentConfirmPostResponses, ConfirmPaymentsApiV1RpaBrowserMembershipPaymentConfirmPostErrors, ThrowOnError, 'data'> {
+        return (options?.client ?? client).post<ConfirmPaymentsApiV1RpaBrowserMembershipPaymentConfirmPostResponses, ConfirmPaymentsApiV1RpaBrowserMembershipPaymentConfirmPostErrors, ThrowOnError, 'data'>({
             responseStyle: 'data',
             url: '/api/v1/rpa/browser/membership/payment/confirm',
             ...options,
             headers: {
                 'Content-Type': 'application/json',
-                ...options.headers
+                ...options?.headers
             }
         });
     }
     
     /**
-     * Notify Payment
+     * 支付完成通知
      *
      * 支付完成通知：notify-payment 完成交易 + 服务端核验 + 幂等入账（计划书 §3.3）
      */

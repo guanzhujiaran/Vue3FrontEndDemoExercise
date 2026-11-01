@@ -67,11 +67,12 @@
           <div class="flex flex-nowrap justify-between items-center gap-2">
             <!-- 查看详情按钮 -->
 
-            <el-link v-if="sourceLink" type="primary" size="default" :href="sourceLink" target="_blank" :rel="LINK_REL" :referrerpolicy="LINK_REFERRER_POLICY"
-              @click="handleLinkClick" link icon="link" underline="never" class="whitespace-nowrap">
-              查看源动态
-            </el-link>
-            <!-- 第三方抽奖动态：站内详情页（评论区 + 互动，按 dynId 定位） -->
+            <!-- 源动态入口三态互斥（v-if / v-else-if / v-else 必须挂在同一条链上）：
+                 ① 第三方抽奖动态 → 站内详情页（评论区 + 互动，按 dynId 定位）；
+                 ② 预约抽奖 → 发起者空间（此类卡片没有源动态语义，入口改为「查看发起者」）；
+                 ③ 其它类型有源动态（官方/充电的 business_id 动态）→ 站外源动态；
+                 ④ 都没有 → 禁用占位。此前 ① 的 v-else 与 ② 的 v-if 各自独立，
+                    导致「查看源动态」与「暂无源动态」同时出现（充电抽奖卡片踩到）。 -->
             <el-link
               v-if="normalizedData.type === 'THIRD_PARTY' && canInteract"
               type="primary"
@@ -82,8 +83,16 @@
             >
               查看详情
             </el-link>
+            <el-link v-else-if="initiatorLink" type="primary" size="default" :href="initiatorLink" target="_blank" :rel="LINK_REL" :referrerpolicy="LINK_REFERRER_POLICY"
+              @click="handleLinkClick" link icon="user" underline="never" class="lottery-card__initiator-link whitespace-nowrap">
+              查看发起者
+            </el-link>
+            <el-link v-else-if="sourceLink" type="primary" size="default" :href="sourceLink" target="_blank" :rel="LINK_REL" :referrerpolicy="LINK_REFERRER_POLICY"
+              @click="handleLinkClick" link icon="link" underline="never" class="whitespace-nowrap">
+              查看源动态
+            </el-link>
             <el-button icon="link" v-else type="info" size="default" disabled class="whitespace-nowrap">
-              暂无源动态
+              {{ normalizedData.type === 'RESERVATION' ? '暂无发起者' : '暂无源动态' }}
             </el-button>
             <el-link v-if="resultLink" type="primary" size="default" :href="resultLink" target="_blank" :rel="LINK_REL" :referrerpolicy="LINK_REFERRER_POLICY"
               @click="handleLinkClick" link icon="link" underline="never" class="whitespace-nowrap">
@@ -688,10 +697,17 @@ const cardEdgeClass = computed(() => {
   return ''
 })
 
-const sourceLink = computed(() => normalizedData.value.sourceLink || null)
+/** 源动态入口：预约抽奖不再提供（其入口为下方 initiatorLink 的发起者空间） */
+const sourceLink = computed(() =>
+  normalizedData.value.type === 'RESERVATION' ? null : normalizedData.value.sourceLink || null
+)
 const resultLink = computed(() => normalizedData.value.resultLink || null)
 const senderProfileLink = computed(() =>
   normalizedData.value.senderInfo.uid ? getBiliUserSpaceUrl(String(normalizedData.value.senderInfo.uid)) : null
+)
+/** 预约抽奖入口：发起者空间（无 uid 时为空，模板回落「暂无发起者」占位） */
+const initiatorLink = computed(() =>
+  normalizedData.value.type === 'RESERVATION' ? senderProfileLink.value : null
 )
 const statusIcon = computed(() => normalizedData.value.statusType || 'info')
 const deadlineText = computed(() => formatTimestamp(normalizedData.value.endTime))

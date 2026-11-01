@@ -167,6 +167,7 @@ const browserIdText = computed(
         <el-descriptions-item label="浏览器版本">{{ browserInfo.fingerprint_brand_version || '-' }}
         </el-descriptions-item>
         <el-descriptions-item label="代理服务器">{{ browserInfo.proxy_server || '未配置' }}</el-descriptions-item>
+        <el-descriptions-item label="代理绕过">{{ browserInfo.proxy_bypass || '未配置' }}</el-descriptions-item>
         <el-descriptions-item label="创建时间">{{ formatTime(browserInfo.created_at) }}</el-descriptions-item>
         <el-descriptions-item label="更新时间">{{ formatTime(browserInfo.updated_at) }}</el-descriptions-item>
       </el-descriptions>

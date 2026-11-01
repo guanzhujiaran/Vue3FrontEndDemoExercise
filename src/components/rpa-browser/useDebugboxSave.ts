@@ -17,14 +17,14 @@ export function useDebugboxSave(
   const saveDialogVisible = ref(false)
   const saveDialogLoading = ref(false)
   /** iconSeries / iconId：动作展示图标（系列 + 系列内编号），0/0 表示默认图标 */
-  const saveDialogForm = ref({ name: '', description: '', isPublic: false, iconSeries: 0, iconId: 0 })
+  const saveDialogForm = ref({ name: '', description: '', isPublic: false, iconSeries: 0, iconId: 0, logPageSnapshot: false })
   const saveDialogItem = ref<DroppedItem | null>(null)
   const saveDialogIndex = ref(-1)
   const saveMultiItems = ref<DroppedItem[]>([])
 
-  /** 统一构造保存表单初始值（图标默认回落默认图标 0/0） */
+  /** 统一构造保存表单初始值（图标默认回落默认图标 0/0，页面快照默认关闭） */
   function makeSaveForm(name: string, description: string) {
-    return { name, description, isPublic: false, iconSeries: 0, iconId: 0 }
+    return { name, description, isPublic: false, iconSeries: 0, iconId: 0, logPageSnapshot: false }
   }
 
   function makeTimestamp() {
@@ -87,11 +87,13 @@ export function useDebugboxSave(
   function openSaveBranchDialog(parentIndex: number, branch: 'true' | 'false' | 'loop', childIndex: number, path?: BranchPathStep[]) {
     const item = droppedItems.value[parentIndex]
     if (!item) return
-    let items = branch === 'true' ? item.trueBranch : branch === 'false' ? item.falseBranch : item.loopBody
+    // 显式标注：分支体字段是自引用类型（DroppedItem[]），不注解会让 items 推断成 any
+    let items: DroppedItem[] | undefined =
+      branch === 'true' ? item.trueBranch : branch === 'false' ? item.falseBranch : item.loopBody
     if (!items) return
     if (path) {
       for (const step of path) {
-        const nestedParent = items[step.parentIndex]
+        const nestedParent: DroppedItem | undefined = items[step.parentIndex]
         if (!nestedParent) return
         items = step.branch === 'true' ? nestedParent.trueBranch : step.branch === 'false' ? nestedParent.falseBranch : nestedParent.loopBody
         if (!items) return
@@ -167,7 +169,8 @@ export function useDebugboxSave(
           body: { name: saveDialogForm.value.name, action_type: 'composite' as BuiltinActionType, description: saveDialogForm.value.description,
             icon_series: saveDialogForm.value.iconSeries, icon_id: saveDialogForm.value.iconId,
             parameters_schema: [], steps, is_public: saveDialogForm.value.isPublic, tags: [],
-            input_vars: [], output_vars: [], timeout: 30000, retry_on_error: false, retry_times: 0, retry_delay: 1.0 },
+            input_vars: [], output_vars: [], timeout: 30000, retry_on_error: false, retry_times: 0, retry_delay: 1.0,
+            log_record_page_snapshot: saveDialogForm.value.logPageSnapshot },
           headers: userNavStore.user_header,
           // 失败走非 2xx 响应，开启 throwOnError 以便 catch 直接拿到后端 { code, msg, data }
           throwOnError: true,
@@ -212,6 +215,7 @@ export function useDebugboxSave(
           parameters_schema: item.json_schema?.properties ? Object.entries(item.json_schema.properties).map(([key, prop]: [string, Record<string, unknown>]) => ({ name: key, json_schema: prop })) : [],
           steps: [stepData], is_public: saveDialogForm.value.isPublic, tags: [],
           input_vars: [], output_vars: [], timeout: 30000, retry_on_error: false, retry_times: 0, retry_delay: 1.0,
+          log_record_page_snapshot: saveDialogForm.value.logPageSnapshot,
         },
         headers: userNavStore.user_header,
         // 失败走非 2xx 响应，开启 throwOnError 以便 catch 直接拿到后端 { code, msg, data }

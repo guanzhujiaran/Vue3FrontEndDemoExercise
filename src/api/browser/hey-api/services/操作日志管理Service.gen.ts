@@ -29,7 +29,7 @@ export class 操作日志管理Service {
     /**
      * 获取单条日志详情
      *
-     * 按 log_id 获取单条日志详情
+     * 按 log_id 获取单条日志详情（在列表项基础上补齐 params / result_data / variables / logs）。
      */
     public static getActionLogApiV1RpaBrowserControlActionLogsGetPost<ThrowOnError extends boolean = false>(options: Options<GetActionLogApiV1RpaBrowserControlActionLogsGetPostData, ThrowOnError>): RequestResult<GetActionLogApiV1RpaBrowserControlActionLogsGetPostResponses, GetActionLogApiV1RpaBrowserControlActionLogsGetPostErrors, ThrowOnError, 'data'> {
         return (options.client ?? client).post<GetActionLogApiV1RpaBrowserControlActionLogsGetPostResponses, GetActionLogApiV1RpaBrowserControlActionLogsGetPostErrors, ThrowOnError, 'data'>({
@@ -46,10 +46,7 @@ export class 操作日志管理Service {
     /**
      * 按执行批次查询完整链路
      *
-     * 按 execution_id 分页拉取一次执行的步骤链路（按写入顺序，便于还原调用树）
-     *
-     * 单次运行可达数千条步骤日志，因此强制分页：`total` 为该批次总条数，
-     * `items` 只回当前页（字段与 `action-logs/list` 的轻量项一致）。
+     * 按 execution_id 拉取一次执行的完整链路（按写入顺序，便于还原调用树）
      */
     public static listActionLogsByExecutionApiV1RpaBrowserControlActionLogsByExecutionPost<ThrowOnError extends boolean = false>(options: Options<ListActionLogsByExecutionApiV1RpaBrowserControlActionLogsByExecutionPostData, ThrowOnError>): RequestResult<ListActionLogsByExecutionApiV1RpaBrowserControlActionLogsByExecutionPostResponses, ListActionLogsByExecutionApiV1RpaBrowserControlActionLogsByExecutionPostErrors, ThrowOnError, 'data'> {
         return (options.client ?? client).post<ListActionLogsByExecutionApiV1RpaBrowserControlActionLogsByExecutionPostResponses, ListActionLogsByExecutionApiV1RpaBrowserControlActionLogsByExecutionPostErrors, ThrowOnError, 'data'>({
@@ -100,7 +97,7 @@ export class 操作日志管理Service {
     /**
      * 操作日志统计
      *
-     * 按 action 聚合统计最近 N 天的执行情况（默认 7 天）
+     * 按 action 聚合统计最近 N 天的执行情况（days 默认 7）
      */
     public static statsActionLogsApiV1RpaBrowserControlActionLogsStatsPost<ThrowOnError extends boolean = false>(options?: Options<StatsActionLogsApiV1RpaBrowserControlActionLogsStatsPostData, ThrowOnError>): RequestResult<StatsActionLogsApiV1RpaBrowserControlActionLogsStatsPostResponses, StatsActionLogsApiV1RpaBrowserControlActionLogsStatsPostErrors, ThrowOnError, 'data'> {
         return (options?.client ?? client).post<StatsActionLogsApiV1RpaBrowserControlActionLogsStatsPostResponses, StatsActionLogsApiV1RpaBrowserControlActionLogsStatsPostErrors, ThrowOnError, 'data'>({

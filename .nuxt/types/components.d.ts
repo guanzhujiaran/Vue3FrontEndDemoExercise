@@ -299,8 +299,8 @@ interface _GlobalComponents {
   ElAlert: typeof import("../../node_modules/element-plus/es/components/alert/index")['ElAlert']
   ElAnchor: typeof import("../../node_modules/element-plus/es/components/anchor/index")['ElAnchor']
   ElAnchorLink: typeof import("../../node_modules/element-plus/es/components/anchor/index")['ElAnchorLink']
-  ElAutoResizer: typeof import("../../node_modules/element-plus/es/components/table-v2/index")['ElAutoResizer']
   ElAside: typeof import("../../node_modules/element-plus/es/components/container/index")['ElAside']
+  ElAutoResizer: typeof import("../../node_modules/element-plus/es/components/table-v2/index")['ElAutoResizer']
   ElAutocomplete: typeof import("../../node_modules/element-plus/es/components/autocomplete/index")['ElAutocomplete']
   ElAvatar: typeof import("../../node_modules/element-plus/es/components/avatar/index")['ElAvatar']
   ElAvatarGroup: typeof import("../../node_modules/element-plus/es/components/avatar/index")['ElAvatarGroup']
@@ -1033,8 +1033,8 @@ interface _GlobalComponents {
   LazyElAlert: LazyComponent<typeof import("../../node_modules/element-plus/es/components/alert/index")['ElAlert']>
   LazyElAnchor: LazyComponent<typeof import("../../node_modules/element-plus/es/components/anchor/index")['ElAnchor']>
   LazyElAnchorLink: LazyComponent<typeof import("../../node_modules/element-plus/es/components/anchor/index")['ElAnchorLink']>
-  LazyElAutoResizer: LazyComponent<typeof import("../../node_modules/element-plus/es/components/table-v2/index")['ElAutoResizer']>
   LazyElAside: LazyComponent<typeof import("../../node_modules/element-plus/es/components/container/index")['ElAside']>
+  LazyElAutoResizer: LazyComponent<typeof import("../../node_modules/element-plus/es/components/table-v2/index")['ElAutoResizer']>
   LazyElAutocomplete: LazyComponent<typeof import("../../node_modules/element-plus/es/components/autocomplete/index")['ElAutocomplete']>
   LazyElAvatar: LazyComponent<typeof import("../../node_modules/element-plus/es/components/avatar/index")['ElAvatar']>
   LazyElAvatarGroup: LazyComponent<typeof import("../../node_modules/element-plus/es/components/avatar/index")['ElAvatarGroup']>

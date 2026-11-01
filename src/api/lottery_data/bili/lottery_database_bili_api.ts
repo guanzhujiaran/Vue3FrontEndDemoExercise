@@ -20,6 +20,7 @@ import type {
   TimePresetEnum,
   CommonLotExtraInfoResp,
   LotteryDetailResp,
+  LotteryDetailListResp,
   ScrapyTypeEnum,
 } from '@/api/bili_lottery_data/hey-api'
 import type { OthersLotPrizeInfo } from '@/models/api/lottery/lottery_card'
@@ -184,7 +185,13 @@ export interface OthersLotDynItem {
 type _LotteryListQuery = NonNullable<
   GetReserveLotteryApiV1LotteryDatabaseBiliGetReserveLotteryGetData['query']
 >
-export type LotteryAdvancedQueryParams = Omit<_LotteryListQuery, 't'>
+export type LotteryAdvancedQueryParams = Omit<_LotteryListQuery, 't'> & {
+  /**
+   * 仅返回预约仍有效（未取消/未失效）的记录，仅 `GetReserveLottery` 且 `status=unfinished` 时生效。
+   * 后端已加入该 query 参数，SDK 重新生成前先在此手工声明，避免阻塞前端接入。
+   */
+  only_available?: boolean | null
+}
 
 export interface LotteryPaginationParams {
   page_num?: number
@@ -268,18 +275,35 @@ export interface UpcomingLotteryItem {
   lottery_time: number
   participants: number | null
   sender_uid: number | string | null
+  /** 2.67.0：卡片原始字段（与 GetLotteryDetail 的 raw 同形态），前端直接渲染 */
+  raw?: Record<string, any> | null
+  /** 2.67.0：附加信息（is_grand_prize 等），与列表项 extra_info 同口径 */
+  extra_info?: CommonLotExtraInfoResp | null
 }
 
-/** 管理端 bili-crawler 数据汇总响应 */
+/**
+ * 管理端 bili-crawler 数据汇总响应。
+ *
+ * 2.67.0：不再下发即将开奖明细（原 `upcoming`），明细改走
+ * `getUpcomingLottery()`（items + total 的分页接口）。
+ */
 export interface LotteryDataSummaryResp {
   generated_at: number
   latest_created_at: number | null
   rows: LotterySummaryRow[]
   trend: LotteryTrendPoint[]
-  upcoming: UpcomingLotteryItem[]
+}
+
+/** 即将开奖明细分页响应（`GetUpcomingLottery`：items + total，与普通抽奖列表同范式） */
+export interface UpcomingLotteryPage {
+  items: UpcomingLotteryItem[]
+  total: number
 }
 
 // ==================== API 类定义（基于 hey-api 生成客户端） ====================
+
+/** 后端 GetLotteryDetailList 单次 `lottery_ids` 上限（超出会被截断，前端必须分片） */
+export const LOTTERY_DETAIL_BATCH_LIMIT = 50
 
 class LotteryDataBaseApi {
   // ==================== 获取各类抽奖数据 ====================
@@ -367,6 +391,59 @@ class LotteryDataBaseApi {
       query: { lottery_id: Number(lottery_id), t: Date.now() },
     })
     return res as any
+  }
+
+  /**
+   * 按多个 lottery_id 批量获取抽奖卡片详情（后端 GetLotteryDetailList，列表页 / 首页专用）。
+   *
+   * 后端单次请求固定 2 条 SQL（lotdata 一次 `IN` + t_lot_extra_info 一次批量），
+   * 与 id 数量无关；逐张调用 GetLotteryDetail 会产生 N 次请求，列表页一律走本方法。
+   *
+   * 后端单次上限 {@link LOTTERY_DETAIL_BATCH_LIMIT} 个，超出会被截断，这里自动分片并发；
+   * 返回顺序与传入 id 顺序一致，未命中的 id（后端 `missing_ids`）直接丢弃该卡，不阻断其余卡片。
+   */
+  async getLotteryDetailListByIds(
+    lottery_ids: Array<string | number>
+  ): Promise<RootObject<LotteryDetailResp[]>> {
+    // 去重保序 + 过滤非数字 id（后端 lottery_ids 逐段 int()，非法片段会整批 400）
+    const ids = [
+      ...new Set(
+        (lottery_ids ?? [])
+          .map((id) => String(id ?? '').trim())
+          .filter((id) => id !== '' && /^\d+$/.test(id))
+      ),
+    ]
+    if (!ids.length) return { code: 0, msg: '', data: [] }
+
+    const chunks: string[][] = []
+    for (let i = 0; i < ids.length; i += LOTTERY_DETAIL_BATCH_LIMIT) {
+      chunks.push(ids.slice(i, i + LOTTERY_DETAIL_BATCH_LIMIT))
+    }
+    const responses = await Promise.all(
+      chunks.map((chunk) =>
+        V1BiliService.getLotteryDetailListApiV1LotteryDatabaseBiliGetLotteryDetailListGet({
+          // lottery_ids 走 query（逗号分隔），附带 t 时间戳防浏览器缓存
+          query: { lottery_ids: chunk.join(','), t: Date.now() },
+        }).catch(() => null)
+      )
+    )
+
+    // 分片并发返回顺序不保证，按 lottery_id 建索引后按请求顺序重排
+    const byId = new Map<string, LotteryDetailResp>()
+    for (const res of responses) {
+      const items = (res as RootObject<LotteryDetailListResp> | null)?.data?.items ?? []
+      for (const item of items) {
+        const id = String(item?.raw?.lottery_id ?? '')
+        if (id) byId.set(id, item)
+      }
+    }
+    return {
+      code: 0,
+      msg: '',
+      data: ids
+        .map((id) => byId.get(id))
+        .filter((item): item is LotteryDetailResp => !!item),
+    }
   }
 
   /**
@@ -519,6 +596,37 @@ class LotteryDataBaseApi {
       query: { t: Date.now() },
     })
     return res as unknown as RootObject<LotteryDataSummaryResp>
+  }
+
+  /**
+   * 即将开奖明细分页（`GetUpcomingLottery`，2.67.0）。
+   *
+   * 与普通抽奖列表（`GetOfficialLottery` 等）同一分页范式：`page_num` / `page_size`
+   * + `total`，**无条数上限、不静默截断**；每条明细自带卡片 `raw` + `extra_info`，
+   * 前端直接渲染，无需再调 detail 域接口。
+   */
+  async getUpcomingLottery(
+    params: {
+      pageNum?: number
+      pageSize?: number
+      /** 抽奖类型筛选：official / reserve / charge（缺省=全部） */
+      key?: string
+      /** 开奖时间窗口（小时），默认 24 */
+      withinHours?: number
+    } = {}
+  ): Promise<RootObject<UpcomingLotteryPage>> {
+    const res = await client.get({
+      url: '/api/v1/lottery_database/bili/GetUpcomingLottery',
+      query: {
+        page_num: params.pageNum ?? 1,
+        page_size: params.pageSize ?? 8,
+        ...(params.key ? { key: params.key } : {}),
+        within_hours: params.withinHours ?? 24,
+        // 附带 t=当前时间戳防止浏览器/CDN 缓存
+        t: Date.now(),
+      },
+    })
+    return res as unknown as RootObject<UpcomingLotteryPage>
   }
 
   // ==================== 兼容旧版的方法（已废弃） ====================

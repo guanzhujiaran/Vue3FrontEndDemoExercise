@@ -11,7 +11,9 @@ export class 自定义操作管理Service {
      *
      * 获取系统预注册操作列表（公开，只读）
      *
-     * 返回精简版 Action 元数据，仅包含 action_id 和 json_schema
+     * 返回每个内置动作的元数据：`action_id`（内置动作名）、`action_type`、`name`、
+     * 图标（`icon_series` / `icon_id`）、参数定义 `json_schema`，
+     * 以及变量契约 `input_variables` / `output_variables`。
      */
     public static listRegisteredActionsApiV1RpaBrowserControlActionsRegisteredPost<ThrowOnError extends boolean = false>(options?: Options<ListRegisteredActionsApiV1RpaBrowserControlActionsRegisteredPostData, ThrowOnError>): RequestResult<ListRegisteredActionsApiV1RpaBrowserControlActionsRegisteredPostResponses, unknown, ThrowOnError, 'data'> {
         return (options?.client ?? client).post<ListRegisteredActionsApiV1RpaBrowserControlActionsRegisteredPostResponses, unknown, ThrowOnError, 'data'>({
@@ -104,7 +106,7 @@ export class 自定义操作管理Service {
     /**
      * 获取自定义操作详情
      *
-     * 获取自定义操作详情，steps 中引用的 ca_ 操作会自动附加完整信息并校验权限
+     * 获取自定义操作详情，steps 中引用的其它复合动作会自动附加完整信息并校验权限
      */
     public static getCustomActionApiV1RpaBrowserControlCustomActionsGetPost<ThrowOnError extends boolean = false>(options: Options<GetCustomActionApiV1RpaBrowserControlCustomActionsGetPostData, ThrowOnError>): RequestResult<GetCustomActionApiV1RpaBrowserControlCustomActionsGetPostResponses, GetCustomActionApiV1RpaBrowserControlCustomActionsGetPostErrors, ThrowOnError, 'data'> {
         return (options.client ?? client).post<GetCustomActionApiV1RpaBrowserControlCustomActionsGetPostResponses, GetCustomActionApiV1RpaBrowserControlCustomActionsGetPostErrors, ThrowOnError, 'data'>({
@@ -202,9 +204,10 @@ export class 自定义操作管理Service {
     /**
      * Fork 自定义操作（类似 GitHub）
      *
-     * Fork 自定义操作（仅允许 Fork 公开的操作）
+     * Fork 自定义操作（公开的动作 + 自己的动作都可以 Fork）
      *
-     * 类似 GitHub 的 Fork 功能，允许用户复制公开的社区操作到自己的空间，并可以选择重命名。
+     * 类似 GitHub 的 Fork 功能：把动作（含其依赖树）复制一份到自己的空间，可重命名。
+     * `action_id` 既可以是公开的社区动作，也可以是自己已拥有的动作（效果等同建副本）。
      *
      * Args:
      * request: {"action_id": <操作action_id>, "new_name": <新名称（可选）>,

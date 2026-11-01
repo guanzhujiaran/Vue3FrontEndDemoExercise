@@ -856,7 +856,8 @@ function formatSeconds(raw: string | number): string {
 const PAYMENT_PENDING_KEY = 'rpa_payment_pending_at'
 const PAYMENT_POLL_INTERVAL_MS = 5000
 const PAYMENT_POLL_MAX_MS = 15 * 60 * 1000
-let paymentPollTimer: ReturnType<typeof window.setInterval> | undefined
+// 用 number 而不是 ReturnType<typeof window.setInterval>：node 类型会让它退化成 NodeJS.Timeout
+let paymentPollTimer: number | undefined
 
 /**
  * Casdoor 商店页（商品列表页）：`{server}/products?organization=xx&application=xx`

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { h, ref, onMounted } from 'vue'
+import { h, ref, computed, onMounted } from 'vue'
 import { Warning, Goods } from '@element-plus/icons-vue'
 import { ElCheckbox, ElMessageBox } from 'element-plus'
 import BiliPageHeader from '@/components/CommonCompo/Bili-Container-Compo/BiliPageHeader.vue'
@@ -16,6 +16,30 @@ import type { FilterType, SortBy, SortOrder } from '@/api/browser/hey-api'
 
 type TabType = 'actions' | 'workflows'
 
+/**
+ * 社区卡片项
+ *
+ * SDK 的 `BasePaginationResp.items` 目前下发为 `unknown[]`（后端泛型分页未把元素类型
+ * 代进 OpenAPI），因此按本页实际用到的字段显式声明，避免模板里 `item` 全是 unknown。
+ */
+interface CommunityActionItem {
+  id: number
+  action_id: string
+  name: string
+  description?: string
+  action_type?: string
+  forks_count?: number
+  created_at?: string
+}
+
+interface CommunityWorkflowItem {
+  id: number
+  name: string
+  description?: string
+  forks_count?: number
+  created_at?: string
+}
+
 const userNavStore = useUserNavStore()
 
 const activeTab = ref<TabType>('actions')
@@ -24,8 +48,14 @@ const pageSize = ref(20)
 const total = ref(0)
 const loading = ref(false)
 
-const actionsList = ref<unknown[]>([])
-const workflowsList = ref<unknown[]>([])
+const actionsList = ref<CommunityActionItem[]>([])
+const workflowsList = ref<CommunityWorkflowItem[]>([])
+
+/** 请求头：x-bili-level 必须是字符串（后端按 "0"~"6" 解析等级） */
+const authHeaders = computed(() => ({
+  'x-bili-mid': userNavStore.user_nav.uid,
+  'x-bili-level': String(userNavStore.user_nav.level_info.current_level ?? ''),
+}))
 
 const sortBy = ref<SortBy>('updated_at')
 const sortOrder = ref<SortOrder>('desc')
@@ -50,14 +80,11 @@ const loadActionsList = async () => {
         sort_by: sortBy.value,
         sort_order: sortOrder.value
       },
-      headers: {
-        'x-bili-mid': userNavStore.user_nav.uid,
-        'x-bili-level': userNavStore.user_nav.level_info.current_level
-      }
+      headers: authHeaders.value
     })
 
     if (response?.code === 0 && response?.data) {
-      const data = response.data as { items?: unknown[]; total?: number }
+      const data = response.data as unknown as { items?: CommunityActionItem[]; total?: number }
       actionsList.value = data.items || []
       total.value = data.total || 0
     }
@@ -79,14 +106,11 @@ const loadWorkflowsList = async () => {
         sort_by: sortBy.value,
         sort_order: sortOrder.value
       },
-      headers: {
-        'x-bili-mid': userNavStore.user_nav.uid,
-        'x-bili-level': userNavStore.user_nav.level_info.current_level
-      }
+      headers: authHeaders.value
     })
 
     if (response?.code === 0 && response?.data) {
-      const data = response.data as { items?: unknown[]; total?: number }
+      const data = response.data as unknown as { items?: CommunityWorkflowItem[]; total?: number }
       workflowsList.value = data.items || []
       total.value = data.total || 0
     }
@@ -118,8 +142,9 @@ const forkAutoSyncNode = () =>
       ElCheckbox,
       {
         modelValue: forkAutoSync.value,
-        'onUpdate:modelValue': (v: boolean) => {
-          forkAutoSync.value = v
+        // el-checkbox 的事件值是联合类型（boolean | string | number），这里统一收敛成布尔
+        'onUpdate:modelValue': (v: string | number | boolean) => {
+          forkAutoSync.value = Boolean(v)
         },
       },
       () => '开启上游自动同步（上游更新后自动同步到我的副本；有本地修改时会跳过并通知）'
@@ -127,6 +152,12 @@ const forkAutoSyncNode = () =>
   ])
 
 const handleForkAction = async (actionId: string) => {
+  // SDK 的 ActionForkRequest.action_id 是雪花 int，列表项里是字符串
+  const numericActionId = Number(actionId)
+  if (!Number.isFinite(numericActionId) || numericActionId <= 0) {
+    biliMessage.error('无效的操作标识')
+    return
+  }
   forkAutoSync.value = false
   try {
     await ElMessageBox.confirm(
@@ -141,11 +172,8 @@ const handleForkAction = async (actionId: string) => {
     )
 
     const response = await 自定义操作管理Service.forkCustomActionApiV1RpaBrowserControlCustomActionsForkPost({
-      body: { action_id: actionId, auto_sync_upstream: forkAutoSync.value },
-      headers: {
-        'x-bili-mid': userNavStore.user_nav.uid,
-        'x-bili-level': userNavStore.user_nav.level_info.current_level
-      },
+      body: { action_id: numericActionId, auto_sync_upstream: forkAutoSync.value },
+      headers: authHeaders.value,
       // 失败走非 2xx 响应，开启 throwOnError 以便 catch 直接拿到后端 { code, msg, data }
       throwOnError: true,
     })
@@ -180,10 +208,7 @@ const handleForkWorkflow = async (workflowId: number) => {
 
     const response = await 工作流管理Service.forkWorkflowApiV1RpaBrowserControlWorkflowsForkPost({
       body: { id: workflowId, auto_sync_upstream: forkAutoSync.value },
-      headers: {
-        'x-bili-mid': userNavStore.user_nav.uid,
-        'x-bili-level': userNavStore.user_nav.level_info.current_level
-      },
+      headers: authHeaders.value,
       // 失败走非 2xx 响应，开启 throwOnError 以便 catch 直接拿到后端 { code, msg, data }
       throwOnError: true,
     })
@@ -300,7 +325,7 @@ onMounted(() => {
                   <span>{{ item.forks_count || 0 }}</span>
                 </div>
                 <div class="flex-1"></div>
-                <span class="text-xs">{{ new Date(item.created_at).toLocaleDateString() }}</span>
+                <span class="text-xs">{{ item.created_at ? new Date(item.created_at).toLocaleDateString() : '-' }}</span>
               </div>
 
               <div class="flex items-center gap-2 mt-2">
@@ -333,7 +358,7 @@ onMounted(() => {
                   <span>{{ item.forks_count || 0 }}</span>
                 </div>
                 <div class="flex-1"></div>
-                <span class="text-xs">{{ new Date(item.created_at).toLocaleDateString() }}</span>
+                <span class="text-xs">{{ item.created_at ? new Date(item.created_at).toLocaleDateString() : '-' }}</span>
               </div>
 
               <div class="flex items-center gap-2 mt-2">

@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { Refresh } from '@element-plus/icons-vue'
+import { RouteName } from '@/models/router/index.ts'
 import { useUserNavStore } from '@/stores/user_nav'
 import {
   listWorkflowResources,
@@ -28,6 +30,20 @@ interface Props {
 
 const props = defineProps<Props>()
 const userNavStore = useUserNavStore()
+const router = useRouter()
+
+/**
+ * 跳到操作日志并只看这一批（资源记录与日志共用 execution_id，无需任何映射）。
+ *
+ * 日志页读 `?execution_id=` 初始化筛选，并展示批次过滤条，可一键查看整批链路。
+ */
+function openExecutionLogs(executionId: string) {
+  if (!executionId) return
+  router.push({
+    name: RouteName.RPA_BROWSER_ACTION_LOG,
+    query: { execution_id: executionId },
+  })
+}
 
 const { getTemplate } = useResourceLinkTemplate()
 /** 当前工作流的跳转链接格式（本地配置，未配置时为空串） */
@@ -57,7 +73,7 @@ const resourceIdFilter = ref('')
 const countMinFilter = ref<number | null>(null)
 const countMaxFilter = ref<number | null>(null)
 const browserFilter = ref<number | null>(null)
-const runIdFilter = ref('')
+const executionIdFilter = ref('')
 const dateRange = ref<[string, string] | null>(null)
 
 const STATUS_OPTIONS = [
@@ -113,7 +129,7 @@ async function load() {
       status: statusFilter.value || undefined,
       resource_type: resourceTypeFilter.value || undefined,
       resource_id: resourceIdFilter.value || undefined,
-      run_id: runIdFilter.value || undefined,
+      execution_id: executionIdFilter.value || undefined,
       process_count_min: toNumberOrUndefined(countMinFilter.value),
       process_count_max: toNumberOrUndefined(countMaxFilter.value),
       browser_id: toNumberOrUndefined(browserFilter.value),
@@ -275,19 +291,29 @@ defineExpose({ load })
         </template>
         <template #default="{ row }">{{ row.browser_id || '-' }}</template>
       </el-table-column>
-      <el-table-column label="所属运行" width="200">
+      <el-table-column label="执行批次" width="200">
         <template #header>
           <el-input
-            v-model="runIdFilter"
+            v-model="executionIdFilter"
             class="workflow-resource-record__filter"
-            placeholder="运行ID"
+            placeholder="执行批次ID"
             clearable
             @change="handleRefresh"
             @clear="handleRefresh"
           />
         </template>
         <template #default="{ row }">
-          <span class="font-mono">{{ row.run_id ? String(row.run_id).slice(0, 8) : '-' }}</span>
+          <el-link
+            v-if="row.execution_id"
+            type="primary"
+            underline="never"
+            class="workflow-resource-record__execution-id font-mono"
+            :title="`查看该批次 ${row.execution_id} 的操作日志`"
+            @click="openExecutionLogs(String(row.execution_id))"
+          >
+            {{ String(row.execution_id).slice(0, 8) }}
+          </el-link>
+          <span v-else class="workflow-resource-record__execution-id">-</span>
         </template>
       </el-table-column>
       <el-table-column label="备注" min-width="120" show-overflow-tooltip>

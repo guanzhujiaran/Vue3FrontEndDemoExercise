@@ -14,6 +14,7 @@ import tailwindcss from '@tailwindcss/vite'
 import svgLoader from 'vite-svg-loader'
 import { heyApiPlugin } from '@hey-api/vite-plugin'
 import { type UserParser } from '@hey-api/shared'
+import type { Plugin, ResolvedConfig } from 'vite'
 import { SITE_URL, SEO_INDEXABLE_ROUTES } from './src/config/seo_routes'
 import { defineNuxtConfig } from 'nuxt/config'
 
@@ -80,60 +81,95 @@ const hey_api_parser: UserParser = {
 
 const pathSrc = path.resolve(__dirname, 'src')
 
-/** 三个后端的 SDK 生成插件（配置与原 vite.config.ts 完全一致） */
-const apiSdkPlugins = [
-  heyApiPlugin({
-    config: {
-      input: 'http://localhost:28000/openapi.json',
-      output: 'src/api/browser/hey-api',
-      plugins: [
-        { name: '@hey-api/client-ofetch', runtimeConfigPath: '@/api/browser/runtime_config' },
-        { enums: 'javascript', name: '@hey-api/typescript' },
-        {
-          name: '@hey-api/sdk',
-          responseStyle: 'data',
-          paramsStructure: 'grouped',
-          operations: { strategy: 'byTags', containerName: (name) => `${name}Service` }
-        }
-      ],
-      parser: hey_api_parser
+/**
+ * hey-api 的 vite 插件在 `configResolved` 阶段实时拉取后端 `openapi.json` 生成 SDK，
+ * 拉不到就直接抛错，导致 `nuxt dev` / `nuxt build` 整个起不来。
+ *
+ * 本地开发时三个后端未必都在线：crawler(23333) 由 dev 编排的 api 容器提供，
+ * 但 rpa-browser(28000) / message(18739) 要本地手动起，连远端网关时也可能缺 ——
+ * 这时应该沿用仓库里已经生成好的 SDK 继续开发，而不是因为「后端没起」把前端也带崩。
+ *
+ * 因此给每个生成插件套一层：生成失败只告警（提示去起对应后端 / 手动 gen），
+ * 不再阻断启动；后端可达时行为与原来完全一致。
+ */
+type ConfigResolvedHook = (config: ResolvedConfig) => void | Promise<void>
+
+const tolerantSdkGen = (input: string, plugin: Plugin): Plugin => {
+  const inner = plugin.configResolved as ConfigResolvedHook | undefined
+  return {
+    ...plugin,
+    async configResolved(config: ResolvedConfig) {
+      try {
+        await inner?.(config)
+      } catch (error) {
+        console.warn(
+          `[hey-api] 无法从 ${input} 生成 SDK（后端未启动？），沿用已生成的代码：${String(error)}`
+        )
+      }
     }
-  }),
-  heyApiPlugin({
-    config: {
-      input: 'http://localhost:23333/openapi.json',
-      output: 'src/api/bili_lottery_data/hey-api',
-      plugins: [
-        { name: '@hey-api/client-ofetch', runtimeConfigPath: '@/api/bili_lottery_data/runtime_config' },
-        { enums: 'javascript', name: '@hey-api/typescript' },
-        {
-          name: '@hey-api/sdk',
-          responseStyle: 'data',
-          paramsStructure: 'grouped',
-          operations: { strategy: 'byTags', containerName: (name) => `${name}Service` }
-        }
-      ],
-      parser: hey_api_parser
-    }
-  }),
-  heyApiPlugin({
-    config: {
-      input: 'http://localhost:18739/openapi.json',
-      output: 'src/api/community/hey-api',
-      plugins: [
-        { name: '@hey-api/client-ofetch', runtimeConfigPath: '@/api/community/runtime_config' },
-        { enums: 'javascript', name: '@hey-api/typescript' },
-        {
-          name: '@hey-api/sdk',
-          responseStyle: 'data',
-          paramsStructure: 'grouped',
-          operations: { strategy: 'byTags', containerName: (name) => `${name}Service` }
-        }
-      ],
-      parser: hey_api_parser
-    }
-  })
-]
+  }
+}
+
+/**
+ * 本机开发时的 API 目标（仅 `nuxt dev` 生效，见下方 vite.server.proxy）。
+ *
+ * 生产与开发是完全分开的两套部署，唯一共用的是「查询」：本机只跑一个只读查询容器
+ * （docker-compose.dev.yml 的 be-bilibili-crawler-query），它连的就是生产库 / 生产 Redis，
+ * 所以开发时看到的是真实数据，不需要把生产数据同步到本地。
+ *
+ *   - 抽奖查询（Get* / Search* / lottery_*）→ 本机查询容器 23336；
+ *   - 其余一切（Add* 写入、Get*ScrapyStatus、zhuanlan、rpa、message、casdoor）
+ *     → 9923 的网关。
+ *
+ * 两个地址都是常量，不引入环境变量；需要指向别处时改这两行即可。
+ */
+const QUERY_API = 'http://localhost:23336'
+const GATEWAY_API = 'http://localhost:9923'
+
+/**
+ * 三个后端的 SDK 生成目标（配置与原 vite.config.ts 完全一致，
+ * 只有 input / output / runtimeConfigPath 不同，其余插件栈相同）。
+ */
+const sdkTargets = [
+  {
+    input: 'http://localhost:28000/openapi.json',
+    output: 'src/api/browser/hey-api',
+    runtimeConfigPath: '@/api/browser/runtime_config'
+  },
+  {
+    input: 'http://localhost:23333/openapi.json',
+    output: 'src/api/bili_lottery_data/hey-api',
+    runtimeConfigPath: '@/api/bili_lottery_data/runtime_config'
+  },
+  {
+    input: 'http://localhost:18739/openapi.json',
+    output: 'src/api/community/hey-api',
+    runtimeConfigPath: '@/api/community/runtime_config'
+  }
+] as const
+
+const apiSdkPlugins = sdkTargets.map(({ input, output, runtimeConfigPath }) =>
+  tolerantSdkGen(
+    input,
+    heyApiPlugin({
+      config: {
+        input,
+        output,
+        plugins: [
+          { name: '@hey-api/client-ofetch', runtimeConfigPath },
+          { enums: 'javascript', name: '@hey-api/typescript' },
+          {
+            name: '@hey-api/sdk',
+            responseStyle: 'data',
+            paramsStructure: 'grouped',
+            operations: { strategy: 'byTags', containerName: (name) => `${name}Service` }
+          }
+        ],
+        parser: hey_api_parser
+      }
+    }) as Plugin
+  )
+)
 
 export default defineNuxtConfig({
   compatibilityDate: '2026-09-21',
@@ -308,8 +344,26 @@ export default defineNuxtConfig({
     ],
     server: {
       allowedHosts: ['serena.dynv6.net'],
+      /**
+       * 按路径分流（顺序敏感：更具体的前缀必须排在前面）。
+       * 爬虫状态读的是爬虫进程内存，本地没有爬虫，必须走远端；
+       * 其余 `lottery_database/bili/*` 全给本地查询容器 —— Add* 写接口在那边没有路由，
+       * 自然返回 404，等于本地开发不可能误写生产库。
+       */
       proxy: {
-        '/api': { target: 'http://localhost:9923', changeOrigin: true }
+        '/api/v1/lottery_database/bili/GetAllLotScrapyStatus': {
+          target: GATEWAY_API,
+          changeOrigin: true
+        },
+        '/api/v1/lottery_database/bili/GetSingleScrapyStatus': {
+          target: GATEWAY_API,
+          changeOrigin: true
+        },
+        '/api/v1/lottery_database/bili': {
+          target: QUERY_API,
+          changeOrigin: true
+        },
+        '/api': { target: GATEWAY_API, changeOrigin: true }
       }
     }
   },

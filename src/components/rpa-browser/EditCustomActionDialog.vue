@@ -29,9 +29,15 @@ const editItems = ref<DroppedItem[]>([])
 const editingName = ref('')
 const editingDescription = ref('')
 const editingTags = ref<string[]>([])
+/** 作者声明的语义化版本（服务端不自动递增，由人决定何时升版） */
+const editingVersion = ref('1.0.0')
+/** 当前内容指纹（只读展示，用于核对"我这个版本对应哪份内容"） */
+const editingContentHash = ref('')
 /** 动作展示图标：系列 + 系列内编号，0/0 表示默认图标 */
 const editingIconSeries = ref(0)
 const editingIconId = ref(0)
+/** 报错时是否记录页面关键元素快照（写入操作日志 page_snapshot） */
+const editingLogPageSnapshot = ref(false)
 const tagInputValue = ref('')
 const saving = ref(false)
 /** 每次打开弹窗递增，强制 DebugBox 重新挂载以加载 initialSteps */
@@ -48,9 +54,13 @@ watch(() => props.modelValue, (visible) => {
     isMinimized.value = false
     editingName.value = (props.actionDetail.name as string) || ''
     editingDescription.value = (props.actionDetail.description as string) || ''
+    editingVersion.value = (props.actionDetail.version as string) || '1.0.0'
+    editingContentHash.value = (props.actionDetail.content_hash as string) || ''
     editingTags.value = Array.isArray(props.actionDetail.tags) ? [...(props.actionDetail.tags as string[])] : []
     editingIconSeries.value = (props.actionDetail.icon_series as number) ?? 0
     editingIconId.value = (props.actionDetail.icon_id as number) ?? 0
+    // 采集开关是动作级配置，未设置时后端默认关闭
+    editingLogPageSnapshot.value = Boolean(props.actionDetail.log_record_page_snapshot)
     tagInputValue.value = ''
     const steps = props.actionDetail.steps
     editItems.value = steps && Array.isArray(steps) ? stepsToDroppedItems(steps as Record<string, unknown>[]) : []
@@ -97,8 +107,10 @@ function handleDialogUpdate(val: boolean) {
 
 async function handleSave() {
   if (!props.actionDetail) return
-  const actionId = props.actionDetail.action_id as string
-  if (!actionId) return
+  // action_id 是雪花 int：SDK 的 CompositeActionUpdateRequest.action_id 声明为 number，
+  // 详情对象里是 unknown，这里统一转成数字（0/NaN 视为无效标识）
+  const actionId = Number(props.actionDetail.action_id)
+  if (!Number.isFinite(actionId) || actionId <= 0) return
   const steps = debugBoxRef.value?.getSteps() || []
   saving.value = true
   try {
@@ -107,6 +119,8 @@ async function handleSave() {
         action_id: actionId,
         name: editingName.value || undefined,
         description: editingDescription.value || undefined,
+        // 为空表示不修改版本号（后端 version=None 时保持原值）
+        version: editingVersion.value || undefined,
         tags: editingTags.value,
         steps,
         icon_series: editingIconSeries.value,
@@ -198,9 +212,44 @@ async function handleSave() {
           show-word-limit
         />
       </div>
+      <div class="edit-custom-action__version-section border border-border rounded p-3 flex flex-col gap-2">
+        <div class="flex items-center gap-3">
+          <label class="text-xs text-color-secondary whitespace-nowrap">版本号</label>
+          <el-input
+            v-model="editingVersion"
+            class="edit-custom-action__version-input max-w-40"
+            placeholder="如 1.1.0"
+            maxlength="50"
+            show-word-limit
+          />
+          <el-text
+            v-if="editingContentHash"
+            class="edit-custom-action__content-hash text-xs font-mono"
+            type="info"
+          >内容指纹：{{ editingContentHash.slice(0, 8) }}</el-text>
+        </div>
+        <el-text class="edit-custom-action__version-tip text-xs" type="info">
+          版本号由作者自行维护，服务端不会自动递增；改了步骤或参数后是否升版由你决定。判断内容是否真的变化，看上面的内容指纹。
+        </el-text>
+      </div>
       <div class="edit-custom-action__icon-section border border-border rounded p-3 flex flex-col gap-2">
         <label class="text-xs text-color-secondary">动作图标</label>
         <ActionIconPicker v-model:series="editingIconSeries" v-model:id="editingIconId" />
+      </div>
+      <div class="edit-custom-action__log-section border border-border rounded p-3 flex flex-col gap-2">
+        <div class="flex items-center gap-3">
+          <label class="text-xs text-color-secondary whitespace-nowrap">报错页面快照</label>
+          <el-switch
+            v-model="editingLogPageSnapshot"
+            class="edit-custom-action__log-switch"
+            inline-prompt
+            active-text="开"
+            inactive-text="关"
+          />
+        </div>
+        <el-text class="edit-custom-action__log-tip text-xs" type="info">
+          开启后，该动作执行失败时会把当前页面的可交互元素（标签 / 选择器 / 文本）一并写入操作日志，便于排查「元素未找到、验证码弹窗」等问题；成功执行不采集。
+        </el-text>
       </div>
       <div class="h-[60vh] border border-border rounded flex flex-col overflow-hidden">
         <DebugBox

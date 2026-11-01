@@ -574,6 +574,32 @@ const routes: CustomRouteRecordRaw[] = [
           order: 10,
           showInHome: false
         }
+      },
+      {
+        path: 'mcp-config',
+        name: RouteName.RPA_BROWSER_MCP_CONFIG,
+        component: () => import('@/views/rpa-browser/RpaMcpConfigView.vue'),
+        meta: {
+          title: RouteName.RPA_BROWSER_MCP_CONFIG,
+          icon: IconConnection,
+          description: '生成 MCP 客户端配置，连接 RPA 调试能力',
+          isHeaderShow: false,
+          order: 11,
+          showInHome: false
+        }
+      },
+      {
+        path: 'feedback',
+        name: RouteName.RPA_BROWSER_FEEDBACK,
+        component: () => import('@/views/rpa-browser/RpaFeedbackView.vue'),
+        meta: {
+          title: RouteName.RPA_BROWSER_FEEDBACK,
+          icon: IconChat,
+          description: '提交运行报错 / 反馈给服主',
+          isHeaderShow: false,
+          order: 12,
+          showInHome: false
+        }
       }
     ]
   },

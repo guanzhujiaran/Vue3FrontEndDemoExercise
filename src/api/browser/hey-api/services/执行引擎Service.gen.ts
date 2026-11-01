@@ -102,7 +102,7 @@ export class 执行引擎Service {
     /**
      * 获取可用的系统 RPC 方法列表
      *
-     * 获取获取外部数据 Action 可选的 RPC 业务方法列表
+     * 获取外部数据 Action 可选的 RPC 业务方法列表
      *
      * 前端在配置获取外部数据 Action 时，应从该接口获取可选方法列表作为可选项展示，
      * 不允许用户随意输入外部方法名。每个方法对应一个独立的 RabbitMQ routing_key，

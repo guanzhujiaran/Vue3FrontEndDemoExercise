@@ -3,115 +3,9 @@
 import type { RequestResult } from '../client';
 import { client } from '../client.gen';
 import type { Options } from '../sdk.gen';
-import type { AddDynamicLotteryApiV1LotteryDatabaseBiliAddDynamicLotteryPostData, AddDynamicLotteryApiV1LotteryDatabaseBiliAddDynamicLotteryPostErrors, AddDynamicLotteryApiV1LotteryDatabaseBiliAddDynamicLotteryPostResponses, AddOthersLotDynApiV1LotteryDatabaseBiliAddOthersLotDynPostData, AddOthersLotDynApiV1LotteryDatabaseBiliAddOthersLotDynPostErrors, AddOthersLotDynApiV1LotteryDatabaseBiliAddOthersLotDynPostResponses, AddTopicLotteryApiV1LotteryDatabaseBiliAddTopicLotteryPostData, AddTopicLotteryApiV1LotteryDatabaseBiliAddTopicLotteryPostErrors, AddTopicLotteryApiV1LotteryDatabaseBiliAddTopicLotteryPostResponses, BulkAddDynamicLotteryApiV1LotteryDatabaseBiliBulkAddDynamicLotteryPostData, BulkAddDynamicLotteryApiV1LotteryDatabaseBiliBulkAddDynamicLotteryPostErrors, BulkAddDynamicLotteryApiV1LotteryDatabaseBiliBulkAddDynamicLotteryPostResponses, BulkAddOthersLotDynApiV1LotteryDatabaseBiliBulkAddOthersLotDynPostData, BulkAddOthersLotDynApiV1LotteryDatabaseBiliBulkAddOthersLotDynPostErrors, BulkAddOthersLotDynApiV1LotteryDatabaseBiliBulkAddOthersLotDynPostResponses, BulkAddTopicLotteryApiV1LotteryDatabaseBiliBulkAddTopicLotteryPostData, BulkAddTopicLotteryApiV1LotteryDatabaseBiliBulkAddTopicLotteryPostErrors, BulkAddTopicLotteryApiV1LotteryDatabaseBiliBulkAddTopicLotteryPostResponses, GetAllLotScrapyStatusApiV1LotteryDatabaseBiliGetAllLotScrapyStatusGetData, GetAllLotScrapyStatusApiV1LotteryDatabaseBiliGetAllLotScrapyStatusGetResponses, GetAllLotteryApiV1LotteryDatabaseBiliGetAllLotteryGetData, GetAllLotteryApiV1LotteryDatabaseBiliGetAllLotteryGetErrors, GetAllLotteryApiV1LotteryDatabaseBiliGetAllLotteryGetResponses, GetChargeLotteryApiV1LotteryDatabaseBiliGetChargeLotteryGetData, GetChargeLotteryApiV1LotteryDatabaseBiliGetChargeLotteryGetErrors, GetChargeLotteryApiV1LotteryDatabaseBiliGetChargeLotteryGetResponses, GetLiveLotteryApiV1LotteryDatabaseBiliGetLiveLotteryGetData, GetLiveLotteryApiV1LotteryDatabaseBiliGetLiveLotteryGetErrors, GetLiveLotteryApiV1LotteryDatabaseBiliGetLiveLotteryGetResponses, GetLotteryDataSummaryApiV1LotteryDatabaseBiliGetLotteryDataSummaryGetData, GetLotteryDataSummaryApiV1LotteryDatabaseBiliGetLotteryDataSummaryGetErrors, GetLotteryDataSummaryApiV1LotteryDatabaseBiliGetLotteryDataSummaryGetResponses, GetLotteryDetailApiV1LotteryDatabaseBiliGetLotteryDetailGetData, GetLotteryDetailApiV1LotteryDatabaseBiliGetLotteryDetailGetErrors, GetLotteryDetailApiV1LotteryDatabaseBiliGetLotteryDetailGetResponses, GetLotteryFilterParamsApiV1LotteryDatabaseBiliGetLotteryFilterParamsGetData, GetLotteryFilterParamsApiV1LotteryDatabaseBiliGetLotteryFilterParamsGetResponses, GetOfficialLotteryApiV1LotteryDatabaseBiliGetOfficialLotteryGetData, GetOfficialLotteryApiV1LotteryDatabaseBiliGetOfficialLotteryGetErrors, GetOfficialLotteryApiV1LotteryDatabaseBiliGetOfficialLotteryGetResponses, GetOthersLotDynDetailApiV1LotteryDatabaseBiliGetOthersLotDynDetailGetData, GetOthersLotDynDetailApiV1LotteryDatabaseBiliGetOthersLotDynDetailGetErrors, GetOthersLotDynDetailApiV1LotteryDatabaseBiliGetOthersLotDynDetailGetResponses, GetOthersLotDynListApiV1LotteryDatabaseBiliGetOthersLotDynListGetData, GetOthersLotDynListApiV1LotteryDatabaseBiliGetOthersLotDynListGetErrors, GetOthersLotDynListApiV1LotteryDatabaseBiliGetOthersLotDynListGetResponses, GetReserveLotteryApiV1LotteryDatabaseBiliGetReserveLotteryGetData, GetReserveLotteryApiV1LotteryDatabaseBiliGetReserveLotteryGetErrors, GetReserveLotteryApiV1LotteryDatabaseBiliGetReserveLotteryGetResponses, GetSingleScrapyStatusApiV1LotteryDatabaseBiliGetSingleScrapyStatusGetData, GetSingleScrapyStatusApiV1LotteryDatabaseBiliGetSingleScrapyStatusGetErrors, GetSingleScrapyStatusApiV1LotteryDatabaseBiliGetSingleScrapyStatusGetResponses, GetTopicLotteryApiV1LotteryDatabaseBiliGetTopicLotteryGetData, GetTopicLotteryApiV1LotteryDatabaseBiliGetTopicLotteryGetErrors, GetTopicLotteryApiV1LotteryDatabaseBiliGetTopicLotteryGetResponses, LotteryArticleApiV1LotteryDatabaseBiliZhuanlanLotteryArticlePostData, LotteryArticleApiV1LotteryDatabaseBiliZhuanlanLotteryArticlePostErrors, LotteryArticleApiV1LotteryDatabaseBiliZhuanlanLotteryArticlePostResponses, LotteryHofApiV1LotteryDatabaseBiliLotteryHofLotTypeGetData, LotteryHofApiV1LotteryDatabaseBiliLotteryHofLotTypeGetErrors, LotteryHofApiV1LotteryDatabaseBiliLotteryHofLotTypeGetResponses, LotteryResultApiV1LotteryDatabaseBiliLotteryResultGetData, LotteryResultApiV1LotteryDatabaseBiliLotteryResultGetErrors, LotteryResultApiV1LotteryDatabaseBiliLotteryResultGetResponses, SearchLotteryByKeywordApiV1LotteryDatabaseBiliSearchLotteryByKeywordPostData, SearchLotteryByKeywordApiV1LotteryDatabaseBiliSearchLotteryByKeywordPostErrors, SearchLotteryByKeywordApiV1LotteryDatabaseBiliSearchLotteryByKeywordPostResponses } from '../types.gen';
+import type { AddDynamicLotteryApiV1LotteryDatabaseBiliAddDynamicLotteryPostData, AddDynamicLotteryApiV1LotteryDatabaseBiliAddDynamicLotteryPostErrors, AddDynamicLotteryApiV1LotteryDatabaseBiliAddDynamicLotteryPostResponses, AddOthersLotDynApiV1LotteryDatabaseBiliAddOthersLotDynPostData, AddOthersLotDynApiV1LotteryDatabaseBiliAddOthersLotDynPostErrors, AddOthersLotDynApiV1LotteryDatabaseBiliAddOthersLotDynPostResponses, AddTopicLotteryApiV1LotteryDatabaseBiliAddTopicLotteryPostData, AddTopicLotteryApiV1LotteryDatabaseBiliAddTopicLotteryPostErrors, AddTopicLotteryApiV1LotteryDatabaseBiliAddTopicLotteryPostResponses, BulkAddDynamicLotteryApiV1LotteryDatabaseBiliBulkAddDynamicLotteryPostData, BulkAddDynamicLotteryApiV1LotteryDatabaseBiliBulkAddDynamicLotteryPostErrors, BulkAddDynamicLotteryApiV1LotteryDatabaseBiliBulkAddDynamicLotteryPostResponses, BulkAddOthersLotDynApiV1LotteryDatabaseBiliBulkAddOthersLotDynPostData, BulkAddOthersLotDynApiV1LotteryDatabaseBiliBulkAddOthersLotDynPostErrors, BulkAddOthersLotDynApiV1LotteryDatabaseBiliBulkAddOthersLotDynPostResponses, BulkAddTopicLotteryApiV1LotteryDatabaseBiliBulkAddTopicLotteryPostData, BulkAddTopicLotteryApiV1LotteryDatabaseBiliBulkAddTopicLotteryPostErrors, BulkAddTopicLotteryApiV1LotteryDatabaseBiliBulkAddTopicLotteryPostResponses, GetAllLotScrapyStatusApiV1LotteryDatabaseBiliGetAllLotScrapyStatusGetData, GetAllLotScrapyStatusApiV1LotteryDatabaseBiliGetAllLotScrapyStatusGetResponses, GetAllLotteryApiV1LotteryDatabaseBiliGetAllLotteryGetData, GetAllLotteryApiV1LotteryDatabaseBiliGetAllLotteryGetErrors, GetAllLotteryApiV1LotteryDatabaseBiliGetAllLotteryGetResponses, GetChargeLotteryApiV1LotteryDatabaseBiliGetChargeLotteryGetData, GetChargeLotteryApiV1LotteryDatabaseBiliGetChargeLotteryGetErrors, GetChargeLotteryApiV1LotteryDatabaseBiliGetChargeLotteryGetResponses, GetLiveLotteryApiV1LotteryDatabaseBiliGetLiveLotteryGetData, GetLiveLotteryApiV1LotteryDatabaseBiliGetLiveLotteryGetErrors, GetLiveLotteryApiV1LotteryDatabaseBiliGetLiveLotteryGetResponses, GetLotteryDataSummaryApiV1LotteryDatabaseBiliGetLotteryDataSummaryGetData, GetLotteryDataSummaryApiV1LotteryDatabaseBiliGetLotteryDataSummaryGetErrors, GetLotteryDataSummaryApiV1LotteryDatabaseBiliGetLotteryDataSummaryGetResponses, GetLotteryDetailApiV1LotteryDatabaseBiliGetLotteryDetailGetData, GetLotteryDetailApiV1LotteryDatabaseBiliGetLotteryDetailGetErrors, GetLotteryDetailApiV1LotteryDatabaseBiliGetLotteryDetailGetResponses, GetLotteryDetailListApiV1LotteryDatabaseBiliGetLotteryDetailListGetData, GetLotteryDetailListApiV1LotteryDatabaseBiliGetLotteryDetailListGetErrors, GetLotteryDetailListApiV1LotteryDatabaseBiliGetLotteryDetailListGetResponses, GetLotteryFilterParamsApiV1LotteryDatabaseBiliGetLotteryFilterParamsGetData, GetLotteryFilterParamsApiV1LotteryDatabaseBiliGetLotteryFilterParamsGetResponses, GetOfficialLotteryApiV1LotteryDatabaseBiliGetOfficialLotteryGetData, GetOfficialLotteryApiV1LotteryDatabaseBiliGetOfficialLotteryGetErrors, GetOfficialLotteryApiV1LotteryDatabaseBiliGetOfficialLotteryGetResponses, GetOthersLotDynDetailApiV1LotteryDatabaseBiliGetOthersLotDynDetailGetData, GetOthersLotDynDetailApiV1LotteryDatabaseBiliGetOthersLotDynDetailGetErrors, GetOthersLotDynDetailApiV1LotteryDatabaseBiliGetOthersLotDynDetailGetResponses, GetOthersLotDynListApiV1LotteryDatabaseBiliGetOthersLotDynListGetData, GetOthersLotDynListApiV1LotteryDatabaseBiliGetOthersLotDynListGetErrors, GetOthersLotDynListApiV1LotteryDatabaseBiliGetOthersLotDynListGetResponses, GetReserveLotteryApiV1LotteryDatabaseBiliGetReserveLotteryGetData, GetReserveLotteryApiV1LotteryDatabaseBiliGetReserveLotteryGetErrors, GetReserveLotteryApiV1LotteryDatabaseBiliGetReserveLotteryGetResponses, GetSingleScrapyStatusApiV1LotteryDatabaseBiliGetSingleScrapyStatusGetData, GetSingleScrapyStatusApiV1LotteryDatabaseBiliGetSingleScrapyStatusGetErrors, GetSingleScrapyStatusApiV1LotteryDatabaseBiliGetSingleScrapyStatusGetResponses, GetTopicLotteryApiV1LotteryDatabaseBiliGetTopicLotteryGetData, GetTopicLotteryApiV1LotteryDatabaseBiliGetTopicLotteryGetErrors, GetTopicLotteryApiV1LotteryDatabaseBiliGetTopicLotteryGetResponses, GetUpcomingLotteryApiV1LotteryDatabaseBiliGetUpcomingLotteryGetData, GetUpcomingLotteryApiV1LotteryDatabaseBiliGetUpcomingLotteryGetErrors, GetUpcomingLotteryApiV1LotteryDatabaseBiliGetUpcomingLotteryGetResponses, LotteryArticleApiV1LotteryDatabaseBiliZhuanlanLotteryArticlePostData, LotteryArticleApiV1LotteryDatabaseBiliZhuanlanLotteryArticlePostErrors, LotteryArticleApiV1LotteryDatabaseBiliZhuanlanLotteryArticlePostResponses, LotteryHofApiV1LotteryDatabaseBiliLotteryHofLotTypeGetData, LotteryHofApiV1LotteryDatabaseBiliLotteryHofLotTypeGetErrors, LotteryHofApiV1LotteryDatabaseBiliLotteryHofLotTypeGetResponses, LotteryResultApiV1LotteryDatabaseBiliLotteryResultGetData, LotteryResultApiV1LotteryDatabaseBiliLotteryResultGetErrors, LotteryResultApiV1LotteryDatabaseBiliLotteryResultGetResponses, SearchLotteryByKeywordApiV1LotteryDatabaseBiliSearchLotteryByKeywordPostData, SearchLotteryByKeywordApiV1LotteryDatabaseBiliSearchLotteryByKeywordPostErrors, SearchLotteryByKeywordApiV1LotteryDatabaseBiliSearchLotteryByKeywordPostResponses } from '../types.gen';
 
 export class V1BiliService {
-    /**
-     * 获取必抽的预约抽奖数据
-     *
-     * 获取必抽的预约抽奖数据，支持高级筛选（GET 查询，参数走 query string，
-     * 前端每次请求附带 t 时间戳防浏览器缓存）。
-     * 当 page_num 和 page_size 任一为 0 时，返回 svm 判断过的必抽的数据
-     * 否则返回分页数据（未传 status 时默认只返回未开奖且未超时的有效记录）
-     */
-    public static getReserveLotteryApiV1LotteryDatabaseBiliGetReserveLotteryGet<ThrowOnError extends boolean = false>(options?: Options<GetReserveLotteryApiV1LotteryDatabaseBiliGetReserveLotteryGetData, ThrowOnError>): RequestResult<GetReserveLotteryApiV1LotteryDatabaseBiliGetReserveLotteryGetResponses, GetReserveLotteryApiV1LotteryDatabaseBiliGetReserveLotteryGetErrors, ThrowOnError, 'data'> {
-        return (options?.client ?? client).get<GetReserveLotteryApiV1LotteryDatabaseBiliGetReserveLotteryGetResponses, GetReserveLotteryApiV1LotteryDatabaseBiliGetReserveLotteryGetErrors, ThrowOnError, 'data'>({
-            responseStyle: 'data',
-            url: '/api/v1/lottery_database/bili/GetReserveLottery',
-            ...options
-        });
-    }
-    
-    /**
-     * 获取必抽的官方抽奖数据
-     *
-     * 获取必抽的官方抽奖数据，支持高级筛选（GET 查询，参数走 query string，
-     * 前端每次请求附带 t 时间戳防浏览器缓存）。
-     * 当 page_num 和 page_size 任一为 0 时，返回 svm 判断过的必抽的数据
-     * 否则返回分页数据（未传 status 时默认只返回未开奖且未超时的有效记录）
-     */
-    public static getOfficialLotteryApiV1LotteryDatabaseBiliGetOfficialLotteryGet<ThrowOnError extends boolean = false>(options?: Options<GetOfficialLotteryApiV1LotteryDatabaseBiliGetOfficialLotteryGetData, ThrowOnError>): RequestResult<GetOfficialLotteryApiV1LotteryDatabaseBiliGetOfficialLotteryGetResponses, GetOfficialLotteryApiV1LotteryDatabaseBiliGetOfficialLotteryGetErrors, ThrowOnError, 'data'> {
-        return (options?.client ?? client).get<GetOfficialLotteryApiV1LotteryDatabaseBiliGetOfficialLotteryGetResponses, GetOfficialLotteryApiV1LotteryDatabaseBiliGetOfficialLotteryGetErrors, ThrowOnError, 'data'>({
-            responseStyle: 'data',
-            url: '/api/v1/lottery_database/bili/GetOfficialLottery',
-            ...options
-        });
-    }
-    
-    /**
-     * 获取必抽的充电抽奖数据
-     *
-     * 获取必抽的充电抽奖数据，支持高级筛选（GET 查询，参数走 query string，
-     * 前端每次请求附带 t 时间戳防浏览器缓存）。
-     * 当 page_num 和 page_size 任一为 0 时，返回 svm 判断过的必抽的数据
-     * 否则返回分页数据（未传 status 时默认只返回未开奖且未超时的有效记录）
-     */
-    public static getChargeLotteryApiV1LotteryDatabaseBiliGetChargeLotteryGet<ThrowOnError extends boolean = false>(options?: Options<GetChargeLotteryApiV1LotteryDatabaseBiliGetChargeLotteryGetData, ThrowOnError>): RequestResult<GetChargeLotteryApiV1LotteryDatabaseBiliGetChargeLotteryGetResponses, GetChargeLotteryApiV1LotteryDatabaseBiliGetChargeLotteryGetErrors, ThrowOnError, 'data'> {
-        return (options?.client ?? client).get<GetChargeLotteryApiV1LotteryDatabaseBiliGetChargeLotteryGetResponses, GetChargeLotteryApiV1LotteryDatabaseBiliGetChargeLotteryGetErrors, ThrowOnError, 'data'>({
-            responseStyle: 'data',
-            url: '/api/v1/lottery_database/bili/GetChargeLottery',
-            ...options
-        });
-    }
-    
-    /**
-     * 获取所有直播抽奖数据（分页）
-     *
-     * GET 查询，参数走 query string，前端每次请求附带 t 时间戳防浏览器缓存
-     */
-    public static getLiveLotteryApiV1LotteryDatabaseBiliGetLiveLotteryGet<ThrowOnError extends boolean = false>(options?: Options<GetLiveLotteryApiV1LotteryDatabaseBiliGetLiveLotteryGetData, ThrowOnError>): RequestResult<GetLiveLotteryApiV1LotteryDatabaseBiliGetLiveLotteryGetResponses, GetLiveLotteryApiV1LotteryDatabaseBiliGetLiveLotteryGetErrors, ThrowOnError, 'data'> {
-        return (options?.client ?? client).get<GetLiveLotteryApiV1LotteryDatabaseBiliGetLiveLotteryGetResponses, GetLiveLotteryApiV1LotteryDatabaseBiliGetLiveLotteryGetErrors, ThrowOnError, 'data'>({
-            responseStyle: 'data',
-            url: '/api/v1/lottery_database/bili/GetLiveLottery',
-            ...options
-        });
-    }
-    
-    /**
-     * 获取所有话题抽奖数据（分页+筛选）
-     *
-     * GET 查询，参数走 query string，前端每次请求附带 t 时间戳防浏览器缓存
-     */
-    public static getTopicLotteryApiV1LotteryDatabaseBiliGetTopicLotteryGet<ThrowOnError extends boolean = false>(options?: Options<GetTopicLotteryApiV1LotteryDatabaseBiliGetTopicLotteryGetData, ThrowOnError>): RequestResult<GetTopicLotteryApiV1LotteryDatabaseBiliGetTopicLotteryGetResponses, GetTopicLotteryApiV1LotteryDatabaseBiliGetTopicLotteryGetErrors, ThrowOnError, 'data'> {
-        return (options?.client ?? client).get<GetTopicLotteryApiV1LotteryDatabaseBiliGetTopicLotteryGetResponses, GetTopicLotteryApiV1LotteryDatabaseBiliGetTopicLotteryGetErrors, ThrowOnError, 'data'>({
-            responseStyle: 'data',
-            url: '/api/v1/lottery_database/bili/GetTopicLottery',
-            ...options
-        });
-    }
-    
-    /**
-     * 获取管理端抽奖数据汇总
-     *
-     * 按抽奖类型汇总 bili-crawler 的抽奖数据（管理端使用）：
-     * 未开奖数（还没到开奖时间）、昨日/本周/本月新增、累计总量、24 小时内即将开奖、
-     * 待抓开奖结果积压、大奖数量、参与人数分布、近 14 天新增趋势与即将开奖明细，
-     * 并额外汇总话题抽奖 / 直播抽奖 / 第三方动态抽奖等独立数据源。
-     * GET 查询，前端每次请求附带 t 时间戳防浏览器缓存（后端不使用该值）。
-     */
-    public static getLotteryDataSummaryApiV1LotteryDatabaseBiliGetLotteryDataSummaryGet<ThrowOnError extends boolean = false>(options?: Options<GetLotteryDataSummaryApiV1LotteryDatabaseBiliGetLotteryDataSummaryGetData, ThrowOnError>): RequestResult<GetLotteryDataSummaryApiV1LotteryDatabaseBiliGetLotteryDataSummaryGetResponses, GetLotteryDataSummaryApiV1LotteryDatabaseBiliGetLotteryDataSummaryGetErrors, ThrowOnError, 'data'> {
-        return (options?.client ?? client).get<GetLotteryDataSummaryApiV1LotteryDatabaseBiliGetLotteryDataSummaryGetResponses, GetLotteryDataSummaryApiV1LotteryDatabaseBiliGetLotteryDataSummaryGetErrors, ThrowOnError, 'data'>({
-            responseStyle: 'data',
-            url: '/api/v1/lottery_database/bili/GetLotteryDataSummary',
-            ...options
-        });
-    }
-    
-    /**
-     * 获取所有抽奖信息（按收录时间和发布时间过滤，支持分页）
-     *
-     * 获取svm判断过的必抽的预约抽奖数据和官方抽奖数据，按收录时间(created_at)和发布时间(pubTime)过滤普通抽奖
-     * 普通抽奖列表支持分页：page_num 从 0 开始，page_size 默认 1000（最大 1000），page_size=0 时返回全部。
-     * GET 查询，前端每次请求附带 t 时间戳防浏览器缓存。
-     */
-    public static getAllLotteryApiV1LotteryDatabaseBiliGetAllLotteryGet<ThrowOnError extends boolean = false>(options?: Options<GetAllLotteryApiV1LotteryDatabaseBiliGetAllLotteryGetData, ThrowOnError>): RequestResult<GetAllLotteryApiV1LotteryDatabaseBiliGetAllLotteryGetResponses, GetAllLotteryApiV1LotteryDatabaseBiliGetAllLotteryGetErrors, ThrowOnError, 'data'> {
-        return (options?.client ?? client).get<GetAllLotteryApiV1LotteryDatabaseBiliGetAllLotteryGetResponses, GetAllLotteryApiV1LotteryDatabaseBiliGetAllLotteryGetErrors, ThrowOnError, 'data'>({
-            responseStyle: 'data',
-            url: '/api/v1/lottery_database/bili/GetAllLottery',
-            ...options
-        });
-    }
-    
     /**
      * 提交抽奖动态(官抽，预约，充电)，自动解析抽奖信息
      */
@@ -223,6 +117,134 @@ export class V1BiliService {
     }
     
     /**
+     * 获取必抽的预约抽奖数据
+     *
+     * 获取必抽的预约抽奖数据，支持高级筛选（GET 查询，参数走 query string，
+     * 前端每次请求附带 t 时间戳防浏览器缓存）。
+     * 当 page_num 和 page_size 任一为 0 时，返回 svm 判断过的必抽的数据
+     * 否则返回分页数据（未传 status 时默认只返回未开奖且未超时的有效记录；
+     * status=unfinished 时默认 only_available=true，过滤掉预约已取消/已失效的记录）
+     */
+    public static getReserveLotteryApiV1LotteryDatabaseBiliGetReserveLotteryGet<ThrowOnError extends boolean = false>(options?: Options<GetReserveLotteryApiV1LotteryDatabaseBiliGetReserveLotteryGetData, ThrowOnError>): RequestResult<GetReserveLotteryApiV1LotteryDatabaseBiliGetReserveLotteryGetResponses, GetReserveLotteryApiV1LotteryDatabaseBiliGetReserveLotteryGetErrors, ThrowOnError, 'data'> {
+        return (options?.client ?? client).get<GetReserveLotteryApiV1LotteryDatabaseBiliGetReserveLotteryGetResponses, GetReserveLotteryApiV1LotteryDatabaseBiliGetReserveLotteryGetErrors, ThrowOnError, 'data'>({
+            responseStyle: 'data',
+            url: '/api/v1/lottery_database/bili/GetReserveLottery',
+            ...options
+        });
+    }
+    
+    /**
+     * 获取必抽的官方抽奖数据
+     *
+     * 获取必抽的官方抽奖数据，支持高级筛选（GET 查询，参数走 query string，
+     * 前端每次请求附带 t 时间戳防浏览器缓存）。
+     * 当 page_num 和 page_size 任一为 0 时，返回 svm 判断过的必抽的数据
+     * 否则返回分页数据（未传 status 时默认只返回未开奖且未超时的有效记录）
+     */
+    public static getOfficialLotteryApiV1LotteryDatabaseBiliGetOfficialLotteryGet<ThrowOnError extends boolean = false>(options?: Options<GetOfficialLotteryApiV1LotteryDatabaseBiliGetOfficialLotteryGetData, ThrowOnError>): RequestResult<GetOfficialLotteryApiV1LotteryDatabaseBiliGetOfficialLotteryGetResponses, GetOfficialLotteryApiV1LotteryDatabaseBiliGetOfficialLotteryGetErrors, ThrowOnError, 'data'> {
+        return (options?.client ?? client).get<GetOfficialLotteryApiV1LotteryDatabaseBiliGetOfficialLotteryGetResponses, GetOfficialLotteryApiV1LotteryDatabaseBiliGetOfficialLotteryGetErrors, ThrowOnError, 'data'>({
+            responseStyle: 'data',
+            url: '/api/v1/lottery_database/bili/GetOfficialLottery',
+            ...options
+        });
+    }
+    
+    /**
+     * 获取必抽的充电抽奖数据
+     *
+     * 获取必抽的充电抽奖数据，支持高级筛选（GET 查询，参数走 query string，
+     * 前端每次请求附带 t 时间戳防浏览器缓存）。
+     * 当 page_num 和 page_size 任一为 0 时，返回 svm 判断过的必抽的数据
+     * 否则返回分页数据（未传 status 时默认只返回未开奖且未超时的有效记录）
+     */
+    public static getChargeLotteryApiV1LotteryDatabaseBiliGetChargeLotteryGet<ThrowOnError extends boolean = false>(options?: Options<GetChargeLotteryApiV1LotteryDatabaseBiliGetChargeLotteryGetData, ThrowOnError>): RequestResult<GetChargeLotteryApiV1LotteryDatabaseBiliGetChargeLotteryGetResponses, GetChargeLotteryApiV1LotteryDatabaseBiliGetChargeLotteryGetErrors, ThrowOnError, 'data'> {
+        return (options?.client ?? client).get<GetChargeLotteryApiV1LotteryDatabaseBiliGetChargeLotteryGetResponses, GetChargeLotteryApiV1LotteryDatabaseBiliGetChargeLotteryGetErrors, ThrowOnError, 'data'>({
+            responseStyle: 'data',
+            url: '/api/v1/lottery_database/bili/GetChargeLottery',
+            ...options
+        });
+    }
+    
+    /**
+     * 获取所有直播抽奖数据（分页）
+     *
+     * GET 查询，参数走 query string，前端每次请求附带 t 时间戳防浏览器缓存
+     */
+    public static getLiveLotteryApiV1LotteryDatabaseBiliGetLiveLotteryGet<ThrowOnError extends boolean = false>(options?: Options<GetLiveLotteryApiV1LotteryDatabaseBiliGetLiveLotteryGetData, ThrowOnError>): RequestResult<GetLiveLotteryApiV1LotteryDatabaseBiliGetLiveLotteryGetResponses, GetLiveLotteryApiV1LotteryDatabaseBiliGetLiveLotteryGetErrors, ThrowOnError, 'data'> {
+        return (options?.client ?? client).get<GetLiveLotteryApiV1LotteryDatabaseBiliGetLiveLotteryGetResponses, GetLiveLotteryApiV1LotteryDatabaseBiliGetLiveLotteryGetErrors, ThrowOnError, 'data'>({
+            responseStyle: 'data',
+            url: '/api/v1/lottery_database/bili/GetLiveLottery',
+            ...options
+        });
+    }
+    
+    /**
+     * 获取所有话题抽奖数据（分页+筛选）
+     *
+     * GET 查询，参数走 query string，前端每次请求附带 t 时间戳防浏览器缓存
+     */
+    public static getTopicLotteryApiV1LotteryDatabaseBiliGetTopicLotteryGet<ThrowOnError extends boolean = false>(options?: Options<GetTopicLotteryApiV1LotteryDatabaseBiliGetTopicLotteryGetData, ThrowOnError>): RequestResult<GetTopicLotteryApiV1LotteryDatabaseBiliGetTopicLotteryGetResponses, GetTopicLotteryApiV1LotteryDatabaseBiliGetTopicLotteryGetErrors, ThrowOnError, 'data'> {
+        return (options?.client ?? client).get<GetTopicLotteryApiV1LotteryDatabaseBiliGetTopicLotteryGetResponses, GetTopicLotteryApiV1LotteryDatabaseBiliGetTopicLotteryGetErrors, ThrowOnError, 'data'>({
+            responseStyle: 'data',
+            url: '/api/v1/lottery_database/bili/GetTopicLottery',
+            ...options
+        });
+    }
+    
+    /**
+     * 获取管理端抽奖数据汇总
+     *
+     * 按抽奖类型汇总 bili-crawler 的抽奖数据（管理端使用）：
+     * 未开奖数（还没到开奖时间）、昨日/本周/本月新增、累计总量、24 小时内即将开奖、
+     * 待抓开奖结果积压、大奖数量、参与人数分布、近 14 天新增趋势与即将开奖明细，
+     * 并额外汇总话题抽奖 / 直播抽奖 / 第三方动态抽奖等独立数据源。
+     * GET 查询，前端每次请求附带 t 时间戳防浏览器缓存（后端不使用该值）。
+     */
+    public static getLotteryDataSummaryApiV1LotteryDatabaseBiliGetLotteryDataSummaryGet<ThrowOnError extends boolean = false>(options?: Options<GetLotteryDataSummaryApiV1LotteryDatabaseBiliGetLotteryDataSummaryGetData, ThrowOnError>): RequestResult<GetLotteryDataSummaryApiV1LotteryDatabaseBiliGetLotteryDataSummaryGetResponses, GetLotteryDataSummaryApiV1LotteryDatabaseBiliGetLotteryDataSummaryGetErrors, ThrowOnError, 'data'> {
+        return (options?.client ?? client).get<GetLotteryDataSummaryApiV1LotteryDatabaseBiliGetLotteryDataSummaryGetResponses, GetLotteryDataSummaryApiV1LotteryDatabaseBiliGetLotteryDataSummaryGetErrors, ThrowOnError, 'data'>({
+            responseStyle: 'data',
+            url: '/api/v1/lottery_database/bili/GetLotteryDataSummary',
+            ...options
+        });
+    }
+    
+    /**
+     * 即将开奖明细（分页，默认 24 小时内，无条数截断）
+     *
+     * 即将开奖明细分页查询（首页轮播 / 数据汇总页共用，2.67.0）。
+     *
+     * - 窗口：`within_hours`（默认 24 小时），只取 `status=0` 且开奖时间未到的记录；
+     * - 分页：`page_num` / `page_size`（上限 50），与普通抽奖列表（GetOfficialLottery 等）同范式，
+     * **不设条数上限、不做静默截断**，`total` 为窗口内总数；
+     * - 类型：`key` 可筛 official / reserve / charge（topic / others_dyn 不在 lotdata，返回空页）；
+     * - 排序：开奖时间升序（最近开奖的在前）；
+     * - 每条明细自带卡片 `raw` + `extra_info`，前端可直接 normalizeLotteryData 渲染；
+     * - 固定 2 条 SQL（count + 分页查询）+ 1 次批量 extra_info，成本与页大小无关。
+     */
+    public static getUpcomingLotteryApiV1LotteryDatabaseBiliGetUpcomingLotteryGet<ThrowOnError extends boolean = false>(options?: Options<GetUpcomingLotteryApiV1LotteryDatabaseBiliGetUpcomingLotteryGetData, ThrowOnError>): RequestResult<GetUpcomingLotteryApiV1LotteryDatabaseBiliGetUpcomingLotteryGetResponses, GetUpcomingLotteryApiV1LotteryDatabaseBiliGetUpcomingLotteryGetErrors, ThrowOnError, 'data'> {
+        return (options?.client ?? client).get<GetUpcomingLotteryApiV1LotteryDatabaseBiliGetUpcomingLotteryGetResponses, GetUpcomingLotteryApiV1LotteryDatabaseBiliGetUpcomingLotteryGetErrors, ThrowOnError, 'data'>({
+            responseStyle: 'data',
+            url: '/api/v1/lottery_database/bili/GetUpcomingLottery',
+            ...options
+        });
+    }
+    
+    /**
+     * 获取所有抽奖信息（按收录时间和发布时间过滤，支持分页）
+     *
+     * 获取svm判断过的必抽的预约抽奖数据和官方抽奖数据，按收录时间(created_at)和发布时间(pubTime)过滤普通抽奖
+     * 普通抽奖列表支持分页：page_num 从 0 开始，page_size 默认 1000（最大 1000），page_size=0 时返回全部。
+     * GET 查询，前端每次请求附带 t 时间戳防浏览器缓存。
+     */
+    public static getAllLotteryApiV1LotteryDatabaseBiliGetAllLotteryGet<ThrowOnError extends boolean = false>(options?: Options<GetAllLotteryApiV1LotteryDatabaseBiliGetAllLotteryGetData, ThrowOnError>): RequestResult<GetAllLotteryApiV1LotteryDatabaseBiliGetAllLotteryGetResponses, GetAllLotteryApiV1LotteryDatabaseBiliGetAllLotteryGetErrors, ThrowOnError, 'data'> {
+        return (options?.client ?? client).get<GetAllLotteryApiV1LotteryDatabaseBiliGetAllLotteryGetResponses, GetAllLotteryApiV1LotteryDatabaseBiliGetAllLotteryGetErrors, ThrowOnError, 'data'>({
+            responseStyle: 'data',
+            url: '/api/v1/lottery_database/bili/GetAllLottery',
+            ...options
+        });
+    }
+    
+    /**
      * 根据关键词搜索抽奖信息
      */
     public static searchLotteryByKeywordApiV1LotteryDatabaseBiliSearchLotteryByKeywordPost<ThrowOnError extends boolean = false>(options: Options<SearchLotteryByKeywordApiV1LotteryDatabaseBiliSearchLotteryByKeywordPostData, ThrowOnError>): RequestResult<SearchLotteryByKeywordApiV1LotteryDatabaseBiliSearchLotteryByKeywordPostResponses, SearchLotteryByKeywordApiV1LotteryDatabaseBiliSearchLotteryByKeywordPostErrors, ThrowOnError, 'data'> {
@@ -234,32 +256,6 @@ export class V1BiliService {
                 'Content-Type': 'application/json',
                 ...options.headers
             }
-        });
-    }
-    
-    /**
-     * Get Single Scrapy Status
-     *
-     * 根据爬虫类型查询单个爬虫的状态（GET，前端附带 t 时间戳防浏览器缓存）
-     */
-    public static getSingleScrapyStatusApiV1LotteryDatabaseBiliGetSingleScrapyStatusGet<ThrowOnError extends boolean = false>(options: Options<GetSingleScrapyStatusApiV1LotteryDatabaseBiliGetSingleScrapyStatusGetData, ThrowOnError>): RequestResult<GetSingleScrapyStatusApiV1LotteryDatabaseBiliGetSingleScrapyStatusGetResponses, GetSingleScrapyStatusApiV1LotteryDatabaseBiliGetSingleScrapyStatusGetErrors, ThrowOnError, 'data'> {
-        return (options.client ?? client).get<GetSingleScrapyStatusApiV1LotteryDatabaseBiliGetSingleScrapyStatusGetResponses, GetSingleScrapyStatusApiV1LotteryDatabaseBiliGetSingleScrapyStatusGetErrors, ThrowOnError, 'data'>({
-            responseStyle: 'data',
-            url: '/api/v1/lottery_database/bili/GetSingleScrapyStatus',
-            ...options
-        });
-    }
-    
-    /**
-     * Get All Lot Scrapy Status
-     *
-     * 获取所有爬虫状态
-     */
-    public static getAllLotScrapyStatusApiV1LotteryDatabaseBiliGetAllLotScrapyStatusGet<ThrowOnError extends boolean = false>(options?: Options<GetAllLotScrapyStatusApiV1LotteryDatabaseBiliGetAllLotScrapyStatusGetData, ThrowOnError>): RequestResult<GetAllLotScrapyStatusApiV1LotteryDatabaseBiliGetAllLotScrapyStatusGetResponses, unknown, ThrowOnError, 'data'> {
-        return (options?.client ?? client).get<GetAllLotScrapyStatusApiV1LotteryDatabaseBiliGetAllLotScrapyStatusGetResponses, unknown, ThrowOnError, 'data'>({
-            responseStyle: 'data',
-            url: '/api/v1/lottery_database/bili/GetAllLotScrapyStatus',
-            ...options
         });
     }
     
@@ -309,6 +305,27 @@ export class V1BiliService {
     }
     
     /**
+     * 按 lottery_ids 批量获取抽奖卡片详情（列表页专用，限 50 个）
+     *
+     * 列表页专用批量版本：一次查询多条抽奖的卡片详情，替代逐张调用 GetLotteryDetail。
+     *
+     * - 入参 lottery_ids 为逗号分隔的 lotdata 主键（超过 50 个按顺序截断，
+     * 前端需自行分片；重复 id 只返回一次），与批量互动态 /interaction/status 的 bizIds 同口径；
+     * - 单次请求固定 2 条 SQL：lotdata 一次 ``IN`` 查询 + t_lot_extra_info 一次批量查询，
+     * 与 id 数量无关（无 N+1）；
+     * - 返回 items 与请求顺序一致，元素形态与 GetLotteryDetail 的 data 完全一致（raw + extra_info）；
+     * missing_ids 为 lotdata 中未命中的 id（单个版本此时返回 code=404）；
+     * - GET 查询，前端每次请求附带 t 时间戳防浏览器缓存。
+     */
+    public static getLotteryDetailListApiV1LotteryDatabaseBiliGetLotteryDetailListGet<ThrowOnError extends boolean = false>(options: Options<GetLotteryDetailListApiV1LotteryDatabaseBiliGetLotteryDetailListGetData, ThrowOnError>): RequestResult<GetLotteryDetailListApiV1LotteryDatabaseBiliGetLotteryDetailListGetResponses, GetLotteryDetailListApiV1LotteryDatabaseBiliGetLotteryDetailListGetErrors, ThrowOnError, 'data'> {
+        return (options.client ?? client).get<GetLotteryDetailListApiV1LotteryDatabaseBiliGetLotteryDetailListGetResponses, GetLotteryDetailListApiV1LotteryDatabaseBiliGetLotteryDetailListGetErrors, ThrowOnError, 'data'>({
+            responseStyle: 'data',
+            url: '/api/v1/lottery_database/bili/GetLotteryDetailList',
+            ...options
+        });
+    }
+    
+    /**
      * 按 dynId 获取单个第三方抽奖动态详情
      *
      * 供前端第三方抽奖动态详情页按 dynId 拉取单条数据，形态与 GetOthersLotDynList
@@ -320,6 +337,32 @@ export class V1BiliService {
         return (options.client ?? client).get<GetOthersLotDynDetailApiV1LotteryDatabaseBiliGetOthersLotDynDetailGetResponses, GetOthersLotDynDetailApiV1LotteryDatabaseBiliGetOthersLotDynDetailGetErrors, ThrowOnError, 'data'>({
             responseStyle: 'data',
             url: '/api/v1/lottery_database/bili/GetOthersLotDynDetail',
+            ...options
+        });
+    }
+    
+    /**
+     * Get Single Scrapy Status
+     *
+     * 根据爬虫类型查询单个爬虫的状态（GET，前端附带 t 时间戳防浏览器缓存）
+     */
+    public static getSingleScrapyStatusApiV1LotteryDatabaseBiliGetSingleScrapyStatusGet<ThrowOnError extends boolean = false>(options: Options<GetSingleScrapyStatusApiV1LotteryDatabaseBiliGetSingleScrapyStatusGetData, ThrowOnError>): RequestResult<GetSingleScrapyStatusApiV1LotteryDatabaseBiliGetSingleScrapyStatusGetResponses, GetSingleScrapyStatusApiV1LotteryDatabaseBiliGetSingleScrapyStatusGetErrors, ThrowOnError, 'data'> {
+        return (options.client ?? client).get<GetSingleScrapyStatusApiV1LotteryDatabaseBiliGetSingleScrapyStatusGetResponses, GetSingleScrapyStatusApiV1LotteryDatabaseBiliGetSingleScrapyStatusGetErrors, ThrowOnError, 'data'>({
+            responseStyle: 'data',
+            url: '/api/v1/lottery_database/bili/GetSingleScrapyStatus',
+            ...options
+        });
+    }
+    
+    /**
+     * Get All Lot Scrapy Status
+     *
+     * 获取所有爬虫状态
+     */
+    public static getAllLotScrapyStatusApiV1LotteryDatabaseBiliGetAllLotScrapyStatusGet<ThrowOnError extends boolean = false>(options?: Options<GetAllLotScrapyStatusApiV1LotteryDatabaseBiliGetAllLotScrapyStatusGetData, ThrowOnError>): RequestResult<GetAllLotScrapyStatusApiV1LotteryDatabaseBiliGetAllLotScrapyStatusGetResponses, unknown, ThrowOnError, 'data'> {
+        return (options?.client ?? client).get<GetAllLotScrapyStatusApiV1LotteryDatabaseBiliGetAllLotScrapyStatusGetResponses, unknown, ThrowOnError, 'data'>({
+            responseStyle: 'data',
+            url: '/api/v1/lottery_database/bili/GetAllLotScrapyStatus',
             ...options
         });
     }

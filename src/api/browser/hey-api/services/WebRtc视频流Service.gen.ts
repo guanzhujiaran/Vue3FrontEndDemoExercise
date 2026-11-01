@@ -7,17 +7,18 @@ import type { AddIceCandidateApiV1RpaBrowserControlWebrtcIceCandidatePostData, A
 
 export class WebRtc视频流Service {
     /**
-     * Get Pages List
+     * 获取页面列表
      *
      * 获取浏览器所有页面列表
      *
-     * 返回指定浏览器实例的所有页面信息，包括URL、标题等。
+     * 返回指定浏览器实例的全部页面信息（索引、URL、标题、是否当前活动页）。
+     * 会话不存在时返回空列表，不报错。
      *
      * Args:
-     * browser_info: 浏览器认证信息
+     * browser_info: 浏览器认证信息（query browser_id）
      *
      * Returns:
-     * dict: 页面列表信息
+     * PagesListResponse: 页面列表
      */
     public static getPagesListApiV1RpaBrowserControlPagesListPost<ThrowOnError extends boolean = false>(options: Options<GetPagesListApiV1RpaBrowserControlPagesListPostData, ThrowOnError>): RequestResult<GetPagesListApiV1RpaBrowserControlPagesListPostResponses, GetPagesListApiV1RpaBrowserControlPagesListPostErrors, ThrowOnError, 'data'> {
         return (options.client ?? client).post<GetPagesListApiV1RpaBrowserControlPagesListPostResponses, GetPagesListApiV1RpaBrowserControlPagesListPostErrors, ThrowOnError, 'data'>({
@@ -28,18 +29,20 @@ export class WebRtc视频流Service {
     }
     
     /**
-     * Switch Page
+     * 切换页面
      *
-     * 切换到指定页面
+     * 切换到指定索引的页面
      *
-     * 将浏览器的当前活动页面切换到指定索引的页面。
+     * 把 `page_index` 指向的页面置为前台（bring_to_front）；索引越界或目标页已关闭时
+     * 返回 PAGE_NAVIGATION_FAILED，不做静默兜底。
+     * 与 `rpa_operation_switch_page` 语义相同（后者参数模型更宽松），二者任一皆可。
      *
      * Args:
-     * request: 包含 page_index 的请求体
-     * browser_info: 浏览器认证信息
+     * request: {"page_index": <页面索引，0 基>}
+     * browser_info: 浏览器认证信息（query browser_id）
      *
      * Returns:
-     * dict: 切换结果
+     * dict: 切换结果（含 page_index）
      */
     public static switchPageApiV1RpaBrowserControlPagesSwitchPost<ThrowOnError extends boolean = false>(options: Options<SwitchPageApiV1RpaBrowserControlPagesSwitchPostData, ThrowOnError>): RequestResult<SwitchPageApiV1RpaBrowserControlPagesSwitchPostResponses, SwitchPageApiV1RpaBrowserControlPagesSwitchPostErrors, ThrowOnError, 'data'> {
         return (options.client ?? client).post<SwitchPageApiV1RpaBrowserControlPagesSwitchPostResponses, SwitchPageApiV1RpaBrowserControlPagesSwitchPostErrors, ThrowOnError, 'data'>({
@@ -54,18 +57,22 @@ export class WebRtc视频流Service {
     }
     
     /**
-     * Close Page
+     * 关闭页面
      *
-     * 关闭指定页面
+     * 关闭指定索引的页面
      *
-     * 关闭指定索引的页面。如果关闭后没有页面了，会创建一个新的空白页面。
+     * 两种情形会被拒绝（返回 PAGE_CLOSED），**不会**自动补建空白页：
+     * - 该页正被工作流占用（别名页 / open_page 创建）；
+     * - 它是最后一个页面（关掉后浏览器就没有页面可用了）。
+     *
+     * 与 `rpa_operation_close_page` 语义相同，二者任一皆可。
      *
      * Args:
-     * request: 包含 page_index 的请求体
-     * browser_info: 浏览器认证信息
+     * request: {"page_index": <页面索引，0 基>}
+     * browser_info: 浏览器认证信息（query browser_id）
      *
      * Returns:
-     * dict: 关闭结果
+     * dict: 关闭结果（含 page_index）
      */
     public static closePageApiV1RpaBrowserControlPagesClosePost<ThrowOnError extends boolean = false>(options: Options<ClosePageApiV1RpaBrowserControlPagesClosePostData, ThrowOnError>): RequestResult<ClosePageApiV1RpaBrowserControlPagesClosePostResponses, ClosePageApiV1RpaBrowserControlPagesClosePostErrors, ThrowOnError, 'data'> {
         return (options.client ?? client).post<ClosePageApiV1RpaBrowserControlPagesClosePostResponses, ClosePageApiV1RpaBrowserControlPagesClosePostErrors, ThrowOnError, 'data'>({

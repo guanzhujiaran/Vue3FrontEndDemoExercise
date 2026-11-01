@@ -20,6 +20,8 @@ interface ActionDetail {
   action_id: number | string
   name: string
   version?: string
+  /** 语义内容指纹（steps/参数/入出参的 sha256）；空 = 存量未计算 */
+  content_hash?: string
   action_type?: string
   description?: string
   icon_series?: number
@@ -39,6 +41,10 @@ interface ActionDetail {
   has_upstream_update?: boolean
   /** 上游最近更新时间（秒级时间戳） */
   upstream_updated_at?: number | null
+  /** 上游当前声明的版本号（非 Fork 或上游不可用时为 null） */
+  upstream_version?: string | null
+  /** 上游当前内容指纹（空 = 未计算或非 Fork） */
+  upstream_content_hash?: string
   /** 最近一次同步上游的时间（秒级时间戳；null = 从未同步过） */
   last_synced_at?: number | null
   /** 是否开启上游自动同步 */
@@ -73,6 +79,27 @@ const flow = ref<ActionFlowGraph>({ nodes: [], edges: [], empty: true })
 
 const stepsCount = computed(() => detail.value?.steps?.length ?? 0)
 const fallbackIcon = computed(() => resolveActionTypeIcon(detail.value?.action_type))
+
+/** 内容指纹只展示前 8 位，完整值放在 title 里 */
+const shortHash = (hash?: string) => (hash ? hash.slice(0, 8) : '')
+
+/**
+ * 上游版本对比文案。
+ * 上游改了内容却没升版本号时如实说明：内容指纹已变，但版本号仍是同一个，
+ * 避免"版本号一样却提示有新版本"让人困惑。
+ */
+const upstreamVersionTip = computed(() => {
+  const current = detail.value
+  if (!current?.forked_from_id) return ''
+  const mine = `你的副本 v${current.version || '1.0.0'}`
+  if (!current.has_upstream_update) return `已是最新 · ${mine}`
+  const upstreamVersion = current.upstream_version
+  if (!upstreamVersion) return `上游有新内容 · ${mine}`
+  if (upstreamVersion === (current.version || '1.0.0')) {
+    return `上游内容已变，版本号仍为 v${upstreamVersion}（作者未升级）· ${mine}`
+  }
+  return `上游 v${upstreamVersion} · ${mine}`
+})
 
 const loadDetail = async () => {
   if (props.actionId === null || props.actionId === undefined || props.actionId === '') return
@@ -128,7 +155,14 @@ watch(
             <div class="flex items-center gap-2 flex-wrap">
               <span class="text-base font-semibold truncate">{{ detail.name }}</span>
               <el-tag size="small" type="info">{{ detail.action_type }}</el-tag>
-              <el-tag v-if="detail.version" size="small" effect="plain">v{{ detail.version }}</el-tag>
+              <el-tag v-if="detail.version" size="small" effect="plain" class="action-detail__version-badge">
+                v{{ detail.version }}
+              </el-tag>
+              <span
+                v-if="detail.content_hash"
+                class="action-detail__content-hash font-mono text-xs text-gray-400"
+                :title="`内容指纹: ${detail.content_hash}`"
+              >{{ shortHash(detail.content_hash) }}</span>
               <el-tag size="small" :type="detail.is_public ? 'success' : 'info'">
                 {{ detail.is_public ? '公开' : '私有' }}
               </el-tag>
@@ -148,10 +182,10 @@ watch(
             <p class="text-sm text-gray-400 mt-1">{{ detail.description || '暂无描述' }}</p>
             <!-- 上游同步状态（仅 Fork 副本展示） -->
             <p v-if="detail.forked_from_id" class="action-detail__sync-status text-xs text-gray-400 mt-1">
+              <span class="action-detail__version-compare">{{ upstreamVersionTip }}</span>
               <template v-if="detail.has_upstream_update">
-                上游有更新（{{ formatTimestamp(detail.upstream_updated_at) }}），可在动作管理列表点「同步上游」更新
+                （{{ formatTimestamp(detail.upstream_updated_at) }}），可在动作管理列表点「同步上游」更新
               </template>
-              <template v-else>上游无更新</template>
               ；本地同步于：{{ formatTimestamp(detail.last_synced_at) }}
               <template v-if="detail.local_steps_modified">；有本地修改，同步将覆盖</template>
               <template v-if="detail.auto_sync_upstream">；自动同步已开启</template>
