@@ -469,8 +469,8 @@ interface _GlobalComponents {
   ElIconCloudy: typeof import("../../node_modules/@element-plus/icons-vue/dist/index")['Cloudy']
   ElIconCoffee: typeof import("../../node_modules/@element-plus/icons-vue/dist/index")['Coffee']
   ElIconCoffeeCup: typeof import("../../node_modules/@element-plus/icons-vue/dist/index")['CoffeeCup']
-  ElIconCoin: typeof import("../../node_modules/@element-plus/icons-vue/dist/index")['Coin']
   ElIconColdDrink: typeof import("../../node_modules/@element-plus/icons-vue/dist/index")['ColdDrink']
+  ElIconCoin: typeof import("../../node_modules/@element-plus/icons-vue/dist/index")['Coin']
   ElIconCollection: typeof import("../../node_modules/@element-plus/icons-vue/dist/index")['Collection']
   ElIconCollectionTag: typeof import("../../node_modules/@element-plus/icons-vue/dist/index")['CollectionTag']
   ElIconComment: typeof import("../../node_modules/@element-plus/icons-vue/dist/index")['Comment']
@@ -1203,8 +1203,8 @@ interface _GlobalComponents {
   LazyElIconCloudy: LazyComponent<typeof import("../../node_modules/@element-plus/icons-vue/dist/index")['Cloudy']>
   LazyElIconCoffee: LazyComponent<typeof import("../../node_modules/@element-plus/icons-vue/dist/index")['Coffee']>
   LazyElIconCoffeeCup: LazyComponent<typeof import("../../node_modules/@element-plus/icons-vue/dist/index")['CoffeeCup']>
-  LazyElIconCoin: LazyComponent<typeof import("../../node_modules/@element-plus/icons-vue/dist/index")['Coin']>
   LazyElIconColdDrink: LazyComponent<typeof import("../../node_modules/@element-plus/icons-vue/dist/index")['ColdDrink']>
+  LazyElIconCoin: LazyComponent<typeof import("../../node_modules/@element-plus/icons-vue/dist/index")['Coin']>
   LazyElIconCollection: LazyComponent<typeof import("../../node_modules/@element-plus/icons-vue/dist/index")['Collection']>
   LazyElIconCollectionTag: LazyComponent<typeof import("../../node_modules/@element-plus/icons-vue/dist/index")['CollectionTag']>
   LazyElIconComment: LazyComponent<typeof import("../../node_modules/@element-plus/icons-vue/dist/index")['Comment']>
