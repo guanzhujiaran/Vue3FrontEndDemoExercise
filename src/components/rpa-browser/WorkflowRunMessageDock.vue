@@ -19,6 +19,7 @@ import {
   buildMessageTree,
   collectLoopNodes,
   flattenRoundOptions,
+  isTruncatedNode,
   locateLoopNode,
   pathKeysOf,
   type BodyRow,
@@ -42,6 +43,10 @@ import WorkflowRunMessageItem from './WorkflowRunMessageItem.vue'
  * 折叠成一条占位行、不产生 DOM；切换轮次靠「上一轮/下一轮」「定位轮次」下拉
  * 与占位行点击。跟随最新时新轮次自动成为焦点；用户上翻阅读时自动钉住当前轮次，
  * 不会被新消息把正在看的内容整体换掉。
+ *
+ * 焦点轮次**只认真正的轮次**：消息窗口裁掉某轮的分组头后留下来的残段会被收进
+ * `truncated` 补位分组（见 `workflowRunMessageTree`），不参与「最新一轮」判定与
+ * 上一轮/下一轮导航——否则面板会突然铺满上百条历史消息。
  */
 const messageStore = useWorkflowRunMessageStore()
 const { panelOpen, messages, workflowName, running, unread, showEntry } =
@@ -106,10 +111,17 @@ const roundOptions = computed(() => flattenRoundOptions(messageTree.value))
 const groupIndex = computed(
   () => new Map(collectLoopNodes(messageTree.value).map(node => [node.key, node]))
 )
-/** 最新一轮（正在跑的那轮）：跟随最新时的焦点 */
+/**
+ * 最新一轮（正在跑的那轮）：跟随最新时的焦点。
+ *
+ * 跳过「窗口截断」补位分组：那只是被消息窗口裁掉分组头的上一轮残段，
+ * 把它当作最新轮次展开会把上百条历史消息重新铺满面板（正是要避免的卡顿来源）。
+ */
 const latestGroupKey = computed(() => {
   const loops = collectLoopNodes(messageTree.value)
-  return loops[loops.length - 1]?.key ?? ''
+  const real = loops.filter(node => !isTruncatedNode(node))
+  // 一个正常轮次都还没有（窗口里只剩残段）：退化为展示残段，避免面板空着
+  return real.length > 0 ? real[real.length - 1]!.key : loops[loops.length - 1]?.key ?? ''
 })
 /**
  * 当前焦点轮次 key：`activeKey` 为空 = 跟随最新（取最新一轮）；
@@ -137,9 +149,15 @@ const failedCount = computed(() => {
   return count
 })
 
-/** 当前焦点轮次的同层兄弟（同一循环的各轮），供上一轮/下一轮使用 */
+/**
+ * 当前焦点轮次的同层兄弟（同一循环的各轮），供上一轮/下一轮使用。
+ * 排除「窗口截断」补位分组：它不是真正的一轮，跳进去只会看到一屏残段消息。
+ */
 const activeSiblings = computed(
-  () => locateLoopNode(messageTree.value, activeLoopKey.value)?.siblings ?? []
+  () =>
+    (locateLoopNode(messageTree.value, activeLoopKey.value)?.siblings ?? []).filter(
+      node => !isTruncatedNode(node)
+    )
 )
 const activeSiblingIndex = computed(() =>
   activeSiblings.value.findIndex(node => node.key === activeLoopKey.value)

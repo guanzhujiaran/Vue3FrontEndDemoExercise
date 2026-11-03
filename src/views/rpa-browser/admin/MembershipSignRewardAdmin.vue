@@ -8,47 +8,72 @@
 
       <el-skeleton v-if="loading" class="membership-sign-reward-admin__basic-skeleton" :rows="3" animated />
 
-      <div v-else class="membership-sign-reward-admin__basic-form flex flex-wrap items-center gap-3">
-        <el-date-picker
-          v-model="basic.launchDate"
-          class="membership-sign-reward-admin__field-launch"
-          type="date"
-          placeholder="玩法上线日期"
-          value-format="YYYY-MM-DD"
-        />
-        <el-select
-          v-model="basic.timezone"
-          class="membership-sign-reward-admin__field-timezone"
-          placeholder="签到判定时区"
-          filterable
-          allow-create
-        >
-          <el-option label="Asia/Shanghai（默认）" value="Asia/Shanghai" />
-          <el-option label="UTC" value="UTC" />
-          <el-option label="Asia/Tokyo" value="Asia/Tokyo" />
-          <el-option label="America/Los_Angeles" value="America/Los_Angeles" />
-        </el-select>
-        <el-input-number
-          v-model="basic.dailyRewardMinutes"
-          class="membership-sign-reward-admin__field-daily"
-          :min="0"
-          :max="1440"
-          placeholder="每日签到奖励（分钟）"
-        />
-        <el-input-number
-          v-model="basic.makeupCardMax"
-          class="membership-sign-reward-admin__field-card-max"
-          :min="0"
-          :max="99"
-          placeholder="补登卡持有上限"
-        />
-        <el-input-number
-          v-model="basic.makeupWindowDays"
-          class="membership-sign-reward-admin__field-window"
-          :min="0"
-          :max="365"
-          placeholder="补签窗口天数（0=仅当月）"
-        />
+      <div v-else class="membership-sign-reward-admin__basic-form flex flex-wrap items-start gap-3">
+        <div class="membership-sign-reward-admin__field-launch-group flex flex-col gap-1">
+          <el-text class="membership-sign-reward-admin__field-launch-label text-text-secondary" tag="span">
+            玩法上线日期
+          </el-text>
+          <el-date-picker
+            v-model="basic.launchDate"
+            class="membership-sign-reward-admin__field-launch"
+            type="date"
+            placeholder="YYYY-MM-DD"
+            value-format="YYYY-MM-DD"
+          />
+        </div>
+        <div class="membership-sign-reward-admin__field-timezone-group w-full flex flex-col gap-1">
+          <el-text class="membership-sign-reward-admin__field-timezone-label text-text-secondary" tag="span">
+            签到判定时区
+          </el-text>
+          <el-select
+            v-model="basic.timezone"
+            class="membership-sign-reward-admin__field-timezone"
+            placeholder="选择或输入时区"
+            filterable
+            allow-create
+          >
+            <el-option label="Asia/Shanghai（默认）" value="Asia/Shanghai" />
+            <el-option label="UTC" value="UTC" />
+            <el-option label="Asia/Tokyo" value="Asia/Tokyo" />
+            <el-option label="America/Los_Angeles" value="America/Los_Angeles" />
+          </el-select>
+        </div>
+        <div class="membership-sign-reward-admin__field-daily-group flex flex-col gap-1">
+          <el-text class="membership-sign-reward-admin__field-daily-label text-text-secondary" tag="span">
+            每日签到奖励（分钟）
+          </el-text>
+          <el-input-number
+            v-model="basic.dailyRewardMinutes"
+            class="membership-sign-reward-admin__field-daily"
+            :min="0"
+            :max="1440"
+            placeholder="每日签到奖励（分钟）"
+          />
+        </div>
+        <div class="membership-sign-reward-admin__field-card-max-group flex flex-col gap-1">
+          <el-text class="membership-sign-reward-admin__field-card-max-label text-text-secondary" tag="span">
+            补登卡持有上限（张）
+          </el-text>
+          <el-input-number
+            v-model="basic.makeupCardMax"
+            class="membership-sign-reward-admin__field-card-max"
+            :min="0"
+            :max="99"
+            placeholder="补登卡持有上限"
+          />
+        </div>
+        <div class="membership-sign-reward-admin__field-window-group flex flex-col gap-1">
+          <el-text class="membership-sign-reward-admin__field-window-label text-text-secondary" tag="span">
+            补签窗口天数（0 = 仅当月）
+          </el-text>
+          <el-input-number
+            v-model="basic.makeupWindowDays"
+            class="membership-sign-reward-admin__field-window"
+            :min="0"
+            :max="365"
+            placeholder="补签窗口天数（0=仅当月）"
+          />
+        </div>
       </div>
 
       <span class="membership-sign-reward-admin__basic-hint text-xs text-text-secondary">

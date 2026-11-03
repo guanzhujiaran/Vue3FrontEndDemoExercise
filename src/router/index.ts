@@ -488,10 +488,12 @@ const routes: CustomRouteRecordRaw[] = [
         meta: {
           title: RouteName.RPA_BROWSER_COMMUNITY,
           icon: IconShare2,
-          description: '社区广场',
+          description: '社区广场：浏览公开的自定义动作与工作流（游客可看）',
           order: 5,
           showInHome: false,
-          isHeaderShow: false
+          isHeaderShow: false,
+          // 游客可浏览公开内容：未登录时也允许直接进入，后端只返回 is_public 资源
+          publicAccess: true
         }
       },
       {
@@ -817,6 +819,22 @@ const routes: CustomRouteRecordRaw[] = [
         name: 'ADMIN_RPA_MEMBERSHIP_CODES',
         component: () => import('@/views/rpa-browser/admin/MembershipCodesAdmin.vue'),
         meta: { title: '兑换码管理', requiresAdmin: true, hidden: true }
+      },
+      {
+        // 签到奖励配置（基础参数 + 累计档位，读写 app/data/sign_in_rewards.json）
+        path: 'rpa/membership-sign-rewards',
+        name: 'ADMIN_RPA_MEMBERSHIP_SIGN_REWARDS',
+        component: () =>
+          import('@/views/rpa-browser/admin/MembershipSignRewardAdmin.vue'),
+        meta: { title: '签到奖励配置', requiresAdmin: true, hidden: true }
+      },
+      {
+        // be-crawler 云端 LLM 实例池（经 be-message 代理读写 crawler 的 /llm/*）
+        path: 'crawler-llm-config',
+        name: 'ADMIN_CRAWLER_LLM_CONFIG',
+        component: () =>
+          import('@/views/rpa-browser/admin/CrawlerLlmConfigAdmin.vue'),
+        meta: { title: 'LLM 配置', requiresAdmin: true, hidden: true }
       },
       {
         path: 'rpa/cert',

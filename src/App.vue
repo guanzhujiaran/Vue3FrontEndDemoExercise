@@ -121,9 +121,11 @@ onMounted(() => {
   window.addEventListener("resize", getWindowHeight)
 
   // 加载不蒜子（busuanzi）PV/UV 统计脚本
+  // 老站点 busuanzi.ibruce.info 已失效，改用新站点 api.tssl.cc（3.6.9，
+  // 返回字段 busuanzi_site_pv / busuanzi_site_uv 与 HomeView 页脚的元素 id 对齐）
   const busuanziScript = document.createElement('script')
   busuanziScript.async = true
-  busuanziScript.src = '//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js'
+  busuanziScript.src = '//api.tssl.cc/busuanzi/3.6.9/busuanzi.min.js'
   document.head.appendChild(busuanziScript)
 })
 

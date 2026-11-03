@@ -16,6 +16,8 @@ interface CustomRouteMeta {
   color?: string
   /** 是否需要登录才能访问 */
   requiresLogin?: boolean
+  /** 游客（未登录）也可访问：仅用于公开只读页面（如社区广场的公开动作/工作流） */
+  publicAccess?: boolean
   /** 权限级别 */
   permissionLevel?: number
   /** 是否在菜单中显示 */

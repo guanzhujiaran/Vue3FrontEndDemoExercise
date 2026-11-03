@@ -1,9 +1,11 @@
 <template>
-  <div class="admin-audit-tabs flex items-center justify-between">
+  <div class="admin-audit-tabs flex flex-col gap-2">
+    <!-- 标题独占一行：与 Tab / 筛选 / 刷新按钮同排时，窄屏会被压成两三个字一行 -->
     <h2 class="admin-audit-tabs__title text-lg font-bold text-text-primary">{{ title }}</h2>
-    <div class="admin-audit-tabs__right flex items-center gap-3">
+    <!-- 控件行允许换行：Tab 过多或窄屏时筛选与刷新按钮换到下一行，而不是挤压标题 -->
+    <div class="admin-audit-tabs__right flex flex-wrap items-center gap-3">
       <!-- 状态 Tab：待审核 / 已过审 / 已驳回（懒加载 + 缓存），具体文案由 tabs prop 决定 -->
-      <el-tabs v-model="activeTab" class="admin-audit-tabs__tabs">
+      <el-tabs v-model="activeTab" class="admin-audit-tabs__tabs min-w-0">
         <el-tab-pane
           v-for="tab in tabs"
           :key="tab.name"

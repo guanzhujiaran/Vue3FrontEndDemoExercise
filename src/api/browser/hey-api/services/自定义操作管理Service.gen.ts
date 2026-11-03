@@ -87,9 +87,10 @@ export class 自定义操作管理Service {
     /**
      * 获取自定义操作列表
      *
-     * 获取当前用户的自定义操作列表
+     * 获取自定义操作列表（可选登录）
      *
-     * 支持分页、筛选、按名称搜索、按标签筛选和排序
+     * 已登录：按 filter_type 返回「我的 / 公开 / 社区（他人公开）/ 认证 / 全部」；
+     * 未登录（游客）：只返回公开内容，private 恒为空（社区广场匿名浏览）。
      */
     public static listCustomActionsApiV1RpaBrowserControlCustomActionsListPost<ThrowOnError extends boolean = false>(options: Options<ListCustomActionsApiV1RpaBrowserControlCustomActionsListPostData, ThrowOnError>): RequestResult<ListCustomActionsApiV1RpaBrowserControlCustomActionsListPostResponses, ListCustomActionsApiV1RpaBrowserControlCustomActionsListPostErrors, ThrowOnError, 'data'> {
         return (options.client ?? client).post<ListCustomActionsApiV1RpaBrowserControlCustomActionsListPostResponses, ListCustomActionsApiV1RpaBrowserControlCustomActionsListPostErrors, ThrowOnError, 'data'>({

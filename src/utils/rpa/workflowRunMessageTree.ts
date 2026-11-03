@@ -12,6 +12,10 @@ import type { WorkflowRunLogEvent } from '@/api/browser/workflow_run_api'
  * 渲染策略是「焦点轮次」：任意时刻只完整渲染当前轮次（activeKey）及其祖先链，
  * 同层/外层的其余轮次由 `buildBodyRows` 折叠成一条占位行，不产生 DOM——
  * 消息上千条时面板也不会卡（详见 `WorkflowRunMessageDock`）。
+ *
+ * 另一条硬约束：消息窗口只保留最近 N 条，窗口滑过某轮的 `loop_iteration` 后，
+ * 该轮体内的消息会失去分组头。它们必须被收进 `truncated` 补位分组，
+ * 否则会以顶层身份平铺，每滑过一轮就多出上百行（实测 108 行 → 归组后 1 行）。
  */
 
 export interface LoopNode {
@@ -41,6 +45,15 @@ export interface LoopNode {
   chain: string[]
   /** 父分组 key（顶层分组为空串），供「上一轮/下一轮」取同层兄弟 */
   parentKey: string
+  /**
+   * 是否为「窗口截断」产生的补位分组。
+   *
+   * 消息窗口只保留最近的 N 条：当窗口滑过某轮的 `loop_iteration` 时，该轮体内的
+   * 消息会失去分组头（`depth > 0` 但无分组可挂）。此前它们被当成顶层消息平铺，
+   * 每滑过一轮就多出上百行，面板越长越卡。这里把它们收进一个补位分组，
+   * 与其它历史轮次一样折叠成占位行。
+   */
+  truncated?: boolean
 }
 
 export interface ItemNode {
@@ -76,11 +89,14 @@ export function roundText(index: number, total: number): string {
 export function buildMessageTree(events: WorkflowRunLogEvent[]): MessageNode[] {
   const roots: MessageNode[] = []
   const stack: LoopNode[] = []
+  /** 窗口截断补位分组（见 `LoopNode.truncated`）：一次构建最多出现一个 */
+  let truncated: LoopNode | null = null
 
   for (const event of events) {
     const depth = depthOf(event)
 
     if (event.kind === 'loop_iteration') {
+      truncated = null
       // 同层或更浅的新轮次到来：先把更深的旧分组出栈。
       // 没有收到 `loop_finished` 也视为已结束——新一轮开始即证明上一轮跑完了，
       // 否则上一次循环会永远停在「未收口」。
@@ -115,6 +131,7 @@ export function buildMessageTree(events: WorkflowRunLogEvent[]): MessageNode[] {
     }
 
     if (event.kind === 'loop_finished') {
+      truncated = null
       while (stack.length > 0 && stack[stack.length - 1]!.depth >= depth) {
         const closed = stack.pop()!
         closed.closed = true
@@ -125,6 +142,21 @@ export function buildMessageTree(events: WorkflowRunLogEvent[]): MessageNode[] {
     }
 
     const item: ItemNode = { type: 'item', key: rowKeyOf(event), event }
+
+    // 带嵌套层级但没有分组可挂：分组头已被消息窗口裁掉，属于「上一轮」的残段。
+    // 收进补位分组，否则这些消息会以顶层身份平铺，窗口每滑过一轮就多上百行。
+    if (stack.length === 0 && depth > 0) {
+      if (!truncated) {
+        truncated = createTruncatedNode(event)
+        roots.push(truncated)
+      }
+      truncated.children.push(item)
+      truncated.itemCount += 1
+      truncated.lastTs = Math.max(truncated.lastTs, event.ts)
+      continue
+    }
+    truncated = null
+
     const parent = stack[stack.length - 1]
     if (parent) {
       parent.itemCount += 1
@@ -136,6 +168,44 @@ export function buildMessageTree(events: WorkflowRunLogEvent[]): MessageNode[] {
 
   aggregate(roots)
   return roots
+}
+
+/** 补位分组（窗口截断遗留的上一轮残段）的分组名 */
+const TRUNCATED_NAME = '更早的消息（已截断）'
+
+/**
+ * 构造补位分组：分组头已被消息窗口裁掉的「上一轮」残段。
+ *
+ * 轮次号沿用残段消息自带的 `loop_index/loop_total`（后端每条消息都带），
+ * 因此分组头仍能显示「第 32/218 轮」，只是标注为已截断。
+ */
+function createTruncatedNode(event: WorkflowRunLogEvent): LoopNode {
+  return {
+    type: 'loop',
+    key: `truncated-${event.run_id}-${event.seq}`,
+    seq: event.seq,
+    depth: 0,
+    head: event,
+    roundIndex: event.loop_index ?? 0,
+    roundTotal: event.loop_total ?? 0,
+    loopName: TRUNCATED_NAME,
+    children: [],
+    itemCount: 0,
+    totalCount: 0,
+    failedCount: 0,
+    tailText: '消息窗口只保留最近的记录，更早的轮次已滑出',
+    closed: true,
+    truncated: true,
+    firstTs: event.ts,
+    lastTs: event.ts,
+    chain: [],
+    parentKey: '',
+  }
+}
+
+/** 是否补位分组（调用方据此把它排除在「最新一轮」判定之外） */
+export function isTruncatedNode(node: LoopNode): boolean {
+  return node.truncated === true
 }
 
 /** 自底向上汇总每个分组的条数与失败数（折叠时也要能看出内部有多少内容/失败） */

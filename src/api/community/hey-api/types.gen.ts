@@ -1844,6 +1844,223 @@ export type CommentUserBrief = {
 };
 
 /**
+ * CrawlerLlmConfigItem
+ *
+ * 单条 LLM 实例配置（读取态）。
+ */
+export type CrawlerLlmConfigItem = {
+    /**
+     * Index
+     *
+     * 实例在 crawler `llm_apis` 中的索引（从 0 开始）
+     */
+    index: string;
+    /**
+     * Base Url
+     *
+     * OpenAI 兼容接口地址（如 https://api.example.com/v1）
+     */
+    base_url: string;
+    /**
+     * Model Name
+     *
+     * 模型名（如 deepseek-chat）
+     */
+    model_name: string;
+    /**
+     * Token
+     *
+     * 脱敏后的密钥（前4****后4；长度 ≤8 时为 ****）
+     */
+    token: string;
+    /**
+     * Requests Per Second
+     *
+     * 限流：每秒允许请求数（如 0.5 = 2 秒 1 次）
+     */
+    requests_per_second: string;
+};
+
+/**
+ * CrawlerLlmConfigResp
+ *
+ * 配置 + 统计的组合响应（页面一次请求即可渲染表格）。
+ */
+export type CrawlerLlmConfigResp = {
+    /**
+     * Items
+     *
+     * 当前生效的实例配置列表
+     */
+    items: Array<CrawlerLlmConfigItem>;
+    /**
+     * Stats
+     *
+     * 运行统计（按 base_url + model_name 与 items 对应，可能少于配置数）
+     */
+    stats: Array<CrawlerLlmStatsItem>;
+};
+
+/**
+ * CrawlerLlmSaveItem
+ *
+ * 单条 LLM 实例配置（保存态）。
+ *
+ * `token` 传空串或脱敏值（含 `****`）表示**沿用该索引上的原密钥**，
+ * 仅在新增实例或换密钥时传明文。
+ */
+export type CrawlerLlmSaveItem = {
+    /**
+     * Base Url
+     *
+     * OpenAI 兼容接口地址
+     */
+    base_url: string;
+    /**
+     * Model Name
+     *
+     * 模型名
+     */
+    model_name: string;
+    /**
+     * Token
+     *
+     * 明文密钥；空串/脱敏值 = 不修改原密钥
+     */
+    token?: string;
+    /**
+     * Requests Per Second
+     *
+     * 限流：每秒允许请求数（> 0）
+     */
+    requests_per_second: string;
+};
+
+/**
+ * CrawlerLlmSaveReq
+ *
+ * 整体覆盖保存请求（与 crawler `PUT /llm/config` 语义一致）。
+ */
+export type CrawlerLlmSaveReq = {
+    /**
+     * Items
+     *
+     * 完整的实例列表（顺序即索引顺序）
+     */
+    items: Array<CrawlerLlmSaveItem>;
+};
+
+/**
+ * CrawlerLlmStatsItem
+ *
+ * 单条 LLM 实例的运行统计（来自 crawler `/llm/stats`）。
+ */
+export type CrawlerLlmStatsItem = {
+    /**
+     * Base Url
+     *
+     * 实例接口地址（与配置项按 base_url + model_name 对应）
+     */
+    base_url: string;
+    /**
+     * Model Name
+     *
+     * 模型名
+     */
+    model_name: string;
+    /**
+     * State
+     *
+     * 健康状态：healthy / cooling / quota_wait / suspended / removed
+     */
+    state: string;
+    /**
+     * Available
+     *
+     * 当前是否可用（state == healthy）
+     */
+    available: boolean;
+    /**
+     * Disabled
+     *
+     * 是否因不可恢复错误被移出池（removed）
+     */
+    disabled: boolean;
+    /**
+     * Disabled Reason
+     *
+     * 不可用原因（服务端文案）
+     */
+    disabled_reason?: string | null;
+    /**
+     * Invoke Count
+     *
+     * 总调用次数
+     */
+    invoke_count: string;
+    /**
+     * Success Count
+     *
+     * 成功次数
+     */
+    success_count: string;
+    /**
+     * Failure Count
+     *
+     * 失败次数
+     */
+    failure_count: string;
+    /**
+     * Consecutive Failures
+     *
+     * 连续失败次数
+     */
+    consecutive_failures: string;
+    /**
+     * Success Rate
+     *
+     * 成功率（0~1，两位小数；无调用时为 0.00）
+     */
+    success_rate: string;
+    /**
+     * Rate Per Minute
+     *
+     * 最近 60 秒内调用次数
+     */
+    rate_per_minute: string;
+    /**
+     * Avg Latency Seconds
+     *
+     * 成功调用平均耗时（秒，三位小数）
+     */
+    avg_latency_seconds: string;
+    /**
+     * Total Tokens
+     *
+     * 累计消耗 token 数
+     */
+    total_tokens: string;
+    /**
+     * Last Used At
+     *
+     * 最后一次调用时间（秒级 unix 时间戳）
+     */
+    last_used_at?: string | null;
+    /**
+     * Resume At
+     *
+     * 自动恢复时间（秒级 unix 时间戳）；null = 不会自动恢复
+     */
+    resume_at?: string | null;
+    /**
+     * Last Error
+     *
+     * 最近一次失败的错误信息
+     */
+    last_error?: string | null;
+};
+
+/**
  * DmAckReq
  *
  * 标记会话已读，把未读数清零并抬高已读水位。
@@ -9941,6 +10158,21 @@ export type StandardResponseCommentTopResp = {
      */
     msg?: string;
     data?: CommentTopResp | null;
+};
+
+/**
+ * StandardResponse[CrawlerLlmConfigResp]
+ */
+export type StandardResponseCrawlerLlmConfigResp = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: CrawlerLlmConfigResp | null;
 };
 
 /**
@@ -31223,6 +31455,156 @@ export type FolderCoverAuditRejectApiV1FavoriteFolderCoverAuditRejectPostRespons
 };
 
 export type FolderCoverAuditRejectApiV1FavoriteFolderCoverAuditRejectPostResponse = FolderCoverAuditRejectApiV1FavoriteFolderCoverAuditRejectPostResponses[keyof FolderCoverAuditRejectApiV1FavoriteFolderCoverAuditRejectPostResponses];
+
+export type GetLlmConfigApiV1CrawlerAdminLlmConfigGetData = {
+    body?: never;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Jwt
+         */
+        'x-bili-jwt'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string | null;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string | null;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string | null;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string | null;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string | null;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string | null;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string | null;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/crawler/admin/llm/config';
+};
+
+export type GetLlmConfigApiV1CrawlerAdminLlmConfigGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetLlmConfigApiV1CrawlerAdminLlmConfigGetError = GetLlmConfigApiV1CrawlerAdminLlmConfigGetErrors[keyof GetLlmConfigApiV1CrawlerAdminLlmConfigGetErrors];
+
+export type GetLlmConfigApiV1CrawlerAdminLlmConfigGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseCrawlerLlmConfigResp;
+};
+
+export type GetLlmConfigApiV1CrawlerAdminLlmConfigGetResponse = GetLlmConfigApiV1CrawlerAdminLlmConfigGetResponses[keyof GetLlmConfigApiV1CrawlerAdminLlmConfigGetResponses];
+
+export type SaveLlmConfigApiV1CrawlerAdminLlmConfigPutData = {
+    body: CrawlerLlmSaveReq;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Jwt
+         */
+        'x-bili-jwt'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string | null;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string | null;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string | null;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string | null;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string | null;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string | null;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string | null;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/crawler/admin/llm/config';
+};
+
+export type SaveLlmConfigApiV1CrawlerAdminLlmConfigPutErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type SaveLlmConfigApiV1CrawlerAdminLlmConfigPutError = SaveLlmConfigApiV1CrawlerAdminLlmConfigPutErrors[keyof SaveLlmConfigApiV1CrawlerAdminLlmConfigPutErrors];
+
+export type SaveLlmConfigApiV1CrawlerAdminLlmConfigPutResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseCrawlerLlmConfigResp;
+};
+
+export type SaveLlmConfigApiV1CrawlerAdminLlmConfigPutResponse = SaveLlmConfigApiV1CrawlerAdminLlmConfigPutResponses[keyof SaveLlmConfigApiV1CrawlerAdminLlmConfigPutResponses];
 
 export type ServeAsyncapiSchemaAsyncapiGetData = {
     body?: never;

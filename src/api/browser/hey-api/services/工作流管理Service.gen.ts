@@ -72,9 +72,10 @@ export class 工作流管理Service {
     /**
      * 获取工作流列表
      *
-     * 获取当前用户的工作流列表
+     * 获取工作流列表（可选登录）
      *
-     * 支持分页、筛选和排序
+     * 已登录：按 filter_type 返回「我的 / 公开 / 社区（他人公开）/ 认证 / 全部」；
+     * 未登录（游客）：只返回公开内容，private 恒为空（社区广场匿名浏览）。
      */
     public static listWorkflowsApiV1RpaBrowserControlWorkflowsListPost<ThrowOnError extends boolean = false>(options?: Options<ListWorkflowsApiV1RpaBrowserControlWorkflowsListPostData, ThrowOnError>): RequestResult<ListWorkflowsApiV1RpaBrowserControlWorkflowsListPostResponses, ListWorkflowsApiV1RpaBrowserControlWorkflowsListPostErrors, ThrowOnError, 'data'> {
         return (options?.client ?? client).post<ListWorkflowsApiV1RpaBrowserControlWorkflowsListPostResponses, ListWorkflowsApiV1RpaBrowserControlWorkflowsListPostErrors, ThrowOnError, 'data'>({

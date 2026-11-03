@@ -47,18 +47,22 @@ const isLatest = computed(() => props.node.key === props.latestKey)
 
 /** 状态点：未收口=警告色，有失败=危险色，其余=成功色 */
 const dotClass = computed(() => {
+  if (props.node.truncated) return 'bg-info'
   if (!props.node.closed) return 'bg-warning'
   if (props.node.failedCount > 0) return 'bg-danger'
   return 'bg-success'
 })
 
 const statusText = computed(() => {
+  // 补位分组：分组头已被消息窗口裁掉，轮次结论无从得知
+  if (props.node.truncated) return '已截断'
   if (!props.node.closed) return isLatest.value ? '运行中' : '未收口'
   if (props.node.failedCount > 0) return `${props.node.failedCount} 失败`
   return '已完成'
 })
 
 const statusClass = computed(() => {
+  if (props.node.truncated) return 'text-info'
   if (!props.node.closed) return 'text-warning'
   if (props.node.failedCount > 0) return 'text-danger'
   return 'text-success'
@@ -186,9 +190,11 @@ async function copyRound() {
           · 另有 {{ row.count }} 轮已折叠
         </div>
       </template>
+      <!-- 本轮收口文案（`loop_finished`）：与组内消息之间用细分隔线区隔，
+           避免和普通消息行混在一起 -->
       <el-text
         v-if="node.tailText"
-        class="workflow-run-message-group__tail min-w-0 break-all text-color-secondary"
+        class="workflow-run-message-group__tail mt-0.5 min-w-0 break-all border-t border-border-lighter pt-1 text-color-secondary"
         size="default"
       >
         {{ node.tailText }}

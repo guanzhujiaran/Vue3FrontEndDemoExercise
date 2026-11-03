@@ -167,7 +167,7 @@ const handleLogoutClick = () => {
           <el-radio-button value="all">{{ t('home.tabAll') }}</el-radio-button>
           <el-radio-button value="lottery">{{ t('home.tabLottery') }}</el-radio-button>
           <el-radio-button v-if="isLoggedIn" value="user-center">{{ t('home.tabUserCenter') }}</el-radio-button>
-          <!-- RPA浏览器入口：生产编译临时隐藏 <el-radio-button v-if="isLoggedIn" value="rpa-browser">RPA浏览器</el-radio-button> -->
+          <el-radio-button v-if="isLoggedIn" value="rpa-browser">RPA浏览器</el-radio-button>
           <el-radio-button value="shopping">{{ t('home.tabShopping') }}</el-radio-button>
         </el-radio-group>
       </div>

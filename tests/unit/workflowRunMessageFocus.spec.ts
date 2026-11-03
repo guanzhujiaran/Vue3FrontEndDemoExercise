@@ -3,8 +3,10 @@ import type { WorkflowRunLogEvent } from '@/api/browser/workflow_run_api'
 import {
   buildBodyRows,
   buildMessageTree,
+  isTruncatedNode,
   locateLoopNode,
   pathKeysOf,
+  type LoopNode,
 } from '@/utils/rpa/workflowRunMessageTree'
 
 /**
@@ -214,5 +216,60 @@ describe('buildBodyRows：非路径轮次折叠为占位行', () => {
     const flat = buildMessageTree([event({ text: 'a' }), event({ text: 'b' })])
     const rows = buildBodyRows(flat, new Set())
     expect(rows.map(row => row.kind)).toEqual(['item', 'item'])
+  })
+})
+
+describe('窗口截断：失去分组头的体内消息必须归组', () => {
+  it('depth>0 且无分组可挂时进入补位分组，不平铺成顶层消息', () => {
+    const events = [
+      // 消息窗口从某一轮中间开始：该轮的 loop_iteration 已被裁掉
+      event({ depth: 1, loop_index: 7, loop_total: 20, text: '体内消息 a' }),
+      event({ depth: 2, loop_index: 7, loop_total: 20, text: '分支消息 b' }),
+      ...round(1, 8, 2, '循环'),
+    ]
+    const tree = buildMessageTree(events)
+    const [truncated, latest] = tree
+
+    if (truncated?.type !== 'loop') throw new Error('补位分组缺失')
+    expect(isTruncatedNode(truncated)).toBe(true)
+    // 轮次号沿用残段消息自带的 loop_index，分组头仍能显示第 7/20 轮
+    expect(truncated.roundIndex).toBe(7)
+    expect(truncated.roundTotal).toBe(20)
+    expect(truncated.itemCount).toBe(2)
+    expect(truncated.children).toHaveLength(2)
+
+    if (latest?.type !== 'loop') throw new Error('当前轮次缺失')
+    expect(isTruncatedNode(latest)).toBe(false)
+
+    // 补位分组与普通历史轮次一样折叠成占位行，不把上百条残段铺到顶层
+    const rows = buildBodyRows(tree, pathKeysOf(tree, latest.key))
+    expect(rows.map(row => row.kind)).toEqual(['hidden', 'loop'])
+    const hidden = rows[0]
+    if (hidden?.kind !== 'hidden') throw new Error('占位行缺失')
+    expect(hidden.count).toBe(1)
+  })
+
+  it('顶层消息（depth=0）仍是普通消息，不会被误收进补位分组', () => {
+    const tree = buildMessageTree([
+      event({ text: '开始步骤 1/18：navigate' }),
+      ...round(1, 1, 1, '循环'),
+    ])
+    expect(tree.map(node => (node.type === 'item' ? 'item' : 'loop'))).toEqual([
+      'item',
+      'loop',
+    ])
+  })
+
+  it('补位分组之后再出现顶层消息：残段收口，消息回到顶层', () => {
+    const tree = buildMessageTree([
+      event({ depth: 1, loop_index: 3, loop_total: 9, text: '残段' }),
+      event({ depth: 0, text: '顶层消息' }),
+    ])
+    expect(tree.map(node => (node.type === 'item' ? 'item' : 'loop'))).toEqual([
+      'loop',
+      'item',
+    ])
+    const truncated = tree[0] as LoopNode
+    expect(truncated.itemCount).toBe(1)
   })
 })

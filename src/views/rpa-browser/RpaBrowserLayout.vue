@@ -8,57 +8,44 @@
          因此注释必须放在根元素「内部」。 -->
     <!-- 与消息中心布局对齐：BiliSideNavLayout 侧边导航（内置 AutoHeightContainer）承载子页面；
          meta.hideSideNav 的子路由（Stream 控制台等沉浸式页面）不走侧边导航 -->
-    <template v-if="isModuleAvailable">
-      <RpaMobileTip v-if="isLoggedIn && !hideSideNav" class="rpa-browser-layout__mobile-tip mb-2" />
-      <BiliErrorRouteTo v-if="!isLoggedIn" :detail="BiliErrorRouteToTxt.rpa_browser_login_required" />
-      <BiliSideNavLayout v-else-if="!hideSideNav" :nav-groups="navGroups">
-        <template #default>
-          <router-view v-slot="{ Component }">
-            <transition
-              enter-active-class="transition-opacity duration-300 ease-in-out"
-              leave-active-class="transition-opacity duration-300 ease-in-out"
-              enter-from-class="opacity-0"
-              leave-to-class="opacity-0"
-              mode="out-in"
-            >
-              <component :is="Component" />
-            </transition>
-          </router-view>
-        </template>
-      </BiliSideNavLayout>
-      <router-view v-else v-slot="{ Component }">
-        <transition
-          enter-active-class="transition-opacity duration-300 ease-in-out"
-          leave-active-class="transition-opacity duration-300 ease-in-out"
-          enter-from-class="opacity-0"
-          leave-to-class="opacity-0"
-          mode="out-in"
-        >
-          <component :is="Component" />
-        </transition>
-      </router-view>
-    </template>
-    <centered-container
-      v-else
-      class="rpa-browser-layout__construction flex flex-col items-center justify-center min-h-[60vh] py-10 px-5 text-center"
-    >
-      <WarningIcon class="rpa-browser-layout__construction-icon w-20 h-20 text-warning mb-6 animate-float" />
-      <h2 class="rpa-browser-layout__construction-title text-3xl font-semibold text-text-primary m-0 mb-3 tracking-wide">
-        前方施工中
-      </h2>
-      <p class="rpa-browser-layout__construction-desc text-base text-text-secondary m-0 mb-8 leading-relaxed">
-        该功能正在施工中，暂时不开放，敬请期待。
-      </p>
-      <router-link :to="{ name: RouteName.HOME }">
-        <el-button type="primary" size="large" round>返回首页</el-button>
-      </router-link>
-    </centered-container>
+    <RpaMobileTip v-if="isLoggedIn && !hideSideNav" class="rpa-browser-layout__mobile-tip mb-2" />
+    <BiliSideNavLayout v-if="showSideNav" :nav-groups="navGroups">
+      <template #default>
+        <router-view v-slot="{ Component }">
+          <transition
+            enter-active-class="transition-opacity duration-300 ease-in-out"
+            leave-active-class="transition-opacity duration-300 ease-in-out"
+            enter-from-class="opacity-0"
+            leave-to-class="opacity-0"
+            mode="out-in"
+          >
+            <component :is="Component" />
+          </transition>
+        </router-view>
+      </template>
+    </BiliSideNavLayout>
+    <!-- 游客可浏览的公开页面（社区广场）直接渲染内容，不渲染侧边导航 -->
+    <BiliErrorRouteTo
+      v-else-if="!isLoggedIn && !isPublicAccess"
+      :detail="BiliErrorRouteToTxt.rpa_browser_login_required"
+    />
+    <router-view v-else v-slot="{ Component }">
+      <transition
+        enter-active-class="transition-opacity duration-300 ease-in-out"
+        leave-active-class="transition-opacity duration-300 ease-in-out"
+        enter-from-class="opacity-0"
+        leave-to-class="opacity-0"
+        mode="out-in"
+      >
+        <component :is="Component" />
+      </transition>
+    </router-view>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, type Component, type Ref } from 'vue'
-import { useRoute } from 'vue-router'
+import { computed, watch, type Component, type Ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import {
   Monitor,
   Share,
@@ -80,25 +67,11 @@ import BiliSideNavLayout, {
 import RpaMobileTip from '@/components/rpa-browser/RpaMobileTip.vue'
 import { BiliErrorRouteToTxt } from '@/assets/text/BiliErrorTxt.ts'
 import { RouteName } from '@/models/router'
-import WarningIcon from '@/assets/svgs/space/warning.svg?component'
-import CenteredContainer from '@/components/CommonCompo/Bili-Container-Compo/CenteredContainer.vue'
 import { useHydrated } from '@/composables/useHydrated'
-import { useMessageAdminStore } from '@/stores/message_admin.ts'
 
 defineOptions({ name: 'RpaBrowserLayout' })
 
-// 开发环境（VITE_BILI_ENV=dev）允许正常进入 RPA 模块；其余环境默认展示施工提示，
-// 但消息管理端 root 例外（root 全环境可用），其他用户保持原策略不变。
-const isDev = import.meta.env.VITE_BILI_ENV === 'dev'
-const adminStore = useMessageAdminStore()
-/** 消息管理端 root 身份（后端 GET /api/v1/message/admin/me 裁决，后端仍独立强制校验） */
-const isRoot = computed(() => Boolean(adminStore.status.is_root))
-const isModuleAvailable = computed(() => isDev || isRoot.value)
-
-// 客户端挂载后再补拉身份：SSR / 首帧按非 root 渲染，挂载后异步更新，避免水合不一致
-onMounted(() => {
-  if (!adminStore.loaded) void adminStore.fetchStatus()
-})
+// RPA 模块对全部登录用户开放；页面内的管理类子页面由路由 meta 与后端接口权限独立校验。
 
 const biliUser = useInject(KeysEnum.BiliUser) as Ref<UserNavModel>
 // 登录态取自 persist(localStorage)，SSR/预渲染阶段恒为空；用 isHydrated 让两端首帧都按
@@ -108,7 +81,23 @@ const isLoggedIn = computed(() => isHydrated.value && !!biliUser.value.uid)
 
 // meta.hideSideNav 的子路由（Stream 控制台）不渲染侧边导航，独占内容区
 const route = useRoute()
+const router = useRouter()
 const hideSideNav = computed(() => route.meta.hideSideNav === true)
+/** 侧边导航只在登录后渲染：游客进入公开页面时独占内容区 */
+const showSideNav = computed(() => isLoggedIn.value && !hideSideNav.value)
+/** 游客可浏览的公开子路由（社区广场）：meta.publicAccess */
+const isPublicAccess = computed(() => route.meta.publicAccess === true)
+
+// 游客访问 RPA 的非公开页面（含 /app/rpa-browser 默认跳转的指纹列表）时，
+// 统一落到对游客开放的社区广场，避免点顶部导航只看到登录提示。
+watch(
+  [isHydrated, isLoggedIn, isPublicAccess],
+  ([hydrated, loggedIn, publicAccess]) => {
+    if (!hydrated || loggedIn || publicAccess) return
+    void router.replace({ name: RouteName.RPA_BROWSER_COMMUNITY })
+  },
+  { immediate: true }
+)
 
 // 侧边导航分组（与消息中心 / 管理后台同款交互）：item.name 对应子路由 RouteName。
 // Stream（浏览器控制台）与创建/编辑指纹由列表页进入，不出现在导航中。

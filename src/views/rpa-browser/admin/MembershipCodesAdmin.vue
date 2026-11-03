@@ -4,54 +4,93 @@
     <div class="membership-codes-admin__generate flex flex-col gap-3 rounded-xl border border-border-light p-4">
       <span class="membership-codes-admin__generate-title text-base font-semibold text-text-primary">批量生成兑换码</span>
 
-      <div class="membership-codes-admin__generate-form flex flex-wrap items-center gap-3">
-        <el-select v-model="form.codeType" class="membership-codes-admin__field-type" placeholder="码类型">
-          <el-option label="时长卡（直加余额）" value="duration" />
-          <el-option label="月卡（定时调度工作流免扣时长）" value="month_card" />
-        </el-select>
-        <el-input-number
-          v-model="form.count"
-          class="membership-codes-admin__field-count"
-          :min="1"
-          :max="500"
-          placeholder="数量"
-        />
-        <el-input-number
-          v-model="form.maxUses"
-          class="membership-codes-admin__field-max-uses"
-          :min="1"
-          :max="10000"
-          placeholder="每码可兑次数"
-        />
-        <el-input-number
+      <div class="membership-codes-admin__generate-form flex flex-wrap items-end gap-3">
+        <div class="membership-codes-admin__field-type-group w-72 flex flex-col gap-1">
+          <el-text class="membership-codes-admin__field-type-label text-text-secondary" tag="span">
+            码类型
+          </el-text>
+          <el-select v-model="form.codeType" class="membership-codes-admin__field-type" placeholder="选择码类型">
+            <el-option label="时长卡（直加余额）" value="duration" />
+            <el-option label="月卡（定时调度工作流免扣时长）" value="month_card" />
+          </el-select>
+        </div>
+        <div class="membership-codes-admin__field-count-group flex flex-col gap-1">
+          <el-text class="membership-codes-admin__field-count-label text-text-secondary" tag="span">
+            生成数量（个）
+          </el-text>
+          <el-input-number
+            v-model="form.count"
+            class="membership-codes-admin__field-count"
+            :min="1"
+            :max="500"
+            placeholder="数量"
+          />
+        </div>
+        <div class="membership-codes-admin__field-max-uses-group flex flex-col gap-1">
+          <el-text class="membership-codes-admin__field-max-uses-label text-text-secondary" tag="span">
+            每码可兑次数（1 = 一次性）
+          </el-text>
+          <el-input-number
+            v-model="form.maxUses"
+            class="membership-codes-admin__field-max-uses"
+            :min="1"
+            :max="10000"
+            placeholder="每码可兑次数"
+          />
+        </div>
+        <div
           v-if="form.codeType === 'duration'"
-          v-model="form.durationMinutes"
-          class="membership-codes-admin__field-duration"
-          :min="1"
-          :max="1000000"
-          placeholder="面值（分钟）"
-        />
-        <el-input-number
+          class="membership-codes-admin__field-duration-group flex flex-col gap-1"
+        >
+          <el-text class="membership-codes-admin__field-duration-label text-text-secondary" tag="span">
+            面值（分钟，兑换后直接加到时长余额）
+          </el-text>
+          <el-input-number
+            v-model="form.durationMinutes"
+            class="membership-codes-admin__field-duration"
+            :min="1"
+            :max="1000000"
+            placeholder="面值（分钟）"
+          />
+        </div>
+        <div
           v-if="form.codeType === 'month_card'"
-          v-model="form.cardDays"
-          class="membership-codes-admin__field-days"
-          :min="1"
-          :max="3650"
-          placeholder="月卡天数（一个月=31天）"
-        />
-        <el-date-picker
-          v-model="form.expireAt"
-          class="membership-codes-admin__field-expire"
-          type="datetime"
-          placeholder="兑换码有效期（可选）"
-          value-format="YYYY-MM-DD HH:mm:ss"
-        />
-        <el-input
-          v-model="form.remark"
-          class="membership-codes-admin__field-remark"
-          placeholder="备注（可选）"
-          clearable
-        />
+          class="membership-codes-admin__field-days-group flex flex-col gap-1"
+        >
+          <el-text class="membership-codes-admin__field-days-label text-text-secondary" tag="span">
+            月卡天数（1 个月 = 31 天）
+          </el-text>
+          <el-input-number
+            v-model="form.cardDays"
+            class="membership-codes-admin__field-days"
+            :min="1"
+            :max="3650"
+            placeholder="月卡天数"
+          />
+        </div>
+        <div class="membership-codes-admin__field-expire-group flex flex-col gap-1">
+          <el-text class="membership-codes-admin__field-expire-label text-text-secondary" tag="span">
+            兑换码有效期（留空 = 永久有效）
+          </el-text>
+          <el-date-picker
+            v-model="form.expireAt"
+            class="membership-codes-admin__field-expire"
+            type="datetime"
+            placeholder="选择失效时间"
+            value-format="YYYY-MM-DD HH:mm:ss"
+          />
+        </div>
+        <div class="membership-codes-admin__field-remark-group w-64 flex flex-col gap-1">
+          <el-text class="membership-codes-admin__field-remark-label text-text-secondary" tag="span">
+            备注（可选，便于区分发放批次）
+          </el-text>
+          <el-input
+            v-model="form.remark"
+            class="membership-codes-admin__field-remark"
+            placeholder="如：2026-11 活动发放"
+            clearable
+          />
+        </div>
         <el-button
           type="primary"
           class="membership-codes-admin__generate-btn"
@@ -62,7 +101,7 @@
         </el-button>
       </div>
       <span class="membership-codes-admin__generate-hint text-xs text-text-secondary">
-        生成动作会写入管理员操作审计日志；兑换码请妥善保管，仅发放给目标用户。
+        时长卡：兑换后直接把面值（分钟）加到用户的时长余额；月卡：兑换后按天数开通月卡权益，期间定时调度工作流免扣时长。生成动作会写入管理员操作审计日志，兑换码请妥善保管，仅发放给目标用户。
       </span>
     </div>
 
@@ -81,7 +120,7 @@
         <el-select
           v-model="codeTypeFilter"
           class="membership-codes-admin__filter-type"
-          placeholder="码类型"
+          placeholder="全部码类型"
           clearable
           @change="handleSearch"
         >
@@ -98,22 +137,22 @@
 
       <el-table v-else :data="codeItems" class="membership-codes-admin__table w-full" border>
         <el-table-column prop="code" label="兑换码" min-width="180" />
-        <el-table-column label="类型" width="100">
+        <el-table-column label="码类型" width="100">
           <template #default="{ row }">
             <el-tag :type="row.code_type === 'month_card' ? 'warning' : 'success'">
               {{ row.code_type === 'month_card' ? '月卡' : '时长卡' }}
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="面值" min-width="120">
+        <el-table-column label="面值（时长卡=时长 / 月卡=天数）" min-width="200">
           <template #default="{ row }">
             {{ row.code_type === 'month_card' ? `${row.card_days} 天` : formatSeconds(row.duration_seconds) }}
           </template>
         </el-table-column>
-        <el-table-column label="已兑/上限" width="110">
+        <el-table-column label="已兑换 / 可兑上限" width="140">
           <template #default="{ row }">{{ row.used_count }} / {{ row.max_uses }}</template>
         </el-table-column>
-        <el-table-column label="状态" width="90">
+        <el-table-column label="启用状态" width="100">
           <template #default="{ row }">
             <el-tag :type="row.is_enabled ? 'success' : 'info'">
               {{ row.is_enabled ? '启用' : '停用' }}
@@ -125,7 +164,7 @@
             {{ row.expire_at ? formatDateTime(row.expire_at) : '永久' }}
           </template>
         </el-table-column>
-        <el-table-column prop="batch_no" label="批次号" min-width="140" />
+        <el-table-column prop="batch_no" label="批次号（同次生成共用）" min-width="180" />
         <el-table-column label="创建时间" min-width="160">
           <template #default="{ row }">{{ formatDateTime(row.created_at) }}</template>
         </el-table-column>

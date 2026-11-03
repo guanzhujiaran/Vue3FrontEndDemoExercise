@@ -25,6 +25,23 @@ import {
  * 配合面板的「按轮次分批收拢」，1000 条足够回看相当长的一段执行过程。
  */
 const MAX_MESSAGES = 1000
+/**
+ * 单条消息保留的返回内容（`detail`）最大字符数。
+ *
+ * 后端运行日志对 `detail` **不做总量限制**（`workflow_run_log_detail_max_length` 默认 0），
+ * 实测一个 LLM 步骤的 detail 就有 9.7MB，1000 条窗口累计 100MB+：
+ * 全部留在内存里会让面板卡死。前端只做展示，保留前 4000 字符足够定位问题，
+ * 完整内容去「运行记录 → 执行日志」看。
+ */
+const MAX_DETAIL_CHARS = 4000
+/**
+ * 消息聚合窗口（毫秒）。
+ *
+ * 循环体密集上报时（一轮 33 个动作 × 起止两条 ≈ 70+ 条消息，几秒内涌入），
+ * 每条消息都替换一次数组会让面板整棵消息树重建 + 重渲染。这里把窗口内的消息
+ * 合并成一次提交，渲染次数从「每条一次」降到「每 120ms 一次」。
+ */
+const FLUSH_INTERVAL = 120
 /** run_id -> 取消订阅函数（模块级，跨组件/页面存活） */
 const subscriptions = new Map<string, () => void>()
 
@@ -52,14 +69,52 @@ export const useWorkflowRunMessageStore = defineStore('workflow-run-messages', (
     subscriptions.delete(targetRunId)
   }
 
+  /** 已入列/已展示的 seq（SSE 断线重连会补发最近消息，据此去重） */
+  let seenSeq = new Set<number>()
+  /** 聚合窗口内待提交的消息 */
+  let pending: WorkflowRunLogEvent[] = []
+  let flushTimer: ReturnType<typeof setTimeout> | null = null
+
+  /** 把窗口内的消息一次性并入消息列表（超出上限只保留最近的） */
+  function flushPending() {
+    flushTimer = null
+    if (pending.length === 0) return
+    const batch = pending
+    pending = []
+    messages.value = [...messages.value, ...batch].slice(-MAX_MESSAGES)
+  }
+
+  /** 丢弃未提交的消息（切换运行 / 清空时不能把上一批补进来） */
+  function dropPending() {
+    if (flushTimer !== null) {
+      clearTimeout(flushTimer)
+      flushTimer = null
+    }
+    pending = []
+  }
+
+  /**
+   * 入列前先给 `detail` 兜底截断。
+   *
+   * 必须在进内存前做：超长 detail 一旦进入响应式数组，面板的 computed（消息树、
+   * 焦点路径、占位行）每帧都要遍历它，DOM 里也会留下巨大的文本节点，改再多的渲染策略都救不回来。
+   */
+  function clampDetail(event: WorkflowRunLogEvent): WorkflowRunLogEvent {
+    const detail = event.detail
+    if (typeof detail !== 'string' || detail.length <= MAX_DETAIL_CHARS) return event
+    return {
+      ...event,
+      detail: `${detail.slice(0, MAX_DETAIL_CHARS)}\n…（已截断，原文 ${detail.length} 字符；完整内容见运行记录的执行日志）`,
+    }
+  }
+
   function handleLogEvent(event: WorkflowRunLogEvent) {
     if (event.run_id !== runId.value) return
-    const duplicated = messages.value.some(
-      existing => existing.run_id === event.run_id && existing.seq === event.seq
-    )
-    if (duplicated) return
-    messages.value = [...messages.value, event].slice(-MAX_MESSAGES)
+    if (seenSeq.has(event.seq)) return
+    seenSeq.add(event.seq)
     if (!panelOpen.value) unread.value += 1
+    pending.push(clampDetail(event))
+    if (flushTimer === null) flushTimer = setTimeout(flushPending, FLUSH_INTERVAL)
   }
 
   /**
@@ -79,6 +134,9 @@ export const useWorkflowRunMessageStore = defineStore('workflow-run-messages', (
       if (switched && runId.value) closeSubscription(runId.value)
       runId.value = targetRunId
       workflowName.value = name
+      // 换了运行：未提交的旧消息与去重表一并作废，避免把上一轮消息混进新运行
+      dropPending()
+      seenSeq = new Set<number>()
       messages.value = []
       unread.value = 0
       status.value = 'running'
@@ -112,6 +170,7 @@ export const useWorkflowRunMessageStore = defineStore('workflow-run-messages', (
 
   /** 清空消息（不影响订阅，后续消息继续累积） */
   function clearMessages() {
+    dropPending()
     messages.value = []
     unread.value = 0
   }
@@ -120,6 +179,7 @@ export const useWorkflowRunMessageStore = defineStore('workflow-run-messages', (
   function detachAll() {
     for (const close of subscriptions.values()) close()
     subscriptions.clear()
+    dropPending()
     status.value = 'idle'
   }
 

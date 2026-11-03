@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { h, ref, computed, onMounted } from 'vue'
+import { h, ref, computed, inject, onMounted } from 'vue'
 import { Warning, Goods } from '@element-plus/icons-vue'
 import { ElCheckbox, ElMessageBox } from 'element-plus'
 import BiliPageHeader from '@/components/CommonCompo/Bili-Container-Compo/BiliPageHeader.vue'
@@ -13,6 +13,8 @@ import ResourceInteractionBar from '@/components/interaction/ResourceInteraction
 import ReportDialog from '@/components/moment/ReportDialog.vue'
 import { InteractionBizTypeEnum } from '@/api/notify/moment-api'
 import type { FilterType, SortBy, SortOrder } from '@/api/browser/hey-api'
+import { useHydrated } from '@/composables/useHydrated'
+import { openGlobalLoginModalKey } from '@/models/inject/inject_type.ts'
 
 type TabType = 'actions' | 'workflows'
 
@@ -41,6 +43,11 @@ interface CommunityWorkflowItem {
 }
 
 const userNavStore = useUserNavStore()
+
+// 社区广场对游客开放：登录态按水合后判定，避免 SSR/首帧与客户端不一致
+const isHydrated = useHydrated()
+const isLoggedIn = computed(() => isHydrated.value && !!userNavStore.user_nav.uid)
+const openGlobalLoginModal = inject(openGlobalLoginModalKey, () => {})
 
 const activeTab = ref<TabType>('actions')
 const currentPage = ref(1)
@@ -328,9 +335,12 @@ onMounted(() => {
                 <span class="text-xs">{{ item.created_at ? new Date(item.created_at).toLocaleDateString() : '-' }}</span>
               </div>
 
-              <div class="flex items-center gap-2 mt-2">
-                <el-button size="small" type="primary" @click="handleForkAction(item.action_id)">Fork</el-button>
-                <el-button size="small" type="warning" @click="handleReport(item, 'action')">举报</el-button>
+              <div class="community-action-card__actions flex items-center gap-2 mt-2">
+                <template v-if="isLoggedIn">
+                  <el-button type="primary" @click="handleForkAction(item.action_id)">Fork</el-button>
+                  <el-button type="warning" @click="handleReport(item, 'action')">举报</el-button>
+                </template>
+                <el-button v-else type="primary" plain @click="openGlobalLoginModal()">登录后可 Fork</el-button>
               </div>
             </div>
           </div>
@@ -361,9 +371,12 @@ onMounted(() => {
                 <span class="text-xs">{{ item.created_at ? new Date(item.created_at).toLocaleDateString() : '-' }}</span>
               </div>
 
-              <div class="flex items-center gap-2 mt-2">
-                <el-button size="small" type="primary" @click="handleForkWorkflow(item.id)">Fork</el-button>
-                <el-button size="small" type="warning" @click="handleReport(item, 'workflow')">举报</el-button>
+              <div class="community-workflow-card__actions flex items-center gap-2 mt-2">
+                <template v-if="isLoggedIn">
+                  <el-button type="primary" @click="handleForkWorkflow(item.id)">Fork</el-button>
+                  <el-button type="warning" @click="handleReport(item, 'workflow')">举报</el-button>
+                </template>
+                <el-button v-else type="primary" plain @click="openGlobalLoginModal()">登录后可 Fork</el-button>
               </div>
             </div>
           </div>
