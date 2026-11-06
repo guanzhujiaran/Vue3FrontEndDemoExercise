@@ -97,7 +97,10 @@ export class 操作日志管理Service {
     /**
      * 操作日志统计
      *
-     * 按 action 聚合统计最近 N 天的执行情况（days 默认 7）
+     * 按 action 聚合统计执行情况
+     *
+     * 筛选口径与列表接口一致（operation / 批次 / 工作流 / 浏览器 / 来源 / 状态 /
+     * 结果 / 关键字），`days=0`（默认）表示不限时间，保证概览数字与列表总数对齐。
      */
     public static statsActionLogsApiV1RpaBrowserControlActionLogsStatsPost<ThrowOnError extends boolean = false>(options?: Options<StatsActionLogsApiV1RpaBrowserControlActionLogsStatsPostData, ThrowOnError>): RequestResult<StatsActionLogsApiV1RpaBrowserControlActionLogsStatsPostResponses, StatsActionLogsApiV1RpaBrowserControlActionLogsStatsPostErrors, ThrowOnError, 'data'> {
         return (options?.client ?? client).post<StatsActionLogsApiV1RpaBrowserControlActionLogsStatsPostResponses, StatsActionLogsApiV1RpaBrowserControlActionLogsStatsPostErrors, ThrowOnError, 'data'>({

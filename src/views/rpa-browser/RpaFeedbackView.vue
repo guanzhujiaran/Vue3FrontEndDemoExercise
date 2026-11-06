@@ -113,6 +113,7 @@
 
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
+import { useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import {
   submitFeedback,
@@ -123,6 +124,8 @@ import {
 
 defineOptions({ name: 'RpaFeedbackView' })
 
+const route = useRoute()
+
 const form = ref<FeedbackSubmitPayload>({
   category: 'bug',
   title: '',
@@ -130,6 +133,16 @@ const form = ref<FeedbackSubmitPayload>({
   source: 'web',
   page_url: typeof window !== 'undefined' ? window.location.href : ''
 })
+
+/**
+ * 上下文预填：RPA 全局反馈按钮跳过来时会带 `page_url`（出错页面）与 `browser_id`，
+ * 直接填进「错误上下文」，比默认的「反馈页自己的 URL」更有定位价值。
+ */
+function applyQueryContext() {
+  const { page_url, browser_id } = route.query
+  if (typeof page_url === 'string' && page_url) form.value.page_url = page_url
+  if (typeof browser_id === 'string' && browser_id) form.value.browser_id = browser_id
+}
 
 const submitting = ref(false)
 const loading = ref(false)
@@ -194,5 +207,8 @@ async function handleSubmit() {
   }
 }
 
-onMounted(loadList)
+onMounted(() => {
+  applyQueryContext()
+  loadList()
+})
 </script>

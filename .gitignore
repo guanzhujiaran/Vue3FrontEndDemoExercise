@@ -33,9 +33,20 @@ playwright/.cache/
 
 *.tsbuildinfo
 
+# Nuxt 构建/开发产物与缓存（本地生成，随版本变化，不入库）
+.nuxt/
+.output/
+.nitro/
+.cache/
+.vite/
+.eslintcache
+
 .lh
 .history
 .env.prod
+.env.development
+.env.local
+.env.*.local
 *.png
 # 例外：SEO 分享图（Open Graph / Twitter Card）必须随站点一起部署，
 # 否则社交平台与搜索引擎抓到的 og:image 是 404。

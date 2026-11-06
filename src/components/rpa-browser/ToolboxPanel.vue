@@ -12,6 +12,20 @@ import { useUserNavStore } from '@/stores/user_nav'
 import ActionIcon from './ActionIcon.vue'
 import { resolveActionTypeIcon } from '@/utils/rpa/actionTypeIcon'
 import { resolveActionIconUrl } from '@/utils/rpa/actionIcon'
+import {
+  RECENT_CATEGORY_ID,
+  buildActionTree,
+  clearActionUsage,
+  defaultExpandedGroupIds,
+  groupNodeId,
+  normalizeQuery,
+  readActionUsage,
+  recentActionIds,
+  recordActionUsage,
+  resolveActionDisplayName,
+  scoreAction,
+  type ActionUsageMap,
+} from '@/utils/rpa/actionCategory'
 
 // ── 常量 ─────────────────────────────────────────────
 enum ToolboxTab {
@@ -89,16 +103,14 @@ const SUGGEST_THROTTLE_MS = 300
 
 // ── 工具 ─────────────────────────────────────────────
 
-const actionTitleMap: Record<string, string> = {
-  click: '点击', input: '输入', navigation: '导航', navigate: '页面导航',
-  new_page: '新建页面', screenshot: '截图', wait: '等待', scroll: '滚动',
-  hover: '悬停', evaluate: '执行JS', select: '选择', keyboard: '键盘',
-  mouse: '鼠标', llm: 'LLM', loop: '循环', if_else: '条件',
-  composite: '组合', custom: '自定义',
-}
-
+/**
+ * 动作显示名
+ *
+ * 收敛到 `actionCategory.ts` 的 `ACTION_DISPLAY_NAME`（31 个内置动作全覆盖）：
+ * 原实现只维护了 19 个 id，新增动作会直接显示原始 `action_id`。
+ */
 const getActionLabel = (id: string, schema?: Record<string, unknown>) =>
-  actionTitleMap[id] || (schema?.title as string) || id
+  resolveActionDisplayName(id, null, (schema?.title as string) || null)
 
 /** 生成 action 详细信息的 tooltip 文本 */
 function getTooltipContent(data: Record<string, unknown>): string {
@@ -306,13 +318,27 @@ async function searchNamesApi(keyword: string): Promise<string[]> {
   return []
 }
 
-/** 从已加载的注册操作中本地过滤名称（基础操作 tab） */
+/** 从已加载的注册操作中本地检索名称（基础操作 tab）—— 与树内检索共用同一套打分算法 */
 function searchNamesLocal(keyword: string): string[] {
-  const q = keyword.toLowerCase()
-  return (registeredActions.value as Record<string, unknown>[])
-    .map((a) => (a.name as string) || getActionLabel(a.action_id as string, a.json_schema as Record<string, unknown>))
-    .filter((n) => n.toLowerCase().includes(q))
+  const q = normalizeQuery(keyword)
+  if (!q) return []
+  return registeredActions.value
+    .map((a) => ({
+      name: a.name || getActionLabel(a.action_id, a.json_schema as Record<string, unknown>),
+      score: scoreAction(
+        {
+          action_id: a.action_id,
+          name: a.name,
+          description: (a.json_schema?.description as string) || null,
+        },
+        q,
+        actionUsage.value,
+      ),
+    }))
+    .filter((item) => item.score > 0)
+    .sort((a, b) => b.score - a.score)
     .slice(0, 10)
+    .map((item) => item.name)
 }
 
 /** 节流获取联想词（el-autocomplete 的 fetch-suggestions 回调） */
@@ -353,15 +379,23 @@ function onTagChange(value: string) {
  * el-tree-v2 的 `data` 只接受对象数组（`TreeNodeData[]`），原先声明成 `unknown[]`
  * 会被直接拒绝；节点字段由模板按需断言（`data as Record<string, unknown>`），
  * 因此这里用宽松的对象记录承载，既能塞进 el-tree-v2，也不锁死字段。
+ *
+ * 结构已从「一层平铺」改为「分类 → 动作」两层（见 docs/frontend_requirements/动作分类与检索.md）：
+ * 31 个动作平铺后靠滚动找动作成本太高，分类节点不可拖拽、只做折叠与计数。
  */
 type ToolboxTreeNode = Record<string, unknown>
 
+/** 内置动作使用记录（localStorage）：驱动「常用」分组与打分加成 */
+const actionUsage = shallowRef<ActionUsageMap>(readActionUsage())
+
+const hasUsage = computed(() => recentActionIds(actionUsage.value).length > 0)
+
+const normalizedQuery = computed(() => normalizeQuery(searchQuery.value))
+
 const filteredRegistered = computed<ToolboxTreeNode[]>(() => {
-  const q = searchQuery.value.toLowerCase()
   const items = registeredActions.value.map((a) => ({
     id: `action-${a.action_id}`,
     label: a.name || getActionLabel(a.action_id, a.json_schema || {}),
-    children: [],
     action_id: a.action_id,
     action_type: a.action_id,
     // 图标字段必须透传：后端为每个内置动作都下发了 (icon_series, icon_id)
@@ -370,8 +404,8 @@ const filteredRegistered = computed<ToolboxTreeNode[]>(() => {
     // 此前漏传导致 ActionIcon 拿不到 series/id，树节点永远走 fallback（图标全都一样）
     icon_series: a.icon_series,
     icon_id: a.icon_id,
-    name: a.name || a.json_schema?.title || a.action_id,
-    description: a.json_schema?.description,
+    name: a.name || (a.json_schema?.title as string) || a.action_id,
+    description: (a.json_schema?.description as string) || null,
     // ActionMetadataResponse 无 tags 字段，历史行为保留（恒为空数组）
     tags: (a as { tags?: unknown[] }).tags || [],
     // 变量契约（后端 /actions/registered 下发）合并进 json_schema 透传，
@@ -382,21 +416,54 @@ const filteredRegistered = computed<ToolboxTreeNode[]>(() => {
       output_variables: a.output_variables,
     },
   }))
-  if (!q) return items
-  return items.filter((i) => String(i.name || i.label || '').toLowerCase().includes(q))
+  return buildActionTree(items, normalizedQuery.value, actionUsage.value) as unknown as ToolboxTreeNode[]
 })
+
+/**
+ * 展开的分组：搜索时全展开（让命中项直接可见），无查询时只展开最常用的两类。
+ * el-tree-v2 的 `default-expanded-keys` 只在挂载时生效，配合下方 `:key` 重建树生效。
+ */
+const expandedGroupIds = computed<string[]>(() => {
+  if (normalizedQuery.value) {
+    return filteredRegistered.value.map((group) => String(group.id))
+  }
+  // 常用分组若已出现也一并展开
+  return [...defaultExpandedGroupIds(), groupNodeId(RECENT_CATEGORY_ID)]
+})
+
+/**
+ * 树重建 key：**只在查询变化时重建**。
+ * 不把使用记录放进 key —— 否则每拖一个新动作（最近列表顺序变化）都会重建整棵树，
+ * 展开态被重置，拖拽体验很差；新增的「常用」分组交给 Vue 响应式更新即可。
+ */
+const treeRenderKey = computed(() => `basic-tree:${normalizedQuery.value}`)
+
+function onClearUsage() {
+  clearActionUsage()
+  actionUsage.value = {}
+}
 
 // ── 拖拽 ─────────────────────────────────────────────
 
 function handleDragStart(event: DragEvent, nodeData: unknown) {
   if (!event.dataTransfer || !nodeData) return
   const data = { ...(nodeData as Record<string, unknown>) }
+  // 分类节点只做折叠与计数，不能被当成步骤拖进画布
+  if (data.is_group) { event.preventDefault(); return }
   delete data.children; delete data.expanded
   delete data.checked; delete data.indeterminate
+  delete data.is_group; delete data.category_id; delete data.score
   const json = JSON.stringify(data)
   event.dataTransfer.setData('text/plain', json)
   event.dataTransfer.setData('application/json', json)
   event.dataTransfer.effectAllowed = 'copyMove'
+  // 记录使用（驱动「常用」分组）；只在最近使用列表真的变化时刷新，避免拖拽过程中重建树
+  const actionId = String(data.action_id || '')
+  if (actionId) {
+    const before = recentActionIds(actionUsage.value).join(',')
+    const usage = recordActionUsage(actionId)
+    if (recentActionIds(usage).join(',') !== before) actionUsage.value = usage
+  }
   setToolboxDragGhost(event, data)
 }
 
@@ -612,45 +679,72 @@ onBeforeUnmount(() => {
       </template>
     </LoadingMoreContainer>
 
-    <!-- 基础操作树 -->
-    <div v-show="activeTab === ToolboxTab.BASIC" ref="treeWrapRef" class="flex-1 min-h-0 overflow-hidden p-3" v-loading="loading">
-      <el-tree-v2
-        v-if="filteredRegistered.length > 0"
-        :data="filteredRegistered" :props="treeProps"
-        :height="treeHeight" :item-size="TOOLBOX_TREE_ITEM_SIZE" class="tree-drag-drop [&_.el-tree-node__content]:p-[4px_8px]!"
-      >
-        <template #default="{ data }">
-          <div
-            class="flex items-center justify-between w-full gap-2 cursor-grab active:cursor-grabbing"
-            draggable="true"
-            @dragstart="handleDragStart($event, data)"
-          >
-            <span class="flex items-center gap-2 min-w-0 flex-1">
-              <ActionIcon
-                :series="(data as Record<string, unknown>).icon_series as number | undefined"
-                :id="(data as Record<string, unknown>).icon_id as number | undefined"
-                :class="TOOLBOX_ICON_CLASS"
-              >
-                <template #fallback>
-                  <!-- 图库中无对应资源时按 action_id 取内置类型图标（点击/输入/导航…各不相同） -->
-                  <el-icon class="w-8 h-8 shrink-0">
-                    <component :is="resolveActionTypeIcon((data as Record<string, unknown>).action_id as string)" />
-                  </el-icon>
-                </template>
-              </ActionIcon>
-              <el-tooltip
-                :content="getTooltipContent(data as Record<string, unknown>)"
-                placement="right" :show-after="400"
-                popper-class="toolbox-tooltip whitespace-pre-line"
-              >
-                <el-text class="flex-1 min-w-0" truncated>{{ (data as Record<string, unknown>).name as string || (data as Record<string, unknown>).label as string }}</el-text>
-              </el-tooltip>
-            </span>
-            <span class="text-xs text-text-secondary shrink-0">预置动作</span>
-          </div>
-        </template>
-      </el-tree-v2>
-      <el-empty v-else description="暂无匹配内容" :image-size="60" />
+    <!-- 基础操作树（分类 → 动作 两层） -->
+    <div v-show="activeTab === ToolboxTab.BASIC" class="flex flex-col flex-1 min-h-0">
+      <div class="toolbox-basic-summary flex items-center justify-between gap-2 px-3 pt-2 shrink-0">
+        <el-text class="text-xs text-text-secondary">
+          {{ registeredActions.length }} 个预置动作 · {{ filteredRegistered.length }} 个分类
+        </el-text>
+        <el-button
+          v-if="hasUsage"
+          link type="primary" class="toolbox-clear-usage"
+          @click="onClearUsage"
+        >清空常用</el-button>
+      </div>
+      <div ref="treeWrapRef" class="flex-1 min-h-0 overflow-hidden p-3" v-loading="loading">
+        <el-tree-v2
+          v-if="filteredRegistered.length > 0"
+          :key="treeRenderKey"
+          :data="filteredRegistered" :props="treeProps"
+          :default-expanded-keys="expandedGroupIds"
+          :height="treeHeight" :item-size="TOOLBOX_TREE_ITEM_SIZE" class="tree-drag-drop [&_.el-tree-node__content]:p-[4px_8px]!"
+        >
+          <template #default="{ data }">
+            <!-- 分类节点：只做折叠与计数，不可拖拽 -->
+            <div
+              v-if="(data as Record<string, unknown>).is_group"
+              class="toolbox-category-node flex items-center justify-between w-full gap-2 cursor-default"
+            >
+              <span class="flex items-center gap-2 min-w-0 flex-1">
+                <el-icon class="w-4 h-4 shrink-0"><Folder /></el-icon>
+                <el-text class="flex-1 min-w-0 font-medium" truncated>{{ (data as Record<string, unknown>).label as string }}</el-text>
+              </span>
+              <span class="text-xs text-text-secondary shrink-0">{{ (data as Record<string, unknown>).count as number }}</span>
+            </div>
+            <!-- 动作节点 -->
+            <div
+              v-else
+              class="toolbox-action-node flex items-center justify-between w-full gap-2 cursor-grab active:cursor-grabbing"
+              draggable="true"
+              @dragstart="handleDragStart($event, data)"
+            >
+              <span class="flex items-center gap-2 min-w-0 flex-1">
+                <ActionIcon
+                  :series="(data as Record<string, unknown>).icon_series as number | undefined"
+                  :id="(data as Record<string, unknown>).icon_id as number | undefined"
+                  :class="TOOLBOX_ICON_CLASS"
+                >
+                  <template #fallback>
+                    <!-- 图库中无对应资源时按 action_id 取内置类型图标（点击/输入/导航…各不相同） -->
+                    <el-icon class="w-8 h-8 shrink-0">
+                      <component :is="resolveActionTypeIcon((data as Record<string, unknown>).action_id as string)" />
+                    </el-icon>
+                  </template>
+                </ActionIcon>
+                <el-tooltip
+                  :content="getTooltipContent(data as Record<string, unknown>)"
+                  placement="right" :show-after="400"
+                  popper-class="toolbox-tooltip whitespace-pre-line"
+                >
+                  <el-text class="flex-1 min-w-0" truncated>{{ (data as Record<string, unknown>).name as string || (data as Record<string, unknown>).label as string }}</el-text>
+                </el-tooltip>
+              </span>
+              <span class="text-xs text-text-secondary shrink-0">预置动作</span>
+            </div>
+          </template>
+        </el-tree-v2>
+        <el-empty v-else description="暂无匹配内容" :image-size="60" />
+      </div>
     </div>
   </div>
 </template>

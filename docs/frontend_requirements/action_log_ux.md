@@ -135,12 +135,13 @@
     （同模块 `BrowserFingerprintList.vue` 先例），筛选栏常驻、分页常驻，
     每翻一页内容整批替换，滚动条随内容变化自然刷新。
 - **实现要点**（`src/views/rpa-browser/ActionLogView.vue`）：
-  - `LoadingMoreContainer` → `BiliScrollbar`（`flex-1 min-h-0`，不传 `noresize`，
-    恢复 EP 的 resize 监听）+ 列表下方 `el-pagination` 吸底
-    （`layout="sizes, prev, pager, next, total"`，每页 10/20/50/100）；
-  - `loadLogs` 固定按 `currentPage / pageSize` 整页加载；`handleSearch` /
-    删除 / 清空后重置回第 1 页，避免落在越界空页；
-  - 翻页 / 切换每页条数后通过 `wrapRef` 把列表滚动复位到顶部；
+  - 移除 `LoadingMoreContainer` / 页内滚动容器：**纵向滚动全部交给
+    `BiliSideNavLayout` 内容区的 `BiliScrollbar`**，页面内容按自然高度堆叠
+    （同 `WorkflowManagement.vue` 的做法），列表末尾跟 `BiliPagination`
+    （`layout="sizes, prev, pager, next, total"`，每页 10/20/50/100，默认 20）；
+  - `loadLogs(resetPage)` 固定按 `currentPage / pageSize` 整页加载；`handleSearch` /
+    刷新 / 删除 / 清空 / 批次筛选变化后重置回第 1 页，避免落在越界空页；
+  - 翻页 / 切换每页条数后清空跨页勾选（避免误删其他页数据）；
   - 移除 `loadingMore / hasMore / loadError` 等无限滚动专属状态。
 
 ## 6. 后续待办（本次不实现，需用户决策 / 后端配合）

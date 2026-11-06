@@ -206,6 +206,7 @@ export type ArticleInfo = {
  *
  * 枚举选项：
  * - DYN_DETAIL_DATABASE_CLEANER: DYN_DETAIL_DATABASE_CLEANER
+ * - TABLESPACE_MAINTENANCE: TABLESPACE_MAINTENANCE
  * - GET_PROXY_METHODS_SCHEDULER: GET_PROXY_METHODS_SCHEDULER
  * - SAMSCCLUB_SCHEDULER: SAMSCCLUB_SCHEDULER
  * - SAMSCCLUB_SPU_DETAIL_SCHEDULER: SAMSCCLUB_SPU_DETAIL_SCHEDULER
@@ -224,6 +225,10 @@ export const BackgroundServiceName = {
      * DYN_DETAIL_DATABASE_CLEANER
      */
     DYN_DETAIL_DATABASE_CLEANER: 'DYN_DETAIL_DATABASE_CLEANER',
+    /**
+     * TABLESPACE_MAINTENANCE
+     */
+    TABLESPACE_MAINTENANCE: 'TABLESPACE_MAINTENANCE',
     /**
      * GET_PROXY_METHODS_SCHEDULER
      */
@@ -279,6 +284,7 @@ export const BackgroundServiceName = {
  *
  * 枚举选项：
  * - DYN_DETAIL_DATABASE_CLEANER: DYN_DETAIL_DATABASE_CLEANER
+ * - TABLESPACE_MAINTENANCE: TABLESPACE_MAINTENANCE
  * - GET_PROXY_METHODS_SCHEDULER: GET_PROXY_METHODS_SCHEDULER
  * - SAMSCCLUB_SCHEDULER: SAMSCCLUB_SCHEDULER
  * - SAMSCCLUB_SPU_DETAIL_SCHEDULER: SAMSCCLUB_SPU_DETAIL_SCHEDULER
@@ -708,6 +714,114 @@ export const CrawlerHealthStatus = {
  * - STOPPED: stopped
  */
 export type CrawlerHealthStatus = typeof CrawlerHealthStatus[keyof typeof CrawlerHealthStatus];
+
+/**
+ * CrawlerPushEffectiveItem
+ *
+ * 合并「文件配置 + 环境变量」之后的生效状态
+ */
+export type CrawlerPushEffectiveItem = {
+    /**
+     * Crawler Name
+     */
+    crawler_name: string;
+    /**
+     * Start
+     */
+    start?: boolean;
+    /**
+     * End
+     */
+    end?: boolean;
+    /**
+     * Source
+     *
+     * 配置来源：file / env
+     */
+    source: string;
+};
+
+/**
+ * CrawlerPushState
+ *
+ * 推送开关的持久化内容（整体覆盖式保存）
+ */
+export type CrawlerPushState = {
+    /**
+     * Items
+     *
+     * 按爬虫配置的开关列表，未列出的爬虫回退到环境变量
+     */
+    items?: Array<CrawlerPushSwitchItem>;
+    /**
+     * Updated At
+     *
+     * 最近保存时间（秒级时间戳）
+     */
+    updated_at?: number | null;
+};
+
+/**
+ * CrawlerPushStateResp
+ *
+ * 查询推送开关的响应
+ */
+export type CrawlerPushStateResp = {
+    /**
+     * 文件里持久化的内容
+     */
+    state: CrawlerPushState;
+    /**
+     * Env Start
+     *
+     * 环境变量 CRAWLER_PUSH_START 原值
+     */
+    env_start?: string;
+    /**
+     * Env End
+     *
+     * 环境变量 CRAWLER_PUSH_END 原值
+     */
+    env_end?: string;
+    /**
+     * State File
+     *
+     * 开关文件落盘路径（排查用）
+     */
+    state_file?: string;
+    /**
+     * Effective
+     *
+     * 每个爬虫的最终生效状态
+     */
+    effective?: Array<CrawlerPushEffectiveItem>;
+};
+
+/**
+ * CrawlerPushSwitchItem
+ *
+ * 单个爬虫的推送开关
+ */
+export type CrawlerPushSwitchItem = {
+    /**
+     * Crawler Name
+     *
+     * 爬虫名，取值同 BackgroundServiceName
+     */
+    crawler_name: string;
+    /**
+     * Start
+     *
+     * 开始执行时是否推送
+     */
+    start?: boolean;
+    /**
+     * End
+     *
+     * 结束时是否推送
+     */
+    end?: boolean;
+};
 
 /**
  * CustomBaseModelHashable
@@ -2266,6 +2380,36 @@ export type StandardResponseCaptchaGenResp = {
      */
     msg?: string;
     data?: CaptchaGenResp | null;
+};
+
+/**
+ * StandardResponse[CrawlerPushStateResp]
+ */
+export type StandardResponseCrawlerPushStateResp = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: CrawlerPushStateResp | null;
+};
+
+/**
+ * StandardResponse[CrawlerPushState]
+ */
+export type StandardResponseCrawlerPushState = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: CrawlerPushState | null;
 };
 
 /**
@@ -5947,6 +6091,74 @@ export type GetGlobalSchedulerStatusApiV1BackgroundServiceGlobalSchedulerStatusG
 };
 
 export type GetGlobalSchedulerStatusApiV1BackgroundServiceGlobalSchedulerStatusGetResponse = GetGlobalSchedulerStatusApiV1BackgroundServiceGlobalSchedulerStatusGetResponses[keyof GetGlobalSchedulerStatusApiV1BackgroundServiceGlobalSchedulerStatusGetResponses];
+
+export type GetCrawlerPushSwitchApiV1BackgroundServiceBackgroundServiceCrawlerPushSwitchGetData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/background_service/BackgroundService/CrawlerPushSwitch';
+};
+
+export type GetCrawlerPushSwitchApiV1BackgroundServiceBackgroundServiceCrawlerPushSwitchGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseCrawlerPushStateResp;
+};
+
+export type GetCrawlerPushSwitchApiV1BackgroundServiceBackgroundServiceCrawlerPushSwitchGetResponse = GetCrawlerPushSwitchApiV1BackgroundServiceBackgroundServiceCrawlerPushSwitchGetResponses[keyof GetCrawlerPushSwitchApiV1BackgroundServiceBackgroundServiceCrawlerPushSwitchGetResponses];
+
+export type SetCrawlerPushSwitchApiV1BackgroundServiceBackgroundServiceCrawlerPushSwitchSetPostData = {
+    body: CrawlerPushState;
+    path?: never;
+    query?: never;
+    url: '/api/v1/background_service/BackgroundService/CrawlerPushSwitch/Set';
+};
+
+export type SetCrawlerPushSwitchApiV1BackgroundServiceBackgroundServiceCrawlerPushSwitchSetPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type SetCrawlerPushSwitchApiV1BackgroundServiceBackgroundServiceCrawlerPushSwitchSetPostError = SetCrawlerPushSwitchApiV1BackgroundServiceBackgroundServiceCrawlerPushSwitchSetPostErrors[keyof SetCrawlerPushSwitchApiV1BackgroundServiceBackgroundServiceCrawlerPushSwitchSetPostErrors];
+
+export type SetCrawlerPushSwitchApiV1BackgroundServiceBackgroundServiceCrawlerPushSwitchSetPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseCrawlerPushState;
+};
+
+export type SetCrawlerPushSwitchApiV1BackgroundServiceBackgroundServiceCrawlerPushSwitchSetPostResponse = SetCrawlerPushSwitchApiV1BackgroundServiceBackgroundServiceCrawlerPushSwitchSetPostResponses[keyof SetCrawlerPushSwitchApiV1BackgroundServiceBackgroundServiceCrawlerPushSwitchSetPostResponses];
+
+export type DeleteCrawlerPushSwitchApiV1BackgroundServiceBackgroundServiceCrawlerPushSwitchDeletePostData = {
+    body?: never;
+    path?: never;
+    query: {
+        crawler_name: BackgroundServiceName;
+    };
+    url: '/api/v1/background_service/BackgroundService/CrawlerPushSwitch/Delete';
+};
+
+export type DeleteCrawlerPushSwitchApiV1BackgroundServiceBackgroundServiceCrawlerPushSwitchDeletePostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type DeleteCrawlerPushSwitchApiV1BackgroundServiceBackgroundServiceCrawlerPushSwitchDeletePostError = DeleteCrawlerPushSwitchApiV1BackgroundServiceBackgroundServiceCrawlerPushSwitchDeletePostErrors[keyof DeleteCrawlerPushSwitchApiV1BackgroundServiceBackgroundServiceCrawlerPushSwitchDeletePostErrors];
+
+export type DeleteCrawlerPushSwitchApiV1BackgroundServiceBackgroundServiceCrawlerPushSwitchDeletePostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseCrawlerPushState;
+};
+
+export type DeleteCrawlerPushSwitchApiV1BackgroundServiceBackgroundServiceCrawlerPushSwitchDeletePostResponse = DeleteCrawlerPushSwitchApiV1BackgroundServiceBackgroundServiceCrawlerPushSwitchDeletePostResponses[keyof DeleteCrawlerPushSwitchApiV1BackgroundServiceBackgroundServiceCrawlerPushSwitchDeletePostResponses];
 
 export type V1GetLiveLotsV1GetLiveLotsGetData = {
     body?: never;

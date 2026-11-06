@@ -10,6 +10,7 @@ import WorkflowEditDialog from '@/components/rpa-browser/WorkflowEditDialog.vue'
 import WorkflowRunLogDialog from '@/components/rpa-browser/WorkflowRunLogDialog.vue'
 import WorkflowCard from '@/components/rpa-browser/WorkflowCard.vue'
 import type { WorkflowMoreCommand } from '@/components/rpa-browser/WorkflowCard.vue'
+import ShareJsonDialog from '@/components/rpa-browser/ShareJsonDialog.vue'
 import {
   subscribeWorkflowRunProgress,
   resumeWorkflowRun,
@@ -128,7 +129,7 @@ const handlePageChange = (page: number) => {
   loadWorkflows(page)
 }
 
-/** 从 JSON 文件直接导入并保存为一个新工作流（后端生成新的 workflow_id） */
+/** 导入他人分享的 JSON 文件并保存为一个新工作流（后端生成新的 workflow_id） */
 const importing = ref(false)
 const handleImportJson = async () => {
   let data: Record<string, unknown> | null
@@ -330,8 +331,37 @@ const syncLoadingId = ref<number | null>(null)
 const handleMoreCommand = (command: WorkflowMoreCommand, item: WorkflowItem) => {
   if (command === 'edit') handleEdit(item)
   else if (command === 'duplicate') handleDuplicate(item)
+  else if (command === 'share') handleShare(item)
   else if (command === 'publish') handleApplyPublish(item)
   else handleDelete(item)
+}
+
+// ── 分享工作流（后端导出的 JSON 与导入接口请求体一致） ──
+const shareVisible = ref(false)
+const shareLoading = ref(false)
+const shareName = ref('')
+const sharePayload = ref<Record<string, unknown> | null>(null)
+
+/** 打开分享弹窗并向后端取导出内容；取不到时直接关闭，避免空弹窗 */
+const handleShare = async (item: WorkflowItem) => {
+  shareName.value = item.name
+  sharePayload.value = null
+  shareVisible.value = true
+  shareLoading.value = true
+  const result = await businessHandler<Record<string, unknown>>(
+    工作流管理Service.exportWorkflowApiV1RpaBrowserControlWorkflowsExportPost({
+      body: { id: item.id },
+      // 失败走非 2xx 响应，开启 throwOnError 让 businessHandler 直接展示后端 msg
+      throwOnError: true,
+    }) as any,
+    { successMessage: '', errorMessage: '生成分享内容失败', showSuccessToast: false }
+  )
+  shareLoading.value = false
+  if (result.success && result.data) {
+    sharePayload.value = result.data
+  } else {
+    shareVisible.value = false
+  }
 }
 
 const handleSyncUpstream = async (item: WorkflowItem) => {
@@ -750,7 +780,7 @@ onBeforeUnmount(closeAllCardSubscriptions)
     <BiliPageHeader title="工作流管理" hide-title description="创建、配置和管理工作流" tagText="工作流">
       <template #extra>
         <div class="workflow-toolbar-extra flex items-center gap-2">
-          <el-button :icon="Upload" :loading="importing" @click="handleImportJson">从 JSON 导入</el-button>
+          <el-button class="workflow-toolbar__import" :icon="Upload" :loading="importing" @click="handleImportJson">导入分享</el-button>
           <el-button :icon="SetUp" @click="goApprovalCenter">审批中心</el-button>
           <el-button :icon="Refresh" @click="handleRefresh">刷新</el-button>
           <el-button :icon="Plus" type="primary" @click="handleCreate">新建工作流</el-button>
@@ -852,6 +882,14 @@ onBeforeUnmount(closeAllCardSubscriptions)
       @run-changed="loadWorkflows"
     />
 
+    <!-- 分享工作流：复制 / 下载与导入接口兼容的 JSON -->
+    <ShareJsonDialog
+      v-model="shareVisible"
+      kind="workflow"
+      :name="shareName"
+      :payload="sharePayload"
+      :loading="shareLoading"
+    />
 
   </FlexContainer>
 </template>

@@ -26,6 +26,8 @@ import { LINK_REFERRER_POLICY, LINK_REL } from '@/utils/PageOpen/linkPolicy'
 interface Props {
   /** 工作流数据库ID（雪花 int；字符串传入后内部转 Number） */
   workflowId: string
+  /** 预置的执行批次筛选（从运行记录/操作日志带批次跳进来时使用） */
+  executionId?: string
 }
 
 const props = defineProps<Props>()
@@ -73,7 +75,8 @@ const resourceIdFilter = ref('')
 const countMinFilter = ref<number | null>(null)
 const countMaxFilter = ref<number | null>(null)
 const browserFilter = ref<number | null>(null)
-const executionIdFilter = ref('')
+/** 执行批次筛选：首次值直接取外部传入（URL query），之后由表头输入框维护 */
+const executionIdFilter = ref(props.executionId ?? '')
 const dateRange = ref<[string, string] | null>(null)
 
 const STATUS_OPTIONS = [
@@ -178,6 +181,17 @@ watch(
   () => props.workflowId,
   () => handleRefresh(),
   { immediate: true }
+)
+
+// 外部（URL query）批次变化（如表头输入框以外的跳转）：写进筛选并重新查询
+watch(
+  () => props.executionId,
+  value => {
+    const next = value ?? ''
+    if (next === executionIdFilter.value) return
+    executionIdFilter.value = next
+    handleRefresh()
+  }
 )
 
 defineExpose({ load })
@@ -296,7 +310,7 @@ defineExpose({ load })
           <el-input
             v-model="executionIdFilter"
             class="workflow-resource-record__filter"
-            placeholder="执行批次ID"
+            placeholder="执行批次ID（可只填前 8 位）"
             clearable
             @change="handleRefresh"
             @clear="handleRefresh"

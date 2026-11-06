@@ -17,6 +17,7 @@ import { pickBackendMsg } from '@/utils/backendErrorMsg'
 import { pickJsonFile, errMsg } from '@/utils/rpa/jsonImport'
 import ResourceInteractionBar from '@/components/interaction/ResourceInteractionBar.vue'
 import ActionDetailDialog from '@/components/rpa-browser/ActionDetailDialog.vue'
+import ShareJsonDialog from '@/components/rpa-browser/ShareJsonDialog.vue'
 import IconRefresh from '@/assets/svgs/space/refresh.svg?component'
 import IconTag from '@/assets/svgs/space/tag.svg?component'
 import IconMore from '@/assets/svgs/space/more.svg?component'
@@ -140,7 +141,7 @@ const handleSearch = useDebounceFn(() => {
   loadActions()
 }, 400)
 
-/** 从 JSON 文件直接导入并保存为一个新动作（后端生成新的 action_id） */
+/** 导入他人分享的 JSON 文件并保存为一个新动作（后端生成新的 action_id） */
 const importing = ref(false)
 const handleImportJson = async () => {
   let data: Record<string, unknown> | null
@@ -185,6 +186,34 @@ const handleTagFilter = () => {
 /** 动作的雪花 ID 以字符串透传（19 位整数超出 JS Number 安全范围，后端自行转 int），
  *  SDK 类型声明为 number，此处统一做带注释的转换，避免转 Number() 丢精度 */
 const actionIdPayload = (actionId: string) => actionId as unknown as number
+
+// ── 分享动作（后端导出的 JSON 与导入接口请求体一致） ──
+const shareVisible = ref(false)
+const shareLoading = ref(false)
+const shareName = ref('')
+const sharePayload = ref<Record<string, unknown> | null>(null)
+
+/** 打开分享弹窗并向后端取导出内容；取不到时直接关闭，避免空弹窗 */
+const handleShare = async (item: ActionItem) => {
+  shareName.value = item.name
+  sharePayload.value = null
+  shareVisible.value = true
+  shareLoading.value = true
+  const result = await businessHandler<Record<string, unknown>>(
+    自定义操作管理Service.exportCustomActionApiV1RpaBrowserControlCustomActionsExportPost({
+      body: { action_id: actionIdPayload(item.action_id) },
+      // 失败走非 2xx 响应，开启 throwOnError 让 businessHandler 直接展示后端 msg
+      throwOnError: true,
+    }) as any,
+    { successMessage: '', errorMessage: '生成分享内容失败', showSuccessToast: false }
+  )
+  shareLoading.value = false
+  if (result.success && result.data) {
+    sharePayload.value = result.data
+  } else {
+    shareVisible.value = false
+  }
+}
 
 const handleRename = async (item: ActionItem) => {
   let newName: string
@@ -346,11 +375,12 @@ const syncIconTip = (item: ActionItem) => {
 
 /** 「更多」下拉菜单命令分发（次级操作收纳，减少卡片按钮数量） */
 const handleMoreCommand = (
-  command: 'rename' | 'publish' | 'delete',
+  command: 'rename' | 'publish' | 'share' | 'delete',
   item: ActionItem
 ) => {
   if (command === 'rename') handleRename(item)
   else if (command === 'publish') handleApplyPublish(item)
+  else if (command === 'share') handleShare(item)
   else handleDelete(item)
 }
 
@@ -481,7 +511,7 @@ onMounted(() => {
   <FlexContainer>
     <BiliPageHeader title="动作管理" hide-title description="管理你的自定义动作" tag-text="私有动作">
       <template #extra>
-        <el-button :icon="Upload" :loading="importing" @click="handleImportJson">从 JSON 导入</el-button>
+        <el-button class="action-toolbar__import" :icon="Upload" :loading="importing" @click="handleImportJson">导入分享</el-button>
         <el-button :icon="SetUp" @click="goApprovalCenter">审批中心</el-button>
         <el-button :icon="Refresh" @click="handleRefresh">刷新</el-button>
       </template>
@@ -648,7 +678,7 @@ onMounted(() => {
                 <el-dropdown
                   class="action-card__more ml-auto"
                   trigger="click"
-                  @command="(cmd: string) => handleMoreCommand(cmd as 'rename' | 'publish' | 'delete', item)"
+                  @command="(cmd: string) => handleMoreCommand(cmd as 'rename' | 'publish' | 'share' | 'delete', item)"
                 >
                   <el-button link class="action-card__more-trigger p-0 h-auto text-text-primary">
                     <component :is="IconMore" class="w-4 h-4" />
@@ -656,6 +686,7 @@ onMounted(() => {
                   <template #dropdown>
                     <el-dropdown-menu>
                       <el-dropdown-item command="rename">重命名</el-dropdown-item>
+                      <el-dropdown-item command="share">分享</el-dropdown-item>
                       <el-dropdown-item v-if="!item.is_public" command="publish">申请公开</el-dropdown-item>
                       <el-dropdown-item command="delete" divided>删除</el-dropdown-item>
                     </el-dropdown-menu>
@@ -678,6 +709,15 @@ onMounted(() => {
 
     <!-- 动作详情（结构流程图） -->
     <ActionDetailDialog v-model="detailVisible" :action-id="detailActionId" />
+
+    <!-- 分享动作：复制 / 下载与导入接口兼容的 JSON -->
+    <ShareJsonDialog
+      v-model="shareVisible"
+      kind="action"
+      :name="shareName"
+      :payload="sharePayload"
+      :loading="shareLoading"
+    />
 
     <!-- 标签编辑对话框 -->
     <el-dialog v-model="tagDialogVisible" title="编辑标签" width="420px" :lock-scroll="false">

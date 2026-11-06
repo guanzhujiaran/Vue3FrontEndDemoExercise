@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { ref, computed, watch, onBeforeUnmount } from 'vue'
+import { useRouter } from 'vue-router'
 import { Delete, Refresh, RefreshRight } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
+import { RouteName } from '@/models/router/index.ts'
 import { 工作流管理Service, 操作日志管理Service } from '@/api/browser/hey-api'
 import { useUserNavStore } from '@/stores/user_nav'
 import { businessHandler } from '@/utils/businessHandler'
@@ -40,6 +42,7 @@ const emit = defineEmits<{
 }>()
 
 const userNavStore = useUserNavStore()
+const router = useRouter()
 
 interface RunItem {
   id: number
@@ -244,6 +247,25 @@ async function loadRuns(page = 1) {
     total.value = 0
   }
   loading.value = false
+}
+
+/**
+ * 跳「已处理数据」并只看本轮批次。
+ *
+ * 资源记录的 execution_id 与运行的 execution_id 同名同值，`?execution_id=` 直接在
+ * 表格的「执行批次」筛选里生效，无需任何映射；顺带带上 workflow_id 定位到本工作流。
+ */
+function openResourceRecords(row: RunItem) {
+  const executionId = row.execution_id
+  if (!executionId) return
+  dialogVisible.value = false
+  router.push({
+    name: RouteName.RPA_BROWSER_RESOURCE_RECORD,
+    query: {
+      workflow_id: String(row.workflow_id || props.workflowId || ''),
+      execution_id: executionId,
+    },
+  })
 }
 
 async function loadStepLogs(run: RunItem, targetPage = 1) {
@@ -494,6 +516,26 @@ onBeforeUnmount(closeAllSubscriptions)
         </el-table-column>
         <el-table-column label="目标浏览器" width="120">
           <template #default="{ row }">{{ row.browser_id || '-' }}</template>
+        </el-table-column>
+        <!-- 执行批次：与「已处理数据」的资源记录同值，点击按批次查看本轮产出的数据 -->
+        <el-table-column label="执行批次" width="120">
+          <template #default="{ row }">
+            <el-tooltip
+              v-if="row.execution_id"
+              :content="`查看该批次已处理数据（${row.execution_id}）`"
+              placement="top"
+            >
+              <el-link
+                class="workflow-run-log__execution-link font-mono"
+                type="primary"
+                :underline="false"
+                @click="openResourceRecords(row as RunItem)"
+              >
+                {{ String(row.execution_id).slice(0, 8) }}
+              </el-link>
+            </el-tooltip>
+            <span v-else class="text-xs text-color-secondary">-</span>
+          </template>
         </el-table-column>
         <el-table-column label="步骤" width="140">
           <template #default="{ row }">

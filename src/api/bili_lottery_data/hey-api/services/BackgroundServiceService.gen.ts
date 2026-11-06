@@ -3,7 +3,7 @@
 import type { RequestResult } from '../client';
 import { client } from '../client.gen';
 import type { Options } from '../sdk.gen';
-import type { AllStatApiV1BackgroundServiceBackgroundServiceAllStatGetData, AllStatApiV1BackgroundServiceBackgroundServiceAllStatGetResponses, GetGlobalJobsApiV1BackgroundServiceGlobalScheduleGetJobsGetData, GetGlobalJobsApiV1BackgroundServiceGlobalScheduleGetJobsGetResponses, GetGlobalSchedulerStatusApiV1BackgroundServiceGlobalSchedulerStatusGetData, GetGlobalSchedulerStatusApiV1BackgroundServiceGlobalSchedulerStatusGetResponses, GetProxyStatusApiV1BackgroundServiceGetProxyStatusGetData, GetProxyStatusApiV1BackgroundServiceGetProxyStatusGetResponses, RestartServiceApiV1BackgroundServiceBackgroundServiceRestartPostData, RestartServiceApiV1BackgroundServiceBackgroundServiceRestartPostErrors, RestartServiceApiV1BackgroundServiceBackgroundServiceRestartPostResponses, StartServiceApiV1BackgroundServiceBackgroundServiceStartPostData, StartServiceApiV1BackgroundServiceBackgroundServiceStartPostErrors, StartServiceApiV1BackgroundServiceBackgroundServiceStartPostResponses, StopServiceApiV1BackgroundServiceBackgroundServiceStopPostData, StopServiceApiV1BackgroundServiceBackgroundServiceStopPostErrors, StopServiceApiV1BackgroundServiceBackgroundServiceStopPostResponses } from '../types.gen';
+import type { AllStatApiV1BackgroundServiceBackgroundServiceAllStatGetData, AllStatApiV1BackgroundServiceBackgroundServiceAllStatGetResponses, DeleteCrawlerPushSwitchApiV1BackgroundServiceBackgroundServiceCrawlerPushSwitchDeletePostData, DeleteCrawlerPushSwitchApiV1BackgroundServiceBackgroundServiceCrawlerPushSwitchDeletePostErrors, DeleteCrawlerPushSwitchApiV1BackgroundServiceBackgroundServiceCrawlerPushSwitchDeletePostResponses, GetCrawlerPushSwitchApiV1BackgroundServiceBackgroundServiceCrawlerPushSwitchGetData, GetCrawlerPushSwitchApiV1BackgroundServiceBackgroundServiceCrawlerPushSwitchGetResponses, GetGlobalJobsApiV1BackgroundServiceGlobalScheduleGetJobsGetData, GetGlobalJobsApiV1BackgroundServiceGlobalScheduleGetJobsGetResponses, GetGlobalSchedulerStatusApiV1BackgroundServiceGlobalSchedulerStatusGetData, GetGlobalSchedulerStatusApiV1BackgroundServiceGlobalSchedulerStatusGetResponses, GetProxyStatusApiV1BackgroundServiceGetProxyStatusGetData, GetProxyStatusApiV1BackgroundServiceGetProxyStatusGetResponses, RestartServiceApiV1BackgroundServiceBackgroundServiceRestartPostData, RestartServiceApiV1BackgroundServiceBackgroundServiceRestartPostErrors, RestartServiceApiV1BackgroundServiceBackgroundServiceRestartPostResponses, SetCrawlerPushSwitchApiV1BackgroundServiceBackgroundServiceCrawlerPushSwitchSetPostData, SetCrawlerPushSwitchApiV1BackgroundServiceBackgroundServiceCrawlerPushSwitchSetPostErrors, SetCrawlerPushSwitchApiV1BackgroundServiceBackgroundServiceCrawlerPushSwitchSetPostResponses, StartServiceApiV1BackgroundServiceBackgroundServiceStartPostData, StartServiceApiV1BackgroundServiceBackgroundServiceStartPostErrors, StartServiceApiV1BackgroundServiceBackgroundServiceStartPostResponses, StopServiceApiV1BackgroundServiceBackgroundServiceStopPostData, StopServiceApiV1BackgroundServiceBackgroundServiceStopPostErrors, StopServiceApiV1BackgroundServiceBackgroundServiceStopPostResponses } from '../types.gen';
 
 export class BackgroundServiceService {
     /**
@@ -93,6 +93,49 @@ export class BackgroundServiceService {
         return (options?.client ?? client).get<GetGlobalSchedulerStatusApiV1BackgroundServiceGlobalSchedulerStatusGetResponses, unknown, ThrowOnError, 'data'>({
             responseStyle: 'data',
             url: '/api/v1/background_service/GlobalScheduler/Status',
+            ...options
+        });
+    }
+    
+    /**
+     * Get Crawler Push Switch
+     *
+     * 查询爬虫「开始 / 结束」推送开关（本地文件 + 环境变量合并后的生效状态）
+     */
+    public static getCrawlerPushSwitchApiV1BackgroundServiceBackgroundServiceCrawlerPushSwitchGet<ThrowOnError extends boolean = false>(options?: Options<GetCrawlerPushSwitchApiV1BackgroundServiceBackgroundServiceCrawlerPushSwitchGetData, ThrowOnError>): RequestResult<GetCrawlerPushSwitchApiV1BackgroundServiceBackgroundServiceCrawlerPushSwitchGetResponses, unknown, ThrowOnError, 'data'> {
+        return (options?.client ?? client).get<GetCrawlerPushSwitchApiV1BackgroundServiceBackgroundServiceCrawlerPushSwitchGetResponses, unknown, ThrowOnError, 'data'>({
+            responseStyle: 'data',
+            url: '/api/v1/background_service/BackgroundService/CrawlerPushSwitch',
+            ...options
+        });
+    }
+    
+    /**
+     * Set Crawler Push Switch
+     *
+     * 修改爬虫「开始 / 结束」推送开关（写入本地文件，立即生效，重启后保留）
+     */
+    public static setCrawlerPushSwitchApiV1BackgroundServiceBackgroundServiceCrawlerPushSwitchSetPost<ThrowOnError extends boolean = false>(options: Options<SetCrawlerPushSwitchApiV1BackgroundServiceBackgroundServiceCrawlerPushSwitchSetPostData, ThrowOnError>): RequestResult<SetCrawlerPushSwitchApiV1BackgroundServiceBackgroundServiceCrawlerPushSwitchSetPostResponses, SetCrawlerPushSwitchApiV1BackgroundServiceBackgroundServiceCrawlerPushSwitchSetPostErrors, ThrowOnError, 'data'> {
+        return (options.client ?? client).post<SetCrawlerPushSwitchApiV1BackgroundServiceBackgroundServiceCrawlerPushSwitchSetPostResponses, SetCrawlerPushSwitchApiV1BackgroundServiceBackgroundServiceCrawlerPushSwitchSetPostErrors, ThrowOnError, 'data'>({
+            responseStyle: 'data',
+            url: '/api/v1/background_service/BackgroundService/CrawlerPushSwitch/Set',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    /**
+     * Delete Crawler Push Switch
+     *
+     * 删除某个爬虫的推送开关文件配置（回退到环境变量）
+     */
+    public static deleteCrawlerPushSwitchApiV1BackgroundServiceBackgroundServiceCrawlerPushSwitchDeletePost<ThrowOnError extends boolean = false>(options: Options<DeleteCrawlerPushSwitchApiV1BackgroundServiceBackgroundServiceCrawlerPushSwitchDeletePostData, ThrowOnError>): RequestResult<DeleteCrawlerPushSwitchApiV1BackgroundServiceBackgroundServiceCrawlerPushSwitchDeletePostResponses, DeleteCrawlerPushSwitchApiV1BackgroundServiceBackgroundServiceCrawlerPushSwitchDeletePostErrors, ThrowOnError, 'data'> {
+        return (options.client ?? client).post<DeleteCrawlerPushSwitchApiV1BackgroundServiceBackgroundServiceCrawlerPushSwitchDeletePostResponses, DeleteCrawlerPushSwitchApiV1BackgroundServiceBackgroundServiceCrawlerPushSwitchDeletePostErrors, ThrowOnError, 'data'>({
+            responseStyle: 'data',
+            url: '/api/v1/background_service/BackgroundService/CrawlerPushSwitch/Delete',
             ...options
         });
     }

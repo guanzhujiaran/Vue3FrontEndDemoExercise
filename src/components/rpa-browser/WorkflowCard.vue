@@ -9,7 +9,7 @@ import IconRefresh from '@/assets/svgs/space/refresh.svg?component'
 import IconMore from '@/assets/svgs/space/more.svg?component'
 
 /** 「更多」下拉菜单命令类型 */
-export type WorkflowMoreCommand = 'edit' | 'duplicate' | 'publish' | 'delete'
+export type WorkflowMoreCommand = 'edit' | 'duplicate' | 'share' | 'publish' | 'delete'
 
 interface Props {
   item: WorkflowItem
@@ -301,6 +301,7 @@ const formatTime = (t: string | null) => {
           <el-dropdown-menu>
             <el-dropdown-item command="edit">编辑</el-dropdown-item>
             <el-dropdown-item command="duplicate">复制工作流</el-dropdown-item>
+            <el-dropdown-item command="share">分享</el-dropdown-item>
             <el-dropdown-item v-if="!item.is_public" command="publish" divided>申请公开</el-dropdown-item>
             <el-dropdown-item command="delete" divided>删除</el-dropdown-item>
           </el-dropdown-menu>

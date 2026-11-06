@@ -1000,6 +1000,17 @@ const routes: CustomRouteRecordRaw[] = [
           requiresAdmin: true,
           hidden: true
         }
+      },
+      {
+        // bili-crawler 爬虫「开始 / 结束」推送开关（本地文件持久化），管理端可见
+        path: 'crawler-push-switch',
+        name: 'ADMIN_CRAWLER_PUSH_SWITCH',
+        component: () => import('@/views/admin/CrawlerPushSwitchView.vue'),
+        meta: {
+          title: '爬虫推送开关',
+          requiresAdmin: true,
+          hidden: true
+        }
       }
     ]
   },

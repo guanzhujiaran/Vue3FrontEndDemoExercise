@@ -27,7 +27,7 @@
 
 <script setup lang="ts">
 import { computed, type Component } from 'vue'
-import { Setting, Bell, ChatDotRound, Comment, Key, DataAnalysis } from '@element-plus/icons-vue'
+import { Setting, Bell, ChatDotRound, Comment, Key, DataAnalysis, Switch } from '@element-plus/icons-vue'
 import { useMessageAdminStore } from '@/stores/message_admin'
 import StatsOverviewCards from '@/components/admin/StatsOverviewCards.vue'
 
@@ -52,6 +52,7 @@ const items = computed<OverviewItem[]>(() => {
   const list: OverviewItem[] = []
   if (isRpaAdmin.value) {
     list.push({ name: 'ADMIN_BILI_CRAWLER_SUMMARY', title: '抽奖数据', desc: '按抽奖类型统计未开奖、昨日/本周/本月新增等', icon: DataAnalysis })
+    list.push({ name: 'ADMIN_CRAWLER_PUSH_SWITCH', title: '爬虫推送开关', desc: '控制各爬虫「开始 / 结束」是否推送通知（默认全关）', icon: Switch })
     list.push({ name: 'ADMIN_RPA', title: 'RPA 管理后台', desc: '操作审批、官方认证、标签与操作审计', icon: Setting })
     list.push({ name: 'ADMIN_MESSAGE_NOTIFY', title: '通知管理', desc: '系统通知的发布与管理', icon: Bell })
     list.push({ name: 'ADMIN_MESSAGE_DM', title: '私信审核', desc: '审核用户私信内容', icon: ChatDotRound })

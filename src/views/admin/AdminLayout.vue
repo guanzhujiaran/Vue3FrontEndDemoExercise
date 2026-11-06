@@ -11,7 +11,7 @@
 
 <script setup lang="ts">
 import { computed, type Component } from 'vue'
-import { Bell, Calendar, ChatDotRound, Comment, Key, Checked, Collection, Avatar, Flag, Stamp, Document, Medal, CollectionTag, Setting, Odometer, SetUp, DataAnalysis, Cpu } from '@element-plus/icons-vue'
+import { Bell, Calendar, ChatDotRound, Comment, Key, Checked, Collection, Avatar, Flag, Stamp, Document, Medal, CollectionTag, Setting, Odometer, SetUp, DataAnalysis, Cpu, Switch } from '@element-plus/icons-vue'
 import icShoucang from '@/assets/svgs/audit/shoucang.svg?component'
 import icLiveCenter from '@/assets/svgs/audit/ic_Livecenter.svg?component'
 import icQuota from '@/assets/svgs/space/play_data.svg?component'
@@ -48,7 +48,8 @@ const navGroups = computed<NavGroup[]>(() => {
       title: '抽奖数据',
       items: [
         { name: 'ADMIN_BILI_CRAWLER_SUMMARY', title: '抽奖数据', icon: DataAnalysis },
-        { name: 'ADMIN_CRAWLER_LLM_CONFIG', title: 'LLM 配置', icon: Cpu }
+        { name: 'ADMIN_CRAWLER_LLM_CONFIG', title: 'LLM 配置', icon: Cpu },
+        { name: 'ADMIN_CRAWLER_PUSH_SWITCH', title: '爬虫推送开关', icon: Switch }
       ]
     })
   }

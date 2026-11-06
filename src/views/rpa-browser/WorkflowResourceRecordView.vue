@@ -28,6 +28,8 @@ const userNavStore = useUserNavStore()
 
 const workflowOptions = ref<WorkflowOption[]>([])
 const selectedWorkflowId = ref('')
+/** URL 带来的执行批次：从「工作流运行记录」点批次号跳进来时只看本轮产出 */
+const queryExecutionId = ref('')
 const loadingWorkflows = ref(false)
 
 const { getTemplate } = useResourceLinkTemplate()
@@ -71,20 +73,29 @@ function handleWorkflowChange() {
   })
 }
 
+/** 同步地址栏里的 workflow_id / execution_id（刷新、分享、从运行记录跳转都走这里） */
+function applyQuery() {
+  const fromWorkflow = route.query.workflow_id
+  if (typeof fromWorkflow === 'string' && fromWorkflow) selectedWorkflowId.value = fromWorkflow
+  const fromExecution = route.query.execution_id
+  queryExecutionId.value = typeof fromExecution === 'string' ? fromExecution : ''
+}
+
+/** 清除批次筛选：同时抹掉地址栏 query，避免刷新后又回到过滤态 */
+function clearExecutionFilter() {
+  queryExecutionId.value = ''
+  const restQuery = { ...route.query }
+  delete restQuery.execution_id
+  router.replace({ name: route.name ?? undefined, query: restQuery })
+}
+
 onMounted(async () => {
-  const fromQuery = route.query.workflow_id
-  if (typeof fromQuery === 'string' && fromQuery) selectedWorkflowId.value = fromQuery
+  applyQuery()
   await loadWorkflows()
 })
 
-watch(
-  () => route.query.workflow_id,
-  value => {
-    if (typeof value === 'string' && value && value !== selectedWorkflowId.value) {
-      selectedWorkflowId.value = value
-    }
-  }
-)
+watch(() => route.query.workflow_id, applyQuery)
+watch(() => route.query.execution_id, applyQuery)
 </script>
 
 <template>
@@ -127,7 +138,25 @@ watch(
         </el-text>
       </div>
 
-      <WorkflowResourceRecordTable v-if="selectedWorkflowId" :workflow-id="selectedWorkflowId" />
+      <!-- 批次过滤条：从运行记录/操作日志带 execution_id 跳进来时显示 -->
+      <div
+        v-if="queryExecutionId"
+        class="workflow-resource-record-view__batch-bar flex items-center gap-2 rounded-lg bg-primary-light-9 px-3 py-1.5 text-xs"
+      >
+        <span class="text-color-secondary">执行批次</span>
+        <span class="workflow-resource-record-view__batch-value font-mono text-primary" :title="queryExecutionId">
+          {{ queryExecutionId }}
+        </span>
+        <el-button text type="primary" class="workflow-resource-record-view__batch-clear" @click="clearExecutionFilter">
+          清除批次筛选
+        </el-button>
+      </div>
+
+      <WorkflowResourceRecordTable
+        v-if="selectedWorkflowId"
+        :workflow-id="selectedWorkflowId"
+        :execution-id="queryExecutionId"
+      />
       <el-empty v-else description="请选择工作流" />
     </div>
 

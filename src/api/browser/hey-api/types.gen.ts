@@ -513,17 +513,95 @@ export const ActionLogSourceEnum = {
 export type ActionLogSourceEnum = typeof ActionLogSourceEnum[keyof typeof ActionLogSourceEnum];
 
 /**
+ * ActionLogStatsItem
+ *
+ * 按操作聚合的统计条目
+ */
+export type ActionLogStatsItem = {
+    /**
+     * Action Id
+     */
+    action_id: string;
+    /**
+     * Action Name
+     */
+    action_name?: string;
+    /**
+     * Total
+     */
+    total: number;
+    /**
+     * Success
+     */
+    success: number;
+    /**
+     * Failed
+     */
+    failed: number;
+    /**
+     * Avg Execution Time
+     */
+    avg_execution_time: number;
+};
+
+/**
  * ActionLogStatsRequest
  *
  * 日志统计请求
+ *
+ * 筛选口径与列表接口（ActionLogListRequest）保持一致，统计才能与列表总数对齐。
  */
 export type ActionLogStatsRequest = {
     /**
      * Days
      *
-     * 统计最近多少天（含今天，默认 7）
+     * 统计最近多少天（含今天）；0 / 不传表示不限时间，与列表默认口径一致
      */
     days?: number;
+    /**
+     * Action Id
+     *
+     * 按操作ID筛选
+     */
+    action_id?: string | null;
+    /**
+     * Execution Id
+     *
+     * 按执行批次ID筛选
+     */
+    execution_id?: string | null;
+    /**
+     * Workflow Id
+     *
+     * 按工作流ID筛选
+     */
+    workflow_id?: string | null;
+    /**
+     * Browser Id
+     *
+     * 按浏览器ID筛选
+     */
+    browser_id?: string | null;
+    /**
+     * 按触发来源筛选
+     */
+    source?: ActionLogSourceEnum | null;
+    /**
+     * 按执行状态筛选
+     */
+    status?: ActionLogStatusEnum | null;
+    /**
+     * Success
+     *
+     * 按是否成功筛选
+     */
+    success?: boolean | null;
+    /**
+     * Keyword
+     *
+     * 关键字（匹配操作名/操作ID/错误信息）
+     */
+    keyword?: string | null;
 };
 
 /**
@@ -551,9 +629,7 @@ export type ActionLogStatsResponse = {
     /**
      * Items
      */
-    items?: Array<{
-        [key: string]: unknown;
-    }>;
+    items?: Array<ActionLogStatsItem>;
 };
 
 /**
@@ -3006,6 +3082,11 @@ export type BrowserSessionStatus = {
  * - BILI_RESERVE: bili_reserve
  * - PICK_LINE: pick_line
  * - NOTIFY: notify
+ * - PRESS: press
+ * - WAIT_FOR_RESPONSE: wait_for_response
+ * - ELEMENT_STATE: element_state
+ * - SELECT_OPTION: select_option
+ * - WAIT_FOR_URL: wait_for_url
  * - OPEN_PAGE: open_page
  * - CLOSE_PAGE: close_page
  * - LOOP: loop
@@ -3095,6 +3176,26 @@ export const BuiltinActionType = {
      */
     NOTIFY: 'notify',
     /**
+     * PRESS
+     */
+    PRESS: 'press',
+    /**
+     * WAIT_FOR_RESPONSE
+     */
+    WAIT_FOR_RESPONSE: 'wait_for_response',
+    /**
+     * ELEMENT_STATE
+     */
+    ELEMENT_STATE: 'element_state',
+    /**
+     * SELECT_OPTION
+     */
+    SELECT_OPTION: 'select_option',
+    /**
+     * WAIT_FOR_URL
+     */
+    WAIT_FOR_URL: 'wait_for_url',
+    /**
      * OPEN_PAGE
      */
     OPEN_PAGE: 'open_page',
@@ -3144,6 +3245,11 @@ export const BuiltinActionType = {
  * - BILI_RESERVE: bili_reserve
  * - PICK_LINE: pick_line
  * - NOTIFY: notify
+ * - PRESS: press
+ * - WAIT_FOR_RESPONSE: wait_for_response
+ * - ELEMENT_STATE: element_state
+ * - SELECT_OPTION: select_option
+ * - WAIT_FOR_URL: wait_for_url
  * - OPEN_PAGE: open_page
  * - CLOSE_PAGE: close_page
  * - LOOP: loop

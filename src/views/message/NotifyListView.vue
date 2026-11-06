@@ -1,6 +1,6 @@
 <template>
-  <!-- 标题与未读角标已由 BiliSideNavLayout 的 header 统一承载，此处不再重复渲染工具栏 -->
   <div class="notify-list h-full flex flex-col">
+    <!-- 标题与未读角标已由 BiliSideNavLayout 的 header 统一承载，此处不再重复渲染工具栏 -->
     <LoadingMoreContainer
       class="notify-list__content"
       fill-parent

@@ -44,7 +44,7 @@ export interface ActionIconManifest {
 
 export const ACTION_ICON_MANIFEST: ActionIconManifest = {
   version: 1,
-  generatedAt: "2026-11-03T05:12:19Z",
+  generatedAt: "2026-11-06T15:17:43Z",
   iconCount: 4087,
   series: {
     1: {

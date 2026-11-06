@@ -2061,6 +2061,148 @@ export type CrawlerLlmStatsItem = {
 };
 
 /**
+ * CrawlerPushDeleteReq
+ *
+ * 删除某个爬虫的文件配置，使其回退到环境变量
+ */
+export type CrawlerPushDeleteReq = {
+    /**
+     * Crawler Name
+     *
+     * 爬虫名，取值同 BackgroundServiceName
+     */
+    crawler_name: string;
+};
+
+/**
+ * CrawlerPushEffectiveItem
+ *
+ * 合并「文件 + 环境变量」之后的生效状态
+ */
+export type CrawlerPushEffectiveItem = {
+    /**
+     * Crawler Name
+     *
+     * 爬虫名，取值同 BackgroundServiceName
+     */
+    crawler_name: string;
+    /**
+     * Start
+     *
+     * 开始执行时是否推送
+     */
+    start?: boolean;
+    /**
+     * End
+     *
+     * 结束时是否推送
+     */
+    end?: boolean;
+    /**
+     * Source
+     *
+     * 配置来源：file（接口写入）/ env（环境变量）
+     */
+    source: string;
+};
+
+/**
+ * CrawlerPushItem
+ *
+ * 单个爬虫的开关（读写共用）
+ */
+export type CrawlerPushItem = {
+    /**
+     * Crawler Name
+     *
+     * 爬虫名，取值同 BackgroundServiceName
+     */
+    crawler_name: string;
+    /**
+     * Start
+     *
+     * 开始执行时是否推送
+     */
+    start?: boolean;
+    /**
+     * End
+     *
+     * 结束时是否推送
+     */
+    end?: boolean;
+};
+
+/**
+ * CrawlerPushSaveReq
+ *
+ * 保存请求：按 crawler_name 覆盖写入（未列出的爬虫保持原配置）
+ */
+export type CrawlerPushSaveReq = {
+    /**
+     * Items
+     *
+     * 要写入的开关列表，不能为空
+     */
+    items: Array<CrawlerPushItem>;
+};
+
+/**
+ * CrawlerPushState
+ *
+ * crawler 本地文件里持久化的内容
+ */
+export type CrawlerPushState = {
+    /**
+     * Items
+     *
+     * 按爬虫配置的开关列表；未列出的爬虫回退到环境变量
+     */
+    items?: Array<CrawlerPushItem>;
+    /**
+     * Updated At
+     *
+     * 最近保存时间（秒级 unix 时间戳）
+     */
+    updated_at?: number | null;
+};
+
+/**
+ * CrawlerPushStateResp
+ *
+ * 查询响应：文件内容 + 环境变量原值 + 每个爬虫的生效状态
+ */
+export type CrawlerPushStateResp = {
+    /**
+     * 文件里持久化的内容
+     */
+    state: CrawlerPushState;
+    /**
+     * Env Start
+     *
+     * 环境变量 CRAWLER_PUSH_START 原值
+     */
+    env_start?: string;
+    /**
+     * Env End
+     *
+     * 环境变量 CRAWLER_PUSH_END 原值
+     */
+    env_end?: string;
+    /**
+     * State File
+     *
+     * 开关文件落盘路径（排查用）
+     */
+    state_file?: string;
+    /**
+     * Effective
+     *
+     * 每个爬虫的最终生效状态
+     */
+    effective?: Array<CrawlerPushEffectiveItem>;
+};
+
+/**
  * DmAckReq
  *
  * 标记会话已读，把未读数清零并抬高已读水位。
@@ -10173,6 +10315,21 @@ export type StandardResponseCrawlerLlmConfigResp = {
      */
     msg?: string;
     data?: CrawlerLlmConfigResp | null;
+};
+
+/**
+ * StandardResponse[CrawlerPushStateResp]
+ */
+export type StandardResponseCrawlerPushStateResp = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: CrawlerPushStateResp | null;
 };
 
 /**
@@ -31605,6 +31762,231 @@ export type SaveLlmConfigApiV1CrawlerAdminLlmConfigPutResponses = {
 };
 
 export type SaveLlmConfigApiV1CrawlerAdminLlmConfigPutResponse = SaveLlmConfigApiV1CrawlerAdminLlmConfigPutResponses[keyof SaveLlmConfigApiV1CrawlerAdminLlmConfigPutResponses];
+
+export type GetPushSwitchApiV1CrawlerAdminPushSwitchGetData = {
+    body?: never;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Jwt
+         */
+        'x-bili-jwt'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string | null;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string | null;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string | null;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string | null;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string | null;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string | null;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string | null;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/crawler/admin/push-switch';
+};
+
+export type GetPushSwitchApiV1CrawlerAdminPushSwitchGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetPushSwitchApiV1CrawlerAdminPushSwitchGetError = GetPushSwitchApiV1CrawlerAdminPushSwitchGetErrors[keyof GetPushSwitchApiV1CrawlerAdminPushSwitchGetErrors];
+
+export type GetPushSwitchApiV1CrawlerAdminPushSwitchGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseCrawlerPushStateResp;
+};
+
+export type GetPushSwitchApiV1CrawlerAdminPushSwitchGetResponse = GetPushSwitchApiV1CrawlerAdminPushSwitchGetResponses[keyof GetPushSwitchApiV1CrawlerAdminPushSwitchGetResponses];
+
+export type SavePushSwitchApiV1CrawlerAdminPushSwitchPutData = {
+    body: CrawlerPushSaveReq;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Jwt
+         */
+        'x-bili-jwt'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string | null;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string | null;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string | null;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string | null;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string | null;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string | null;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string | null;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/crawler/admin/push-switch';
+};
+
+export type SavePushSwitchApiV1CrawlerAdminPushSwitchPutErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type SavePushSwitchApiV1CrawlerAdminPushSwitchPutError = SavePushSwitchApiV1CrawlerAdminPushSwitchPutErrors[keyof SavePushSwitchApiV1CrawlerAdminPushSwitchPutErrors];
+
+export type SavePushSwitchApiV1CrawlerAdminPushSwitchPutResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseCrawlerPushStateResp;
+};
+
+export type SavePushSwitchApiV1CrawlerAdminPushSwitchPutResponse = SavePushSwitchApiV1CrawlerAdminPushSwitchPutResponses[keyof SavePushSwitchApiV1CrawlerAdminPushSwitchPutResponses];
+
+export type DeletePushSwitchApiV1CrawlerAdminPushSwitchDeletePostData = {
+    body: CrawlerPushDeleteReq;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Jwt
+         */
+        'x-bili-jwt'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string | null;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string | null;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string | null;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string | null;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string | null;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string | null;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string | null;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/crawler/admin/push-switch/delete';
+};
+
+export type DeletePushSwitchApiV1CrawlerAdminPushSwitchDeletePostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type DeletePushSwitchApiV1CrawlerAdminPushSwitchDeletePostError = DeletePushSwitchApiV1CrawlerAdminPushSwitchDeletePostErrors[keyof DeletePushSwitchApiV1CrawlerAdminPushSwitchDeletePostErrors];
+
+export type DeletePushSwitchApiV1CrawlerAdminPushSwitchDeletePostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseCrawlerPushStateResp;
+};
+
+export type DeletePushSwitchApiV1CrawlerAdminPushSwitchDeletePostResponse = DeletePushSwitchApiV1CrawlerAdminPushSwitchDeletePostResponses[keyof DeletePushSwitchApiV1CrawlerAdminPushSwitchDeletePostResponses];
 
 export type ServeAsyncapiSchemaAsyncapiGetData = {
     body?: never;
