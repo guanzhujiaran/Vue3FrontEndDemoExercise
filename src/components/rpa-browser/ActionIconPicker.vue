@@ -5,6 +5,7 @@ import {
   ACTION_ICON_DIR,
   DEFAULT_ICON_ID,
   DEFAULT_ICON_SERIES,
+  autoAssignActionIcon,
   formatActionIconSeriesLabel,
   getActionIconCategories,
   getActionIconCategory,
@@ -27,7 +28,7 @@ import ActionIcon from './ActionIcon.vue'
  * 分类层可省略，仅用于组织展示（后端没有该字段，系列编号需全局唯一）。
  *
  * 交互：
- * - 「默认图标」→ `0 / 0`
+ * - 「自动图标」→ `0 / 0`（展示时按动作 id 自动分配一张图库图标）
  * - 系列下拉只切换展示（可搜索；多分类时按分类分组），点击编号才提交
  * - 无任何图标资源时给出明确提示（不伪造图标、不用 Element Plus 图标兜底）
  */
@@ -36,6 +37,8 @@ interface Props {
   series?: number | null
   /** 后端 icon_id */
   id?: number | null
+  /** 动作标识，用于预览「自动图标」实际会分配到的那张图库图标 */
+  seed?: string | null
 }
 
 const props = defineProps<Props>()
@@ -87,16 +90,16 @@ const currentIcons = computed(
 )
 
 /**
- * 默认图标的资源名称
+ * 「自动图标」实际会分配到的图库图标
  *
- * 图库不提供 `s_0_*` 默认资源（默认图标由 `@/utils/rpa/actionTypeIcon` 的内置图标充当），
- * 因此没有可展示的名称，`selectedText` 走「默认图标」分支。
+ * `0/0` 不是一张具体资源，展示层才按 seed 从 `AUTO_ICON_SERIES` 里稳定挑选；
+ * 图库为空时返回 `null`，`selectedText` 只显示「自动图标」。
  */
-const defaultIconName = computed(() => '')
+const autoIcon = computed(() => autoAssignActionIcon(props.seed))
 
 const selectedText = computed(() => {
   if (isDefaultSelected.value) {
-    return defaultIconName.value ? `默认图标（${defaultIconName.value}）` : '默认图标'
+    return autoIcon.value ? `自动图标（#${autoIcon.value.id}）` : '自动图标'
   }
   const seriesLabel = formatActionIconSeriesLabel(
     props.series as number,
@@ -149,19 +152,28 @@ function isSelected(series: number, id: number): boolean {
     </div>
 
     <template v-if="seriesOptions.length > 0">
-      <!-- 默认图标 -->
+      <!-- 自动图标（0 / 0）：展示层按动作 id 稳定分配一张图库图标 -->
       <div
         class="action-icon-picker__default flex items-center gap-3 p-3 rounded border cursor-pointer transition-colors"
         :class="isDefaultSelected ? 'border-primary bg-primary-light-9' : 'border-border hover:border-primary'"
         @click="selectDefault"
       >
-        <el-icon class="action-icon-picker__default-icon text-text-primary" :size="24">
-          <component :is="DEFAULT_ACTION_ICON" />
-        </el-icon>
+        <ActionIcon
+          :series="DEFAULT_ICON_SERIES"
+          :id="DEFAULT_ICON_ID"
+          :seed="seed"
+          class="action-icon-picker__default-icon w-6 h-6 text-text-primary"
+        >
+          <template #fallback>
+            <el-icon class="action-icon-picker__default-icon text-text-primary" :size="24">
+              <component :is="DEFAULT_ACTION_ICON" />
+            </el-icon>
+          </template>
+        </ActionIcon>
         <div class="flex flex-col">
-          <span class="text-sm">默认图标（{{ DEFAULT_ICON_SERIES }} / {{ DEFAULT_ICON_ID }}）</span>
+          <span class="text-sm">自动图标（{{ DEFAULT_ICON_SERIES }} / {{ DEFAULT_ICON_ID }}）</span>
           <span class="text-xs text-color-secondary">
-            未选图标时沿用动作类型图标（内置默认），无需图库提供资源
+            未选图标时按动作 id 自动分配一张图库图标；图库缺失时回落内置图标
           </span>
         </div>
       </div>
@@ -221,6 +233,7 @@ function isSelected(series: number, id: number): boolean {
             <ActionIcon
               :series="activeSeries"
               :id="icon.id"
+              :auto-default="false"
               class="action-icon-picker__cell-icon w-6 h-6 text-text-primary"
             />
             <span class="text-xs text-color-secondary">#{{ icon.id }}</span>
@@ -234,7 +247,7 @@ function isSelected(series: number, id: number): boolean {
         v-if="!isDefaultSelected && !hasActionIcon(props.series, props.id)"
         class="text-xs text-danger"
       >
-        当前保存的系列/编号在前端无对应资源，展示时将回落默认图标
+        当前保存的系列/编号在前端无对应资源，展示时将自动分配一张图库图标
       </span>
     </template>
 

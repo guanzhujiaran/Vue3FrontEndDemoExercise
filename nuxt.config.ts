@@ -252,8 +252,8 @@ export default defineNuxtConfig({
         // 提前建连：统计 / 广告域名的 DNS + TLS 预握手
         { rel: 'preconnect', href: 'https://www.googletagmanager.com', crossorigin: '' },
         { rel: 'preconnect', href: 'https://pagead2.googlesyndication.com', crossorigin: '' },
-        // 不蒜子新站点（老站点 busuanzi.ibruce.info 已失效，见 src/App.vue 的脚本注入）
-        { rel: 'dns-prefetch', href: '//api.tssl.cc' }
+        // 站点访问量计数器图片域名（见 src/views/HomeView.vue 的计数图片）
+        { rel: 'dns-prefetch', href: '//count.getloli.com' }
       ]
     }
   },

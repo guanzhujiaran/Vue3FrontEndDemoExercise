@@ -134,10 +134,11 @@ const handleLogoutClick = () => {
       </div>
     </section>
 
-    <!-- 不蒜子访问统计（全站 PV / UV）：hero 横幅下方第一个元素 -->
-    <footer class="busuanzi-footer shrink-0 border-y border-border-lighter py-2 text-center text-sm text-text-secondary">
-      {{ t('home.busuanziPv') }} <span id="busuanzi_site_pv" class="busuanzi-footer__pv">{{ t('network.detecting') }}</span> {{ t('home.busuanziTimes') }} ·
-      {{ t('home.busuanziUv') }} <span id="busuanzi_site_uv" class="busuanzi-footer__uv">{{ t('network.detecting') }}</span> {{ t('home.busuanziPeople') }}
+    <!-- 站点访问量统计（count.getloli.com 计数器图片）：hero 横幅下方第一个元素 -->
+    <footer class="site-visit-counter shrink-0 border-y border-border-lighter py-2 text-center">
+      <img class="site-visit-counter__img inline-block h-20 w-auto align-middle"
+        src="https://count.getloli.com/@BiliExplosion?theme=eva&padding=7&offset=0&align=top&scale=1.0&pixelated=1&darkmode=auto"
+        alt="BiliExplosion 站点访问量" referrerpolicy="no-referrer" />
     </footer>
 
     <div class="mt-8 flex justify-center gap-10" v-if="isLoggedIn"></div>

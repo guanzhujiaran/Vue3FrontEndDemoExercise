@@ -4,6 +4,7 @@ import type { BuiltinActionType } from '@/api/browser/hey-api'
 import { useUserNavStore } from '@/stores/user_nav'
 import biliMessage from '@/utils/message'
 import { pickBackendMsg } from '@/utils/backendErrorMsg'
+import { autoAssignActionIcon } from '@/utils/rpa/actionIcon'
 import type { BranchPathStep, DroppedItem } from './debugbox-types'
 
 export function useDebugboxSave(
@@ -16,15 +17,23 @@ export function useDebugboxSave(
   // ── 保存对话框状态 ───────────────────────────────────
   const saveDialogVisible = ref(false)
   const saveDialogLoading = ref(false)
-  /** iconSeries / iconId：动作展示图标（系列 + 系列内编号），0/0 表示默认图标 */
+  /** iconSeries / iconId：动作展示图标（系列 + 系列内编号），0/0 表示自动分配图库图标 */
   const saveDialogForm = ref({ name: '', description: '', isPublic: false, iconSeries: 0, iconId: 0, logPageSnapshot: false })
   const saveDialogItem = ref<DroppedItem | null>(null)
   const saveDialogIndex = ref(-1)
   const saveMultiItems = ref<DroppedItem[]>([])
 
-  /** 统一构造保存表单初始值（图标默认回落默认图标 0/0，页面快照默认关闭） */
+  /** 统一构造保存表单初始值：按动作名自动分配一张图库图标，页面快照默认关闭 */
   function makeSaveForm(name: string, description: string) {
-    return { name, description, isPublic: false, iconSeries: 0, iconId: 0, logPageSnapshot: false }
+    const assigned = autoAssignActionIcon(name)
+    return {
+      name,
+      description,
+      isPublic: false,
+      iconSeries: assigned?.series ?? 0,
+      iconId: assigned?.id ?? 0,
+      logPageSnapshot: false,
+    }
   }
 
   function makeTimestamp() {

@@ -234,7 +234,11 @@ async function handleSave() {
       </div>
       <div class="edit-custom-action__icon-section border border-border rounded p-3 flex flex-col gap-2">
         <label class="text-xs text-color-secondary">动作图标</label>
-        <ActionIconPicker v-model:series="editingIconSeries" v-model:id="editingIconId" />
+        <ActionIconPicker
+          v-model:series="editingIconSeries"
+          v-model:id="editingIconId"
+          :seed="String(props.actionDetail?.action_id ?? editingName)"
+        />
       </div>
       <div class="edit-custom-action__log-section border border-border rounded p-3 flex flex-col gap-2">
         <div class="flex items-center gap-3">

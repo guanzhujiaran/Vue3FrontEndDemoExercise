@@ -11,7 +11,7 @@ import type { ActionMetadataResponse, FilterType, SortBy, SortOrder } from '@/ap
 import { useUserNavStore } from '@/stores/user_nav'
 import ActionIcon from './ActionIcon.vue'
 import { resolveActionTypeIcon } from '@/utils/rpa/actionTypeIcon'
-import { resolveActionIconUrl } from '@/utils/rpa/actionIcon'
+import { resolveDisplayActionIconUrl } from '@/utils/rpa/actionIcon'
 import {
   RECENT_CATEGORY_ID,
   buildActionTree,
@@ -472,7 +472,7 @@ function handleDragStart(event: DragEvent, nodeData: unknown) {
  *
  * 浏览器默认的拖拽影像是被拖元素的整行截图（含文字/标签、宽高不定），
  * 拖到画布上难以辨认；这里替换为固定尺寸的方形图标缩略图，
- * 图标缺失（未设置 / 图库无资源）时用内置类型图标兜底，保证预览不空白。
+ * 未设置图标时按动作 id 自动分配图库图标；图库没有资源才用内置类型图标兜底，保证预览不空白。
  *
  * 实现要点：`setDragImage` 要求元素在调用瞬间位于文档中（允许移出视口），
  * 故临时挂到 body、调用后下一帧卸载移除；外观全部为 Tailwind 原子类字面量
@@ -482,9 +482,10 @@ function setToolboxDragGhost(event: DragEvent, action: Record<string, unknown>) 
   const dt = event.dataTransfer
   if (!dt) return
 
-  const iconUrl = resolveActionIconUrl(
+  const iconUrl = resolveDisplayActionIconUrl(
     action.icon_series as number | undefined,
     action.icon_id as number | undefined,
+    action.action_id as string | undefined,
   )
   const iconVNode = iconUrl
     ? h('img', { src: iconUrl, alt: '', class: 'toolbox-drag-ghost__icon w-12 h-12 object-contain' })
@@ -635,10 +636,11 @@ onBeforeUnmount(() => {
                 <ActionIcon
                   :series="(item as Record<string, unknown>).icon_series as number | undefined"
                   :id="(item as Record<string, unknown>).icon_id as number | undefined"
+                  :seed="(item as Record<string, unknown>).action_id as string | undefined"
                   :class="TOOLBOX_ICON_CLASS"
                 >
                   <template #fallback>
-                    <!-- 未选图标 / 图库无资源：按动作类型兜底（自定义动作 ca_* 回落默认问号图标） -->
+                    <!-- 图库清单为空时才按动作类型兜底；未选图标已由 ActionIcon 自动分配图库图标 -->
                     <el-icon class="w-8 h-8 shrink-0">
                       <component :is="resolveActionTypeIcon((item as Record<string, unknown>).action_id as string)" />
                     </el-icon>
@@ -722,6 +724,7 @@ onBeforeUnmount(() => {
                 <ActionIcon
                   :series="(data as Record<string, unknown>).icon_series as number | undefined"
                   :id="(data as Record<string, unknown>).icon_id as number | undefined"
+                  :seed="(data as Record<string, unknown>).action_id as string | undefined"
                   :class="TOOLBOX_ICON_CLASS"
                 >
                   <template #fallback>

@@ -36,8 +36,16 @@ function meta(actionId: string, name?: string, description?: string): ActionMeta
 }
 
 describe('分类映射', () => {
-  it('覆盖全部 31 个内置动作', () => {
-    expect(ALL_ACTION_IDS).toHaveLength(31)
+  it('覆盖全部 30 个内置动作', () => {
+    expect(ALL_ACTION_IDS).toHaveLength(30)
+  })
+
+  it('已移除站点专属的预约抽奖内置动作', () => {
+    expect(ALL_ACTION_IDS).not.toContain('bili_reserve')
+  })
+
+  it('get_window 显示名改为「获取 window 属性」', () => {
+    expect(ACTION_DISPLAY_NAME.get_window).toBe('获取 window 属性')
   })
 
   it('每个动作都有显示名', () => {
@@ -59,7 +67,7 @@ describe('分类映射', () => {
     }
   })
 
-  it('分类数量与文档一致（6/5/5/6/4/3/2）', () => {
+  it('分类数量与文档一致（6/5/5/6/4/2/2）', () => {
     const counts = ACTION_CATEGORIES.map((category) => ({
       id: category.id,
       count: ALL_ACTION_IDS.filter(
@@ -73,7 +81,7 @@ describe('分类映射', () => {
       { id: 'probe', count: 5 },
       { id: 'data', count: 6 },
       { id: 'control', count: 4 },
-      { id: 'business', count: 3 },
+      { id: 'business', count: 2 },
       { id: 'media', count: 2 },
     ])
   })
@@ -186,7 +194,7 @@ describe('buildActionTree 分组树', () => {
     const groups = buildActionTree(allActions)
     expect(groups).toHaveLength(7)
     expect(groups.map((g) => g.category_id)).toEqual(ACTION_CATEGORIES.map((c) => c.id))
-    expect(groups.reduce((sum, g) => sum + g.count, 0)).toBe(31)
+    expect(groups.reduce((sum, g) => sum + g.count, 0)).toBe(30)
     const clickLeaf = groups[0].children.find((leaf) => leaf.action_id === 'click')
     expect(clickLeaf?.extra).toBe('keep')
     expect(clickLeaf?.is_group).toBe(false)

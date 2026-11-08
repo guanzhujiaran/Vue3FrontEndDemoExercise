@@ -54,7 +54,7 @@ const canvasHeight = computed(() => props.height)
         <template #node-actionNode="{ data }">
           <div class="flow-node" :class="`flow-node--${data.kind}`" :title="data.name">
             <Handle type="target" :position="Position.Top" class="flow-handle" />
-            <ActionIcon :series="data.iconSeries" :id="data.iconId" class="flow-node__icon">
+            <ActionIcon :series="data.iconSeries" :id="data.iconId" :seed="data.actionId" class="flow-node__icon">
               <template #fallback>
                 <el-icon class="flow-node__icon-inner">
                   <component :is="resolveActionTypeIcon(data.actionId)" />

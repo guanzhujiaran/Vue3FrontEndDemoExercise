@@ -143,6 +143,7 @@ watch(
           <ActionIcon
             :series="detail.icon_series"
             :id="detail.icon_id"
+            :seed="String(detail.action_id)"
             class="w-9 h-9 shrink-0 text-text-primary"
           >
             <template #fallback>

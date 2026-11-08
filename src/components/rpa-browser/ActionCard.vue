@@ -139,6 +139,7 @@ const detailBadges = computed(() => {
           <ActionIcon
             :series="action.icon_series ?? action.action_detail?.icon_series"
             :id="action.icon_id ?? action.action_detail?.icon_id"
+            :seed="action.action_id"
             class="action-card__icon w-5 h-5 text-text-primary"
           >
             <template #fallback>

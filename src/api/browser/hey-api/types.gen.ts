@@ -3079,7 +3079,6 @@ export type BrowserSessionStatus = {
  * - PRINT: print
  * - SHUFFLE_LIST: shuffle_list
  * - SORT_LIST: sort_list
- * - BILI_RESERVE: bili_reserve
  * - PICK_LINE: pick_line
  * - NOTIFY: notify
  * - PRESS: press
@@ -3164,10 +3163,6 @@ export const BuiltinActionType = {
      */
     SORT_LIST: 'sort_list',
     /**
-     * BILI_RESERVE
-     */
-    BILI_RESERVE: 'bili_reserve',
-    /**
      * PICK_LINE
      */
     PICK_LINE: 'pick_line',
@@ -3242,7 +3237,6 @@ export const BuiltinActionType = {
  * - PRINT: print
  * - SHUFFLE_LIST: shuffle_list
  * - SORT_LIST: sort_list
- * - BILI_RESERVE: bili_reserve
  * - PICK_LINE: pick_line
  * - NOTIFY: notify
  * - PRESS: press

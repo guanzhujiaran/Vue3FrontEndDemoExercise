@@ -570,6 +570,7 @@ onMounted(() => {
                     <ActionIcon
                       :series="item.icon_series"
                       :id="item.icon_id"
+                      :seed="item.action_id || item.action_type"
                       class="action-card__icon w-5 h-5 shrink-0 text-text-primary"
                     >
                       <template #fallback>

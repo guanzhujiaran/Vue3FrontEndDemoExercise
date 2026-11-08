@@ -16,7 +16,6 @@
 import type { Component } from 'vue'
 import {
   Aim,
-  AlarmClock,
   ArrowDown,
   Bell,
   Camera,
@@ -81,7 +80,7 @@ export const ACTION_CATEGORY_LABEL: Readonly<Record<ActionCategoryId, string>> =
     {} as Record<ActionCategoryId, string>,
   )
 
-// ── 31 个内置动作：显示名 + 分类 + 兜底图标 ────────────
+// ── 30 个内置动作：显示名 + 分类 + 兜底图标 ────────────
 
 export type BuiltinActionId =
   | 'click'
@@ -110,7 +109,6 @@ export type BuiltinActionId =
   | 'if_else'
   | 'parallel'
   | 'composite'
-  | 'bili_reserve'
   | 'mark_resource_result'
   | 'notify'
   | 'screenshot'
@@ -132,7 +130,7 @@ export const ACTION_DISPLAY_NAME: Record<BuiltinActionId, string> = {
   wait: '等待',
   wait_for_response: '等待响应',
   get_text: '获取文本',
-  get_window: '获取窗口',
+  get_window: '获取 window 属性',
   element_state: '元素状态',
   print: '打印参数',
   random_pick: '随机取值',
@@ -144,7 +142,6 @@ export const ACTION_DISPLAY_NAME: Record<BuiltinActionId, string> = {
   if_else: '条件判断',
   parallel: '并行分支',
   composite: '复合操作',
-  bili_reserve: '预约抽奖',
   mark_resource_result: '记录资源结果',
   notify: '发送通知',
   screenshot: '截图',
@@ -184,7 +181,6 @@ export const ACTION_CATEGORY_MAP: Record<BuiltinActionId, ActionCategoryId> = {
   parallel: 'control',
   composite: 'control',
 
-  bili_reserve: 'business',
   mark_resource_result: 'business',
   notify: 'business',
 
@@ -192,7 +188,7 @@ export const ACTION_CATEGORY_MAP: Record<BuiltinActionId, ActionCategoryId> = {
   llm: 'media',
 }
 
-/** 兜底图标：图库无素材时按 action_id 取（覆盖全部 31 个，避免出现问号） */
+/** 兜底图标：图库无素材时按 action_id 取（覆盖全部 30 个，避免出现问号） */
 export const ACTION_TYPE_ICONS: Record<BuiltinActionId, Component> = {
   click: Mouse,
   input: Edit,
@@ -225,7 +221,6 @@ export const ACTION_TYPE_ICONS: Record<BuiltinActionId, Component> = {
   parallel: Operation,
   composite: Grid,
 
-  bili_reserve: AlarmClock,
   mark_resource_result: CollectionTag,
   notify: Bell,
 

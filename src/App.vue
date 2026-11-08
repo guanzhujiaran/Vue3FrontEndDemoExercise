@@ -119,14 +119,6 @@ onMounted(() => {
   themeCleanup = themeStore.setupSystemThemeListener()
   getWindowHeight()
   window.addEventListener("resize", getWindowHeight)
-
-  // 加载不蒜子（busuanzi）PV/UV 统计脚本
-  // 老站点 busuanzi.ibruce.info 已失效，改用新站点 api.tssl.cc（3.6.9，
-  // 返回字段 busuanzi_site_pv / busuanzi_site_uv 与 HomeView 页脚的元素 id 对齐）
-  const busuanziScript = document.createElement('script')
-  busuanziScript.async = true
-  busuanziScript.src = '//api.tssl.cc/busuanzi/3.6.9/busuanzi.min.js'
-  document.head.appendChild(busuanziScript)
 })
 
 // 监听路由变化：当从 Casdoor 回调页跳回首页时，重新检查登录状态获取完整用户信息

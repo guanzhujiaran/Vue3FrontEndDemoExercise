@@ -415,6 +415,7 @@ defineExpose({ droppedItems, getSteps })
           <ActionIconPicker
             v-model:series="saveDialogForm.iconSeries"
             v-model:id="saveDialogForm.iconId"
+            :seed="saveDialogForm.name"
           />
         </el-form-item>
         <el-form-item label="报错页面快照">

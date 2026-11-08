@@ -51,17 +51,22 @@ import { ACTION_ICON_MANIFEST, ACTION_ICON_PUBLIC_DIR } from './actionIconManife
  *
  * ## 兜底规则
  *
- * 本模块只负责「具体图标」的查找：命中返回 URL，未命中一律返回 `null`。
- * - 未命中场景：`series/id` 为 0（未选择自定义图标）、编号不存在、清单为空等；
- * - **默认图标由调用方通过 `fallback` 插槽提供**（沿用前端既有的动作类型图标 /
- *   `QuestionFilled`，见 `@/utils/rpa/actionTypeIcon`），因此图库**无需**提供默认资源；
- * - 调用方（`ActionIcon.vue`）还需在图片加载失败时回落 `fallback`（资源缺失也不破图）；
- * - `icon_series = 0` 或 `icon_id = 0` 是「未选择自定义图标」的协议约定（见 `isDefaultActionIcon`）。
+ * - `resolveActionIconUrl` 只做精确查找：命中返回 URL，未命中返回 `null`；
+ * - `resolveDisplayActionIconUrl` 是**展示层入口**：已配置的图标原样使用，未配置
+ *   （`0/0`、编号越界等）时按动作标识稳定分配一张 `AUTO_ICON_SERIES` 图库图标，
+ *   因此自定义动作不再显示 `QuestionFilled`（见 `docs/frontend_requirements/RPA动作图标全覆盖.md`）；
+ * - 仅当图库清单为空、或图片加载失败（404）时，调用方（`ActionIcon.vue`）才渲染
+ *   `fallback` 插槽（沿用前端既有的动作类型图标，见 `@/utils/rpa/actionTypeIcon`）；
+ * - `icon_series = 0` 或 `icon_id = 0` 仍是「未选择自定义图标」的协议约定
+ *   （见 `isDefaultActionIcon`），自动分配只发生在展示层，不改协议语义。
  */
 
 /** 默认图标占位：系列 0 / 编号 0 */
 export const DEFAULT_ICON_SERIES = 0
 export const DEFAULT_ICON_ID = 0
+
+/** 自动分配图标使用的系列（与后端 `BUILTIN_ACTION_ICON_SERIES` 保持一致） */
+export const AUTO_ICON_SERIES = 33
 
 /** 资源根目录（展示用，如 `action-icons/`；运行时以站点根绝对路径引用） */
 export const ACTION_ICON_DIR = ACTION_ICON_PUBLIC_DIR
@@ -150,6 +155,59 @@ export function resolveActionIconUrl(
   const i = typeof id === 'number' && Number.isFinite(id) ? id : DEFAULT_ICON_ID
 
   return findExact(s, i)?.url ?? null
+}
+
+/** 稳定字符串哈希（FNV-1a），保证同一动作在各处拿到同一张自动图标 */
+function stableSeedHash(seed: string): number {
+  let hash = 2166136261
+  for (const char of seed) {
+    hash ^= char.codePointAt(0) ?? 0
+    hash = Math.imul(hash, 16777619) >>> 0
+  }
+  return hash >>> 0
+}
+
+export interface AutoAssignedActionIcon {
+  series: number
+  id: number
+}
+
+/**
+ * 按动作标识稳定分配一张图库图标（供「新建动作默认图标」与展示层共用）
+ *
+ * 图库清单为空时返回 `null`，调用方回落到内置类型图标。
+ */
+export function autoAssignActionIcon(
+  seed?: string | number | null
+): AutoAssignedActionIcon | null {
+  const icons = iconRegistry.get(AUTO_ICON_SERIES)?.icons
+  if (!icons || icons.size === 0) return null
+  const ids = [...icons.keys()].sort((a, b) => a - b)
+  const id = ids[stableSeedHash(String(seed || 'action')) % ids.length]
+  if (id === undefined) return null
+  return { series: AUTO_ICON_SERIES, id }
+}
+
+/**
+ * 解析「展示用」动作图标 URL
+ *
+ * 1. 后端已配置图标且命中清单 → 原样返回（手动选择优先）；
+ * 2. 未配置（`0/0`）、编号越界或资源编号不存在 → 按 `seed` 稳定分配一张
+ *    `AUTO_ICON_SERIES` 图库图标，自定义动作不再显示问号；
+ * 3. 图库清单为空 → 返回 `null`，由调用方渲染 `fallback`。
+ *
+ * @param seed 动作标识（`action_id` / 名称）；同一 seed 在任意页面结果一致
+ */
+export function resolveDisplayActionIconUrl(
+  series?: number | null,
+  id?: number | null,
+  seed?: string | number | null
+): string | null {
+  const configured = resolveActionIconUrl(series, id)
+  if (configured) return configured
+
+  const assigned = autoAssignActionIcon(seed)
+  return assigned ? (findExact(assigned.series, assigned.id)?.url ?? null) : null
 }
 
 /** 是否等价于「默认图标」（系列或编号为 0 / 未设置） */
