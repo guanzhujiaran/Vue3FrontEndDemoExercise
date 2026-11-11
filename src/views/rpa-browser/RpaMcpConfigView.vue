@@ -28,18 +28,18 @@
       </div>
 
       <div class="rpa-mcp-config-view__field flex flex-col gap-1.5">
-        <span class="rpa-mcp-config-view__label text-sm text-text-secondary">bili_jwt</span>
+        <span class="rpa-mcp-config-view__label text-sm text-text-secondary">本站登录令牌 bili_jwt</span>
         <el-input
           v-model="biliJwt"
           size="large"
           class="rpa-mcp-config-view__token-input"
           type="password"
           show-password
-          placeholder="从浏览器登录后的 Cookie 中取 bili_jwt 值"
+          placeholder="本站网关签发的 bili_jwt（非 B 站 Cookie）"
           clearable
         />
         <span class="rpa-mcp-config-view__hint text-xs text-text-placeholder">
-          DevTools → Application → Cookies，复制 bili_jwt 的值。鉴权只认此 Cookie，不支持 Authorization 头
+          bili_jwt 是本站登录时由网关签发的本站令牌，不是 B 站的 SESSDATA / bili_jct，也不需要您提供 B 站账号或密码。可在 DevTools → Application → Cookies 中查看；鉴权只认此 Cookie，不支持 Authorization 头
         </span>
       </div>
     </div>

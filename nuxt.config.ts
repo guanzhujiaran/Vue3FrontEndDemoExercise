@@ -15,7 +15,15 @@ import svgLoader from 'vite-svg-loader'
 import { heyApiPlugin } from '@hey-api/vite-plugin'
 import { type UserParser } from '@hey-api/shared'
 import type { Plugin, ResolvedConfig } from 'vite'
-import { SITE_URL, SEO_INDEXABLE_ROUTES } from './src/config/seo_routes'
+import {
+  CANONICAL_QUERY_WHITELIST,
+  DEFAULT_DESCRIPTION,
+  DEFAULT_KEYWORDS,
+  DEFAULT_LOCALE,
+  SEO_INDEXABLE_ROUTES,
+  SITE_NAME,
+  SITE_URL
+} from './src/config/seo_routes'
 import { defineNuxtConfig } from 'nuxt/config'
 
 /**
@@ -189,21 +197,138 @@ export default defineNuxtConfig({
     }
   },
 
-  modules: ['@pinia/nuxt', '@element-plus/nuxt', '@nuxtjs/sitemap'],
+  /**
+   * SEO 全家桶：一个模块装上 site-config / seo-utils / robots / sitemap / og-image /
+   * schema.org / link-checker / ai-ready / skew-protection，各自用下面的同名配置键。
+   * 不再单独注册 @nuxtjs/sitemap 等子模块（Nuxt 会自动安装一次）。
+   */
+  modules: ['@pinia/nuxt', '@element-plus/nuxt', '@nuxtjs/seo'],
 
   /**
-   * 站点配置（nuxt-site-config）：@nuxtjs/sitemap 依赖它拼出绝对 URL，
-   * canonical / OG 等仍由 useRouteSeo 单独维护，互不影响。
+   * 站点配置（nuxt-site-config）：全家桶统一从这里取权威域名 / 站点名 / 默认文案，
+   * 自动生成 canonical、og:url、og:site_name、`<html lang>` / og:locale、标题模板与绝对图片 URL。
+   * `indexable` 不写死：生产构建可索引，`nuxt dev` 自动 Disallow 全部。
    */
-  site: { url: SITE_URL },
+  site: {
+    url: SITE_URL,
+    name: SITE_NAME,
+    description: DEFAULT_DESCRIPTION,
+    defaultLocale: DEFAULT_LOCALE,
+    // 标题模板 `%s %separator %siteName`：保持「页面标题 - 站点名」口径
+    separator: '-',
+    trailingSlash: false
+  },
+
+  /** seo-utils：站点级 head 兜底 + canonical 的 query 白名单（跟踪参数由模块剔除） */
+  seo: {
+    canonicalQueryWhitelist: CANONICAL_QUERY_WHITELIST,
+    meta: { keywords: DEFAULT_KEYWORDS.join(',') }
+  },
+
+  /**
+   * robots：robots.txt 由模块生成（不再维护 public/robots.txt），sitemap 链接由 sitemap 模块自动写入。
+   * `metaTag: false`：页面级 `<meta name="robots">` 交给 `useRouteSeo` 的 `useSeoMeta()` 统一输出，
+   * 这样 SSR 与 SPA 客户端导航都会跟着路由更新，且纯静态托管不需要在 nginx 补 `X-Robots-Tag`。
+   */
+  robots: {
+    disallow: ['/app/casdoor-callback', '/test'],
+    metaTag: false
+  },
+
+  /** schema.org：WebSite / WebPage / Organization 默认图 + 页面级节点（见 useRouteSeo） */
+  schemaOrg: {
+    defaults: true,
+    reactive: true,
+    identity: { type: 'Organization' as const, name: SITE_NAME, url: SITE_URL }
+  },
+
+  /**
+   * og-image：纯静态托管（`nuxt generate`）不需要运行时渲染器 / `NUXT_APP_SECRET`；
+   * 社交分享图由 seo-utils 从 `public/og-image.png` + `og-image.alt.txt` 自动注入。
+   */
+  ogImage: { zeroRuntime: true },
+
+  /**
+   * link-checker：预渲染后扫描站内链接，只报告不阻断发布。
+   * `/app/lot-data` 与 `/app/lot-data/bili-data` 是 SPA 容器路由（导航面包屑指向它，
+   * 生产由 nginx fallback 到 index.html），静态产物没有对应 HTML，
+   * 扫描器会误报 403 / 建议加尾斜杠，故显式排除。
+   */
+  linkChecker: {
+    // 官方 guide 建议把链接检查作为发布门禁：当前 12 个预渲染页 0 error，
+    // 出现死链时直接阻断构建（外链不抓取，不会受第三方波动影响）。
+    failOnError: true,
+    excludeLinks: ['/api/**', '/action-icons/**', '/app/lot-data', '/app/lot-data/bili-data']
+  },
+
+  /**
+   * AI Ready（nuxt-ai-ready）：把站点内容直接暴露给 LLM / AI Agent。
+   *
+   * 构建期产出 `/llms.txt`（索引）、`/llms-full.txt`（正文合集）、`/sitemap.md`
+   * 以及每个预渲染页的 Markdown 副本（如 `/app/lot-data/home.md`），
+   * 页面清单唯一来源仍是 sitemap（= `SEO_INDEXABLE_ROUTES`），与 robots / 预渲染同源。
+   *
+   * 纯静态 nginx 托管没有常驻 Node 运行时，因此：
+   * - 关闭按 `Accept` 头的内容协商（`contentNegotiation` / `botNegotiation`）：
+   *   只提供显式 `.md` 路径，不向 AI 客户端宣告静态托管做不到的能力；
+   * - MCP / WebMCP / Agent Skills / API Catalog 全部依赖运行时，一律关闭，不产出空壳入口；
+   * - `runtimeSync` / `cron` 需要数据库，保持默认关闭，索引只在构建期生成。
+   */
+  aiReady: {
+    contentNegotiation: false,
+    botNegotiation: false,
+    webmcp: false,
+    agentSkills: false,
+    apiCatalog: false,
+    llmsTxt: {
+      // 只收录 sitemap 中的可索引页，登录 / 管理端页面不进 AI 索引
+      pages: 'sitemap',
+      // 页面链接指向 Markdown 副本，agent 不必解析 HTML
+      markdownLinks: true,
+      // 只在 `.md` 顶部插入 llms.txt 指路；HTML 不再注入视觉隐藏链接。
+      // Google 安全浏览把「视觉隐藏的链接」视为 cloaking 信号，安全整改后保持关闭：
+      // 爬虫与访客看到的页面内容必须完全一致。
+      directive: { markdown: true, html: false },
+      // 补充静态产物无法自动表达的信息（数据来源 / 更新频率 / 读取方式）
+      notes: [
+        '站点数据来自 B 站公开接口，抽奖列表每日更新，每条记录都带 B 站原文链接。',
+        '站点为纯静态产物，全部内容以 Markdown 提供：先读 llms.txt 找页面，再按需读取对应 .md。'
+      ]
+    },
+    llmsFullTxt: true,
+    sitemapMd: true,
+    // HTML / .md 响应通过 Link: rel="describedby" 指向 llms.txt（llms.txt v2 规范）
+    describedby: true,
+    /**
+     * robots.txt 的 Content-Signal：允许搜索收录与 AI 检索引用，不允许训练。
+     * 写成对象而不是留空：留空默认只输出 search / ai-input 两项，
+     * 这里显式写出 ai-train=no，让抓取方一眼看到完整策略。
+     */
+    contentSignal: { search: true, aiInput: true, aiTrain: false },
+    // 生成 .md 时要逐页 SSR，与 nitro.prerender 一样串行，避免并发把后端打限流
+    prerender: { concurrency: 1 }
+  },
+
+  /** Skew Protection 是给常驻 Node 服务做版本轮询用的，纯静态 nginx 托管关掉 */
+  skewProtection: false,
 
   /**
    * sitemap 模块：`nuxt generate` 时由 Nitro 预渲染出 `dist/client/sitemap.xml`，
-   * 替代原「构建后脚本生成」方案（scripts/gen-sitemap.mjs 已删除）。
    * 路由清单唯一来源仍是 `src/config/seo_routes.ts`，与 `nitro.prerender.routes` 同源。
+   * 模块还会把预渲染路由自动并入并去重；这里的 urls 负责补 lastmod / changefreq / priority。
    */
   sitemap: {
+    // 关闭内置 XSL 样式表：模块默认会在 sitemap.xml 顶部插入
+    // `<?xml-stylesheet href="/__sitemap__/style.xsl"?>`，Chrome 132+ 已移除 XSLT，
+    // 打开 sitemap.xml 会提示「此网站使用 XSLT，该功能将从此浏览器中移除」。
+    // 关掉后浏览器直接以原生 XML 树展示，搜索引擎抓取不受影响。
+    xsl: false,
     autoLastmod: false,
+    // 官方推荐：纯静态输出用 zeroRuntime，构建期预渲染 sitemap 并移除运行时 sitemap 代码。
+    zeroRuntime: true,
+    // 关闭预渲染页面 `<img>` 的自动图片条目：首页只有第三方访问计数图片
+    // （count.getloli.com），不该作为站点自有图片写进 sitemap。
+    discoverImages: false,
     urls: SEO_INDEXABLE_ROUTES.map((route) => ({
       loc: route,
       lastmod: SITEMAP_LASTMOD,
@@ -230,18 +355,17 @@ export default defineNuxtConfig({
    */
   components: [{ path: '~/components', pathPrefix: false }],
 
-  // 站点级 head 兜底：SSR 出来的每个 HTML 都带这些标签；
-  // 标题 / 描述 / canonical / OG / JSON-LD 由 composables/useRouteSeo.ts 按路由维护。
+  // 站点级 head 兜底：只放全家桶不生成的第三方 / 浏览器相关标签。
+  // `<html lang>` 由 site.defaultLocale 生成；标题 / 描述 / canonical / OG / robots /
+  // JSON-LD / llms 链接等全部由 @nuxtjs/seo 输出（业务差异见 useRouteSeo.ts）。
   app: {
     head: {
-      htmlAttrs: { lang: 'zh-CN' },
       meta: [
-        { charset: 'utf-8' },
         { name: 'viewport', content: 'width=device-width, initial-scale=1.0' },
         { name: 'referrer', content: 'no-referrer' },
         { name: 'format-detection', content: 'telephone=no' },
-        { name: 'author', content: '爆破哔哩哔哩弹幕视频网' },
-        { name: 'application-name', content: '爆破哔哩哔哩弹幕视频网' },
+        { name: 'author', content: 'BiliExplosion（非官方第三方数据工具）' },
+        { name: 'application-name', content: 'BiliExplosion（非官方第三方数据工具）' },
         { name: 'theme-color', content: '#00AEEC', media: '(prefers-color-scheme: light)' },
         { name: 'theme-color', content: '#0F172A', media: '(prefers-color-scheme: dark)' },
         { name: 'google-adsense-account', content: 'ca-pub-5783205065512010' },
@@ -381,7 +505,8 @@ export default defineNuxtConfig({
       __SSR_API_TARGET__: JSON.stringify(process.env.PRERENDER_API_TARGET ?? 'http://localhost:9923')
     },
     prerender: {
-      // 只预渲染有收录价值的页面（与 sitemap 清单同源），其余路由留作 SPA 兜底
+      // 只预渲染有收录价值的页面（与 sitemap 清单同源），其余路由留作 SPA 兜底；
+      // robots.txt / sitemap.xml / llms.txt / .md 等由 @nuxtjs/seo 自动追加预渲染
       routes: [...SEO_INDEXABLE_ROUTES],
       crawlLinks: false,
       // 迁移期先不因单页失败中断整轮构建：失败页会退回 SPA 外壳，便于逐项修复

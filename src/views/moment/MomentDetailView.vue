@@ -412,8 +412,7 @@ usePageSeo(() => {
     description: text
       ? `${authorName}的动态：${text.slice(0, 110)}`
       : `${authorName} 在B站发布的动态，查看正文、图片与评论区互动。`,
-    jsonLd: {
-      '@context': 'https://schema.org',
+    schemaOrg: {
       '@type': 'SocialMediaPosting',
       headline: `${authorName}的动态`,
       articleSection: 'B站动态',

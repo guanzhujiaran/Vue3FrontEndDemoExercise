@@ -282,6 +282,21 @@ elementDark放到theme后面是为了确保暗色状态下直接用elementDark�
     top: var(--workflow-dock-top, 10rem);
   }
 
+  /* ===== 工作流运行消息悬浮入口（可拖动，位置记忆） =====
+     与面板同一套做法：位置由组件写 CSS 变量，这里只消费；
+     未拖动过时保持右下角默认摆放（right-4 / bottom-24）。 */
+  .workflow-run-message-entry {
+    right: 1rem;
+    bottom: 6rem;
+  }
+
+  .workflow-run-message-entry.is-positioned {
+    right: auto;
+    bottom: auto;
+    left: var(--workflow-entry-left, 1rem);
+    top: var(--workflow-entry-top, 6rem);
+  }
+
   .lottery-card {
     @apply border-border overflow-hidden [--el-card-border-color:var(--color-border)] [--el-card-padding:var(--spacing-1)] sm:[--el-card-padding:var(--spacing-2)] lg:[--el-card-padding:var(--spacing-3)];
   }

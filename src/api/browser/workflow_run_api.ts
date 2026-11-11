@@ -57,6 +57,14 @@ export interface WorkflowRunProgress {
   resume_of: string | null
   resume_count: number
   error_message: string | null
+  /** 资源级结果：运行结论的实际判据（SSE 帧未提供，故为可选；消费方按 ?? 0 处理） */
+  resource_total?: number
+  resource_success?: number
+  resource_failed?: number
+  resource_skipped?: number
+  /** 失败中按 fail_reason 分出的可重试软失败 / 致命失败 */
+  resource_soft_failed?: number
+  resource_fatal_failed?: number
 }
 
 /**
@@ -177,6 +185,12 @@ export function detailToRunProgress(
     resume_of: detail.resume_of ?? null,
     resume_count: detail.resume_count ?? 0,
     error_message: detail.error_message ?? null,
+    resource_total: detail.resource_total ?? 0,
+    resource_success: detail.resource_success ?? 0,
+    resource_failed: detail.resource_failed ?? 0,
+    resource_skipped: detail.resource_skipped ?? 0,
+    resource_soft_failed: detail.resource_soft_failed ?? 0,
+    resource_fatal_failed: detail.resource_fatal_failed ?? 0,
   }
 }
 
@@ -226,6 +240,12 @@ export function createPendingRunProgress(options: {
     resume_of: null,
     resume_count: 0,
     error_message: null,
+    resource_total: 0,
+    resource_success: 0,
+    resource_failed: 0,
+    resource_skipped: 0,
+    resource_soft_failed: 0,
+    resource_fatal_failed: 0,
   }
 }
 

@@ -118,7 +118,7 @@
 import { watch, onActivated, onUnmounted, ref } from 'vue'
 import { usePageSeo } from '@/composables/usePageSeo.ts'
 import { useRefreshAfterMount } from '@/composables/useRefreshAfterMount.ts'
-import { buildItemListJsonLd } from '@/config/seo.ts'
+import { buildItemListNode } from '@/config/seo.ts'
 import { collectSsrData, getSsrData } from '@/app/ssrData'
 import { ssrDataKeyOf, ssrFilterKeyOf, useLotteryData } from '@/utils/useLotteryData.ts'
 import BiliScrapyStatusMini from './BiliScrapyStatusMini.vue'
@@ -237,12 +237,12 @@ onActivated(restoreFirstPage)
 usePageSeo(() => {
   const lot = reserve_lot_data_props.value.lot_data
   const items = lot?.items ?? []
-  const jsonLd = buildItemListJsonLd('B站预约抽奖汇总', items, lot?.total)
+  const schemaOrg = buildItemListNode('B站预约抽奖汇总', items, lot?.total)
   // 首屏尚无数据时不覆盖：回落到 ROUTE_SEO 的路由级文案
-  if (!jsonLd) return null
+  if (!schemaOrg) return null
   return {
     description: `B站预约抽奖汇总：当前收录 ${lot?.total ?? items.length} 条需先预约的抽奖活动，含预约截止时间、开奖时间与奖品信息。`,
-    jsonLd
+    schemaOrg
   }
 })
 

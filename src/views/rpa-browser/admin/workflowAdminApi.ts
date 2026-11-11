@@ -30,6 +30,14 @@ export interface AdminWorkflowItem {
   forks_count: number
   last_run_at: string | null
   last_run_status: string | null
+  /** 上次运行成功步骤数（无资源记录时展示「成功 N 步」） */
+  last_run_success_count?: number
+  /** 上次运行步骤总数（用于区分「历史无快照」与「0 步」） */
+  last_run_total?: number
+  /** 上次运行处理的资源总数（>0 = 批量循环口径） */
+  last_run_resource_total?: number
+  /** 上次运行资源成功数（= 成功循环轮次） */
+  last_run_resource_success?: number
   next_run_at: string | null
   created_at: string | null
   updated_at: string | null
@@ -68,6 +76,9 @@ export interface AdminWorkflowRunItem {
   duration_ms: number
   started_at: string | null
   finished_at: string | null
+  /** 资源口径（>0 = 批量循环，展示「成功循环 N 轮」） */
+  resource_total?: number
+  resource_success?: number
 }
 
 type Resp<T> = Promise<BusinessResponse<T>>

@@ -1,44 +1,45 @@
 /**
- * 路由级 SEO：按当前路由维护 <head> 里的标题、描述、关键词、canonical、robots、
- * Open Graph / Twitter Card 与结构化数据（JSON-LD）。
+ * 路由级 SEO：把「业务差异」交给 @nuxtjs/seo 全家桶的 composable，
+ * 不再自己拼 <head> 标签、canonical 或 JSON-LD `<script>`。
  *
- * 取值优先级：**页面级覆盖（usePageSeo）> 路由级覆盖（ROUTE_SEO）> 路由 meta > 站点默认值**。
+ * 全家桶负责（配置见 `nuxt.config.ts`）：
+ * - `site` / `seo`：站点名、标题模板 `%s - 站点名`、`<html lang>` / `og:locale`、
+ *   canonical 默认规则（query 白名单）、`og:site_name` / OG-Twitter 默认标签，
+ *   `public/og-image.png` 自动转成绝对 `og:image` / `twitter:image`；
+ *   canonical / og:url 另由本文件按路由显式维护一份（模块默认只在 SSR 注入，SPA 导航不更新）；
+ * - `robots` / `sitemap`：robots.txt、sitemap.xml、`<meta name="robots">`；
+ * - `schemaOrg`：`WebSite` / `WebPage` / `Organization` 默认图，以及 `@graph` / `@context` / `@id`；
+ * - `ogImage` / `linkChecker` / `aiReady`：社交图运行时、预渲染死链检查、llms.txt / `.md` 页面。
  *
- * 两条容易被忽略但很关键的规则：
- * 1. **canonical 用 `SITE_URL` 而不是 `window.location.origin`**：本地 / 预览 / 生产
- *    多套环境同时在线时，只有权威域名应被收录；
- * 2. **空壳页必须 noindex**：详情页（`?id=` / `?dynId=`）缺参数时没有实质内容，
- *    登录 / 管理端页面是空壳或涉私，一律 `noindex,nofollow`，避免收录垃圾页。
+ * 本文件只保留模块推断不出来的业务信息：
+ * 1. 按 vue-router 的 `route.matched` 拼页面标题、取描述兜底；
+ * 2. 路由级（`ROUTE_SEO`）与页面级（`usePageSeo`）文案覆盖；
+ * 3. 空壳 / 私有页 noindex；
+ * 4. 面包屑节点与页面级 `ItemList` / `SocialMediaPosting` 节点。
  *
- * 局限：本项目是纯 SPA，首屏 HTML 由 `index.html` 提供，动态内容要等 JS 执行后才写入
- * DOM；`index.html` 中的静态 SEO 标签（带 `data-seo-static`）会在挂载后被本模块移除，
- * 避免与动态值重复。不执行 JS 的爬虫（多数社交平台分享抓取）读到的是静态兜底内容。
+ * 取值优先级：**页面级覆盖 > 路由级覆盖 > 路由 meta > 站点默认值**。
  */
 import { computed } from 'vue'
 import { useRoute, type RouteLocationNormalizedLoaded, type RouteRecordNormalized } from 'vue-router'
-// Nuxt 内置的 useHead（自动导入）：@vueuse/head 的版本只能改到它自己的实例，
-// 服务端渲染时 JSON-LD（head.script）不会进入 HTML —— 迁移 Nuxt 后二者不能混用。
-import { useHead } from '#imports'
-import { useI18n } from 'vue-i18n'
+import { useHead, useSchemaOrg, useSeoMeta } from '#imports'
 import { RouteName, type CustomRouteMeta } from '@/models/router/index.ts'
 import {
+  CANONICAL_QUERY_WHITELIST,
   DEFAULT_DESCRIPTION,
   HOME_TITLE,
-  IGNORED_QUERY_PARAMS,
   OG_IMAGE,
-  OG_IMAGE_ALT,
-  OG_IMAGE_HEIGHT,
-  OG_IMAGE_WIDTH,
-  OG_LOCALE,
   ROBOTS_INDEX,
   ROBOTS_NO_INDEX,
-  ROUTE_SEO,
   SITE_NAME,
-  SITE_URL,
-  buildWebsiteJsonLd,
+  SITE_URL
+} from '@/config/seo_routes.ts'
+import {
+  ROUTE_SEO,
   joinKeywords,
+  type BreadcrumbNode,
   type PageSeo,
-  type RouteSeoOverride
+  type RouteSeoOverride,
+  type SchemaOrgNode
 } from '@/config/seo.ts'
 import { getPageSeo } from '@/composables/usePageSeo.ts'
 
@@ -59,8 +60,8 @@ const resolveOverride = (route: RouteLocationNormalizedLoaded): RouteSeoOverride
 }
 
 /**
- * 标题：由「具体到抽象」拼接层级标题（官方抽奖 - B站抽奖数据 - 站点名），
- * 页面级覆盖的标题优先，且已含站点名时不重复拼接。
+ * 标题：由「具体到抽象」拼接层级标题（官方抽奖 - B站抽奖数据）。
+ * 站点名由模块的 `site.separator` + 标题模板补上，这里不再拼，避免重复。
  */
 const buildSeoTitle = (route: RouteLocationNormalizedLoaded, override: PageSeo): string => {
   if (route.name === RouteName.HOME) return override.title || HOME_TITLE
@@ -70,8 +71,25 @@ const buildSeoTitle = (route: RouteLocationNormalizedLoaded, override: PageSeo):
     const title = metaOf(record).title
     if (title && !levels.includes(title)) levels.push(title)
   }
-  const pageTitle = override.title || levels.join(' - ') || SITE_NAME
-  return pageTitle.includes(SITE_NAME) ? pageTitle : `${pageTitle} - ${SITE_NAME}`
+  return override.title || levels.join(' - ') || SITE_NAME
+}
+
+/**
+ * canonical：站点权威域名 + 去尾斜杠的路径 + 业务 query（只保留白名单内的参数）。
+ * 模块自带的 canonical 只在 SSR 注入，SPA 客户端导航不会跟着变，故这里显式维护一份，
+ * 让浏览器里切换路由后「当前页地址」仍然正确（也供 og:url 使用）。
+ */
+const buildCanonicalUrl = (route: RouteLocationNormalizedLoaded): string => {
+  const path = route.path.length > 1 ? route.path.replace(/\/+$/, '') : route.path
+  const search = new URLSearchParams(
+    Object.entries(route.query)
+      .filter(
+        ([key, value]) =>
+          CANONICAL_QUERY_WHITELIST.includes(key) && value !== '' && value != null
+      )
+      .map(([key, value]) => [key, String(value)])
+  ).toString()
+  return `${SITE_URL}${path}${search ? `?${search}` : ''}`
 }
 
 /** 描述：覆盖 > 最深一层 meta.description > 站点默认 */
@@ -82,17 +100,6 @@ const buildSeoDescription = (route: RouteLocationNormalizedLoaded, override: Pag
     if (description) return description
   }
   return DEFAULT_DESCRIPTION
-}
-
-/** canonical：权威域名 + 路径 + 业务 query（剔除 utm 等跟踪参数），去掉结尾多余斜杠 */
-const buildCanonicalUrl = (route: RouteLocationNormalizedLoaded): string => {
-  const path = route.path.length > 1 ? route.path.replace(/\/+$/, '') : route.path
-  const search = new URLSearchParams(
-    Object.entries(route.query)
-      .filter(([key, value]) => !IGNORED_QUERY_PARAMS.includes(key) && value !== '' && value != null)
-      .map(([key, value]) => [key, String(value)])
-  ).toString()
-  return `${SITE_URL}${path}${search ? `?${search}` : ''}`
 }
 
 /** 需要 noindex 的场景：404 / 回调 / 测试页 / 登录与管理员页面 / 缺必要 query 的详情页 */
@@ -108,11 +115,11 @@ const shouldNoIndex = (route: RouteLocationNormalizedLoaded, override: RouteSeoO
 }
 
 /**
- * 面包屑结构化数据：按 `route.matched` 层级生成。
+ * 面包屑节点：按 `route.matched` 层级生成，交给 `useSchemaOrg()` 并入页面 @graph。
  * 中间层 URL 含动态参数（如 `:momentId`）时不输出 item，只保留名称。
  */
-const buildBreadcrumbJsonLd = (route: RouteLocationNormalizedLoaded, canonicalUrl: string) => {
-  const items: Record<string, unknown>[] = []
+const buildBreadcrumbNode = (route: RouteLocationNormalizedLoaded): BreadcrumbNode | null => {
+  const items: BreadcrumbNode['itemListElement'] = []
   let acc = ''
   route.matched.forEach((record, index) => {
     const title = metaOf(record).title
@@ -120,92 +127,76 @@ const buildBreadcrumbJsonLd = (route: RouteLocationNormalizedLoaded, canonicalUr
     const rawPath = record.path || ''
     acc = rawPath.startsWith('/') ? rawPath : `${acc.replace(/\/+$/, '')}/${rawPath}`
     const isLast = index === route.matched.length - 1
-    const item: Record<string, unknown> = { '@type': 'ListItem', position: items.length + 1, name: title }
-    // 末级用真实 canonical，父级仅在路径不含动态参数时才给出 URL
-    if (isLast) item.item = canonicalUrl
+    const item: BreadcrumbNode['itemListElement'][number] = {
+      '@type': 'ListItem' as const,
+      position: items.length + 1,
+      name: title
+    }
+    // 末级用当前页面路径（canonical 由模块生成），父级仅在路径不含动态参数时给出 URL
+    if (isLast) item.item = `${SITE_URL}${route.path.replace(/\/+$/, '') || '/'}`
     else if (acc && !acc.includes(':')) item.item = `${SITE_URL}${acc}`
     items.push(item)
   })
-  if (items.length < 2) return null
-  return {
-    '@context': 'https://schema.org',
-    '@type': 'BreadcrumbList',
-    itemListElement: items
-  }
+  return items.length < 2 ? null : { '@type': 'BreadcrumbList', itemListElement: items }
 }
 
-/** 结构化数据：首页 WebSite；其余页面 BreadcrumbList；页面级 jsonLd 追加在后 */
-const buildJsonLd = (route: RouteLocationNormalizedLoaded, override: PageSeo, canonicalUrl: string) => {
-  const list: Record<string, unknown>[] = []
-  if (route.name === RouteName.HOME) list.push(buildWebsiteJsonLd())
-  const breadcrumb = buildBreadcrumbJsonLd(route, canonicalUrl)
-  if (breadcrumb) list.push(breadcrumb)
-  if (override.jsonLd) {
-    if (Array.isArray(override.jsonLd)) list.push(...override.jsonLd)
-    else list.push(override.jsonLd)
-  }
-  return list
-}
-
-/**
- * 移除 `index.html` 里的静态 SEO 兜底标签（带 `data-seo-static`）。
- * 静态标签是给不执行 JS 的爬虫看的；一旦应用挂载，就必须交给 useHead 独占维护，
- * 否则同一页面会出现两份 description / og:title，搜索引擎取到的是首页的旧值。
- */
-const removeStaticSeoTags = () => {
-  if (typeof document === 'undefined') return
-  document.head.querySelectorAll('[data-seo-static]').forEach((el) => el.remove())
-}
-
-/** 按当前路由维护 SEO 相关的 <head>（在 App.vue 里调用一次即可） */
+/** 在 App.vue 里调用一次即可：按当前路由维护全家桶的 SEO 输入 */
 export function useRouteSeo() {
   const route = useRoute()
-  const { locale } = useI18n()
 
-  const headPayload = computed(() => {
+  const seo = computed(() => {
     const override = resolveOverride(route)
     const title = buildSeoTitle(route, override)
-    const description = buildSeoDescription(route, override)
-    const canonicalUrl = buildCanonicalUrl(route)
-    const robots = shouldNoIndex(route, override) ? ROBOTS_NO_INDEX : ROBOTS_INDEX
-    const image = override.image || OG_IMAGE
-    const ogType = override.ogType || 'website'
-    const jsonLd = buildJsonLd(route, override, canonicalUrl)
-
     return {
+      override,
       title,
-      htmlAttrs: { lang: locale.value },
-      link: [{ key: 'seo-canonical', rel: 'canonical', href: canonicalUrl }],
-      meta: [
-        { key: 'seo-description', name: 'description', content: description },
-        { key: 'seo-keywords', name: 'keywords', content: joinKeywords(override.keywords) },
-        { key: 'seo-robots', name: 'robots', content: robots },
-        { key: 'seo-og-type', property: 'og:type', content: ogType },
-        { key: 'seo-og-site-name', property: 'og:site_name', content: SITE_NAME },
-        { key: 'seo-og-title', property: 'og:title', content: title },
-        { key: 'seo-og-description', property: 'og:description', content: description },
-        { key: 'seo-og-url', property: 'og:url', content: canonicalUrl },
-        { key: 'seo-og-image', property: 'og:image', content: image },
-        { key: 'seo-og-image-secure', property: 'og:image:secure_url', content: image },
-        { key: 'seo-og-image-alt', property: 'og:image:alt', content: OG_IMAGE_ALT },
-        { key: 'seo-og-image-width', property: 'og:image:width', content: String(OG_IMAGE_WIDTH) },
-        { key: 'seo-og-image-height', property: 'og:image:height', content: String(OG_IMAGE_HEIGHT) },
-        { key: 'seo-og-locale', property: 'og:locale', content: OG_LOCALE },
-        { key: 'seo-twitter-card', name: 'twitter:card', content: 'summary_large_image' },
-        { key: 'seo-twitter-title', name: 'twitter:title', content: title },
-        { key: 'seo-twitter-description', name: 'twitter:description', content: description },
-        { key: 'seo-twitter-image', name: 'twitter:image', content: image },
-        { key: 'seo-twitter-image-alt', name: 'twitter:image:alt', content: OG_IMAGE_ALT }
-      ],
-      // JSON-LD：Unhead 通过 `innerHTML` 注入脚本内容（其内部 contentAttrs 就是 innerHTML/textContent）。
-      // 注意不要给 script 加 `key`：它会被当成去重用的 hid，实测脚本会进不了 SSR 输出。
-      script: jsonLd.map((data) => ({
-        type: 'application/ld+json',
-        innerHTML: JSON.stringify(data)
-      }))
+      // 首页 / 自带站点名的动态标题不再套模板，否则会出现两次站点名。
+      // 必须是字符串：给 `undefined` 会把 seo-utils 的默认模板一并顶掉，Unhead 连 title 都不输出。
+      titleTemplate: title.includes(SITE_NAME) ? '%s' : `%s - ${SITE_NAME}`,
+      description: buildSeoDescription(route, override),
+      keywords: joinKeywords(override.keywords),
+      ogType: override.ogType,
+      canonical: buildCanonicalUrl(route),
+      noIndex: shouldNoIndex(route, override)
     }
   })
 
-  removeStaticSeoTags()
-  useHead(headPayload)
+  // 标题、描述、关键词、og:type / og:url 用站点级默认值兜底；
+  // og:title / og:description / twitter:card / OG 图等由模块自动推断。
+  useSeoMeta({
+    title: () => seo.value.title,
+    titleTemplate: () => seo.value.titleTemplate,
+    description: () => seo.value.description,
+    keywords: () => seo.value.keywords,
+    ogType: () => seo.value.ogType,
+    ogUrl: () => seo.value.canonical,
+    // seo-utils 会从 public/og-image.png 自动生成 og:image / twitter:image，
+    // 但不会补 secure_url；HTTPS 站点补上可让部分抓取器直接走安全地址。
+    ogImageSecureUrl: () => OG_IMAGE,
+    // robots meta 由这里统一输出：SSR 写进 HTML，SPA 导航时也会跟着更新。
+    // robots.txt 仍由 @nuxtjs/robots 生成（nuxt.config 里 metaTag: false，避免两条 meta）。
+    robots: () => (seo.value.noIndex ? ROBOTS_NO_INDEX : ROBOTS_INDEX)
+  })
+
+  // 页面级 canonical 覆盖模块默认值（低优先级，不会重复输出），且客户端导航时保持响应式。
+  useHead({
+    link: [{ rel: 'canonical', href: () => seo.value.canonical }]
+  })
+
+  // 默认 WebSite / WebPage / Organization 由 schemaOrg.defaults 生成，
+  // 这里只追加面包屑与页面级节点，模块负责补 @context / @graph / @id 与绝对 URL。
+  const schemaNodes = computed<Record<string, unknown>[]>(() => {
+    const nodes: SchemaOrgNode[] = []
+    const breadcrumb = buildBreadcrumbNode(route)
+    if (breadcrumb) nodes.push(breadcrumb)
+    const extra = seo.value.override.schemaOrg
+    if (extra) {
+      if (Array.isArray(extra)) nodes.push(...extra)
+      else nodes.push(extra)
+    }
+    return nodes.map((node) => ({ ...node }))
+  })
+  // 传 getter 而不是 computed 值：页面级节点由子组件（`usePageSeo`）在 setup 里才写入，
+  // 若在这里立刻取值会拿到空覆盖，SSR 的 @graph 就会漏掉 ItemList / SocialMediaPosting。
+  useSchemaOrg(() => schemaNodes.value)
 }

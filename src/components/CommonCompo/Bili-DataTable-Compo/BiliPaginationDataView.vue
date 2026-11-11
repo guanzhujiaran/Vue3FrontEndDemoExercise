@@ -143,7 +143,9 @@ watch(loading, async (newVal, oldVal) => {
 })
 
 onMounted(() => {
-  if (props.showMountToast) biliMessage.info('加载数据中！')
+  // 同一页面可能有多个分页视图（主列表 / 即将开奖等），快速切页时也会重复挂载：
+  // 用单例提示保证「加载数据中！」在屏幕上只出现一次，不叠加成多条。
+  if (props.showMountToast) biliMessage.infoOnce('加载数据中！')
   emits('onMounted')
 })
 

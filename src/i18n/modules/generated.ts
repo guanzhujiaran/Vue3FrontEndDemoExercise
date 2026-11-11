@@ -3,8 +3,9 @@
 export const generated = {
   'zh-CN': {
     home: {
-      slogan: '哔哩哔哩本社爆破',
-      loginNow: '立即登录',
+      slogan: '独立的非官方第三方 B 站公开抽奖数据工具',
+      identityNotice: '本站由个人独立运营，与哔哩哔哩（bilibili）无隶属或授权关系；本站账号登录不是 B 站登录，本站不索取 B 站账号、密码或 Cookie。',
+      loginNow: '登录本站账号',
       viewLottery: '查看抽奖数据',
       submitFeedback: '提交反馈',
       navTitle: '功能导航',
@@ -15,10 +16,12 @@ export const generated = {
       tabShopping: '山姆会员商店',
       visitNow: '立即访问',
       aboutDesc:
-        'BiliExplosion 是一个帮助 B 站用户管理和分析抽奖数据的工具，提供多种功能帮助您更好地参与 B 站活动。',
+        'BiliExplosion 是独立于哔哩哔哩的非官方第三方数据工具，由个人独立开发运营，整理公开可访问的 B 站抽奖数据。',
       quickLinks: '快速链接',
       linkBrowserMgmt: '浏览器管理',
       linkLottery: '抽奖数据',
+      linkDisclaimer: '免责声明',
+      linkPrivacy: '隐私政策',
       contactMe: '联系我',
       contactNote: '就我一个人写前后端，更新慢点见谅',
       logoutConfirm: '确定要退出登录吗?',
@@ -64,8 +67,9 @@ export const generated = {
   },
   en: {
     home: {
-      slogan: 'Bilibili Headquarters Explosion',
-      loginNow: 'Login Now',
+      slogan: 'An independent, unofficial third-party tool for public Bilibili lottery data',
+      identityNotice: 'Independently operated and not affiliated with, authorized by, or endorsed by Bilibili. Signing in here uses a site account, not a Bilibili account; we never ask for your Bilibili password or cookies.',
+      loginNow: 'Log in with site account',
       viewLottery: 'View Lottery Data',
       submitFeedback: 'Submit Feedback',
       navTitle: 'Feature Navigation',
@@ -76,10 +80,12 @@ export const generated = {
       tabShopping: "Sam's Club",
       visitNow: 'Visit Now',
       aboutDesc:
-        'BiliExplosion is a tool that helps Bilibili users manage and analyze lottery data, providing various features to help you better participate in Bilibili events.',
+        'BiliExplosion is an independent, unofficial third-party tool, operated by an individual, that organizes publicly available Bilibili lottery data.',
       quickLinks: 'Quick Links',
       linkBrowserMgmt: 'Browser Management',
       linkLottery: 'Lottery Data',
+      linkDisclaimer: 'Disclaimer',
+      linkPrivacy: 'Privacy Policy',
       contactMe: 'Contact Me',
       contactNote:
         'I am the only one working on both frontend and backend, so updates may be slow.',
@@ -127,8 +133,9 @@ export const generated = {
   },
   'zh-TW': {
     home: {
-      slogan: '嗶哩嗶哩本社爆破',
-      loginNow: '立即登入',
+      slogan: '獨立的非官方第三方 B 站公開抽獎資料工具',
+      identityNotice: '本站由個人獨立運營，與嗶哩嗶哩（bilibili）無隸屬或授權關係；本站帳號登入不是 B 站登入，本站不索取 B 站帳號、密碼或 Cookie。',
+      loginNow: '登入本站帳號',
       viewLottery: '查看抽獎資料',
       submitFeedback: '提交回饋',
       navTitle: '功能導覽',
@@ -139,10 +146,12 @@ export const generated = {
       tabShopping: '山姆會員商店',
       visitNow: '立即前往',
       aboutDesc:
-        'BiliExplosion 是一個幫助 B 站使用者管理和分析抽獎資料的工具，提供多種功能協助您更好地參與 B 站活動。',
+        'BiliExplosion 是一個獨立於 B 站的非官方第三方抽獎資料工具，由個人獨立開發營運。',
       quickLinks: '快速連結',
       linkBrowserMgmt: '瀏覽器管理',
       linkLottery: '抽獎資料',
+      linkDisclaimer: '免責聲明',
+      linkPrivacy: '隱私政策',
       contactMe: '聯絡我',
       contactNote: '就我一個人寫前後端，更新慢點見諒',
       logoutConfirm: '確定要登出嗎?',
@@ -188,8 +197,9 @@ export const generated = {
   },
   ja: {
     home: {
-      slogan: 'びりびり本社爆破',
-      loginNow: '今すぐログイン',
+      slogan: 'B站の公開くじデータを扱う独立した非公式サードパーティーツール',
+      identityNotice: '本サイトは個人が独立して運営しており、B站（bilibili）とは隶属・授権・提携関係がありません。ここでのログインは本サイトのアカウントであり、B站アカウントではありません。B站のパスワードや Cookie を要求することはありません。',
+      loginNow: 'サイトアカウントでログイン',
       viewLottery: 'くじデータを見る',
       submitFeedback: 'フィードバックを送信',
       navTitle: '機能ナビ',
@@ -200,10 +210,12 @@ export const generated = {
       tabShopping: 'サムズクラブ',
       visitNow: '今すぐアクセス',
       aboutDesc:
-        'BiliExplosion は B 站ユーザーがくじデータを管理・分析するためのツールで、B 站のイベントに参加するためのさまざまな機能を提供します。',
+        'BiliExplosion は B站とは無関係の非公式サードパーティーツールで、公開くじデータを整理・分析します。',
       quickLinks: 'クイックリンク',
       linkBrowserMgmt: 'ブラウザ管理',
       linkLottery: 'くじデータ',
+      linkDisclaimer: '免責事項',
+      linkPrivacy: 'プライバシーポリシー',
       contactMe: 'お問い合わせ',
       contactNote: 'フロントエンドもバックエンドも一人で書いているので、更新は遅めです。',
       logoutConfirm: 'ログアウトしてもよろしいですか?',
@@ -250,8 +262,9 @@ export const generated = {
   },
   ko: {
     home: {
-      slogan: '비리비리 본사 폭발',
-      loginNow: '지금 로그인',
+      slogan: 'B站 공개 추첨 데이터를 다루는 독립 비공식 서드파티 도구',
+      identityNotice: '본 사이트는 개인이 독립적으로 운영하며 B站(bilibili)과 소속·승인·제휴 관계가 없습니다. 여기서의 로그인은 본 사이트 계정이며 B站 계정이 아니고, B站 비밀번호나 Cookie를 요구하지 않습니다.',
+      loginNow: '사이트 계정으로 로그인',
       viewLottery: '추첨 데이터 보기',
       submitFeedback: '피드백 제출',
       navTitle: '기능 탐색',
@@ -262,10 +275,12 @@ export const generated = {
       tabShopping: '샘스클럽',
       visitNow: '지금 방문',
       aboutDesc:
-        'BiliExplosion은 B站 사용자가 추첨 데이터를 관리하고 분석할 수 있도록 돕는 도구로, B站 활동에 더 잘 참여할 수 있는 다양한 기능을 제공합니다.',
+        'BiliExplosion은 B站과 무관한 비공식 서드파티 도구로, 공개 추첨 데이터를 정리하고 분석합니다.',
       quickLinks: '빠른 링크',
       linkBrowserMgmt: '브라우저 관리',
       linkLottery: '추첨 데이터',
+      linkDisclaimer: '면책 조항',
+      linkPrivacy: '개인정보 처리방침',
       contactMe: '연락처',
       contactNote: '프론트엔드와 백엔드를 혼자서 다 작성하므로 업데이트가 조금 느릴 수 있습니다.',
       logoutConfirm: '정말 로그아웃하시겠습니까?',

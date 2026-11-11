@@ -2,7 +2,8 @@
 import { onMounted, onUnmounted, computed, ref, watch } from 'vue'
 import { type GlobalVarsType, ScreenTypeEnum } from '@/models/global_var/global_var_model.ts'
 import { useInject, KeysEnum } from '@/models/base/provide_model.ts'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
+import { onSpaLinkClick } from '@/utils/PageOpen/spaLink'
 import { routes } from '@/router'
 import { processRoutesForHeader } from '@/utils/routeUtils.ts'
 import { useMessageAdminStore } from '@/stores/message_admin.ts'
@@ -11,6 +12,7 @@ const globalVars = useInject(KeysEnum.GlobalVars) as Ref<GlobalVarsType>
 const messageAdminStore = useMessageAdminStore()
 
 const route = useRoute()
+const router = useRouter()
 let resizeTimer: number | null = null
 
 const checkScreenSize = () => {
@@ -76,7 +78,8 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="sticky top-0 z-50 border-b border-(--el-border-color-light) bg-bg/90 backdrop-blur-md backdrop-saturate-150 shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
+  <div
+    class="sticky top-0 z-50 border-b border-(--el-border-color-light) bg-bg/90 backdrop-blur-md backdrop-saturate-150 shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
     <div class="flex items-center justify-between w-full px-2 md:px-0 lg:px-4 relative">
       <el-scrollbar class="headerbar-scroller z-10">
         <el-menu :default-active="route.path" mode="horizontal" class="flex w-fit" :collapse="false" :ellipsis="false">

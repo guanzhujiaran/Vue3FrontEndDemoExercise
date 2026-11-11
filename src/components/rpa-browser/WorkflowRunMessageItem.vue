@@ -94,7 +94,8 @@ function iconOf(event: WorkflowRunLogEvent) {
   }
   if (event.kind === 'loop_iteration') return Refresh
   if (event.kind === 'loop_finished') return Flag
-  if (event.kind === 'run_finished') return event.success ? CircleCheck : WarningFilled
+  // 运行结束不再判成败：统一用结束标记，结果由文案里的可数结果表达
+  if (event.kind === 'run_finished') return Flag
   return CaretRight
 }
 

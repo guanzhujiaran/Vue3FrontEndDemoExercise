@@ -47,18 +47,8 @@ const ACTION_LINE = /^(开始步骤|完成步骤|步骤|动作)\s*(\d+(?:\s*\/\s
 /** 文案尾部的「，耗时 1.2s」 */
 const COST_SUFFIX = /[，,]\s*耗时\s*([\d.]+)\s*s\s*$/
 
-/** `运行结束：success（成功 10 / 失败 0 / 共 12 步）｜错误` */
-const RUN_FINISHED_LINE =
-  /^运行结束[：:]\s*([^（(]*)[（(]([^）)]*)[）)](?:\s*｜\s*([\s\S]*))?$/
-
-/** 运行状态英文枚举 → 中文 */
-const RUN_STATUS_TEXT: Record<string, string> = {
-  success: '执行成功',
-  failed: '执行失败',
-  interrupted: '已中断',
-  cancelled: '已取消',
-  running: '运行中',
-}
+/** `运行结束：成功循环 12 轮（共 150 条资源）｜错误`（只给可数结果，不再带成功/失败结论） */
+const RUN_FINISHED_PREFIX = /^运行结束[：:]\s*/
 
 /** 返回内容里「参数: {json}」的标签前缀 */
 const PARAM_PREFIX = /^参数[:：]\s*/
@@ -83,27 +73,17 @@ function prettyJson(text: string): string | null {
   }
 }
 
-/** 「运行结束」行：状态 + 成败统计 + 错误原因 */
+/** 「运行结束」行：可数结果（成功循环轮次 / 成功步骤数）+ 错误原因 */
 function formatRunFinished(event: WorkflowRunLogEvent, raw: string): RunMessageView {
-  const matched = RUN_FINISHED_LINE.exec(raw.trim())
-  if (!matched) {
-    return {
-      structured: false,
-      badge: '运行结束',
-      title: raw,
-      cost: formatCost(event.duration_ms),
-      reason: (event.error ?? '').trim(),
-      raw,
-    }
-  }
-  const status = (matched[1] ?? '').trim()
-  const counts = (matched[2] ?? '').trim()
+  const body = raw.replace(RUN_FINISHED_PREFIX, '')
+  // 后端把错误原因拼在「｜」之后：主文案只留结果，原因单独成块
+  const [summary, ...rest] = body.split('｜')
   return {
     structured: true,
     badge: '运行结束',
-    title: `${RUN_STATUS_TEXT[status] ?? status}（${counts}）`,
+    title: (summary ?? '').trim() || raw,
     cost: formatCost(event.duration_ms),
-    reason: (matched[3] ?? '').trim() || (event.error ?? '').trim(),
+    reason: rest.join('｜').trim() || (event.error ?? '').trim(),
     raw,
   }
 }

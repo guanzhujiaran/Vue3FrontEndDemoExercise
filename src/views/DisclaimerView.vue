@@ -1,13 +1,38 @@
 <script setup lang="ts">
-import { ElText } from 'element-plus'
+import { ElLink, ElText } from 'element-plus'
+import { onSpaLinkClick } from '@/utils/PageOpen/spaLink'
+import router from '@/router'
+
+const goTo = (path: string) => router.push(path)
+
+interface DisclaimerLink {
+  text: string
+  to: string
+}
 
 interface DisclaimerSection {
   title: string
   paragraphs: string[]
   bullets?: string[]
+  links?: DisclaimerLink[]
 }
 
 const sections: DisclaimerSection[] = [
+  {
+    // 非官方第三方服务声明：Google 安全浏览要求含第一方品牌的页面明确标示运营方与双方关系，
+    // 并给出「更多信息」链接，否则会被归入社交工程（欺骗性网页）。
+    title: '本站与哔哩哔哩的关系（非官方第三方服务声明）',
+    paragraphs: [
+      '本站（BiliExplosion，https://serena.dynv6.net）由个人独立开发并运营，是独立于哔哩哔哩（bilibili）的非官方第三方数据整理工具，与哔哩哔哩及其关联公司不存在任何隶属、授权、合作或背书关系。',
+      '页面中的「B站」「哔哩哔哩」「bilibili」「官方抽奖」等字样，仅用于说明所整理数据的来源与类别，不表示本站由哔哩哔哩运营或获得其授权。本站展示的抽奖信息来自公开页面与公开接口，请以 B 站原页面为准。',
+      '本站登录使用本站账号体系（Casdoor / Gitee 第三方授权），不是 B 站账号登录。本站不会要求您提供 B 站账号、密码、短信验证码、SESSDATA、bili_jct 或任何 B 站 Cookie；如遇以本站名义索取上述信息的页面，请勿填写并联系我们。',
+      '本站不提供、也不引导下载或安装任何客户端、插件、浏览器扩展及其他软件；页面中的站外链接均指向 B 站公开页面。'
+    ],
+    links: [
+      { text: '查看隐私政策与第三方服务清单', to: '/app/privacy-policy' },
+      { text: '返回首页', to: '/' }
+    ]
+  },
   {
     title: '1. 信息准确性',
     paragraphs: [
@@ -66,7 +91,7 @@ const sections: DisclaimerSection[] = [
     </el-text>
     <el-text class="disclaimer-view__updated block text-text-secondary mb-6">最后更新：2026-10-02</el-text>
     <el-text class="disclaimer-view__lead block text-text-regular leading-relaxed mb-8">
-      请仔细阅读本免责声明。使用 serena（https://serena.dynv6.net） 提供的服务，即表示您同意本免责声明的全部内容。
+      请仔细阅读本免责声明。serena（https://serena.dynv6.net）是独立于哔哩哔哩的非官方第三方数据工具；使用本站提供的服务，即表示您同意本免责声明的全部内容。
     </el-text>
 
     <section
@@ -89,6 +114,18 @@ const sections: DisclaimerSection[] = [
           {{ bullet }}
         </li>
       </ul>
+      <div v-if="section.links" class="disclaimer-view__links mt-3 flex flex-wrap gap-x-6 gap-y-2">
+        <el-link
+          v-for="link in section.links"
+          :key="link.to"
+          class="disclaimer-view__link text-sm! no-underline hover:underline"
+          :href="link.to"
+          target="_self"
+          @click="onSpaLinkClick($event, () => goTo(link.to))"
+        >
+          {{ link.text }}
+        </el-link>
+      </div>
     </section>
 
     <el-text class="disclaimer-view__footer block text-text-secondary mt-12">

@@ -1,73 +1,61 @@
 /**
- * 站点 SEO 唯一配置源（标题 / 描述 / 关键词 / OG / Twitter / canonical / robots）。
+ * 路由级 / 页面级 SEO 文案与结构化数据节点（业务差异层）。
  *
- * 设计要点：
- * 1. **站点级常量集中在此**：`useRouteSeo` 与各页面一律从这里取值，禁止在组件里硬编码
- *    站点名 / 域名 / 分享图，避免多处口径漂移；
- * 2. **canonical 用 `SITE_URL` 而非 `window.location.origin`**：本地 `localhost`、
- *    预览环境、生产域名同时在线时，只有权威域名应被收录，否则会产生重复内容；
- * 3. **路由级覆盖 `ROUTE_SEO` 按路由 name 声明**：路由表里 `meta.description` 是面向
- *    菜单的短描述（如「应用首页」），不适合直接当 SEO 描述，故 SEO 文案单独在这里维护，
- *    与路由表解耦（不必改庞大的路由表）；
- * 4. **详情页必须声明 `requiredQuery`**：`?id=` / `?dynId=` 缺失时页面是空壳，
- *    此时输出 `noindex`，避免搜索引擎收录无内容的详情页模板。
+ * 站点级常量、`<head>` 标签、canonical、robots、sitemap、OG 图、Schema.org 默认图
+ * 全部由 `@nuxtjs/seo` 全家桶负责：站点常量见 `seo_routes.ts`，模块配置见 `nuxt.config.ts`。
+ * 本文件只保留模块无法推断的业务信息：
+ * 1. **路由级覆盖 `ROUTE_SEO` 按路由 name 声明**：路由表里 `meta.description` 是面向
+ *    菜单的短描述（如「应用首页」），不适合直接当 SEO 描述，故 SEO 文案单独在这里维护；
+ * 2. **详情页必须声明 `requiredQuery`**：`?id=` / `?dynId=` 缺失时页面是空壳，
+ *    由 `useRobotsRule()` 输出 `noindex`，避免搜索引擎收录无内容的详情页模板；
+ * 3. **结构化数据只给节点，不给完整 JSON-LD 文档**：`@context` / `@graph` / `@id` 与
+ *    URL 解析都由 `useSchemaOrg()` 完成（见 `useRouteSeo.ts`）。
  */
 import { RouteName } from '@/models/router/index.ts'
-import { SITE_URL } from './seo_routes'
+import { DEFAULT_DESCRIPTION, DEFAULT_KEYWORDS, SITE_URL } from './seo_routes'
 
-/** 站点权威域名（无尾斜杠）：canonical / sitemap / OG 一律以它为准（唯一定义在 seo_routes.ts） */
+/** 站点权威域名：详情页拼分享 URL 仍从这里取（唯一定义在 seo_routes.ts） */
 export { SITE_URL }
-/** 站点名：拼在所有非首页标题末尾 */
-export const SITE_NAME = '爆破哔哩哔哩弹幕视频网'
-/** 品牌 slogan（仅首页标题使用，沿用已被收录的标题） */
-export const SITE_SLOGAN = '( ゜- ゜)つロ 乾杯~ - bilibili'
-/** 首页完整标题：保持与 index.html 静态兜底一致 */
-export const HOME_TITLE = `${SITE_NAME} - ${SITE_SLOGAN}`
-/** 站点默认描述（未声明页面描述时的兜底） */
-export const DEFAULT_DESCRIPTION =
-  'B站官方抽奖信息集合：转发抽奖、预约抽奖、充电抽奖、话题抽奖一网打尽，并提供山姆会员商店商品数据查询。'
-/** 站点默认关键词 */
-export const DEFAULT_KEYWORDS = [
-  'B站抽奖',
-  '哔哩哔哩抽奖',
-  '转发抽奖',
-  '预约抽奖',
-  '充电抽奖',
-  '话题抽奖',
-  '抽奖汇总',
-  '中奖名单',
-  '山姆会员店',
-  '山姆商品查询',
-  'bilibili lottery'
-]
-/** 社交分享图（1200×630，静态资源；绝对路径便于微信 / Twitter 等外部抓取） */
-export const OG_IMAGE = `${SITE_URL}/og-image.png`
-export const OG_IMAGE_ALT = `${SITE_NAME} - B站抽奖数据与山姆商品查询`
-export const OG_IMAGE_WIDTH = 1200
-export const OG_IMAGE_HEIGHT = 630
-/** 可被搜索引擎索引（max-image-preview:large 便于搜索结果出大图） */
-export const ROBOTS_INDEX = 'index,follow,max-image-preview:large'
-/** 不收录（登录 / 管理端 / 404 / 空壳详情页） */
-export const ROBOTS_NO_INDEX = 'noindex,nofollow'
-/** 站点主语言（OG 用 `zh_CN` 下划线格式） */
-export const OG_LOCALE = 'zh_CN'
-/** canonical 需要剔除的跟踪参数（保留业务参数如 dynId / id） */
-export const IGNORED_QUERY_PARAMS = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content', 'ref', 'from']
+
+/** 列表页节点：首屏条目的 ItemList */
+export interface ItemListNode {
+  '@type': 'ItemList'
+  name: string
+  numberOfItems: number
+  itemListElement: { '@type': 'ListItem'; position: number; name: string; url: string }[]
+}
+
+/** 详情页节点：动态 / 抽奖动态用 SocialMediaPosting */
+export interface SocialMediaPostingNode {
+  '@type': 'SocialMediaPosting'
+  headline: string
+  articleSection: string
+  inLanguage: string
+  url: string
+  author?: { '@type': 'Person'; name: string }
+}
+
+/** 面包屑节点：由 `useRouteSeo` 按 route.matched 生成 */
+export interface BreadcrumbNode {
+  '@type': 'BreadcrumbList'
+  itemListElement: { '@type': 'ListItem'; position: number; name: string; item?: string }[]
+}
+
+/** 交给 `useSchemaOrg()` 的自定义节点（`@context` / `@graph` 由模块补） */
+export type SchemaOrgNode = ItemListNode | SocialMediaPostingNode | BreadcrumbNode
 
 /** 页面级 SEO 字段（页面覆盖 / 路由覆盖共用） */
 export interface PageSeo {
-  /** 页面标题（不含站点名；留空则用路由层级标题） */
+  /** 页面标题（不含站点名；`site.separator` + 标题模板会补站点名） */
   title?: string
   /** 页面描述 */
   description?: string
   /** 页面关键词 */
   keywords?: string[]
-  /** 分享图（绝对 URL） */
-  image?: string
   /** OG 类型：内容详情页用 article，其余用 website */
   ogType?: 'website' | 'article'
-  /** 结构化数据（JSON-LD），可传单个对象或数组 */
-  jsonLd?: Record<string, unknown> | Record<string, unknown>[]
+  /** 追加到 Schema.org 默认图的节点，可传单个或数组 */
+  schemaOrg?: SchemaOrgNode | SchemaOrgNode[]
 }
 
 /** 路由级 SEO 覆盖 */
@@ -102,7 +90,7 @@ export const ROUTE_SEO: Record<string, RouteSeoOverride> = {
   },
   [RouteName.OFFICIAL_LOTTERY]: {
     description:
-      'B站官方抽奖汇总：官方账号发起的转发抽奖动态，含开奖时间、奖品、参与条件与一键跳转原动态。',
+      '本站（非官方第三方工具）整理的 B 站官方账号抽奖动态，含开奖时间、奖品、参与条件与一键跳转原动态。',
     keywords: ['官方抽奖', 'B站官方活动', '转发抽奖', '开奖时间']
   },
   [RouteName.RESERVE_LOTTERY]: {
@@ -135,7 +123,7 @@ export const ROUTE_SEO: Record<string, RouteSeoOverride> = {
     keywords: ['山姆会员店', '山姆商品', '商品价格查询', 'Sam’s Club']
   },
   [RouteName.CHANGE_LOG]: {
-    description: '爆破哔哩哔哩更新日志：各版本的功能新增、体验优化与问题修复记录。',
+    description: 'BiliExplosion 更新日志：各版本的功能新增、体验优化与问题修复记录。',
     keywords: ['更新日志', '版本记录', 'changelog']
   },
   // 动态详情 / 用户空间是 UGC 页面，SEO 价值最高：匿名可读，允许收录
@@ -172,18 +160,8 @@ export const ROUTE_SEO: Record<string, RouteSeoOverride> = {
   }
 }
 
-/** 站点级 WebSite 结构化数据（仅首页输出） */
-export const buildWebsiteJsonLd = () => ({
-  '@context': 'https://schema.org',
-  '@type': 'WebSite',
-  name: SITE_NAME,
-  url: `${SITE_URL}/`,
-  description: DEFAULT_DESCRIPTION,
-  inLanguage: 'zh-CN'
-})
-
 /**
- * 列表页 ItemList 结构化数据：把首屏条目交给搜索引擎。
+ * 列表页 ItemList 节点：把首屏条目交给 `useSchemaOrg()`。
  *
  * 抽奖列表的条目本质上是一个「条目集合」，用 ItemList 描述后搜索引擎能识别出
  * 「这是一个列表页 + 有哪些具体条目」，比只给一段 description 更容易理解页面主题。
@@ -193,8 +171,13 @@ export const buildWebsiteJsonLd = () => ({
  * - 条目 name 截断到 80 字（部分抽奖文案很长，全量塞进去只会稀释信号）；
  * - 没有 url 的条目丢弃（结构化数据里没有 url 的 ListItem 价值很低）；
  * - 返回 null 表示无有效条目，调用方应放弃覆盖、回落到路由级 SEO。
+ * - 不写 `@context` / `@graph`：`nuxt-schema-org` 会把节点并入页面默认图。
  */
-export const buildItemListJsonLd = (name: string, items: readonly unknown[], total?: number) => {
+export const buildItemListNode = (
+  name: string,
+  items: readonly unknown[],
+  total?: number
+): ItemListNode | null => {
   const entries = (items as readonly { jump_url?: string; lottery_text?: string }[])
     .map((it) => ({
       url: it?.jump_url ?? '',
@@ -205,12 +188,11 @@ export const buildItemListJsonLd = (name: string, items: readonly unknown[], tot
   if (!entries.length) return null
 
   return {
-    '@context': 'https://schema.org',
     '@type': 'ItemList',
     name,
     numberOfItems: total ?? entries.length,
     itemListElement: entries.map((it, index) => ({
-      '@type': 'ListItem',
+      '@type': 'ListItem' as const,
       position: index + 1,
       name: it.text.slice(0, 80) || name,
       url: it.url

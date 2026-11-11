@@ -14,6 +14,9 @@ const { t } = useI18n()
 <template>
   <div class="login-panel-popover p-3 flex flex-col gap-6 size-max">
     <p class="title text-base font-medium text-text-primary">{{ t('common.loginTipTitle') }}</p>
+    <el-text class="login-panel-popover__identity block text-xs leading-relaxed text-text-secondary" tag="p">
+      {{ t('common.loginTipAccountNotice') }}
+    </el-text>
     <div class="login-tip-content grid grid-cols-2 gap-x-40 gap-y-6">
       <div class="login-tip-content-item flex items-center gap-1">
         <el-icon size="28" class="svg-icon fill-primary">

@@ -3,7 +3,7 @@
 import type { RequestResult } from '../client';
 import { client } from '../client.gen';
 import type { Options } from '../sdk.gen';
-import type { CreateLlmConfigLlmConfigPostData, CreateLlmConfigLlmConfigPostErrors, CreateLlmConfigLlmConfigPostResponses, DeleteLlmConfigLlmConfigIndexDeleteData, DeleteLlmConfigLlmConfigIndexDeleteErrors, DeleteLlmConfigLlmConfigIndexDeleteResponses, GcGcGetData, GcGcGetResponses, GetLlmConfigItemLlmConfigIndexGetData, GetLlmConfigItemLlmConfigIndexGetErrors, GetLlmConfigItemLlmConfigIndexGetResponses, GetLlmConfigLlmConfigGetData, GetLlmConfigLlmConfigGetResponses, GetLlmStatsLlmStatsGetData, GetLlmStatsLlmStatsGetResponses, GetOthersBigLotGetOthersBigLotGetData, GetOthersBigLotGetOthersBigLotGetResponses, GetOthersBigReserveGetOthersBigReserveGetData, GetOthersBigReserveGetOthersBigReserveGetResponses, GetOthersLotDynGetOthersLotDynGetData, GetOthersLotDynGetOthersLotDynGetResponses, GetOthersOfficialLotDynGetOthersOfficialLotDynGetData, GetOthersOfficialLotDynGetOthersOfficialLotDynGetResponses, PatchLlmConfigLlmConfigIndexPatchData, PatchLlmConfigLlmConfigIndexPatchErrors, PatchLlmConfigLlmConfigIndexPatchResponses, ReplaceLlmConfigLlmConfigPutData, ReplaceLlmConfigLlmConfigPutErrors, ReplaceLlmConfigLlmConfigPutResponses, TestPushErrorTestPushErrorGetData, TestPushErrorTestPushErrorGetResponses, TestTestGetData, TestTestGetResponses, ToutiaoGetOthersLotIdsToutiaoGetOthersLotIdsGetData, ToutiaoGetOthersLotIdsToutiaoGetOthersLotIdsGetResponses, UpdateLlmConfigLlmConfigIndexPutData, UpdateLlmConfigLlmConfigIndexPutErrors, UpdateLlmConfigLlmConfigIndexPutResponses, UpsertLotDetailLotUpsertLotDetailPostData, UpsertLotDetailLotUpsertLotDetailPostErrors, UpsertLotDetailLotUpsertLotDetailPostResponses, V1GetLiveLotsV1GetLiveLotsGetData, V1GetLiveLotsV1GetLiveLotsGetErrors, V1GetLiveLotsV1GetLiveLotsGetResponses, V1PostRmFollowingListV1PostRmFollowingListPostData, V1PostRmFollowingListV1PostRmFollowingListPostErrors, V1PostRmFollowingListV1PostRmFollowingListPostResponses, ZhihuGetOthersLotPinsZhihuGetOthersLotPinsGetData, ZhihuGetOthersLotPinsZhihuGetOthersLotPinsGetResponses } from '../types.gen';
+import type { CreateLlmConfigLlmConfigPostData, CreateLlmConfigLlmConfigPostErrors, CreateLlmConfigLlmConfigPostResponses, DeleteLlmConfigLlmConfigIndexDeleteData, DeleteLlmConfigLlmConfigIndexDeleteErrors, DeleteLlmConfigLlmConfigIndexDeleteResponses, DeleteLlmConfigOverrideLlmConfigOverrideDeleteData, DeleteLlmConfigOverrideLlmConfigOverrideDeleteResponses, GcGcGetData, GcGcGetResponses, GetLlmConfigItemLlmConfigIndexGetData, GetLlmConfigItemLlmConfigIndexGetErrors, GetLlmConfigItemLlmConfigIndexGetResponses, GetLlmConfigLlmConfigGetData, GetLlmConfigLlmConfigGetResponses, GetLlmModelsLlmModelsPostData, GetLlmModelsLlmModelsPostErrors, GetLlmModelsLlmModelsPostResponses, GetLlmStatsLlmStatsGetData, GetLlmStatsLlmStatsGetResponses, GetOthersBigLotGetOthersBigLotGetData, GetOthersBigLotGetOthersBigLotGetResponses, GetOthersBigReserveGetOthersBigReserveGetData, GetOthersBigReserveGetOthersBigReserveGetResponses, GetOthersLotDynGetOthersLotDynGetData, GetOthersLotDynGetOthersLotDynGetResponses, GetOthersOfficialLotDynGetOthersOfficialLotDynGetData, GetOthersOfficialLotDynGetOthersOfficialLotDynGetResponses, HealthCheckHealthGetData, HealthCheckHealthGetResponses, PatchLlmConfigLlmConfigIndexPatchData, PatchLlmConfigLlmConfigIndexPatchErrors, PatchLlmConfigLlmConfigIndexPatchResponses, ReplaceLlmConfigLlmConfigPutData, ReplaceLlmConfigLlmConfigPutErrors, ReplaceLlmConfigLlmConfigPutResponses, TestLlmConfigLlmConfigTestPostData, TestLlmConfigLlmConfigTestPostErrors, TestLlmConfigLlmConfigTestPostResponses, TestPushErrorTestPushErrorGetData, TestPushErrorTestPushErrorGetResponses, TestTestGetData, TestTestGetResponses, ToutiaoGetOthersLotIdsToutiaoGetOthersLotIdsGetData, ToutiaoGetOthersLotIdsToutiaoGetOthersLotIdsGetResponses, UpdateLlmConfigLlmConfigIndexPutData, UpdateLlmConfigLlmConfigIndexPutErrors, UpdateLlmConfigLlmConfigIndexPutResponses, UpsertLotDetailLotUpsertLotDetailPostData, UpsertLotDetailLotUpsertLotDetailPostErrors, UpsertLotDetailLotUpsertLotDetailPostResponses, V1GetLiveLotsV1GetLiveLotsGetData, V1GetLiveLotsV1GetLiveLotsGetErrors, V1GetLiveLotsV1GetLiveLotsGetResponses, V1PostRmFollowingListV1PostRmFollowingListPostData, V1PostRmFollowingListV1PostRmFollowingListPostErrors, V1PostRmFollowingListV1PostRmFollowingListPostResponses, ZhihuGetOthersLotPinsZhihuGetOthersLotPinsGetData, ZhihuGetOthersLotPinsZhihuGetOthersLotPinsGetResponses } from '../types.gen';
 
 export class CommonRouterService {
     /**
@@ -57,7 +57,7 @@ export class CommonRouterService {
     /**
      * Get Llm Config
      *
-     * 【内部接口】云端 LLM 配置在线 CRUD，修改立即生效、无需重启服务；仅运行时内存生效，不写回 .env，服务重启后回退为环境变量中的 llm_apis；token 一律脱敏返回，路径不在网关转发白名单内，不对外公开。 读取全部配置（列表）。
+     * 【内部接口】云端 LLM 配置在线 CRUD，修改立即生效、无需重启服务；写操作会持久化到 runtime/llm_apis.json（事实来源：文件 > .env），重启后仍然生效；不写回 .env；token 一律脱敏返回，路径不在网关转发白名单内，不对外公开。 读取全部配置（列表）。
      */
     public static getLlmConfigLlmConfigGet<ThrowOnError extends boolean = false>(options?: Options<GetLlmConfigLlmConfigGetData, ThrowOnError>): RequestResult<GetLlmConfigLlmConfigGetResponses, unknown, ThrowOnError, 'data'> {
         return (options?.client ?? client).get<GetLlmConfigLlmConfigGetResponses, unknown, ThrowOnError, 'data'>({
@@ -70,7 +70,7 @@ export class CommonRouterService {
     /**
      * Create Llm Config
      *
-     * 【内部接口】云端 LLM 配置在线 CRUD，修改立即生效、无需重启服务；仅运行时内存生效，不写回 .env，服务重启后回退为环境变量中的 llm_apis；token 一律脱敏返回，路径不在网关转发白名单内，不对外公开。 新增一条配置（追加到列表末尾）。
+     * 【内部接口】云端 LLM 配置在线 CRUD，修改立即生效、无需重启服务；写操作会持久化到 runtime/llm_apis.json（事实来源：文件 > .env），重启后仍然生效；不写回 .env；token 一律脱敏返回，路径不在网关转发白名单内，不对外公开。 新增一条配置（追加到列表末尾）。
      */
     public static createLlmConfigLlmConfigPost<ThrowOnError extends boolean = false>(options: Options<CreateLlmConfigLlmConfigPostData, ThrowOnError>): RequestResult<CreateLlmConfigLlmConfigPostResponses, CreateLlmConfigLlmConfigPostErrors, ThrowOnError, 'data'> {
         return (options.client ?? client).post<CreateLlmConfigLlmConfigPostResponses, CreateLlmConfigLlmConfigPostErrors, ThrowOnError, 'data'>({
@@ -87,7 +87,7 @@ export class CommonRouterService {
     /**
      * Replace Llm Config
      *
-     * 【内部接口】云端 LLM 配置在线 CRUD，修改立即生效、无需重启服务；仅运行时内存生效，不写回 .env，服务重启后回退为环境变量中的 llm_apis；token 一律脱敏返回，路径不在网关转发白名单内，不对外公开。 整体替换全部配置（传空列表 [] 表示清空）。
+     * 【内部接口】云端 LLM 配置在线 CRUD，修改立即生效、无需重启服务；写操作会持久化到 runtime/llm_apis.json（事实来源：文件 > .env），重启后仍然生效；不写回 .env；token 一律脱敏返回，路径不在网关转发白名单内，不对外公开。 整体替换全部配置（传空列表 [] 表示清空）。
      */
     public static replaceLlmConfigLlmConfigPut<ThrowOnError extends boolean = false>(options: Options<ReplaceLlmConfigLlmConfigPutData, ThrowOnError>): RequestResult<ReplaceLlmConfigLlmConfigPutResponses, ReplaceLlmConfigLlmConfigPutErrors, ThrowOnError, 'data'> {
         return (options.client ?? client).put<ReplaceLlmConfigLlmConfigPutResponses, ReplaceLlmConfigLlmConfigPutErrors, ThrowOnError, 'data'>({
@@ -102,9 +102,56 @@ export class CommonRouterService {
     }
     
     /**
+     * Test Llm Config
+     *
+     * 【内部接口】云端 LLM 配置在线 CRUD，修改立即生效、无需重启服务；写操作会持久化到 runtime/llm_apis.json（事实来源：文件 > .env），重启后仍然生效；不写回 .env；token 一律脱敏返回，路径不在网关转发白名单内，不对外公开。 用裸 ChatOpenAI 真实问一句 1+1=? 探测单条配置（管理端「测试」按钮）。token 为空或脱敏时按 index 沿用原密钥；探测不参与健康状态机、不改统计、不落盘。
+     */
+    public static testLlmConfigLlmConfigTestPost<ThrowOnError extends boolean = false>(options: Options<TestLlmConfigLlmConfigTestPostData, ThrowOnError>): RequestResult<TestLlmConfigLlmConfigTestPostResponses, TestLlmConfigLlmConfigTestPostErrors, ThrowOnError, 'data'> {
+        return (options.client ?? client).post<TestLlmConfigLlmConfigTestPostResponses, TestLlmConfigLlmConfigTestPostErrors, ThrowOnError, 'data'>({
+            responseStyle: 'data',
+            url: '/llm/config/test',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    /**
+     * Get Llm Models
+     *
+     * 【内部接口】云端 LLM 配置在线 CRUD，修改立即生效、无需重启服务；写操作会持久化到 runtime/llm_apis.json（事实来源：文件 > .env），重启后仍然生效；不写回 .env；token 一律脱敏返回，路径不在网关转发白名单内，不对外公开。 拉取上游 `GET {base_url}/models` 的模型列表（管理端「获取模型列表」按钮）：token 为空或脱敏时按 index 沿用原密钥；查询不参与健康状态机、不改统计、不落盘。
+     */
+    public static getLlmModelsLlmModelsPost<ThrowOnError extends boolean = false>(options: Options<GetLlmModelsLlmModelsPostData, ThrowOnError>): RequestResult<GetLlmModelsLlmModelsPostResponses, GetLlmModelsLlmModelsPostErrors, ThrowOnError, 'data'> {
+        return (options.client ?? client).post<GetLlmModelsLlmModelsPostResponses, GetLlmModelsLlmModelsPostErrors, ThrowOnError, 'data'>({
+            responseStyle: 'data',
+            url: '/llm/models',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    /**
+     * Delete Llm Config Override
+     *
+     * 【内部接口】云端 LLM 配置在线 CRUD，修改立即生效、无需重启服务；写操作会持久化到 runtime/llm_apis.json（事实来源：文件 > .env），重启后仍然生效；不写回 .env；token 一律脱敏返回，路径不在网关转发白名单内，不对外公开。 撤销人工保存：删除持久化文件并热切回环境变量（.env）配置，返回切换后的脱敏列表与当前生效来源。
+     */
+    public static deleteLlmConfigOverrideLlmConfigOverrideDelete<ThrowOnError extends boolean = false>(options?: Options<DeleteLlmConfigOverrideLlmConfigOverrideDeleteData, ThrowOnError>): RequestResult<DeleteLlmConfigOverrideLlmConfigOverrideDeleteResponses, unknown, ThrowOnError, 'data'> {
+        return (options?.client ?? client).delete<DeleteLlmConfigOverrideLlmConfigOverrideDeleteResponses, unknown, ThrowOnError, 'data'>({
+            responseStyle: 'data',
+            url: '/llm/config/override',
+            ...options
+        });
+    }
+    
+    /**
      * Delete Llm Config
      *
-     * 【内部接口】云端 LLM 配置在线 CRUD，修改立即生效、无需重启服务；仅运行时内存生效，不写回 .env，服务重启后回退为环境变量中的 llm_apis；token 一律脱敏返回，路径不在网关转发白名单内，不对外公开。 删除指定索引的单条配置。
+     * 【内部接口】云端 LLM 配置在线 CRUD，修改立即生效、无需重启服务；写操作会持久化到 runtime/llm_apis.json（事实来源：文件 > .env），重启后仍然生效；不写回 .env；token 一律脱敏返回，路径不在网关转发白名单内，不对外公开。 删除指定索引的单条配置。
      */
     public static deleteLlmConfigLlmConfigIndexDelete<ThrowOnError extends boolean = false>(options: Options<DeleteLlmConfigLlmConfigIndexDeleteData, ThrowOnError>): RequestResult<DeleteLlmConfigLlmConfigIndexDeleteResponses, DeleteLlmConfigLlmConfigIndexDeleteErrors, ThrowOnError, 'data'> {
         return (options.client ?? client).delete<DeleteLlmConfigLlmConfigIndexDeleteResponses, DeleteLlmConfigLlmConfigIndexDeleteErrors, ThrowOnError, 'data'>({
@@ -117,7 +164,7 @@ export class CommonRouterService {
     /**
      * Get Llm Config Item
      *
-     * 【内部接口】云端 LLM 配置在线 CRUD，修改立即生效、无需重启服务；仅运行时内存生效，不写回 .env，服务重启后回退为环境变量中的 llm_apis；token 一律脱敏返回，路径不在网关转发白名单内，不对外公开。 按索引读取单条配置。
+     * 【内部接口】云端 LLM 配置在线 CRUD，修改立即生效、无需重启服务；写操作会持久化到 runtime/llm_apis.json（事实来源：文件 > .env），重启后仍然生效；不写回 .env；token 一律脱敏返回，路径不在网关转发白名单内，不对外公开。 按索引读取单条配置。
      */
     public static getLlmConfigItemLlmConfigIndexGet<ThrowOnError extends boolean = false>(options: Options<GetLlmConfigItemLlmConfigIndexGetData, ThrowOnError>): RequestResult<GetLlmConfigItemLlmConfigIndexGetResponses, GetLlmConfigItemLlmConfigIndexGetErrors, ThrowOnError, 'data'> {
         return (options.client ?? client).get<GetLlmConfigItemLlmConfigIndexGetResponses, GetLlmConfigItemLlmConfigIndexGetErrors, ThrowOnError, 'data'>({
@@ -130,7 +177,7 @@ export class CommonRouterService {
     /**
      * Patch Llm Config
      *
-     * 【内部接口】云端 LLM 配置在线 CRUD，修改立即生效、无需重启服务；仅运行时内存生效，不写回 .env，服务重启后回退为环境变量中的 llm_apis；token 一律脱敏返回，路径不在网关转发白名单内，不对外公开。 部分更新指定索引的单条配置（仅传需要修改的字段）。
+     * 【内部接口】云端 LLM 配置在线 CRUD，修改立即生效、无需重启服务；写操作会持久化到 runtime/llm_apis.json（事实来源：文件 > .env），重启后仍然生效；不写回 .env；token 一律脱敏返回，路径不在网关转发白名单内，不对外公开。 部分更新指定索引的单条配置（仅传需要修改的字段）。
      */
     public static patchLlmConfigLlmConfigIndexPatch<ThrowOnError extends boolean = false>(options: Options<PatchLlmConfigLlmConfigIndexPatchData, ThrowOnError>): RequestResult<PatchLlmConfigLlmConfigIndexPatchResponses, PatchLlmConfigLlmConfigIndexPatchErrors, ThrowOnError, 'data'> {
         return (options.client ?? client).patch<PatchLlmConfigLlmConfigIndexPatchResponses, PatchLlmConfigLlmConfigIndexPatchErrors, ThrowOnError, 'data'>({
@@ -147,7 +194,7 @@ export class CommonRouterService {
     /**
      * Update Llm Config
      *
-     * 【内部接口】云端 LLM 配置在线 CRUD，修改立即生效、无需重启服务；仅运行时内存生效，不写回 .env，服务重启后回退为环境变量中的 llm_apis；token 一律脱敏返回，路径不在网关转发白名单内，不对外公开。 整体更新指定索引的单条配置（需提供完整字段）。
+     * 【内部接口】云端 LLM 配置在线 CRUD，修改立即生效、无需重启服务；写操作会持久化到 runtime/llm_apis.json（事实来源：文件 > .env），重启后仍然生效；不写回 .env；token 一律脱敏返回，路径不在网关转发白名单内，不对外公开。 整体更新指定索引的单条配置（需提供完整字段）。
      */
     public static updateLlmConfigLlmConfigIndexPut<ThrowOnError extends boolean = false>(options: Options<UpdateLlmConfigLlmConfigIndexPutData, ThrowOnError>): RequestResult<UpdateLlmConfigLlmConfigIndexPutResponses, UpdateLlmConfigLlmConfigIndexPutErrors, ThrowOnError, 'data'> {
         return (options.client ?? client).put<UpdateLlmConfigLlmConfigIndexPutResponses, UpdateLlmConfigLlmConfigIndexPutErrors, ThrowOnError, 'data'>({
@@ -270,6 +317,19 @@ export class CommonRouterService {
         return (options?.client ?? client).get<ToutiaoGetOthersLotIdsToutiaoGetOthersLotIdsGetResponses, unknown, ThrowOnError, 'data'>({
             responseStyle: 'data',
             url: '/toutiao/get_others_lot_ids',
+            ...options
+        });
+    }
+    
+    /**
+     * Health Check
+     *
+     * 轻量健康检查：不查库、不连 MQ，仅表示进程存活（200 + 极简 JSON）
+     */
+    public static healthCheckHealthGet<ThrowOnError extends boolean = false>(options?: Options<HealthCheckHealthGetData, ThrowOnError>): RequestResult<HealthCheckHealthGetResponses, unknown, ThrowOnError, 'data'> {
+        return (options?.client ?? client).get<HealthCheckHealthGetResponses, unknown, ThrowOnError, 'data'>({
+            responseStyle: 'data',
+            url: '/health',
             ...options
         });
     }

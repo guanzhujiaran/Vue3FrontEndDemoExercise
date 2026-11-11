@@ -4,10 +4,15 @@ import { useRouter } from 'vue-router'
 import { Delete, Refresh, RefreshRight } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { RouteName } from '@/models/router/index.ts'
-import { 工作流管理Service, 操作日志管理Service } from '@/api/browser/hey-api'
+import {
+  工作流管理Service,
+  操作日志管理Service,
+  type WorkflowRunLogItemResponse,
+} from '@/api/browser/hey-api'
 import { useUserNavStore } from '@/stores/user_nav'
 import { businessHandler } from '@/utils/businessHandler'
 import { deleteWorkflowResources } from '@/api/browser/workflow_resource_api'
+import { runStatusTagType, runStatusText } from '@/utils/rpa/runDisplay'
 import WorkflowRunProgressBar from './WorkflowRunProgressBar.vue'
 import {
   subscribeWorkflowRunProgress,
@@ -44,38 +49,14 @@ const emit = defineEmits<{
 const userNavStore = useUserNavStore()
 const router = useRouter()
 
-interface RunItem {
-  id: number
-  run_id: string
+/**
+ * 列表行：直接复用后端契约（含资源统计与失败分类字段；SDK 分页 items 已展开）。
+ * `workflow_id` / `browser_id` 本地保持 string：与 props / 路由参数比较时避免
+ * number 精度问题与来回转换。
+ */
+type RunItem = Omit<WorkflowRunLogItemResponse, 'workflow_id' | 'browser_id'> & {
   workflow_id: string
   browser_id?: string
-  trigger_source: string
-  status: string
-  total?: number
-  success_count?: number
-  failed_count?: number
-  execution_id?: string
-  error_message?: string | null
-  duration_ms?: number
-  started_at?: string | null
-  finished_at?: string | null
-  /** 运行期进度（SSE 未覆盖时作为兜底展示） */
-  completed_steps?: number
-  current_step_index?: number
-  current_step_name?: string
-  loop_action_name?: string
-  loop_index?: number
-  loop_total?: number
-  /** 本轮循环体内的动作进度（第二条进度条） */
-  loop_body_completed?: number
-  loop_body_total?: number
-  loop_body_step_name?: string
-  progress_updated_at?: number | null
-  /** 断点恢复：是否可继续、来源运行、已恢复次数、检查点 */
-  resumable?: boolean
-  resume_of?: string | null
-  resume_count?: number
-  checkpoint_step?: number
 }
 
 interface StepLog {
@@ -124,20 +105,19 @@ const triggerLabel: Record<string, string> = {
   manual: '手动',
   schedule: '定时',
 }
-const statusLabel: Record<string, string> = {
-  success: '成功',
-  failed: '失败',
-  running: '运行中',
-  interrupted: '已中断',
-  cancelled: '已取消',
-}
-const statusType: Record<string, 'success' | 'danger' | 'warning' | 'info'> = {
-  success: 'success',
-  failed: 'danger',
-  running: 'warning',
-  interrupted: 'info',
-  cancelled: 'info',
-}
+/**
+ * 状态列文案：不再给成功/失败结论。
+ * 过程状态照旧（运行中 / 排队中 / 已中断 / 已停止），终态展示可数结果：
+ * 有资源 = 成功循环 N 轮；无资源 = 成功 N 步。
+ */
+const runStatusTextOf = (row: RunItem) =>
+  runStatusText({
+    status: row.status,
+    success_count: row.success_count,
+    total_steps: row.total,
+    resource_total: row.resource_total,
+    resource_success: row.resource_success,
+  })
 
 /** 用进度帧同步列表行（步骤统计/当前步骤需实时变化，不必等重新拉列表） */
 function applyProgressToRow(progress: WorkflowRunProgress) {
@@ -451,7 +431,8 @@ onBeforeUnmount(closeAllSubscriptions)
     <div class="workflow-run-log flex flex-col gap-3">
       <div class="workflow-run-log__toolbar flex items-center justify-between">
         <span class="text-xs text-color-secondary">
-          共 {{ total }} 条运行记录；「步骤」为顶层步骤数（循环体每轮单独记日志、不重复计步骤），
+          共 {{ total }} 条运行记录；「结果」只给可数成果——有资源记录时按成功循环轮次，
+          无资源记录时按成功步骤数；「步骤」为顶层步骤数（循环体每轮单独记日志、不重复计步骤），
           展开可下钻动作日志
         </span>
         <el-button :icon="Refresh" @click="handleRefresh">刷新</el-button>
@@ -504,10 +485,10 @@ onBeforeUnmount(closeAllSubscriptions)
             </div>
           </template>
         </el-table-column>
-        <el-table-column label="状态" width="100">
+        <el-table-column label="结果" width="140">
           <template #default="{ row }">
-            <el-tag :type="statusType[row.status] || 'info'">
-              {{ statusLabel[row.status] || row.status }}
+            <el-tag :type="runStatusTagType(row.status)">
+              {{ runStatusTextOf(row as RunItem) }}
             </el-tag>
           </template>
         </el-table-column>
@@ -543,6 +524,37 @@ onBeforeUnmount(closeAllSubscriptions)
             /
             <span class="text-danger">{{ row.failed_count ?? 0 }}</span>
             / {{ row.total ?? 0 }}
+          </template>
+        </el-table-column>
+        <el-table-column label="资源结果" min-width="190">
+          <template #default="{ row }">
+            <div
+              v-if="(row.resource_total ?? 0) > 0"
+              class="workflow-run-log__resource flex flex-col"
+            >
+              <div class="workflow-run-log__resource-summary text-xs">
+                <span class="text-success">{{ row.resource_success ?? 0 }}</span>
+                /
+                <span
+                  :class="(row.resource_failed ?? 0) > 0 ? 'text-danger' : 'text-color-secondary'"
+                >{{ row.resource_failed ?? 0 }}</span>
+                /
+                <span class="text-color-secondary">{{ row.resource_skipped ?? 0 }}</span>
+                <span class="text-color-secondary">（共 {{ row.resource_total }}）</span>
+              </div>
+              <el-tooltip
+                v-if="(row.resource_failed ?? 0) > 0"
+                content="致命失败达到阈值会把整次运行判为失败；可重试失败只留痕，下一轮重新捞起"
+                placement="top"
+              >
+                <div class="workflow-run-log__resource-detail text-xs">
+                  <span class="text-warning">可重试 {{ row.resource_soft_failed ?? 0 }}</span>
+                  <span class="text-color-secondary"> / </span>
+                  <span class="text-danger">致命 {{ row.resource_fatal_failed ?? 0 }}</span>
+                </div>
+              </el-tooltip>
+            </div>
+            <span v-else class="text-xs text-color-secondary">-</span>
           </template>
         </el-table-column>
         <!-- 实时进度：循环体内按轮次展示（用户最关心「第几条/共几条」），否则按步骤 -->

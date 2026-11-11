@@ -57,6 +57,8 @@ const listRef = ref<HTMLElement | null>(null)
 const entryTitle = computed(() =>
   running.value ? '运行消息（运行中）' : '运行消息'
 )
+/** 入口按钮提示：点击开面板、拖动可换位置 */
+const entryTooltip = computed(() => `${entryTitle.value}（点击打开 / 拖动换位置）`)
 
 // ── 跟随最新：只在滚动条贴底时自动滚动，用户上翻看历史时不被拽回底部 ──
 /** 距底部多少像素内视为「贴底」 */
@@ -234,8 +236,11 @@ const MIN_WIDTH = 320
 const MIN_HEIGHT = 220
 /** 与视口边缘/悬浮入口之间保留的间距 */
 const VIEWPORT_MARGIN = 16
-/** 默认摆放：悬浮入口按钮上方（bottom-24 ≈ 6rem 加按钮高度） */
-const DEFAULT_BOTTOM_OFFSET = 160
+/** 与 CSS 里入口按钮默认摆放一致：right-4 / bottom-24 */
+const ENTRY_DEFAULT_RIGHT = 16
+const ENTRY_DEFAULT_BOTTOM = 96
+/** 按钮尚未渲染时用于钳制的兜底尺寸（el-button large circle ≈ 40px） */
+const ENTRY_FALLBACK_SIZE = 40
 
 const panelRef = ref<HTMLElement | null>(null)
 const geometry = ref<DockGeometry | null>(null)
@@ -250,16 +255,18 @@ interface InteractionOrigin extends DockGeometry {
 }
 let origin: InteractionOrigin | null = null
 
-/** 默认几何：贴右下角，位于悬浮入口按钮上方 */
+/** 默认几何：右对齐悬浮入口按钮、摆在按钮上方（按钮被拖走后随之跟随） */
 function defaultGeometry(): DockGeometry {
   const width = Math.min(DEFAULT_WIDTH, window.innerWidth - VIEWPORT_MARGIN * 2)
   const height = Math.min(DEFAULT_HEIGHT, window.innerHeight - VIEWPORT_MARGIN * 2)
-  return {
+  const entry = entryPosition.value ?? defaultEntryPosition()
+  const entrySize = entryRect()
+  return clampGeometry({
     width,
     height,
-    left: Math.max(VIEWPORT_MARGIN, window.innerWidth - width - VIEWPORT_MARGIN),
-    top: Math.max(VIEWPORT_MARGIN, window.innerHeight - height - DEFAULT_BOTTOM_OFFSET),
-  }
+    left: entry.left + entrySize.width - width,
+    top: entry.top - height - VIEWPORT_MARGIN,
+  })
 }
 
 /** 把宽高与位置收进合法区间，拖出视口/窗口缩小后不会找不到面板 */
@@ -370,24 +377,168 @@ function resetGeometry() {
   applyGeometry(geometry.value)
 }
 
-/** 窗口尺寸变化后把面板收回视口内 */
+/** 窗口尺寸变化后把面板与入口按钮都收回视口内 */
 function handleViewportResize() {
+  if (entryPosition.value) {
+    entryPosition.value = clampEntryPosition(entryPosition.value)
+    applyEntryPosition(entryPosition.value)
+    persistEntryPosition(entryPosition.value)
+  }
   if (!geometry.value) return
   geometry.value = clampGeometry(geometry.value)
   applyGeometry(geometry.value)
   persistGeometry(geometry.value)
 }
 
+// ── 悬浮入口按钮：可拖动 / 位置记忆 ──
+// 为什么入口也要能拖：右下角是各家页面自己的按钮重灾区（反馈、回到顶部、工具箱…），
+// 入口固定死会互相遮挡；拖动后位置写入 localStorage，下次进来还在原处。
+interface EntryPosition {
+  left: number
+  top: number
+}
+
+const ENTRY_STORAGE_KEY = 'workflow-run-message-entry-position'
+/** 按下到抬起的位移小于该阈值视为「点击」（打开/收起面板），否则只算拖动 */
+const DRAG_CLICK_THRESHOLD = 4
+
+const entryRef = ref<HTMLElement | null>(null)
+/** null = 尚未定位，沿用 CSS 默认摆放（右下角） */
+const entryPosition = ref<EntryPosition | null>(null)
+const entryPositioned = computed(() => entryPosition.value !== null)
+const entryDragging = ref(false)
+/** 拖动结束后的那一次 click 要吞掉，否则拖完会顺手打开/收起面板 */
+let suppressEntryClick = false
+let entryOrigin: { x: number; y: number; left: number; top: number } | null = null
+
+/** 入口按钮当前尺寸（未渲染时用兜底值，保证钳制不越界） */
+function entryRect(): { width: number; height: number } {
+  const el = entryRef.value
+  if (!el) return { width: ENTRY_FALLBACK_SIZE, height: ENTRY_FALLBACK_SIZE }
+  return { width: el.offsetWidth || ENTRY_FALLBACK_SIZE, height: el.offsetHeight || ENTRY_FALLBACK_SIZE }
+}
+
+/** 默认位置：与 CSS 的 right-4 / bottom-24 一致 */
+function defaultEntryPosition(): EntryPosition {
+  const size = entryRect()
+  return {
+    left: Math.max(VIEWPORT_MARGIN, window.innerWidth - size.width - ENTRY_DEFAULT_RIGHT),
+    top: Math.max(VIEWPORT_MARGIN, window.innerHeight - size.height - ENTRY_DEFAULT_BOTTOM),
+  }
+}
+
+/** 收进视口内，避免拖出屏幕后找不回来 */
+function clampEntryPosition(value: EntryPosition): EntryPosition {
+  const size = entryRect()
+  const maxLeft = Math.max(0, window.innerWidth - size.width - VIEWPORT_MARGIN)
+  const maxTop = Math.max(0, window.innerHeight - size.height - VIEWPORT_MARGIN)
+  return {
+    left: Math.min(Math.max(value.left, VIEWPORT_MARGIN), maxLeft),
+    top: Math.min(Math.max(value.top, VIEWPORT_MARGIN), maxTop),
+  }
+}
+
+function readStoredEntryPosition(): EntryPosition | null {
+  try {
+    const raw = window.localStorage.getItem(ENTRY_STORAGE_KEY)
+    if (!raw) return null
+    const parsed = JSON.parse(raw) as Partial<EntryPosition>
+    const { left, top } = parsed
+    if (typeof left !== 'number' || typeof top !== 'number') return null
+    return { left, top }
+  } catch {
+    return null
+  }
+}
+
+function persistEntryPosition(value: EntryPosition) {
+  try {
+    window.localStorage.setItem(ENTRY_STORAGE_KEY, JSON.stringify(value))
+  } catch {
+    // 隐私模式 / 配额不可用：本次会话内仍可拖动，只是不保留
+  }
+}
+
+/** 位置落到 DOM 上（写 CSS 变量，样式声明集中在 app-tailwind.css） */
+function applyEntryPosition(value: EntryPosition) {
+  const el = entryRef.value
+  if (!el) return
+  el.style.setProperty('--workflow-entry-left', `${value.left}px`)
+  el.style.setProperty('--workflow-entry-top', `${value.top}px`)
+}
+
+/** 入口渲染出来（或首次挂载）时装载位置 */
+async function ensureEntryPosition() {
+  if (!showEntry.value) return
+  await nextTick()
+  const current = entryPosition.value ?? readStoredEntryPosition() ?? defaultEntryPosition()
+  const next = clampEntryPosition(current)
+  entryPosition.value = next
+  applyEntryPosition(next)
+}
+
+function startEntryDrag(event: PointerEvent) {
+  // 只响应主键（鼠标左键 / 触摸），右键菜单等不触发拖动
+  if (event.button !== 0) return
+  const el = entryRef.value
+  if (!el) return
+  const rect = el.getBoundingClientRect()
+  const start = clampEntryPosition({ left: rect.left, top: rect.top })
+  entryPosition.value = start
+  entryOrigin = { x: event.clientX, y: event.clientY, left: start.left, top: start.top }
+  entryDragging.value = true
+  // 新的一次按下从「未拖动」开始：上一次没收到 click 的残留标记不能吞掉这次点击
+  suppressEntryClick = false
+  // 立刻切到绝对定位：否则从「CSS 默认摆放」切到「拖动位置」时按钮会跳一下
+  applyEntryPosition(start)
+  el.setPointerCapture(event.pointerId)
+}
+
+function onEntryPointerMove(event: PointerEvent) {
+  if (!entryDragging.value || !entryOrigin) return
+  const dx = event.clientX - entryOrigin.x
+  const dy = event.clientY - entryOrigin.y
+  if (Math.abs(dx) < DRAG_CLICK_THRESHOLD && Math.abs(dy) < DRAG_CLICK_THRESHOLD) return
+  suppressEntryClick = true
+  const next = clampEntryPosition({ left: entryOrigin.left + dx, top: entryOrigin.top + dy })
+  entryPosition.value = next
+  applyEntryPosition(next)
+}
+
+function endEntryDrag(event: PointerEvent) {
+  if (!entryDragging.value) return
+  entryDragging.value = false
+  entryOrigin = null
+  const el = entryRef.value
+  if (el && el.hasPointerCapture(event.pointerId)) el.releasePointerCapture(event.pointerId)
+  if (entryPosition.value) persistEntryPosition(entryPosition.value)
+}
+
+/** 点击入口：拖动结束时的那一下不当作点击 */
+function onEntryClick() {
+  if (suppressEntryClick) {
+    suppressEntryClick = false
+    return
+  }
+  messageStore.togglePanel()
+}
+
 onMounted(() => {
   window.addEventListener('resize', handleViewportResize)
+  void ensureEntryPosition()
 })
 
 onBeforeUnmount(() => {
   window.removeEventListener('resize', handleViewportResize)
 })
 
+/** 入口从「无消息隐藏」变为可见时装载位置（v-if 渲染前 ref 为空） */
+watch(showEntry, visible => {
+  if (visible) void ensureEntryPosition()
+})
+
 /** 展开时装载几何并滚到底，避免打开后停在顶部 */
-watch(panelOpen, async (open) => {
+watch(panelOpen, async open => {
   if (!open) return
   ensureGeometry()
   await nextTick()
@@ -398,9 +549,19 @@ watch(panelOpen, async (open) => {
 </script>
 
 <template>
-  <!-- 悬浮入口：有消息或运行中才出现；未读数量角标 -->
-  <div v-if="showEntry" class="workflow-run-message-entry fixed bottom-24 right-4 z-[2000]">
-    <el-tooltip :content="entryTitle" placement="left">
+  <!-- 悬浮入口：有消息或运行中才出现；未读数量角标。可拖动（位置记忆），点击打开/收起面板 -->
+  <div
+    v-if="showEntry"
+    ref="entryRef"
+    class="workflow-run-message-entry fixed z-[2000] touch-none cursor-grab active:cursor-grabbing"
+    :class="[entryPositioned ? 'is-positioned' : '', entryDragging ? 'select-none' : '']"
+    @pointerdown="startEntryDrag($event)"
+    @pointermove="onEntryPointerMove($event)"
+    @pointerup="endEntryDrag($event)"
+    @pointercancel="endEntryDrag($event)"
+    @click="onEntryClick()"
+  >
+    <el-tooltip :content="entryTooltip" placement="left">
       <el-badge :value="unread" :hidden="unread === 0" :max="99">
         <el-button
           class="workflow-run-message-entry__button"
@@ -408,7 +569,6 @@ watch(panelOpen, async (open) => {
           circle
           size="large"
           :icon="panelOpen ? Close : ChatDotRound"
-          @click="messageStore.togglePanel()"
         />
       </el-badge>
     </el-tooltip>

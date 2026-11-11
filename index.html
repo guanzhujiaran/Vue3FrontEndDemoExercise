@@ -35,8 +35,8 @@
          initial-scale=1 保证移动端首屏按设备实际宽度渲染（不缩放、不裁切） -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="format-detection" content="telephone=no" />
-    <meta name="author" content="爆破哔哩哔哩弹幕视频网" />
-    <meta name="application-name" content="爆破哔哩哔哩弹幕视频网" />
+    <meta name="author" content="BiliExplosion（非官方第三方数据工具）" />
+    <meta name="application-name" content="BiliExplosion（非官方第三方数据工具）" />
     <!-- 主题色：与站点深浅色主题一致，影响移动端浏览器地址栏着色 -->
     <meta name="theme-color" content="#00AEEC" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#0F172A" media="(prefers-color-scheme: dark)" />
@@ -44,59 +44,12 @@
     <meta name="msvalidate.01" content="92B4FA6867933856FF110F303BAA953F" />
 
     <!--
-      以下带 data-seo-static 的标签是「静态 SEO 兜底」：
-      本应用是纯 SPA，社交平台 / 不执行 JS 的爬虫抓到的只有首屏 HTML，
-      故这里给出首页口径的 OG / Twitter / canonical；应用挂载后由
-      src/composables/useRouteSeo.ts 移除这些静态标签并按当前路由重写，
-      保证同一时刻只存在一份 SEO 标签（否则会出现「页面 A 的标题 + 首页的 OG」这种错配）。
+      SEO 标签（title / description / canonical / OG / Twitter / robots / JSON-LD /
+      llms 链接）全部由 @nuxtjs/seo 在 SSR 预渲染阶段写入 <head>，见 nuxt.config.ts
+      与 src/composables/useRouteSeo.ts：不再在这里放静态兜底，避免两份标签错配。
+      本文件是 Vite / Vike 时代遗留的外壳，Nuxt 4 不再读取；保留基础 meta 与统计脚本
+      作参考，其中 no-referrer 仍是全站跳转的兜底策略。
     -->
-    <title>爆破哔哩哔哩弹幕视频网 - ( ゜- ゜)つロ 乾杯~ - bilibili</title>
-    <link data-seo-static rel="canonical" href="https://serena.dynv6.net/" />
-    <meta
-      data-seo-static
-      name="description"
-      content="B站官方抽奖信息集合：转发抽奖、预约抽奖、充电抽奖、话题抽奖一网打尽，并提供山姆会员商店商品数据查询。"
-    />
-    <meta
-      data-seo-static
-      name="keywords"
-      content="B站抽奖,哔哩哔哩抽奖,转发抽奖,预约抽奖,充电抽奖,话题抽奖,抽奖汇总,中奖名单,山姆会员店,山姆商品查询,bilibili lottery"
-    />
-    <meta data-seo-static name="robots" content="index,follow,max-image-preview:large" />
-    <meta data-seo-static property="og:type" content="website" />
-    <meta data-seo-static property="og:site_name" content="爆破哔哩哔哩弹幕视频网" />
-    <meta data-seo-static property="og:locale" content="zh_CN" />
-    <meta
-      data-seo-static
-      property="og:title"
-      content="爆破哔哩哔哩弹幕视频网 - ( ゜- ゜)つロ 乾杯~ - bilibili"
-    />
-    <meta
-      data-seo-static
-      property="og:description"
-      content="B站官方抽奖信息集合：转发抽奖、预约抽奖、充电抽奖、话题抽奖一网打尽，并提供山姆会员商店商品数据查询。"
-    />
-    <meta data-seo-static property="og:url" content="https://serena.dynv6.net/" />
-    <meta data-seo-static property="og:image" content="https://serena.dynv6.net/og-image.png" />
-    <meta data-seo-static property="og:image:width" content="1200" />
-    <meta data-seo-static property="og:image:height" content="630" />
-    <meta
-      data-seo-static
-      property="og:image:alt"
-      content="爆破哔哩哔哩弹幕视频网 - B站抽奖数据与山姆商品查询"
-    />
-    <meta data-seo-static name="twitter:card" content="summary_large_image" />
-    <meta
-      data-seo-static
-      name="twitter:title"
-      content="爆破哔哩哔哩弹幕视频网 - ( ゜- ゜)つロ 乾杯~ - bilibili"
-    />
-    <meta
-      data-seo-static
-      name="twitter:description"
-      content="B站官方抽奖信息集合：转发抽奖、预约抽奖、充电抽奖、话题抽奖一网打尽，并提供山姆会员商店商品数据查询。"
-    />
-    <meta data-seo-static name="twitter:image" content="https://serena.dynv6.net/og-image.png" />
 
     <!-- 提前建连：统计 / 广告 / 计数脚本的域名，省掉 DNS + TLS 往返（利于 LCP / FCP） -->
     <link rel="preconnect" href="https://www.googletagmanager.com" crossorigin />

@@ -11,6 +11,7 @@ import WorkflowRunLogDialog from '@/components/rpa-browser/WorkflowRunLogDialog.
 import WorkflowCard from '@/components/rpa-browser/WorkflowCard.vue'
 import type { WorkflowMoreCommand } from '@/components/rpa-browser/WorkflowCard.vue'
 import ShareJsonDialog from '@/components/rpa-browser/ShareJsonDialog.vue'
+import ImportJsonDialog from '@/components/rpa-browser/ImportJsonDialog.vue'
 import {
   subscribeWorkflowRunProgress,
   resumeWorkflowRun,
@@ -26,7 +27,8 @@ import { useUserNavStore } from '@/stores/user_nav'
 import { businessHandler } from '@/utils/businessHandler'
 import { pickBackendMsg } from '@/utils/backendErrorMsg'
 import biliMessage from '@/utils/message'
-import { pickJsonFile, errMsg } from '@/utils/rpa/jsonImport'
+import { errMsg } from '@/utils/rpa/jsonImport'
+import { runResultText } from '@/utils/rpa/runDisplay'
 import { RouteName } from '@/models/router/index.ts'
 import type { WorkflowItem } from '@/models/rpa_browser'
 
@@ -129,18 +131,15 @@ const handlePageChange = (page: number) => {
   loadWorkflows(page)
 }
 
-/** 导入他人分享的 JSON 文件并保存为一个新工作流（后端生成新的 workflow_id） */
-const importing = ref(false)
-const handleImportJson = async () => {
-  let data: Record<string, unknown> | null
-  try {
-    data = await pickJsonFile()
-  } catch (e) {
-    ElMessage.error(`导入失败：${errMsg(e)}`)
-    return
-  }
-  if (!data) return // 用户取消
+/** 打开「导入分享」弹窗：粘贴 JSON 或从文件读取，统一在弹窗里完成 */
+const importVisible = ref(false)
+const openImportDialog = () => {
+  importVisible.value = true
+}
 
+/** 导入他人分享的 JSON 并保存为一个新工作流（后端生成新的 workflow_id） */
+const importing = ref(false)
+const handleImportSubmit = async (data: Record<string, unknown>) => {
   importing.value = true
   try {
     const res = await client.post({
@@ -152,6 +151,7 @@ const handleImportJson = async () => {
     }) as { code?: number; msg?: string; data?: { workflow_id?: string; name?: string } | null }
     if (res?.code === 0) {
       ElMessage.success(`导入成功${res.data?.name ? `：${res.data.name}` : ''}`)
+      importVisible.value = false
       await loadWorkflows()
     } else {
       ElMessage.error(res?.msg || '导入失败')
@@ -503,15 +503,25 @@ function closeAllCardSubscriptions() {
   cardSubscriptions.clear()
 }
 
-/** 运行结束提示：成功/失败/中断/停止分别给出结论与可恢复提示 */
+/**
+ * 运行结束提示：不再给「运行成功 / 运行失败」结论，只报可数成果
+ * （有资源 = 成功循环 N 轮；无资源 = 成功 N 步），中断 / 停止仍提示状态。
+ */
 function notifyRunFinished(item: WorkflowItem, progress: WorkflowRunProgress) {
-  const summary = `成功 ${progress.success_count} / 失败 ${progress.failed_count} / 共 ${progress.total_steps} 步`
+  const summary = runResultText({
+    status: progress.status,
+    success_count: progress.success_count,
+    total_steps: progress.total_steps,
+    resource_total: progress.resource_total,
+    resource_success: progress.resource_success,
+  })
   if (progress.status === 'success') {
-    ElMessage.success(`「${item.name}」运行成功（${summary}）`)
+    ElMessage.success(`「${item.name}」运行结束：${summary}`)
   } else if (progress.status === 'failed') {
-    ElMessage.warning(`「${item.name}」运行失败：${progress.error_message || '未知错误'}`)
+    const reason = progress.error_message ? `；${progress.error_message}` : ''
+    ElMessage.warning(`「${item.name}」运行结束：${summary}${reason}`)
   } else if (progress.status === 'interrupted') {
-    ElMessage.warning(`「${item.name}」运行被中断，可在运行记录中继续运行`)
+    ElMessage.warning(`「${item.name}」运行被中断（${summary}），可在运行记录中继续运行`)
   } else if (progress.status === 'cancelled') {
     ElMessage.info(`「${item.name}」已停止（${summary}）`)
   }
@@ -780,7 +790,7 @@ onBeforeUnmount(closeAllCardSubscriptions)
     <BiliPageHeader title="工作流管理" hide-title description="创建、配置和管理工作流" tagText="工作流">
       <template #extra>
         <div class="workflow-toolbar-extra flex items-center gap-2">
-          <el-button class="workflow-toolbar__import" :icon="Upload" :loading="importing" @click="handleImportJson">导入分享</el-button>
+          <el-button class="workflow-toolbar__import" :icon="Upload" @click="openImportDialog">导入分享</el-button>
           <el-button :icon="SetUp" @click="goApprovalCenter">审批中心</el-button>
           <el-button :icon="Refresh" @click="handleRefresh">刷新</el-button>
           <el-button :icon="Plus" type="primary" @click="handleCreate">新建工作流</el-button>
@@ -889,6 +899,14 @@ onBeforeUnmount(closeAllCardSubscriptions)
       :name="shareName"
       :payload="sharePayload"
       :loading="shareLoading"
+    />
+
+    <!-- 导入分享：粘贴 JSON 或选择 .json 文件后创建一份工作流副本 -->
+    <ImportJsonDialog
+      v-model="importVisible"
+      kind="workflow"
+      :importing="importing"
+      @submit="handleImportSubmit"
     />
 
   </FlexContainer>

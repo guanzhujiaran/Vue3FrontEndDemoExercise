@@ -14,10 +14,11 @@ import ActionIcon from '@/components/rpa-browser/ActionIcon.vue'
 import { DEFAULT_ACTION_ICON } from '@/utils/rpa/actionTypeIcon'
 import { businessHandler } from '@/utils/businessHandler'
 import { pickBackendMsg } from '@/utils/backendErrorMsg'
-import { pickJsonFile, errMsg } from '@/utils/rpa/jsonImport'
+import { errMsg } from '@/utils/rpa/jsonImport'
 import ResourceInteractionBar from '@/components/interaction/ResourceInteractionBar.vue'
 import ActionDetailDialog from '@/components/rpa-browser/ActionDetailDialog.vue'
 import ShareJsonDialog from '@/components/rpa-browser/ShareJsonDialog.vue'
+import ImportJsonDialog from '@/components/rpa-browser/ImportJsonDialog.vue'
 import IconRefresh from '@/assets/svgs/space/refresh.svg?component'
 import IconTag from '@/assets/svgs/space/tag.svg?component'
 import IconMore from '@/assets/svgs/space/more.svg?component'
@@ -141,18 +142,15 @@ const handleSearch = useDebounceFn(() => {
   loadActions()
 }, 400)
 
-/** 导入他人分享的 JSON 文件并保存为一个新动作（后端生成新的 action_id） */
-const importing = ref(false)
-const handleImportJson = async () => {
-  let data: Record<string, unknown> | null
-  try {
-    data = await pickJsonFile()
-  } catch (e) {
-    ElMessage.error(`导入失败：${errMsg(e)}`)
-    return
-  }
-  if (!data) return // 用户取消
+/** 打开「导入分享」弹窗：粘贴 JSON 或从文件读取，统一在弹窗里完成 */
+const importVisible = ref(false)
+const openImportDialog = () => {
+  importVisible.value = true
+}
 
+/** 导入他人分享的 JSON 并保存为一个新动作（后端生成新的 action_id） */
+const importing = ref(false)
+const handleImportSubmit = async (data: Record<string, unknown>) => {
   importing.value = true
   try {
     const res = await client.post({
@@ -164,6 +162,7 @@ const handleImportJson = async () => {
     }) as { code?: number; msg?: string; data?: { action_id?: string; name?: string } | null }
     if (res?.code === 0) {
       ElMessage.success(`导入成功${res.data?.name ? `：${res.data.name}` : ''}`)
+      importVisible.value = false
       await loadActions()
       loadTags()
     } else {
@@ -511,7 +510,7 @@ onMounted(() => {
   <FlexContainer>
     <BiliPageHeader title="动作管理" hide-title description="管理你的自定义动作" tag-text="私有动作">
       <template #extra>
-        <el-button class="action-toolbar__import" :icon="Upload" :loading="importing" @click="handleImportJson">导入分享</el-button>
+        <el-button class="action-toolbar__import" :icon="Upload" @click="openImportDialog">导入分享</el-button>
         <el-button :icon="SetUp" @click="goApprovalCenter">审批中心</el-button>
         <el-button :icon="Refresh" @click="handleRefresh">刷新</el-button>
       </template>
@@ -718,6 +717,14 @@ onMounted(() => {
       :name="shareName"
       :payload="sharePayload"
       :loading="shareLoading"
+    />
+
+    <!-- 导入分享：粘贴 JSON 或选择 .json 文件后创建一份动作副本 -->
+    <ImportJsonDialog
+      v-model="importVisible"
+      kind="action"
+      :importing="importing"
+      @submit="handleImportSubmit"
     />
 
     <!-- 标签编辑对话框 -->

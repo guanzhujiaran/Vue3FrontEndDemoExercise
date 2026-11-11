@@ -1,7 +1,0 @@
-User-agent: *
-Allow: /
-
-Disallow: /app/casdoor-callback
-Disallow: /test
-
-Sitemap: https://serena.dynv6.net/sitemap.xml

@@ -43,6 +43,8 @@ const filteredModules = computed(() => {
   }
   return modules
 })
+const goToDisclaimer = () => router.push('/app/disclaimer')
+
 // 未登录时隐藏需要登录的子项入口；没有可跳转路径的项不渲染成链接
 const visibleChildren = (children: any[]) => {
   const list = isLoggedIn.value ? children : children.filter((child: any) => !child.requiresLogin)
@@ -109,7 +111,8 @@ const handleLogoutClick = () => {
       <div class="relative z-10 mx-auto max-w-3xl">
         <el-text class="mb-3 block text-5xl font-bold tracking-tight drop-shadow-lg md:text-6xl"
           tag="h1">BiliExplosion</el-text>
-        <el-text class="mb-8 block text-shadow-text-primary text-lg opacity-90 md:text-xl" tag="p">{{ t('home.slogan') }}</el-text>
+        <el-text class="mb-8 block text-shadow-text-primary text-lg opacity-90 md:text-xl" tag="p">{{ t('home.slogan')
+        }}</el-text>
         <div class="flex flex-wrap justify-center gap-3">
           <el-button type="primary" size="large" @click="handleLoginClick" v-if="!isLoggedIn" class="shadow-lg!">
             <el-icon class="el-icon--left">
@@ -131,6 +134,9 @@ const handleLogoutClick = () => {
             {{ t('home.submitFeedback') }}
           </el-button>
         </div>
+        <el-text class="home-hero__identity mt-6 block text-sm leading-relaxed text-shadow-text-primary" tag="p">
+          {{ t('home.identityNotice') }}
+        </el-text>
       </div>
     </section>
 
@@ -158,141 +164,169 @@ const handleLogoutClick = () => {
 
     <!-- 功能导航区 -->
     <section class="mx-5 py-10 lg:mx-10 sm:px-0 sm:mx-0">
-    <div class="mb-6 flex flex-wrap items-center justify-between gap-4">
-      <div>
-        <el-text class="m-0 block text-2xl font-semibold tracking-tight" tag="h2">{{ t('home.navTitle') }}</el-text>
-        <el-text class="mt-1 block text-sm" tag="p">{{ t('home.navDesc') }}</el-text>
-      </div>
-      <div>
-        <el-radio-group v-model="activeTab" size="large">
-          <el-radio-button value="all">{{ t('home.tabAll') }}</el-radio-button>
-          <el-radio-button value="lottery">{{ t('home.tabLottery') }}</el-radio-button>
-          <el-radio-button v-if="isLoggedIn" value="user-center">{{ t('home.tabUserCenter') }}</el-radio-button>
-          <el-radio-button v-if="isLoggedIn" value="rpa-browser">RPA浏览器</el-radio-button>
-          <el-radio-button value="shopping">{{ t('home.tabShopping') }}</el-radio-button>
-        </el-radio-group>
-      </div>
-    </div>
-
-    <!-- 模块列表：两列布局，卡片之间有间距 -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <!-- 每个模块作为独立卡片 -->
-      <div v-for="(module, index) in filteredModules" :key="index"
-        class="flex flex-col overflow-hidden rounded-xl border border-border shadow-sm hover:shadow-md transition-all duration-200">
-        <!-- 模块头部 -->
-        <div class="flex items-center gap-3 px-5 py-4 text-white" :style="{ background: module.color }">
-          <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/20 backdrop-blur-sm">
-            <el-icon :size="20" class="text-white">
-              <component :is="module.icon || CoffeeCup" />
-            </el-icon>
-          </div>
-          <el-text class="m-0 text-base font-semibold drop-shadow-sm" tag="h3">{{ module.title }}</el-text>
+      <div class="mb-6 flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <el-text class="m-0 block text-2xl font-semibold tracking-tight" tag="h2">{{ t('home.navTitle') }}</el-text>
+          <el-text class="mt-1 block text-sm" tag="p">{{ t('home.navDesc') }}</el-text>
         </div>
-        <!-- 模块内容 -->
-        <div class="flex min-h-3xl flex-1 flex-col p-5 bg-bg hover:bg-fill-light/90">
-          <p class="mb-4 text-sm leading-6 text-text-regular">
-            {{ module.description }}
-          </p>
-          <!-- 如果有子项，显示子项列表 -->
-          <div v-if="module.children && module.children.length"
-            class="flex flex-col divide-y divide-border overflow-hidden rounded-lg border border-border">
-            <!-- 子项入口渲染为带真实 href 的 <a>，爬虫可据此发现站内页面 -->
-            <router-link v-for="(child, childIndex) in visibleChildren(module.children)" :key="childIndex"
-              :to="child.path"
-              class="home-nav__item group flex cursor-pointer items-center p-3 no-underline transition-all duration-150 hover:bg-fill-light">
-              <div class="mr-3 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-white"
-                :style="{ background: child.color }">
-                <el-icon :size="15">
-                  <component :is="child.icon || CoffeeCup" />
-                </el-icon>
-              </div>
-              <div class="min-w-0 flex-1">
-                <el-text class="m-0 mb-0.5 block text-sm font-semibold" tag="h4">{{ child.title }}</el-text>
-                <el-text class="m-0 block truncate text-xs text-text-secondary" tag="p">
-                  {{ child.description }}
-                </el-text>
-              </div>
-              <el-icon
-                class="shrink-0 text-text-secondary transition-transform duration-150 group-hover:translate-x-0.5">
-                <el-icon-arrow-right />
-              </el-icon>
-            </router-link>
-          </div>
-
-          <!-- 如果没有子项，显示直接访问按钮（同样是 <a>，保留 href 供爬虫抓取） -->
-          <div v-else class="flex justify-center">
-            <router-link v-if="module.path" v-slot="{ href, navigate }" custom :to="module.path">
-              <el-button tag="a" type="default" :plain="true" :href="href" class="home-nav__visit"
-                @click="onSpaLinkClick($event, navigate)">
-                {{ t('home.visitNow') }}
-              </el-button>
-            </router-link>
-          </div>
+        <div>
+          <el-radio-group v-model="activeTab" size="large">
+            <el-radio-button value="all">{{ t('home.tabAll') }}</el-radio-button>
+            <el-radio-button value="lottery">{{ t('home.tabLottery') }}</el-radio-button>
+            <el-radio-button v-if="isLoggedIn" value="user-center">{{ t('home.tabUserCenter') }}</el-radio-button>
+            <el-radio-button v-if="isLoggedIn" value="rpa-browser">RPA浏览器</el-radio-button>
+            <el-radio-button value="shopping">{{ t('home.tabShopping') }}</el-radio-button>
+          </el-radio-group>
         </div>
       </div>
-    </div>
-  </section>
 
-  <!-- 页脚 -->
-  <footer class="mt-16 border-t border-border-lighter bg-fill-light/50">
-    <div class="mx-auto max-w-6xl px-5 py-8">
-      <div class="grid grid-cols-2 gap-6 sm:gap-8 lg:grid-cols-12">
-        <!-- 关于我：品牌信息区，窄屏占满两列 -->
-        <div class="col-span-2 lg:col-span-5">
-          <div class="mb-3 flex items-center gap-2">
-            <div class="flex h-8 w-8 items-center justify-center rounded-lg text-white"
-              style="background: var(--color-gradient-hero-primary)">
-              <el-icon :size="18">
-                <CoffeeCup />
+      <!-- 模块列表：两列布局，卡片之间有间距 -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- 每个模块作为独立卡片 -->
+        <div v-for="(module, index) in filteredModules" :key="index"
+          class="flex flex-col overflow-hidden rounded-xl border border-border shadow-sm hover:shadow-md transition-all duration-200">
+          <!-- 模块头部 -->
+          <div class="flex items-center gap-3 px-5 py-4 text-white" :style="{ background: module.color }">
+            <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/20 backdrop-blur-sm">
+              <el-icon :size="20" class="text-white">
+                <component :is="module.icon || CoffeeCup" />
               </el-icon>
             </div>
-            <el-text class="m-0 block text-lg font-bold tracking-tight" tag="h3">BiliExplosion</el-text>
+            <el-text class="m-0 text-base font-semibold drop-shadow-sm" tag="h3">{{ module.title }}</el-text>
           </div>
-          <el-text class="block text-sm leading-7 text-text-regular">
-            {{ t('home.aboutDesc') }}
-          </el-text>
-        </div>
-        <!-- 快速链接 -->
-        <div class="lg:col-span-3">
-          <el-text class="mb-4 block text-base font-semibold" tag="h3">{{ t('home.quickLinks') }}</el-text>
-          <ul class="m-0 flex list-none flex-wrap gap-x-6 gap-y-2 p-0">
-            <li>
-              <el-link class="home-footer__link text-sm! text-text-regular! no-underline transition-colors hover:text-primary!"
-                href="/app/user-center" @click="onSpaLinkClick($event, () => goTo('/app/user-center'))">
-                {{ t('home.linkBrowserMgmt') }}
-              </el-link>
-            </li>
-            <li>
-              <el-link class="home-footer__link text-sm! text-text-regular! no-underline transition-colors hover:text-primary!"
-                href="/app/lot-data/bili-data/official" @click="onSpaLinkClick($event, () => goTo('/app/lot-data/bili-data/official'))">
-                {{ t('home.linkLottery') }}
-              </el-link>
-            </li>
-          </ul>
-        </div>
-        <!-- 联系我 -->
-        <div class="lg:col-span-4">
-          <el-text class="mb-4 block text-base font-semibold" tag="h3">{{ t('home.contactMe') }}</el-text>
-          <div class="flex items-center gap-2 text-sm text-text-regular">
-            <el-icon :size="15" class="shrink-0 text-text-secondary">
-              <Message />
-            </el-icon>
-            <span class="break-all">guanzhujiaran2022@163.com</span>
-          </div>
-          <el-text class="mt-3 block text-sm leading-6 text-text-secondary" tag="p">
-            {{ t('home.contactNote') }}
-          </el-text>
-        </div>
-      </div>
-      <div
-        class="mt-10 flex flex-col items-center justify-between gap-3 border-t border-border-lighter pt-6 sm:flex-row">
-        <el-text class="text-xs text-text-secondary" tag="p">&copy; 2025 BiliExplosion. All rights reserved.</el-text>
-        <el-text class="text-xs text-text-secondary" tag="p">Made with ❤ by 斯卡蒂天下第一T_T</el-text>
-      </div>
-    </div>
-  </footer>
+          <!-- 模块内容 -->
+          <div class="flex min-h-3xl flex-1 flex-col p-5 bg-bg hover:bg-fill-light/90">
+            <p class="mb-4 text-sm leading-6 text-text-regular">
+              {{ module.description }}
+            </p>
+            <!-- 如果有子项，显示子项列表 -->
+            <div v-if="module.children && module.children.length"
+              class="flex flex-col divide-y divide-border overflow-hidden rounded-lg border border-border">
+              <!-- 子项入口渲染为带真实 href 的 <a>，爬虫可据此发现站内页面 -->
+              <router-link v-for="(child, childIndex) in visibleChildren(module.children)" :key="childIndex"
+                :to="child.path"
+                class="home-nav__item group flex cursor-pointer items-center p-3 no-underline transition-all duration-150 hover:bg-fill-light">
+                <div class="mr-3 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-white"
+                  :style="{ background: child.color }">
+                  <el-icon :size="15">
+                    <component :is="child.icon || CoffeeCup" />
+                  </el-icon>
+                </div>
+                <div class="min-w-0 flex-1">
+                  <el-text class="m-0 mb-0.5 block text-sm font-semibold" tag="h4">{{ child.title }}</el-text>
+                  <el-text class="m-0 block truncate text-xs text-text-secondary" tag="p">
+                    {{ child.description }}
+                  </el-text>
+                </div>
+                <el-icon
+                  class="shrink-0 text-text-secondary transition-transform duration-150 group-hover:translate-x-0.5">
+                  <el-icon-arrow-right />
+                </el-icon>
+              </router-link>
+            </div>
 
-  <!-- 首页"提交反馈"弹窗，由顶部按钮触发，不渲染内置按钮 -->
-  <SubmitFeedbackModal ref="feedbackModalRef" :show-trigger="false" source="首页" />
+            <!-- 如果没有子项，显示直接访问按钮（同样是 <a>，保留 href 供爬虫抓取） -->
+            <div v-else class="flex justify-center">
+              <router-link v-if="module.path" v-slot="{ href, navigate }" custom :to="module.path">
+                <el-button tag="a" type="default" :plain="true" :href="href" class="home-nav__visit"
+                  @click="onSpaLinkClick($event, navigate)">
+                  {{ t('home.visitNow') }}
+                </el-button>
+              </router-link>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 页脚 -->
+    <footer class="mt-16 border-t border-border-lighter bg-fill-light/50">
+      <div class="mx-auto max-w-6xl px-5 py-8">
+        <div class="grid grid-cols-2 gap-6 sm:gap-8 lg:grid-cols-12">
+          <!-- 关于我：品牌信息区，窄屏占满两列 -->
+          <div class="col-span-2 lg:col-span-5">
+            <div class="mb-3 flex items-center gap-2">
+              <div class="flex h-8 w-8 items-center justify-center rounded-lg text-white"
+                style="background: var(--color-gradient-hero-primary)">
+                <el-icon :size="18">
+                  <CoffeeCup />
+                </el-icon>
+              </div>
+              <el-text class="m-0 block text-lg font-bold tracking-tight" tag="h3">BiliExplosion</el-text>
+            </div>
+            <el-text class="block text-sm leading-7 text-text-regular">
+              {{ t('home.aboutDesc') }}
+            </el-text>
+          </div>
+          <!-- 快速链接 -->
+          <div class="lg:col-span-3">
+            <el-text class="mb-4 block text-base font-semibold" tag="h3">{{ t('home.quickLinks') }}</el-text>
+            <ul class="m-0 flex list-none flex-wrap gap-x-6 gap-y-2 p-0">
+              <li>
+                <el-link
+                  class="home-footer__link text-sm! text-text-regular! no-underline transition-colors hover:text-primary!"
+                  href="/app/user-center" @click="onSpaLinkClick($event, () => goTo('/app/user-center'))">
+                  {{ t('home.linkBrowserMgmt') }}
+                </el-link>
+              </li>
+              <li>
+                <el-link
+                  class="home-footer__link text-sm! text-text-regular! no-underline transition-colors hover:text-primary!"
+                  href="/app/lot-data/bili-data/official"
+                  @click="onSpaLinkClick($event, () => goTo('/app/lot-data/bili-data/official'))">
+                  {{ t('home.linkLottery') }}
+                </el-link>
+              </li>
+              <li>
+                <el-link
+                  class="home-footer__link text-sm! text-text-regular! no-underline transition-colors hover:text-primary!"
+                  href="/app/disclaimer" @click="onSpaLinkClick($event, () => goTo('/app/disclaimer'))">
+                  {{ t('home.linkDisclaimer') }}
+                </el-link>
+              </li>
+              <li>
+                <el-link
+                  class="home-footer__link text-sm! text-text-regular! no-underline transition-colors hover:text-primary!"
+                  href="/app/privacy-policy" @click="onSpaLinkClick($event, () => goTo('/app/privacy-policy'))">
+                  {{ t('home.linkPrivacy') }}
+                </el-link>
+              </li>
+            </ul>
+          </div>
+          <!-- 联系我 -->
+          <div class="lg:col-span-4">
+            <el-text class="mb-4 block text-base font-semibold" tag="h3">{{ t('home.contactMe') }}</el-text>
+            <div class="flex items-center gap-2 text-sm text-text-regular">
+              <el-icon :size="15" class="shrink-0 text-text-secondary">
+                <Message />
+              </el-icon>
+              <span class="break-all">guanzhujiaran2022@163.com</span>
+            </div>
+            <el-text class="mt-3 block text-sm leading-6 text-text-secondary" tag="p">
+              {{ t('home.contactNote') }}
+            </el-text>
+          </div>
+        </div>
+        <div
+          class="mt-10 flex flex-col items-center justify-between gap-3 border-t border-border-lighter pt-6 sm:flex-row">
+          <el-text class="text-xs text-text-secondary" tag="p">&copy; 2025 BiliExplosion. All rights reserved.</el-text>
+          <el-text class="text-xs text-text-secondary" tag="p">Made with ❤ by 斯卡蒂天下第一T_T</el-text>
+        </div>
+      </div>
+      <!-- 全站身份声明：页面含 B 站（第一方）品牌时，Google「第三方服务规范」要求 -->
+      <div
+        class="site-identity-notice flex flex-wrap items-center justify-center gap-x-2 gap-y-1 border-b border-warning-light-8 bg-warning-light-9 px-3 py-1.5 text-center">
+        <el-text class="site-identity-notice__text text-xs leading-relaxed text-text-regular" tag="span">
+          BiliExplosion 是独立运营的非官方第三方数据工具，与哔哩哔哩（bilibili）无隶属或授权关系；本站账号登录不是 B 站登录，本站不索取 B 站账号、密码或 Cookie。
+        </el-text>
+        <el-link class="site-identity-notice__link text-xs! no-underline hover:underline" href="/app/disclaimer"
+          @click="onSpaLinkClick($event, goToDisclaimer)">
+          了解详情
+        </el-link>
+      </div>
+    </footer>
+
+    <!-- 首页"提交反馈"弹窗，由顶部按钮触发，不渲染内置按钮 -->
+    <SubmitFeedbackModal ref="feedbackModalRef" :show-trigger="false" source="首页" />
   </div>
 </template>

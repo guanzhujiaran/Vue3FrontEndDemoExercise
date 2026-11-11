@@ -107,8 +107,7 @@ usePageSeo(() => {
   return {
     title: `${displayType}：${title}`,
     description: `${displayType}「${title}」的开奖时间、奖品与参与条件，一键跳转原动态查看与参与。`,
-    jsonLd: {
-      '@context': 'https://schema.org',
+    schemaOrg: {
       '@type': 'SocialMediaPosting',
       headline: `${displayType}：${title}`,
       articleSection: displayType,

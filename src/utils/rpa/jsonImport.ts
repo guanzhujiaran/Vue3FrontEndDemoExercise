@@ -4,9 +4,14 @@ import { genItemId, defaultLoopConfig } from '@/components/rpa-browser/debugbox-
 /**
  * RPA 动作 / 工作流 JSON 相关工具。
  *
- * - `pickJsonFile`：选一个 .json 文件并解析为普通对象（导入时原样 POST 给后端）。
+ * - `pickJsonFileText`：弹窗选择一个 .json 文件，返回**原始文本**（导入弹窗回填到可粘贴的编辑框）。
+ * - `parseShareJsonText`：把粘贴 / 文件文本解析为可直接 POST 给导入接口的对象（含形状校验）。
+ * - `pickJsonFile`：`pickJsonFileText` + 解析的组合用法，一次拿到解析结果。
  * - `stepsToDroppedItems`：后端 steps → 前端可编辑 DroppedItem[]（编辑动作时回填）。
  */
+
+/** 分享对象类型：动作 / 工作流的导入请求体结构不同，校验规则也不同 */
+export type ShareJsonKind = 'action' | 'workflow'
 
 /** 错误信息转字符串 */
 export function errMsg(e: unknown): string {
@@ -14,11 +19,11 @@ export function errMsg(e: unknown): string {
 }
 
 /**
- * 弹窗选择一个 .json 文件并解析为普通对象。
+ * 弹窗选择一个 .json 文件，返回原始文本与文件名。
  * - 用户取消选择时 resolve(null)
- * - 读取 / 解析失败或顶层不是对象时 reject（错误信息可直接提示给用户）
+ * - 读取失败时 reject（错误信息可直接提示给用户）
  */
-export function pickJsonFile(): Promise<Record<string, unknown> | null> {
+export function pickJsonFileText(): Promise<{ text: string; name: string } | null> {
   return new Promise((resolve, reject) => {
     const input = document.createElement('input')
     input.type = 'file'
@@ -34,30 +39,61 @@ export function pickJsonFile(): Promise<Record<string, unknown> | null> {
       const file = input.files?.[0]
       input.remove()
       if (!file) { resolve(null); return }
-      let text: string
       try {
-        text = await file.text()
+        const text = await file.text()
+        resolve({ text, name: file.name })
       } catch (e) {
         reject(new Error(`读取文件失败：${errMsg(e)}`))
-        return
       }
-      let parsed: unknown
-      try {
-        parsed = JSON.parse(text)
-      } catch (e) {
-        reject(new Error(`JSON 解析失败：${errMsg(e)}`))
-        return
-      }
-      if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
-        reject(new Error('文件内容必须是 JSON 对象'))
-        return
-      }
-      resolve(parsed as Record<string, unknown>)
     }
 
     document.body.appendChild(input)
     input.click()
   })
+}
+
+/** JSON 文本 → 顶层必须是对象；失败时抛错（错误信息可直接提示用户） */
+function parseJsonObject(text: string): Record<string, unknown> {
+  let parsed: unknown
+  try {
+    parsed = JSON.parse(text)
+  } catch (e) {
+    throw new Error(`JSON 解析失败：${errMsg(e)}`)
+  }
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+    throw new Error('分享内容必须是 JSON 对象')
+  }
+  return parsed as Record<string, unknown>
+}
+
+/**
+ * 解析分享 JSON 文本（用户粘贴 / 文件内容）。
+ * - 顶层必须是对象；
+ * - 动作分享必须带非空 `steps`，工作流分享必须带 `name`（与后端导入接口必填项一致，提前拦截给出友好提示）；
+ * - 失败时抛错，错误信息可直接展示给用户。
+ */
+export function parseShareJsonText(text: string, kind: ShareJsonKind): Record<string, unknown> {
+  if (!text.trim()) throw new Error('请先粘贴分享 JSON 或选择 .json 文件')
+  const payload = parseJsonObject(text)
+  if (kind === 'action') {
+    if (!Array.isArray(payload.steps) || payload.steps.length === 0) {
+      throw new Error('缺少 steps 步骤列表，这不是一份动作分享 JSON')
+    }
+  } else if (typeof payload.name !== 'string' || !payload.name.trim()) {
+    throw new Error('缺少 name 名称字段，这不是一份工作流分享 JSON')
+  }
+  return payload
+}
+
+/**
+ * 选文件并解析为普通对象（导入时原样 POST 给后端）。
+ * - 用户取消选择时 resolve(null)
+ * - 读取 / 解析失败时 reject（错误信息可直接提示给用户）
+ */
+export async function pickJsonFile(kind?: ShareJsonKind): Promise<Record<string, unknown> | null> {
+  const picked = await pickJsonFileText()
+  if (!picked) return null
+  return kind ? parseShareJsonText(picked.text, kind) : parseJsonObject(picked.text)
 }
 
 function toNumber(v: unknown): number {

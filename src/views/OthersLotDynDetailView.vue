@@ -95,8 +95,7 @@ usePageSeo(() => {
     description: content
       ? `${author}的抽奖动态：${content.slice(0, 110)}`
       : `${author} 在B站发布的第三方抽奖动态，查看开奖信息、参与条件与评论区。`,
-    jsonLd: {
-      '@context': 'https://schema.org',
+    schemaOrg: {
       '@type': 'SocialMediaPosting',
       headline: `${author}的第三方抽奖动态`,
       articleSection: '抽奖动态',

@@ -7,6 +7,7 @@ import { 工作流管理Service, 浏览器指纹管理Service } from '@/api/brow
 import { useUserNavStore } from '@/stores/user_nav'
 import { businessHandler } from '@/utils/businessHandler'
 import type { UserBrowserInfo } from '@/models/rpa_browser'
+import { runStatusTagType, runStatusText } from '@/utils/rpa/runDisplay'
 import { RouteName } from '@/models/router/index.ts'
 
 /**
@@ -56,6 +57,14 @@ interface WorkflowItem {
   is_enabled: boolean
   last_run_status: string | null
   last_run_at: string | null
+  /** 上次运行成功步骤数（无资源记录时展示「成功 N 步」） */
+  last_run_success_count?: number
+  /** 上次运行步骤总数（用于区分「历史无快照」与「0 步」） */
+  last_run_total?: number
+  /** 上次运行处理的资源总数（>0 = 批量循环口径） */
+  last_run_resource_total?: number
+  /** 上次运行资源成功数（= 成功循环轮次） */
+  last_run_resource_success?: number
 }
 
 const workflows = ref<WorkflowItem[]>([])
@@ -123,18 +132,15 @@ const cronOf = (wf: WorkflowItem) => {
 const triggerText = (wf: WorkflowItem) =>
   wf.trigger_type === 'cron' ? `定时（${cronOf(wf) || '未配置'}）` : '手动'
 
-const runStatusLabel: Record<string, string> = {
-  success: '成功',
-  failed: '失败',
-  running: '运行中',
-  interrupted: '已中断',
-}
-const runStatusType: Record<string, 'success' | 'danger' | 'warning' | 'info'> = {
-  success: 'success',
-  failed: 'danger',
-  running: 'warning',
-  interrupted: 'info',
-}
+/** 上次运行：不给成败结论，只给可数结果（成功循环 N 轮 / 成功 N 步） */
+const lastRunText = (wf: WorkflowItem) =>
+  runStatusText({
+    status: wf.last_run_status,
+    success_count: wf.last_run_success_count,
+    total_steps: wf.last_run_total,
+    resource_total: wf.last_run_resource_total,
+    resource_success: wf.last_run_resource_success,
+  })
 
 const browserIdText = computed(
   () => browserInfo.value?.browser_id_str || browserInfo.value?.browser_id || browserId.value
@@ -194,8 +200,8 @@ const browserIdText = computed(
               <el-tag :type="wf.trigger_type === 'cron' ? 'warning' : 'info'" effect="plain">
                 {{ triggerText(wf) }}
               </el-tag>
-              <el-tag v-if="wf.last_run_status" :type="runStatusType[wf.last_run_status] || 'info'" effect="plain">
-                {{ runStatusLabel[wf.last_run_status] || wf.last_run_status }}
+              <el-tag v-if="wf.last_run_status" :type="runStatusTagType(wf.last_run_status)" effect="plain">
+                {{ lastRunText(wf) }}
               </el-tag>
               <el-tag :type="wf.is_enabled ? 'success' : 'info'" effect="plain">
                 {{ wf.is_enabled ? '已启用' : '已禁用' }}

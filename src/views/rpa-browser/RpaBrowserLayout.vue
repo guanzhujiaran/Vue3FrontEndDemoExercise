@@ -40,17 +40,6 @@
         <component :is="Component" />
       </transition>
     </router-view>
-
-    <!-- 全局反馈入口：前端跑不通时随时一键反馈，自动带上当前页面 URL 与浏览器 id。
-         Stream 控制台等 hideSideNav 页面看不到侧边导航，就是这个按钮兜底。 -->
-    <el-button
-      v-if="isLoggedIn && !isFeedbackRoute"
-      type="primary" round
-      class="rpa-feedback-entry fixed bottom-6 right-6 z-50 shadow-lg"
-      @click="goFeedback"
-    >
-      反馈问题
-    </el-button>
   </div>
 </template>
 
@@ -69,7 +58,6 @@ import {
   Connection,
   ChatDotRound
 } from '@element-plus/icons-vue'
-import { ElButton } from 'element-plus'
 import { useInject, KeysEnum } from '@/models/base/provide_model.ts'
 import type { UserNavModel } from '@/models/user/user_model.ts'
 import BiliErrorRouteTo from '@/components/CommonCompo/Bili-Feedback-Compo/BiliErrorRouteTo.vue'
@@ -113,26 +101,8 @@ watch(
 
 // 侧边导航分组（与消息中心 / 管理后台同款交互）：item.name 对应子路由 RouteName。
 // Stream（浏览器控制台）与创建/编辑指纹由列表页进入，不出现在导航中。
-
-/**
- * 全局反馈按钮
- *
- * 反馈页本身不再显示（避免自己跳自己）；其余 RPA 页面（含 hideSideNav 的 Stream 控制台）
- * 都能一键进入，并把「出错的页面 URL」与「当前浏览器 id」带过去预填，省得手抄上下文。
- * 站内 SPA 跳转，不产生文档请求，无需 referrer 处理。
- */
-const isFeedbackRoute = computed(() => route.name === RouteName.RPA_BROWSER_FEEDBACK)
-
-function goFeedback() {
-  const browserId = route.params.browserId
-  void router.push({
-    name: RouteName.RPA_BROWSER_FEEDBACK,
-    query: {
-      page_url: typeof window !== 'undefined' ? window.location.href : undefined,
-      ...(browserId ? { browser_id: String(browserId) } : {})
-    }
-  })
-}
+// 反馈入口统一走「协作」分组里的导航项（hideSideNav 的 Stream 控制台在页头提供入口），
+// 不再渲染右下角悬浮按钮。
 
 const navGroups = computed<BiliSideNavGroup[]>(() => [
   {

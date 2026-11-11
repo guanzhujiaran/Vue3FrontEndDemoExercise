@@ -824,24 +824,6 @@ export type CrawlerPushSwitchItem = {
 };
 
 /**
- * CustomBaseModelHashable
- *
- * 可哈希的自定义基础模型
- * Args:
- * ABC (_type_): _description_
- * CustomBaseModel (_type_): _description_
- */
-export type CustomBaseModelHashable = {
-    /**
-     * Extra Fields
-     */
-    readonly extra_fields: {
-        [key: string]: unknown;
-    } | null;
-    [key: string]: unknown;
-};
-
-/**
  * EndpointFilterMeta
  *
  * 端点筛选参数元数据
@@ -1078,6 +1060,8 @@ export type JobInfoModel = {
     readonly next_run_time_formatted: string;
 };
 
+export type JsonValue = unknown;
+
 /**
  * LLMApiConfig
  *
@@ -1130,6 +1114,70 @@ export type LlmApiConfigPatch = {
      * Requests Per Second
      */
     requests_per_second?: number | null;
+};
+
+/**
+ * LLMApiModelsRequest
+ *
+ * 管理端「获取模型列表」请求：一条实例的地址 / 密钥 + 可选索引。
+ */
+export type LlmApiModelsRequest = {
+    /**
+     * Index
+     *
+     * 该实例在 crawler llm_apis 中的索引；token 为空/脱敏时用它回填原密钥，新增行传 null
+     */
+    index?: number | null;
+    /**
+     * Base Url
+     *
+     * OpenAI 兼容接口地址
+     */
+    base_url?: string;
+    /**
+     * Model Name
+     *
+     * 该实例当前的模型名；仅用于「索引与配置是否匹配」的校验，可为空
+     */
+    model_name?: string;
+    /**
+     * Token
+     *
+     * 明文密钥；空串或含 **** 时按 index 回填原密钥
+     */
+    token?: string;
+};
+
+/**
+ * LLMApiTestRequest
+ *
+ * 管理端「测试」请求：一条实例的可编辑字段 + 可选的索引。
+ */
+export type LlmApiTestRequest = {
+    /**
+     * Index
+     *
+     * 该实例在 crawler llm_apis 中的索引；token 为空/脱敏时用它回填原密钥，新增行传 null
+     */
+    index?: number | null;
+    /**
+     * Base Url
+     *
+     * OpenAI 兼容接口地址
+     */
+    base_url?: string;
+    /**
+     * Model Name
+     *
+     * 模型名
+     */
+    model_name?: string;
+    /**
+     * Token
+     *
+     * 明文密钥；空串或含 **** 时按 index 回填原密钥
+     */
+    token?: string;
 };
 
 /**
@@ -1855,6 +1903,14 @@ export type ProgressStatusResp = {
 
 /**
  * ProxyStatusResp
+ *
+ * 代理池概览（口径全部来自 MySQL ``proxy_tab``；Redis 代理池已整体废弃）。
+ *
+ * ``proxy_unknown_count`` 是「从未被真实业务请求用过」的代理数
+ * （``success_times IS NULL OR success_times = 0``），
+ * 与 ``proxy_usable_count``（``status=0`` 且未被判死）**不是互斥口径**：
+ * 可用池里同时包含「从未使用」和「用过且成功过」两部分。
+ * 因此 ``total != black + usable + unknown``，不要按旧口径（Redis zset 成员数）理解。
  */
 export type ProxyStatusResp = {
     /**
@@ -1867,6 +1923,8 @@ export type ProxyStatusResp = {
     proxy_black_count?: number;
     /**
      * Proxy Unknown Count
+     *
+     * 从未被业务请求使用过的代理数（success_times IS NULL OR success_times = 0），与 proxy_usable_count 非互斥：可用池里既有从未使用的，也有用过且成功过的
      */
     proxy_unknown_count?: number;
     /**
@@ -1874,17 +1932,11 @@ export type ProxyStatusResp = {
      */
     proxy_usable_count?: number;
     /**
-     * Mysql Sync Redis Ts
-     */
-    mysql_sync_redis_ts?: number;
-    /**
      * Free Proxy Fetch Ts
+     *
+     * 最近一次入库代理的 add_ts（代理源最新产出时间，unix 秒）
      */
     free_proxy_fetch_ts?: number;
-    /**
-     * Sync Ts
-     */
-    sync_ts?: number;
     /**
      * Extra Fields
      */
@@ -2789,17 +2841,17 @@ export type StatsPlugin = {
      */
     push_result?: boolean;
     /**
-     * 最开始的参数
+     * 最开始的参数（可序列化摘要）
      */
-    readonly init_params: WorkerModel | null;
+    readonly init_params: WorkerSummaryModel | null;
     /**
-     * 最后一个任务（WorkerModel，含参数与最终状态）
+     * 最后一个任务（含参数与最终状态的摘要）
      */
-    readonly end_params: WorkerModel | null;
+    readonly end_params: WorkerSummaryModel | null;
     /**
-     * 最后成功处理的参数
+     * 最后成功处理的参数（可序列化摘要）
      */
-    readonly end_success_params: WorkerModel | null;
+    readonly end_success_params: WorkerSummaryModel | null;
     /**
      * Is Running
      *
@@ -2890,8 +2942,10 @@ export type StatsPlugin = {
     readonly succ_count: number;
     /**
      * Running Params Set
+     *
+     * 运行中任务的参数摘要列表（按 seqId 排序，保证输出稳定）
      */
-    readonly running_params_set: Array<WorkerModel>;
+    readonly running_params_set: Array<WorkerSummaryModel>;
     /**
      * 爬虫健康状态。
      *
@@ -3198,35 +3252,51 @@ export type WinnerInfo = {
 };
 
 /**
- * WorkerModel
+ * WorkerSummaryModel
+ *
+ * WorkerModel 的可序列化摘要（对外接口只暴露这个，不透传 WorkerModel 本身）
  */
-export type WorkerModel = {
-    params?: CustomBaseModelHashable | null;
+export type WorkerSummaryModel = {
     /**
      * Seqid
      *
      * 任务序号（自增）从0开始
      */
-    seqId: number;
-    fetchStatus?: WorkerStatus;
+    seqId?: number;
     /**
-     * Created At
+     * Fetchstatus
      *
-     * 创建时间
+     * 任务状态码
      */
-    created_at?: string;
+    fetchStatus?: number;
     /**
-     * Updated At
+     * Fetchstatusstr
      *
-     * 更新时间
+     * 任务状态名
      */
-    updated_at?: string;
+    fetchStatusStr?: string;
     /**
      * Retry Count
      *
      * 重试次数
      */
     retry_count?: number;
+    /**
+     * Created At
+     *
+     * 创建时间（unix 秒）
+     */
+    created_at?: number;
+    /**
+     * Updated At
+     *
+     * 更新时间（unix 秒）
+     */
+    updated_at?: number;
+    /**
+     * 任务参数的安全投影（仅基础类型；ORM 实体等降级为类型名）
+     */
+    params?: JsonValue;
     /**
      * Extra Fields
      */
@@ -3235,51 +3305,6 @@ export type WorkerModel = {
     } | null;
     [key: string]: unknown;
 };
-
-/**
- * WorkerStatus
- *
- * 枚举选项：
- * - complete: 1
- * - nullData: 2
- * - pending: 3
- * - fail: 4
- * - timeoutError: 5
- */
-export const WorkerStatus = {
-    /**
-     * complete
-     */
-    COMPLETE: 1,
-    /**
-     * nullData
-     */
-    NULL_DATA: 2,
-    /**
-     * pending
-     */
-    PENDING: 3,
-    /**
-     * fail
-     */
-    FAIL: 4,
-    /**
-     * timeoutError
-     */
-    TIMEOUT_ERROR: 5
-} as const;
-
-/**
- * WorkerStatus
- *
- * 枚举选项：
- * - complete: 1
- * - nullData: 2
- * - pending: 3
- * - fail: 4
- * - timeoutError: 5
- */
-export type WorkerStatus = typeof WorkerStatus[keyof typeof WorkerStatus];
 
 /**
  * lotteryArticleReq
@@ -4146,6 +4171,14 @@ export type ProgressStatusRespWritable = {
 
 /**
  * ProxyStatusResp
+ *
+ * 代理池概览（口径全部来自 MySQL ``proxy_tab``；Redis 代理池已整体废弃）。
+ *
+ * ``proxy_unknown_count`` 是「从未被真实业务请求用过」的代理数
+ * （``success_times IS NULL OR success_times = 0``），
+ * 与 ``proxy_usable_count``（``status=0`` 且未被判死）**不是互斥口径**：
+ * 可用池里同时包含「从未使用」和「用过且成功过」两部分。
+ * 因此 ``total != black + usable + unknown``，不要按旧口径（Redis zset 成员数）理解。
  */
 export type ProxyStatusRespWritable = {
     /**
@@ -4158,6 +4191,8 @@ export type ProxyStatusRespWritable = {
     proxy_black_count?: number;
     /**
      * Proxy Unknown Count
+     *
+     * 从未被业务请求使用过的代理数（success_times IS NULL OR success_times = 0），与 proxy_usable_count 非互斥：可用池里既有从未使用的，也有用过且成功过的
      */
     proxy_unknown_count?: number;
     /**
@@ -4165,17 +4200,11 @@ export type ProxyStatusRespWritable = {
      */
     proxy_usable_count?: number;
     /**
-     * Mysql Sync Redis Ts
-     */
-    mysql_sync_redis_ts?: number;
-    /**
      * Free Proxy Fetch Ts
+     *
+     * 最近一次入库代理的 add_ts（代理源最新产出时间，unix 秒）
      */
     free_proxy_fetch_ts?: number;
-    /**
-     * Sync Ts
-     */
-    sync_ts?: number;
     [key: string]: unknown;
 };
 
@@ -4711,35 +4740,51 @@ export type TUpReserveRelationInfoRespWritable = {
 };
 
 /**
- * WorkerModel
+ * WorkerSummaryModel
+ *
+ * WorkerModel 的可序列化摘要（对外接口只暴露这个，不透传 WorkerModel 本身）
  */
-export type WorkerModelWritable = {
-    params?: null;
+export type WorkerSummaryModelWritable = {
     /**
      * Seqid
      *
      * 任务序号（自增）从0开始
      */
-    seqId: number;
-    fetchStatus?: WorkerStatus;
+    seqId?: number;
     /**
-     * Created At
+     * Fetchstatus
      *
-     * 创建时间
+     * 任务状态码
      */
-    created_at?: string;
+    fetchStatus?: number;
     /**
-     * Updated At
+     * Fetchstatusstr
      *
-     * 更新时间
+     * 任务状态名
      */
-    updated_at?: string;
+    fetchStatusStr?: string;
     /**
      * Retry Count
      *
      * 重试次数
      */
     retry_count?: number;
+    /**
+     * Created At
+     *
+     * 创建时间（unix 秒）
+     */
+    created_at?: number;
+    /**
+     * Updated At
+     *
+     * 更新时间（unix 秒）
+     */
+    updated_at?: number;
+    /**
+     * 任务参数的安全投影（仅基础类型；ORM 实体等降级为类型名）
+     */
+    params?: JsonValue;
     [key: string]: unknown;
 };
 
@@ -6317,6 +6362,84 @@ export type ReplaceLlmConfigLlmConfigPutResponses = {
 
 export type ReplaceLlmConfigLlmConfigPutResponse = ReplaceLlmConfigLlmConfigPutResponses[keyof ReplaceLlmConfigLlmConfigPutResponses];
 
+export type TestLlmConfigLlmConfigTestPostData = {
+    body: LlmApiTestRequest;
+    path?: never;
+    query?: never;
+    url: '/llm/config/test';
+};
+
+export type TestLlmConfigLlmConfigTestPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type TestLlmConfigLlmConfigTestPostError = TestLlmConfigLlmConfigTestPostErrors[keyof TestLlmConfigLlmConfigTestPostErrors];
+
+export type TestLlmConfigLlmConfigTestPostResponses = {
+    /**
+     * Response Test Llm Config Llm Config Test Post
+     *
+     * Successful Response
+     */
+    200: {
+        [key: string]: unknown;
+    };
+};
+
+export type TestLlmConfigLlmConfigTestPostResponse = TestLlmConfigLlmConfigTestPostResponses[keyof TestLlmConfigLlmConfigTestPostResponses];
+
+export type GetLlmModelsLlmModelsPostData = {
+    body: LlmApiModelsRequest;
+    path?: never;
+    query?: never;
+    url: '/llm/models';
+};
+
+export type GetLlmModelsLlmModelsPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetLlmModelsLlmModelsPostError = GetLlmModelsLlmModelsPostErrors[keyof GetLlmModelsLlmModelsPostErrors];
+
+export type GetLlmModelsLlmModelsPostResponses = {
+    /**
+     * Response Get Llm Models Llm Models Post
+     *
+     * Successful Response
+     */
+    200: {
+        [key: string]: unknown;
+    };
+};
+
+export type GetLlmModelsLlmModelsPostResponse = GetLlmModelsLlmModelsPostResponses[keyof GetLlmModelsLlmModelsPostResponses];
+
+export type DeleteLlmConfigOverrideLlmConfigOverrideDeleteData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/llm/config/override';
+};
+
+export type DeleteLlmConfigOverrideLlmConfigOverrideDeleteResponses = {
+    /**
+     * Response Delete Llm Config Override Llm Config Override Delete
+     *
+     * Successful Response
+     */
+    200: {
+        [key: string]: unknown;
+    };
+};
+
+export type DeleteLlmConfigOverrideLlmConfigOverrideDeleteResponse = DeleteLlmConfigOverrideLlmConfigOverrideDeleteResponses[keyof DeleteLlmConfigOverrideLlmConfigOverrideDeleteResponses];
+
 export type DeleteLlmConfigLlmConfigIndexDeleteData = {
     body?: never;
     path: {
@@ -6620,6 +6743,26 @@ export type ToutiaoGetOthersLotIdsToutiaoGetOthersLotIdsGetResponses = {
      */
     200: unknown;
 };
+
+export type HealthCheckHealthGetData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/health';
+};
+
+export type HealthCheckHealthGetResponses = {
+    /**
+     * Response Health Check Health Get
+     *
+     * Successful Response
+     */
+    200: {
+        [key: string]: string;
+    };
+};
+
+export type HealthCheckHealthGetResponse = HealthCheckHealthGetResponses[keyof HealthCheckHealthGetResponses];
 
 export type TestMsgPubRabbitmqTestPublishPostData = {
     body?: never;

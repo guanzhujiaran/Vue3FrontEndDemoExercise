@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, provide, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { VideoPlay, VideoPause, Refresh, Camera, ArrowLeft, Tools, Minus, Close } from '@element-plus/icons-vue'
+import { VideoPlay, VideoPause, Refresh, Camera, ArrowLeft, Tools, Minus, Close, ChatDotRound } from '@element-plus/icons-vue'
 import { useDebounceFn } from '@vueuse/core'
 import { ElMessageBox, ElDialog } from 'element-plus'
 import BiliPageHeader from '@/components/CommonCompo/Bili-Container-Compo/BiliPageHeader.vue'
@@ -19,6 +19,7 @@ import MinimizeBar from '@/components/rpa-browser/MinimizeBar.vue'
 import { RouteName } from '@/models/router/index.ts'
 import { useBrowserSessionState } from '@/composables/useBrowserSessionState'
 import { useBrowserSessionEvents, type BrowserSessionStatusSnapshot } from '@/composables/useBrowserSessionEvents'
+import { useRpaFeedback } from '@/composables/useRpaFeedback'
 import { useI18n } from 'vue-i18n'
 
 const route = useRoute()
@@ -459,6 +460,9 @@ const handleBack = () => {
   router.push({ name: RouteName.RPA_BROWSER_FINGERPRINT_LIST })
 }
 
+/** 页头「反馈问题」：带上当前页面 URL 与浏览器 id 跳到反馈页（与布局悬浮入口同一套逻辑） */
+const { goFeedback } = useRpaFeedback()
+
 const executingScreenshot = ref(false)
 const screenshots = ref<Array<{ id: number; dataUrl: string; format: string; size: number; timestamp: number }>>([])
 let screenshotIdCounter = 0
@@ -556,6 +560,9 @@ onMounted(() => {
           </el-button-group>
 
           <el-button :icon="Refresh" @click="handleRefreshStatus">{{ t('rpa.refreshSessionStatus') }}</el-button>
+
+          <!-- 反馈入口放在页头：Stream 是沉浸式页面，不再用右下角悬浮按钮（会压住运行消息入口） -->
+          <el-button :icon="ChatDotRound" @click="goFeedback">反馈问题</el-button>
 
           <el-button :icon="ArrowLeft" @click="handleBack">{{ t('common.back') }}</el-button>
         </div>

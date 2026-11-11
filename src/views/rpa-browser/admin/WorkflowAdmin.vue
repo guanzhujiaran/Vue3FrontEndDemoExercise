@@ -5,6 +5,7 @@ import { TableV2FixedDir, type Column } from 'element-plus'
 import { Refresh, Search, Document, Delete } from '@element-plus/icons-vue'
 import { useMessageAdminStore } from '@/stores/message_admin'
 import { businessHandler } from '@/utils/businessHandler'
+import { runStatusTagType, runStatusText } from '@/utils/rpa/runDisplay'
 import {
   listWorkflowsAdmin,
   setWorkflowEnabledAdmin,
@@ -96,18 +97,31 @@ function onPageSizeChange(size: number) {
 
 // ── 展示映射 ─────────────────────────────────────────
 const triggerText = (t: string) => (t === 'cron' ? '定时' : '手动')
-const statusText: Record<string, string> = {
-  success: '成功',
-  failed: '失败',
-  running: '运行中',
-  interrupted: '已中断',
-}
-const statusTagType: Record<string, 'success' | 'danger' | 'warning' | 'info'> = {
-  success: 'success',
-  failed: 'danger',
-  running: 'warning',
-  interrupted: 'info',
-}
+/** 运行结果：不给成败结论，只给可数结果（成功循环 N 轮 / 成功 N 步） */
+const runTextOf = (source: {
+  status: string | null
+  success_count?: number | null
+  total?: number | null
+  resource_total?: number | null
+  resource_success?: number | null
+}) =>
+  runStatusText({
+    status: source.status,
+    success_count: source.success_count,
+    total_steps: source.total,
+    resource_total: source.resource_total,
+    resource_success: source.resource_success,
+  })
+
+/** 列表「上次运行」列：快照字段名与运行记录不同，单独收口 */
+const lastRunTextOf = (item: AdminWorkflowItem) =>
+  runTextOf({
+    status: item.last_run_status,
+    success_count: item.last_run_success_count,
+    total: item.last_run_total,
+    resource_total: item.last_run_resource_total,
+    resource_success: item.last_run_resource_success,
+  })
 function formatTime(t?: string | null) {
   if (!t) return '-'
   return new Date(t).toLocaleString('zh-CN')
@@ -321,10 +335,10 @@ onMounted(async () => {
                   <template v-else-if="column.key === 'last_run_status'">
                     <el-tag
                       v-if="rowData.last_run_status"
-                      :type="statusTagType[rowData.last_run_status] || 'info'"
+                      :type="runStatusTagType(rowData.last_run_status)"
                       effect="light"
                     >
-                      {{ statusText[rowData.last_run_status] || rowData.last_run_status }}
+                      {{ lastRunTextOf(rowData as AdminWorkflowItem) }}
                     </el-tag>
                     <span v-else class="text-sm text-text-placeholder">-</span>
                   </template>
@@ -401,14 +415,14 @@ onMounted(async () => {
           <el-table-column label="触发" width="80">
             <template #default="{ row }">{{ triggerText(row.trigger_source) }}</template>
           </el-table-column>
-          <el-table-column label="状态" width="90">
+          <el-table-column label="结果" width="140">
             <template #default="{ row }">
-              <el-tag :type="statusTagType[row.status] || 'info'" effect="light">
-                {{ statusText[row.status] || row.status }}
+              <el-tag :type="runStatusTagType(row.status)" effect="light">
+                {{ runTextOf(row as AdminWorkflowRunItem) }}
               </el-tag>
             </template>
           </el-table-column>
-          <el-table-column label="结果" width="110">
+          <el-table-column label="步骤" width="110">
             <template #default="{ row }">成功 {{ row.success_count }}/{{ row.total }}</template>
           </el-table-column>
           <el-table-column label="耗时" width="90">

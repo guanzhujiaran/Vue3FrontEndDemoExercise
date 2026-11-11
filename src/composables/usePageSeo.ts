@@ -6,6 +6,9 @@
  * 取决于接口返回的内容——这些页面在拿到数据后调用 `usePageSeo()` 覆盖，
  * 即可让分享卡片与搜索结果展示真实内容。
  *
+ * 字段最终由 `useRouteSeo()` 交给 `@nuxtjs/seo`：文案走 `useSeoMeta()`，
+ * 结构化数据走 `useSchemaOrg()`（只传节点，不写 `@context` / `@graph`）。
+ *
  * 实现要点：
  * - 存的是 **getter 而不是快照**：接口数据异步返回后，`useRouteSeo` 的 computed
  *   重新求值时直接调用 getter，从而自动追踪到页面里的 ref（快照会导致首屏 null

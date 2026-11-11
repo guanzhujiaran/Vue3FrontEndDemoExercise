@@ -9,7 +9,7 @@ import { errMsg } from '@/utils/rpa/jsonImport'
  * RPA 分享弹窗（动作 / 工作流共用）。
  *
  * 「分享」对用户就是「把这份配置给到别人」：弹窗里给出与后端导入接口完全兼容的 JSON，
- * 用户可复制文本或下载 .json 文件；对方在对应管理页点「导入分享」选择该文件即可还原。
+ * 用户可复制文本或下载 .json 文件；对方在对应管理页点「导入分享」后粘贴文本（或选择该文件）即可还原。
  */
 
 interface Props {
@@ -66,7 +66,7 @@ const handleDownload = () => {
     <div class="share-json-dialog__body flex flex-col gap-3">
       <div class="share-json-dialog__meta text-sm text-gray-400">
         <span class="share-json-dialog__name">分享「{{ name }}」</span>
-        <span class="share-json-dialog__hint ml-2">对方在「{{ importEntryText }}」中选择这份 JSON 即可导入</span>
+        <span class="share-json-dialog__hint ml-2">对方在「{{ importEntryText }}」里粘贴这份 JSON（或选择 .json 文件）即可导入</span>
       </div>
 
       <div v-if="loading" class="share-json-dialog__loading py-10">

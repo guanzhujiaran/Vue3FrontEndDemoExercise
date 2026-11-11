@@ -1198,7 +1198,7 @@ export type ApprovalListResponse = {
      *
      * 当前页数据
      */
-    items?: Array<unknown>;
+    items?: Array<ApprovalItemResp>;
     /**
      * Pages
      */
@@ -1219,6 +1219,42 @@ export type ApprovalListResponse = {
      * Prev Page
      */
     readonly prev_page: number;
+};
+
+/**
+ * AuditListItemResponse
+ *
+ * 审计日志列表项响应
+ */
+export type AuditListItemResponse = {
+    /**
+     * Id
+     */
+    id: number;
+    /**
+     * Admin Mid
+     */
+    admin_mid: number;
+    /**
+     * Action
+     */
+    action: string;
+    /**
+     * Target Type
+     */
+    target_type: string;
+    /**
+     * Target Id
+     */
+    target_id: string;
+    /**
+     * Detail
+     */
+    detail: string;
+    /**
+     * Created At
+     */
+    created_at: string;
 };
 
 /**
@@ -1282,7 +1318,7 @@ export type BanListResponse = {
      *
      * 当前页数据
      */
-    items?: Array<unknown>;
+    items?: Array<UserBanItemResp>;
     /**
      * Pages
      */
@@ -1536,7 +1572,7 @@ export type BasePaginationRespActionLogItemResponse = {
      *
      * 当前页数据
      */
-    items?: Array<unknown>;
+    items?: Array<ActionLogItemResponse>;
     /**
      * Pages
      */
@@ -1586,7 +1622,7 @@ export type BasePaginationRespAuditListItemResponse = {
      *
      * 当前页数据
      */
-    items?: Array<unknown>;
+    items?: Array<AuditListItemResponse>;
     /**
      * Pages
      */
@@ -1636,7 +1672,7 @@ export type BasePaginationRespCompositeActionListItemResponse = {
      *
      * 当前页数据
      */
-    items?: Array<unknown>;
+    items?: Array<CompositeActionListItemResponse>;
     /**
      * Pages
      */
@@ -1686,7 +1722,7 @@ export type BasePaginationRespRedemptionCodeItem = {
      *
      * 当前页数据
      */
-    items?: Array<unknown>;
+    items?: Array<RedemptionCodeItem>;
     /**
      * Pages
      */
@@ -1736,7 +1772,7 @@ export type BasePaginationRespUserBrowserInfo = {
      *
      * 当前页数据
      */
-    items?: Array<unknown>;
+    items?: Array<UserBrowserInfo>;
     /**
      * Pages
      */
@@ -1786,7 +1822,7 @@ export type BasePaginationRespWorkflowAdminListItemResponse = {
      *
      * 当前页数据
      */
-    items?: Array<unknown>;
+    items?: Array<WorkflowAdminListItemResponse>;
     /**
      * Pages
      */
@@ -1836,7 +1872,7 @@ export type BasePaginationRespWorkflowListItemResponse = {
      *
      * 当前页数据
      */
-    items?: Array<unknown>;
+    items?: Array<WorkflowListItemResponse>;
     /**
      * Pages
      */
@@ -1886,7 +1922,7 @@ export type BasePaginationRespWorkflowResourceRecordItemResponse = {
      *
      * 当前页数据
      */
-    items?: Array<unknown>;
+    items?: Array<WorkflowResourceRecordItemResponse>;
     /**
      * Pages
      */
@@ -1936,7 +1972,7 @@ export type BasePaginationRespWorkflowRunLogItemResponse = {
      *
      * 当前页数据
      */
-    items?: Array<unknown>;
+    items?: Array<WorkflowRunLogItemResponse>;
     /**
      * Pages
      */
@@ -3340,7 +3376,7 @@ export type CertificationListResponse = {
      *
      * 当前页数据
      */
-    items?: Array<unknown>;
+    items?: Array<CertificationItemResp>;
     /**
      * Pages
      */
@@ -3885,6 +3921,142 @@ export type CompositeActionGetRequest = {
      * 操作的雪花 action_id
      */
     action_id: number;
+};
+
+/**
+ * CompositeActionListItemResponse
+ *
+ * 复合操作列表项响应
+ */
+export type CompositeActionListItemResponse = {
+    /**
+     * Has Upstream Update
+     */
+    has_upstream_update?: boolean;
+    /**
+     * Upstream Updated At
+     */
+    upstream_updated_at?: number | null;
+    /**
+     * Last Synced At
+     */
+    last_synced_at?: number | null;
+    /**
+     * Auto Sync Upstream
+     */
+    auto_sync_upstream?: boolean;
+    /**
+     * Local Steps Modified
+     */
+    local_steps_modified?: boolean;
+    /**
+     * Upstream Version
+     *
+     * 上游当前声明的语义化版本（非 Fork 或上游不可用时为 None）
+     */
+    upstream_version?: string | null;
+    /**
+     * Upstream Content Hash
+     *
+     * 上游当前内容指纹（空=未计算或非 Fork）
+     */
+    upstream_content_hash?: string;
+    /**
+     * Id
+     *
+     * 表主键
+     */
+    id: number;
+    /**
+     * Action Id
+     *
+     * 雪花 action_id（be-message 互动 rpa_action 的 bizId）
+     */
+    action_id: number;
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Version
+     *
+     * 作者声明的语义化版本
+     */
+    version?: string;
+    /**
+     * Content Hash
+     *
+     * 语义内容指纹（空=存量未计算）
+     */
+    content_hash?: string;
+    /**
+     * Action Type
+     */
+    action_type: string;
+    /**
+     * Description
+     */
+    description: string;
+    /**
+     * Icon Series
+     */
+    icon_series?: number;
+    /**
+     * Icon Id
+     */
+    icon_id?: number;
+    /**
+     * Steps Count
+     */
+    steps_count: number;
+    /**
+     * Tags
+     */
+    tags?: Array<string>;
+    /**
+     * Is Enabled
+     */
+    is_enabled: boolean;
+    /**
+     * Is Public
+     */
+    is_public?: boolean;
+    /**
+     * Log Enabled
+     */
+    log_enabled?: boolean | null;
+    /**
+     * Log Debug
+     */
+    log_debug?: boolean | null;
+    /**
+     * Likes Count
+     */
+    likes_count?: number;
+    /**
+     * Reports Count
+     */
+    reports_count?: number;
+    /**
+     * Is Verified
+     */
+    is_verified?: boolean;
+    /**
+     * Forks Count
+     */
+    forks_count?: number;
+    /**
+     * Forked From Id
+     */
+    forked_from_id?: number | null;
+    /**
+     * Created At
+     */
+    created_at?: string | null;
+    /**
+     * Updated At
+     */
+    updated_at?: string | null;
 };
 
 /**
@@ -4646,6 +4818,74 @@ export type DurationAccountResponse = {
 };
 
 /**
+ * DurationLedgerItem
+ *
+ * 时长流水条目
+ */
+export type DurationLedgerItem = {
+    /**
+     * Id
+     *
+     * 流水ID
+     */
+    id: string;
+    /**
+     * Change Seconds
+     *
+     * 变动秒数（负=消耗）
+     */
+    change_seconds: string;
+    /**
+     * Balance After
+     *
+     * 变动后余额（秒）
+     */
+    balance_after: string;
+    /**
+     * Change Type
+     *
+     * 变动类型
+     */
+    change_type: string;
+    /**
+     * Ref Id
+     *
+     * 关联业务ID
+     */
+    ref_id: string;
+    /**
+     * Workflow Id
+     *
+     * 关联工作流ID
+     */
+    workflow_id: string;
+    /**
+     * Run Id
+     *
+     * 关联运行ID
+     */
+    run_id: string;
+    /**
+     * Browser Id
+     *
+     * 关联浏览器ID
+     */
+    browser_id: string;
+    /**
+     * Remark
+     *
+     * 备注
+     */
+    remark: string;
+    /**
+     * Created At
+     *
+     * 时间
+     */
+    created_at: string;
+};
+
+/**
  * EmptyRequest
  *
  * 空请求体占位（所有 POST 语义但无入参的接口统一复用）
@@ -5401,7 +5641,7 @@ export type LedgerListResponse = {
      *
      * 当前页数据
      */
-    items?: Array<unknown>;
+    items?: Array<DurationLedgerItem>;
     /**
      * Pages
      */
@@ -6823,6 +7063,80 @@ export type RedeemResponse = {
      * 兑换后余额（秒）
      */
     balance_seconds: string;
+};
+
+/**
+ * RedemptionCodeItem
+ *
+ * 兑换码条目
+ */
+export type RedemptionCodeItem = {
+    /**
+     * Code
+     *
+     * 兑换码
+     */
+    code: string;
+    /**
+     * Code Type
+     *
+     * 码类型
+     */
+    code_type: string;
+    /**
+     * Duration Seconds
+     *
+     * 时长卡面值（秒）
+     */
+    duration_seconds: string;
+    /**
+     * Card Days
+     *
+     * 月卡天数
+     */
+    card_days: string;
+    /**
+     * Max Uses
+     *
+     * 最大兑换次数
+     */
+    max_uses: string;
+    /**
+     * Used Count
+     *
+     * 已兑换次数
+     */
+    used_count: string;
+    /**
+     * Is Enabled
+     *
+     * 是否启用
+     */
+    is_enabled: boolean;
+    /**
+     * Expire At
+     *
+     * 有效期
+     */
+    expire_at: string | null;
+    /**
+     * Batch No
+     *
+     * 批次号
+     */
+    batch_no: string;
+    /**
+     * Remark
+     *
+     * 备注
+     */
+    remark: string;
+    /**
+     * Created At
+     *
+     * 创建时间
+     */
+    created_at: string;
 };
 
 /**
@@ -9892,6 +10206,149 @@ export type UserBrowserDefaultSettingResponse = {
 };
 
 /**
+ * UserBrowserInfo
+ *
+ * 用户浏览器信息数据库模型
+ */
+export type UserBrowserInfo = {
+    /**
+     * --Fingerprint
+     */
+    '--fingerprint'?: number;
+    '--fingerprint-platform'?: PlatformEnum | null;
+    /**
+     * --Fingerprint-Platform-Version
+     *
+     * Uses default version if not specified
+     */
+    '--fingerprint-platform-version'?: string | null;
+    /**
+     * Chrome, Edge, Opera, Vivaldi (default is Chrome)
+     */
+    '--fingerprint-browser'?: BrowserEnum | null;
+    /**
+     * --Fingerprint-Brand-Version
+     *
+     * Uses default version if not specified
+     */
+    '--fingerprint-brand-version'?: string | null;
+    /**
+     * --Fingerprint-Hardware-Concurrency
+     */
+    '--fingerprint-hardware-concurrency'?: number | null;
+    /**
+     * --Fingerprint-Gpu-Vendor
+     *
+     * Vendor string (e.g., Intel Inc., NVIDIA Corporation). If not specified, uses fingerprint seed
+     */
+    '--fingerprint-gpu-vendor'?: string | null;
+    /**
+     * --Fingerprint-Gpu-Renderer
+     *
+     * Renderer string (e.g., Intel Iris OpenGL Engine, NVIDIA GeForce GTX 1060). If not specified, uses fingerprint seed
+     */
+    '--fingerprint-gpu-renderer'?: string | null;
+    /**
+     * --Lang
+     *
+     * Language code (e.g., en-US)
+     */
+    '--lang'?: string | null;
+    /**
+     * --Accept-Lang
+     *
+     * Language code (e.g., en-US)
+     */
+    '--accept-lang'?: string | null;
+    /**
+     * --Timezone
+     *
+     * Timezone (e.g., America/New_York)
+     */
+    '--timezone'?: string | null;
+    /**
+     * --Proxy-Server
+     *
+     * http, socks proxy (password authentication not supported)
+     */
+    '--proxy-server'?: string | null;
+    /**
+     * Proxy Bypass
+     *
+     * 代理绕过列表：逗号分隔的 host 规则（如 *.bilibili.com,127.0.0.1），命中的主机直连、不走 proxy_server。只能匹配主机名/IP，不能写完整 URL；未配置时回退到服务端环境变量 browser_proxy_bypass
+     */
+    proxy_bypass?: string | null;
+    /**
+     * Patchright Screen Width
+     */
+    patchright_screen_width?: number;
+    /**
+     * Patchright Screen Height
+     */
+    patchright_screen_height?: number;
+    /**
+     * Patchright Viewport Width
+     */
+    patchright_viewport_width?: number;
+    /**
+     * Patchright Viewport Height
+     */
+    patchright_viewport_height?: number;
+    /**
+     * Patchright Fingerprint Dict
+     */
+    patchright_fingerprint_dict?: {
+        [key: string]: unknown;
+    } | null;
+    /**
+     * Patchright Browser Ua
+     */
+    patchright_browser_ua?: string | null;
+    /**
+     * Browser Id
+     */
+    browser_id?: number;
+    /**
+     * Created At
+     *
+     * 创建时间
+     */
+    created_at?: string;
+    /**
+     * Updated At
+     *
+     * 更新时间
+     */
+    updated_at?: string;
+    /**
+     * Mid
+     */
+    mid: number;
+    /**
+     * Custom Name
+     *
+     * 用户自定义的浏览器名称，同一用户下不能重复
+     */
+    custom_name?: string | null;
+    /**
+     * 浏览器视口大小
+     */
+    readonly viewport: ViewportSize;
+    /**
+     * 屏幕大小
+     */
+    readonly screen: ViewportSize;
+    /**
+     * Browser Id Str
+     */
+    readonly browser_id_str: string;
+    /**
+     * Mid Str
+     */
+    readonly mid_str: string;
+};
+
+/**
  * ValidateStepsRequest
  *
  * 静态校验：内联 steps 或已保存动作，二选一。
@@ -10233,6 +10690,224 @@ export type WebRtcVisibilityRequest = {
 };
 
 /**
+ * WorkflowAdminListItemResponse
+ *
+ * 管理端工作流列表项响应（附带作者 mid）
+ */
+export type WorkflowAdminListItemResponse = {
+    /**
+     * Has Upstream Update
+     */
+    has_upstream_update?: boolean;
+    /**
+     * Upstream Updated At
+     */
+    upstream_updated_at?: number | null;
+    /**
+     * Last Synced At
+     */
+    last_synced_at?: number | null;
+    /**
+     * Auto Sync Upstream
+     */
+    auto_sync_upstream?: boolean;
+    /**
+     * Local Steps Modified
+     */
+    local_steps_modified?: boolean;
+    /**
+     * Upstream Version
+     *
+     * 上游当前声明的语义化版本（非 Fork 或上游不可用时为 None）
+     */
+    upstream_version?: string | null;
+    /**
+     * Upstream Content Hash
+     *
+     * 上游当前内容指纹（空=未计算或非 Fork）
+     */
+    upstream_content_hash?: string;
+    /**
+     * Id
+     */
+    id: number;
+    /**
+     * Workflow Id
+     */
+    workflow_id: number;
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Custom Action Id
+     */
+    custom_action_id?: number | null;
+    /**
+     * Description
+     */
+    description: string;
+    /**
+     * Browser Id
+     */
+    browser_id?: number | null;
+    /**
+     * Trigger Type
+     */
+    trigger_type?: string;
+    /**
+     * Trigger Config
+     */
+    trigger_config?: {
+        [key: string]: unknown;
+    };
+    /**
+     * Is Enabled
+     */
+    is_enabled: boolean;
+    /**
+     * Is Public
+     */
+    is_public?: boolean;
+    /**
+     * Likes Count
+     */
+    likes_count?: number;
+    /**
+     * Reports Count
+     */
+    reports_count?: number;
+    /**
+     * Is Verified
+     */
+    is_verified?: boolean;
+    /**
+     * Forks Count
+     */
+    forks_count?: number;
+    /**
+     * Forked From Id
+     */
+    forked_from_id?: number | null;
+    /**
+     * Running Run Id
+     *
+     * 当前进行中的运行ID（RUNNING），无进行中的运行则为空
+     */
+    running_run_id?: string | null;
+    /**
+     * Last Run At
+     */
+    last_run_at?: string | null;
+    /**
+     * Last Run Status
+     */
+    last_run_status?: string | null;
+    /**
+     * Last Run Success Count
+     *
+     * 上次运行成功步骤数
+     */
+    last_run_success_count?: number;
+    /**
+     * Last Run Total
+     *
+     * 上次运行步骤总数
+     */
+    last_run_total?: number;
+    /**
+     * Last Run Resource Total
+     *
+     * 上次运行处理的资源总数（>0 = 批量循环口径）
+     */
+    last_run_resource_total?: number;
+    /**
+     * Last Run Resource Success
+     *
+     * 上次运行资源成功数（= 成功循环轮次）
+     */
+    last_run_resource_success?: number;
+    /**
+     * Next Run At
+     */
+    next_run_at?: string | null;
+    /**
+     * Notify Inbox On Start
+     *
+     * 站内通知：开始执行时是否发送
+     */
+    notify_inbox_on_start?: boolean;
+    /**
+     * Notify Inbox On End
+     *
+     * 站内通知：结束时（成功/失败/停止）是否发送
+     */
+    notify_inbox_on_end?: boolean;
+    /**
+     * Notify Push On Start
+     *
+     * 站外推送：开始执行时是否发送
+     */
+    notify_push_on_start?: boolean;
+    /**
+     * Notify Push On End
+     *
+     * 站外推送：结束时（成功/失败/停止）是否发送
+     */
+    notify_push_on_end?: boolean;
+    /**
+     * Notify On Start
+     *
+     * 【已废弃】开始通知（通道混合，= 两通道取或）
+     */
+    notify_on_start?: boolean;
+    /**
+     * Notify On End
+     *
+     * 【已废弃】结束通知（通道混合，= 两通道取或）
+     */
+    notify_on_end?: boolean;
+    /**
+     * Log Enabled
+     */
+    log_enabled?: boolean | null;
+    /**
+     * Log Debug
+     */
+    log_debug?: boolean | null;
+    /**
+     * Resume On Restart
+     */
+    resume_on_restart?: boolean;
+    /**
+     * Browser Ids
+     *
+     * 执行目标浏览器ID列表；为空=单浏览器
+     */
+    browser_ids?: Array<number> | null;
+    /**
+     * Concurrent Exec
+     *
+     * 多浏览器时是否并发执行
+     */
+    concurrent_exec?: boolean;
+    /**
+     * Created At
+     */
+    created_at?: string | null;
+    /**
+     * Updated At
+     */
+    updated_at?: string | null;
+    /**
+     * Mid
+     *
+     * 工作流作者 mid
+     */
+    mid?: string;
+};
+
+/**
  * WorkflowAdminListRequest
  *
  * 管理端工作流列表请求（root 全量视图）
@@ -10565,6 +11240,30 @@ export type WorkflowDetailResponse = {
      */
     last_run_status?: string | null;
     /**
+     * Last Run Success Count
+     *
+     * 上次运行成功步骤数
+     */
+    last_run_success_count?: number;
+    /**
+     * Last Run Total
+     *
+     * 上次运行步骤总数
+     */
+    last_run_total?: number;
+    /**
+     * Last Run Resource Total
+     *
+     * 上次运行处理的资源总数（>0 = 批量循环口径）
+     */
+    last_run_resource_total?: number;
+    /**
+     * Last Run Resource Success
+     *
+     * 上次运行资源成功数（= 成功循环轮次）
+     */
+    last_run_resource_success?: number;
+    /**
      * Next Run At
      */
     next_run_at?: string | null;
@@ -10871,6 +11570,218 @@ export type WorkflowIdRequest = {
      * 工作流数据库 ID（雪花 int，字符串形式也接受）
      */
     id: number;
+};
+
+/**
+ * WorkflowListItemResponse
+ *
+ * 工作流列表项响应
+ */
+export type WorkflowListItemResponse = {
+    /**
+     * Has Upstream Update
+     */
+    has_upstream_update?: boolean;
+    /**
+     * Upstream Updated At
+     */
+    upstream_updated_at?: number | null;
+    /**
+     * Last Synced At
+     */
+    last_synced_at?: number | null;
+    /**
+     * Auto Sync Upstream
+     */
+    auto_sync_upstream?: boolean;
+    /**
+     * Local Steps Modified
+     */
+    local_steps_modified?: boolean;
+    /**
+     * Upstream Version
+     *
+     * 上游当前声明的语义化版本（非 Fork 或上游不可用时为 None）
+     */
+    upstream_version?: string | null;
+    /**
+     * Upstream Content Hash
+     *
+     * 上游当前内容指纹（空=未计算或非 Fork）
+     */
+    upstream_content_hash?: string;
+    /**
+     * Id
+     */
+    id: number;
+    /**
+     * Workflow Id
+     */
+    workflow_id: number;
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Custom Action Id
+     */
+    custom_action_id?: number | null;
+    /**
+     * Description
+     */
+    description: string;
+    /**
+     * Browser Id
+     */
+    browser_id?: number | null;
+    /**
+     * Trigger Type
+     */
+    trigger_type?: string;
+    /**
+     * Trigger Config
+     */
+    trigger_config?: {
+        [key: string]: unknown;
+    };
+    /**
+     * Is Enabled
+     */
+    is_enabled: boolean;
+    /**
+     * Is Public
+     */
+    is_public?: boolean;
+    /**
+     * Likes Count
+     */
+    likes_count?: number;
+    /**
+     * Reports Count
+     */
+    reports_count?: number;
+    /**
+     * Is Verified
+     */
+    is_verified?: boolean;
+    /**
+     * Forks Count
+     */
+    forks_count?: number;
+    /**
+     * Forked From Id
+     */
+    forked_from_id?: number | null;
+    /**
+     * Running Run Id
+     *
+     * 当前进行中的运行ID（RUNNING），无进行中的运行则为空
+     */
+    running_run_id?: string | null;
+    /**
+     * Last Run At
+     */
+    last_run_at?: string | null;
+    /**
+     * Last Run Status
+     */
+    last_run_status?: string | null;
+    /**
+     * Last Run Success Count
+     *
+     * 上次运行成功步骤数
+     */
+    last_run_success_count?: number;
+    /**
+     * Last Run Total
+     *
+     * 上次运行步骤总数
+     */
+    last_run_total?: number;
+    /**
+     * Last Run Resource Total
+     *
+     * 上次运行处理的资源总数（>0 = 批量循环口径）
+     */
+    last_run_resource_total?: number;
+    /**
+     * Last Run Resource Success
+     *
+     * 上次运行资源成功数（= 成功循环轮次）
+     */
+    last_run_resource_success?: number;
+    /**
+     * Next Run At
+     */
+    next_run_at?: string | null;
+    /**
+     * Notify Inbox On Start
+     *
+     * 站内通知：开始执行时是否发送
+     */
+    notify_inbox_on_start?: boolean;
+    /**
+     * Notify Inbox On End
+     *
+     * 站内通知：结束时（成功/失败/停止）是否发送
+     */
+    notify_inbox_on_end?: boolean;
+    /**
+     * Notify Push On Start
+     *
+     * 站外推送：开始执行时是否发送
+     */
+    notify_push_on_start?: boolean;
+    /**
+     * Notify Push On End
+     *
+     * 站外推送：结束时（成功/失败/停止）是否发送
+     */
+    notify_push_on_end?: boolean;
+    /**
+     * Notify On Start
+     *
+     * 【已废弃】开始通知（通道混合，= 两通道取或）
+     */
+    notify_on_start?: boolean;
+    /**
+     * Notify On End
+     *
+     * 【已废弃】结束通知（通道混合，= 两通道取或）
+     */
+    notify_on_end?: boolean;
+    /**
+     * Log Enabled
+     */
+    log_enabled?: boolean | null;
+    /**
+     * Log Debug
+     */
+    log_debug?: boolean | null;
+    /**
+     * Resume On Restart
+     */
+    resume_on_restart?: boolean;
+    /**
+     * Browser Ids
+     *
+     * 执行目标浏览器ID列表；为空=单浏览器
+     */
+    browser_ids?: Array<number> | null;
+    /**
+     * Concurrent Exec
+     *
+     * 多浏览器时是否并发执行
+     */
+    concurrent_exec?: boolean;
+    /**
+     * Created At
+     */
+    created_at?: string | null;
+    /**
+     * Updated At
+     */
+    updated_at?: string | null;
 };
 
 /**
@@ -11320,6 +12231,178 @@ export type WorkflowRunLogDetailResponse = {
      * Checkpoint Step
      */
     checkpoint_step?: number;
+    /**
+     * Resource Total
+     */
+    resource_total?: number;
+    /**
+     * Resource Success
+     */
+    resource_success?: number;
+    /**
+     * Resource Failed
+     */
+    resource_failed?: number;
+    /**
+     * Resource Skipped
+     */
+    resource_skipped?: number;
+    /**
+     * Resource Soft Failed
+     */
+    resource_soft_failed?: number;
+    /**
+     * Resource Fatal Failed
+     */
+    resource_fatal_failed?: number;
+};
+
+/**
+ * WorkflowRunLogItemResponse
+ *
+ * 工作流运行记录列表项
+ */
+export type WorkflowRunLogItemResponse = {
+    /**
+     * Id
+     */
+    id: number;
+    /**
+     * Run Id
+     */
+    run_id: string;
+    /**
+     * Workflow Id
+     */
+    workflow_id: number;
+    /**
+     * Browser Id
+     */
+    browser_id?: number;
+    /**
+     * Trigger Source
+     */
+    trigger_source: string;
+    /**
+     * Status
+     */
+    status: string;
+    /**
+     * Total
+     */
+    total?: number;
+    /**
+     * Success Count
+     */
+    success_count?: number;
+    /**
+     * Failed Count
+     */
+    failed_count?: number;
+    /**
+     * Execution Id
+     */
+    execution_id?: string;
+    /**
+     * Error Message
+     */
+    error_message?: string | null;
+    /**
+     * Duration Ms
+     */
+    duration_ms?: number;
+    /**
+     * Started At
+     */
+    started_at?: string | null;
+    /**
+     * Finished At
+     */
+    finished_at?: string | null;
+    /**
+     * Completed Steps
+     */
+    completed_steps?: number;
+    /**
+     * Current Step Index
+     */
+    current_step_index?: number;
+    /**
+     * Current Step Name
+     */
+    current_step_name?: string;
+    /**
+     * Loop Action Name
+     */
+    loop_action_name?: string;
+    /**
+     * Loop Index
+     */
+    loop_index?: number;
+    /**
+     * Loop Total
+     */
+    loop_total?: number;
+    /**
+     * Loop Body Completed
+     */
+    loop_body_completed?: number;
+    /**
+     * Loop Body Total
+     */
+    loop_body_total?: number;
+    /**
+     * Loop Body Step Name
+     */
+    loop_body_step_name?: string;
+    /**
+     * Progress Updated At
+     */
+    progress_updated_at?: number | null;
+    /**
+     * Queue Position
+     */
+    queue_position?: number;
+    /**
+     * Resumable
+     */
+    resumable?: boolean;
+    /**
+     * Resume Of
+     */
+    resume_of?: string | null;
+    /**
+     * Resume Count
+     */
+    resume_count?: number;
+    /**
+     * Checkpoint Step
+     */
+    checkpoint_step?: number;
+    /**
+     * Resource Total
+     */
+    resource_total?: number;
+    /**
+     * Resource Success
+     */
+    resource_success?: number;
+    /**
+     * Resource Failed
+     */
+    resource_failed?: number;
+    /**
+     * Resource Skipped
+     */
+    resource_skipped?: number;
+    /**
+     * Resource Soft Failed
+     */
+    resource_soft_failed?: number;
+    /**
+     * Resource Fatal Failed
+     */
+    resource_fatal_failed?: number;
 };
 
 /**
@@ -11873,7 +12956,7 @@ export type ApprovalListResponseWritable = {
      *
      * 当前页数据
      */
-    items?: Array<unknown>;
+    items?: Array<ApprovalItemResp>;
 };
 
 /**
@@ -11905,7 +12988,7 @@ export type BanListResponseWritable = {
      *
      * 当前页数据
      */
-    items?: Array<unknown>;
+    items?: Array<UserBanItemResp>;
 };
 
 /**
@@ -12037,7 +13120,7 @@ export type BasePaginationRespActionLogItemResponseWritable = {
      *
      * 当前页数据
      */
-    items?: Array<unknown>;
+    items?: Array<ActionLogItemResponse>;
 };
 
 /**
@@ -12067,7 +13150,7 @@ export type BasePaginationRespAuditListItemResponseWritable = {
      *
      * 当前页数据
      */
-    items?: Array<unknown>;
+    items?: Array<AuditListItemResponse>;
 };
 
 /**
@@ -12097,7 +13180,7 @@ export type BasePaginationRespCompositeActionListItemResponseWritable = {
      *
      * 当前页数据
      */
-    items?: Array<unknown>;
+    items?: Array<CompositeActionListItemResponse>;
 };
 
 /**
@@ -12127,7 +13210,7 @@ export type BasePaginationRespRedemptionCodeItemWritable = {
      *
      * 当前页数据
      */
-    items?: Array<unknown>;
+    items?: Array<RedemptionCodeItem>;
 };
 
 /**
@@ -12157,7 +13240,7 @@ export type BasePaginationRespUserBrowserInfoWritable = {
      *
      * 当前页数据
      */
-    items?: Array<unknown>;
+    items?: Array<UserBrowserInfoWritable>;
 };
 
 /**
@@ -12187,7 +13270,7 @@ export type BasePaginationRespWorkflowAdminListItemResponseWritable = {
      *
      * 当前页数据
      */
-    items?: Array<unknown>;
+    items?: Array<WorkflowAdminListItemResponse>;
 };
 
 /**
@@ -12217,7 +13300,7 @@ export type BasePaginationRespWorkflowListItemResponseWritable = {
      *
      * 当前页数据
      */
-    items?: Array<unknown>;
+    items?: Array<WorkflowListItemResponse>;
 };
 
 /**
@@ -12247,7 +13330,7 @@ export type BasePaginationRespWorkflowResourceRecordItemResponseWritable = {
      *
      * 当前页数据
      */
-    items?: Array<unknown>;
+    items?: Array<WorkflowResourceRecordItemResponse>;
 };
 
 /**
@@ -12277,7 +13360,7 @@ export type BasePaginationRespWorkflowRunLogItemResponseWritable = {
      *
      * 当前页数据
      */
-    items?: Array<unknown>;
+    items?: Array<WorkflowRunLogItemResponse>;
 };
 
 /**
@@ -12488,7 +13571,7 @@ export type CertificationListResponseWritable = {
      *
      * 当前页数据
      */
-    items?: Array<unknown>;
+    items?: Array<CertificationItemResp>;
 };
 
 /**
@@ -12547,7 +13630,7 @@ export type LedgerListResponseWritable = {
      *
      * 当前页数据
      */
-    items?: Array<unknown>;
+    items?: Array<DurationLedgerItem>;
 };
 
 /**
@@ -12861,6 +13944,133 @@ export type StandardResponseUnionBrowserFingerprintQueryRespNoneTypeWritable = {
      */
     msg?: string;
     data?: BrowserFingerprintQueryRespWritable | null;
+};
+
+/**
+ * UserBrowserInfo
+ *
+ * 用户浏览器信息数据库模型
+ */
+export type UserBrowserInfoWritable = {
+    /**
+     * --Fingerprint
+     */
+    '--fingerprint'?: number;
+    '--fingerprint-platform'?: PlatformEnum | null;
+    /**
+     * --Fingerprint-Platform-Version
+     *
+     * Uses default version if not specified
+     */
+    '--fingerprint-platform-version'?: string | null;
+    /**
+     * Chrome, Edge, Opera, Vivaldi (default is Chrome)
+     */
+    '--fingerprint-browser'?: BrowserEnum | null;
+    /**
+     * --Fingerprint-Brand-Version
+     *
+     * Uses default version if not specified
+     */
+    '--fingerprint-brand-version'?: string | null;
+    /**
+     * --Fingerprint-Hardware-Concurrency
+     */
+    '--fingerprint-hardware-concurrency'?: number | null;
+    /**
+     * --Fingerprint-Gpu-Vendor
+     *
+     * Vendor string (e.g., Intel Inc., NVIDIA Corporation). If not specified, uses fingerprint seed
+     */
+    '--fingerprint-gpu-vendor'?: string | null;
+    /**
+     * --Fingerprint-Gpu-Renderer
+     *
+     * Renderer string (e.g., Intel Iris OpenGL Engine, NVIDIA GeForce GTX 1060). If not specified, uses fingerprint seed
+     */
+    '--fingerprint-gpu-renderer'?: string | null;
+    /**
+     * --Lang
+     *
+     * Language code (e.g., en-US)
+     */
+    '--lang'?: string | null;
+    /**
+     * --Accept-Lang
+     *
+     * Language code (e.g., en-US)
+     */
+    '--accept-lang'?: string | null;
+    /**
+     * --Timezone
+     *
+     * Timezone (e.g., America/New_York)
+     */
+    '--timezone'?: string | null;
+    /**
+     * --Proxy-Server
+     *
+     * http, socks proxy (password authentication not supported)
+     */
+    '--proxy-server'?: string | null;
+    /**
+     * Proxy Bypass
+     *
+     * 代理绕过列表：逗号分隔的 host 规则（如 *.bilibili.com,127.0.0.1），命中的主机直连、不走 proxy_server。只能匹配主机名/IP，不能写完整 URL；未配置时回退到服务端环境变量 browser_proxy_bypass
+     */
+    proxy_bypass?: string | null;
+    /**
+     * Patchright Screen Width
+     */
+    patchright_screen_width?: number;
+    /**
+     * Patchright Screen Height
+     */
+    patchright_screen_height?: number;
+    /**
+     * Patchright Viewport Width
+     */
+    patchright_viewport_width?: number;
+    /**
+     * Patchright Viewport Height
+     */
+    patchright_viewport_height?: number;
+    /**
+     * Patchright Fingerprint Dict
+     */
+    patchright_fingerprint_dict?: {
+        [key: string]: unknown;
+    } | null;
+    /**
+     * Patchright Browser Ua
+     */
+    patchright_browser_ua?: string | null;
+    /**
+     * Browser Id
+     */
+    browser_id?: number;
+    /**
+     * Created At
+     *
+     * 创建时间
+     */
+    created_at?: string;
+    /**
+     * Updated At
+     *
+     * 更新时间
+     */
+    updated_at?: string;
+    /**
+     * Mid
+     */
+    mid: number;
+    /**
+     * Custom Name
+     *
+     * 用户自定义的浏览器名称，同一用户下不能重复
+     */
+    custom_name?: string | null;
 };
 
 export type GenRandFingerprintRouterApiV1RpaBrowserGenRandFingerprintPostData = {

@@ -11,6 +11,7 @@ import type {
 import { useUserNavStore } from '@/stores/user_nav'
 import { businessHandler } from '@/utils/businessHandler'
 import { pickBackendMsg } from '@/utils/backendErrorMsg'
+import { runStatusTagType, runStatusText } from '@/utils/rpa/runDisplay'
 import biliMessage from '@/utils/message'
 import ActionCard from './ActionCard.vue'
 import ActionPickerDialog from './ActionPickerDialog.vue'
@@ -477,23 +478,30 @@ const canSave = computed(
   () => !formError.value && !saving.value && !inputVarLoading.value
 )
 
-/** 运行状态展示 */
+/** 运行状态展示：不再给成功/失败结论，只给可数结果 */
 const nextRunAt = computed(() => (props.workflowDetail?.next_run_at as string) || '')
 const lastRunAt = computed(() => (props.workflowDetail?.last_run_at as string) || '')
 const lastRunStatus = computed(() => (props.workflowDetail?.last_run_status as string) || '')
 
-const runStatusLabel: Record<string, string> = {
-  success: '成功',
-  failed: '失败',
-  running: '运行中',
-  interrupted: '已中断',
+/** 详情接口已下发次数口径字段，本地生成类型尚未包含（SDK 下次生成后自动对齐） */
+interface LastRunCountFields {
+  last_run_success_count?: number | null
+  last_run_total?: number | null
+  last_run_resource_total?: number | null
+  last_run_resource_success?: number | null
 }
-const runStatusType: Record<string, 'success' | 'danger' | 'warning' | 'info'> = {
-  success: 'success',
-  failed: 'danger',
-  running: 'warning',
-  interrupted: 'info',
-}
+const lastRunCounts = computed<LastRunCountFields>(
+  () => (props.workflowDetail ?? {}) as LastRunCountFields
+)
+const lastRunText = computed(() =>
+  runStatusText({
+    status: lastRunStatus.value,
+    success_count: lastRunCounts.value.last_run_success_count,
+    total_steps: lastRunCounts.value.last_run_total,
+    resource_total: lastRunCounts.value.last_run_resource_total,
+    resource_success: lastRunCounts.value.last_run_resource_success,
+  })
+)
 
 // ── 监听打开/关闭 ─────────────────────────────────────
 watch(
@@ -756,8 +764,8 @@ function formatTime(t: string | null) {
         </div>
         <div class="workflow-run-state flex items-center gap-4 text-xs text-color-secondary flex-wrap">
           <span>上次运行：{{ formatTime(lastRunAt) }}</span>
-          <el-tag v-if="lastRunStatus" :type="runStatusType[lastRunStatus] || 'info'" effect="plain">
-            {{ runStatusLabel[lastRunStatus] || lastRunStatus }}
+          <el-tag v-if="lastRunStatus" :type="runStatusTagType(lastRunStatus)" effect="plain">
+            {{ lastRunText }}
           </el-tag>
           <span v-if="triggerType === 'cron'">下次运行：{{ formatTime(nextRunAt) }}</span>
         </div>

@@ -159,10 +159,12 @@ const percentText = computed(() =>
   indeterminate.value ? '—' : `${percentage.value}%`
 )
 
-const barStatus = computed<'' | 'success' | 'exception' | 'warning'>(() => {
+/**
+ * 进度条配色只表达过程状态（中断/停止），不表达运行成败：
+ * 运行结果统一由「成功循环 N 轮 / 成功 N 步」表达，避免同一条运行出现红绿矛盾。
+ */
+const barStatus = computed<'' | 'warning'>(() => {
   const status = props.progress?.status
-  if (status === 'failed') return 'exception'
-  if (status === 'success') return 'success'
   if (status === 'interrupted' || status === 'cancelled') return 'warning'
   return ''
 })
@@ -212,10 +214,11 @@ const triggerText = computed(() => {
   return source ? (TRIGGER_LABEL[source] ?? source) : ''
 })
 
+/** 步骤完成度（只报事实进度，不标成功/失败） */
 const showCounts = computed(() => {
   const progress = props.progress
   if (!progress) return false
-  return progress.success_count > 0 || progress.failed_count > 0
+  return progress.total_steps > 0 || progress.completed_steps > 0
 })
 
 /** 进度心跳超时提示：仅运行中才有意义 */
@@ -315,9 +318,7 @@ const resumedHint = computed(() => {
         class="workflow-run-progress__counts text-color-secondary"
         size="default"
       >
-        <span class="text-success">成功 {{ progress?.success_count ?? 0 }}</span>
-        <span class="mx-1">/</span>
-        <span class="text-danger">失败 {{ progress?.failed_count ?? 0 }}</span>
+        已完成 {{ progress?.completed_steps ?? 0 }}/{{ progress?.total_steps ?? 0 }} 步
       </el-text>
 
       <el-text v-if="triggerText" class="workflow-run-progress__trigger text-color-secondary" size="default">

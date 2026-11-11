@@ -3,6 +3,7 @@ import { computed } from 'vue'
 import { Clock, List, RefreshRight, VideoPause, VideoPlay } from '@element-plus/icons-vue'
 import type { WorkflowRunProgress } from '@/api/browser/workflow_run_api'
 import type { WorkflowItem } from '@/models/rpa_browser'
+import { runStatusTagType, runStatusText } from '@/utils/rpa/runDisplay'
 import WorkflowRunProgressBar from './WorkflowRunProgressBar.vue'
 import ResourceInteractionBar from '@/components/interaction/ResourceInteractionBar.vue'
 import IconRefresh from '@/assets/svgs/space/refresh.svg?component'
@@ -119,18 +120,18 @@ const execModeLabel = (item: WorkflowItem): string => {
   return item.concurrent_exec ? '并发执行' : '串行执行'
 }
 
-const runStatusLabel: Record<string, string> = {
-  success: '成功',
-  failed: '失败',
-  running: '运行中',
-  interrupted: '已中断',
-}
-const runStatusType: Record<string, 'success' | 'danger' | 'warning' | 'info'> = {
-  success: 'success',
-  failed: 'danger',
-  running: 'warning',
-  interrupted: 'info',
-}
+/**
+ * 上次运行展示：不再给成功/失败结论，只给可数结果
+ * （有资源 = 成功循环 N 轮；无资源 = 成功 N 步）。
+ */
+const lastRunText = (item: WorkflowItem) =>
+  runStatusText({
+    status: item.last_run_status,
+    success_count: item.last_run_success_count,
+    total_steps: item.last_run_total,
+    resource_total: item.last_run_resource_total,
+    resource_success: item.last_run_resource_success,
+  })
 
 /** 同步图标悬停文案（图标化后的状态说明入口） */
 const syncIconTip = (item: WorkflowItem) => {
@@ -202,8 +203,8 @@ const formatTime = (t: string | null) => {
         <el-tag v-if="running" type="warning" effect="plain">
           正在运行
         </el-tag>
-        <el-tag v-else-if="item.last_run_status" :type="runStatusType[item.last_run_status] || 'info'" effect="plain">
-          上次运行：{{ runStatusLabel[item.last_run_status] || item.last_run_status }}
+        <el-tag v-else-if="item.last_run_status" :type="runStatusTagType(item.last_run_status)" effect="plain">
+          上次运行：{{ lastRunText(item) }}
         </el-tag>
         <el-tag
           class="workflow-card__browser cursor-pointer"

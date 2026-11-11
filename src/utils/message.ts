@@ -40,6 +40,12 @@ const ssrLog = (level: string, options?: any) => {
 }
 
 /**
+ * 正在展示的「单例提示」文案。
+ * 提示关闭（自动消失 / 手动关闭 / closeAll）后才允许再次弹出同一文案。
+ */
+const activeSingletonMessages = new Set<string>()
+
+/**
  * 封装的 ElMessage，支持开发环境自动手动关闭
  */
 const biliMessage = function (options?: any) {
@@ -62,6 +68,34 @@ biliMessage.error = function (options?: any) {
 biliMessage.info = function (options?: any) {
   if (isSsr) return ssrLog('info', options)
   return ElMessage.info(getDevOptions(options))
+}
+/**
+ * 单例 info 提示：同一文案在关闭前只保留一个。
+ *
+ * 用于「多个组件/多次页面切换都会触发」的全局提示（如分页组件的「加载数据中！」），
+ * 避免相同提示在屏幕上叠加成多条；提示关闭后可再次弹出。
+ * 已存在相同文案时不再新建，返回 `undefined`。
+ */
+biliMessage.infoOnce = function (options?: any) {
+  if (isSsr) return ssrLog('info', options)
+  const baseOptions: any = typeof options === 'string' ? { message: options } : { ...options }
+  const key = String(baseOptions.message ?? '')
+  if (activeSingletonMessages.has(key)) return
+
+  activeSingletonMessages.add(key)
+  const userOnClose = baseOptions.onClose
+  try {
+    return ElMessage.info(getDevOptions({
+      ...baseOptions,
+      onClose: () => {
+        activeSingletonMessages.delete(key)
+        userOnClose?.()
+      }
+    }))
+  } catch (error) {
+    activeSingletonMessages.delete(key)
+    throw error
+  }
 }
 biliMessage.closeAll = function (): void {
   if (isSsr) return
