@@ -3,9 +3,26 @@
 import type { RequestResult } from '../client';
 import { client } from '../client.gen';
 import type { Options } from '../sdk.gen';
-import type { GetLlmConfigApiV1CrawlerAdminLlmConfigGetData, GetLlmConfigApiV1CrawlerAdminLlmConfigGetErrors, GetLlmConfigApiV1CrawlerAdminLlmConfigGetResponses, SaveLlmConfigApiV1CrawlerAdminLlmConfigPutData, SaveLlmConfigApiV1CrawlerAdminLlmConfigPutErrors, SaveLlmConfigApiV1CrawlerAdminLlmConfigPutResponses } from '../types.gen';
+import type { GetLlmConfigApiV1CrawlerAdminLlmConfigGetData, GetLlmConfigApiV1CrawlerAdminLlmConfigGetErrors, GetLlmConfigApiV1CrawlerAdminLlmConfigGetResponses, ListLlmModelsApiV1CrawlerAdminLlmModelsPostData, ListLlmModelsApiV1CrawlerAdminLlmModelsPostErrors, ListLlmModelsApiV1CrawlerAdminLlmModelsPostResponses, ResetLlmConfigApiV1CrawlerAdminLlmConfigDeleteData, ResetLlmConfigApiV1CrawlerAdminLlmConfigDeleteErrors, ResetLlmConfigApiV1CrawlerAdminLlmConfigDeleteResponses, SaveLlmConfigApiV1CrawlerAdminLlmConfigPutData, SaveLlmConfigApiV1CrawlerAdminLlmConfigPutErrors, SaveLlmConfigApiV1CrawlerAdminLlmConfigPutResponses, TestLlmConfigApiV1CrawlerAdminLlmConfigTestPostData, TestLlmConfigApiV1CrawlerAdminLlmConfigTestPostErrors, TestLlmConfigApiV1CrawlerAdminLlmConfigTestPostResponses } from '../types.gen';
 
 export class CrawlerLlmAdminService {
+    /**
+     * 撤销人工保存，恢复为 .env 配置
+     *
+     * 撤销人工保存：删除 crawler 的持久化文件并热切回 `.env` 的 `llm_apis`。
+     *
+     * - 幂等：本来就没有持久化文件时也返回成功（相当于把 `.env` 重新应用一遍）；
+     * - 返回切换后的配置 + 统计（与 `GET` 同结构，页面可直接覆盖表格）；
+     * - 会丢弃运维在管理页保存过的所有人工修改，前端必须二次确认。
+     */
+    public static resetLlmConfigApiV1CrawlerAdminLlmConfigDelete<ThrowOnError extends boolean = false>(options?: Options<ResetLlmConfigApiV1CrawlerAdminLlmConfigDeleteData, ThrowOnError>): RequestResult<ResetLlmConfigApiV1CrawlerAdminLlmConfigDeleteResponses, ResetLlmConfigApiV1CrawlerAdminLlmConfigDeleteErrors, ThrowOnError, 'data'> {
+        return (options?.client ?? client).delete<ResetLlmConfigApiV1CrawlerAdminLlmConfigDeleteResponses, ResetLlmConfigApiV1CrawlerAdminLlmConfigDeleteErrors, ThrowOnError, 'data'>({
+            responseStyle: 'data',
+            url: '/api/v1/crawler/admin/llm/config',
+            ...options
+        });
+    }
+    
     /**
      * crawler LLM 实例配置 + 运行统计
      *
@@ -26,12 +43,57 @@ export class CrawlerLlmAdminService {
      *
      * - 数值字段一律字符串传输（`requests_per_second` 如 `"0.5"`）；
      * - `token` 传空串或脱敏值表示**沿用原密钥**，新增实例必须填明文；
-     * - 只在 crawler 进程内存生效，**重启后回退 `.env` 的 `llm_apis`**。
+     * - 保存后立即热更新，并**持久化到 crawler 的 `runtime/llm_apis.json`**，
+     * crawler 重启后仍然生效（事实来源：本地文件 > `.env`，不回写 `.env`）。
      */
     public static saveLlmConfigApiV1CrawlerAdminLlmConfigPut<ThrowOnError extends boolean = false>(options: Options<SaveLlmConfigApiV1CrawlerAdminLlmConfigPutData, ThrowOnError>): RequestResult<SaveLlmConfigApiV1CrawlerAdminLlmConfigPutResponses, SaveLlmConfigApiV1CrawlerAdminLlmConfigPutErrors, ThrowOnError, 'data'> {
         return (options.client ?? client).put<SaveLlmConfigApiV1CrawlerAdminLlmConfigPutResponses, SaveLlmConfigApiV1CrawlerAdminLlmConfigPutErrors, ThrowOnError, 'data'>({
             responseStyle: 'data',
             url: '/api/v1/crawler/admin/llm/config',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    /**
+     * 测试单条 crawler LLM 实例是否可用
+     *
+     * 对一条实例做一次真实 LLM 调用探测（可测未保存的编辑态）。
+     *
+     * - `token` 传空串或脱敏值 → 按 `index` 沿用原密钥（新增行必须传明文）；
+     * - 只做诊断：不参与 crawler 的健康状态机、不改统计、不落盘；
+     * - 上游慢模型可能触发探测超时（crawler `llm_test_timeout`，默认 45s），
+     * 此时返回 `ok=false` + 超时文案，不代表配置错误。
+     */
+    public static testLlmConfigApiV1CrawlerAdminLlmConfigTestPost<ThrowOnError extends boolean = false>(options: Options<TestLlmConfigApiV1CrawlerAdminLlmConfigTestPostData, ThrowOnError>): RequestResult<TestLlmConfigApiV1CrawlerAdminLlmConfigTestPostResponses, TestLlmConfigApiV1CrawlerAdminLlmConfigTestPostErrors, ThrowOnError, 'data'> {
+        return (options.client ?? client).post<TestLlmConfigApiV1CrawlerAdminLlmConfigTestPostResponses, TestLlmConfigApiV1CrawlerAdminLlmConfigTestPostErrors, ThrowOnError, 'data'>({
+            responseStyle: 'data',
+            url: '/api/v1/crawler/admin/llm/config/test',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    /**
+     * 获取某条 crawler LLM 实例的可选模型列表
+     *
+     * 拉取上游 `GET {base_url}/models`，供管理页做模型名下拉候选。
+     *
+     * - `token` 传空串或脱敏值 → 按 `index` 沿用原密钥（新增行必须传明文）；
+     * - 地址 / 密钥填好即可拉取，**不要求先填模型名**；
+     * - 只做诊断：不参与 crawler 的健康状态机、不改统计、不落盘；
+     * - 上游不可达 / 超时也返回 `ok=false` + 原因（HTTP 仍为 200）。
+     */
+    public static listLlmModelsApiV1CrawlerAdminLlmModelsPost<ThrowOnError extends boolean = false>(options: Options<ListLlmModelsApiV1CrawlerAdminLlmModelsPostData, ThrowOnError>): RequestResult<ListLlmModelsApiV1CrawlerAdminLlmModelsPostResponses, ListLlmModelsApiV1CrawlerAdminLlmModelsPostErrors, ThrowOnError, 'data'> {
+        return (options.client ?? client).post<ListLlmModelsApiV1CrawlerAdminLlmModelsPostResponses, ListLlmModelsApiV1CrawlerAdminLlmModelsPostErrors, ThrowOnError, 'data'>({
+            responseStyle: 'data',
+            url: '/api/v1/crawler/admin/llm/models',
             ...options,
             headers: {
                 'Content-Type': 'application/json',

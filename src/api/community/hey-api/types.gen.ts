@@ -1902,6 +1902,82 @@ export type CrawlerLlmConfigResp = {
 };
 
 /**
+ * CrawlerLlmModelsReq
+ *
+ * 单条实例的「获取模型列表」请求（管理端下拉候选，可对未保存的编辑态发起）。
+ */
+export type CrawlerLlmModelsReq = {
+    /**
+     * Index
+     *
+     * 该实例在当前列表中的索引（字符串）；token 为空/脱敏时按它回填原密钥，新增行传 null
+     */
+    index?: string | null;
+    /**
+     * Base Url
+     *
+     * OpenAI 兼容接口地址
+     */
+    base_url: string;
+    /**
+     * Model Name
+     *
+     * 该实例当前的模型名；仅用于「索引与配置是否匹配」的校验，可为空
+     */
+    model_name?: string;
+    /**
+     * Token
+     *
+     * 明文密钥；空串或脱敏值 = 沿用该索引上的原密钥
+     */
+    token?: string;
+};
+
+/**
+ * CrawlerLlmModelsResp
+ *
+ * 一次模型列表查询的结果（诊断口径：不参与 crawler 的健康状态机、不改统计）。
+ */
+export type CrawlerLlmModelsResp = {
+    /**
+     * Ok
+     *
+     * 是否查询成功（上游 /models 返回了可解析的列表）
+     */
+    ok: boolean;
+    /**
+     * Base Url
+     *
+     * 被查询的接口地址
+     */
+    base_url: string;
+    /**
+     * Status Code
+     *
+     * 上游 HTTP 状态码；未发出请求时为 null
+     */
+    status_code?: string | null;
+    /**
+     * Latency Ms
+     *
+     * 耗时（毫秒）；未发出请求时为 0
+     */
+    latency_ms: string;
+    /**
+     * Models
+     *
+     * 上游可用的模型 id 列表（去重 + 升序）；失败时为空
+     */
+    models?: Array<string>;
+    /**
+     * Error
+     *
+     * 失败或提示文案（已抹掉密钥，截断 200 字符）
+     */
+    error?: string | null;
+};
+
+/**
  * CrawlerLlmSaveItem
  *
  * 单条 LLM 实例配置（保存态）。
@@ -2058,6 +2134,82 @@ export type CrawlerLlmStatsItem = {
      * 最近一次失败的错误信息
      */
     last_error?: string | null;
+};
+
+/**
+ * CrawlerLlmTestReq
+ *
+ * 单条实例的连通性测试请求（管理端「测试」按钮，可测未保存的编辑态）。
+ */
+export type CrawlerLlmTestReq = {
+    /**
+     * Index
+     *
+     * 该实例在当前列表中的索引（字符串）；token 为空/脱敏时按它回填原密钥，新增行传 null
+     */
+    index?: string | null;
+    /**
+     * Base Url
+     *
+     * OpenAI 兼容接口地址
+     */
+    base_url: string;
+    /**
+     * Model Name
+     *
+     * 模型名
+     */
+    model_name: string;
+    /**
+     * Token
+     *
+     * 明文密钥；空串或脱敏值 = 沿用该索引上的原密钥
+     */
+    token?: string;
+};
+
+/**
+ * CrawlerLlmTestResp
+ *
+ * 一次探测的结果（诊断口径：不参与 crawler 的健康状态机、不改统计）。
+ */
+export type CrawlerLlmTestResp = {
+    /**
+     * Ok
+     *
+     * 是否探测成功（裸 ChatOpenAI 真实调用拿到模型回复）
+     */
+    ok: boolean;
+    /**
+     * Base Url
+     *
+     * 被测接口地址
+     */
+    base_url: string;
+    /**
+     * Model Name
+     *
+     * 被测模型名
+     */
+    model_name: string;
+    /**
+     * Status Code
+     *
+     * 上游 HTTP 状态码；SDK 成功调用拿不到状态码时记为 200，未发请求时为 null
+     */
+    status_code?: string | null;
+    /**
+     * Latency Ms
+     *
+     * 耗时（毫秒）；未发请求时为 0
+     */
+    latency_ms: string;
+    /**
+     * Error
+     *
+     * 失败原因（已抹掉密钥，截断 200 字符）
+     */
+    error?: string | null;
 };
 
 /**
@@ -10315,6 +10467,36 @@ export type StandardResponseCrawlerLlmConfigResp = {
      */
     msg?: string;
     data?: CrawlerLlmConfigResp | null;
+};
+
+/**
+ * StandardResponse[CrawlerLlmModelsResp]
+ */
+export type StandardResponseCrawlerLlmModelsResp = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: CrawlerLlmModelsResp | null;
+};
+
+/**
+ * StandardResponse[CrawlerLlmTestResp]
+ */
+export type StandardResponseCrawlerLlmTestResp = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: CrawlerLlmTestResp | null;
 };
 
 /**
@@ -31613,6 +31795,81 @@ export type FolderCoverAuditRejectApiV1FavoriteFolderCoverAuditRejectPostRespons
 
 export type FolderCoverAuditRejectApiV1FavoriteFolderCoverAuditRejectPostResponse = FolderCoverAuditRejectApiV1FavoriteFolderCoverAuditRejectPostResponses[keyof FolderCoverAuditRejectApiV1FavoriteFolderCoverAuditRejectPostResponses];
 
+export type ResetLlmConfigApiV1CrawlerAdminLlmConfigDeleteData = {
+    body?: never;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Jwt
+         */
+        'x-bili-jwt'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string | null;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string | null;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string | null;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string | null;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string | null;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string | null;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string | null;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/crawler/admin/llm/config';
+};
+
+export type ResetLlmConfigApiV1CrawlerAdminLlmConfigDeleteErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ResetLlmConfigApiV1CrawlerAdminLlmConfigDeleteError = ResetLlmConfigApiV1CrawlerAdminLlmConfigDeleteErrors[keyof ResetLlmConfigApiV1CrawlerAdminLlmConfigDeleteErrors];
+
+export type ResetLlmConfigApiV1CrawlerAdminLlmConfigDeleteResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseCrawlerLlmConfigResp;
+};
+
+export type ResetLlmConfigApiV1CrawlerAdminLlmConfigDeleteResponse = ResetLlmConfigApiV1CrawlerAdminLlmConfigDeleteResponses[keyof ResetLlmConfigApiV1CrawlerAdminLlmConfigDeleteResponses];
+
 export type GetLlmConfigApiV1CrawlerAdminLlmConfigGetData = {
     body?: never;
     headers?: {
@@ -31762,6 +32019,156 @@ export type SaveLlmConfigApiV1CrawlerAdminLlmConfigPutResponses = {
 };
 
 export type SaveLlmConfigApiV1CrawlerAdminLlmConfigPutResponse = SaveLlmConfigApiV1CrawlerAdminLlmConfigPutResponses[keyof SaveLlmConfigApiV1CrawlerAdminLlmConfigPutResponses];
+
+export type TestLlmConfigApiV1CrawlerAdminLlmConfigTestPostData = {
+    body: CrawlerLlmTestReq;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Jwt
+         */
+        'x-bili-jwt'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string | null;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string | null;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string | null;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string | null;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string | null;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string | null;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string | null;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/crawler/admin/llm/config/test';
+};
+
+export type TestLlmConfigApiV1CrawlerAdminLlmConfigTestPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type TestLlmConfigApiV1CrawlerAdminLlmConfigTestPostError = TestLlmConfigApiV1CrawlerAdminLlmConfigTestPostErrors[keyof TestLlmConfigApiV1CrawlerAdminLlmConfigTestPostErrors];
+
+export type TestLlmConfigApiV1CrawlerAdminLlmConfigTestPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseCrawlerLlmTestResp;
+};
+
+export type TestLlmConfigApiV1CrawlerAdminLlmConfigTestPostResponse = TestLlmConfigApiV1CrawlerAdminLlmConfigTestPostResponses[keyof TestLlmConfigApiV1CrawlerAdminLlmConfigTestPostResponses];
+
+export type ListLlmModelsApiV1CrawlerAdminLlmModelsPostData = {
+    body: CrawlerLlmModelsReq;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Jwt
+         */
+        'x-bili-jwt'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string | null;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string | null;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string | null;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string | null;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string | null;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string | null;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string | null;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/crawler/admin/llm/models';
+};
+
+export type ListLlmModelsApiV1CrawlerAdminLlmModelsPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ListLlmModelsApiV1CrawlerAdminLlmModelsPostError = ListLlmModelsApiV1CrawlerAdminLlmModelsPostErrors[keyof ListLlmModelsApiV1CrawlerAdminLlmModelsPostErrors];
+
+export type ListLlmModelsApiV1CrawlerAdminLlmModelsPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseCrawlerLlmModelsResp;
+};
+
+export type ListLlmModelsApiV1CrawlerAdminLlmModelsPostResponse = ListLlmModelsApiV1CrawlerAdminLlmModelsPostResponses[keyof ListLlmModelsApiV1CrawlerAdminLlmModelsPostResponses];
 
 export type GetPushSwitchApiV1CrawlerAdminPushSwitchGetData = {
     body?: never;
