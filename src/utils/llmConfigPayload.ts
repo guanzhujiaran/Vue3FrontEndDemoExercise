@@ -6,7 +6,8 @@
  *   （crawler 侧一条配置仍然只对应一个模型，槽位 / 冷却 / 摘除都按模型算，
  *   这里只做展示与编辑层级的合并，不改变存储结构）；
  * - **保存**：一张卡片勾了 N 个模型就展开成 N 条实例配置，共用该卡片的
- *   地址 / 密钥 / 限流（crawler 侧会按 `base_url` 沿用同源密钥）。
+ *   地址 / 密钥 / 限流；密钥留空时回传该卡片的**脱敏值**，作为「沿用这一把」的引用，
+ *   这样同一 `base_url` 下配多把不同密钥也能各自对上（见 `LlmConfigCard.tokenHint`）。
  */
 import type { CrawlerLlmSaveItem } from '@/api/notify/crawler_llm_api'
 
@@ -16,8 +17,16 @@ export interface LlmConfigCard {
   baseUrl: string
   /** 该卡片勾选 / 手写的模型名 */
   models: string[]
-  /** 明文密钥；空串 / 脱敏值 = 沿用原密钥 */
+  /** 用户新填的**明文**密钥；空串 = 不改密钥 */
   token: string
+  /**
+   * 服务端回显的脱敏密钥（`前4****后4`）。
+   *
+   * `token` 为空时原样回传它：脱敏值是「沿用**这把**密钥」的引用，后端据此在
+   * 同一地址的多把密钥里精确挑出这一把（同一 `base_url` 配不同 key 时才分得清）。
+   * 新增卡片没有回显值，留空即「新来源必须填明文」。
+   */
+  tokenHint?: string
   /** 限流：每秒请求数 */
   rps: number
 }
@@ -100,17 +109,20 @@ export function groupLlmConfigs<T extends LlmConfigLike>(
 /**
  * 卡片列表 → 提交载荷：一张卡片勾了 N 个模型就展开成 N 条。
  *
- * 模型名为空的卡片仍提交一条（`model_name: ''`）：让后端的「缺少模型名」校验
- * 给出明确文案，而不是前端静默丢行导致保存后配置莫名少一条。
+ * - `token`：填了明文就传明文（改密钥），没填就回传服务端的脱敏值
+ *   （= 「沿用这一把」的引用，同一地址多把密钥时才不会串），都没有则传空串；
+ * - 模型名为空的卡片仍提交一条（`model_name: ''`）：让后端的「缺少模型名」校验
+ *   给出明确文案，而不是前端静默丢行导致保存后配置莫名少一条。
  */
 export function buildLlmSaveItems(cards: LlmConfigCard[]): CrawlerLlmSaveItem[] {
   return cards.flatMap((card) => {
     const models = normalizeCardModels(card.models)
     const targets = models.length > 0 ? models : ['']
+    const token = card.token.trim() || (card.tokenHint ?? '').trim()
     return targets.map((model) => ({
       base_url: card.baseUrl.trim(),
       model_name: model,
-      token: card.token.trim(),
+      token,
       requests_per_second: String(card.rps),
     }))
   })

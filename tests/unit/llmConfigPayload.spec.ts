@@ -95,6 +95,40 @@ describe('buildLlmSaveItems', () => {
     expect(items.every((i) => i.requests_per_second === '0.5')).toBe(true)
   })
 
+  it('没填密钥时回传服务端脱敏值（沿用这一把的引用）', () => {
+    const items = buildLlmSaveItems([
+      {
+        baseUrl: 'https://api.example.com/v1',
+        models: ['m1', 'm2'],
+        token: '',
+        tokenHint: 'sk-1****abcd',
+        rps: 0.5,
+      },
+    ])
+    // 同一地址配多把密钥时，靠这个引用才分得清是哪一把
+    expect(items.map((i) => i.token)).toEqual(['sk-1****abcd', 'sk-1****abcd'])
+  })
+
+  it('填了新明文就覆盖脱敏值', () => {
+    const items = buildLlmSaveItems([
+      {
+        baseUrl: 'https://api.example.com/v1',
+        models: ['m1'],
+        token: ' sk-new ',
+        tokenHint: 'sk-1****abcd',
+        rps: 0.5,
+      },
+    ])
+    expect(items[0].token).toBe('sk-new')
+  })
+
+  it('新增卡片没有脱敏值，密钥留空就传空串（交给后端判「新来源」）', () => {
+    const items = buildLlmSaveItems([
+      { baseUrl: 'https://new.example.com/v1', models: ['m1'], token: '', rps: 0.5 },
+    ])
+    expect(items[0].token).toBe('')
+  })
+
   it('模型名为空的卡片仍提交一条空 model_name（交给后端报错，不静默丢行）', () => {
     const items = buildLlmSaveItems([
       { baseUrl: 'https://a.com', models: [], token: '', rps: 1 },

@@ -22,14 +22,32 @@
       </el-text>
       <el-text class="crawler-llm-config__notice-line block w-full whitespace-normal break-words text-text-secondary"
         tag="div">
-        · 状态里被判为不可恢复（鉴权失败 / 模型下线等）的实例会被 crawler
-        <span class="crawler-llm-config__notice-emphasis font-semibold">自动摘除</span>，
-        但摘除只影响运行时、不落盘，重启后会自动恢复；要永久删掉请在这里删除并保存。
+        · 状态按
+        <span class="crawler-llm-config__notice-emphasis font-semibold">模型</span>
+        单独计算：同一地址下的多个模型各自健康 / 冷却 / 被移除，卡片头只显示数量，
+        具体哪个模型、什么原因写在卡片内的「模型名称」列表里。
       </el-text>
       <el-text class="crawler-llm-config__notice-line block w-full whitespace-normal break-words text-text-secondary"
         tag="div">
-        · 密钥读取时为脱敏值（前4****后4）；编辑时留空表示不修改，只有新增实例必须填明文。
-        删除中间某一项后，后面的实例按新顺序逐条沿用原密钥，必要时请重新填写。
+        · 被判为不可恢复（鉴权失败 / 模型下线等）的模型会被 crawler
+        <span class="crawler-llm-config__notice-emphasis font-semibold">自动摘除</span>，
+        卡片里会标出
+        <span class="crawler-llm-config__notice-emphasis font-semibold">移除原因</span>
+        ；摘除只影响运行时、不落盘，重启后会自动恢复，
+        要永久删掉请取消勾选该模型（或删除卡片）后保存。
+      </el-text>
+      <el-text class="crawler-llm-config__notice-line block w-full whitespace-normal break-words text-text-secondary"
+        tag="div">
+        · 密钥读取时为脱敏值（前4****后4）。密钥属于
+        <span class="crawler-llm-config__notice-emphasis font-semibold">接口地址（来源）</span>，
+        同一地址下增删模型、调整顺序都沿用同一把钥匙，留空即可；只有新增地址才必须填明文。
+      </el-text>
+      <el-text class="crawler-llm-config__notice-line block w-full whitespace-normal break-words text-text-secondary"
+        tag="div">
+        · 一个地址要配
+        <span class="crawler-llm-config__notice-emphasis font-semibold">第二把密钥</span>
+        时：点「新增实例」，填相同地址 + 新密钥后再勾模型即可——密钥属于卡片，
+        每张卡片各用自己那把、互不影响（同一张卡片内的模型共用该卡片的密钥）。
       </el-text>
       <el-text class="crawler-llm-config__notice-line block w-full whitespace-normal break-words text-text-secondary"
         tag="div">
@@ -58,7 +76,7 @@
   <div class="crawler-llm-config__toolbar flex flex-col min-w-0 gap-3 rounded-xl border border-border-light p-4">
     <div class="crawler-llm-config__toolbar-head flex items-center justify-between gap-2 flex-wrap">
       <span class="crawler-llm-config__toolbar-title text-base font-semibold text-text-primary">
-        LLM 实例（{{ rows.length }} 个，卡片顺序 = 调用轮询顺序）
+        LLM 实例（{{ totalModelCount }} 个模型 / {{ rows.length }} 张卡片，卡片顺序 = 调用轮询顺序）
       </span>
       <el-text class="crawler-llm-config__dirty text-xs text-text-secondary" tag="span">
         {{ dirty ? '有未保存的修改' : '当前为 crawler 正在生效的配置' }}
@@ -96,22 +114,18 @@
     class="crawler-llm-config__grid grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
     <article v-for="(row, index) in rows" :key="row.key"
       class="crawler-llm-config__item flex flex-col min-w-0 gap-2 rounded-xl border border-border-light bg-bg-secondary p-3 transition-colors hover:border-primary-light-5">
-      <!-- 卡片头：序号 + 运行状态，下面是模型名 / 地址摘要（便于一眼定位） -->
+      <!-- 卡片头：序号 + 模型级状态计数，下面是模型名 / 地址摘要（便于一眼定位） -->
       <div class="crawler-llm-config__item-head flex items-start justify-between gap-2">
         <div class="crawler-llm-config__item-heading flex min-w-0 flex-col gap-1">
-          <div class="crawler-llm-config__item-meta flex min-w-0 items-center gap-2">
+          <div class="crawler-llm-config__item-meta flex min-w-0 flex-wrap items-center gap-2">
             <span
               class="crawler-llm-config__item-index shrink-0 rounded-md bg-fill-dark px-1.5 py-0.5 text-xs font-medium text-text-regular">
               #{{ index + 1 }}
             </span>
-            <el-tooltip v-if="rowState(row).reason" class="crawler-llm-config__item-state-tip"
-              :content="rowState(row).reason" placement="top">
-              <el-tag class="crawler-llm-config__item-state" :type="rowState(row).type">
-                {{ rowState(row).label }}
-              </el-tag>
-            </el-tooltip>
-            <el-tag v-else class="crawler-llm-config__item-state" :type="rowState(row).type">
-              {{ rowState(row).label }}
+            <!-- 状态是**每个模型**自己的：卡片头只给「几个异常 / 几个已被移除」的计数，
+                 具体是哪个模型、什么原因见下面的「已移除模型」区块与「模型名称」列表 -->
+            <el-tag class="crawler-llm-config__item-state" :type="rowStateSummary(row).type">
+              {{ rowStateSummary(row).label }}
             </el-tag>
           </div>
           <el-text class="crawler-llm-config__item-model w-full truncate text-sm font-semibold text-text-primary"
@@ -130,6 +144,31 @@
             </el-button>
           </template>
         </el-popconfirm>
+      </div>
+
+      <!-- 已被移出实例池的模型：crawler 只做运行时摘除、不落盘，配置里仍然存在，
+           所以必须把「哪个模型、为什么被移除」写明白，并说明怎么永久删掉 -->
+      <div v-if="rowRemovedStates(row).length > 0"
+        class="crawler-llm-config__item-removed flex min-w-0 flex-col gap-1 rounded-md border border-danger-light-7 bg-danger-light-9 px-2 py-1.5">
+        <span class="crawler-llm-config__item-removed-title text-xs font-semibold text-danger">
+          已被 crawler 移出实例池的模型（{{ rowRemovedStates(row).length }} 个）
+        </span>
+        <div v-for="item in rowRemovedStates(row)" :key="item.model"
+          class="crawler-llm-config__item-removed-row flex min-w-0 flex-col gap-0.5">
+          <span class="crawler-llm-config__item-removed-model min-w-0 break-words text-xs font-medium text-danger">
+            {{ item.model }}
+          </span>
+          <el-text
+            class="crawler-llm-config__item-removed-reason block w-full whitespace-normal break-words text-xs text-text-regular"
+            tag="div">
+            移除原因：{{ item.reason }}
+          </el-text>
+        </div>
+        <el-text
+          class="crawler-llm-config__item-removed-hint block w-full whitespace-normal break-words text-xs text-text-secondary"
+          tag="div">
+          摘除只影响运行时、不落盘，配置仍在；要永久去掉请取消勾选该模型（或删除卡片）后保存。
+        </el-text>
       </div>
 
       <!-- 可编辑字段：卡片较窄，统一竖向排列，避免输入框被压缩 -->
@@ -181,12 +220,36 @@
               </el-text>
             </div>
 
-            <div v-if="visibleModelChoices(row).length > 0"
-              class="crawler-llm-config__row-model-list bili-thin-scroll max-h-40 overflow-y-auto px-2 py-1">
+            <!-- 每个模型各自一行：名字 + 自己的状态 + 原因 / 恢复时间 / 统计，
+                 状态不再按卡片（base_url）聚合成一个标签 -->
+            <div v-if="visibleModelOptions(row).length > 0"
+              class="crawler-llm-config__row-model-list bili-thin-scroll max-h-72 overflow-y-auto px-2 py-1">
               <el-checkbox-group v-model="row.models" class="crawler-llm-config__row-model-group flex flex-col">
-                <el-checkbox v-for="model in visibleModelChoices(row)" :key="model" :value="model"
-                  class="crawler-llm-config__row-model-item h-7 min-w-0" :title="model">
-                  <span class="crawler-llm-config__row-model-label block truncate text-xs">{{ model }}</span>
+                <!-- h-auto：Element Plus 默认给 el-checkbox 固定 32px 高，多行内容会被压出容器 -->
+                <el-checkbox v-for="option in visibleModelOptions(row)" :key="option.model" :value="option.model"
+                  class="crawler-llm-config__row-model-item h-auto min-w-0 items-start py-1" :title="option.model">
+                  <div class="crawler-llm-config__row-model-body flex min-w-0 flex-col gap-0.5">
+                    <div class="crawler-llm-config__row-model-title flex min-w-0 items-center gap-1.5">
+                      <span class="crawler-llm-config__row-model-label min-w-0 truncate text-xs">{{ option.model }}</span>
+                      <el-tag class="crawler-llm-config__row-model-state shrink-0" :type="option.state.tagType">
+                        {{ option.state.label }}
+                      </el-tag>
+                    </div>
+                    <el-text v-if="option.state.reason"
+                      class="crawler-llm-config__row-model-reason block w-full whitespace-normal break-words text-xs"
+                      :class="option.state.removed ? 'text-danger' : 'text-warning'" tag="div">
+                      {{ option.state.removed ? '移除原因' : '状态原因' }}：{{ option.state.reason }}
+                    </el-text>
+                    <el-text v-if="option.state.resumeAt"
+                      class="crawler-llm-config__row-model-resume block text-xs text-text-secondary" tag="div">
+                      预计 {{ formatDateTime(option.state.resumeAt) }} 自动恢复
+                    </el-text>
+                    <el-text v-if="option.statsText"
+                      class="crawler-llm-config__row-model-stats block w-full whitespace-normal break-words text-xs text-text-secondary"
+                      tag="div">
+                      {{ option.statsText }}
+                    </el-text>
+                  </div>
                 </el-checkbox>
               </el-checkbox-group>
             </div>
@@ -227,7 +290,7 @@
           <!-- 占位文案走绑定常量：静态属性里出现 `//` 会被 vue-tsc 当成行注释，
                  导致后续模板表达式的 row/index 全部「Cannot find name」 -->
           <el-input v-model="row.baseUrl" class="crawler-llm-config__row-base-url" :placeholder="BASE_URL_PLACEHOLDER"
-            clearable @change="handleEndpointChange(row)" />
+            clearable @change="handleBaseUrlChange(row)" />
         </div>
 
         <div class="crawler-llm-config__field flex flex-col min-w-0 gap-1">
@@ -239,25 +302,8 @@
         </div>
       </div>
 
-      <!-- 统计（服务端只读）：三格等分 + 细分隔线，比灰底大块更紧凑 -->
-      <div class="crawler-llm-config__stats grid grid-cols-3 divide-x divide-border py-1.5">
-        <div class="crawler-llm-config__stat flex min-w-0 flex-col gap-0.5 px-1.5 first:pl-0 last:pr-0">
-          <span class="crawler-llm-config__stat-label text-xs leading-tight text-text-secondary">调用 / 成功率</span>
-          <span class="crawler-llm-config__stat-value truncate text-sm font-medium text-text-primary">{{ invokeText(row)
-            }}</span>
-        </div>
-        <div class="crawler-llm-config__stat flex min-w-0 flex-col gap-0.5 px-1.5 first:pl-0 last:pr-0">
-          <span class="crawler-llm-config__stat-label text-xs leading-tight text-text-secondary">累计 token</span>
-          <span class="crawler-llm-config__stat-value truncate text-sm font-medium text-text-primary">{{ tokensText(row)
-            }}</span>
-        </div>
-        <div class="crawler-llm-config__stat flex min-w-0 flex-col gap-0.5 px-1.5 first:pl-0 last:pr-0">
-          <span class="crawler-llm-config__stat-label text-xs leading-tight text-text-secondary">最近一次调用</span>
-          <span class="crawler-llm-config__stat-value truncate text-sm font-medium text-text-primary">{{
-            lastUsedText(row)
-            }}</span>
-        </div>
-      </div>
+      <!-- 统计（服务端只读）不再按卡片聚合成三格：调用次数 / 成功率 / token / 最近一次调用
+           都是**每个模型**自己的口径，直接跟着上面的模型列表逐行展示 -->
 
       <!-- 底部：测试入口（结果在弹窗里看，不占卡片高度） -->
       <div
@@ -347,6 +393,8 @@ import {
   normalizeBaseUrl,
   normalizeCardModels,
 } from '@/utils/llmConfigPayload'
+import { describeLlmModelState, llmStatsKey } from '@/utils/llmModelState'
+import type { LlmModelStateView } from '@/utils/llmModelState'
 import {
   fetchCrawlerLlmConfig,
   fetchCrawlerLlmModels,
@@ -446,73 +494,68 @@ function nextKey(): string {
   return `llm-row-${rowSeq}`
 }
 
-/** 统计按 `归一化 base_url + model_name` 与配置卡片对应（服务端已归一化，这里再兜一次） */
+/** 统计按 `归一化 base_url + model_name` 索引（服务端已归一化，这里再兜一次） */
 const statsMap = computed(() => {
   const map = new Map<string, CrawlerLlmStatsItem>()
   for (const item of stats.value) {
-    map.set(`${normalizeBaseUrl(item.base_url)}||${item.model_name}`, item)
+    map.set(llmStatsKey(item.base_url, item.model_name), item)
   }
   return map
 })
 
 /**
- * 该卡片下每个模型各自的统计。
+ * 某个模型**自己**的统计。
  *
- * 可能少于模型数：刚加的模型还没进实例池（保存后才会建槽位），这类不参与聚合。
+ * crawler 是逐模型建槽位、逐模型冷却 / 摘除的，所以状态、原因、调用量都按模型取；
+ * 卡片（`base_url`）只是编辑层级，不能作为状态口径。
+ * 返回 `undefined` = 该模型还没进池（刚配置 / 刚保存还没被加载）。
  */
-function statsOf(row: LlmRow): CrawlerLlmStatsItem[] {
-  const baseUrl = normalizeBaseUrl(row.baseUrl)
-  return rowModels(row)
-    .map((model) => statsMap.value.get(`${baseUrl}||${model}`))
-    .filter((item): item is CrawlerLlmStatsItem => Boolean(item))
+function modelStat(row: LlmRow, model: string): CrawlerLlmStatsItem | undefined {
+  return statsMap.value.get(llmStatsKey(row.baseUrl, model))
 }
 
-/** 状态严重程度：数值越大越差，一张卡片按**最差**的模型展示 */
-const STATE_SEVERITY: Record<string, number> = {
-  removed: 5,
-  suspended: 4,
-  quota_wait: 3,
-  cooling: 2,
-  healthy: 1,
+/** 某个模型的状态视图（健康 / 冷却 / 已被移除 + 原因 + 自动恢复时间） */
+function modelState(row: LlmRow, model: string): LlmModelStateView {
+  return describeLlmModelState(modelStat(row, model))
 }
 
-/** 卡片内状态最差的模型（可能没有：整组都还没进池） */
-function worstStat(row: LlmRow): CrawlerLlmStatsItem | undefined {
-  return statsOf(row).reduce<CrawlerLlmStatsItem | undefined>((worst, item) => {
-    if (!worst) return item
-    return (STATE_SEVERITY[item.state] ?? 0) > (STATE_SEVERITY[worst.state] ?? 0)
-      ? item
-      : worst
-  }, undefined)
+/** 单个模型的统计摘要（无统计返回空串，模板据此不渲染该行） */
+function modelStatsText(row: LlmRow, model: string): string {
+  const stat = modelStat(row, model)
+  if (!stat) return ''
+  const parts = [
+    `${Number(stat.invoke_count) || 0} 次 / ${Math.round((Number(stat.success_rate) || 0) * 100)}%`,
+    `${Number(stat.total_tokens) || 0} token`,
+  ]
+  const lastUsedAt = Number(stat.last_used_at) || 0
+  if (lastUsedAt > 0) parts.push(`最近 ${formatDateTime(lastUsedAt)}`)
+  return parts.join(' · ')
 }
 
-/** 卡片级聚合指标：多模型求和 / 加权，最近调用取最大 */
-interface RowAggregate {
-  invoke: number
-  successRate: number
-  tokens: number
-  lastUsedAt: number
+/** 卡片头汇总：只统计**模型级**状态的数量，具体哪个模型 / 什么原因在列表里 */
+function rowStateSummary(row: LlmRow): { label: string; type: TagType } {
+  const views = modelChoices(row).map((model) => modelState(row, model))
+  const removed = views.filter((view) => view.removed).length
+  if (removed > 0) return { label: `${removed} 个模型已被移除`, type: 'danger' }
+  const abnormal = views.filter(
+    (view) => view.tracked && !view.removed && view.state !== 'healthy'
+  ).length
+  if (abnormal > 0) return { label: `${abnormal} 个模型异常`, type: 'warning' }
+  if (views.some((view) => view.tracked)) return { label: '全部模型健康', type: 'success' }
+  return { label: '无运行统计', type: 'info' }
 }
 
-function aggregateStats(row: LlmRow): RowAggregate | null {
-  const list = statsOf(row)
-  if (list.length === 0) return null
-  let invoke = 0
-  let success = 0
-  let tokens = 0
-  let lastUsedAt = 0
-  for (const item of list) {
-    invoke += Number(item.invoke_count) || 0
-    success += Number(item.success_count) || 0
-    tokens += Number(item.total_tokens) || 0
-    lastUsedAt = Math.max(lastUsedAt, Number(item.last_used_at) || 0)
-  }
-  return {
-    invoke,
-    successRate: invoke > 0 ? success / invoke : 0,
-    tokens,
-    lastUsedAt,
-  }
+/** 卡片数 ≠ 实例数：一张卡片可能承载多个模型，工具栏计数按模型算才准 */
+const totalModelCount = computed(() =>
+  rows.value.reduce((sum, row) => sum + rowModels(row).length, 0)
+)
+
+/** 已被移出实例池的模型（含移除原因），用于卡片头的红色区块 */
+function rowRemovedStates(row: LlmRow): { model: string; reason: string }[] {
+  return modelChoices(row)
+    .map((model) => ({ model, state: modelState(row, model) }))
+    .filter((item) => item.state.removed)
+    .map((item) => ({ model: item.model, reason: item.state.reason }))
 }
 
 /** 卡片勾选的模型（去空白 + 去重，空值丢弃）；提交与校验都以它为准 */
@@ -520,11 +563,24 @@ function rowModels(row: LlmRow): string[] {
   return normalizeCardModels(row.models)
 }
 
+/** 同源（归一化地址相同）的另一张卡片已有的 crawler 下标；新卡片靠它沿用密钥 */
+function siblingCrawlerIndex(row: LlmRow): string | null {
+  const target = normalizeBaseUrl(row.baseUrl)
+  if (!target) return null
+  for (const other of rows.value) {
+    if (other === row || normalizeBaseUrl(other.baseUrl) !== target) continue
+    const index = Object.values(other.indexByModel)[0]
+    if (index) return index
+  }
+  return null
+}
+
 /**
  * 卡片对应的 crawler `llm_apis` 下标（「测试」「获取模型」用它回填原密钥）。
  *
  * 分组后一张卡片对应多个下标，优先取**当前勾选模型**的下标；
  * 都匹配不上（比如刚手输了新模型名）时退回组内第一个下标 —— 同组同源，密钥相同。
+ * 新增卡片没有自己的下标时，借用同地址已有卡片的下标（密钥按来源共用）。
  */
 function rowCrawlerIndex(row: LlmRow): string | null {
   for (const model of rowModels(row)) {
@@ -532,7 +588,8 @@ function rowCrawlerIndex(row: LlmRow): string | null {
     if (index !== undefined) return index
   }
   const fallback = Object.values(row.indexByModel)
-  return fallback.length > 0 ? fallback[0] : null
+  if (fallback.length > 0) return fallback[0] ?? null
+  return siblingCrawlerIndex(row)
 }
 
 /**
@@ -565,6 +622,23 @@ function visibleModelChoices(row: LlmRow): string[] {
   return choices.filter(
     (model) => model.toLowerCase().includes(query) || selected.has(model)
   )
+}
+
+/** 列表一行 = 一个模型 + 它自己的状态 / 原因 / 统计（模板里不再对 baseUrl 聚合） */
+interface LlmModelOption {
+  model: string
+  state: LlmModelStateView
+  /** 调用 / 成功率 / token / 最近调用；空串 = 该模型还没有统计 */
+  statsText: string
+}
+
+/** 搜索过滤后的候选（带每个模型自己的状态与统计），模板直接用 */
+function visibleModelOptions(row: LlmRow): LlmModelOption[] {
+  return visibleModelChoices(row).map((model) => ({
+    model,
+    state: modelState(row, model),
+    statsText: modelStatsText(row, model),
+  }))
 }
 
 /** 输入的名字能否作为新模型添加（非空，且候选里没有同名） */
@@ -640,8 +714,8 @@ function handleAddModel(row: LlmRow) {
 function modelSummary(row: LlmRow): string {
   const models = rowModels(row)
   if (models.length === 0) return '（未填模型名）'
-  if (models.length === 1) return models[0]
-  return `${models[0]} 等 ${models.length} 个模型`
+  if (models.length === 1) return models[0] ?? ''
+  return `${models[0] ?? ''} 等 ${models.length} 个模型`
 }
 
 function toRows(data: CrawlerLlmConfigResp): LlmRow[] {
@@ -674,7 +748,10 @@ function toRows(data: CrawlerLlmConfigResp): LlmRow[] {
 
 /**
  * 提交用的实例列表：一张卡片勾了 N 个模型就展开成 N 条配置
- * （共用该卡片的地址 / 密钥 / 限流；crawler 按 base_url 沿用同源密钥）。
+ * （共用该卡片的地址 / 密钥 / 限流）。
+ *
+ * 密钥留空时带上 `tokenHint`（服务端脱敏值）：它是「沿用**这一把**密钥」的引用，
+ * 同一地址配了多把不同密钥时，后端才能分清每一行属于哪一把。
  * 展开 / 归一逻辑抽在 `@/utils/llmConfigPayload`，由单测覆盖。
  */
 function toPayload(): CrawlerLlmSaveItem[] {
@@ -683,6 +760,7 @@ function toPayload(): CrawlerLlmSaveItem[] {
       baseUrl: row.baseUrl,
       models: row.models,
       token: row.token,
+      tokenHint: row.tokenHint,
       rps: row.rps,
     }))
   )
@@ -696,46 +774,20 @@ const dirty = computed(
   () => serverSignature.value !== '' && buildSignature() !== serverSignature.value
 )
 
+/** 本页是否已有**同一个地址**的卡片带着服务端密钥（新卡片可沿用它的密钥） */
+function sourceHasSavedCard(row: LlmRow): boolean {
+  const target = normalizeBaseUrl(row.baseUrl)
+  if (!target) return false
+  return rows.value.some(
+    (other) =>
+      other !== row && Boolean(other.tokenHint) && normalizeBaseUrl(other.baseUrl) === target
+  )
+}
+
 function tokenPlaceholder(row: LlmRow): string {
-  return row.isNew
-    ? '必填，如 sk-xxxxxxxx'
-    : `已配置 ${row.tokenHint}，留空则不修改`
-}
-
-const STATE_LABEL: Record<string, { label: string; type: TagType }> = {
-  healthy: { label: '健康', type: 'success' },
-  cooling: { label: '冷却中', type: 'warning' },
-  quota_wait: { label: '额度等待', type: 'warning' },
-  suspended: { label: '已暂停', type: 'danger' },
-  removed: { label: '已被移除', type: 'danger' },
-}
-
-function rowState(row: LlmRow): { label: string; type: TagType; reason: string } {
-  // 一张卡片可能承载多个模型：状态取**最差**的那个，避免「三个模型里一个挂了还显示健康」
-  const stat = worstStat(row)
-  if (!stat) {
-    return { label: '无统计', type: 'info', reason: '该组合尚未在 crawler 实例池中出现（保存后才会建槽位）' }
-  }
-  const mapped = STATE_LABEL[stat.state] || { label: stat.state || '未知', type: 'info' as TagType }
-  const reason = stat.disabled_reason || stat.last_error || ''
-  return { label: mapped.label, type: mapped.type, reason }
-}
-
-function invokeText(row: LlmRow): string {
-  const agg = aggregateStats(row)
-  if (!agg) return '—'
-  return `${agg.invoke} 次 / ${Math.round(agg.successRate * 100)}%`
-}
-
-function lastUsedText(row: LlmRow): string {
-  const agg = aggregateStats(row)
-  if (!agg?.lastUsedAt) return '尚未调用'
-  return formatDateTime(agg.lastUsedAt)
-}
-
-function tokensText(row: LlmRow): string {
-  const agg = aggregateStats(row)
-  return agg ? String(agg.tokens) : '—'
+  if (row.tokenHint) return `已配置 ${row.tokenHint}，留空则不修改`
+  // 地址被改过 / 新增卡片：同地址已有卡片就能沿用，否则必须填明文
+  return sourceHasSavedCard(row) ? '留空 = 沿用该地址已保存的密钥' : '必填，如 sk-xxxxxxxx'
 }
 
 async function loadConfig() {
@@ -778,16 +830,31 @@ function handleEndpointChange(row: LlmRow) {
   row.modelMessageOk = false
 }
 
-/** 「获取模型」是否可点：地址合法 + 有密钥可回填（新增卡片必须已填明文） */
+/**
+ * 地址变了：候选和「原密钥引用」都属于旧地址，必须一起清掉。
+ *
+ * `tokenHint` 是脱敏值，只会指向旧地址下的某一把密钥；留着它再保存会被后端判
+ * 「回传的密钥在该地址下已不存在」，清成空串则按新地址的密钥规则处理
+ * （新地址唯一密钥可沿用，多把 / 全新地址则要求填明文）。
+ */
+function handleBaseUrlChange(row: LlmRow) {
+  row.tokenHint = ''
+  handleEndpointChange(row)
+}
+
+/**
+ * 「获取模型」是否可点：地址合法 + 能拿到密钥
+ * （要么填了明文，要么有同源下标让 crawler 回填）。
+ */
 function canFetchModels(row: LlmRow): boolean {
   if (loading.value || saving.value || resetting.value || row.fetchingModels) return false
   if (!/^https?:\/\//.test(row.baseUrl.trim())) return false
-  return !row.isNew || row.token.trim().length > 0
+  return row.token.trim().length > 0 || rowCrawlerIndex(row) !== null
 }
 
 /**
  * 拉取该卡片对应的上游模型列表（只做候选，不提交任何配置）。
- * 老卡片 token 留空时由 crawler 按 index 沿用原密钥；新增卡片必须已填明文。
+ * token 留空时由 crawler 按 index 沿用同源原密钥（新卡片借用同地址卡片的下标）。
  */
 async function handleFetchModels(index: number) {
   const row = rows.value[index]
@@ -797,7 +864,7 @@ async function handleFetchModels(index: number) {
   row.modelMessageOk = false
   try {
     const result = await fetchCrawlerLlmModels({
-      index: row.isNew ? null : rowCrawlerIndex(row),
+      index: rowCrawlerIndex(row),
       base_url: row.baseUrl.trim(),
       model_name: rowModels(row)[0] ?? '',
       token: row.token.trim(),
@@ -852,11 +919,12 @@ function handleOpenTest(index: number) {
   testRunning.value = false
   testForm.value = {
     // 最后一个勾选的模型作为默认值：管理页通常先选主模型、再补备用
-    model: models[models.length - 1],
+    model: models[models.length - 1] ?? '',
     baseUrl: row.baseUrl.trim(),
     token: '',
     tokenHint: row.tokenHint,
-    index: row.isNew ? null : rowCrawlerIndex(row),
+    // 新卡片与已有卡片同地址时，借用它的下标让 crawler 回填同源密钥
+    index: rowCrawlerIndex(row),
   }
   testDialogVisible.value = true
 }
@@ -898,6 +966,7 @@ function validate(): string | null {
   if (rows.value.length === 0) return '至少需要保留一个 LLM 实例'
   for (let i = 0; i < rows.value.length; i += 1) {
     const row = rows.value[i]
+    if (!row) continue
     const no = i + 1
     // 卡片可能展开成多个实例，文案统一用「卡片」避免序号对不上
     if (rowModels(row).length === 0) return `第 ${no} 张卡片缺少模型名`
@@ -905,7 +974,11 @@ function validate(): string | null {
       return `第 ${no} 张卡片的接口地址必须以 http:// 或 https:// 开头`
     }
     if (!(row.rps > 0)) return `第 ${no} 张卡片的限流必须大于 0`
-    if (row.isNew && !row.token.trim()) return `第 ${no} 张卡片是新实例，必须填写密钥`
+    // 密钥按来源（接口地址）沿用：只有「新地址且本页没有同源卡片」才必须填明文，
+    // 不能因为卡片是本次新建的就要密钥（同地址加模型/加卡片都沿用同一把钥匙）
+    if (row.isNew && !row.token.trim() && rowCrawlerIndex(row) === null) {
+      return `第 ${no} 张卡片是新地址，必须填写密钥`
+    }
   }
   return null
 }

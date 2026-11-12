@@ -16,6 +16,24 @@
 > `CrawlerLlmAdminService.listLlmModelsApiV1CrawlerAdminLlmModelsPost`。
 > 卡片 → 提交载荷的展开逻辑抽在 `src/utils/llmConfigPayload.ts`，由
 > `tests/unit/llmConfigPayload.spec.ts` 覆盖。
+>
+> **2026-11-12 修订（状态按模型，不按地址）**：crawler 的状态机本来就是「每个模型一个槽位」，
+> 但页面此前把同 `base_url` 的多个模型合并成一张卡片后，卡片头只显示**最差**的那个状态，
+> 看不出「哪个模型被移除、为什么被移除」。现调整为：
+> - 卡片头只显示**模型级状态的计数**（`N 个模型已被移除` / `N 个模型异常` / `全部模型健康` / `无运行统计`），
+>   不再代表「这个地址的状态」；
+> - 卡片内新增红色「已被 crawler 移出实例池的模型」区块，逐条列出**模型名 + 移除原因**；
+> - 「模型名称」列表里每个模型各自显示状态标签、状态 / 移除原因、自动恢复时间、调用统计；
+> - 卡片底部原「调用 / 成功率、累计 token、最近一次调用」三格聚合统计取消（按地址聚合会掩盖
+>   单模型问题），改为跟着模型列表逐行展示；
+> - 取数逻辑抽在 `src/utils/llmModelState.ts`（`llmStatsKey` / `describeLlmModelState`），
+>   由 `tests/unit/llmModelState.spec.ts` 覆盖；接口契约（§3）与 SDK 未变。
+>
+> **2026-11-12 再修订（密钥按卡片回传引用）**：同一 `base_url` 允许配多把密钥（每张卡片一把）。
+> 为此 `buildLlmSaveItems` 在密钥留空时回传该卡片的 `tokenHint`（脱敏值）作为「沿用这一把」的引用，
+> 而不是空串；后端按「同地址 + 同脱敏值」精确回填，行序后移 / 多把密钥都不会串。
+> 改地址时会清空 `tokenHint`（旧地址的引用对新地址无效）。
+> 要在同一地址再加一把密钥：新增实例 → 填相同地址 + 新密钥 → 勾模型 → 保存。
 
 ## 1. 背景与目标
 
@@ -135,8 +153,16 @@ crawler 侧**已有**完整能力，且支持热更新（`Service/llm_service/po
 }
 ```
 
-- `token` 传**脱敏值**（含 `****`）或空串 → 后端按同索引**保留原密钥**；传明文才替换。
-  新增实例（索引超出原配置长度）时 `token` 必填，否则返回 `code=400`；
+- `token` 支持三种取值（2026-11-12 修订）：
+  1. **明文** → 直接用这把（改密钥）；
+  2. **脱敏值**（含 `****`，即 `GET` 原样回传）→ 作为「沿用**这一把**」的引用：
+     后端按「同地址 + 同脱敏值」换回明文，因此同一 `base_url` 下配多把不同密钥也能各自对上，
+     行序后移（一张卡片展开成多条）也不受影响；
+  3. **空串** → 仅当该地址恰好一把密钥时允许（按「同地址 + 同模型 → 同地址唯一密钥」回填）；
+     该地址有多把密钥却留空 → `code=400`（无法判断沿用哪把，宁可报错也不串钥匙）；
+- 只有「新增来源」（该 `base_url` 在现有配置里不存在）时才必须填明文，否则 `code=400`；
+- 因此前端保存时对**未改动的卡片**要回传 `tokenHint`（脱敏值），而不是空串
+  （`buildLlmSaveItems` 已按 `token || tokenHint` 回传）；
 - 校验：`base_url` 必须 `http(s)://` 开头、`model_name` 非空、`requests_per_second > 0`；
   `items` 为空直接拒绝（清空会让 crawler 云端判断整体不可用）；
 - 保存即热更新，并**持久化到 crawler 的 `runtime/llm_apis.json`**（重启仍生效）；
@@ -217,23 +243,34 @@ crawler 侧**已有**完整能力，且支持热更新（`Service/llm_service/po
    - 卡片容器：`rounded-xl border border-border-light bg-bg-secondary p-3`，
      `hover:border-primary-light-5` 做轻量悬浮反馈；一张卡 = 一个 `<article>`；
    - 卡片头（三行层次，便于扫读定位）：
-     1) `#序号`（`bg-fill-dark` 小胶囊）+ 运行状态 `el-tag`（有 `reason` 时 `el-tooltip` 悬浮显示）；
+     1) `#序号`（`bg-fill-dark` 小胶囊）+ **模型级状态计数** `el-tag`
+        （`N 个模型已被移除` danger / `N 个模型异常` warning / `全部模型健康` success /
+        `无运行统计` info）—— 卡片是编辑层级，不是状态主体，所以这里只给数量，
+        哪个模型什么状态见下面的红色区块与「模型名称」列表；
      2) 模型名（`text-base font-semibold`，超长 `truncate`，未填时显示「（未填模型名）」）；
      3) Base URL 摘要（`text-xs text-text-secondary`，超长 `truncate`）；
      右上角「移除」用 `el-button link type="danger"`（降低视觉权重），仍走 `el-popconfirm` 二次确认；
    - 可编辑字段：卡片变窄后统一**竖向排列**（`flex flex-col gap-2`），避免输入框被压到不可用；
      字段名用小号 `el-text` 做标签；密钥用 `el-input show-password`，placeholder「留空则不修改」；
      限流用 `el-input-number`（`step=0.1`，`min=0.1`，`w-full`）；地址标签简化为「接口地址（Base URL）」；
-   - **模型名（2026-11-11 改）**：`el-select`（`filterable` + `allow-create` + `default-first-option`
-     + `clearable`），既能从「获取模型列表」拉到的候选里勾选，也能直接手打未列出的模型名；
+   - **模型名（2026-11-11 改，2026-11-12 加状态）**：搜索框 + 全选表头 + `el-checkbox-group` 多选列表，
+     既能从「获取模型列表」拉到的候选里勾选，也能直接手打未列出的模型名；
      字段右侧「获取模型」按钮用该卡片的 `base_url + token` 拉候选（见 §3.5）：
      成功后就地显示「已获取 N 个模型」（`text-success`），失败显示原因（`text-danger`）；
      缺 `base_url` / 缺密钥 / 拉取中时按钮禁用；`base_url` 变更后清空该卡片的候选缓存
      （避免把上个厂商的模型留在下拉里）；
-   - 统计区（只读，来自 stats，按 `base_url + model_name` 匹配）：三格等分
-     `grid grid-cols-3 divide-x divide-border`（不用灰底大块，更紧凑），
-     依次是调用次数 / 成功率、累计 token、最近一次调用（秒级时间戳格式化），
-     数值 `truncate` 防溢出；
+   - **每个模型一行，状态按模型展示**（`visibleModelOptions(row)` → `LlmModelOption`）：
+     - 第一行：模型名（`truncate`）+ 该模型自己的状态标签
+       （`健康` success / `冷却中`、`额度等待` warning / `已暂停`、`已被移除` danger / `无统计` info）；
+     - 被移除的模型（`removed`）显示红色「**移除原因：**…」；其他异常状态显示黄色「状态原因：…」；
+       服务端没给原因时兜底「服务端未给出移除原因」，不留空白；
+     - 有 `resume_at` 且不是终态时显示「预计 {时间} 自动恢复」；
+     - 有统计时显示「{N} 次 / {成功率}% · {token} token · 最近 {时间}」；
+     取数逻辑见 `src/utils/llmModelState.ts`（`llmStatsKey` 按 `base_url + model_name` 建键，
+     `describeLlmModelState` 产出一行视图，不做跨模型聚合）；
+   - **卡片头红色区块**：只要卡片内有模型 `state=removed`，就在卡片头下面显示
+     「已被 crawler 移出实例池的模型（N 个）」，逐条列 `模型名` + `移除原因：…`，
+     并提示「摘除只影响运行时、不落盘，要永久去掉请取消勾选该模型（或删除卡片）后保存」；
    - 卡片底部（`border-t border-border pt-3`）：左侧**「测试」按钮**（`plain`），右侧就地结果
      —— 成功：`CircleCheckFilled` 图标 + `text-success` 文案 `可用（HTTP 200，1234ms）`；
      失败：`CircleCloseFilled` + `text-danger` 文案 `不可用（HTTP 401，800ms）：…`；
@@ -249,7 +286,10 @@ crawler 侧**已有**完整能力，且支持热更新（`Service/llm_service/po
 - `base_url` 必须以 `http://` 或 `https://` 开头；
 - `model_name` 非空；
 - `requests_per_second` 必须 > 0（允许小数，如 `0.5` 表示 2 秒 1 次）；
-- 新增行时密钥必填，编辑行留空表示沿用原密钥；
+- 密钥按「来源（`base_url`）」沿用：**新增卡片**（新地址）密钥必填；已有地址下加模型、
+  调整顺序留空即可（2026-11-12 修订，后端不再按提交下标判「新实例」）；
+- 同一地址要多把不同密钥：新增一张卡片、填相同地址 + 新密钥即可（卡片 = 一把密钥）；
+  已有卡片保存时会自动回传自己的脱敏值，所以多把密钥互不干扰；
 - 至少保留 1 个实例（清空会导致 crawler 云端判断直接报错），如需全部清空必须二次确认。
 
 ### 4.4 撤销人工保存（切回 `.env`）
@@ -313,3 +353,8 @@ crawler 侧**已有**完整能力，且支持热更新（`Service/llm_service/po
 15. 「获取模型」（2026-11-11）：点按钮后模型下拉出现上游候选（可搜索、可勾选），
     未列出的模型名可手打后直接保存；失败时卡片内显示原因（红色），已填内容不被清空；
     改完 `base_url` 后下拉不再保留上一个地址的候选。
+16. 「状态按模型」（2026-11-12）：同一卡片里只有某一个模型被 crawler 摘除时，
+    卡片头显示「1 个模型已被移除」（而不是整张卡只显示一个笼统状态），
+    红色区块与「模型名称」列表都写明**是哪个模型**与**移除原因**；
+    点击「重新读取」后状态跟着 `/llm/stats` 实时变化，其余模型的状态 / 统计不受影响；
+    取消勾选被移除的模型并保存后，该模型从 `items` 消失、红色区块随之消失。
