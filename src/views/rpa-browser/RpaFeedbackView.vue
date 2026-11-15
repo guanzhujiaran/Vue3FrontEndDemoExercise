@@ -2,7 +2,18 @@
   <FlexContainer class="rpa-feedback-view flex flex-col gap-4">
     <BiliPageHeader
       title="报错反馈"
-      description="把运行中遇到的报错、异常或改进建议提交给服主，落库后会实时通知服主，便于及时定位问题、改进设计。同一能力也通过 MCP 暴露（工具 rpa_feedback_submit），你的 LLM 也能自动上报。"
+      description="把运行中遇到的报错、异常或改进建议提交给服主：先落库留档，再按服主配置做站外推送（邮件 / Webhook），便于及时定位问题、改进设计。未登录也可以提交（建议留联系方式）。同一能力也通过 MCP 暴露（工具 rpa_feedback_submit），你的 LLM 也能自动上报。"
+    />
+
+    <!-- 游客提示：未登录也能反馈，留联系方式便于回访 -->
+    <el-alert
+      v-if="isHydrated && !isLoggedIn"
+      class="rpa-feedback-view__guest-tip"
+      type="info"
+      :closable="false"
+      show-icon
+      title="当前未登录，仍可提交反馈"
+      description="未登录提交不会记录你的账号，请填写联系方式（邮箱 / QQ 等），否则服主无法回访；登录后还能在下方查看自己提交过的反馈。"
     />
 
     <!-- 提交表单 -->
@@ -32,6 +43,18 @@
             type="textarea"
             :rows="4"
             placeholder="错误现象、期望行为、复现步骤等"
+          />
+        </el-form-item>
+
+        <el-form-item
+          label="联系方式（未登录必填，便于服主回访）"
+          class="mb-0 rpa-feedback-view__contact"
+        >
+          <el-input
+            v-model="form.contact"
+            maxlength="256"
+            show-word-limit
+            placeholder="邮箱 / QQ / 其他联系方式"
           />
         </el-form-item>
 
@@ -72,26 +95,29 @@
           <el-button type="primary" size="large" :loading="submitting" @click="handleSubmit">
             提交反馈
           </el-button>
-          <span class="text-sm text-text-placeholder">提交后会实时通知服主</span>
+          <span class="text-sm text-text-placeholder">提交后先落库留档，再按服主配置站外推送（邮件 / Webhook）</span>
         </div>
       </el-form>
     </div>
 
-    <!-- 我的反馈 -->
-    <div class="rpa-feedback-view__list rounded-2xl bg-primary-light-9 border border-primary-light-8 p-4 flex flex-col gap-3">
+    <!-- 我的反馈（仅登录可见；游客没有归属数据） -->
+    <div
+      v-if="isLoggedIn"
+      class="rpa-feedback-view__list rounded-2xl bg-primary-light-9 border border-primary-light-8 p-4 flex flex-col gap-3"
+    >
       <div class="flex items-center justify-between">
         <span class="text-sm text-text-secondary font-medium">我的反馈</span>
-        <el-button size="small" :loading="loading" @click="loadList">刷新</el-button>
+        <el-button size="default" :loading="loading" @click="loadList">刷新</el-button>
       </div>
-      <el-table :data="items" size="small" stripe>
+      <el-table :data="items" stripe>
         <el-table-column prop="title" label="标题" min-width="180" />
-        <el-table-column prop="category" label="分类" width="100" />
-        <el-table-column label="状态" width="100">
+        <el-table-column prop="category" label="分类" width="110" />
+        <el-table-column label="状态" width="110">
           <template #default="{ row }">
-            <el-tag :type="statusTagType(row.status)" size="small">{{ statusLabel(row.status) }}</el-tag>
+            <el-tag :type="statusTagType(row.status)">{{ statusLabel(row.status) }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="提交时间" width="180">
+        <el-table-column label="提交时间" width="190">
           <template #default="{ row }">
             <span class="text-text-secondary">{{ formatTime(row.created_at) }}</span>
           </template>
@@ -108,11 +134,19 @@
         @size-change="onSizeChange"
       />
     </div>
+    <el-alert
+      v-else-if="isHydrated"
+      class="rpa-feedback-view__login-tip"
+      type="warning"
+      :closable="false"
+      show-icon
+      title="登录后可查看自己的反馈记录"
+    />
   </FlexContainer>
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch, type Ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import {
@@ -121,15 +155,25 @@ import {
   type FeedbackItem,
   type FeedbackSubmitPayload
 } from '@/api/browser/feedback_api'
+import { useInject, KeysEnum } from '@/models/base/provide_model.ts'
+import type { UserNavModel } from '@/models/user/user_model.ts'
+import { useHydrated } from '@/composables/useHydrated'
+import { formatDateTime } from '@/utils/dateFormat'
 
 defineOptions({ name: 'RpaFeedbackView' })
 
 const route = useRoute()
 
+// 登录态：反馈提交允许游客（后端可选登录），「我的反馈」仅登录后可查
+const biliUser = useInject(KeysEnum.BiliUser) as Ref<UserNavModel>
+const isHydrated = useHydrated()
+const isLoggedIn = computed(() => isHydrated.value && !!biliUser.value.uid)
+
 const form = ref<FeedbackSubmitPayload>({
   category: 'bug',
   title: '',
   description: '',
+  contact: '',
   source: 'web',
   page_url: typeof window !== 'undefined' ? window.location.href : ''
 })
@@ -164,9 +208,11 @@ const STATUS_TAG: Record<string, 'warning' | 'success' | 'info'> = {
 const statusLabel = (s: string) => STATUS_LABELS[s] ?? s
 const statusTagType = (s: string) => STATUS_TAG[s] ?? 'info'
 
-const formatTime = (t?: string | null) => (t ? String(t).replace('T', ' ').slice(0, 19) : '-')
+// 后端出参为秒级时间戳，统一走站点时间工具（固定 Asia/Shanghai + zh-CN）
+const formatTime = (t?: number | null) => (t ? formatDateTime(t) : '-')
 
 async function loadList() {
+  if (!isLoggedIn.value) return
   loading.value = true
   const res = await listFeedback({ page: page.value, per_page: perPage.value })
   loading.value = false
@@ -186,10 +232,24 @@ async function handleSubmit() {
     ElMessage.warning('请填写标题与详细描述')
     return
   }
+  // 游客提交没有账号可追溯，联系方式是唯一回访渠道，前端强制填写
+  if (!isLoggedIn.value && !form.value.contact?.trim()) {
+    ElMessage.warning('未登录提交请填写联系方式，便于服主回访')
+    return
+  }
   submitting.value = true
   const payload: FeedbackSubmitPayload = { ...form.value }
   // 可选上下文：空值不提交，避免写入无意义字段
-  for (const key of ['error_message', 'page_url', 'action_id', 'workflow_id', 'run_id', 'browser_id', 'error_detail'] as const) {
+  for (const key of [
+    'contact',
+    'error_message',
+    'page_url',
+    'action_id',
+    'workflow_id',
+    'run_id',
+    'browser_id',
+    'error_detail'
+  ] as const) {
     if (!payload[key]) delete payload[key]
   }
   const res = await submitFeedback(payload)
@@ -200,15 +260,23 @@ async function handleSubmit() {
     form.value.error_message = ''
     form.value.error_detail = ''
     ElMessage.success(
-      res.data?.notified ? '已提交并通知服主' : '已提交（未配置推送，服主可在后台查看）'
+      res.data?.notified
+        ? '已提交并通知服主'
+        : '已提交落库（服主可在管理后台查看）'
     )
-    page.value = 1
-    loadList()
+    if (isLoggedIn.value) {
+      page.value = 1
+      loadList()
+    }
   }
 }
 
+watch(isLoggedIn, (loggedIn) => {
+  if (loggedIn) loadList()
+})
+
 onMounted(() => {
   applyQueryContext()
-  loadList()
+  if (isLoggedIn.value) loadList()
 })
 </script>

@@ -597,10 +597,12 @@ const routes: CustomRouteRecordRaw[] = [
         meta: {
           title: RouteName.RPA_BROWSER_FEEDBACK,
           icon: IconChat,
-          description: '提交运行报错 / 反馈给服主',
+          description: '提交运行报错 / 反馈给服主（未登录也可提交）',
           isHeaderShow: false,
           order: 12,
-          showInHome: false
+          showInHome: false,
+          // 出错了但还没登录是最常见的求助场景：游客也能提交反馈（后端可选登录）
+          publicAccess: true
         }
       }
     ]
@@ -866,6 +868,13 @@ const routes: CustomRouteRecordRaw[] = [
         name: 'ADMIN_RPA_WORKFLOW',
         component: () => import('@/views/rpa-browser/admin/WorkflowAdmin.vue'),
         meta: { title: '工作流管理', requiresMessageRoot: true, hidden: true }
+      },
+      {
+        // 报错 / 反馈管理（跨提交者，含未登录游客）：查看 / 补录 / 编辑 / 删除
+        path: 'rpa/feedback',
+        name: 'ADMIN_RPA_FEEDBACK',
+        component: () => import('@/views/rpa-browser/admin/FeedbackAdmin.vue'),
+        meta: { title: '反馈管理', requiresAdmin: true, hidden: true }
       },
       {
         path: 'message-notify',

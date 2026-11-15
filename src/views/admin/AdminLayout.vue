@@ -11,7 +11,7 @@
 
 <script setup lang="ts">
 import { computed, type Component } from 'vue'
-import { Bell, Calendar, ChatDotRound, Comment, Key, Checked, Collection, Avatar, Flag, Stamp, Document, Medal, CollectionTag, Setting, Odometer, SetUp, DataAnalysis, Cpu, Switch } from '@element-plus/icons-vue'
+import { Bell, Calendar, ChatDotRound, ChatLineSquare, Comment, Key, Checked, Collection, Avatar, Flag, Stamp, Document, Medal, CollectionTag, Setting, Odometer, SetUp, DataAnalysis, Cpu, Switch } from '@element-plus/icons-vue'
 import icShoucang from '@/assets/svgs/audit/shoucang.svg?component'
 import icLiveCenter from '@/assets/svgs/audit/ic_Livecenter.svg?component'
 import icQuota from '@/assets/svgs/space/play_data.svg?component'
@@ -62,7 +62,8 @@ const navGroups = computed<NavGroup[]>(() => {
       { name: 'ADMIN_RPA_CERT', title: '官方认证', icon: Medal },
       { name: 'ADMIN_RPA_TAG', title: '标签管理', icon: CollectionTag },
       { name: 'ADMIN_BROWSER_MONITOR', title: '浏览器监管', icon: icLiveCenter },
-      { name: 'ADMIN_LAUNCH_QUEUE', title: '启动队列', icon: Odometer }
+      { name: 'ADMIN_LAUNCH_QUEUE', title: '启动队列', icon: Odometer },
+      { name: 'ADMIN_RPA_FEEDBACK', title: '反馈管理', icon: ChatLineSquare }
     ]
     // root 专属：全量工作流管理（跨作者查看 / 启停 / 运行 / 删除）
     if (isMessageRoot.value) {
