@@ -10,6 +10,7 @@ import {
   type WorkflowResourceRecordItem,
 } from '@/api/browser/workflow_resource_api'
 import { buildLinkUrl, useResourceLinkTemplate } from '@/composables/useResourceLinkTemplate'
+import { useResourceOpenedMark } from '@/composables/useResourceOpenedMark'
 import { LINK_REFERRER_POLICY, LINK_REL } from '@/utils/PageOpen/linkPolicy'
 
 /**
@@ -50,6 +51,19 @@ function openExecutionLogs(executionId: string) {
 const { getTemplate } = useResourceLinkTemplate()
 /** 当前工作流的跳转链接格式（本地配置，未配置时为空串） */
 const linkTemplate = computed(() => getTemplate(props.workflowId))
+
+const { getOpenedIds, markOpened } = useResourceOpenedMark()
+/**
+ * 当前工作流下「已打开」的业务主键集合（纯前端标记，见 useResourceOpenedMark）。
+ *
+ * 用 Set 而不是在模板里逐行 includes：每行都会判断一次，集合查询是 O(1)。
+ */
+const openedIdSet = computed(() => new Set(getOpenedIds(props.workflowId)))
+
+/** 点击「打开」时记录标记：打开行为本身由 el-link 的 href 完成 */
+function handleOpenResource(row: WorkflowResourceRecordItem) {
+  markOpened(props.workflowId, row.resource_id)
+}
 
 /** 按链接格式把业务主键替换成实际跳转地址；未配置返回空串 */
 function rowLinkUrl(row: WorkflowResourceRecordItem): string {
@@ -246,9 +260,20 @@ defineExpose({ load })
             target="_blank"
             :rel="LINK_REL"
             :referrerpolicy="LINK_REFERRER_POLICY"
+            @click="handleOpenResource(row as WorkflowResourceRecordItem)"
           >
             打开
           </el-link>
+          <!-- 纯前端标记：本地记录点过「打开」的业务主键，仅用于人工核对 -->
+          <el-tag
+            v-if="openedIdSet.has(row.resource_id)"
+            class="workflow-resource-record__opened-tag ml-2"
+            type="info"
+            effect="plain"
+            disable-transitions
+          >
+            已打开
+          </el-tag>
         </template>
       </el-table-column>
       <el-table-column label="状态" width="140">

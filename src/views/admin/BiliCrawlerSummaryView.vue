@@ -152,7 +152,7 @@
         <h3 class="bili-crawler-summary__section-title m-0 mt-4 text-base font-semibold text-text-primary">
           爬虫健康度
         </h3>
-        <ScrapyStatus />
+        <ScrapyStatus show-admin-actions />
       </LoadingWrap>
     </template>
   </div>

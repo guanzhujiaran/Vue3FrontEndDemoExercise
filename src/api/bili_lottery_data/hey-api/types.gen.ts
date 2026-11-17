@@ -207,6 +207,7 @@ export type ArticleInfo = {
  * 枚举选项：
  * - DYN_DETAIL_DATABASE_CLEANER: DYN_DETAIL_DATABASE_CLEANER
  * - TABLESPACE_MAINTENANCE: TABLESPACE_MAINTENANCE
+ * - PROXY_POOL_CLEANER: PROXY_POOL_CLEANER
  * - GET_PROXY_METHODS_SCHEDULER: GET_PROXY_METHODS_SCHEDULER
  * - SAMSCCLUB_SCHEDULER: SAMSCCLUB_SCHEDULER
  * - SAMSCCLUB_SPU_DETAIL_SCHEDULER: SAMSCCLUB_SPU_DETAIL_SCHEDULER
@@ -229,6 +230,10 @@ export const BackgroundServiceName = {
      * TABLESPACE_MAINTENANCE
      */
     TABLESPACE_MAINTENANCE: 'TABLESPACE_MAINTENANCE',
+    /**
+     * PROXY_POOL_CLEANER
+     */
+    PROXY_POOL_CLEANER: 'PROXY_POOL_CLEANER',
     /**
      * GET_PROXY_METHODS_SCHEDULER
      */
@@ -285,6 +290,7 @@ export const BackgroundServiceName = {
  * 枚举选项：
  * - DYN_DETAIL_DATABASE_CLEANER: DYN_DETAIL_DATABASE_CLEANER
  * - TABLESPACE_MAINTENANCE: TABLESPACE_MAINTENANCE
+ * - PROXY_POOL_CLEANER: PROXY_POOL_CLEANER
  * - GET_PROXY_METHODS_SCHEDULER: GET_PROXY_METHODS_SCHEDULER
  * - SAMSCCLUB_SCHEDULER: SAMSCCLUB_SCHEDULER
  * - SAMSCCLUB_SPU_DETAIL_SCHEDULER: SAMSCCLUB_SPU_DETAIL_SCHEDULER
@@ -1885,6 +1891,18 @@ export type ProgressStatusResp = {
      */
     running_params?: Array<unknown>;
     /**
+     * Waiting For Proxy
+     *
+     * 是否正在等待代理池恢复（熔断开启）
+     */
+    waiting_for_proxy?: boolean;
+    /**
+     * Blocked Reason
+     *
+     * 被阻塞的原因（空串 = 未被阻塞）
+     */
+    blocked_reason?: string;
+    /**
      * Extra Fields
      */
     readonly extra_fields: {
@@ -1937,6 +1955,48 @@ export type ProxyStatusResp = {
      * 最近一次入库代理的 add_ts（代理源最新产出时间，unix 秒）
      */
     free_proxy_fetch_ts?: number;
+    /**
+     * Proxy Hot Count
+     *
+     * hot：已验证可用，fast 档主池
+     */
+    proxy_hot_count?: number;
+    /**
+     * Proxy Warm Count
+     *
+     * warm：连续失败已降档
+     */
+    proxy_warm_count?: number;
+    /**
+     * Proxy Suspect Count
+     *
+     * suspect：只允许 slow 档低频探测
+     */
+    proxy_suspect_count?: number;
+    /**
+     * Proxy Quarantine Count
+     *
+     * quarantine：风控层命中，按 IP 长冷却
+     */
+    proxy_quarantine_count?: number;
+    /**
+     * Proxy Dead Count
+     *
+     * dead：连续失败到上限
+     */
+    proxy_dead_count?: number;
+    /**
+     * Proxy Cooling Count
+     *
+     * 当前处于冷却中的代理数
+     */
+    proxy_cooling_count?: number;
+    /**
+     * Proxy Cold Count
+     *
+     * cold：无健康记录（未验证）的代理数，由「MySQL 可用行数 - 已有记录」估算
+     */
+    proxy_cold_count?: number;
     /**
      * Extra Fields
      */
@@ -2946,6 +3006,14 @@ export type StatsPlugin = {
      * 运行中任务的参数摘要列表（按 seqId 排序，保证输出稳定）
      */
     readonly running_params_set: Array<WorkerSummaryModel>;
+    /**
+     * 代理池熔断快照（未接入熔断的爬虫返回 None）。
+     *
+     * 只在接口层做投影：``Service/BaseCrawler/resilience.py`` 依赖 ``CONFIG``，
+     * 而本模块被 ``Service.BaseCrawler.config`` 在 ``CONFIG`` 初始化期间导入，
+     * 顶层 import 会形成循环导入，因此这里用 duck-typing 取快照。
+     */
+    readonly breaker: JsonValue;
     /**
      * 爬虫健康状态。
      *
@@ -4166,6 +4234,18 @@ export type ProgressStatusRespWritable = {
      * 运行中的参数
      */
     running_params?: Array<unknown>;
+    /**
+     * Waiting For Proxy
+     *
+     * 是否正在等待代理池恢复（熔断开启）
+     */
+    waiting_for_proxy?: boolean;
+    /**
+     * Blocked Reason
+     *
+     * 被阻塞的原因（空串 = 未被阻塞）
+     */
+    blocked_reason?: string;
     [key: string]: unknown;
 };
 
@@ -4205,6 +4285,48 @@ export type ProxyStatusRespWritable = {
      * 最近一次入库代理的 add_ts（代理源最新产出时间，unix 秒）
      */
     free_proxy_fetch_ts?: number;
+    /**
+     * Proxy Hot Count
+     *
+     * hot：已验证可用，fast 档主池
+     */
+    proxy_hot_count?: number;
+    /**
+     * Proxy Warm Count
+     *
+     * warm：连续失败已降档
+     */
+    proxy_warm_count?: number;
+    /**
+     * Proxy Suspect Count
+     *
+     * suspect：只允许 slow 档低频探测
+     */
+    proxy_suspect_count?: number;
+    /**
+     * Proxy Quarantine Count
+     *
+     * quarantine：风控层命中，按 IP 长冷却
+     */
+    proxy_quarantine_count?: number;
+    /**
+     * Proxy Dead Count
+     *
+     * dead：连续失败到上限
+     */
+    proxy_dead_count?: number;
+    /**
+     * Proxy Cooling Count
+     *
+     * 当前处于冷却中的代理数
+     */
+    proxy_cooling_count?: number;
+    /**
+     * Proxy Cold Count
+     *
+     * cold：无健康记录（未验证）的代理数，由「MySQL 可用行数 - 已有记录」估算
+     */
+    proxy_cold_count?: number;
     [key: string]: unknown;
 };
 
@@ -6255,6 +6377,36 @@ export type GcGcGetData = {
 };
 
 export type GcGcGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
+export type DebugMemoryDebugMemoryGetData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Trace
+         *
+         * on=启动 tracemalloc（有性能开销，记得 off）；off=关闭
+         */
+        trace?: 'on' | 'off' | null;
+    };
+    url: '/debug/memory';
+};
+
+export type DebugMemoryDebugMemoryGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type DebugMemoryDebugMemoryGetError = DebugMemoryDebugMemoryGetErrors[keyof DebugMemoryDebugMemoryGetErrors];
+
+export type DebugMemoryDebugMemoryGetResponses = {
     /**
      * Successful Response
      */

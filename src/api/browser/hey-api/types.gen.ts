@@ -1696,6 +1696,56 @@ export type BasePaginationRespCompositeActionListItemResponse = {
 };
 
 /**
+ * BasePaginationResp[FeedbackAdminItem]
+ */
+export type BasePaginationRespFeedbackAdminItem = {
+    /**
+     * Page
+     *
+     * 页码
+     */
+    page?: number;
+    /**
+     * Per Page
+     *
+     * 每页数量
+     */
+    per_page?: number;
+    /**
+     * Total
+     *
+     * 总记录数
+     */
+    total?: number;
+    /**
+     * Items
+     *
+     * 当前页数据
+     */
+    items?: Array<FeedbackAdminItem>;
+    /**
+     * Pages
+     */
+    readonly pages: number;
+    /**
+     * Has Next
+     */
+    readonly has_next: boolean;
+    /**
+     * Has Prev
+     */
+    readonly has_prev: boolean;
+    /**
+     * Next Page
+     */
+    readonly next_page: number;
+    /**
+     * Prev Page
+     */
+    readonly prev_page: number;
+};
+
+/**
  * BasePaginationResp[RedemptionCodeItem]
  */
 export type BasePaginationRespRedemptionCodeItem = {
@@ -5006,6 +5056,314 @@ export type ExecuteStepResponse = {
 };
 
 /**
+ * FeedbackAdminCreateRequest
+ *
+ * 管理端手工补录一条反馈
+ */
+export type FeedbackAdminCreateRequest = {
+    /**
+     * 分类
+     */
+    category?: FeedbackCategory;
+    /**
+     * Title
+     *
+     * 简短标题
+     */
+    title: string;
+    /**
+     * Description
+     *
+     * 详细描述
+     */
+    description: string;
+    /**
+     * Mid
+     *
+     * 提交者 mid（游客留空，数字字符串）
+     */
+    mid?: string | null;
+    /**
+     * Uname
+     *
+     * 提交者昵称
+     */
+    uname?: string | null;
+    /**
+     * Contact
+     *
+     * 联系方式
+     */
+    contact?: string | null;
+    /**
+     * 处理状态
+     */
+    status?: FeedbackStatus;
+    /**
+     * Admin Remark
+     *
+     * 处理备注
+     */
+    admin_remark?: string;
+    /**
+     * 报错上下文
+     */
+    context?: FeedbackContext | null;
+};
+
+/**
+ * FeedbackAdminDeleteRequest
+ *
+ * 管理端删除反馈（支持单条 / 批量）
+ */
+export type FeedbackAdminDeleteRequest = {
+    /**
+     * Report Ids
+     *
+     * 要删除的报告唯一标识列表
+     */
+    report_ids: Array<string>;
+};
+
+/**
+ * FeedbackAdminDeleteResp
+ *
+ * 管理端批量删除反馈的响应
+ */
+export type FeedbackAdminDeleteResp = {
+    /**
+     * Deleted
+     *
+     * 实际删除条数
+     */
+    deleted?: number;
+    /**
+     * Report Ids
+     *
+     * 请求删除的报告唯一标识列表
+     */
+    report_ids?: Array<string>;
+};
+
+/**
+ * FeedbackAdminGetRequest
+ *
+ * 管理端查看单条反馈详情
+ */
+export type FeedbackAdminGetRequest = {
+    /**
+     * Report Id
+     *
+     * 报告唯一标识
+     */
+    report_id: string;
+};
+
+/**
+ * FeedbackAdminItem
+ *
+ * 单条反馈展示模型（管理端，全字段）
+ */
+export type FeedbackAdminItem = {
+    /**
+     * Id
+     *
+     * 数据库主键
+     */
+    id: number;
+    /**
+     * Report Id
+     *
+     * 报告唯一标识
+     */
+    report_id: string;
+    /**
+     * Mid
+     *
+     * 提交者 mid（游客为 null，字符串形式）
+     */
+    mid?: string | null;
+    /**
+     * Uname
+     *
+     * 提交者昵称快照
+     */
+    uname?: string | null;
+    /**
+     * Contact
+     *
+     * 联系方式
+     */
+    contact?: string | null;
+    /**
+     * Category
+     *
+     * 分类：bug / suggestion / other
+     */
+    category: string;
+    /**
+     * Title
+     *
+     * 简短标题
+     */
+    title: string;
+    /**
+     * Description
+     *
+     * 详细描述
+     */
+    description: string;
+    /**
+     * 错误上下文
+     */
+    context?: FeedbackContext | null;
+    /**
+     * Status
+     *
+     * 处理状态：pending / resolved / ignored
+     */
+    status: string;
+    /**
+     * Admin Remark
+     *
+     * 管理端处理备注
+     */
+    admin_remark?: string;
+    /**
+     * Handled By
+     *
+     * 处理人 mid
+     */
+    handled_by?: number | null;
+    /**
+     * Handled At
+     *
+     * 处理时间（秒级时间戳）
+     */
+    handled_at?: number | null;
+    /**
+     * Created At
+     *
+     * 提交时间（秒级时间戳）
+     */
+    created_at?: number | null;
+    /**
+     * Updated At
+     *
+     * 最近更新时间（秒级时间戳）
+     */
+    updated_at?: number | null;
+};
+
+/**
+ * FeedbackAdminListRequest
+ *
+ * 管理端反馈列表请求（全量，不分提交者）
+ */
+export type FeedbackAdminListRequest = {
+    /**
+     * Page
+     *
+     * 页码，从 1 开始
+     */
+    page?: number;
+    /**
+     * Per Page
+     *
+     * 每页数量
+     */
+    per_page?: number;
+    /**
+     * Mid
+     *
+     * 按提交者 mid 精确筛选（数字字符串）
+     */
+    mid?: string | null;
+    /**
+     * 按处理状态筛选
+     */
+    status?: FeedbackStatus | null;
+    /**
+     * 按分类筛选
+     */
+    category?: FeedbackCategory | null;
+    /**
+     * Keyword
+     *
+     * 关键词：模糊匹配标题 / 描述 / 联系方式
+     */
+    keyword?: string | null;
+    /**
+     * Uname
+     *
+     * 按提交者昵称模糊筛选
+     */
+    uname?: string | null;
+};
+
+/**
+ * FeedbackAdminUpdateRequest
+ *
+ * 管理端更新一条反馈（按 report_id 定位，未传字段保持不变）
+ */
+export type FeedbackAdminUpdateRequest = {
+    /**
+     * Report Id
+     *
+     * 报告唯一标识
+     */
+    report_id: string;
+    /**
+     * 分类
+     */
+    category?: FeedbackCategory | null;
+    /**
+     * Title
+     *
+     * 简短标题
+     */
+    title?: string | null;
+    /**
+     * Description
+     *
+     * 详细描述
+     */
+    description?: string | null;
+    /**
+     * Mid
+     *
+     * 提交者 mid（传 null 表示游客，数字字符串）
+     */
+    mid?: string | null;
+    /**
+     * Uname
+     *
+     * 提交者昵称
+     */
+    uname?: string | null;
+    /**
+     * Contact
+     *
+     * 联系方式
+     */
+    contact?: string | null;
+    /**
+     * 处理状态
+     */
+    status?: FeedbackStatus | null;
+    /**
+     * Admin Remark
+     *
+     * 处理备注
+     */
+    admin_remark?: string | null;
+    /**
+     * 报错上下文（整体覆盖）
+     */
+    context?: FeedbackContext | null;
+};
+
+/**
  * FeedbackCategory
  *
  * 枚举选项：
@@ -5039,9 +5397,71 @@ export const FeedbackCategory = {
 export type FeedbackCategory = typeof FeedbackCategory[keyof typeof FeedbackCategory];
 
 /**
+ * FeedbackContext
+ *
+ * 报错上下文（落库时序列化为 JSON 存 ``context`` 文本列）
+ */
+export type FeedbackContext = {
+    /**
+     * Source
+     *
+     * 来源标记：mcp / web
+     */
+    source?: string | null;
+    /**
+     * Action Id
+     *
+     * 相关动作 id
+     */
+    action_id?: number | string | null;
+    /**
+     * Workflow Id
+     *
+     * 相关工作流 id
+     */
+    workflow_id?: number | string | null;
+    /**
+     * Run Id
+     *
+     * 相关运行记录 id
+     */
+    run_id?: string | null;
+    /**
+     * Browser Id
+     *
+     * 相关浏览器 id
+     */
+    browser_id?: number | string | null;
+    /**
+     * Error Message
+     *
+     * 错误摘要
+     */
+    error_message?: string | null;
+    /**
+     * Error Detail
+     *
+     * 错误详情 / 堆栈
+     */
+    error_detail?: string | null;
+    /**
+     * Page Url
+     *
+     * 出错时页面 URL
+     */
+    page_url?: string | null;
+    /**
+     * Extra
+     *
+     * 其他补充信息（自由文本 / JSON）
+     */
+    extra?: string | null;
+};
+
+/**
  * FeedbackItem
  *
- * 单条反馈展示模型
+ * 单条反馈展示模型（用户侧）
  */
 export type FeedbackItem = {
     /**
@@ -5069,13 +5489,9 @@ export type FeedbackItem = {
      */
     description: string;
     /**
-     * Context
-     *
      * 错误上下文
      */
-    context?: {
-        [key: string]: unknown;
-    } | null;
+    context?: FeedbackContext | null;
     /**
      * Status
      *
@@ -5085,9 +5501,9 @@ export type FeedbackItem = {
     /**
      * Created At
      *
-     * 提交时间
+     * 提交时间（秒级时间戳）
      */
-    created_at?: string | null;
+    created_at?: number | null;
 };
 
 /**
@@ -5143,6 +5559,39 @@ export type FeedbackListResp = {
 };
 
 /**
+ * FeedbackStatus
+ *
+ * 枚举选项：
+ * - pending: pending
+ * - resolved: resolved
+ * - ignored: ignored
+ */
+export const FeedbackStatus = {
+    /**
+     * pending
+     */
+    PENDING: 'pending',
+    /**
+     * resolved
+     */
+    RESOLVED: 'resolved',
+    /**
+     * ignored
+     */
+    IGNORED: 'ignored'
+} as const;
+
+/**
+ * FeedbackStatus
+ *
+ * 枚举选项：
+ * - pending: pending
+ * - resolved: resolved
+ * - ignored: ignored
+ */
+export type FeedbackStatus = typeof FeedbackStatus[keyof typeof FeedbackStatus];
+
+/**
  * FeedbackSubmitRequest
  *
  * 提交报错 / 反馈的请求模型
@@ -5164,6 +5613,12 @@ export type FeedbackSubmitRequest = {
      * 详细描述：错误现象、期望行为、复现步骤等
      */
     description: string;
+    /**
+     * Contact
+     *
+     * 联系方式（邮箱 / QQ 等）：未登录提交时建议填写，便于服主回访
+     */
+    contact?: string | null;
     /**
      * Source
      *
@@ -5215,11 +5670,9 @@ export type FeedbackSubmitRequest = {
     /**
      * Extra
      *
-     * 其他键值对（补充上下文）
+     * 其他补充信息（自由文本 / JSON 字符串）
      */
-    extra?: {
-        [key: string]: unknown;
-    } | null;
+    extra?: string | null;
 };
 
 /**
@@ -5237,15 +5690,21 @@ export type FeedbackSubmitResp = {
     /**
      * Mid
      *
-     * 提交者 mid（服务端回填）
+     * 提交者 mid（服务端回填；未登录提交为 null）
      */
-    mid: string;
+    mid?: string | null;
+    /**
+     * Uname
+     *
+     * 提交者昵称快照
+     */
+    uname?: string | null;
     /**
      * Created At
      *
-     * 提交时间
+     * 提交时间（秒级时间戳）
      */
-    created_at?: string | null;
+    created_at?: number | null;
     /**
      * Notified
      *
@@ -8431,6 +8890,21 @@ export type StandardResponseBasePaginationRespCompositeActionListItemResponse = 
 };
 
 /**
+ * StandardResponse[BasePaginationResp[FeedbackAdminItem]]
+ */
+export type StandardResponseBasePaginationRespFeedbackAdminItem = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: BasePaginationRespFeedbackAdminItem | null;
+};
+
+/**
  * StandardResponse[BasePaginationResp[RedemptionCodeItem]]
  */
 export type StandardResponseBasePaginationRespRedemptionCodeItem = {
@@ -8893,6 +9367,36 @@ export type StandardResponseExecuteStepResponse = {
      */
     msg?: string;
     data?: ExecuteStepResponse | null;
+};
+
+/**
+ * StandardResponse[FeedbackAdminDeleteResp]
+ */
+export type StandardResponseFeedbackAdminDeleteResp = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: FeedbackAdminDeleteResp | null;
+};
+
+/**
+ * StandardResponse[FeedbackAdminItem]
+ */
+export type StandardResponseFeedbackAdminItem = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: FeedbackAdminItem | null;
 };
 
 /**
@@ -13184,6 +13688,36 @@ export type BasePaginationRespCompositeActionListItemResponseWritable = {
 };
 
 /**
+ * BasePaginationResp[FeedbackAdminItem]
+ */
+export type BasePaginationRespFeedbackAdminItemWritable = {
+    /**
+     * Page
+     *
+     * 页码
+     */
+    page?: number;
+    /**
+     * Per Page
+     *
+     * 每页数量
+     */
+    per_page?: number;
+    /**
+     * Total
+     *
+     * 总记录数
+     */
+    total?: number;
+    /**
+     * Items
+     *
+     * 当前页数据
+     */
+    items?: Array<FeedbackAdminItem>;
+};
+
+/**
  * BasePaginationResp[RedemptionCodeItem]
  */
 export type BasePaginationRespRedemptionCodeItemWritable = {
@@ -13749,6 +14283,21 @@ export type StandardResponseBasePaginationRespCompositeActionListItemResponseWri
      */
     msg?: string;
     data?: BasePaginationRespCompositeActionListItemResponseWritable | null;
+};
+
+/**
+ * StandardResponse[BasePaginationResp[FeedbackAdminItem]]
+ */
+export type StandardResponseBasePaginationRespFeedbackAdminItemWritable = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: BasePaginationRespFeedbackAdminItemWritable | null;
 };
 
 /**
@@ -24167,3 +24716,358 @@ export type ListWorkflowRunsAdminApiAdminRpaWorkflowRunsPostResponses = {
 };
 
 export type ListWorkflowRunsAdminApiAdminRpaWorkflowRunsPostResponse = ListWorkflowRunsAdminApiAdminRpaWorkflowRunsPostResponses[keyof ListWorkflowRunsAdminApiAdminRpaWorkflowRunsPostResponses];
+
+export type ListFeedbacksAdminApiAdminRpaFeedbackListPostData = {
+    body: FeedbackAdminListRequest;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/admin/rpa/feedback/list';
+};
+
+export type ListFeedbacksAdminApiAdminRpaFeedbackListPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ListFeedbacksAdminApiAdminRpaFeedbackListPostError = ListFeedbacksAdminApiAdminRpaFeedbackListPostErrors[keyof ListFeedbacksAdminApiAdminRpaFeedbackListPostErrors];
+
+export type ListFeedbacksAdminApiAdminRpaFeedbackListPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseBasePaginationRespFeedbackAdminItem;
+};
+
+export type ListFeedbacksAdminApiAdminRpaFeedbackListPostResponse = ListFeedbacksAdminApiAdminRpaFeedbackListPostResponses[keyof ListFeedbacksAdminApiAdminRpaFeedbackListPostResponses];
+
+export type GetFeedbackAdminApiAdminRpaFeedbackGetPostData = {
+    body: FeedbackAdminGetRequest;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/admin/rpa/feedback/get';
+};
+
+export type GetFeedbackAdminApiAdminRpaFeedbackGetPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetFeedbackAdminApiAdminRpaFeedbackGetPostError = GetFeedbackAdminApiAdminRpaFeedbackGetPostErrors[keyof GetFeedbackAdminApiAdminRpaFeedbackGetPostErrors];
+
+export type GetFeedbackAdminApiAdminRpaFeedbackGetPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseFeedbackAdminItem;
+};
+
+export type GetFeedbackAdminApiAdminRpaFeedbackGetPostResponse = GetFeedbackAdminApiAdminRpaFeedbackGetPostResponses[keyof GetFeedbackAdminApiAdminRpaFeedbackGetPostResponses];
+
+export type CreateFeedbackAdminApiAdminRpaFeedbackCreatePostData = {
+    body: FeedbackAdminCreateRequest;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/admin/rpa/feedback/create';
+};
+
+export type CreateFeedbackAdminApiAdminRpaFeedbackCreatePostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type CreateFeedbackAdminApiAdminRpaFeedbackCreatePostError = CreateFeedbackAdminApiAdminRpaFeedbackCreatePostErrors[keyof CreateFeedbackAdminApiAdminRpaFeedbackCreatePostErrors];
+
+export type CreateFeedbackAdminApiAdminRpaFeedbackCreatePostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseFeedbackAdminItem;
+};
+
+export type CreateFeedbackAdminApiAdminRpaFeedbackCreatePostResponse = CreateFeedbackAdminApiAdminRpaFeedbackCreatePostResponses[keyof CreateFeedbackAdminApiAdminRpaFeedbackCreatePostResponses];
+
+export type UpdateFeedbackAdminApiAdminRpaFeedbackUpdatePostData = {
+    body: FeedbackAdminUpdateRequest;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/admin/rpa/feedback/update';
+};
+
+export type UpdateFeedbackAdminApiAdminRpaFeedbackUpdatePostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type UpdateFeedbackAdminApiAdminRpaFeedbackUpdatePostError = UpdateFeedbackAdminApiAdminRpaFeedbackUpdatePostErrors[keyof UpdateFeedbackAdminApiAdminRpaFeedbackUpdatePostErrors];
+
+export type UpdateFeedbackAdminApiAdminRpaFeedbackUpdatePostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseFeedbackAdminItem;
+};
+
+export type UpdateFeedbackAdminApiAdminRpaFeedbackUpdatePostResponse = UpdateFeedbackAdminApiAdminRpaFeedbackUpdatePostResponses[keyof UpdateFeedbackAdminApiAdminRpaFeedbackUpdatePostResponses];
+
+export type DeleteFeedbackAdminApiAdminRpaFeedbackDeletePostData = {
+    body: FeedbackAdminDeleteRequest;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/admin/rpa/feedback/delete';
+};
+
+export type DeleteFeedbackAdminApiAdminRpaFeedbackDeletePostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type DeleteFeedbackAdminApiAdminRpaFeedbackDeletePostError = DeleteFeedbackAdminApiAdminRpaFeedbackDeletePostErrors[keyof DeleteFeedbackAdminApiAdminRpaFeedbackDeletePostErrors];
+
+export type DeleteFeedbackAdminApiAdminRpaFeedbackDeletePostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseFeedbackAdminDeleteResp;
+};
+
+export type DeleteFeedbackAdminApiAdminRpaFeedbackDeletePostResponse = DeleteFeedbackAdminApiAdminRpaFeedbackDeletePostResponses[keyof DeleteFeedbackAdminApiAdminRpaFeedbackDeletePostResponses];

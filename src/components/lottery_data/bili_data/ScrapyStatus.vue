@@ -5,8 +5,39 @@ import { useWindowSize } from '@vueuse/core'
 import Placeholder from '@/components/opus-detail/RightPannel/PannelItems/Placeholder.vue'
 import type { ScrapyStatus, ScrapyStatusResp } from '@/models/api/lottery/lotdata.ts'
 import lottery_database_bili_api from '@/api/lottery_data/bili/lottery_database_bili_api.ts'
-import biliMessage from '@/utils/message'
+import {
+  fetchCrawlerServiceStatus,
+  operateCrawlerService,
+  type CrawlerServiceAction
+} from '@/api/lottery_data/bili/crawler_service_api.ts'
+import biliMessage, { ElMessageBox } from '@/utils/message'
 import { Refresh, Clock, Timer, DataAnalysis, Check, Close, Loading } from '@element-plus/icons-vue'
+
+const props = withDefaults(
+  defineProps<{
+    /** 管理端：在爬虫名称后展示后端服务名，并显示启停 / 重启按钮 */
+    showAdminActions?: boolean
+  }>(),
+  { showAdminActions: false }
+)
+
+/** 状态字段 → crawler 后台服务名（BackgroundServiceName），启停接口以此为入参 */
+const CRAWLER_BACKEND_SERVICE: Record<string, string> = {
+  dyn_scrapy_status: 'GET_DYN',
+  topic_scrapy_status: 'GET_TOPIC',
+  reserve_scrapy_status: 'GET_RESERVE_INFO',
+  official_scrapy_status: 'REFRESH_BILI_LOTDATA_DATABASE',
+  other_space_scrapy_status: 'GET_OTHERS_LOT_DYN'
+}
+
+const getBackendServiceName = (category: string): string =>
+  CRAWLER_BACKEND_SERVICE[category] || ''
+
+const ACTION_LABEL: Record<CrawlerServiceAction, string> = {
+  start: '启动',
+  stop: '停止',
+  restart: '重启'
+}
 
 const is_loading = ref(false)
 
@@ -38,6 +69,7 @@ const keyToChineseMap: KeyToChineseMap = {
   end_params: '结束参数',
   end_success_params: '成功结束参数',
   init_params: '初始参数',
+  running_params: '运行中任务',
   running_params_set: '运行中参数集',
   health_status: '健康状态'
 }
@@ -81,18 +113,85 @@ const statProcessed = (s: any) => s?.processed_items_count ?? s?.total_num ?? 0
 const statTotal = (s: any) => s?.total_num ?? 0
 const statNull = (s: any) => s?.null_count ?? 0
 const statSpeed = (s: any) => s?.crawling_speed ?? 0
-const statProgress = (s: any) => s?.progress ?? 0
 const startStr = (s: any) => s?.start_time_str ?? s?.start_time ?? '未启动'
 const updateStr = (s: any) => s?.last_update_time_str ?? s?.update_time ?? '未启动'
-const getParamsList = (s: any) => s?.running_params_set ?? s?.running_params ?? []
 
-// 根据结构返回需要展示的参数键：ScrapyStatus 型含初始/结束参数，官方型只有 running_params 列表
-const getParamKeys = (s: any): string[] => {
-  if (s && (s.running_params_set !== undefined || s.init_params !== undefined)) {
-    return ['init_params', 'end_params', 'end_success_params', 'running_params_set']
-  }
-  return ['running_params']
+/** 官方/空间型的 progress 是 0~1 的比例（后端 show_pace），统一换算成 0~100 */
+const progressPercent = (s: any): number => {
+  const percent = Math.round(Number(s?.progress ?? 0) * 100)
+  return Math.min(100, Math.max(0, percent))
 }
+
+/** 剩余待处理数量（官方/空间型） */
+const statRemaining = (s: any): number => Math.max(0, statTotal(s) - statSucc(s))
+
+/** 运行中任务列表：新版为 WorkerSummaryModel[]，老接口为裸 id[] */
+const getParamsList = (s: any): any[] => {
+  const list = s?.running_params_set ?? s?.running_params ?? []
+  return Array.isArray(list) ? list : []
+}
+
+/** 取参数本体：StatsPlugin 的 init/end 是 WorkerSummaryModel，参数在 params 里 */
+const paramPayload = (value: any): any =>
+  value && typeof value === 'object' && value.params && typeof value.params === 'object'
+    ? value.params
+    : value
+
+/** 大整数（如动态 ID）经 JSON 解析后会丢精度，超出安全整数时退回 seqId */
+const safeParamId = (label: string, value: any): string | null => {
+  if (value === null || value === undefined || value === '') return null
+  if (typeof value === 'string') return `${label} ${value}`
+  const num = Number(value)
+  if (!Number.isFinite(num)) return `${label} ${value}`
+  return Number.isSafeInteger(num) ? `${label} ${num}` : null
+}
+
+/** 运行中任务的短标识：空间用户显示 UID，动态判定显示动态 ID，其余按 seqId 兜底 */
+const runningParamLabel = (item: any): string => {
+  if (typeof item === 'number' || typeof item === 'string') return `参数 ${item}`
+  const fallback = item?.seqId !== undefined ? `任务 #${item.seqId}` : '任务'
+  const params = item?.params
+  const obj = params?.obj
+  if (obj && typeof obj === 'object') {
+    if (obj.uid !== undefined) return safeParamId('UID', obj.uid) ?? fallback
+    if (obj.dynamic_id !== undefined) return safeParamId('动态', obj.dynamic_id) ?? fallback
+  }
+  if (params && typeof params === 'object') {
+    if (params.rid !== undefined) return safeParamId('RID', params.rid) ?? fallback
+    if (params.topic_id !== undefined) return safeParamId('话题', params.topic_id) ?? fallback
+    if (params.reserve_id !== undefined) return safeParamId('预约', params.reserve_id) ?? fallback
+  }
+  return fallback
+}
+
+/** WorkerModel.fetchStatusStr 在运行中恒为 pending，这里转成更直观的文案 */
+const runningParamStatus = (item: any): string => {
+  const status = String(item?.fetchStatusStr ?? '')
+  if (!status) return '运行中'
+  return status.toLowerCase() === 'pending' ? '运行中' : status
+}
+
+const fmtUnix = (ts?: number): string =>
+  ts ? dayjs.unix(ts).format('MM-DD HH:mm:ss') : '—'
+
+/** 参数是否值得展示：避免卡片长期挂着三行「无」 */
+const hasParamValue = (value: any): boolean => {
+  if (value === null || value === undefined) return false
+  if (typeof value !== 'object') return value !== ''
+  const payload = paramPayload(value)
+  const extraKeys = Object.keys(payload?.extra_fields ?? {})
+  return (
+    ['rid', 'topic_id', 'reserve_id'].some(
+      (key) => payload?.[key] !== undefined && payload?.[key] !== null
+    ) || extraKeys.length > 0
+  )
+}
+
+/** 只保留有内容的初始/结束参数；运行中任务由专门的区块展示 */
+const getParamKeys = (s: any): string[] =>
+  ['init_params', 'end_params', 'end_success_params'].filter((key) =>
+    hasParamValue(s?.[key])
+  )
 const { width: windowWidth } = useWindowSize()
 const data = ref<ScrapyStatusResp>({
   dyn_scrapy_status: {
@@ -174,7 +273,7 @@ const formatValue = (key: string, value: any) => {
   const formatters = {
     time: (v: number) => (v ? dayjs.unix(v).format('MM月DD日 HH:mm:ss') : '未启动'),
     timeStr: (v: string) => v || '未启动',
-    speed: (v: number) => `${v.toFixed(4)} 秒/个`,
+    speed: (v: number) => `${v.toFixed(4)} 个/秒`,
     count: (v: number) => v.toLocaleString(),
     bool: (v: boolean) => (v ? '运行中' : '已停止'),
     duration: (v: number) => {
@@ -185,10 +284,11 @@ const formatValue = (key: string, value: any) => {
     },
     params: (v: any) => {
       if (!v) return '无'
+      const payload = paramPayload(v)
       const parts = []
-      if (v.rid) parts.push(`RID: ${v.rid}`)
-      if (v.topic_id) parts.push(`话题ID: ${v.topic_id}`)
-      if (v.reserve_id) parts.push(`预约ID: ${v.reserve_id}`)
+      if (payload.rid) parts.push(`RID: ${payload.rid}`)
+      if (payload.topic_id) parts.push(`话题ID: ${payload.topic_id}`)
+      if (payload.reserve_id) parts.push(`预约ID: ${payload.reserve_id}`)
       return parts.length ? parts.join(', ') : '无参数'
     },
     paramsList: (v: any[]) => {
@@ -211,9 +311,113 @@ const formatValue = (key: string, value: any) => {
   if (key === 'end_params' || key === 'end_success_params' || key === 'init_params')
     return formatters.params(value)
   if (Array.isArray(value)) return formatters.paramsList(value)
-  if (key === 'running_params_set') return formatters.paramsList(value)
   return formatters.default(value)
 }
+/**
+ * 后台服务在 crawler 全局调度器中的状态，启停按钮的可用性以此为准：
+ * - unknown：还没成功拿到调度状态（首次加载中 / 接口失败），一律不放行；
+ * - stopped：未注册在调度器中，只能「启动」；
+ * - paused：已注册但未排期（next_run_time 为 null），只能「停止 / 重启」；
+ * - scheduled：已注册且已排期，只能「停止 / 重启」。
+ */
+type SchedulerState = 'unknown' | 'stopped' | 'paused' | 'scheduled'
+
+/** service_name → 下次触发时间（null 表示已注册但未排期 / 已暂停） */
+const scheduled_services = ref<Map<string, number | null>>(new Map())
+/** 是否至少成功拉到过一次调度状态：失败时不能把服务误判成「已停止」 */
+const scheduled_loaded = ref(false)
+const scheduled_loading = ref(false)
+/** 正在执行的操作，格式为 `${service_name}:${action}`，用于按钮 loading */
+const operating_key = ref('')
+
+const getSchedulerState = (service_name: string): SchedulerState => {
+  if (!scheduled_loaded.value) return 'unknown'
+  if (!scheduled_services.value.has(service_name)) return 'stopped'
+  return scheduled_services.value.get(service_name) == null ? 'paused' : 'scheduled'
+}
+
+/** 每个调度状态下允许的动作：已停止只能启动；已排期 / 暂停只能停止、重启 */
+const ALLOWED_ACTIONS: Record<SchedulerState, CrawlerServiceAction[]> = {
+  unknown: [],
+  stopped: ['start'],
+  scheduled: ['stop', 'restart'],
+  paused: ['stop', 'restart']
+}
+
+const canOperate = (service_name: string, action: CrawlerServiceAction): boolean =>
+  ALLOWED_ACTIONS[getSchedulerState(service_name)].includes(action)
+
+/** 管理端状态徽标：调度状态 + 当前是否在执行（已排期但空闲不算「运行中」） */
+type AdminCrawlerState = 'unknown' | 'stopped' | 'paused' | 'scheduled' | 'running'
+const adminStateMap: Record<AdminCrawlerState, { text: string; class: string }> = {
+  unknown: { text: '状态未知', class: 'text-text-secondary' },
+  stopped: { text: '已停止', class: 'text-danger' },
+  paused: { text: '已暂停', class: 'text-warning' },
+  scheduled: { text: '已排期', class: 'text-primary' },
+  running: { text: '运行中', class: 'text-success' }
+}
+const getAdminStateMeta = (service_name: string, is_running: boolean) => {
+  const scheduler_state = getSchedulerState(service_name)
+  const state: AdminCrawlerState =
+    scheduler_state === 'scheduled' ? (is_running ? 'running' : 'scheduled') : scheduler_state
+  return adminStateMap[state]
+}
+
+const isOperating = (service_name: string, action: CrawlerServiceAction): boolean =>
+  operating_key.value === `${service_name}:${action}`
+
+const load_scheduled_services = async () => {
+  // 自动刷新与手动刷新可能同时触发，避免重复请求
+  if (!props.showAdminActions || scheduled_loading.value) return
+  scheduled_loading.value = true
+  try {
+    // 错误提示由统一请求层处理；失败时保留上一次的服务状态
+    const data = await fetchCrawlerServiceStatus()
+    if (data) {
+      scheduled_services.value = new Map(
+        (data.scheduled || []).map(
+          (item) => [item.service_name, item.next_run_time ?? null] as const
+        )
+      )
+      scheduled_loaded.value = true
+    }
+  } finally {
+    scheduled_loading.value = false
+  }
+}
+
+const handle_manual_refresh = async () => {
+  await Promise.all([handle_get_scrapy_status(), load_scheduled_services()])
+}
+
+const handle_service_action = async (category: string, action: CrawlerServiceAction) => {
+  const service_name = getBackendServiceName(category)
+  if (!service_name) return
+  const label = ACTION_LABEL[action]
+  if (action !== 'start') {
+    try {
+      await ElMessageBox.confirm(`确定要${label}后台服务 ${service_name} 吗？`, '提示', {
+        type: 'warning',
+        confirmButtonText: '确定',
+        cancelButtonText: '取消'
+      })
+    } catch {
+      return
+    }
+  }
+  operating_key.value = `${service_name}:${action}`
+  try {
+    // 失败提示由统一请求层弹出，成功时展示后端返回的结果描述
+    const result = await operateCrawlerService(action, service_name)
+    if (result) {
+      biliMessage.success(result.msg || `${label}成功`)
+      await Promise.all([handle_get_scrapy_status(), load_scheduled_services()])
+    }
+  } finally {
+    operating_key.value = ''
+  }
+}
+
 const handle_get_scrapy_status = async () => {
   is_loading.value = true
   try {
@@ -301,6 +505,9 @@ onMounted(() => {
   if (isStale) {
     handle_get_scrapy_status().catch(() => { })
   }
+  if (props.showAdminActions) {
+    load_scheduled_services()
+  }
   startAutoRefresh()
 })
 const isAutoRefresh = ref(false)
@@ -309,6 +516,9 @@ const startAutoRefresh = () => {
   if (!autoRefreshTimer && isAutoRefresh.value) {
     autoRefreshTimer = window.setInterval(() => {
       handle_get_scrapy_status()
+      // 调度状态同样会被外部改变（别的管理员操作 / 服务自行停止），一并刷新，
+      // 否则按钮可用性会一直停在页面打开时的状态
+      if (props.showAdminActions) load_scheduled_services()
     }, 10e3) // 每隔10秒刷新一次
   }
 }
@@ -350,7 +560,7 @@ onBeforeUnmount(() => {
           </div>
           <el-button
             type="primary"
-            @click="handle_get_scrapy_status"
+            @click="handle_manual_refresh"
             :disabled="isAutoRefresh"
             :loading="is_loading"
             class="flex-1 md:flex-none"
@@ -388,10 +598,37 @@ onBeforeUnmount(() => {
           class="rounded-lg overflow-hidden border border-border-light bg-bg transition-all duration-300 hover:shadow-lg hover:-translate-y-1 flex flex-col"
         >
           <div class="p-4 border-b border-border-light">
-            <div class="flex justify-between items-center">
-              <h3 class="text-xl font-semibold text-text-primary">{{ getKeyName(category) }}</h3>
+            <div class="flex flex-wrap justify-between items-center gap-2">
+              <div class="bili-crawler-card__title-box flex min-w-0 flex-wrap items-center gap-2">
+                <h3 class="text-xl font-semibold text-text-primary">{{ getKeyName(category) }}</h3>
+                <el-tag
+                  v-if="showAdminActions && getBackendServiceName(category)"
+                  class="bili-crawler-card__backend-name font-mono"
+                  type="info"
+                  effect="plain"
+                >
+                  {{ getBackendServiceName(category) }}
+                </el-tag>
+              </div>
               <div class="flex items-center gap-2">
+                <!-- 代理池熔断时任务并没有失败，只是被挡住，避免误读成「已停止」 -->
+                <el-tooltip
+                  v-if="(scrapy_data as any).waiting_for_proxy"
+                  :content="(scrapy_data as any).blocked_reason || '代理池不可用，任务暂时被阻塞'"
+                  placement="top"
+                >
+                  <el-tag type="warning" effect="light">等待代理恢复</el-tag>
+                </el-tooltip>
+                <!-- 管理端：状态以调度器为准（与下方按钮可用性同源），已排期但空闲不再误显示为「已停止」 -->
                 <div
+                  v-if="showAdminActions && getBackendServiceName(category)"
+                  class="bili-crawler-card__scheduler-status flex items-center px-3 py-1 rounded-full text-sm font-medium"
+                  :class="getAdminStateMeta(getBackendServiceName(category), scrapy_data.is_running).class"
+                >
+                  {{ getAdminStateMeta(getBackendServiceName(category), scrapy_data.is_running).text }}
+                </div>
+                <div
+                  v-else
                   class="flex items-center px-3 py-1 rounded-full text-sm font-medium"
                   :class="scrapy_data.is_running ? 'text-success' : 'text-danger'"
                 >
@@ -412,27 +649,27 @@ onBeforeUnmount(() => {
           
           <div class="p-6 flex-1">
             <div class="space-y-5">
-              <!-- 运行状态 -->
-              <div class="flex flex-col">
-                <div class="font-medium text-text-regular flex items-center mb-2">
-                  <Timer class="mr-2 w-4 h-4 text-text-secondary" />
-                  运行状态
-                </div>
-                <div class="flex items-center">
-                  <div class="w-full bg-border-light rounded-full h-2.5 mr-3">
-                    <div 
-                      class="h-2.5 rounded-full transition-all duration-500" 
-                      :class="scrapy_data.is_running ? 'bg-success w-full' : 'bg-danger w-1/4'"
-                    ></div>
+              <!-- 抓取进度：官方/空间型有 total_num，按真实 progress 展示 -->
+              <div v-if="isOfficialType(scrapy_data)" class="flex flex-col">
+                <div class="mb-2 flex items-center justify-between">
+                  <div class="font-medium text-text-regular flex items-center">
+                    <Timer class="mr-2 w-4 h-4 text-text-secondary" />
+                    抓取进度
                   </div>
-                  <span :class="scrapy_data.is_running ? 'text-success font-medium' : 'text-danger font-medium'">
-                    {{ scrapy_data.is_running ? '运行中' : '已停止' }}
+                  <span class="text-sm text-text-secondary">
+                    {{ statSucc(scrapy_data).toLocaleString() }} / {{ statTotal(scrapy_data).toLocaleString() }}
+                    <span class="ml-1 font-medium text-text-primary">{{ progressPercent(scrapy_data) }}%</span>
                   </span>
                 </div>
+                <el-progress
+                  :percentage="progressPercent(scrapy_data)"
+                  :stroke-width="10"
+                  :show-text="false"
+                />
               </div>
-              
+
               <!-- 数据统计 -->
-              <div class="grid grid-cols-2 gap-4">
+              <div class="grid grid-cols-2 gap-3">
                 <div class="bg-bg-page rounded-lg p-3 border border-border-light">
                   <div class="text-text-secondary text-xs mb-1">成功数量</div>
                   <div class="text-lg font-bold text-text-primary">{{ statSucc(scrapy_data).toLocaleString() }}</div>
@@ -443,8 +680,12 @@ onBeforeUnmount(() => {
                     <div class="text-lg font-bold text-text-primary">{{ statTotal(scrapy_data).toLocaleString() }}</div>
                   </div>
                   <div class="bg-bg-page rounded-lg p-3 border border-border-light">
-                    <div class="text-text-secondary text-xs mb-1">进度</div>
-                    <div class="text-lg font-bold text-text-primary">{{ statProgress(scrapy_data) }}%</div>
+                    <div class="text-text-secondary text-xs mb-1">剩余</div>
+                    <div class="text-lg font-bold text-text-primary">{{ statRemaining(scrapy_data).toLocaleString() }}</div>
+                  </div>
+                  <div class="bg-bg-page rounded-lg p-3 border border-border-light">
+                    <div class="text-text-secondary text-xs mb-1">运行中任务</div>
+                    <div class="text-lg font-bold text-text-primary">{{ getParamsList(scrapy_data).length }}</div>
                   </div>
                 </template>
                 <template v-else>
@@ -458,11 +699,11 @@ onBeforeUnmount(() => {
                   </div>
                   <div class="bg-bg-page rounded-lg p-3 border border-border-light">
                     <div class="text-text-secondary text-xs mb-1">爬取速度</div>
-                    <div class="text-lg font-bold text-text-primary">{{ statSpeed(scrapy_data).toFixed(4) }}s/个</div>
+                    <div class="text-lg font-bold text-text-primary">{{ statSpeed(scrapy_data).toFixed(4) }} 个/秒</div>
                   </div>
                 </template>
               </div>
-              
+
               <!-- 时间信息 -->
               <div class="space-y-2">
                 <div class="flex justify-between items-center">
@@ -474,9 +715,46 @@ onBeforeUnmount(() => {
                   <div class="text-text-primary">{{ updateStr(scrapy_data) }}</div>
                 </div>
               </div>
-              
-              <!-- 参数信息 -->
-              <div class="space-y-2">
+
+              <!-- 运行中任务：状态 + 参数摘要，替代原来的裸 id / 纯 JSON -->
+              <div v-if="getParamsList(scrapy_data).length" class="space-y-2">
+                <div class="flex items-center justify-between">
+                  <div class="font-medium text-text-regular">运行中任务</div>
+                  <el-tag type="success" effect="light">{{ getParamsList(scrapy_data).length }}</el-tag>
+                </div>
+                <div class="flex flex-wrap gap-2">
+                  <el-popover
+                    v-for="(item, idx) in getParamsList(scrapy_data).slice(0, 8)"
+                    :key="`${item?.seqId ?? idx}`"
+                    placement="top"
+                    :width="360"
+                    trigger="hover"
+                  >
+                    <template #reference>
+                      <el-tag type="info" effect="plain" class="cursor-pointer font-mono">
+                        {{ runningParamLabel(item) }}
+                        <span v-if="item?.retry_count" class="ml-1 text-warning">重试{{ item.retry_count }}</span>
+                      </el-tag>
+                    </template>
+                    <div class="space-y-2">
+                      <div class="text-sm text-text-regular">
+                        任务 #{{ item?.seqId ?? '-' }} · {{ runningParamStatus(item) }}
+                        <span v-if="item?.retry_count"> · 重试 {{ item.retry_count }} 次</span>
+                      </div>
+                      <div class="text-xs text-text-placeholder">
+                        开始 {{ fmtUnix(item?.created_at) }} · 更新 {{ fmtUnix(item?.updated_at) }}
+                      </div>
+                      <pre class="m-0 max-h-60 overflow-auto whitespace-pre-wrap break-all rounded border border-border-light bg-bg p-3 text-sm text-text-regular">{{ JSON.stringify(item?.params ?? item, null, 2) }}</pre>
+                    </div>
+                  </el-popover>
+                  <span v-if="getParamsList(scrapy_data).length > 8" class="flex items-center text-sm text-text-placeholder">
+                    还有 {{ getParamsList(scrapy_data).length - 8 }} 个
+                  </span>
+                </div>
+              </div>
+
+              <!-- 参数信息：只展示有内容的初始/结束参数，避免长期挂着「无」 -->
+              <div v-if="getParamKeys(scrapy_data).length" class="space-y-2">
                 <div v-for="key in getParamKeys(scrapy_data)" :key="key" class="flex justify-between items-center">
                   <div class="font-medium text-text-regular">{{ getKeyName(key) }}</div>
                   <el-popover placement="top" :width="300" trigger="hover">
@@ -493,10 +771,43 @@ onBeforeUnmount(() => {
           </div>
           
           <div class="p-4 border-t border-border-light bg-bg-page">
-            <div class="flex items-center text-sm text-text-secondary">
-              <Clock class="mr-2 w-4 h-4 text-text-placeholder" />
-              <span v-if="!isOfficialType(scrapy_data)">持续运行：{{ formatValue('total_run_duration', (scrapy_data as any).total_run_duration) }}</span>
-              <span v-else>更新时间：{{ updateStr(scrapy_data) }}</span>
+            <div class="flex flex-wrap items-center justify-between gap-3">
+              <div class="flex items-center text-sm text-text-secondary">
+                <Clock class="mr-2 w-4 h-4 text-text-placeholder" />
+                <span v-if="!isOfficialType(scrapy_data)">持续运行：{{ formatValue('total_run_duration', (scrapy_data as any).total_run_duration) }}</span>
+                <span v-else>更新时间：{{ updateStr(scrapy_data) }}</span>
+              </div>
+              <div
+                v-if="showAdminActions && getBackendServiceName(category)"
+                class="bili-crawler-card__service-actions flex flex-wrap items-center gap-2"
+              >
+                <el-button
+                  :id="`crawler-service-${getBackendServiceName(category)}-start`"
+                  type="primary"
+                  :disabled="!canOperate(getBackendServiceName(category), 'start')"
+                  :loading="isOperating(getBackendServiceName(category), 'start')"
+                  @click="handle_service_action(category, 'start')"
+                >
+                  启动
+                </el-button>
+                <el-button
+                  :id="`crawler-service-${getBackendServiceName(category)}-stop`"
+                  type="danger"
+                  :disabled="!canOperate(getBackendServiceName(category), 'stop')"
+                  :loading="isOperating(getBackendServiceName(category), 'stop')"
+                  @click="handle_service_action(category, 'stop')"
+                >
+                  停止
+                </el-button>
+                <el-button
+                  :id="`crawler-service-${getBackendServiceName(category)}-restart`"
+                  :disabled="!canOperate(getBackendServiceName(category), 'restart')"
+                  :loading="isOperating(getBackendServiceName(category), 'restart')"
+                  @click="handle_service_action(category, 'restart')"
+                >
+                  重启
+                </el-button>
+              </div>
             </div>
           </div>
         </div>

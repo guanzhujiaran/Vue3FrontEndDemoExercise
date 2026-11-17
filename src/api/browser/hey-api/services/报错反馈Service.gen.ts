@@ -9,19 +9,19 @@ export class 报错反馈Service {
     /**
      * 提交报错 / 反馈
      *
-     * 提交一条运行报错 / 反馈给服主。
+     * 提交一条运行报错 / 反馈给服主（登录 / 未登录均可）。
      *
      * 把出错现场（分类、标题、描述 + 关联动作/工作流/运行/浏览器、错误摘要/详情、
-     * 页面 URL 等上下文）落库，并实时推送服主（站内通知 + 邮件/Webhook 等外部推送）。
+     * 页面 URL 等上下文）落库，并按服主 NotificationConfig 做**站外**推送（邮件 / Webhook 等）。
      * 用于让服主及时知道哪里出错、哪里需要改进。用户通过 MCP 也可调用本工具上报。
      *
      * Args:
      * request: 反馈内容（category/title/description 必填，其余可选上下文）
-     * mid: 提交者 mid，从请求头自动获取（服务端回填，不接受用户传 mid）
+     * auth_info: 登录态，从请求头自动获取；未登录为 None（可填写 contact 便于回访）
      * session: 数据库会话
      *
      * Returns:
-     * FeedbackSubmitResp: report_id、提交者 mid、提交时间、是否已推送服主。
+     * FeedbackSubmitResp: report_id、提交者 mid / uname、提交时间、是否已推送服主。
      * 推送为弱依赖（失败不阻塞提交），notified=false 表示本次未发出推送但已落库。
      */
     public static feedbackSubmitRouterApiV1RpaBrowserFeedbackSubmitPost<ThrowOnError extends boolean = false>(options: Options<FeedbackSubmitRouterApiV1RpaBrowserFeedbackSubmitPostData, ThrowOnError>): RequestResult<FeedbackSubmitRouterApiV1RpaBrowserFeedbackSubmitPostResponses, FeedbackSubmitRouterApiV1RpaBrowserFeedbackSubmitPostErrors, ThrowOnError, 'data'> {
@@ -45,7 +45,7 @@ export class 报错反馈Service {
      *
      * Args:
      * request: 分页参数（page / per_page）
-     * mid: 提交者 mid，从请求头自动获取（只返回该用户自己的反馈）
+     * auth_info: 登录态信息（mid 从请求头获取，只返回该用户自己的反馈）
      * session: 数据库会话
      *
      * Returns:

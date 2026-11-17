@@ -1982,8 +1982,9 @@ export type CrawlerLlmModelsResp = {
  *
  * 单条 LLM 实例配置（保存态）。
  *
- * `token` 传空串或脱敏值（含 `****`）表示**沿用该索引上的原密钥**，
- * 仅在新增实例或换密钥时传明文。
+ * 密钥归属「来源」（`base_url`），同一地址可配多把密钥（管理页每张卡片一把）。
+ * `token` 的三种取值见模块头：明文 / 脱敏引用（沿用这一把）/ 空串（同址唯一密钥时沿用）。
+ * 只有**新增来源**（该地址在现有配置里不存在）时才必须传明文。
  */
 export type CrawlerLlmSaveItem = {
     /**
@@ -2001,7 +2002,7 @@ export type CrawlerLlmSaveItem = {
     /**
      * Token
      *
-     * 明文密钥；空串/脱敏值 = 不修改原密钥
+     * 明文密钥 / 脱敏值(=沿用这一把) / 空串(=同址唯一密钥时沿用)
      */
     token?: string;
     /**
@@ -2352,6 +2353,96 @@ export type CrawlerPushStateResp = {
      * 每个爬虫的最终生效状态
      */
     effective?: Array<CrawlerPushEffectiveItem>;
+};
+
+/**
+ * CrawlerScheduledService
+ *
+ * 一个已注册在全局调度器里的后台服务
+ */
+export type CrawlerScheduledService = {
+    /**
+     * Service Name
+     *
+     * 后台服务名
+     */
+    service_name: string;
+    /**
+     * Next Run Time
+     *
+     * 下次触发时间（unix 秒）；null 表示未排期 / 已暂停
+     */
+    next_run_time?: number | null;
+};
+
+/**
+ * CrawlerServiceAction
+ *
+ * 对后台服务执行的启停动作
+ */
+export const CrawlerServiceAction = {
+    START: 'start',
+    STOP: 'stop',
+    RESTART: 'restart'
+} as const;
+
+/**
+ * CrawlerServiceAction
+ *
+ * 对后台服务执行的启停动作
+ */
+export type CrawlerServiceAction = typeof CrawlerServiceAction[keyof typeof CrawlerServiceAction];
+
+/**
+ * CrawlerServiceOperateReq
+ *
+ * 启停请求：服务名取值同 crawler 的 `BackgroundServiceName`
+ */
+export type CrawlerServiceOperateReq = {
+    /**
+     * Service Name
+     *
+     * 后台服务名，取值同 BackgroundServiceName
+     */
+    service_name: string;
+};
+
+/**
+ * CrawlerServiceOperateResp
+ *
+ * 启停操作结果
+ */
+export type CrawlerServiceOperateResp = {
+    /**
+     * Service Name
+     *
+     * 后台服务名
+     */
+    service_name: string;
+    /**
+     * 执行的动作
+     */
+    action: CrawlerServiceAction;
+    /**
+     * Msg
+     *
+     * crawler 返回的结果描述
+     */
+    msg: string;
+};
+
+/**
+ * CrawlerServiceStatusResp
+ *
+ * 后台服务调度状态：只返回已注册的服务，未出现即为「已停止」
+ */
+export type CrawlerServiceStatusResp = {
+    /**
+     * Scheduled
+     *
+     * 当前已注册在全局调度器中的后台服务
+     */
+    scheduled?: Array<CrawlerScheduledService>;
 };
 
 /**
@@ -10512,6 +10603,36 @@ export type StandardResponseCrawlerPushStateResp = {
      */
     msg?: string;
     data?: CrawlerPushStateResp | null;
+};
+
+/**
+ * StandardResponse[CrawlerServiceOperateResp]
+ */
+export type StandardResponseCrawlerServiceOperateResp = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: CrawlerServiceOperateResp | null;
+};
+
+/**
+ * StandardResponse[CrawlerServiceStatusResp]
+ */
+export type StandardResponseCrawlerServiceStatusResp = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: CrawlerServiceStatusResp | null;
 };
 
 /**
@@ -32394,6 +32515,306 @@ export type DeletePushSwitchApiV1CrawlerAdminPushSwitchDeletePostResponses = {
 };
 
 export type DeletePushSwitchApiV1CrawlerAdminPushSwitchDeletePostResponse = DeletePushSwitchApiV1CrawlerAdminPushSwitchDeletePostResponses[keyof DeletePushSwitchApiV1CrawlerAdminPushSwitchDeletePostResponses];
+
+export type GetServiceStatusApiV1CrawlerAdminServiceGetData = {
+    body?: never;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Jwt
+         */
+        'x-bili-jwt'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string | null;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string | null;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string | null;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string | null;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string | null;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string | null;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string | null;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/crawler/admin/service';
+};
+
+export type GetServiceStatusApiV1CrawlerAdminServiceGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetServiceStatusApiV1CrawlerAdminServiceGetError = GetServiceStatusApiV1CrawlerAdminServiceGetErrors[keyof GetServiceStatusApiV1CrawlerAdminServiceGetErrors];
+
+export type GetServiceStatusApiV1CrawlerAdminServiceGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseCrawlerServiceStatusResp;
+};
+
+export type GetServiceStatusApiV1CrawlerAdminServiceGetResponse = GetServiceStatusApiV1CrawlerAdminServiceGetResponses[keyof GetServiceStatusApiV1CrawlerAdminServiceGetResponses];
+
+export type StartServiceApiV1CrawlerAdminServiceStartPostData = {
+    body: CrawlerServiceOperateReq;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Jwt
+         */
+        'x-bili-jwt'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string | null;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string | null;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string | null;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string | null;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string | null;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string | null;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string | null;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/crawler/admin/service/start';
+};
+
+export type StartServiceApiV1CrawlerAdminServiceStartPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type StartServiceApiV1CrawlerAdminServiceStartPostError = StartServiceApiV1CrawlerAdminServiceStartPostErrors[keyof StartServiceApiV1CrawlerAdminServiceStartPostErrors];
+
+export type StartServiceApiV1CrawlerAdminServiceStartPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseCrawlerServiceOperateResp;
+};
+
+export type StartServiceApiV1CrawlerAdminServiceStartPostResponse = StartServiceApiV1CrawlerAdminServiceStartPostResponses[keyof StartServiceApiV1CrawlerAdminServiceStartPostResponses];
+
+export type StopServiceApiV1CrawlerAdminServiceStopPostData = {
+    body: CrawlerServiceOperateReq;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Jwt
+         */
+        'x-bili-jwt'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string | null;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string | null;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string | null;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string | null;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string | null;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string | null;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string | null;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/crawler/admin/service/stop';
+};
+
+export type StopServiceApiV1CrawlerAdminServiceStopPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type StopServiceApiV1CrawlerAdminServiceStopPostError = StopServiceApiV1CrawlerAdminServiceStopPostErrors[keyof StopServiceApiV1CrawlerAdminServiceStopPostErrors];
+
+export type StopServiceApiV1CrawlerAdminServiceStopPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseCrawlerServiceOperateResp;
+};
+
+export type StopServiceApiV1CrawlerAdminServiceStopPostResponse = StopServiceApiV1CrawlerAdminServiceStopPostResponses[keyof StopServiceApiV1CrawlerAdminServiceStopPostResponses];
+
+export type RestartServiceApiV1CrawlerAdminServiceRestartPostData = {
+    body: CrawlerServiceOperateReq;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Jwt
+         */
+        'x-bili-jwt'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string | null;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string | null;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string | null;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string | null;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string | null;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string | null;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string | null;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/crawler/admin/service/restart';
+};
+
+export type RestartServiceApiV1CrawlerAdminServiceRestartPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type RestartServiceApiV1CrawlerAdminServiceRestartPostError = RestartServiceApiV1CrawlerAdminServiceRestartPostErrors[keyof RestartServiceApiV1CrawlerAdminServiceRestartPostErrors];
+
+export type RestartServiceApiV1CrawlerAdminServiceRestartPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseCrawlerServiceOperateResp;
+};
+
+export type RestartServiceApiV1CrawlerAdminServiceRestartPostResponse = RestartServiceApiV1CrawlerAdminServiceRestartPostResponses[keyof RestartServiceApiV1CrawlerAdminServiceRestartPostResponses];
 
 export type ServeAsyncapiSchemaAsyncapiGetData = {
     body?: never;
