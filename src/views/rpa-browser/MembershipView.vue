@@ -338,7 +338,7 @@
       title="兑换码"
       width="480px"
       align-center
-      append-to-body
+      append-to="#app-modal-root"
       :lock-scroll="false"
     >
       <div class="membership-view__redeem-body flex flex-col gap-3">
@@ -367,7 +367,7 @@
       title="兑换奖励"
       width="720px"
       align-center
-      append-to-body
+      append-to="#app-modal-root"
       :lock-scroll="false"
     >
       <div class="membership-view__reward-body flex flex-col gap-3">

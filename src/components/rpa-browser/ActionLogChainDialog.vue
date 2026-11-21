@@ -142,7 +142,7 @@ const formatDuration = (ms: number) => {
     :title="`执行链路 · ${executionId}`"
     width="720px"
     class="action-log-chain-dialog"
-    append-to-body
+    append-to="#app-modal-root"
     :close-on-click-modal="false"
   >
     <div v-loading="loading" class="action-log-chain flex flex-col gap-3">

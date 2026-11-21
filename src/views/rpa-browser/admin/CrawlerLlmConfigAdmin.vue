@@ -326,7 +326,7 @@
 
   <!-- ============ 测试弹窗：选一个模型发一次最小请求 ============ -->
   <el-dialog v-model="testDialogVisible" class="crawler-llm-config__test-dialog" width="520" title="测试连通性"
-    append-to-body>
+    append-to="#app-modal-root">
     <div class="crawler-llm-config__test-body flex flex-col gap-3">
       <div class="crawler-llm-config__test-field flex flex-col gap-1">
         <el-text class="crawler-llm-config__test-label text-xs text-text-secondary" tag="div">

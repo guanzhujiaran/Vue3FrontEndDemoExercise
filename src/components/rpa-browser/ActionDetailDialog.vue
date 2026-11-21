@@ -134,7 +134,7 @@ watch(
     width="900px"
     top="6vh"
     :lock-scroll="false"
-    append-to-body
+    append-to="#app-modal-root"
   >
     <div v-loading="loading" style="min-height: 240px">
       <template v-if="detail">

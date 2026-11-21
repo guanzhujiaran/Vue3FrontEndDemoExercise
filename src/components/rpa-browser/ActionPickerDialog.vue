@@ -168,7 +168,7 @@ watch(
     v-model="dialogVisible"
     title="选择动作"
     width="720px"
-    :append-to-body="true"
+    append-to="#app-modal-root"
     :close-on-click-modal="false"
     :destroy-on-close="false"
     class="action-picker-dialog"

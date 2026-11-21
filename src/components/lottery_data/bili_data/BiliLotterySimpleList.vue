@@ -144,7 +144,7 @@
       width="680px"
       class="lottery-detail-dialog"
       :title="selectedNormalized?.title"
-      append-to-body
+      append-to="#app-modal-root"
       :lock-scroll="false"
     >
       <BiliLotteryCard v-if="selectedRaw" :lottery-data="selectedRaw" />

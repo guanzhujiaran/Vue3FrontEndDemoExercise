@@ -79,6 +79,20 @@ const user_face_src = computed(() => {
 
 const headerAvatarDropdown = useTemplateRef<typeof ElDropdown>('headerAvatarDropdown')
 
+/**
+ * 下拉面板固定贴在头像下方、右边缘对齐。
+ * 面板不再 teleport 到 body，而是留在页面内随整体 scale 缩放（窄屏页内容会整体缩放）；
+ * 此时不能再用 popper.js 计算出的位置——它基于视觉坐标，在缩放容器里会算偏并把页面撑出
+ * 横向滚动。这里直接覆盖为相对 .el-dropdown 的右对齐定位。
+ */
+const headerDropdownPopperStyle = {
+  top: '100%',
+  right: '0px',
+  bottom: 'auto',
+  left: 'auto',
+  marginTop: '12px'
+}
+
 const handleThemeClick = (theme: ThemeMode) => {
   themeStore.setTheme(theme)
   // 保持下拉菜单打开
@@ -262,6 +276,11 @@ const handleKeepDropdownOpen = () => {
   headerAvatarDropdown.value?.popperRef?.onOpen()
 }
 
+// 主动收起下拉框（如点击登录/注册后）
+const handleCloseDropdown = () => {
+  headerAvatarDropdown.value?.handleClose()
+}
+
 const handleDropDownVisibleChange = (visible: boolean) => {
   ; (themeVisible.value || sizeThemeVisible.value || hueThemeVisible.value || visible) &&
     handleKeepDropdownOpen()
@@ -269,8 +288,9 @@ const handleDropDownVisibleChange = (visible: boolean) => {
 </script>
 
 <template>
-  <el-dropdown @mouseover=" headerAvatarDropdown?.handleOpen()" trigger="click" :hide-on-click="false"
-    ref="headerAvatarDropdown" @visible-change="handleDropDownVisibleChange" :persistent="true" :teleported="true">
+  <el-dropdown @mouseover=" headerAvatarDropdown?.handleOpen()" trigger="click" :hide-on-click="false" placement="bottom-end"
+    :popper-style="headerDropdownPopperStyle" ref="headerAvatarDropdown" @visible-change="handleDropDownVisibleChange"
+    :persistent="true" :teleported="false">
     <div class="header-avatar-wrapper cursor-pointer">
       <UserAvatarBox v-if="isLoggedIn" :src="user_face_src" size="default" :level-info="user_nav_model?.level_info"
         :show-exp-bar="false" />
@@ -292,7 +312,7 @@ const handleDropDownVisibleChange = (visible: boolean) => {
       <ClientOnly>
         <el-dropdown-menu class="dropdown-menu py-3 px-3">
           <el-dropdown-item class="login-tip hover:!text-inherit hover:!bg-inherit" v-if="!isLoggedIn">
-            <HeaderDropdownLoginTip></HeaderDropdownLoginTip>
+            <HeaderDropdownLoginTip @close="handleCloseDropdown"></HeaderDropdownLoginTip>
           </el-dropdown-item>
           <template v-else>
             <!-- 用户信息展示区域 -->

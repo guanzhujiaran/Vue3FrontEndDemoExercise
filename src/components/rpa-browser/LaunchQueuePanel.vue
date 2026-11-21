@@ -59,16 +59,22 @@ const hasMaxWait = computed(() => (props.queue?.max_wait_seconds ?? 0) > 0)
         <Loading />
       </el-icon>
       <el-text class="launch-queue-panel__title text-xl font-medium text-text-primary">
-        {{ isLaunching ? t('rpa.sessionStatusConnecting') : t('rpa.queueTitle') }}
+        {{ isLaunching ? t('rpa.queueLaunchingTitle') : t('rpa.queueTitle') }}
       </el-text>
       <el-tag
         class="launch-queue-panel__queue-type"
-        :type="isVip ? 'warning' : 'info'"
+        :type="isLaunching ? 'primary' : isVip ? 'warning' : 'info'"
         size="large"
       >
         <span class="flex items-center gap-1">
-          <el-icon v-if="isVip"><Trophy /></el-icon>
-          {{ isVip ? t('rpa.queueVipHint') : t('rpa.queueNormalHint') }}
+          <el-icon v-if="isVip && !isLaunching"><Trophy /></el-icon>
+          {{
+            isLaunching
+              ? t('rpa.queueLaunchingHint')
+              : isVip
+                ? t('rpa.queueVipHint')
+                : t('rpa.queueNormalHint')
+          }}
         </span>
       </el-tag>
     </div>
@@ -127,6 +133,7 @@ const hasMaxWait = computed(() => (props.queue?.max_wait_seconds ?? 0) > 0)
     </el-text>
 
     <el-button
+      v-if="!isLaunching"
       class="launch-queue-panel__cancel"
       type="danger"
       plain

@@ -6,7 +6,7 @@ import { useDebounceFn } from '@vueuse/core'
 import { ElMessageBox, ElDialog } from 'element-plus'
 import BiliPageHeader from '@/components/CommonCompo/Bili-Container-Compo/BiliPageHeader.vue'
 import FlexContainer from '@/components/CommonCompo/Bili-Container-Compo/FlexContainer.vue'
-import { WebRtc视频流Service, 执行引擎Service, 浏览器会话控制Service, 浏览器指纹管理Service, type BrowserLaunchQueueStatusResponse } from '@/api/browser/hey-api'
+import { WebRtc视频流Service, 执行引擎Service, 浏览器会话控制Service, 浏览器指纹管理Service, LaunchQueueStateEnum, type BrowserLaunchQueueStatusResponse } from '@/api/browser/hey-api'
 import { useUserNavStore } from '@/stores/user_nav'
 import biliMessage from '@/utils/message'
 import { businessHandler } from '@/utils/businessHandler'
@@ -272,6 +272,10 @@ const isSessionEventsLive = computed(() => sessionEventsState.value === 'open')
 const QUEUE_POLL_INTERVAL_MS = 2000
 
 const launchQueue = ref<BrowserLaunchQueueStatusResponse | null>(null)
+/** 已放行、正在启动（与「内存不足排队等待」区分文案） */
+const isLaunchingQueue = computed(
+  () => launchQueue.value?.queue_state === LaunchQueueStateEnum.LAUNCHING
+)
 const queueWaitingSeconds = ref(0)
 const cancellingQueue = ref(false)
 let queuePollTimer: ReturnType<typeof setInterval> | null = null
@@ -299,12 +303,22 @@ const loadLaunchQueue = async () => {
   // 单次轮询失败静默处理，等下一次轮询继续
   if (!result.success || !result.data) return
 
+  const previousState = launchQueue.value?.queue_state
   launchQueue.value = result.data
-  // 与后端对齐等待时长（只增不减，避免请求往返造成显示回退）
-  queueWaitingSeconds.value = Math.max(
-    queueWaitingSeconds.value,
-    result.data.queue_waiting_seconds ?? 0
-  )
+  // 排队 → 已放行时，后端 waiting_seconds 改为「启动耗时」，本地计数也要跟着归零重计，
+  // 否则 Math.max 会让「已等待」继续显示排队阶段的数百秒
+  if (
+    result.data.queue_state === LaunchQueueStateEnum.LAUNCHING &&
+    previousState !== LaunchQueueStateEnum.LAUNCHING
+  ) {
+    queueWaitingSeconds.value = result.data.queue_waiting_seconds ?? 0
+  } else {
+    // 与后端对齐等待时长（只增不减，避免请求往返造成显示回退）
+    queueWaitingSeconds.value = Math.max(
+      queueWaitingSeconds.value,
+      result.data.queue_waiting_seconds ?? 0
+    )
+  }
 
   // 本循环只查排队进度，不再查会话状态（会话状态一律由 SSE 提供）。两个出口：
   // ① 启动完成：SSE 推送 browser_running=true → 状态机转 connected → isQueued 变 false，
@@ -539,7 +553,7 @@ onMounted(() => {
                   'bg-yellow-500 animate-pulse': isConnecting || isQueued,
                   'bg-gray-400': !isConnected && !isConnecting && !isQueued
                 }" class="w-2 h-2 rounded-full"></span>
-                {{ statusLabel }}
+                {{ isLaunchingQueue ? t('rpa.queueLaunchingTitle') : statusLabel }}
               </span>
             </el-tag>
             <span v-if="hasError" class="text-xs text-(--el-color-danger) ml-1" :title="errorMessage">⚠</span>
@@ -678,7 +692,7 @@ onMounted(() => {
 
     <!-- 工具箱对话框 -->
     <el-dialog v-model="toolboxDialogVisible" width="520px" :modal-penetrable="true" :modal="false" :lock-scroll="false"
-      :draggable="true" :close-on-click-modal="false" :destroy-on-close="false" :append-to-body="true"
+      :draggable="true" :close-on-click-modal="false" :destroy-on-close="false" append-to="#app-modal-root"
       modal-class="toolbox-overlay" class="toolbox-dialog">
       <template #header>
         <div class="flex">

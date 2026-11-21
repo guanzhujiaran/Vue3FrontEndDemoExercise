@@ -265,6 +265,14 @@ onMounted(() => localeStore.applyBrowserLocale())
         <!-- 安全区内边距直接落在元素上（preflight 已统一 box-sizing: border-box，无需重复声明） -->
         <div
           class="site-layout w-full flex-1 flex flex-col pt-[env(safe-area-inset-top,0px)] pr-[env(safe-area-inset-right,0px)] pb-[env(safe-area-inset-bottom,0px)] pl-[env(safe-area-inset-left,0px)]">
+          <!--
+            全局 modal 挂载点：所有 el-dialog / el-drawer 统一 teleport 到这里（append-to），
+            而不是挂到 body。它位于缩放容器内部，弹窗会跟随页面整体 scale，窄屏下尺寸/字号
+            与页面一致，不会出现未缩放导致的溢出和样式错位。
+            必须放在 el-container 之前：子页面里的 dialog 在父级 App 完成 patch 前就会挂载，
+            放后面会导致 teleport 目标不存在。
+          -->
+          <div id="app-modal-root" class="app-modal-root"></div>
           <el-container v-if="isInit" id="i_cecream">
             <el-header class="bili-header p-0">
               <HeaderBarView />

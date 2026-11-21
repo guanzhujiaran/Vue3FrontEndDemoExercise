@@ -5,7 +5,7 @@
     :title="t('message.auditTitle', { action: actionLabelI18n, n: items.length })"
     width="90%"
     top="5vh"
-    append-to-body
+    append-to="#app-modal-root"
     :close-on-click-modal="false"
     :lock-scroll="false"
     @closed="onClosed"

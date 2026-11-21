@@ -5,7 +5,7 @@
     :title="'请选择举报的原因'"
     width="90%"
     top="12vh"
-    append-to-body
+    append-to="#app-modal-root"
     :close-on-click-modal="false"
     :close-on-press-escape="false"
     :lock-scroll="false"

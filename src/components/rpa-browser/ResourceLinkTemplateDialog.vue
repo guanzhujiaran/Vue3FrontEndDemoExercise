@@ -96,7 +96,7 @@ function handleClose() {
     class="resource-link-template-dialog"
     title="前端跳转链接格式"
     width="640px"
-    append-to-body
+    append-to="#app-modal-root"
     :close-on-click-modal="false"
   >
     <div class="resource-link-template flex flex-col gap-4">

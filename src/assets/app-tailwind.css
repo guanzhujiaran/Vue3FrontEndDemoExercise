@@ -250,7 +250,10 @@ elementDark放到theme后面是为了确保暗色状态下直接用elementDark�
      .app-viewport__inner：内容容器，保持 .smallest-width（>=690px）的布局宽度后整体 scale
      这样窄屏也能一次看到全部内容，且页面本身没有横向溢出 */
   .app-viewport {
+    /* clip 而非 hidden：hidden 仍会创建可滚动容器，页面内元素获得焦点时浏览器会
+       把容器横向滚动（窄屏下头部下拉面板聚焦就会把整页往右推）。clip 只裁切、不可滚动。 */
     overflow: hidden;
+    overflow: clip;
     width: 100%;
   }
   .app-viewport__inner {
@@ -260,6 +263,12 @@ elementDark放到theme后面是为了确保暗色状态下直接用elementDark�
        根元素仍被 Element Plus 的 `.el-scrollbar { height: 100% }` 锁在外层容器高度上，
        于是「wrap 高度 > 根高度」的部分会被根的 overflow: hidden 裁掉（表现为只显示一半）。 */
     height: var(--app-content-height, 100%);
+  }
+
+  /* 弹窗最大宽度跟随所在容器（缩放容器内是 690 逻辑宽，body 上是真实视口），
+     避免固定 px 宽度（如 720/860/900）在窄屏下超出屏幕 */
+  .el-dialog:not(.is-fullscreen) {
+    max-width: calc(100% - 32px);
   }
 
   /* ===== 工作流运行消息浮窗（可拖动 / 可调整大小） =====

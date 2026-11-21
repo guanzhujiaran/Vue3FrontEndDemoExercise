@@ -424,7 +424,7 @@ onBeforeUnmount(closeAllSubscriptions)
     v-model="dialogVisible"
     :title="workflowName ? `运行记录 - ${workflowName}` : '运行记录'"
     width="80%"
-    :append-to-body="true"
+    append-to="#app-modal-root"
     :close-on-click-modal="false"
     class="workflow-run-log-dialog"
   >
@@ -638,7 +638,7 @@ onBeforeUnmount(closeAllSubscriptions)
       v-model="clearConfirmVisible"
       title="清理本轮资源记录"
       width="440px"
-      append-to-body
+      append-to="#app-modal-root"
       :lock-scroll="false"
       class="workflow-run-log__clear-confirm"
     >

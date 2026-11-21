@@ -4,7 +4,7 @@
     class="ban-user-dialog max-w-[520px]"
     :title="t('message.banTitle')"
     width="90%"
-    append-to-body
+    append-to="#app-modal-root"
     :close-on-click-modal="false"
     :lock-scroll="false"
     @closed="onClosed"

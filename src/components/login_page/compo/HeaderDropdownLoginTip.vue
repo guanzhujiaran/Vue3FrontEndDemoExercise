@@ -9,6 +9,14 @@ import loginTip4Url from '@/assets/svgs/login_tip_4.svg?component'
 
 const openGlobalLoginModal = inject(openGlobalLoginModalKey)
 const { t } = useI18n()
+
+// 点击登录/注册时先通知父级收起下拉框，再打开登录弹窗
+const emit = defineEmits<{ close: [] }>()
+
+const handleOpenLogin = () => {
+  emit('close')
+  openGlobalLoginModal?.()
+}
 </script>
 
 <template>
@@ -43,9 +51,9 @@ const { t } = useI18n()
         <span class="lt-text text-sm text-text-regular">{{ t('common.loginTipDrama') }}</span>
       </div>
     </div>
-    <el-button type="primary" @click="openGlobalLoginModal" class="login-btn mt-2">{{ t('common.loginNow') }}</el-button>
+    <el-button type="primary" @click="handleOpenLogin" class="login-btn mt-2">{{ t('common.loginNow') }}</el-button>
     <div class="register-tip text-center text-sm text-text-secondary">
-      {{ t('common.registerTip') }} <span class="register-exper text-primary cursor-pointer hover:underline" @click="openGlobalLoginModal">
+      {{ t('common.registerTip') }} <span class="register-exper text-primary cursor-pointer hover:underline" @click="handleOpenLogin">
         {{ t('common.registerNow') }} </span>
     </div>
   </div>
