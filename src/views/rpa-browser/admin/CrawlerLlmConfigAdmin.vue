@@ -1,83 +1,91 @@
 <template>
 
-  <!-- ============ 说明 ============ -->
-  <!-- 不用 el-alert：其 .el-alert__content 是 max-content 弹性项，长文本不换行会被 overflow:hidden 裁掉 -->
-  <div
-    class="crawler-llm-config__notice flex min-w-0 items-start gap-2 rounded-lg border border-warning-light-7 bg-warning-light-9 p-3">
-    <el-icon class="crawler-llm-config__notice-icon mt-0.5 shrink-0 text-warning">
-      <WarningFilled />
-    </el-icon>
-    <div class="crawler-llm-config__notice-body flex min-w-0 flex-1 flex-col gap-1">
-      <span class="crawler-llm-config__notice-title text-sm font-semibold text-warning">
-        这里是 be-bilibili-crawler 的云端 LLM 实例池（按卡片顺序轮询，失败自动冷却/切换）
-      </span>
-      <el-text class="crawler-llm-config__notice-line block w-full whitespace-normal break-words text-text-secondary"
-        tag="div">
-        · 保存后立即热更新并持久化到 crawler 的
-        <span class="crawler-llm-config__notice-emphasis font-semibold">
-          runtime/llm_apis.json，crawler 重启后仍然生效
-        </span>
-        ；配置来源优先级「本地文件 &gt; .env」，不会回写 .env。
-        要彻底回到部署配置，用下方「撤销人工保存（恢复 .env）」。
-      </el-text>
-      <el-text class="crawler-llm-config__notice-line block w-full whitespace-normal break-words text-text-secondary"
-        tag="div">
-        · 状态按
-        <span class="crawler-llm-config__notice-emphasis font-semibold">模型</span>
-        单独计算：同一地址下的多个模型各自健康 / 冷却 / 被移除，卡片头只显示数量，
-        具体哪个模型、什么原因写在卡片内的「模型名称」列表里。
-      </el-text>
-      <el-text class="crawler-llm-config__notice-line block w-full whitespace-normal break-words text-text-secondary"
-        tag="div">
-        · 被判为不可恢复（鉴权失败 / 模型下线等）的模型会被 crawler
-        <span class="crawler-llm-config__notice-emphasis font-semibold">自动摘除</span>，
-        卡片里会标出
-        <span class="crawler-llm-config__notice-emphasis font-semibold">移除原因</span>
-        ；摘除只影响运行时、不落盘，重启后会自动恢复，
-        要永久删掉请取消勾选该模型（或删除卡片）后保存。
-      </el-text>
-      <el-text class="crawler-llm-config__notice-line block w-full whitespace-normal break-words text-text-secondary"
-        tag="div">
-        · 密钥读取时为脱敏值（前4****后4）。密钥属于
-        <span class="crawler-llm-config__notice-emphasis font-semibold">接口地址（来源）</span>，
-        同一地址下增删模型、调整顺序都沿用同一把钥匙，留空即可；只有新增地址才必须填明文。
-      </el-text>
-      <el-text class="crawler-llm-config__notice-line block w-full whitespace-normal break-words text-text-secondary"
-        tag="div">
-        · 一个地址要配
-        <span class="crawler-llm-config__notice-emphasis font-semibold">第二把密钥</span>
-        时：点「新增实例」，填相同地址 + 新密钥后再勾模型即可——密钥属于卡片，
-        每张卡片各用自己那把、互不影响（同一张卡片内的模型共用该卡片的密钥）。
-      </el-text>
-      <el-text class="crawler-llm-config__notice-line block w-full whitespace-normal break-words text-text-secondary"
-        tag="div">
-        · 「测试」只发一次最小请求（1 token）验证连通性，
-        <span class="crawler-llm-config__notice-emphasis font-semibold">
-          不影响调用统计 / 健康状态，也不保存配置
-        </span>
-        ；慢模型可能超时（默认 45s），超时不代表配置错。
-      </el-text>
-      <el-text class="crawler-llm-config__notice-line block w-full whitespace-normal break-words text-text-secondary"
-        tag="div">
-        · 模型名可点「获取模型」拉取上游模型列表后勾选，也可直接手动输入；
-        <span class="crawler-llm-config__notice-emphasis font-semibold">
-          一张卡片可勾选多个模型，保存时按模型展开成多个实例
-        </span>
-        （共用该卡片的地址 / 密钥 / 限流）。
-      </el-text>
-      <el-text class="crawler-llm-config__notice-line block w-full whitespace-normal break-words text-text-secondary"
-        tag="div">
-        · 采样参数（temperature / top_p / top_k / num_predict）由 crawler 的 presets.py 固定，管理端不可调。
-      </el-text>
-    </div>
-  </div>
-
   <!-- ============ 工具栏 ============ -->
   <div class="crawler-llm-config__toolbar flex flex-col min-w-0 gap-3 rounded-xl border border-border-light p-4">
     <div class="crawler-llm-config__toolbar-head flex items-center justify-between gap-2 flex-wrap">
-      <span class="crawler-llm-config__toolbar-title text-base font-semibold text-text-primary">
-        LLM 实例（{{ totalModelCount }} 个模型 / {{ rows.length }} 张卡片，卡片顺序 = 调用轮询顺序）
-      </span>
+      <div class="crawler-llm-config__toolbar-heading flex min-w-0 flex-wrap items-center gap-2">
+        <span class="crawler-llm-config__toolbar-title text-base font-semibold text-text-primary">
+          LLM 实例（{{ totalModelCount }} 个模型 / {{ rows.length }} 张卡片，卡片顺序 = 调用轮询顺序）
+        </span>
+        <!-- 说明改为悬浮提示：默认不占页面高度，鼠标移到「使用说明」上才展开 -->
+        <el-popover class="crawler-llm-config__help" placement="bottom-start" :width="560" trigger="hover"
+          :show-after="100">
+          <template #reference>
+            <el-button class="crawler-llm-config__help-trigger" link type="primary">
+              使用说明
+            </el-button>
+          </template>
+          <div class="crawler-llm-config__help-panel bili-thin-scroll flex max-h-96 flex-col gap-1.5 overflow-y-auto">
+            <span class="crawler-llm-config__help-title text-sm font-semibold text-warning">
+              这里是 be-bilibili-crawler 的云端 LLM 实例池（按卡片顺序轮询，失败自动冷却/切换）
+            </span>
+            <el-text class="crawler-llm-config__help-line block w-full whitespace-normal break-words text-xs text-text-secondary"
+              tag="div">
+              · 保存后立即热更新并持久化到 crawler 的
+              <span class="crawler-llm-config__help-emphasis font-semibold text-text-primary">
+                runtime/llm_apis.json，crawler 重启后仍然生效
+              </span>
+              ；配置来源优先级「本地文件 &gt; .env」，不会回写 .env。
+              要彻底回到部署配置，用下方「撤销人工保存（恢复 .env）」。
+            </el-text>
+            <el-text class="crawler-llm-config__help-line block w-full whitespace-normal break-words text-xs text-text-secondary"
+              tag="div">
+              · 状态按
+              <span class="crawler-llm-config__help-emphasis font-semibold text-text-primary">模型</span>
+              单独计算：同一地址下的多个模型各自健康 / 冷却 / 被移除，卡片头只显示数量，
+              具体哪个模型、什么原因写在卡片内的「模型名称」列表里。
+            </el-text>
+            <el-text class="crawler-llm-config__help-line block w-full whitespace-normal break-words text-xs text-text-secondary"
+              tag="div">
+              · 被判为不可恢复（鉴权失败 / 模型下线等）的模型会被 crawler
+              <span class="crawler-llm-config__help-emphasis font-semibold text-text-primary">自动摘除</span>，
+              卡片里会标出
+              <span class="crawler-llm-config__help-emphasis font-semibold text-text-primary">移除原因</span>
+              ；摘除只影响运行时、不落盘，重启后会自动恢复，
+              要永久删掉请取消勾选该模型（或删除卡片）后保存。
+            </el-text>
+            <el-text class="crawler-llm-config__help-line block w-full whitespace-normal break-words text-xs text-text-secondary"
+              tag="div">
+              · 密钥读取时为脱敏值（前4****后4）。密钥属于
+              <span class="crawler-llm-config__help-emphasis font-semibold text-text-primary">接口地址（来源）</span>，
+              同一地址下增删模型、调整顺序都沿用同一把钥匙，留空即可；只有新增地址才必须填明文。
+            </el-text>
+            <el-text class="crawler-llm-config__help-line block w-full whitespace-normal break-words text-xs text-text-secondary"
+              tag="div">
+              · 一个地址要配
+              <span class="crawler-llm-config__help-emphasis font-semibold text-text-primary">第二把密钥</span>
+              时：点「新增实例」，填相同地址 + 新密钥后再勾模型即可——密钥属于卡片，
+              每张卡片各用自己那把、互不影响（同一张卡片内的模型共用该卡片的密钥）。
+            </el-text>
+            <el-text class="crawler-llm-config__help-line block w-full whitespace-normal break-words text-xs text-text-secondary"
+              tag="div">
+              · 「测试」只发一次最小请求（1 token）验证连通性，
+              <span class="crawler-llm-config__help-emphasis font-semibold text-text-primary">
+                不影响调用统计 / 健康状态，也不保存配置
+              </span>
+              ；慢模型可能超时（默认 45s），超时不代表配置错。
+            </el-text>
+            <el-text class="crawler-llm-config__help-line block w-full whitespace-normal break-words text-xs text-text-secondary"
+              tag="div">
+              · 模型名可点「获取模型」拉取上游模型列表后勾选，也可直接手动输入；
+              <span class="crawler-llm-config__help-emphasis font-semibold text-text-primary">
+                一张卡片可勾选多个模型，保存时按模型展开成多个实例
+              </span>
+              （共用该卡片的地址 / 密钥 / 限流）。
+            </el-text>
+            <el-text class="crawler-llm-config__help-line block w-full whitespace-normal break-words text-xs text-text-secondary"
+              tag="div">
+              · 「导出 JSON」导出当前页面配置（含未保存的修改，密钥为脱敏值）；「导入 JSON」按
+              <span class="crawler-llm-config__help-emphasis font-semibold text-text-primary">地址 + 密钥</span>
+              合并到卡片，导入后仍需点「保存配置」才会写入 crawler。
+            </el-text>
+            <el-text class="crawler-llm-config__help-line block w-full whitespace-normal break-words text-xs text-text-secondary"
+              tag="div">
+              · 采样参数（temperature / top_p / top_k / num_predict）由 crawler 的 presets.py 固定，管理端不可调。
+            </el-text>
+          </div>
+        </el-popover>
+      </div>
       <el-text class="crawler-llm-config__dirty text-xs text-text-secondary" tag="span">
         {{ dirty ? '有未保存的修改' : '当前为 crawler 正在生效的配置' }}
       </el-text>
@@ -96,6 +104,15 @@
         @click="loadConfig">
         重新读取
       </el-button>
+      <el-button class="crawler-llm-config__import" size="large" :disabled="loading || saving || resetting"
+        title="导入 JSON 并合并到当前卡片（不会直接保存）" @click="handleImportClick">
+        导入 JSON
+      </el-button>
+      <el-button class="crawler-llm-config__export" size="large"
+        :disabled="loading || saving || resetting || rows.length === 0" title="导出当前页面配置（含未保存的修改，密钥为脱敏值）"
+        @click="handleExportJson">
+        导出 JSON
+      </el-button>
       <el-popconfirm class="crawler-llm-config__reset-confirm" width="320"
         title="撤销所有人工保存？将删除 crawler 的持久化配置，恢复为部署 .env 里的 llm_apis（不可撤销）。" confirm-button-text="撤销并恢复"
         cancel-button-text="取消" @confirm="handleReset">
@@ -107,6 +124,9 @@
         </template>
       </el-popconfirm>
     </div>
+    <!-- 隐藏的文件选择器：导入走原生 input（Element Plus 没有轻量的本地文件选择组件） -->
+    <input ref="importInputRef" class="crawler-llm-config__import-input hidden" type="file"
+      accept="application/json,.json" @change="handleImportFile" />
   </div>
 
   <!-- ============ 实例卡片 ============ -->
@@ -383,10 +403,10 @@ import {
   CircleCloseFilled,
   Plus,
   Search,
-  WarningFilled,
 } from '@element-plus/icons-vue'
 import biliMessage from '@/utils/message'
 import { formatDateTime } from '@/utils/dateFormat'
+import { downloadJsonFile } from '@/utils/rpa/jsonShare'
 import {
   buildLlmSaveItems,
   groupLlmConfigs,
@@ -462,6 +482,9 @@ const saving = ref(false)
 const resetting = ref(false)
 /** 服务端快照签名：用于提示「有未保存的修改」 */
 const serverSignature = ref('')
+
+/** 导入 JSON 用的隐藏文件输入框（点「导入 JSON」时触发 click） */
+const importInputRef = ref<HTMLInputElement | null>(null)
 
 // ===== 测试弹窗 =====
 /** 弹窗是否可见 */
@@ -766,6 +789,226 @@ function toPayload(): CrawlerLlmSaveItem[] {
   )
 }
 
+/** 导出文件名：带本地时间，连续导出不会互相覆盖 */
+function exportFileName(): string {
+  const now = new Date()
+  const pad = (value: number) => String(value).padStart(2, '0')
+  return `crawler-llm-config-${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}.json`
+}
+
+/** 导出时把明文密钥抹成脱敏值（与页面读取态的「前4****后4」一致，避免 JSON 带出完整 key） */
+function maskExportToken(token: string): string {
+  const value = token.trim()
+  if (!value || value.includes('****')) return value
+  if (value.length <= 8) return '****'
+  return `${value.slice(0, 4)}****${value.slice(-4)}`
+}
+
+/**
+ * 导出当前页面配置为 JSON（含未保存的修改）。
+ *
+ * 结构与 crawler 的 `llm_apis` 一致：一条记录 = 一个模型，密钥只导出脱敏值，
+ * 便于备份 / 对比「哪个地址下有哪些模型、限流多少」，也避免明文密钥落到文件里。
+ */
+function handleExportJson() {
+  const items = toPayload().map((item) => ({
+    ...item,
+    token: maskExportToken(item.token ?? ''),
+  }))
+  downloadJsonFile(exportFileName(), {
+    version: 1,
+    exported_at: Math.floor(Date.now() / 1000),
+    items,
+  })
+  biliMessage.success('已导出当前配置 JSON')
+}
+
+/** 导入文件里的一条实例（解析后统一成驼峰字段） */
+interface ImportedLlmItem {
+  baseUrl: string
+  model: string
+  token: string
+  rps: number
+}
+
+interface ParsedImport {
+  items: ImportedLlmItem[]
+  /** 被跳过的非法条目数（缺地址 / 模型名、类型不对等） */
+  skipped: number
+}
+
+/**
+ * 解析导入文件：兼容本页导出格式 `{items:[...]}`、裸数组，
+ * 以及 crawler 的 `runtime/llm_apis.json`（同样有 `items`）。
+ */
+function parseImportJson(raw: string): ParsedImport {
+  let data: unknown
+  try {
+    data = JSON.parse(raw)
+  } catch {
+    throw new Error('文件不是合法的 JSON')
+  }
+  const list = Array.isArray(data)
+    ? data
+    : (data as { items?: unknown } | null)?.items
+  if (!Array.isArray(list)) throw new Error('JSON 中缺少 items 数组')
+  const items: ImportedLlmItem[] = []
+  let skipped = 0
+  for (const entry of list) {
+    if (!entry || typeof entry !== 'object') {
+      skipped += 1
+      continue
+    }
+    const record = entry as Record<string, unknown>
+    const baseUrl = typeof record.base_url === 'string' ? record.base_url.trim() : ''
+    const model = typeof record.model_name === 'string' ? record.model_name.trim() : ''
+    if (!baseUrl || !model) {
+      skipped += 1
+      continue
+    }
+    const token = typeof record.token === 'string' ? record.token.trim() : ''
+    const rpsRaw = Number(record.requests_per_second)
+    const rps = Number.isFinite(rpsRaw) && rpsRaw > 0
+      ? Math.round(rpsRaw * 100) / 100
+      : 0.5
+    items.push({ baseUrl, model, token, rps })
+  }
+  if (items.length === 0) throw new Error('没有可导入的实例（每条需要 base_url 与 model_name）')
+  return { items, skipped }
+}
+
+/** 卡片当前生效的密钥：用户新填的优先，其次服务端回显的脱敏值 */
+function currentCardToken(row: LlmRow): string {
+  return row.token.trim() || row.tokenHint.trim()
+}
+
+/** 导入匹配键：归一化地址 + 密钥（与页面「一张卡片 = 一把密钥」一致） */
+function importCardKey(baseUrl: string, token: string): string {
+  return `${normalizeBaseUrl(baseUrl)}||${token.trim()}`
+}
+
+/**
+ * 当前 crawler 里是否已有「同地址 + 同脱敏密钥」的配置。
+ *
+ * 脱敏值只是「沿用这一把」的引用：只有后端能在同地址下匹配到同一把密钥才能还原，
+ * 否则保存会被拒绝（无法判断沿用哪把），页面上要提示补填明文。
+ */
+function hasSavedToken(baseUrl: string, tokenHint: string): boolean {
+  const target = normalizeBaseUrl(baseUrl)
+  if (!target || !tokenHint) return false
+  return rows.value.some(
+    (row) =>
+      normalizeBaseUrl(row.baseUrl) === target &&
+      row.tokenHint === tokenHint &&
+      Object.keys(row.indexByModel).length > 0
+  )
+}
+
+/** 导入的脱敏密钥无法还原时的卡片提示 */
+const UNRESOLVED_IMPORT_TOKEN =
+  '导入的密钥是脱敏值，当前 crawler 中没有同地址同密钥，请补填明文后再保存'
+
+interface ImportMergeResult {
+  /** 本次导入涉及的卡片数（合并 + 新增） */
+  cards: number
+  /** 导入的模型数 */
+  models: number
+  /** 脱敏密钥无法还原、需要补填明文的卡片数 */
+  unresolved: number
+}
+
+/**
+ * 把导入实例合并进当前卡片：按「归一化地址 + 密钥」匹配。
+ *
+ * - 匹配到已有卡片：模型取并集、限流以导入值为准，保留原密钥 / 保存态；
+ * - 匹配不到：追加为新卡片（同一地址不同密钥也会追加，与页面语义一致）。
+ *
+ * 只改页面状态、不调用保存接口，导入后仍需人工核对并点「保存配置」。
+ */
+function mergeImportedItems(items: ImportedLlmItem[]): ImportMergeResult {
+  const result: ImportMergeResult = { cards: 0, models: 0, unresolved: 0 }
+  const groups = groupLlmConfigs(
+    items.map((item) => ({
+      base_url: item.baseUrl,
+      model_name: item.model,
+      token: item.token,
+      requests_per_second: String(item.rps),
+    }))
+  )
+  for (const group of groups) {
+    const importedModels = normalizeCardModels(group.models)
+    if (importedModels.length === 0) continue
+    const baseUrl = normalizeBaseUrl(group.baseUrl)
+    const token = group.tokenHint.trim()
+    const target = rows.value.find(
+      (row) => importCardKey(row.baseUrl, currentCardToken(row)) === importCardKey(baseUrl, token)
+    )
+    if (target) {
+      target.models = normalizeCardModels([...target.models, ...importedModels])
+      target.modelOptions = [...new Set([...target.modelOptions, ...importedModels])]
+      target.rps = group.rps
+      target.modelMessage = ''
+      target.modelMessageOk = false
+    } else {
+      const masked = token.includes('****')
+      const needsPlainToken = masked && !hasSavedToken(baseUrl, token)
+      rows.value.push({
+        key: nextKey(),
+        baseUrl,
+        models: importedModels,
+        savedModels: [],
+        modelOptions: [...importedModels],
+        modelQuery: '',
+        modelMessage: needsPlainToken ? UNRESOLVED_IMPORT_TOKEN : '',
+        modelMessageOk: false,
+        fetchingModels: false,
+        token: masked ? '' : token,
+        tokenHint: masked ? token : '',
+        rps: group.rps,
+        indexByModel: {},
+        isNew: true,
+      })
+      if (needsPlainToken) result.unresolved += 1
+    }
+    result.cards += 1
+    result.models += importedModels.length
+  }
+  return result
+}
+
+/** 点「导入 JSON」：交给隐藏的 file input 打开系统选文件 */
+function handleImportClick() {
+  importInputRef.value?.click()
+}
+
+/** 选完文件：解析 → 合并进卡片（不保存），结果用 toast 汇总 */
+async function handleImportFile(event: Event) {
+  const input = event.target as HTMLInputElement
+  const file = input.files?.[0]
+  // 清空 value：同一个文件连续导入两次也要能触发 change
+  input.value = ''
+  if (!file) return
+  let parsed: ParsedImport
+  try {
+    parsed = parseImportJson(await file.text())
+  } catch (error) {
+    biliMessage.error(error instanceof Error ? error.message : '导入失败：无法解析 JSON')
+    return
+  }
+  const merged = mergeImportedItems(parsed.items)
+  const skippedText = parsed.skipped > 0 ? `，忽略 ${parsed.skipped} 条无效记录` : ''
+  if (merged.unresolved > 0) {
+    biliMessage.warning(
+      `已导入 ${merged.models} 个模型（${merged.cards} 张卡片）${skippedText}；` +
+        `其中 ${merged.unresolved} 张卡片的脱敏密钥无法还原，请补填明文后再保存`
+    )
+  } else {
+    biliMessage.success(
+      `已导入 ${merged.models} 个模型（${merged.cards} 张卡片）${skippedText}，请核对后保存`
+    )
+  }
+}
+
 function buildSignature(): string {
   return JSON.stringify(toPayload())
 }
@@ -974,6 +1217,15 @@ function validate(): string | null {
       return `第 ${no} 张卡片的接口地址必须以 http:// 或 https:// 开头`
     }
     if (!(row.rps > 0)) return `第 ${no} 张卡片的限流必须大于 0`
+    // 导入的脱敏密钥只有在 crawler 能匹配到「同地址 + 同脱敏值」时才能还原，
+    // 否则后端无法判断沿用哪把钥匙，提前拦截并提示补明文
+    if (
+      !row.token.trim() &&
+      row.tokenHint.includes('****') &&
+      !hasSavedToken(row.baseUrl, row.tokenHint)
+    ) {
+      return `第 ${no} 张卡片的脱敏密钥在当前 crawler 中无法还原，请填写明文密钥`
+    }
     // 密钥按来源（接口地址）沿用：只有「新地址且本页没有同源卡片」才必须填明文，
     // 不能因为卡片是本次新建的就要密钥（同地址加模型/加卡片都沿用同一把钥匙）
     if (row.isNew && !row.token.trim() && rowCrawlerIndex(row) === null) {

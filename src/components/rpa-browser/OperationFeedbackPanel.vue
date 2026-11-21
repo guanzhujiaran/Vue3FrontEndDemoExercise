@@ -82,6 +82,47 @@ const formatValue = (value: unknown): string => {
   return String(value)
 }
 
+/** 执行结果的返回数据（对象形态才逐项展示） */
+const execData = computed<Record<string, unknown> | null>(() => {
+  const data = fb.value.detail?.data
+  return data !== null && typeof data === 'object' ? data as Record<string, unknown> : null
+})
+
+/** 图片格式白名单：截图动作固定返回 { format, size, base64 } */
+const IMAGE_FORMATS = ['png', 'jpeg', 'jpg', 'webp', 'gif', 'bmp', 'svg+xml']
+
+/**
+ * 返回数据中的 base64 → 可直接加载的图片地址。
+ *
+ * 截图动作（screenshot）的返回是 `{ format, size, base64 }`，此前整段 base64
+ * 以文本渲染，既不可读又会撑爆反馈面板。这里按同级 format 还原成 data URL，
+ * 交给 el-image 自动加载；非图片内容仍走文本展示。
+ */
+function resolveImageSrc(value: unknown, format?: unknown): string | null {
+  if (typeof value !== 'string' || value.length === 0) return null
+  if (value.startsWith('data:image/')) return value
+  if (typeof format !== 'string') return null
+  const fmt = format.trim().toLowerCase().replace(/^image\//, '')
+  if (!IMAGE_FORMATS.includes(fmt)) return null
+  // 抽检前 200 字符，排除普通文本（如报错信息）被误判为 base64
+  if (!/^[A-Za-z0-9+/\s]+={0,2}$/.test(value.slice(0, 200))) return null
+  return `data:image/${fmt === 'jpg' ? 'jpeg' : fmt};base64,${value}`
+}
+
+/** 返回数据逐项展示，图片字段直接带出可渲染地址 */
+const execDataEntries = computed(() => {
+  const data = execData.value
+  if (!data) return []
+  return Object.entries(data).map(([key, value]) => ({
+    key,
+    value,
+    imageSrc: resolveImageSrc(value, data.format),
+  }))
+})
+
+/** 返回数据本身是 data URL 字符串时，直接作为图片展示 */
+const execDataImageSrc = computed(() => resolveImageSrc(fb.value.detail?.data))
+
 /**
  * 长文本换行约束（作用于元素自身，避免结果内容撑宽卡片导致外层容器横向滚动）：
  * 返回的 JSON / base64 / URL 等无空格内容不会被默认折行，必须强制断词。
@@ -167,17 +208,35 @@ const wrapTagClass = 'feedback-tag h-auto min-h-6 whitespace-normal'
               <el-text size="small" class="font-medium">返回数据</el-text>
             </template>
             <el-descriptions :column="1" border size="small" label-width="28%" :class="descWrapClass">
-              <template v-if="typeof fb.detail.data === 'object' && Object.keys(fb.detail.data as Record<string, unknown>).length > 0">
+              <template v-if="execDataEntries.length > 0">
                 <el-descriptions-item
-                  v-for="(val, key) in fb.detail.data as Record<string, unknown>"
-                  :key="String(key)"
-                  :label="String(key)"
+                  v-for="entry in execDataEntries"
+                  :key="entry.key"
+                  :label="entry.key"
                 >
-                  <el-text size="small">{{ formatValue(val) }}</el-text>
+                  <el-image
+                    v-if="entry.imageSrc"
+                    :src="entry.imageSrc"
+                    :preview-src-list="[entry.imageSrc]"
+                    fit="contain"
+                    class="feedback-data-image w-full h-48 rounded border border-border cursor-zoom-in"
+                    preview-teleported
+                    :z-index="3000"
+                  />
+                  <el-text v-else size="small">{{ formatValue(entry.value) }}</el-text>
                 </el-descriptions-item>
               </template>
               <el-descriptions-item v-else label="value">
-                <el-text size="small">{{ formatValue(fb.detail.data) }}</el-text>
+                <el-image
+                  v-if="execDataImageSrc"
+                  :src="execDataImageSrc"
+                  :preview-src-list="[execDataImageSrc]"
+                  fit="contain"
+                  class="feedback-data-image w-full h-48 rounded border border-border cursor-zoom-in"
+                  preview-teleported
+                  :z-index="3000"
+                />
+                <el-text v-else size="small">{{ formatValue(fb.detail.data) }}</el-text>
               </el-descriptions-item>
             </el-descriptions>
           </el-collapse-item>

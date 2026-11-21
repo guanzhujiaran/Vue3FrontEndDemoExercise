@@ -722,9 +722,10 @@ onBeforeUnmount(() => {
                   <div class="font-medium text-text-regular">运行中任务</div>
                   <el-tag type="success" effect="light">{{ getParamsList(scrapy_data).length }}</el-tag>
                 </div>
-                <div class="flex flex-wrap gap-2">
+                <!-- 全部展示运行中任务（可达上百个），用滚动区限高，避免卡片无限拉长 -->
+                <div class="bili-crawler-card__running-tasks flex max-h-40 flex-wrap gap-2 overflow-y-auto pr-1">
                   <el-popover
-                    v-for="(item, idx) in getParamsList(scrapy_data).slice(0, 8)"
+                    v-for="(item, idx) in getParamsList(scrapy_data)"
                     :key="`${item?.seqId ?? idx}`"
                     placement="top"
                     :width="360"
@@ -747,9 +748,6 @@ onBeforeUnmount(() => {
                       <pre class="m-0 max-h-60 overflow-auto whitespace-pre-wrap break-all rounded border border-border-light bg-bg p-3 text-sm text-text-regular">{{ JSON.stringify(item?.params ?? item, null, 2) }}</pre>
                     </div>
                   </el-popover>
-                  <span v-if="getParamsList(scrapy_data).length > 8" class="flex items-center text-sm text-text-placeholder">
-                    还有 {{ getParamsList(scrapy_data).length - 8 }} 个
-                  </span>
                 </div>
               </div>
 

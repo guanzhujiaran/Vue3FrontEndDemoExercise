@@ -1887,9 +1887,9 @@ export type ProgressStatusResp = {
     /**
      * Running Params
      *
-     * 运行中的参数
+     * 运行中任务的状态摘要（seqId / 状态 / 重试次数 / 时间 / 参数投影）
      */
-    running_params?: Array<unknown>;
+    running_params?: Array<WorkerSummaryModel>;
     /**
      * Waiting For Proxy
      *
@@ -4231,9 +4231,9 @@ export type ProgressStatusRespWritable = {
     /**
      * Running Params
      *
-     * 运行中的参数
+     * 运行中任务的状态摘要（seqId / 状态 / 重试次数 / 时间 / 参数投影）
      */
-    running_params?: Array<unknown>;
+    running_params?: Array<WorkerSummaryModelWritable>;
     /**
      * Waiting For Proxy
      *

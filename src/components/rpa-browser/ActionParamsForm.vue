@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
-import { Delete, Setting, Plus, Top, Bottom } from '@element-plus/icons-vue'
+import { Delete, Setting, Plus, Top, Bottom, ArrowDown, ArrowUp } from '@element-plus/icons-vue'
 import ActionCard from './ActionCard.vue'
 import ObjectArrayEditor from './ObjectArrayEditor.vue'
 import { schemaRequired, toJsonSchemaNode } from '@/utils/jsonSchema'
@@ -279,6 +279,52 @@ const getTypeLabel = (type: string) => {
 const getEnumOptionLabel = (val: unknown): string => {
   if (val === '' || val === null || val === undefined) return '无'
   return String(val)
+}
+
+// ─── 日志采集选项（BaseActionParams.log） ───────────────
+// log 对象有 9 个子字段，全部平铺会把动作卡片撑得很高；
+// 这里只常显关键开关，记录内容 / 截断 / 保留期收进「高级」折叠，
+// 且总开关关闭时其余选项统一禁用，避免误配。
+
+/** 常显的关键子字段；其余字段进「高级」 */
+const LOG_PRIMARY_KEYS = new Set(['enabled', 'debug', 'only_on_error'])
+
+/** log 子字段的中文标签（后端 schema 只下发字段名） */
+const LOG_FIELD_LABELS: Record<string, string> = {
+  enabled: '启用日志',
+  debug: '调试模式（全量记录）',
+  only_on_error: '仅失败时记录',
+  record_params: '记录入参',
+  record_result: '记录返回结果',
+  record_variables: '记录变量池快照',
+  record_page_snapshot: '记录报错页面快照',
+  max_payload_length: '最大内容长度（0 = 不限）',
+  retention_days: '保留天数（0 = 永久）',
+}
+
+const isLogOptionProp = (key: string, prop: JsonSchemaNode): boolean =>
+  key === 'log' && prop.type === 'object' && !!prop.properties
+
+/** log 对象的关键子字段 */
+const logPrimaryFields = (prop: JsonSchemaNode): [string, JsonSchemaNode][] =>
+  Object.entries(resolveNestedProperties(prop))
+    .filter(([subKey]) => LOG_PRIMARY_KEYS.has(subKey)) as [string, JsonSchemaNode][]
+
+/** log 对象的其余子字段（「高级」折叠区内） */
+const logAdvancedFields = (prop: JsonSchemaNode): [string, JsonSchemaNode][] =>
+  Object.entries(resolveNestedProperties(prop))
+    .filter(([subKey]) => !LOG_PRIMARY_KEYS.has(subKey)) as [string, JsonSchemaNode][]
+
+const logFieldLabel = (subKey: string, subProp: JsonSchemaNode): string =>
+  LOG_FIELD_LABELS[subKey] || subProp.title || subKey
+
+/** 总开关关闭时，其余日志选项禁用 */
+const isLogEnabled = (key: string): boolean => paramObject(key).enabled === true
+
+/** 「高级」展开状态（按字段 key 记忆） */
+const logAdvancedOpen = ref<Record<string, boolean>>({})
+const toggleLogAdvanced = (key: string) => {
+  logAdvancedOpen.value[key] = !logAdvancedOpen.value[key]
 }
 
 const initFormData = () => {
@@ -791,7 +837,105 @@ const isJsonField = (key: string, prop: JsonSchemaNode): boolean => {
           <span class="text-xs text-text-secondary ml-2">({{ getTypeLabel(String(prop.type ?? '')) }})</span>
         </div>
         
-        <div v-if="prop.type === 'object' && prop.properties">
+        <!-- 日志采集选项（log）：关键项常显，其余收进「高级」折叠；总开关关闭时其余项禁用 -->
+        <div
+          v-if="isLogOptionProp(String(key), prop)"
+          class="action-params-form__log-option space-y-2"
+        >
+          <div class="action-params-form__log-primary grid grid-cols-2 gap-3">
+            <div
+              v-for="[subKey, subProp] in logPrimaryFields(prop)"
+              :key="subKey"
+              class="action-params-form__log-item flex flex-col gap-1"
+            >
+              <el-text type="info" class="action-params-form__sub-label text-xs">
+                {{ logFieldLabel(String(subKey), subProp) }}
+              </el-text>
+              <el-switch
+                v-if="subProp.type === 'boolean'"
+                :model-value="nestedValue(key, String(subKey)) === true"
+                :disabled="String(subKey) !== 'enabled' && !isLogEnabled(String(key))"
+                @update:model-value="val => setNestedValue(key, String(subKey), val)"
+                active-text="是"
+                inactive-text="否"
+              />
+              <el-input
+                v-else-if="subProp.type === 'number' || subProp.type === 'integer'"
+                :model-value="nestedNumberValue(key, String(subKey))"
+                :disabled="!isLogEnabled(String(key))"
+                @update:model-value="val => setNestedValue(key, String(subKey), val === '' ? null : Number(val))"
+                type="number"
+                :placeholder="subProp.description"
+              />
+              <el-input
+                v-else
+                :model-value="nestedTextValue(key, String(subKey))"
+                :disabled="!isLogEnabled(String(key))"
+                @update:model-value="val => setNestedValue(key, String(subKey), val)"
+                :placeholder="subProp.description || `请输入${subKey}`"
+              />
+            </div>
+          </div>
+
+          <el-text
+            v-if="!isLogEnabled(String(key))"
+            class="action-params-form__log-hint text-xs text-text-placeholder"
+          >
+            开启「启用日志」后可配置其余选项
+          </el-text>
+
+          <div class="action-params-form__log-advanced border-t border-border-lighter pt-1">
+            <el-button
+              text
+              class="action-params-form__log-advanced-toggle w-full px-1 [&>span]:flex [&>span]:w-full [&>span]:items-center [&>span]:justify-between"
+              @click="toggleLogAdvanced(String(key))"
+            >
+              <el-text type="info" class="text-xs">高级选项（记录内容 / 截断 / 保留期）</el-text>
+              <el-icon class="text-text-secondary">
+                <component :is="logAdvancedOpen[String(key)] ? ArrowUp : ArrowDown" />
+              </el-icon>
+            </el-button>
+            <div
+              v-show="logAdvancedOpen[String(key)]"
+              class="action-params-form__log-advanced-fields mt-2 grid grid-cols-2 gap-3"
+            >
+              <div
+                v-for="[subKey, subProp] in logAdvancedFields(prop)"
+                :key="subKey"
+                class="action-params-form__log-item flex flex-col gap-1"
+              >
+                <el-text type="info" class="action-params-form__sub-label text-xs">
+                  {{ logFieldLabel(String(subKey), subProp) }}
+                </el-text>
+                <el-switch
+                  v-if="subProp.type === 'boolean'"
+                  :model-value="nestedValue(key, String(subKey)) === true"
+                  :disabled="!isLogEnabled(String(key))"
+                  @update:model-value="val => setNestedValue(key, String(subKey), val)"
+                  active-text="是"
+                  inactive-text="否"
+                />
+                <el-input
+                  v-else-if="subProp.type === 'number' || subProp.type === 'integer'"
+                  :model-value="nestedNumberValue(key, String(subKey))"
+                  :disabled="!isLogEnabled(String(key))"
+                  @update:model-value="val => setNestedValue(key, String(subKey), val === '' ? null : Number(val))"
+                  type="number"
+                  :placeholder="subProp.description"
+                />
+                <el-input
+                  v-else
+                  :model-value="nestedTextValue(key, String(subKey))"
+                  :disabled="!isLogEnabled(String(key))"
+                  @update:model-value="val => setNestedValue(key, String(subKey), val)"
+                  :placeholder="subProp.description || `请输入${subKey}`"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div v-else-if="prop.type === 'object' && prop.properties">
           <div class="grid grid-cols-2 gap-3">
             <div
               v-for="(subProp, subKey) in resolveNestedProperties(prop)"

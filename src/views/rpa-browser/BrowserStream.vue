@@ -488,7 +488,7 @@ const handleScreenshot = async () => {
   try {
     const response: any = await 执行引擎Service.executeActionApiV1RpaBrowserControlActionsExecutePost({
       query: { browser_id: browserId },
-      body: { action_id: 'screenshot', params: {} }
+      body: { action_id: 'screenshot', params: { full_page: true } }
     })  // responseStyle='data' → 直接返回 {code, data, msg}
 
     if (response?.code === 0 && response?.data) {
