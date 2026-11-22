@@ -32,6 +32,7 @@ const isSessionConnected = inject<Ref<boolean>>('isSessionConnected', ref(false)
 const {
   droppedItems, dragOverIndex, expandedItems, ifElseActiveTab,
   handleDrop,
+  appendToolboxItem,
   handleItemDragStart, handleItemDragEnter, handleItemDragEnd, handleItemDrop,
   handleBranchDrop, removeBranchItem, reorderBranchItem,
   toggleExpand, toggleExpandAll, toggleBranchExpand, removeItem,
@@ -145,7 +146,7 @@ const selectedCount = computed(() => selectedIds.value.size)
 const totalCount = computed(() => droppedItems.value.length)
 
 // ── 暴露给父组件 ─────────────────────────────────────
-defineExpose({ droppedItems, getSteps })
+defineExpose({ droppedItems, getSteps, appendToolboxItem })
 </script>
 
 <template>
@@ -153,7 +154,7 @@ defineExpose({ droppedItems, getSteps })
     <div class="flex-0 shrink-0 p-3 border-b border-border text-(--el-text-color-primary)">
       <h3 class="font-medium text-sm">{{ props.editMode ? '步骤列表' : '调试面板' }}</h3>
       <p class="text-xs text-color-secondary mt-1">
-        {{ props.editMode ? '拖拽动作到此处调整步骤' : '从工具箱拖拽动作到此处，构建工作流' }}
+        {{ props.editMode ? '拖拽动作到此处调整步骤' : '从工具箱拖拽动作，或点击「添加」按钮加入到此处' }}
       </p>
     </div>
 
@@ -163,7 +164,7 @@ defineExpose({ droppedItems, getSteps })
           <Rank />
         </el-icon>
         <p class="text-sm">拖拽动作到此处</p>
-        <p class="text-xs mt-1">从右侧工具箱选择动作插件</p>
+        <p class="text-xs mt-1">从工具箱选择动作插件，移动端可点击「添加」</p>
       </div>
 
       <div v-else class="space-y-3" @dragover.prevent>

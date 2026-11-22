@@ -116,31 +116,7 @@ export function useDebugboxItems(browserId: string, editMode: boolean, initialSt
       }
 
       // 工具箱新条目
-      const item = parsed as DroppedItem
-      const newItem: DroppedItem = {
-        ...item,
-        id: genItemId(String(item.action_id || item.action_type || 'item')),
-        name: item.name || item.label || item.json_schema?.title || item.action_id || item.action_type || '未命名',
-        action_id: item.action_id || item.action_type || 'custom',
-        action_type: item.action_type || item.action_id || 'custom',
-        description: item.description || item.json_schema?.description,
-        type: item.type || 'action',
-        json_schema: item.json_schema,
-        config_params: item.config_params,
-        input_vars: item.input_vars,
-        output_vars: item.output_vars,
-        step_children: item.step_children,
-        // 展示图标（内置操作由后端分配；不参与步骤序列化，仅供渲染）
-        icon_series: item.icon_series,
-        icon_id: item.icon_id,
-        formData: { ...(item.formData || {}) },
-      }
-      initBranchForItem(newItem)
-      if (newItem.action_type === 'if_else' || newItem.action_id === 'if_else') {
-        delete (newItem.formData as Record<string, unknown>).condition
-        delete (newItem.formData as Record<string, unknown>).TrueBranch
-        delete (newItem.formData as Record<string, unknown>).FalseBranch
-      }
+      const newItem = buildToolboxItem(parsed as Record<string, unknown>)
       const insertAt = dragOverIndex.value ?? droppedItems.value.length
       droppedItems.value.splice(insertAt, 0, newItem)
     } catch (error) {
@@ -148,6 +124,52 @@ export function useDebugboxItems(browserId: string, editMode: boolean, initialSt
     }
     dragOverIndex.value = null
     dragSource.value = null
+  }
+
+  /**
+   * 把工具箱动作节点转换成调试面板条目。
+   *
+   * 拖拽（handleDrop）与移动端「添加」按钮（appendToolboxItem）共用同一份构造逻辑，
+   * 保证两条入口生成的条目字段、默认表单、分支初始化完全一致。
+   */
+  function buildToolboxItem(raw: Record<string, unknown>): DroppedItem {
+    const item = raw as DroppedItem
+    const newItem: DroppedItem = {
+      ...item,
+      id: genItemId(String(item.action_id || item.action_type || 'item')),
+      name: item.name || item.label || item.json_schema?.title || item.action_id || item.action_type || '未命名',
+      action_id: item.action_id || item.action_type || 'custom',
+      action_type: item.action_type || item.action_id || 'custom',
+      description: item.description || item.json_schema?.description,
+      type: item.type || 'action',
+      json_schema: item.json_schema,
+      config_params: item.config_params,
+      input_vars: item.input_vars,
+      output_vars: item.output_vars,
+      step_children: item.step_children,
+      // 展示图标（内置操作由后端分配；不参与步骤序列化，仅供渲染）
+      icon_series: item.icon_series,
+      icon_id: item.icon_id,
+      formData: { ...(item.formData || {}) },
+    }
+    initBranchForItem(newItem)
+    if (newItem.action_type === 'if_else' || newItem.action_id === 'if_else') {
+      delete (newItem.formData as Record<string, unknown>).condition
+      delete (newItem.formData as Record<string, unknown>).TrueBranch
+      delete (newItem.formData as Record<string, unknown>).FalseBranch
+    }
+    return newItem
+  }
+
+  /**
+   * 点击工具箱条目的「添加」：追加到调试面板末尾。
+   *
+   * 移动端无法从弹窗里拖拽到页面上的调试面板，用点击入口复用同一套条目构造。
+   */
+  function appendToolboxItem(raw: Record<string, unknown>): DroppedItem {
+    const newItem = buildToolboxItem(raw)
+    droppedItems.value.push(newItem)
+    return newItem
   }
 
   // ── 拖拽：条目间排序 ─────────────────────────────────
@@ -542,6 +564,7 @@ export function useDebugboxItems(browserId: string, editMode: boolean, initialSt
     branchCollapseState, ifElseActiveTab,
     initBranchForItem,
     handleDrop,
+    appendToolboxItem,
     handleItemDragStart, handleItemDragEnter, handleItemDragEnd, handleItemDrop,
     handleBranchDrop,
     removeBranchItem, reorderBranchItem,

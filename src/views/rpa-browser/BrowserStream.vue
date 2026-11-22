@@ -77,6 +77,8 @@ const splitterSize = ref(50)
 const isLoadingInfo = ref(true)
 const toolboxVisible = ref(false)
 const toolboxMinimized = ref(false)
+/** 调试面板实例：工具箱「添加」按钮通过它把动作追加进步骤列表 */
+const debugBoxRef = ref<InstanceType<typeof DebugBox> | null>(null)
 const toolboxDialogVisible = computed({
   get: () => toolboxVisible.value && !toolboxMinimized.value,
   set: (val: boolean) => {
@@ -102,6 +104,11 @@ function handleToolboxClose() {
 function openToolbox() {
   toolboxVisible.value = true
   toolboxMinimized.value = false
+}
+
+/** 工具箱条目点击「添加」：移动端无法拖拽时，把动作直接追加到调试面板 */
+function handleAddActionToDebug(action: Record<string, unknown>) {
+  debugBoxRef.value?.appendToolboxItem(action)
 }
 
 provide('isStreaming', isStreaming)
@@ -659,7 +666,7 @@ onMounted(() => {
           </el-splitter-panel>
           <el-splitter-panel class="debug-box-container flex flex-1" collapsible min="30%"
             :class="{ 'transition-[flex-basis] duration-550 ease-[cubic-bezier(0.34,1.56,0.64,1)]': isLivePanelAnimating }">
-            <DebugBox :browser-id="browserId" />
+            <DebugBox ref="debugBoxRef" :browser-id="browserId" />
           </el-splitter-panel>
         </el-splitter>
       </div>
@@ -705,7 +712,7 @@ onMounted(() => {
           </button>
         </div>
       </template>
-      <ToolboxPanel :browser-id="browserId" @edit-action="handleEditAction" />
+      <ToolboxPanel :browser-id="browserId" @edit-action="handleEditAction" @add-action="handleAddActionToDebug" />
     </el-dialog>
 
     <!-- 工具箱最小化浮动标签 -->

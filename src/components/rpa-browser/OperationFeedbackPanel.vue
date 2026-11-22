@@ -91,6 +91,9 @@ const execData = computed<Record<string, unknown> | null>(() => {
 /** 图片格式白名单：截图动作固定返回 { format, size, base64 } */
 const IMAGE_FORMATS = ['png', 'jpeg', 'jpg', 'webp', 'gif', 'bmp', 'svg+xml']
 
+/** 截图返回里的描述性元信息字段：只按文本展示，不参与图片渲染 */
+const IMAGE_META_KEYS = ['format', 'size']
+
 /**
  * 返回数据中的 base64 → 可直接加载的图片地址。
  *
@@ -116,7 +119,8 @@ const execDataEntries = computed(() => {
   return Object.entries(data).map(([key, value]) => ({
     key,
     value,
-    imageSrc: resolveImageSrc(value, data.format),
+    // format 只是图片格式说明（如 "png"），不能拿它自身的值拼 data URL 当图片渲染
+    imageSrc: IMAGE_META_KEYS.includes(key) ? null : resolveImageSrc(value, data.format),
   }))
 })
 

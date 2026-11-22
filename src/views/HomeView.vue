@@ -6,6 +6,7 @@ import biliMessage, { ElMessageBox } from '@/utils/message'
 import { CoffeeCup } from '@element-plus/icons-vue'
 import SubmitFeedbackModal from '@/components/lottery_data/bili_data/SubmitFeedbackModal.vue'
 import HomeLatestComments from '@/components/home/HomeLatestComments.vue'
+import HomeLotteryStats from '@/components/home/HomeLotteryStats.vue'
 import UpcomingLotteryMarquee from '@/components/lottery_data/bili_data/UpcomingLotteryMarquee.vue'
 import HotLotteryList from '@/components/lottery_data/bili_data/HotLotteryList.vue'
 import { processRoutesForHome } from '@/utils/routeUtils'
@@ -149,9 +150,6 @@ const handleLogoutClick = () => {
 
     <div class="mt-8 flex justify-center gap-10" v-if="isLoggedIn"></div>
 
-    <!-- 最新评论（扁平多行多列网格，置于功能导航区上方） -->
-    <HomeLatestComments />
-
     <!-- 即将开奖 + 热门抽奖：并排布局（左侧即将开奖含抽奖数据统计，右侧热门抽奖竖排） -->
     <section class="home-lottery-panels mx-5 mt-6 grid grid-cols-1 gap-4 lg:mx-10 lg:grid-cols-3">
       <div class="home-lottery-panels__upcoming rounded-lg border border-border-light bg-bg p-4 lg:col-span-2">
@@ -161,6 +159,12 @@ const handleLogoutClick = () => {
         <HotLotteryList :limit="6" />
       </div>
     </section>
+
+    <!-- 抽奖数据概览：分抽奖类型统计 + 近 14 天新增 / 开奖趋势 -->
+    <HomeLotteryStats />
+
+    <!-- 最新评论（置于即将开奖与热门抽奖下方） -->
+    <HomeLatestComments />
 
     <!-- 功能导航区 -->
     <section class="mx-5 py-10 lg:mx-10 sm:px-0 sm:mx-0">

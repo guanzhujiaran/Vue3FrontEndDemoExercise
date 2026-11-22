@@ -11,7 +11,7 @@
           </h2>
           <p class="bili-crawler-summary__desc m-0 text-sm text-text-secondary">
             按抽奖类型统计<strong>还没到开奖时间</strong>的未开奖数据、昨日 / 本周 / 本月新增，
-            并汇总累计总量、即将开奖、待抓结果积压、大奖数量与参与人数分布。
+            并汇总累计总量、即将开奖、待抓结果积压、大奖数量、参与人数分布与近 14 天新增 / 开奖趋势。
           </p>
         </div>
         <div class="bili-crawler-summary__actions flex flex-wrap items-center gap-3">
@@ -109,38 +109,18 @@
           </el-table-column>
         </el-table>
 
-        <!-- 近 N 天新增趋势（纯 CSS 柱状图，避免引入图表依赖） -->
-        <h3 class="bili-crawler-summary__section-title m-0 mt-4 text-base font-semibold text-text-primary">
-          近 {{ trend.length }} 天新增趋势
-        </h3>
-        <div class="bili-crawler-summary__legend flex flex-wrap items-center gap-4 text-xs text-text-secondary">
-          <span v-for="item in trendLegend" :key="item.key" class="flex items-center gap-1">
-            <span class="bili-crawler-summary__legend-dot" :style="{ background: item.color }" />
-            {{ item.label }}
-          </span>
-        </div>
-        <div class="bili-crawler-summary__chart flex items-end gap-1 overflow-x-auto pb-1">
-          <div
-            v-for="point in trend"
-            :key="point.date"
-            class="bili-crawler-summary__chart-day flex flex-col items-center"
-            :title="trendTitle(point)"
-          >
-            <div class="bili-crawler-summary__chart-bars flex h-32 items-end gap-0.5">
-              <span
-                v-for="item in trendLegend"
-                :key="item.key"
-                class="bili-crawler-summary__chart-bar w-2 rounded-t"
-                :style="{
-                  height: barHeight(point.counts[item.key] || 0),
-                  background: item.color
-                }"
-              />
-            </div>
-            <span class="bili-crawler-summary__chart-label text-text-placeholder">
-              {{ point.date.slice(5) }}
-            </span>
-          </div>
+        <!-- 近 14 天新增趋势 / 开奖趋势（纯 CSS 柱状图，共用趋势图组件） -->
+        <div class="bili-crawler-summary__trends mt-4 grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <LotteryTrendChart
+            title="近 14 天新增趋势"
+            :trend="trend"
+            :legend="trendLegend"
+          />
+          <LotteryTrendChart
+            title="近 14 天开奖趋势"
+            :trend="drawTrend"
+            :legend="drawTrendLegend"
+          />
         </div>
 
         <!-- 即将开奖（24 小时内）：简略卡片跑马灯，全类型通用 -->
@@ -169,6 +149,7 @@ import biliMessage from '@/utils/message'
 import LoadingWrap from '@/components/message/LoadingWrap.vue'
 import ScrapyStatus from '@/components/lottery_data/bili_data/ScrapyStatus.vue'
 import UpcomingLotteryMarquee from '@/components/lottery_data/bili_data/UpcomingLotteryMarquee.vue'
+import LotteryTrendChart from '@/components/lottery_data/bili_data/LotteryTrendChart.vue'
 
 /** lotdata 三类抽奖（官方/预约/充电），用于合计与环比口径 */
 const LOTDATA_KEYS = ['official', 'reserve', 'charge'] as const
@@ -180,6 +161,9 @@ const TREND_LEGEND = [
   { key: 'others_dyn', label: '第三方动态抽奖', color: '#e6a23c' }
 ]
 
+/** 开奖趋势只统计 lotdata 三类（与后端 draw_trend 口径一致） */
+const DRAW_TREND_LEGEND = TREND_LEGEND.filter((item) => item.key !== 'others_dyn')
+
 const adminStore = useMessageAdminStore()
 
 const isAdmin = computed(() => Boolean(adminStore.status?.is_admin || adminStore.status?.is_root))
@@ -187,10 +171,12 @@ const isAdmin = computed(() => Boolean(adminStore.status?.is_admin || adminStore
 const loading = ref(false)
 const rows = ref<LotterySummaryRow[]>([])
 const trend = ref<LotteryTrendPoint[]>([])
+const drawTrend = ref<LotteryTrendPoint[]>([])
 const generatedAt = ref<number | null>(null)
 const latestCreatedAt = ref<number | null>(null)
 
 const trendLegend = TREND_LEGEND
+const drawTrendLegend = DRAW_TREND_LEGEND
 
 /** 仅 lotdata 的三类行（合计与环比只算这几类，避免把其它数据源混进来） */
 const lotdataRows = computed(() => rows.value.filter((row) => LOTDATA_KEYS.includes(row.key as any)))
@@ -250,19 +236,6 @@ const freshness = computed(() => {
 
 const generatedAtText = computed(() => (generatedAt.value ? fmtTime(generatedAt.value) : '—'))
 
-const trendMax = computed(() =>
-  Math.max(1, ...trend.value.flatMap((p) => TREND_LEGEND.map((l) => p.counts[l.key] || 0)))
-)
-
-function barHeight(count: number): string {
-  return `${Math.max(count > 0 ? 2 : 0, Math.round((count / trendMax.value) * 100))}%`
-}
-
-function trendTitle(point: LotteryTrendPoint): string {
-  const parts = TREND_LEGEND.map((l) => `${l.label}: ${point.counts[l.key] || 0}`)
-  return `${point.date}\n${parts.join('\n')}`
-}
-
 function fmtNum(value: number | null | undefined): string {
   if (value === null || value === undefined) return '—'
   return value.toLocaleString('zh-CN')
@@ -284,6 +257,7 @@ async function load() {
     if (res.code === 0 && res.data) {
       rows.value = res.data.rows || []
       trend.value = res.data.trend || []
+      drawTrend.value = res.data.draw_trend || []
       generatedAt.value = res.data.generated_at ?? null
       latestCreatedAt.value = res.data.latest_created_at ?? null
     } else {
@@ -301,30 +275,3 @@ onMounted(async () => {
   if (isAdmin.value) await load()
 })
 </script>
-
-<style scoped>
-.bili-crawler-summary__legend-dot {
-  display: inline-block;
-  width: 8px;
-  height: 8px;
-  border-radius: 2px;
-}
-
-.bili-crawler-summary__chart-day {
-  min-width: 34px;
-}
-
-.bili-crawler-summary__chart-label {
-  font-size: 10px;
-  white-space: nowrap;
-}
-
-.bili-crawler-summary__link {
-  color: var(--el-color-primary);
-  text-decoration: none;
-}
-
-.bili-crawler-summary__link:hover {
-  text-decoration: underline;
-}
-</style>

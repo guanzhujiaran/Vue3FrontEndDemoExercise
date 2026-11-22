@@ -10,6 +10,7 @@ import { client } from '@/api/browser/hey-api/client.gen'
 import type { ActionMetadataResponse, FilterType, SortBy, SortOrder } from '@/api/browser/hey-api'
 import { useUserNavStore } from '@/stores/user_nav'
 import ActionIcon from './ActionIcon.vue'
+import plusIcon from '@/assets/svgs/space/plus.svg?component'
 import { resolveActionTypeIcon } from '@/utils/rpa/actionTypeIcon'
 import { resolveDisplayActionIconUrl } from '@/utils/rpa/actionIcon'
 import {
@@ -60,7 +61,11 @@ const tabList: TabOption[] = [
 
 interface Props { browserId: string }
 defineProps<Props>()
-const emit = defineEmits<{ 'edit-action': [actionDetail: Record<string, unknown>] }>()
+const emit = defineEmits<{
+  'edit-action': [actionDetail: Record<string, unknown>]
+  /** 点击「添加」：移动端无法拖拽时，把动作直接追加到调试面板 */
+  'add-action': [action: Record<string, unknown>]
+}>()
 const userNavStore = useUserNavStore()
 
 // ── 状态 ─────────────────────────────────────────────
@@ -443,28 +448,50 @@ function onClearUsage() {
   actionUsage.value = {}
 }
 
-// ── 拖拽 ─────────────────────────────────────────────
+// ── 拖拽 / 点击添加 ───────────────────────────────────
 
-function handleDragStart(event: DragEvent, nodeData: unknown) {
-  if (!event.dataTransfer || !nodeData) return
+/** 提取可下发给调试面板的动作数据：剔除 el-tree-v2 节点的 UI 字段；分类节点返回 null */
+function toActionPayload(nodeData: unknown): Record<string, unknown> | null {
+  if (!nodeData) return null
   const data = { ...(nodeData as Record<string, unknown>) }
-  // 分类节点只做折叠与计数，不能被当成步骤拖进画布
-  if (data.is_group) { event.preventDefault(); return }
+  if (data.is_group) return null
   delete data.children; delete data.expanded
   delete data.checked; delete data.indeterminate
   delete data.is_group; delete data.category_id; delete data.score
+  return data
+}
+
+/** 记录动作使用（驱动「常用」分组）；只在最近使用列表真的变化时刷新，避免拖拽过程中重建树 */
+function recordUsage(data: Record<string, unknown>) {
+  const actionId = String(data.action_id || '')
+  if (!actionId) return
+  const before = recentActionIds(actionUsage.value).join(',')
+  const usage = recordActionUsage(actionId)
+  if (recentActionIds(usage).join(',') !== before) actionUsage.value = usage
+}
+
+function handleDragStart(event: DragEvent, nodeData: unknown) {
+  if (!event.dataTransfer) return
+  const data = toActionPayload(nodeData)
+  // 分类节点只做折叠与计数，不能被当成步骤拖进画布
+  if (!data) { event.preventDefault(); return }
   const json = JSON.stringify(data)
   event.dataTransfer.setData('text/plain', json)
   event.dataTransfer.setData('application/json', json)
   event.dataTransfer.effectAllowed = 'copyMove'
-  // 记录使用（驱动「常用」分组）；只在最近使用列表真的变化时刷新，避免拖拽过程中重建树
-  const actionId = String(data.action_id || '')
-  if (actionId) {
-    const before = recentActionIds(actionUsage.value).join(',')
-    const usage = recordActionUsage(actionId)
-    if (recentActionIds(usage).join(',') !== before) actionUsage.value = usage
-  }
+  recordUsage(data)
   setToolboxDragGhost(event, data)
+}
+
+/** 点击「添加」：移动端无法从工具箱弹窗拖拽到调试面板，用点击入口追加同款条目 */
+function handleAddToDebug(nodeData: unknown) {
+  const data = toActionPayload(nodeData)
+  if (!data) return
+  recordUsage(data)
+  emit('add-action', data)
+  const label = (data.name as string) || (data.label as string)
+    || getActionLabel(String(data.action_id || ''), data.json_schema as Record<string, unknown> | undefined)
+  ElMessage.success(`已添加「${label}」到调试面板`)
 }
 
 /**
@@ -670,6 +697,9 @@ onBeforeUnmount(() => {
                 </template>
               </span>
               <span class="flex items-center gap-1 shrink-0">
+                <el-button type="primary" link class="toolbox-add-btn shrink-0" :icon="plusIcon"
+                  @mousedown.stop @click.stop="handleAddToDebug(item as Record<string, unknown>)"
+                >添加</el-button>
                 <el-button size="small" text :icon="Edit" class="p-0.5! h-auto!"
                   @click.stop="handleEditCustomAction(item as Record<string, unknown>)"
                 />
@@ -742,7 +772,11 @@ onBeforeUnmount(() => {
                   <el-text class="flex-1 min-w-0" truncated>{{ (data as Record<string, unknown>).name as string || (data as Record<string, unknown>).label as string }}</el-text>
                 </el-tooltip>
               </span>
-              <span class="text-xs text-text-secondary shrink-0">预置动作</span>
+              <span class="flex items-center gap-1 shrink-0">
+                <el-button type="primary" link class="toolbox-add-btn" :icon="plusIcon"
+                  @mousedown.stop @click.stop="handleAddToDebug(data as Record<string, unknown>)"
+                >添加</el-button>
+              </span>
             </div>
           </template>
         </el-tree-v2>
