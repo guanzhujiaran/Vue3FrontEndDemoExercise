@@ -4024,6 +4024,12 @@ export type CompositeActionListItemResponse = {
      */
     action_id: number;
     /**
+     * Mid
+     *
+     * 作者 mid（前端据此区分本人/他人资源）
+     */
+    mid?: string;
+    /**
      * Name
      */
     name: string;
@@ -11196,7 +11202,7 @@ export type WebRtcVisibilityRequest = {
 /**
  * WorkflowAdminListItemResponse
  *
- * 管理端工作流列表项响应（附带作者 mid）
+ * 管理端工作流列表项响应（mid 已由基类携带）
  */
 export type WorkflowAdminListItemResponse = {
     /**
@@ -11239,6 +11245,12 @@ export type WorkflowAdminListItemResponse = {
      * Workflow Id
      */
     workflow_id: number;
+    /**
+     * Mid
+     *
+     * 工作流作者 mid（前端据此区分本人/他人资源）
+     */
+    mid?: string;
     /**
      * Name
      */
@@ -11403,12 +11415,6 @@ export type WorkflowAdminListItemResponse = {
      * Updated At
      */
     updated_at?: string | null;
-    /**
-     * Mid
-     *
-     * 工作流作者 mid
-     */
-    mid?: string;
 };
 
 /**
@@ -12122,6 +12128,12 @@ export type WorkflowListItemResponse = {
      * Workflow Id
      */
     workflow_id: number;
+    /**
+     * Mid
+     *
+     * 工作流作者 mid（前端据此区分本人/他人资源）
+     */
+    mid?: string;
     /**
      * Name
      */
