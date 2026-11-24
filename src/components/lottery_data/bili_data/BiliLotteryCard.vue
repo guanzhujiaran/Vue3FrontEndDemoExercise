@@ -84,18 +84,18 @@
               查看详情
             </el-link>
             <el-link v-else-if="initiatorLink" type="primary" size="default" :href="initiatorLink" target="_blank" :rel="LINK_REL" :referrerpolicy="LINK_REFERRER_POLICY"
-              @click="handleLinkClick" link icon="user" underline="never" class="lottery-card__initiator-link whitespace-nowrap">
+              @click="handleLinkClick()" link icon="user" underline="never" class="lottery-card__initiator-link whitespace-nowrap">
               查看发起者
             </el-link>
             <el-link v-else-if="sourceLink" type="primary" size="default" :href="sourceLink" target="_blank" :rel="LINK_REL" :referrerpolicy="LINK_REFERRER_POLICY"
-              @click="handleLinkClick" link icon="link" underline="never" class="whitespace-nowrap">
+              @click="handleLinkClick(true)" link icon="link" underline="never" class="whitespace-nowrap">
               查看源动态
             </el-link>
             <el-button icon="link" v-else type="info" size="default" disabled class="whitespace-nowrap">
               {{ normalizedData.type === 'RESERVATION' ? '暂无发起者' : '暂无源动态' }}
             </el-button>
             <el-link v-if="resultLink" type="primary" size="default" :href="resultLink" target="_blank" :rel="LINK_REL" :referrerpolicy="LINK_REFERRER_POLICY"
-              @click="handleLinkClick" link icon="link" underline="never" class="whitespace-nowrap">
+              @click="handleLinkClick(true)" link icon="link" underline="never" class="whitespace-nowrap">
               查看h5抽奖详情
             </el-link>
             <!-- 参加/不参加开关 -->
@@ -135,7 +135,7 @@
 
         <section class="gap-0.5 sm:gap-1 lg:gap-2 grid grid-cols-2 lg:grid-cols-4">
           <div v-for="item in summaryItems" :key="item.label"
-            class="bg-fill-lighter p-4 border border-border-light rounded-lg">
+            class="min-w-0 bg-fill-lighter p-4 border border-border-light rounded-lg">
             <div class="flex items-center gap-1">
               <span class="font-medium text-text-secondary text-xs">{{ item.label }}</span>
               <el-popover v-if="item.hint" trigger="hover" placement="top" width="200">
@@ -153,12 +153,12 @@
             </div>
             <div>
               <el-link v-if="item.link" :href="item.link" target="_blank" type="primary" underline="never"
-                class="mt-2 w-fit font-semibold text-sm sm:text-base text-left no-underline leading-relaxed"
-                :rel="LINK_REL" :referrerpolicy="LINK_REFERRER_POLICY" @click="handleLinkClick">
+                class="mt-2 w-full min-w-0 justify-start font-semibold text-sm sm:text-base text-left no-underline leading-relaxed whitespace-normal wrap-anywhere"
+                :rel="LINK_REL" :referrerpolicy="LINK_REFERRER_POLICY" @click="handleLinkClick()">
                 {{ item.value }}
               </el-link>
               <div v-else
-                class="mt-2 font-semibold text-text-primary text-sm sm:text-base wrap-break-word leading-relaxed">
+                class="mt-2 min-w-0 font-semibold text-text-primary text-sm sm:text-base wrap-anywhere leading-relaxed">
                 {{ item.value }}
               </div>
             </div>
@@ -260,7 +260,7 @@
           <div class="flex flex-wrap gap-2 mt-3">
             <template v-for="(req, index) in normalizedData.requirements" :key="`${req.type}-${index}`">
               <el-link v-if="req.link" :href="req.link" target="_blank" type="primary" underline="never"
-                class="no-underline" :rel="LINK_REL" :referrerpolicy="LINK_REFERRER_POLICY" @click="handleLinkClick">
+                class="no-underline" :rel="LINK_REL" :referrerpolicy="LINK_REFERRER_POLICY" @click="handleLinkClick()">
                 <el-tag :type="getRequirementTagType(req.type)" size="default" effect="plain" round>
                   {{ req.text }}
                 </el-tag>
@@ -435,6 +435,7 @@ import { LINK_REL, LINK_REFERRER_POLICY } from '@/utils/PageOpen/linkPolicy'
 import { isMobileDevice } from '@/utils/Browser/useDeviceDetect.ts'
 import { BiliCommTxt } from '@/assets/text/BiliCommTxt.ts'
 import { handleLotteryLinkClick, setLotteryParticipation, isLotteryParticipated } from '@/utils/lotteryParticipation'
+import { reportInteractionView } from '@/utils/lotteryInteractionStatus'
 import { thumbMoment, fetchInteractionStatus } from '@/api/notify/moment-api'
 import type { InteractionStatusItem } from '@/api/notify/moment-api'
 import MomentPublishForm from '@/components/moment/MomentPublishForm.vue'
@@ -445,7 +446,10 @@ const handleRecordLotteryId = (val: boolean | number | string) => {
   setLotteryParticipation(String(normalizedData.value.id), Boolean(val))
 }
 
-const handleLinkClick = () => {
+const handleLinkClick = (countView = false) => {
+  if (countView) {
+    reportInteractionView(interactionBizType.value, lotteryId.value)
+  }
   handleLotteryLinkClick(String(normalizedData.value.id))
 }
 

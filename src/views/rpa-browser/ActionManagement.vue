@@ -2,26 +2,21 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessageBox, ElMessage } from 'element-plus'
-import { Refresh, Search, Loading, SetUp, Upload } from '@element-plus/icons-vue'
-import { useDebounceFn } from '@vueuse/core'
+import { Refresh, Loading, SetUp, Upload } from '@element-plus/icons-vue'
 import FlexContainer from '@/components/CommonCompo/Bili-Container-Compo/FlexContainer.vue'
 import BiliPageHeader from '@/components/CommonCompo/Bili-Container-Compo/BiliPageHeader.vue'
 import { 自定义操作管理Service, 管理员管理Service } from '@/api/browser/hey-api'
 import { client } from '@/api/browser/hey-api/client.gen'
 import type { FilterType, SortBy, SortOrder } from '@/api/browser/hey-api'
 import { useUserNavStore } from '@/stores/user_nav'
-import ActionIcon from '@/components/rpa-browser/ActionIcon.vue'
-import { DEFAULT_ACTION_ICON } from '@/utils/rpa/actionTypeIcon'
+import ActionManageCard from '@/components/rpa-browser/ActionManageCard.vue'
+import RpaResourceFilterBar from '@/components/rpa-browser/RpaResourceFilterBar.vue'
 import { businessHandler } from '@/utils/businessHandler'
 import { pickBackendMsg } from '@/utils/backendErrorMsg'
 import { errMsg } from '@/utils/rpa/jsonImport'
-import ResourceInteractionBar from '@/components/interaction/ResourceInteractionBar.vue'
 import ActionDetailDialog from '@/components/rpa-browser/ActionDetailDialog.vue'
 import ShareJsonDialog from '@/components/rpa-browser/ShareJsonDialog.vue'
 import ImportJsonDialog from '@/components/rpa-browser/ImportJsonDialog.vue'
-import IconRefresh from '@/assets/svgs/space/refresh.svg?component'
-import IconTag from '@/assets/svgs/space/tag.svg?component'
-import IconMore from '@/assets/svgs/space/more.svg?component'
 
 const router = useRouter()
 
@@ -29,6 +24,8 @@ interface ActionItem {
   /** 表主键（be-message 互动体系 rpa_action 的 bizId 用数字主键，非 action_id） */
   id: number
   action_id: string
+  /** 作者 mid：用于区分本人/他人资源，他人资源不展示作者侧操作 */
+  mid?: string
   name: string
   action_type: string
   description: string
@@ -76,7 +73,14 @@ const loading = ref(false)
 const loadingMore = ref(false)
 const searchText = ref('')
 const filterTag = ref('')
+const filterType = ref<FilterType>('all')
+const sortBy = ref<SortBy>('updated_at')
+const sortOrder = ref<SortOrder>('desc')
 const allTags = ref<string[]>([])
+
+/** 本人资源才展示作者侧操作（全部筛选下会混入他人公开资源） */
+const isOwned = (mid?: string) =>
+  !mid || String(mid) === String(userNavStore.user_nav.uid)
 
 const hasMore = computed(() => actionList.value.length < total.value)
 
@@ -95,9 +99,9 @@ const loadActions = async (append = false) => {
       body: {
         page: currentPage.value,
         per_page: pageSize.value,
-        filter_type: 'private' as FilterType,
-        sort_by: 'updated_at' as SortBy,
-        sort_order: 'desc' as SortOrder,
+        filter_type: filterType.value,
+        sort_by: sortBy.value,
+        sort_order: sortOrder.value,
         name: searchText.value || null,
         tag: filterTag.value || null,
       },
@@ -138,9 +142,10 @@ const loadTags = async () => {
   }
 }
 
-const handleSearch = useDebounceFn(() => {
+/** 筛选条件变化：统一回到第一页重新加载 */
+const handleFilterChange = () => {
   loadActions()
-}, 400)
+}
 
 /** 打开「导入分享」弹窗：粘贴 JSON 或从文件读取，统一在弹窗里完成 */
 const importVisible = ref(false)
@@ -176,10 +181,6 @@ const handleImportSubmit = async (data: Record<string, unknown>) => {
   } finally {
     importing.value = false
   }
-}
-
-const handleTagFilter = () => {
-  loadActions()
 }
 
 /** 动作的雪花 ID 以字符串透传（19 位整数超出 JS Number 安全范围，后端自行转 int），
@@ -283,7 +284,7 @@ const handleApplyPublish = async (item: ActionItem) => {
     管理员管理Service.submitApprovalApiAdminRpaApprovalSubmitPost({
       body: {
         resource_type: 'action',
-        resource_id: item.action_id,
+        resource_id: String(item.action_id),
         action: 'publish',
         title: item.name,
         description: desc,
@@ -350,27 +351,6 @@ const handleSaveTags = async () => {
 
 // ── 同步上游最新版本（仅 Fork 副本可用） ──
 const syncLoadingId = ref<string | null>(null)
-
-/** 内容指纹只展示前 8 位，完整值放在 title 里 */
-const shortHash = (hash?: string) => (hash ? hash.slice(0, 8) : '')
-
-/** 同步图标悬停文案（图标化后的状态说明入口） */
-const syncIconTip = (item: ActionItem) => {
-  const mine = item.version ? `你的副本 v${item.version}` : '你的副本'
-  if (item.has_upstream_update) {
-    // 上游改了内容却没升版本号：如实说明，不假装"有新版本 1.1.0"
-    const upstream = item.upstream_version
-      ? item.upstream_version === item.version
-        ? `上游内容已变（版本号仍为 v${item.upstream_version}，作者未升级）`
-        : `上游 v${item.upstream_version}`
-      : '上游有新内容'
-    const tip = `${upstream} · ${mine}`
-    return item.local_steps_modified ? `${tip}；有本地修改，同步将覆盖` : `${tip}；点击同步`
-  }
-  return item.local_steps_modified
-    ? `已是最新版本（${mine}，有本地修改）`
-    : `已是最新版本（${mine}）`
-}
 
 /** 「更多」下拉菜单命令分发（次级操作收纳，减少卡片按钮数量） */
 const handleMoreCommand = (
@@ -489,11 +469,6 @@ const handleRefresh = () => {
   loadTags()
 }
 
-const formatTime = (t: string | null) => {
-  if (!t) return '-'
-  return new Date(t).toLocaleString('zh-CN')
-}
-
 /** 秒级时间戳（后端统一口径）转本地时间展示；null/0 视为从未同步 */
 const formatTimestamp = (ts: number | null | undefined) => {
   if (!ts) return '从未同步'
@@ -508,7 +483,7 @@ onMounted(() => {
 
 <template>
   <FlexContainer>
-    <BiliPageHeader title="动作管理" hide-title description="管理你的自定义动作" tag-text="私有动作">
+    <BiliPageHeader title="动作管理" hide-title description="管理你的自定义动作" tag-text="动作">
       <template #extra>
         <el-button class="action-toolbar__import" :icon="Upload" @click="openImportDialog">导入分享</el-button>
         <el-button :icon="SetUp" @click="goApprovalCenter">审批中心</el-button>
@@ -517,28 +492,18 @@ onMounted(() => {
     </BiliPageHeader>
 
     <FlexContainer class="mt-4 bg-bg rounded-2xl p-4">
-      <!-- 搜索栏 -->
-      <div class="action-toolbar flex items-center gap-3 mb-4 flex-wrap">
-        <el-input
-          v-model="searchText"
-          placeholder="搜索动作名称"
-          :prefix-icon="Search"
-          clearable
-          class="action-toolbar__search w-60"
-          @input="handleSearch"
-          @clear="handleSearch"
-        />
-        <el-select
-          v-model="filterTag"
-          placeholder="按标签筛选"
-          clearable
-          class="action-toolbar__tag-filter w-45"
-          @change="handleTagFilter"
-          @clear="handleTagFilter"
-        >
-          <el-option v-for="t in allTags" :key="t" :label="t" :value="t" />
-        </el-select>
-      </div>
+      <!-- 搜索 / 筛选 / 排序：与工作流管理共用统一筛选栏 -->
+      <RpaResourceFilterBar
+        v-model:keyword="searchText"
+        v-model:filter-type="filterType"
+        v-model:sort-by="sortBy"
+        v-model:sort-order="sortOrder"
+        v-model:tag="filterTag"
+        :tags="allTags"
+        show-tag
+        placeholder="搜索动作名称"
+        @change="handleFilterChange"
+      />
 
       <!-- 加载骨架 -->
       <div v-if="loading" class="w-full">
@@ -557,143 +522,20 @@ onMounted(() => {
       <!-- 动作卡片列表（滚动容器） -->
       <div v-else class="action-list-scroll overflow-auto max-h-[calc(100vh-280px)]" @scroll="handleScroll">
         <div class="action-card-grid grid grid-cols-[repeat(auto-fill,minmax(340px,1fr))] gap-4">
-          <div
+          <ActionManageCard
             v-for="item in actionList"
             :key="item.action_id"
-            class="action-card min-w-0 rounded-xl p-5 border border-border-light hover:border-primary transition-colors flex flex-col gap-3 overflow-hidden"
-          >
-              <!-- 名称行 -->
-              <div class="action-card__header flex items-start justify-between gap-2">
-                <div class="flex-1 min-w-0">
-                  <div class="action-card__title-row flex items-center gap-2">
-                    <ActionIcon
-                      :series="item.icon_series"
-                      :id="item.icon_id"
-                      :seed="item.action_id || item.action_type"
-                      class="action-card__icon w-5 h-5 shrink-0 text-text-primary"
-                    >
-                      <template #fallback>
-                        <el-icon class="text-lg text-text-primary">
-                          <component :is="DEFAULT_ACTION_ICON" />
-                        </el-icon>
-                      </template>
-                    </ActionIcon>
-                    <h3 class="text-base font-semibold truncate" :title="item.name">{{ item.name }}</h3>
-                  </div>
-                  <p class="action-card__description text-sm text-gray-400 mt-1 line-clamp-2 min-h-10">
-                    {{ item.description || '暂无描述' }}
-                  </p>
-                </div>
-                <!-- 上游同步状态图标（仅 Fork 副本）：有更新=warning 高亮可点击；
-                     已是最新=置灰不可点，悬停有说明，取代原文字徽标与同步按钮 -->
-                <div class="action-card__status-icons flex items-center gap-2 shrink-0">
-                  <el-tooltip v-if="item.forked_from_id" :content="syncIconTip(item)" placement="top">
-                    <el-button
-                      v-if="item.has_upstream_update"
-                      link
-                      class="action-card__sync-icon p-0 h-auto text-warning"
-                      :loading="syncLoadingId === item.action_id"
-                      @click="handleSyncUpstream(item)"
-                    >
-                      <component :is="IconRefresh" class="w-4 h-4" />
-                    </el-button>
-                    <span v-else class="action-card__sync-idle text-gray-300">
-                      <component :is="IconRefresh" class="w-4 h-4" />
-                    </span>
-                  </el-tooltip>
-                </div>
-              </div>
-
-              <!-- 标签（仅在有标签时展示，无占位文字，避免卡片信息过载） -->
-              <div v-if="item.tags?.length" class="action-card__tags flex flex-wrap items-center gap-1.5">
-                <el-tag
-                  v-for="tag in item.tags"
-                  :key="tag"
-                  effect="plain"
-                >
-                  {{ tag }}
-                </el-tag>
-              </div>
-
-              <!-- 元信息 -->
-              <div class="action-card__meta flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-400">
-                <span class="shrink-0">步骤: {{ item.steps_count }}</span>
-                <span v-if="item.version" class="action-card__version shrink-0">版本: v{{ item.version }}</span>
-                <span
-                  v-if="item.content_hash"
-                  class="action-card__content-hash shrink-0 font-mono"
-                  :title="`内容指纹: ${item.content_hash}`"
-                >{{ shortHash(item.content_hash) }}</span>
-                <span class="truncate">更新: {{ formatTime(item.updated_at) }}</span>
-              </div>
-
-              <!-- 收藏/点赞（2.17.0：动作走 be-message 通用互动） -->
-              <div class="action-card__interaction flex items-center pt-1">
-                <ResourceInteractionBar biz-type="rpa_action" :biz-id="String(item.id)" />
-              </div>
-
-              <!-- 操作栏：主操作（查看）保留文字按钮，次级操作全部图标化，
-                   重命名/申请公开/删除收入「更多」下拉；EP 会给相邻 el-button
-                   加 12px 左边距，用 [&_.el-button]:ml-0 中和 gap -->
-              <div class="action-card__actions flex items-center gap-3 pt-3 border-t border-border-lighter [&_.el-button]:ml-0">
-                <el-button type="primary" @click="openDetail(item)">查看</el-button>
-
-                <el-tooltip content="编辑标签" placement="top">
-                  <el-button
-                    link
-                    class="action-card__action-tags p-0 h-auto text-text-primary"
-                    @click="openTagDialog(item)"
-                  >
-                    <component :is="IconTag" class="w-4 h-4" />
-                  </el-button>
-                </el-tooltip>
-
-                <!-- 上游自动同步开关（仅 Fork 副本） -->
-                <el-tooltip
-                  v-if="item.forked_from_id"
-                  :content="item.auto_sync_upstream ? '自动同步：开' : '自动同步：关'"
-                  placement="top"
-                >
-                  <el-switch
-                    class="action-card__auto-sync"
-                    v-model="item.auto_sync_upstream"
-                    :loading="autoSyncLoadingId === item.action_id"
-                    @change="handleToggleAutoSync(item)"
-                  />
-                </el-tooltip>
-
-                <!-- 可见性开关 -->
-                <el-tooltip :content="item.is_public ? '公开' : '私有'" placement="top">
-                  <el-switch
-                    class="action-card__visibility"
-                    v-model="item.is_public"
-                    inline-prompt
-                    active-text="公开"
-                    inactive-text="私有"
-                    @change="handleTogglePublic(item)"
-                  />
-                </el-tooltip>
-
-                <!-- 更多次级操作 -->
-                <el-dropdown
-                  class="action-card__more ml-auto"
-                  trigger="click"
-                  @command="(cmd: string) => handleMoreCommand(cmd as 'rename' | 'publish' | 'share' | 'delete', item)"
-                >
-                  <el-button link class="action-card__more-trigger p-0 h-auto text-text-primary">
-                    <component :is="IconMore" class="w-4 h-4" />
-                  </el-button>
-                  <template #dropdown>
-                    <el-dropdown-menu>
-                      <el-dropdown-item command="rename">重命名</el-dropdown-item>
-                      <el-dropdown-item command="share">分享</el-dropdown-item>
-                      <el-dropdown-item v-if="!item.is_public" command="publish">申请公开</el-dropdown-item>
-                      <el-dropdown-item command="delete" divided>删除</el-dropdown-item>
-                    </el-dropdown-menu>
-                  </template>
-                </el-dropdown>
-              </div>
-            </div>
+            :item="item"
+            :variant="isOwned(item.mid) ? 'manage' : 'community'"
+            :sync-loading="syncLoadingId === item.action_id"
+            :auto-sync-loading="autoSyncLoadingId === item.action_id"
+            @view="openDetail(item)"
+            @sync-upstream="handleSyncUpstream(item)"
+            @edit-tags="openTagDialog(item)"
+            @toggle-public="handleTogglePublic(item)"
+            @toggle-auto-sync="handleToggleAutoSync(item)"
+            @more-command="(cmd) => handleMoreCommand(cmd, item)"
+          />
         </div>
 
         <!-- 加载更多状态 -->

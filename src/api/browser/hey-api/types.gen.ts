@@ -1536,7 +1536,7 @@ export type BaseFingerprintBrowserInitParams = {
      */
     patchright_browser_ua?: string | null;
     /**
-     * 浏览器视口大小
+     * 浏览器视口大小（收敛到屏幕内，避免窗口外框超出 screen）
      */
     readonly viewport: ViewportSize;
     /**
@@ -2292,7 +2292,7 @@ export type BrowserFingerprintQueryResp = {
      */
     mid: number;
     /**
-     * 浏览器视口大小
+     * 浏览器视口大小（收敛到屏幕内，避免窗口外框超出 screen）
      */
     readonly viewport: ViewportSize;
     /**
@@ -10835,7 +10835,7 @@ export type UserBrowserInfo = {
      */
     custom_name?: string | null;
     /**
-     * 浏览器视口大小
+     * 浏览器视口大小（收敛到屏幕内，避免窗口外框超出 screen）
      */
     readonly viewport: ViewportSize;
     /**

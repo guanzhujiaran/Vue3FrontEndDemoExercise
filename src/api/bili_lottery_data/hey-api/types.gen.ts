@@ -1428,6 +1428,10 @@ export type LotteryDataSummaryResp = {
      * Trend
      */
     trend?: Array<LotteryTrendPoint>;
+    /**
+     * Draw Trend
+     */
+    draw_trend?: Array<LotteryTrendPoint>;
 };
 
 /**
@@ -1596,7 +1600,7 @@ export type LotterySummaryRow = {
 /**
  * LotteryTrendPoint
  *
- * 近 N 天每日新增趋势点；counts 的 key 与 LotterySummaryRow.key 对应。
+ * 近 N 天每日趋势点（新增 / 开奖）；counts 的 key 与 LotterySummaryRow.key 对应。
  */
 export type LotteryTrendPoint = {
     /**
@@ -1619,7 +1623,7 @@ export type LotteryTrendPoint = {
  * 官方抽奖的抽奖方式（是否需转发/评论、是否话题抽奖等）已由 lottery_type
  * （即 lotdata.business_type）固定，无需落库，因此 is_lot / need_comment /
  * need_repost 不再作为存储字段，而是在响应中根据 lottery_type 由 property 计算得出。
- * 仅 is_grand_prize 由大模型判断并落库。
+ * is_grand_prize / judge_reason / judge_version 由大模型判断并落库。
  */
 export type OfficialLotExtraInfoResp = {
     /**
@@ -1634,6 +1638,18 @@ export type OfficialLotExtraInfoResp = {
      * 大奖标志: true-大奖, false-非大奖, null-未判断
      */
     is_grand_prize?: boolean | null;
+    /**
+     * Judge Reason
+     *
+     * 大奖判定理由（LLM 输出，便于回溯）
+     */
+    judge_reason?: string | null;
+    /**
+     * Judge Version
+     *
+     * 大奖判定规则/输入版本号；版本或输入指纹变化后会自动重判
+     */
+    judge_version?: number | null;
     /**
      * Is Lot
      */
@@ -4078,7 +4094,7 @@ export type LotteryFilterParamsRespWritable = {
  * 官方抽奖的抽奖方式（是否需转发/评论、是否话题抽奖等）已由 lottery_type
  * （即 lotdata.business_type）固定，无需落库，因此 is_lot / need_comment /
  * need_repost 不再作为存储字段，而是在响应中根据 lottery_type 由 property 计算得出。
- * 仅 is_grand_prize 由大模型判断并落库。
+ * is_grand_prize / judge_reason / judge_version 由大模型判断并落库。
  */
 export type OfficialLotExtraInfoRespWritable = {
     /**
@@ -4093,6 +4109,18 @@ export type OfficialLotExtraInfoRespWritable = {
      * 大奖标志: true-大奖, false-非大奖, null-未判断
      */
     is_grand_prize?: boolean | null;
+    /**
+     * Judge Reason
+     *
+     * 大奖判定理由（LLM 输出，便于回溯）
+     */
+    judge_reason?: string | null;
+    /**
+     * Judge Version
+     *
+     * 大奖判定规则/输入版本号；版本或输入指纹变化后会自动重判
+     */
+    judge_version?: number | null;
 };
 
 /**
@@ -5939,6 +5967,44 @@ export type GetLotteryDetailListApiV1LotteryDatabaseBiliGetLotteryDetailListGetR
 
 export type GetLotteryDetailListApiV1LotteryDatabaseBiliGetLotteryDetailListGetResponse = GetLotteryDetailListApiV1LotteryDatabaseBiliGetLotteryDetailListGetResponses[keyof GetLotteryDetailListApiV1LotteryDatabaseBiliGetLotteryDetailListGetResponses];
 
+export type GetTopLotteryByParticipantsApiV1LotteryDatabaseBiliGetTopLotteryByParticipantsGetData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Limit
+         *
+         * 返回条数上限
+         */
+        limit?: number;
+        /**
+         * T
+         *
+         * 防缓存时间戳（前端传当前毫秒时间戳 Date.now()）；后端不使用该值，仅用于让每次 URL 不同以绕过浏览器/CDN 缓存
+         */
+        t?: number | null;
+    };
+    url: '/api/v1/lottery_database/bili/GetTopLotteryByParticipants';
+};
+
+export type GetTopLotteryByParticipantsApiV1LotteryDatabaseBiliGetTopLotteryByParticipantsGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetTopLotteryByParticipantsApiV1LotteryDatabaseBiliGetTopLotteryByParticipantsGetError = GetTopLotteryByParticipantsApiV1LotteryDatabaseBiliGetTopLotteryByParticipantsGetErrors[keyof GetTopLotteryByParticipantsApiV1LotteryDatabaseBiliGetTopLotteryByParticipantsGetErrors];
+
+export type GetTopLotteryByParticipantsApiV1LotteryDatabaseBiliGetTopLotteryByParticipantsGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseLotteryDetailListResp;
+};
+
+export type GetTopLotteryByParticipantsApiV1LotteryDatabaseBiliGetTopLotteryByParticipantsGetResponse = GetTopLotteryByParticipantsApiV1LotteryDatabaseBiliGetTopLotteryByParticipantsGetResponses[keyof GetTopLotteryByParticipantsApiV1LotteryDatabaseBiliGetTopLotteryByParticipantsGetResponses];
+
 export type GetOthersLotDynDetailApiV1LotteryDatabaseBiliGetOthersLotDynDetailGetData = {
     body?: never;
     path?: never;
@@ -6513,6 +6579,26 @@ export type ReplaceLlmConfigLlmConfigPutResponses = {
 };
 
 export type ReplaceLlmConfigLlmConfigPutResponse = ReplaceLlmConfigLlmConfigPutResponses[keyof ReplaceLlmConfigLlmConfigPutResponses];
+
+export type ExportLlmConfigLlmConfigExportGetData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/llm/config/export';
+};
+
+export type ExportLlmConfigLlmConfigExportGetResponses = {
+    /**
+     * Response Export Llm Config Llm Config Export Get
+     *
+     * Successful Response
+     */
+    200: Array<{
+        [key: string]: unknown;
+    }>;
+};
+
+export type ExportLlmConfigLlmConfigExportGetResponse = ExportLlmConfigLlmConfigExportGetResponses[keyof ExportLlmConfigLlmConfigExportGetResponses];
 
 export type TestLlmConfigLlmConfigTestPostData = {
     body: LlmApiTestRequest;

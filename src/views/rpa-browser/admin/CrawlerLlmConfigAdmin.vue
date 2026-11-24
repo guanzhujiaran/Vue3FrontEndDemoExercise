@@ -75,7 +75,7 @@
             </el-text>
             <el-text class="crawler-llm-config__help-line block w-full whitespace-normal break-words text-xs text-text-secondary"
               tag="div">
-              · 「导出 JSON」导出当前页面配置（含未保存的修改，密钥为脱敏值）；「导入 JSON」按
+              · 「导出 JSON」从后端下载当前生效配置（含明文密钥，请妥善保管）；「导入 JSON」按
               <span class="crawler-llm-config__help-emphasis font-semibold text-text-primary">地址 + 密钥</span>
               合并到卡片，导入后仍需点「保存配置」才会写入 crawler。
             </el-text>
@@ -109,7 +109,7 @@
         导入 JSON
       </el-button>
       <el-button class="crawler-llm-config__export" size="large"
-        :disabled="loading || saving || resetting || rows.length === 0" title="导出当前页面配置（含未保存的修改，密钥为脱敏值）"
+        :disabled="loading || saving || resetting" title="从后端下载当前生效配置（含明文密钥）"
         @click="handleExportJson">
         导出 JSON
       </el-button>
@@ -406,7 +406,6 @@ import {
 } from '@element-plus/icons-vue'
 import biliMessage from '@/utils/message'
 import { formatDateTime } from '@/utils/dateFormat'
-import { downloadJsonFile } from '@/utils/rpa/jsonShare'
 import {
   buildLlmSaveItems,
   groupLlmConfigs,
@@ -416,6 +415,7 @@ import {
 import { describeLlmModelState, llmStatsKey } from '@/utils/llmModelState'
 import type { LlmModelStateView } from '@/utils/llmModelState'
 import {
+  downloadCrawlerLlmConfigExport,
   fetchCrawlerLlmConfig,
   fetchCrawlerLlmModels,
   resetCrawlerLlmConfig,
@@ -789,38 +789,14 @@ function toPayload(): CrawlerLlmSaveItem[] {
   )
 }
 
-/** 导出文件名：带本地时间，连续导出不会互相覆盖 */
-function exportFileName(): string {
-  const now = new Date()
-  const pad = (value: number) => String(value).padStart(2, '0')
-  return `crawler-llm-config-${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}.json`
-}
-
-/** 导出时把明文密钥抹成脱敏值（与页面读取态的「前4****后4」一致，避免 JSON 带出完整 key） */
-function maskExportToken(token: string): string {
-  const value = token.trim()
-  if (!value || value.includes('****')) return value
-  if (value.length <= 8) return '****'
-  return `${value.slice(0, 4)}****${value.slice(-4)}`
-}
-
 /**
- * 导出当前页面配置为 JSON（含未保存的修改）。
+ * 导出当前配置为 JSON：直接下载后端生成的附件。
  *
- * 结构与 crawler 的 `llm_apis` 一致：一条记录 = 一个模型，密钥只导出脱敏值，
- * 便于备份 / 对比「哪个地址下有哪些模型、限流多少」，也避免明文密钥落到文件里。
+ * 页面上的 token 是脱敏值，导出备份 / 迁移必须用后端保存的明文，
+ * 因此这里不在前端拼 JSON，只负责触发下载。
  */
 function handleExportJson() {
-  const items = toPayload().map((item) => ({
-    ...item,
-    token: maskExportToken(item.token ?? ''),
-  }))
-  downloadJsonFile(exportFileName(), {
-    version: 1,
-    exported_at: Math.floor(Date.now() / 1000),
-    items,
-  })
-  biliMessage.success('已导出当前配置 JSON')
+  void downloadCrawlerLlmConfigExport()
 }
 
 /** 导入文件里的一条实例（解析后统一成驼峰字段） */

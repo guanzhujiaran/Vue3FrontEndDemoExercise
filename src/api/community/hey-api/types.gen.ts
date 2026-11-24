@@ -4930,7 +4930,7 @@ export type HotLotteryItem = {
     /**
      * Recentviewcount
      *
-     * 统计窗口内的浏览次数（浏览记录 sum(viewCount)）
+     * 统计窗口内的去重浏览人数（仅 rank_by=site；bili 口径恒 0）
      */
     recentViewCount?: number;
     /**
@@ -4972,7 +4972,7 @@ export type HotLotteryResp = {
     /**
      * Items
      *
-     * 热门抽奖（按窗口内浏览热度降序）
+     * 热门抽奖（site 按窗口内浏览人数 / bili 按抓取时参与人数降序）
      */
     items?: Array<HotLotteryItem>;
     /**
@@ -20894,6 +20894,12 @@ export type InteractionHotLotteriesApiV1CommunityInteractionHotLotteriesGetData 
          * 返回条数上限
          */
         limit?: number;
+        /**
+         * Rank By
+         *
+         * 榜单口径：site=本站近 N 天去重浏览人数；bili=B站抓取时参与人数（仅进行中）
+         */
+        rank_by?: 'site' | 'bili';
     };
     url: '/api/v1/community/interaction/hot-lotteries';
 };
@@ -32140,6 +32146,79 @@ export type SaveLlmConfigApiV1CrawlerAdminLlmConfigPutResponses = {
 };
 
 export type SaveLlmConfigApiV1CrawlerAdminLlmConfigPutResponse = SaveLlmConfigApiV1CrawlerAdminLlmConfigPutResponses[keyof SaveLlmConfigApiV1CrawlerAdminLlmConfigPutResponses];
+
+export type ExportLlmConfigApiV1CrawlerAdminLlmConfigExportGetData = {
+    body?: never;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Jwt
+         */
+        'x-bili-jwt'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string | null;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string | null;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string | null;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string | null;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string | null;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string | null;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string | null;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/crawler/admin/llm/config/export';
+};
+
+export type ExportLlmConfigApiV1CrawlerAdminLlmConfigExportGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ExportLlmConfigApiV1CrawlerAdminLlmConfigExportGetError = ExportLlmConfigApiV1CrawlerAdminLlmConfigExportGetErrors[keyof ExportLlmConfigApiV1CrawlerAdminLlmConfigExportGetErrors];
+
+export type ExportLlmConfigApiV1CrawlerAdminLlmConfigExportGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
 
 export type TestLlmConfigApiV1CrawlerAdminLlmConfigTestPostData = {
     body: CrawlerLlmTestReq;

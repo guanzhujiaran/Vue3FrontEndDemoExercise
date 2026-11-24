@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { h, ref, computed, inject, onMounted } from 'vue'
-import { Warning, Goods } from '@element-plus/icons-vue'
 import { ElCheckbox, ElMessageBox } from 'element-plus'
 import BiliPageHeader from '@/components/CommonCompo/Bili-Container-Compo/BiliPageHeader.vue'
 import FlexContainer from '@/components/CommonCompo/Bili-Container-Compo/FlexContainer.vue'
@@ -9,37 +8,47 @@ import { 工作流管理Service, 自定义操作管理Service } from '@/api/brow
 import { useUserNavStore } from '@/stores/user_nav'
 import biliMessage from '@/utils/message'
 import { pickBackendMsg } from '@/utils/backendErrorMsg'
-import ResourceInteractionBar from '@/components/interaction/ResourceInteractionBar.vue'
+import ActionManageCard from '@/components/rpa-browser/ActionManageCard.vue'
+import ActionDetailDialog from '@/components/rpa-browser/ActionDetailDialog.vue'
+import WorkflowCard from '@/components/rpa-browser/WorkflowCard.vue'
 import ReportDialog from '@/components/moment/ReportDialog.vue'
 import { InteractionBizTypeEnum } from '@/api/notify/moment-api'
 import type { FilterType, SortBy, SortOrder } from '@/api/browser/hey-api'
+import type { WorkflowItem } from '@/models/rpa_browser'
 import { useHydrated } from '@/composables/useHydrated'
 import { openGlobalLoginModalKey } from '@/models/inject/inject_type.ts'
 
 type TabType = 'actions' | 'workflows'
 
 /**
- * 社区卡片项
+ * 社区动作卡片项
  *
- * SDK 的 `BasePaginationResp.items` 目前下发为 `unknown[]`（后端泛型分页未把元素类型
- * 代进 OpenAPI），因此按本页实际用到的字段显式声明，避免模板里 `item` 全是 unknown。
+ * 与动作管理页共用 ActionManageCard，字段与列表接口
+ * （list_custom_actions）返回的 item 对齐。
  */
 interface CommunityActionItem {
   id: number
   action_id: string
   name: string
-  description?: string
-  action_type?: string
-  forks_count?: number
-  created_at?: string
-}
-
-interface CommunityWorkflowItem {
-  id: number
-  name: string
-  description?: string
-  forks_count?: number
-  created_at?: string
+  description: string
+  action_type: string
+  icon_series?: number
+  icon_id?: number
+  steps_count: number
+  tags: string[]
+  is_enabled: boolean
+  is_public: boolean
+  likes_count: number
+  forks_count: number
+  forked_from_id: number | null
+  version?: string
+  content_hash?: string
+  has_upstream_update?: boolean
+  upstream_version?: string | null
+  auto_sync_upstream?: boolean
+  local_steps_modified?: boolean
+  created_at: string | null
+  updated_at: string | null
 }
 
 const userNavStore = useUserNavStore()
@@ -56,7 +65,7 @@ const total = ref(0)
 const loading = ref(false)
 
 const actionsList = ref<CommunityActionItem[]>([])
-const workflowsList = ref<CommunityWorkflowItem[]>([])
+const workflowsList = ref<WorkflowItem[]>([])
 
 /** 请求头：x-bili-level 必须是字符串（后端按 "0"~"6" 解析等级） */
 const authHeaders = computed(() => ({
@@ -117,7 +126,7 @@ const loadWorkflowsList = async () => {
     })
 
     if (response?.code === 0 && response?.data) {
-      const data = response.data as unknown as { items?: CommunityWorkflowItem[]; total?: number }
+      const data = response.data as unknown as { items?: WorkflowItem[]; total?: number }
       workflowsList.value = data.items || []
       total.value = data.total || 0
     }
@@ -265,6 +274,20 @@ const handlePageChange = (page: number) => {
   loadData()
 }
 
+// ── 动作详情（复用动作管理页的只读结构流程图弹窗） ──
+const detailVisible = ref(false)
+const detailActionId = ref<string | null>(null)
+
+/** 详情接口要求登录，游客先走登录引导 */
+const openActionDetail = (item: CommunityActionItem) => {
+  if (!isLoggedIn.value) {
+    openGlobalLoginModal()
+    return
+  }
+  detailActionId.value = item.action_id
+  detailVisible.value = true
+}
+
 const handleSortChange = () => {
   currentPage.value = 1
   loadData()
@@ -312,74 +335,41 @@ onMounted(() => {
       </div>
 
       <div v-else-if="activeTab === 'actions' && actionsList.length > 0" class="w-full">
-        <div class="grid gap-4" style="grid-template-columns: repeat(auto-fill, minmax(350px, 1fr))">
-          <div v-for="item in actionsList" :key="item.action_id"
-            class="rounded-xl  p-5 border border-border-light hover:border-primary transition-all duration-300">
-            <div class="flex flex-col gap-3">
-              <div class="flex items-center justify-between">
-                <el-text class="text-lg font-semibold truncate flex-1 mr-2">{{ item.name }}</el-text>
-                <el-tag size="small" type="info">{{ item.action_type || 'custom' }}</el-tag>
-              </div>
-
-              <el-text class="text-sm text-text-secondary line-clamp-2">
-                {{ item.description || '无描述' }}
-              </el-text>
-
-              <div class="flex items-center gap-4 text-sm text-text-secondary">
-                <ResourceInteractionBar biz-type="rpa_action" :biz-id="String(item.id)" />
-                <div class="flex items-center gap-1">
-                  <el-icon><ForkSpoon /></el-icon>
-                  <span>{{ item.forks_count || 0 }}</span>
-                </div>
-                <div class="flex-1"></div>
-                <span class="text-xs">{{ item.created_at ? new Date(item.created_at).toLocaleDateString() : '-' }}</span>
-              </div>
-
-              <div class="community-action-card__actions flex items-center gap-2 mt-2">
-                <template v-if="isLoggedIn">
-                  <el-button type="primary" @click="handleForkAction(item.action_id)">Fork</el-button>
-                  <el-button type="warning" @click="handleReport(item, 'action')">举报</el-button>
-                </template>
-                <el-button v-else type="primary" plain @click="openGlobalLoginModal()">登录后可 Fork</el-button>
-              </div>
-            </div>
-          </div>
+        <div class="grid gap-4" style="grid-template-columns: repeat(auto-fill, minmax(340px, 1fr))">
+          <ActionManageCard
+            v-for="item in actionsList"
+            :key="item.action_id"
+            :item="item"
+            variant="community"
+            @view="openActionDetail(item)"
+          >
+            <template #actions>
+              <template v-if="isLoggedIn">
+                <el-button type="primary" @click="handleForkAction(item.action_id)">Fork</el-button>
+                <el-button type="warning" @click="handleReport(item, 'action')">举报</el-button>
+              </template>
+              <el-button v-else type="primary" plain @click="openGlobalLoginModal()">登录后可 Fork</el-button>
+            </template>
+          </ActionManageCard>
         </div>
       </div>
 
       <div v-else-if="activeTab === 'workflows' && workflowsList.length > 0" class="w-full">
-        <div class="grid gap-4" style="grid-template-columns: repeat(auto-fill, minmax(350px, 1fr))">
-          <div v-for="item in workflowsList" :key="item.id"
-            class="rounded-xl  p-5 border border-border-light hover:border-primary transition-all duration-300">
-            <div class="flex flex-col gap-3">
-              <div class="flex items-center justify-between">
-                <el-text class="text-lg font-semibold truncate flex-1 mr-2">{{ item.name }}</el-text>
-                <el-tag size="small" type="info">工作流</el-tag>
-              </div>
-
-              <el-text class="text-sm text-text-secondary line-clamp-2">
-                {{ item.description || '无描述' }}
-              </el-text>
-
-              <div class="flex items-center gap-4 text-sm text-text-secondary">
-                <ResourceInteractionBar biz-type="rpa_workflow" :biz-id="String(item.id)" />
-                <div class="flex items-center gap-1">
-                  <el-icon><Goods /></el-icon>
-                  <span>{{ item.forks_count || 0 }}</span>
-                </div>
-                <div class="flex-1"></div>
-                <span class="text-xs">{{ item.created_at ? new Date(item.created_at).toLocaleDateString() : '-' }}</span>
-              </div>
-
-              <div class="community-workflow-card__actions flex items-center gap-2 mt-2">
-                <template v-if="isLoggedIn">
-                  <el-button type="primary" @click="handleForkWorkflow(item.id)">Fork</el-button>
-                  <el-button type="warning" @click="handleReport(item, 'workflow')">举报</el-button>
-                </template>
-                <el-button v-else type="primary" plain @click="openGlobalLoginModal()">登录后可 Fork</el-button>
-              </div>
-            </div>
-          </div>
+        <div class="grid gap-4" style="grid-template-columns: repeat(auto-fill, minmax(340px, 1fr))">
+          <WorkflowCard
+            v-for="item in workflowsList"
+            :key="item.id"
+            :item="item"
+            variant="community"
+          >
+            <template #actions>
+              <template v-if="isLoggedIn">
+                <el-button type="primary" @click="handleForkWorkflow(item.id)">Fork</el-button>
+                <el-button type="warning" @click="handleReport(item, 'workflow')">举报</el-button>
+              </template>
+              <el-button v-else type="primary" plain @click="openGlobalLoginModal()">登录后可 Fork</el-button>
+            </template>
+          </WorkflowCard>
         </div>
       </div>
 
@@ -399,6 +389,9 @@ onMounted(() => {
         />
       </div>
     </FlexContainer>
+
+    <!-- 动作详情：复用动作管理页的只读结构流程图弹窗 -->
+    <ActionDetailDialog v-model="detailVisible" :action-id="detailActionId" />
 
     <ReportDialog
       v-model="reportDialogVisible"

@@ -230,6 +230,8 @@ const handleStopSession = async () => {
       const msg = response?.msg || t('rpa.sessionCloseFailed')
       const code = response?.code ?? 0
       biliMessage.error(msg)
+      // 2016：工作流执行中拒绝关闭，会话仍在运行，不能把 UI 置为 error/disconnected
+      if (code === 2016) return
       onSessionStopFailed(msg, code)
     }
   } catch (error: unknown) {

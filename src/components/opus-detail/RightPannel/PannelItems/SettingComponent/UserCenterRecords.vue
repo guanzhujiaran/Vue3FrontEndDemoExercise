@@ -159,6 +159,7 @@
 import { ref, onMounted } from 'vue'
 import userApi from '@/api/user/user_api.ts'
 import type { UserActLogItem, UserExpRecordItem } from '@/api/user/user_api.ts'
+import { formatDateTime } from '@/utils/dateFormat'
 
 // 当前激活的 tab：login（登录记录）/ exp（经验记录）
 const activeTab = ref('login')
@@ -249,12 +250,10 @@ const handleTabChange = (name: string | number) => {
 }
 
 // ==================== 展示辅助 ====================
-const formatTime = (time?: string) => {
+// 后端出参 time 为秒级时间戳，统一交给 dateFormat 归一为毫秒，避免 new Date(秒) 显示成 1970 年
+const formatTime = (time?: number | string) => {
   if (!time) return '—'
-  const d = new Date(time)
-  if (isNaN(d.getTime())) return time
-  const pad = (n: number) => String(n).padStart(2, '0')
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`
+  return formatDateTime(time) || String(time)
 }
 
 // 登录记录 act_info → 中文文案

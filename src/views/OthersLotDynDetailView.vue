@@ -149,11 +149,12 @@ function handleStatusChange(payload: { bizId: string; status: Partial<Interactio
           :status="status ?? undefined"
           @update-status="handleStatusChange"
         />
+        <!-- 浏览上报已由上方 loadInteractionStatus 的单资源请求触发，
+             这里不再 count-view，避免一次详情访问投递两条浏览消息。 -->
         <div v-if="dynId" class="others-lot-dyn-detail__interaction mt-3 flex justify-start">
           <ResourceInteractionBar
             :biz-type="InteractionBizTypeEnum.OTHERS_LOT_DYN"
             :biz-id="dynId"
-            count-view
           />
         </div>
       </div>

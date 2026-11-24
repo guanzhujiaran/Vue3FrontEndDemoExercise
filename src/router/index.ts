@@ -758,7 +758,60 @@ const routes: CustomRouteRecordRaw[] = [
       requiresLogin: false,
       showInHome: false,
       isHeaderShow: false
-    }
+    },
+    children: [
+      {
+        path: '',
+        name: 'MOMENT_USER_SPACE_HOME',
+        component: () => import('@/views/moment/tabs/SpaceHomeOtherTab.vue'),
+        meta: { title: '主页' }
+      },
+      {
+        path: 'dynamic',
+        name: 'MOMENT_USER_SPACE_DYNAMIC',
+        component: () => import('@/views/moment/tabs/SpaceDynamicTab.vue'),
+        meta: { title: '动态' }
+      },
+      {
+        path: 'timeline',
+        name: 'MOMENT_USER_SPACE_TIMELINE',
+        component: () => import('@/views/moment/tabs/SpaceTimelineTab.vue'),
+        meta: { title: '时间线' }
+      },
+      {
+        path: 'favlist',
+        name: 'MOMENT_USER_SPACE_FAVORITES',
+        component: () => import('@/views/moment/tabs/SpaceFavoritesTab.vue'),
+        meta: { title: '收藏' }
+      },
+      {
+        path: 'settings',
+        name: 'MOMENT_USER_SPACE_SETTINGS',
+        component: () => import('@/views/moment/tabs/SpaceSettingsTab.vue'),
+        meta: { title: '设置' }
+      },
+      {
+        // 关注 / 粉丝关系详情：共用左侧分组导航布局壳，右侧按子路由切换
+        path: 'relation',
+        component: () => import('@/views/moment/SpaceRelationLayout.vue'),
+        children: [
+          {
+            path: 'followings',
+            name: 'MOMENT_USER_SPACE_FOLLOWINGS',
+            component: () => import('@/views/moment/tabs/SpaceRelationTab.vue'),
+            props: { relationType: 'followings' },
+            meta: { title: '关注' }
+          },
+          {
+            path: 'fans',
+            name: 'MOMENT_USER_SPACE_FANS',
+            component: () => import('@/views/moment/tabs/SpaceRelationTab.vue'),
+            props: { relationType: 'fans' },
+            meta: { title: '粉丝' }
+          }
+        ]
+      }
+    ]
   },
   {
     path: '/app/admin',

@@ -28,9 +28,8 @@ export function shareFileName(name: string, fallback: string): string {
   return `${cleaned.slice(0, 60) || fallback}.json`
 }
 
-/** 触发浏览器下载一个 JSON 文件 */
-export function downloadJsonFile(fileName: string, payload: unknown): void {
-  const blob = new Blob([stringifyShareJson(payload)], { type: 'application/json;charset=utf-8' })
+/** 触发浏览器下载一个已有的 Blob（如后端直接返回的 JSON 文件） */
+export function downloadBlobFile(fileName: string, blob: Blob): void {
   const url = URL.createObjectURL(blob)
   const link = document.createElement('a')
   link.href = url
@@ -41,6 +40,12 @@ export function downloadJsonFile(fileName: string, payload: unknown): void {
   link.remove()
   // 立即释放会让部分浏览器下载中断，延后释放
   setTimeout(() => URL.revokeObjectURL(url), 1000)
+}
+
+/** 触发浏览器下载一个 JSON 文件 */
+export function downloadJsonFile(fileName: string, payload: unknown): void {
+  const blob = new Blob([stringifyShareJson(payload)], { type: 'application/json;charset=utf-8' })
+  downloadBlobFile(fileName, blob)
 }
 
 /** 复制文本到剪贴板；浏览器不支持或用户拒绝时 reject */

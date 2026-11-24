@@ -3,7 +3,7 @@
 import type { RequestResult } from '../client';
 import { client } from '../client.gen';
 import type { Options } from '../sdk.gen';
-import type { GetLlmConfigApiV1CrawlerAdminLlmConfigGetData, GetLlmConfigApiV1CrawlerAdminLlmConfigGetErrors, GetLlmConfigApiV1CrawlerAdminLlmConfigGetResponses, ListLlmModelsApiV1CrawlerAdminLlmModelsPostData, ListLlmModelsApiV1CrawlerAdminLlmModelsPostErrors, ListLlmModelsApiV1CrawlerAdminLlmModelsPostResponses, ResetLlmConfigApiV1CrawlerAdminLlmConfigDeleteData, ResetLlmConfigApiV1CrawlerAdminLlmConfigDeleteErrors, ResetLlmConfigApiV1CrawlerAdminLlmConfigDeleteResponses, SaveLlmConfigApiV1CrawlerAdminLlmConfigPutData, SaveLlmConfigApiV1CrawlerAdminLlmConfigPutErrors, SaveLlmConfigApiV1CrawlerAdminLlmConfigPutResponses, TestLlmConfigApiV1CrawlerAdminLlmConfigTestPostData, TestLlmConfigApiV1CrawlerAdminLlmConfigTestPostErrors, TestLlmConfigApiV1CrawlerAdminLlmConfigTestPostResponses } from '../types.gen';
+import type { ExportLlmConfigApiV1CrawlerAdminLlmConfigExportGetData, ExportLlmConfigApiV1CrawlerAdminLlmConfigExportGetErrors, ExportLlmConfigApiV1CrawlerAdminLlmConfigExportGetResponses, GetLlmConfigApiV1CrawlerAdminLlmConfigGetData, GetLlmConfigApiV1CrawlerAdminLlmConfigGetErrors, GetLlmConfigApiV1CrawlerAdminLlmConfigGetResponses, ListLlmModelsApiV1CrawlerAdminLlmModelsPostData, ListLlmModelsApiV1CrawlerAdminLlmModelsPostErrors, ListLlmModelsApiV1CrawlerAdminLlmModelsPostResponses, ResetLlmConfigApiV1CrawlerAdminLlmConfigDeleteData, ResetLlmConfigApiV1CrawlerAdminLlmConfigDeleteErrors, ResetLlmConfigApiV1CrawlerAdminLlmConfigDeleteResponses, SaveLlmConfigApiV1CrawlerAdminLlmConfigPutData, SaveLlmConfigApiV1CrawlerAdminLlmConfigPutErrors, SaveLlmConfigApiV1CrawlerAdminLlmConfigPutResponses, TestLlmConfigApiV1CrawlerAdminLlmConfigTestPostData, TestLlmConfigApiV1CrawlerAdminLlmConfigTestPostErrors, TestLlmConfigApiV1CrawlerAdminLlmConfigTestPostResponses } from '../types.gen';
 
 export class CrawlerLlmAdminService {
     /**
@@ -56,6 +56,25 @@ export class CrawlerLlmAdminService {
                 'Content-Type': 'application/json',
                 ...options.headers
             }
+        });
+    }
+    
+    /**
+     * 导出 crawler LLM 配置 JSON（含明文密钥，附件下载）
+     *
+     * 从后端导出**当前生效**的 crawler LLM 配置。
+     *
+     * 页面读取态的 token 是脱敏值，导出备份 / 迁移必须用明文，因此由本接口
+     * 代理 crawler 的内部导出接口，并以附件形式返回，避免前端二次拼接。
+     *
+     * - 只包含后端已保存的配置（页面上未保存的编辑不在其中）；
+     * - 文件含明文密钥：响应禁止缓存，前端必须提示用户妥善保管。
+     */
+    public static exportLlmConfigApiV1CrawlerAdminLlmConfigExportGet<ThrowOnError extends boolean = false>(options?: Options<ExportLlmConfigApiV1CrawlerAdminLlmConfigExportGetData, ThrowOnError>): RequestResult<ExportLlmConfigApiV1CrawlerAdminLlmConfigExportGetResponses, ExportLlmConfigApiV1CrawlerAdminLlmConfigExportGetErrors, ThrowOnError, 'data'> {
+        return (options?.client ?? client).get<ExportLlmConfigApiV1CrawlerAdminLlmConfigExportGetResponses, ExportLlmConfigApiV1CrawlerAdminLlmConfigExportGetErrors, ThrowOnError, 'data'>({
+            responseStyle: 'data',
+            url: '/api/v1/crawler/admin/llm/config/export',
+            ...options
         });
     }
     

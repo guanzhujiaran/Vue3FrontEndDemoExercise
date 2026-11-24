@@ -9,6 +9,8 @@
 export interface WorkflowItem {
   id: number
   workflow_id: string
+  /** 作者 mid：用于区分本人/他人资源，他人资源不展示作者侧操作 */
+  mid?: string
   name: string
   custom_action_id: string | null
   description: string

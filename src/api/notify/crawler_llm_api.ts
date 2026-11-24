@@ -19,7 +19,9 @@ import type {
   CrawlerLlmTestReq,
   CrawlerLlmTestResp,
 } from '@/api/community/hey-api'
-import { request, requestOk } from '@/api/http'
+import { request, requestOk, authHeaders } from '@/api/http'
+import biliMessage from '@/utils/message'
+import { downloadBlobFile } from '@/utils/rpa/jsonShare'
 
 export type {
   CrawlerLlmConfigItem,
@@ -122,4 +124,59 @@ export async function resetCrawlerLlmConfig(): Promise<CrawlerLlmConfigResp | nu
       successMessage: '已撤销人工保存，crawler 已恢复为 .env 配置',
     }
   )
+}
+
+/** 后端导出接口：返回附件（Content-Disposition），含明文密钥 */
+const LLM_EXPORT_PATH = '/api/v1/crawler/admin/llm/config/export'
+
+/** 后端未给出文件名时的兜底（带本地时间，连续导出不覆盖） */
+function localExportFileName(): string {
+  const now = new Date()
+  const pad = (value: number) => String(value).padStart(2, '0')
+  return `crawler-llm-config-${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}.json`
+}
+
+/** 从 `Content-Disposition` 取文件名；取不到时用本地时间兜底 */
+function exportFileName(header: string | null): string {
+  const matched = /filename="?([^";]+)"?/i.exec(header || '')
+  return matched?.[1] || localExportFileName()
+}
+
+/**
+ * 从后端下载 crawler 当前生效的 LLM 配置 JSON。
+ *
+ * 为什么不能在前端拼：页面读取态的 `token` 是脱敏值（`前4****后4`），
+ * 导出备份 / 迁移必须使用后端保存的明文密钥，因此文件内容完全由后端生成。
+ *
+ * 该接口返回附件而非 `StandardResponse`，故不走 hey-api SDK / businessHandler。
+ *
+ * @returns 是否已触发下载（失败时已弹错误提示）
+ */
+export async function downloadCrawlerLlmConfigExport(): Promise<boolean> {
+  let resp: Response
+  try {
+    resp = await fetch(LLM_EXPORT_PATH, {
+      credentials: 'include',
+      headers: { ...authHeaders(), Accept: 'application/json' },
+    })
+  } catch {
+    biliMessage.error('导出失败：网络异常')
+    return false
+  }
+  if (!resp.ok) {
+    let message = `导出失败（HTTP ${resp.status}）`
+    try {
+      const body = (await resp.json()) as { msg?: string; detail?: string }
+      if (body?.msg) message = body.msg
+      else if (body?.detail) message = body.detail
+    } catch {
+      // 非 JSON 错误体：保留 HTTP 状态提示
+    }
+    biliMessage.error(message)
+    return false
+  }
+  const blob = await resp.blob()
+  downloadBlobFile(exportFileName(resp.headers.get('Content-Disposition')), blob)
+  biliMessage.success('已从后端导出当前生效配置（含明文密钥，请妥善保管）')
+  return true
 }

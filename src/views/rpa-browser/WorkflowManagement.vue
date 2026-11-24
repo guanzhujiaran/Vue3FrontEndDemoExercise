@@ -2,13 +2,13 @@
 import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessageBox, ElMessage } from 'element-plus'
-import { Refresh, Search, Plus, SetUp, Upload } from '@element-plus/icons-vue'
-import { useDebounceFn } from '@vueuse/core'
+import { Refresh, Plus, SetUp, Upload } from '@element-plus/icons-vue'
 import FlexContainer from '@/components/CommonCompo/Bili-Container-Compo/FlexContainer.vue'
 import BiliPageHeader from '@/components/CommonCompo/Bili-Container-Compo/BiliPageHeader.vue'
 import WorkflowEditDialog from '@/components/rpa-browser/WorkflowEditDialog.vue'
 import WorkflowRunLogDialog from '@/components/rpa-browser/WorkflowRunLogDialog.vue'
 import WorkflowCard from '@/components/rpa-browser/WorkflowCard.vue'
+import RpaResourceFilterBar from '@/components/rpa-browser/RpaResourceFilterBar.vue'
 import type { WorkflowMoreCommand } from '@/components/rpa-browser/WorkflowCard.vue'
 import ShareJsonDialog from '@/components/rpa-browser/ShareJsonDialog.vue'
 import ImportJsonDialog from '@/components/rpa-browser/ImportJsonDialog.vue'
@@ -44,9 +44,13 @@ const currentPage = ref(1)
 const pageSize = ref(10)
 const loading = ref(false)
 const searchText = ref('')
-const filterType = ref<FilterType>('private')
+const filterType = ref<FilterType>('all')
 const sortBy = ref<SortBy>('updated_at')
 const sortOrder = ref<SortOrder>('desc')
+
+/** 本人资源才展示作者侧操作（全部筛选下会混入他人公开工作流） */
+const isOwned = (mid?: string) =>
+  !mid || String(mid) === String(userNavStore.user_nav.uid)
 
 // ── 编辑对话框 ───────────────────────────────────────
 const editDialogVisible = ref(false)
@@ -166,10 +170,7 @@ const handleImportSubmit = async (data: Record<string, unknown>) => {
   }
 }
 
-const handleSearch = useDebounceFn(() => {
-  loadWorkflows()
-}, 400)
-
+/** 筛选条件变化：统一回到第一页重新加载 */
 const handleFilterChange = () => {
   loadWorkflows()
 }
@@ -305,7 +306,7 @@ const handleApplyPublish = async (item: WorkflowItem) => {
     管理员管理Service.submitApprovalApiAdminRpaApprovalSubmitPost({
       body: {
         resource_type: 'workflow',
-        resource_id: item.workflow_id,
+        resource_id: String(item.workflow_id),
         action: 'publish',
         title: item.name,
         description: desc,
@@ -581,7 +582,8 @@ function syncCardSubscriptions() {
   }
   for (const item of workflowList.value) {
     const runId = activeRunIds.value[item.id] || item.running_run_id
-    if (runId) subscribeItemRun(item, runId)
+    // 只订阅本人工作流：全部筛选下会混入他人公开工作流，其运行进度无权限读取
+    if (runId && isOwned(item.mid)) subscribeItemRun(item, runId)
   }
 }
 
@@ -799,27 +801,15 @@ onBeforeUnmount(closeAllCardSubscriptions)
     </BiliPageHeader>
 
     <FlexContainer class="mt-4 bg-bg rounded-2xl p-4">
-      <!-- 搜索栏 -->
-      <div class="workflow-toolbar flex items-center gap-3 mb-4 flex-wrap">
-        <el-input v-model="searchText" placeholder="搜索工作流名称" :prefix-icon="Search" clearable style="width: 240px"
-          @input="handleSearch" @clear="handleSearch" />
-        <el-select v-model="filterType" placeholder="筛选类型" style="width: 140px" @change="handleFilterChange">
-          <el-option label="私有" value="private" />
-          <el-option label="公开" value="public" />
-          <el-option label="全部" value="all" />
-        </el-select>
-        <el-select v-model="sortBy" placeholder="排序字段" style="width: 140px" @change="handleFilterChange">
-          <el-option label="更新时间" value="updated_at" />
-          <el-option label="创建时间" value="created_at" />
-          <el-option label="名称" value="name" />
-          <el-option label="点赞数" value="likes_count" />
-          <el-option label="Fork数" value="forks_count" />
-        </el-select>
-        <el-select v-model="sortOrder" placeholder="排序方向" style="width: 120px" @change="handleFilterChange">
-          <el-option label="降序" value="desc" />
-          <el-option label="升序" value="asc" />
-        </el-select>
-      </div>
+      <!-- 搜索 / 筛选 / 排序：与动作管理共用统一筛选栏（工作流列表暂不支持标签过滤） -->
+      <RpaResourceFilterBar
+        v-model:keyword="searchText"
+        v-model:filter-type="filterType"
+        v-model:sort-by="sortBy"
+        v-model:sort-order="sortOrder"
+        placeholder="搜索工作流名称"
+        @change="handleFilterChange"
+      />
 
       <!-- 加载骨架 -->
       <div v-if="loading" class="w-full">
@@ -845,6 +835,7 @@ onBeforeUnmount(closeAllCardSubscriptions)
             v-for="item in workflowList"
             :key="item.id"
             :item="item"
+            :variant="isOwned(item.mid) ? 'manage' : 'community'"
             :browser-name-map="browserNameMap"
             :progress="progressOf(item)"
             :running="isRunning(item)"

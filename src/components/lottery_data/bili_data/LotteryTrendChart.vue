@@ -20,19 +20,19 @@
 
     <div
       v-if="trend.length"
-      class="lottery-trend-chart__chart flex items-end gap-1 overflow-x-auto pb-1"
+      class="lottery-trend-chart__chart flex w-full items-end gap-1 overflow-x-auto pb-1"
     >
       <div
         v-for="point in trend"
         :key="point.date"
-        class="lottery-trend-chart__day flex min-w-[34px] flex-col items-center"
+        class="lottery-trend-chart__day flex min-w-[34px] flex-1 flex-col items-center"
         :title="trendTitle(point)"
       >
-        <div class="lottery-trend-chart__bars flex h-32 items-end gap-0.5">
+        <div class="lottery-trend-chart__bars flex h-32 w-full items-end justify-center gap-0.5">
           <span
             v-for="item in legend"
             :key="item.key"
-            class="lottery-trend-chart__bar w-2 rounded-t"
+            class="lottery-trend-chart__bar flex-1 rounded-t"
             :style="{
               height: barHeight(point.counts[item.key] || 0),
               background: item.color

@@ -11,6 +11,7 @@
  */
 import {
   fetchInteractionStatus,
+  fetchInteractionStatusOne,
   isNumericBizId,
   InteractionBizTypeEnum,
 } from '@/api/notify/moment-api'
@@ -36,6 +37,23 @@ export function interactionStatusKey(
   bizId: string
 ): string {
   return `${bizType}:${bizId}`
+}
+
+/**
+ * 外链点击上报一次浏览（查看源动态 / 抽奖详情）。
+ *
+ * 浏览计数挂在单资源 `GET /interaction/status/{bizId}` 上；点外链后当前页不会再加载
+ * 详情页，因此只能在点击时触发。仅登录用户会真正计数（后端匿名不投递），
+ * 失败静默，不阻塞跳转。
+ */
+export function reportInteractionView(
+  bizType: InteractionBizTypeEnum,
+  bizId: string
+): void {
+  if (!isNumericBizId(bizId)) return
+  void fetchInteractionStatusOne(bizType, bizId, {
+    showErrorToast: false,
+  }).catch(() => {})
 }
 
 /**

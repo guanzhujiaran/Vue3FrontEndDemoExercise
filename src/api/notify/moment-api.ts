@@ -320,12 +320,14 @@ export async function fetchInteractionStatus(
 }
 
 /**
- * 查询单资源交互态——detail 页专用，查询后后端投递 MQ 异步累计浏览数。
- * 列表批量接口不累计浏览，仅进入详情页（本接口）才 +1。
+ * 查询单资源交互态——兼作浏览统计触发点，detail 页加载与
+ * 「查看源动态 / 抽奖详情」外链点击共用；查询后后端投递 MQ 异步累计浏览数
+ * （仅登录用户），列表批量接口不累计浏览。
  */
 export async function fetchInteractionStatusOne(
   bizType: InteractionBizTypeEnum,
-  bizId: string
+  bizId: string,
+  options: RequestOptions = {}
 ): Promise<InteractionStatusItem | null> {
   return request<InteractionStatusItem | null>(
     () =>
@@ -333,7 +335,8 @@ export async function fetchInteractionStatusOne(
         path: { biz_id: bizId },
         query: { bizType },
       }),
-    null
+    null,
+    options
   )
 }
 
@@ -342,13 +345,22 @@ export async function fetchInteractionStatusOne(
 /**
  * 热门抽奖榜：`GET /api/v1/community/interaction/hot-lotteries`。
  *
- * 口径：窗口内浏览记录（TInteractionViewLog，bizType=lottery）按资源聚合
- * sum(viewCount) 降序；2.67.0 起后端一次带回卡片数据（`items[].card` =
- * `{raw, extra_info}`，与 GetLotteryDetail 的 data 同形态），前端直接交给
- * 卡片列表渲染，**不再**二次调用抽奖 detail 域接口。
+ * `rankBy`：
+ * - `site`（默认）本站口径：窗口内浏览记录按资源统计去重浏览人数（COUNT）降序；
+ * - `bili` B站口径：crawler 抓取时参与人数降序，仅统计进行中的抽奖。
+ *
+ * 2.67.0 起后端一次带回卡片数据（`items[].card` = `{raw, extra_info}`，
+ * 与 GetLotteryDetail 的 data 同形态），前端直接交给卡片列表渲染，
+ * **不再**二次调用抽奖 detail 域接口。
  */
+export type HotLotteryRankBy = 'site' | 'bili'
+
 export async function fetchHotLotteries(
-  params: { windowDays?: number; limit?: number } = {}
+  params: {
+    windowDays?: number
+    limit?: number
+    rankBy?: HotLotteryRankBy
+  } = {}
 ): Promise<HotLotteryResp | null> {
   return request<HotLotteryResp | null>(
     () =>
@@ -356,6 +368,7 @@ export async function fetchHotLotteries(
         query: {
           window_days: params.windowDays ?? 7,
           limit: params.limit ?? 10,
+          rank_by: params.rankBy ?? 'site'
         },
       }),
     null,

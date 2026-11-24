@@ -218,16 +218,20 @@ export class MomentService {
     }
     
     /**
-     * 热门抽奖榜（浏览热度 + 抽奖卡片一次返回，匿名可读）
+     * 热门抽奖榜（本站浏览人数 / B站参与人数 + 抽奖卡片一次返回，匿名可读）
      *
      * 热门抽奖榜（2.64.0 浏览记录口径；2.67.0 一次返回卡片数据）。
      *
-     * 口径：窗口内 ``TInteractionViewLog``（bizType=lottery）按资源聚合
-     * ``sum(viewCount)`` 降序取 topN，附累计浏览 / 点赞 / 收藏与实时评论数；
-     * 卡片内容经 crawler 只读查询服务（``GetLotteryDetailList``）一次批量回捞
-     * （弱依赖，取不到卡片的项由服务层剔除），前端首页因此**不再**二次调用 detail 域接口。
-     * 纯读接口，不校验资源存在性（抽奖归属 be-bilibili-crawler，弱依赖不放大抖动），
-     * 也不做任何写入。
+     * 口径（``rank_by``）：
+     * - ``site``（默认）：窗口内 ``TInteractionViewLog``（bizType=lottery）按资源统计
+     * 去重浏览人数（每用户每资源一行，``COUNT``）降序；
+     * - ``bili``：crawler 抓取时 ``lotdata.participants`` 降序，仅统计进行中的
+     * 官方 / 预约 / 充电抽奖。
+     *
+     * 两种口径均附累计浏览 / 点赞 / 收藏与实时评论数；卡片内容经 crawler 只读查询服务
+     * 一次批量回捞（弱依赖，取不到卡片的项由服务层剔除），前端首页因此**不再**二次调用
+     * detail 域接口。纯读接口，不校验资源存在性（抽奖归属 be-bilibili-crawler，
+     * 弱依赖不放大抖动），也不做任何写入。
      */
     public static interactionHotLotteriesApiV1CommunityInteractionHotLotteriesGet<ThrowOnError extends boolean = false>(options?: Options<InteractionHotLotteriesApiV1CommunityInteractionHotLotteriesGetData, ThrowOnError>): RequestResult<InteractionHotLotteriesApiV1CommunityInteractionHotLotteriesGetResponses, InteractionHotLotteriesApiV1CommunityInteractionHotLotteriesGetErrors, ThrowOnError, 'data'> {
         return (options?.client ?? client).get<InteractionHotLotteriesApiV1CommunityInteractionHotLotteriesGetResponses, InteractionHotLotteriesApiV1CommunityInteractionHotLotteriesGetErrors, ThrowOnError, 'data'>({

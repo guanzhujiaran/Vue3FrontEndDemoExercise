@@ -6,7 +6,17 @@
         <el-icon><Trophy /></el-icon>
         热门抽奖
       </el-text>
-      <el-tag size="large" type="warning" effect="plain" round>近 {{ windowDays }} 天浏览热度</el-tag>
+      <el-radio-group
+        v-model="rankBy"
+        size="default"
+        class="hot-lottery-list__rank-switch"
+      >
+        <el-radio-button value="site">本站热门</el-radio-button>
+        <el-radio-button value="bili">B站热门</el-radio-button>
+      </el-radio-group>
+      <el-tag size="large" type="warning" effect="plain" round>
+        {{ rankBy === 'site' ? `近 ${windowDays} 天浏览人数` : '抓取时参与人数' }}
+      </el-tag>
       <span v-if="!loading && details.length" class="text-xs text-text-placeholder">
         Top {{ details.length }}
       </span>
@@ -32,16 +42,22 @@
       class="hot-lottery-list__cards [&>div]:grid-cols-1"
       :data="details"
       :initial-status="statusMap"
+      :recent-viewer-map="recentViewerMap"
+      :show-participants="rankBy === 'bili'"
     />
   </section>
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 import { Trophy } from '@element-plus/icons-vue'
 import BiliLotterySimpleList from '@/components/lottery_data/bili_data/BiliLotterySimpleList.vue'
 import { fetchHotLotteries } from '@/api/notify/moment-api'
-import type { InteractionStatusItem, LotteryCard } from '@/api/notify/moment-api'
+import type {
+  HotLotteryRankBy,
+  InteractionStatusItem,
+  LotteryCard,
+} from '@/api/notify/moment-api'
 import {
   fetchInteractionStatusMap,
   lotteryCardInteractionTargets,
@@ -62,6 +78,10 @@ const props = withDefaults(
  * 同形态），直接喂给小卡片组件；不再由首页二次调用 detail 域接口回捞。
  */
 const details = ref<LotteryCard[]>([])
+/** 榜单口径：site=本站近 N 天浏览人数；bili=B站抓取时参与人数 */
+const rankBy = ref<HotLotteryRankBy>('site')
+/** 近 N 天去重浏览人数（key=bizId）：榜单排序依据，透传给卡片展示 */
+const recentViewerMap = ref<Record<string, number>>({})
 /** 全榜互动态：一次批量拉取后注入卡片列表，不再由每张卡片各自请求（避免一串「单个查询」） */
 const statusMap = ref<Record<string, InteractionStatusItem> | null>(null)
 const loading = ref(true)
@@ -69,16 +89,25 @@ const loading = ref(true)
 async function load() {
   loading.value = true
   try {
-    const resp = await fetchHotLotteries({ windowDays: props.windowDays, limit: props.limit })
+    const resp = await fetchHotLotteries({
+      windowDays: props.windowDays,
+      limit: props.limit,
+      rankBy: rankBy.value
+    })
+    const items = resp?.items ?? []
     // 卡片缺失的项后端已剔除，这里再兜一层（弱依赖降级时不会渲染空壳卡片）
-    details.value = (resp?.items ?? [])
+    details.value = items
       .map((item) => item.card)
       .filter((card): card is LotteryCard => Boolean(card))
+    recentViewerMap.value = Object.fromEntries(
+      items.map((item) => [String(item.bizId), Number(item.recentViewCount ?? 0)])
+    )
     // 一次批量拉全榜互动态（按 bizType 分组 + 后端 50 上限分片），注入给卡片列表
     statusMap.value = await fetchInteractionStatusMap(lotteryCardInteractionTargets(details.value))
   } catch {
     // 静默：热门榜是旁路信息，失败不影响主页其他模块
     details.value = []
+    recentViewerMap.value = {}
     statusMap.value = {}
   } finally {
     loading.value = false
@@ -86,6 +115,11 @@ async function load() {
 }
 
 onMounted(() => {
+  void load()
+})
+
+// 切换本站 / B站口径后重新拉榜（v-model 更新完成后再请求）
+watch(rankBy, () => {
   void load()
 })
 </script>

@@ -158,9 +158,11 @@ function handleStatusChange(payload: { bizId: string; status: Partial<Interactio
           :status="status ?? undefined"
           @update-status="handleStatusChange"
         />
-        <!-- 收藏 / 点赞（2.17.0：抽奖卡片走 be-message 通用互动） -->
+        <!-- 收藏 / 点赞（2.17.0：抽奖卡片走 be-message 通用互动）。
+             浏览上报已由上方 loadInteractionStatus 的单资源请求触发，
+             这里不再 count-view，避免一次详情访问投递两条浏览消息。 -->
         <div v-if="lotteryId" class="lottery-card-detail__interaction mt-3 flex justify-start">
-          <ResourceInteractionBar :biz-type="InteractionBizTypeEnum.LOTTERY" :biz-id="lotteryId" count-view />
+          <ResourceInteractionBar :biz-type="InteractionBizTypeEnum.LOTTERY" :biz-id="lotteryId" />
         </div>
       </div>
       <!-- 详情拉取中 -->

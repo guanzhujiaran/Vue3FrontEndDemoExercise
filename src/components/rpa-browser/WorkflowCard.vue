@@ -14,6 +14,11 @@ export type WorkflowMoreCommand = 'edit' | 'duplicate' | 'share' | 'publish' | '
 
 interface Props {
   item: WorkflowItem
+  /**
+   * manage（默认）：资源所有者视角，保留开关 / 运行 / 编辑等操作；
+   * community：社区广场只读展示，隐藏作者侧操作，操作区由 #actions 插槽注入。
+   */
+  variant?: 'manage' | 'community'
   /** 浏览器ID -> 名称映射（展示目标浏览器用；未命中回落「浏览器 {id}」） */
   browserNameMap?: Map<number, string>
   /** 当前进行中的运行进度快照（终态帧保留，卡片可继续显示最终耗时） */
@@ -33,6 +38,7 @@ interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), {
+  variant: 'manage',
   browserNameMap: () => new Map<number, string>(),
   progress: null,
   running: false,
@@ -42,6 +48,9 @@ const props = withDefaults(defineProps<Props>(), {
   syncLoading: false,
   autoSyncLoading: false,
 })
+
+/** 社区只读模式：不展示作者侧操作 */
+const isOwnerView = computed(() => props.variant === 'manage')
 
 interface Emits {
   (e: 'toggle-public', value: boolean): void
@@ -162,7 +171,7 @@ const formatTime = (t: string | null) => {
            已是最新=置灰不可点，悬停有说明）+ 可见性 / 启用开关。
            两个开关从底部操作栏上移到此处：底部只留运行/记录/编辑等主操作，
            避免窄卡片下按钮溢出；开关属于状态表达，放状态区语义也更一致 -->
-      <div class="workflow-card__status-icons flex items-center gap-2 shrink-0">
+      <div v-if="isOwnerView" class="workflow-card__status-icons flex items-center gap-2 shrink-0">
         <el-tooltip v-if="item.forked_from_id" :content="syncIconTip(item)" placement="top">
           <el-button
             v-if="item.has_upstream_update"
@@ -207,6 +216,7 @@ const formatTime = (t: string | null) => {
           上次运行：{{ lastRunText(item) }}
         </el-tag>
         <el-tag
+          v-if="isOwnerView"
           class="workflow-card__browser cursor-pointer"
           :type="item.browser_id === null ? 'danger' : 'info'"
           effect="plain"
@@ -265,49 +275,58 @@ const formatTime = (t: string | null) => {
     <!-- 操作栏：只放主操作（运行/停止、运行记录、编辑）+ 复制图标 + 更多下拉；
          可见性 / 启用开关已上移至卡片右上角状态区，同步入口也在右上角，
          底部不再混放开关，窄卡片下按钮不溢出（flex-wrap 兜底换行，
-         [&_.el-button]:ml-0 中和 EP 给相邻按钮加的 12px 左边距） -->
+         [&_.el-button]:ml-0 中和 EP 给相邻按钮加的 12px 左边距）；
+         社区只读模式只渲染 #actions 插槽（Fork / 举报） -->
     <div
+      v-if="isOwnerView || $slots.actions"
       class="workflow-card__actions flex items-center flex-wrap gap-2 pt-3 border-t border-border-lighter [&_.el-button]:ml-0">
-      <el-button v-if="running" size="small" type="danger" :icon="VideoPause"
-        :loading="stopping" @click="emit('stop-run')">停止</el-button>
-      <template v-else>
-        <el-button size="small" type="primary" :loading="runLoading" :icon="VideoPlay"
-          @click="emit('run')">立即运行</el-button>
-        <el-tooltip
-          v-if="item.last_run_status === 'interrupted'"
-          content="从上次中断的检查点继续执行：当前步骤会重跑，循环内已处理的资源自动跳过"
-          placement="top"
-        >
-          <el-button size="small" type="warning" plain :icon="RefreshRight"
-            :loading="resuming" @click="emit('resume-run')">继续运行</el-button>
-        </el-tooltip>
-      </template>
-      <el-button size="small" :icon="Clock" @click="emit('open-run-log')">运行记录</el-button>
-      <el-button size="small" :icon="List" @click="emit('open-resource-records')">已处理数据</el-button>
-
-      <!-- 上游自动同步开关（仅 Fork 副本） -->
-      <el-tooltip v-if="item.forked_from_id"
-        :content="item.auto_sync_upstream ? '自动同步：开' : '自动同步：关'" placement="top">
-        <el-switch class="workflow-card__auto-sync" v-model="autoSyncSwitch"
-          :loading="autoSyncLoading" />
-      </el-tooltip>
-
-      <!-- 更多下拉：编辑/复制等次级操作统一收纳，减少卡片按钮数量 -->
-      <el-dropdown class="workflow-card__more ml-auto" trigger="click"
-        @command="(cmd: string) => emit('more-command', cmd as WorkflowMoreCommand)">
-        <el-button link class="workflow-card__more-trigger p-0 h-auto text-text-primary">
-          <component :is="IconMore" class="w-4 h-4" />
-        </el-button>
-        <template #dropdown>
-          <el-dropdown-menu>
-            <el-dropdown-item command="edit">编辑</el-dropdown-item>
-            <el-dropdown-item command="duplicate">复制工作流</el-dropdown-item>
-            <el-dropdown-item command="share">分享</el-dropdown-item>
-            <el-dropdown-item v-if="!item.is_public" command="publish" divided>申请公开</el-dropdown-item>
-            <el-dropdown-item command="delete" divided>删除</el-dropdown-item>
-          </el-dropdown-menu>
+      <template v-if="isOwnerView">
+        <el-button v-if="running" size="small" type="danger" :icon="VideoPause"
+          :loading="stopping" @click="emit('stop-run')">停止</el-button>
+        <template v-else>
+          <el-button size="small" type="primary" :loading="runLoading" :icon="VideoPlay"
+            @click="emit('run')">立即运行</el-button>
+          <el-tooltip
+            v-if="item.last_run_status === 'interrupted'"
+            content="从上次中断的检查点继续执行：当前步骤会重跑，循环内已处理的资源自动跳过"
+            placement="top"
+          >
+            <el-button size="small" type="warning" plain :icon="RefreshRight"
+              :loading="resuming" @click="emit('resume-run')">继续运行</el-button>
+          </el-tooltip>
         </template>
-      </el-dropdown>
+        <el-button size="small" :icon="Clock" @click="emit('open-run-log')">运行记录</el-button>
+        <el-button size="small" :icon="List" @click="emit('open-resource-records')">已处理数据</el-button>
+
+        <!-- 上游自动同步开关（仅 Fork 副本） -->
+        <el-tooltip v-if="item.forked_from_id"
+          :content="item.auto_sync_upstream ? '自动同步：开' : '自动同步：关'" placement="top">
+          <el-switch class="workflow-card__auto-sync" v-model="autoSyncSwitch"
+            :loading="autoSyncLoading" />
+        </el-tooltip>
+
+        <!-- 更多下拉：编辑/复制等次级操作统一收纳，减少卡片按钮数量 -->
+        <el-dropdown class="workflow-card__more ml-auto" trigger="click"
+          @command="(cmd: string) => emit('more-command', cmd as WorkflowMoreCommand)">
+          <el-button link class="workflow-card__more-trigger p-0 h-auto text-text-primary">
+            <component :is="IconMore" class="w-4 h-4" />
+          </el-button>
+          <template #dropdown>
+            <el-dropdown-menu>
+              <el-dropdown-item command="edit">编辑</el-dropdown-item>
+              <el-dropdown-item command="duplicate">复制工作流</el-dropdown-item>
+              <el-dropdown-item command="share">分享</el-dropdown-item>
+              <el-dropdown-item v-if="!item.is_public" command="publish" divided>申请公开</el-dropdown-item>
+              <el-dropdown-item command="delete" divided>删除</el-dropdown-item>
+            </el-dropdown-menu>
+          </template>
+        </el-dropdown>
+      </template>
+
+      <!-- 社区模式：Fork / 举报等操作由使用方注入 -->
+      <div v-if="$slots.actions" class="workflow-card__community-actions flex items-center gap-2 ml-auto">
+        <slot name="actions" />
+      </div>
     </div>
   </div>
 </template>

@@ -29,6 +29,18 @@
             {{ item.participated ? '已参加' : '未参加' }}
           </span>
           <span
+            v-if="recentViewersOf(item) > 0"
+            class="inline-flex items-center bg-primary-light-9 px-2 py-0.5 border border-primary-light-7 rounded-full font-medium text-primary text-xs"
+          >
+            {{ recentViewersOf(item) }} 人浏览
+          </span>
+          <span
+            v-if="showParticipants && participantsOf(item) !== null"
+            class="inline-flex items-center bg-warning-light-9 px-2 py-0.5 border border-warning-light-7 rounded-full font-medium text-warning text-xs"
+          >
+            {{ participantsOf(item) }} 人参与
+          </span>
+          <span
             v-if="item.normalized.extraInfo?.is_grand_prize"
             class="ml-auto inline-flex items-center bg-amber-50 px-2 py-0.5 border border-amber-400 rounded-full font-medium text-amber-700 text-xs"
           >
@@ -87,7 +99,7 @@
             underline="never"
             icon="link"
             class="text-xs!"
-            @click="handleLinkClick(item.normalized)"
+            @click="handleLinkClick(item.normalized, true)"
           >
             查看源动态
           </el-link>
@@ -101,7 +113,7 @@
             underline="never"
             icon="link"
             class="text-xs!"
-            @click="handleLinkClick(item.normalized)"
+            @click="handleLinkClick(item.normalized, true)"
           >
             抽奖详情
           </el-link>
@@ -189,6 +201,7 @@ import { interactionBizTypeOf } from '@/stores/lottery_detail.ts'
 import {
   fetchInteractionStatusMap,
   interactionStatusKey,
+  reportInteractionView,
 } from '@/utils/lotteryInteractionStatus'
 
 interface SimpleListItem {
@@ -207,8 +220,12 @@ const props = withDefaults(
      * 本组件不再发请求——首页轮播是「每页一个实例」，各自请求会退化成一串「单个查询」。
      */
     initialStatus?: Record<string, InteractionStatusItem> | null
+    /** 近 N 天去重浏览人数（key=bizId）；仅热门榜传入，其它列表不展示 */
+    recentViewerMap?: Record<string, number> | null
+    /** 是否展示抓取时参与人数（热门榜 B站口径） */
+    showParticipants?: boolean
   }>(),
-  { data: () => [] }
+  { data: () => [], recentViewerMap: null, showParticipants: false }
 )
 
 const parsedData = computed<SimpleListItem[]>(() =>
@@ -273,7 +290,16 @@ const openDetail = (item: SimpleListItem) => {
   detailVisible.value = true
 }
 
-const handleLinkClick = (normalized: SimpleListItem['normalized']) => {
+const handleLinkClick = (
+  normalized: SimpleListItem['normalized'],
+  countView = false
+) => {
+  if (countView) {
+    reportInteractionView(
+      interactionBizTypeOf(normalized.type),
+      String(normalized.id ?? '')
+    )
+  }
   handleLotteryLinkClick(String(normalized.id))
 }
 
@@ -295,6 +321,19 @@ const statusManagedByParent = computed(() => props.initialStatus !== undefined)
 const itemBizType = (item: SimpleListItem) => interactionBizTypeOf(item.normalized.type)
 const itemBizId = (item: SimpleListItem) => String(item.normalized.id ?? '')
 const statusKey = interactionStatusKey
+
+/** 近 N 天去重浏览人数：仅热门榜透传 map，其它列表返回 0 不渲染 */
+const recentViewersOf = (item: SimpleListItem): number => {
+  const id = itemBizId(item)
+  const count = id ? props.recentViewerMap?.[id] : undefined
+  return typeof count === 'number' ? count : 0
+}
+
+/** 抓取时参与人数（B站口径）；无数据返回 null 不渲染 */
+const participantsOf = (item: SimpleListItem): number | null => {
+  const count = item.normalized.participants
+  return typeof count === 'number' ? count : null
+}
 
 /** 父级一次批量拉取的结果注入（轮播多页共用同一份，各实例不再各自请求） */
 watch(
