@@ -9,6 +9,7 @@
  * - `vite.plugins` 承接原 vite.config.ts 里的构建插件（Tailwind v4 / svg / hey-api SDK 生成）。
  */
 import path from 'node:path'
+import { existsSync, readFileSync } from 'node:fs'
 import { config as loadEnv } from 'dotenv'
 import tailwindcss from '@tailwindcss/vite'
 import svgLoader from 'vite-svg-loader'
@@ -20,6 +21,7 @@ import {
   DEFAULT_DESCRIPTION,
   DEFAULT_KEYWORDS,
   DEFAULT_LOCALE,
+  OG_IMAGE,
   SEO_INDEXABLE_ROUTES,
   SITE_NAME,
   SITE_URL
@@ -88,6 +90,15 @@ const hey_api_parser: UserParser = {
 }
 
 const pathSrc = path.resolve(__dirname, 'src')
+
+/**
+ * 分享图（`public/og-image.png`，1200×630）的 alt 文案。
+ * 直接复用 seo-utils 的约定文件 `og-image.alt.txt`，避免同一段文案在配置文件里再抄一份。
+ */
+const OG_IMAGE_ALT_PATH = path.resolve(__dirname, 'public/og-image.alt.txt')
+const OG_IMAGE_ALT = existsSync(OG_IMAGE_ALT_PATH)
+  ? readFileSync(OG_IMAGE_ALT_PATH, 'utf8').trim()
+  : SITE_NAME
 
 /**
  * hey-api 的 vite 插件在 `configResolved` 阶段实时拉取后端 `openapi.json` 生成 SDK，
@@ -222,7 +233,14 @@ export default defineNuxtConfig({
   /** seo-utils：站点级 head 兜底 + canonical 的 query 白名单（跟踪参数由模块剔除） */
   seo: {
     canonicalQueryWhitelist: CANONICAL_QUERY_WHITELIST,
-    meta: { keywords: DEFAULT_KEYWORDS.join(',') }
+    meta: { keywords: DEFAULT_KEYWORDS.join(',') },
+    /**
+     * 关闭 twitter:card 的自动推断。
+     * unhead v3 已把 `twitter:*` 标记为弃用（`[unhead] twitter:card is deprecated. Use Open Graph
+     * metadata instead.`）：X / Slack 等抓取方都直接读 OG 标签，多输出一份 twitter 标签纯属冗余。
+     * 关掉后 `inferSeoMetaPlugin` 只保留 og:title / og:description 的推断。
+     */
+    automaticTwitterTags: false
   },
 
   /**
@@ -368,6 +386,18 @@ export default defineNuxtConfig({
         { name: 'application-name', content: 'BiliExplosion（非官方第三方数据工具）' },
         { name: 'theme-color', content: '#00AEEC', media: '(prefers-color-scheme: light)' },
         { name: 'theme-color', content: '#0F172A', media: '(prefers-color-scheme: dark)' },
+        /**
+         * 分享图显式声明（`public/og-image.png`）。
+         * 这里必须自己写全：seo-utils 发现 head 里已有 `og:image` 就不再推断，
+         * 从而不会再顺带补一份 `twitter:image`（unhead v3 已弃用 twitter:*）。
+         * 用 `OG_IMAGE` 的绝对地址而不是相对路径：absoluteImageUrls 插件只跑在服务端，
+         * 相对值在客户端导航时会被 unhead 判为「og:image 不是绝对 URL」。
+         */
+        { property: 'og:image', content: OG_IMAGE },
+        { property: 'og:image:type', content: 'image/png' },
+        { property: 'og:image:width', content: '1200' },
+        { property: 'og:image:height', content: '630' },
+        { property: 'og:image:alt', content: OG_IMAGE_ALT },
         { name: 'google-adsense-account', content: 'ca-pub-5783205065512010' },
         { name: 'msvalidate.01', content: '92B4FA6867933856FF110F303BAA953F' }
       ],

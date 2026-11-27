@@ -3,7 +3,7 @@
 import type { RequestResult } from '../client';
 import { client } from '../client.gen';
 import type { Options } from '../sdk.gen';
-import type { CountFingerprintRouterApiV1RpaBrowserCountFingerprintPostData, CountFingerprintRouterApiV1RpaBrowserCountFingerprintPostErrors, CountFingerprintRouterApiV1RpaBrowserCountFingerprintPostResponses, DeleteFingerprintRouterApiV1RpaBrowserDeleteFingerprintPostData, DeleteFingerprintRouterApiV1RpaBrowserDeleteFingerprintPostErrors, DeleteFingerprintRouterApiV1RpaBrowserDeleteFingerprintPostResponses, GenRandFingerprintRouterApiV1RpaBrowserGenRandFingerprintPostData, GenRandFingerprintRouterApiV1RpaBrowserGenRandFingerprintPostErrors, GenRandFingerprintRouterApiV1RpaBrowserGenRandFingerprintPostResponses, ListFingerprintRouterApiV1RpaBrowserListFingerprintPostData, ListFingerprintRouterApiV1RpaBrowserListFingerprintPostErrors, ListFingerprintRouterApiV1RpaBrowserListFingerprintPostResponses, ReadFingerprintRouterApiV1RpaBrowserReadFingerprintPostData, ReadFingerprintRouterApiV1RpaBrowserReadFingerprintPostErrors, ReadFingerprintRouterApiV1RpaBrowserReadFingerprintPostResponses, RenameFingerprintRouterApiV1RpaBrowserRenameFingerprintPostData, RenameFingerprintRouterApiV1RpaBrowserRenameFingerprintPostErrors, RenameFingerprintRouterApiV1RpaBrowserRenameFingerprintPostResponses, UpsertFingerprintRouterApiV1RpaBrowserUpsertFingerprintPostData, UpsertFingerprintRouterApiV1RpaBrowserUpsertFingerprintPostErrors, UpsertFingerprintRouterApiV1RpaBrowserUpsertFingerprintPostResponses } from '../types.gen';
+import type { CountFingerprintRouterApiV1RpaBrowserCountFingerprintPostData, CountFingerprintRouterApiV1RpaBrowserCountFingerprintPostErrors, CountFingerprintRouterApiV1RpaBrowserCountFingerprintPostResponses, DeleteFingerprintRouterApiV1RpaBrowserDeleteFingerprintPostData, DeleteFingerprintRouterApiV1RpaBrowserDeleteFingerprintPostErrors, DeleteFingerprintRouterApiV1RpaBrowserDeleteFingerprintPostResponses, GenRandFingerprintRouterApiV1RpaBrowserGenRandFingerprintPostData, GenRandFingerprintRouterApiV1RpaBrowserGenRandFingerprintPostErrors, GenRandFingerprintRouterApiV1RpaBrowserGenRandFingerprintPostResponses, ListExecVersionsRouterApiV1RpaBrowserListExecVersionsPostData, ListExecVersionsRouterApiV1RpaBrowserListExecVersionsPostResponses, ListFingerprintRouterApiV1RpaBrowserListFingerprintPostData, ListFingerprintRouterApiV1RpaBrowserListFingerprintPostErrors, ListFingerprintRouterApiV1RpaBrowserListFingerprintPostResponses, ReadFingerprintRouterApiV1RpaBrowserReadFingerprintPostData, ReadFingerprintRouterApiV1RpaBrowserReadFingerprintPostErrors, ReadFingerprintRouterApiV1RpaBrowserReadFingerprintPostResponses, RenameFingerprintRouterApiV1RpaBrowserRenameFingerprintPostData, RenameFingerprintRouterApiV1RpaBrowserRenameFingerprintPostErrors, RenameFingerprintRouterApiV1RpaBrowserRenameFingerprintPostResponses, UpsertFingerprintRouterApiV1RpaBrowserUpsertFingerprintPostData, UpsertFingerprintRouterApiV1RpaBrowserUpsertFingerprintPostErrors, UpsertFingerprintRouterApiV1RpaBrowserUpsertFingerprintPostResponses } from '../types.gen';
 
 export class 浏览器指纹管理Service {
     /**
@@ -33,6 +33,25 @@ export class 浏览器指纹管理Service {
                 'Content-Type': 'application/json',
                 ...options?.headers
             }
+        });
+    }
+    
+    /**
+     * 可选浏览器真实版本清单
+     *
+     * 读取服务端可用的浏览器真实版本清单（数据源：``browser_exec_info.json``）
+     *
+     * 前端「真实版本」下拉的唯一数据来源。清单里的 ``full_version`` 与磁盘上的
+     * chromium 二进制一一对应；不在清单内的版本无法生成指纹（后端会拒绝落库）。
+     *
+     * Returns:
+     * list[BrowserExecVersionInfo]: 每个可选版本及其 UA / AppImage / 是否已安装
+     */
+    public static listExecVersionsRouterApiV1RpaBrowserListExecVersionsPost<ThrowOnError extends boolean = false>(options?: Options<ListExecVersionsRouterApiV1RpaBrowserListExecVersionsPostData, ThrowOnError>): RequestResult<ListExecVersionsRouterApiV1RpaBrowserListExecVersionsPostResponses, unknown, ThrowOnError, 'data'> {
+        return (options?.client ?? client).post<ListExecVersionsRouterApiV1RpaBrowserListExecVersionsPostResponses, unknown, ThrowOnError, 'data'>({
+            responseStyle: 'data',
+            url: '/api/v1/rpa/browser/list_exec_versions',
+            ...options
         });
     }
     

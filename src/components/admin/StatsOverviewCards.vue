@@ -5,7 +5,7 @@
   <section class="stats-overview-cards flex flex-col gap-4">
     <div class="stats-overview-cards__header flex items-center justify-between gap-3">
       <el-text class="stats-overview-cards__title m-0 text-base font-semibold text-text-primary" tag="h2">数据概览</el-text>
-      <el-link class="stats-overview-cards__refresh" type="primary" :underline="false" @click="loadStats">
+      <el-link class="stats-overview-cards__refresh" type="primary" underline="never" @click="loadStats">
         <el-icon class="mr-1"><Refresh /></el-icon>刷新
       </el-link>
     </div>

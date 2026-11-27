@@ -39,7 +39,7 @@
             type="danger"
             size="large"
             class="membership-view__buy-btn"
-            :underline="false"
+            underline="never"
             :href="casdoorShopUrl || undefined"
             :disabled="!casdoorShopUrl"
             :rel="LINK_REL"

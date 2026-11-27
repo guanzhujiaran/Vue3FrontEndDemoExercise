@@ -476,7 +476,7 @@ watch(
           v-if="!subLoading"
           class="lottery-comment-item__sub-retry text-sm"
           type="primary"
-          :underline="false"
+          underline="never"
           @click="loadSubRepliesPage(subCurrentPage)"
         >
           加载失败，点击重试

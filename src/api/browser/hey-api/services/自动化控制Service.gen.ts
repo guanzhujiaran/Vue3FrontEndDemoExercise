@@ -3,7 +3,7 @@
 import type { RequestResult } from '../client';
 import { client } from '../client.gen';
 import type { Options } from '../sdk.gen';
-import type { ClearLoginStateApiV1RpaBrowserControlOperationClearLoginStatePostData, ClearLoginStateApiV1RpaBrowserControlOperationClearLoginStatePostErrors, ClearLoginStateApiV1RpaBrowserControlOperationClearLoginStatePostResponses, ClosePageApiV1RpaBrowserControlOperationClosePagePostData, ClosePageApiV1RpaBrowserControlOperationClosePagePostErrors, ClosePageApiV1RpaBrowserControlOperationClosePagePostResponses, GetBrowserInfoApiV1RpaBrowserControlBrowserInfoPostData, GetBrowserInfoApiV1RpaBrowserControlBrowserInfoPostErrors, GetBrowserInfoApiV1RpaBrowserControlBrowserInfoPostResponses, GetPageInfoApiV1RpaBrowserControlOperationGetPageInfoPostData, GetPageInfoApiV1RpaBrowserControlOperationGetPageInfoPostErrors, GetPageInfoApiV1RpaBrowserControlOperationGetPageInfoPostResponses, OpenPageApiV1RpaBrowserControlOperationOpenPagePostData, OpenPageApiV1RpaBrowserControlOperationOpenPagePostErrors, OpenPageApiV1RpaBrowserControlOperationOpenPagePostResponses, SwitchPageApiV1RpaBrowserControlOperationSwitchPagePostData, SwitchPageApiV1RpaBrowserControlOperationSwitchPagePostErrors, SwitchPageApiV1RpaBrowserControlOperationSwitchPagePostResponses } from '../types.gen';
+import type { ClearLoginStateApiV1RpaBrowserControlOperationClearLoginStatePostData, ClearLoginStateApiV1RpaBrowserControlOperationClearLoginStatePostErrors, ClearLoginStateApiV1RpaBrowserControlOperationClearLoginStatePostResponses, ClearLoginStateBatchApiV1RpaBrowserControlOperationClearLoginStateBatchPostData, ClearLoginStateBatchApiV1RpaBrowserControlOperationClearLoginStateBatchPostErrors, ClearLoginStateBatchApiV1RpaBrowserControlOperationClearLoginStateBatchPostResponses, ClosePageApiV1RpaBrowserControlOperationClosePagePostData, ClosePageApiV1RpaBrowserControlOperationClosePagePostErrors, ClosePageApiV1RpaBrowserControlOperationClosePagePostResponses, ExportCookiesApiV1RpaBrowserControlOperationExportCookiesPostData, ExportCookiesApiV1RpaBrowserControlOperationExportCookiesPostErrors, ExportCookiesApiV1RpaBrowserControlOperationExportCookiesPostResponses, ExportCookiesBatchApiV1RpaBrowserControlOperationExportCookiesBatchPostData, ExportCookiesBatchApiV1RpaBrowserControlOperationExportCookiesBatchPostErrors, ExportCookiesBatchApiV1RpaBrowserControlOperationExportCookiesBatchPostResponses, GetBrowserInfoApiV1RpaBrowserControlBrowserInfoPostData, GetBrowserInfoApiV1RpaBrowserControlBrowserInfoPostErrors, GetBrowserInfoApiV1RpaBrowserControlBrowserInfoPostResponses, GetOperationTaskStatusApiV1RpaBrowserControlOperationTasksStatusPostData, GetOperationTaskStatusApiV1RpaBrowserControlOperationTasksStatusPostErrors, GetOperationTaskStatusApiV1RpaBrowserControlOperationTasksStatusPostResponses, GetPageInfoApiV1RpaBrowserControlOperationGetPageInfoPostData, GetPageInfoApiV1RpaBrowserControlOperationGetPageInfoPostErrors, GetPageInfoApiV1RpaBrowserControlOperationGetPageInfoPostResponses, ImportCookiesApiV1RpaBrowserControlOperationImportCookiesPostData, ImportCookiesApiV1RpaBrowserControlOperationImportCookiesPostErrors, ImportCookiesApiV1RpaBrowserControlOperationImportCookiesPostResponses, ImportCookiesBatchApiV1RpaBrowserControlOperationImportCookiesBatchPostData, ImportCookiesBatchApiV1RpaBrowserControlOperationImportCookiesBatchPostErrors, ImportCookiesBatchApiV1RpaBrowserControlOperationImportCookiesBatchPostResponses, OpenPageApiV1RpaBrowserControlOperationOpenPagePostData, OpenPageApiV1RpaBrowserControlOperationOpenPagePostErrors, OpenPageApiV1RpaBrowserControlOperationOpenPagePostResponses, SubmitClearLoginStateTaskApiV1RpaBrowserControlOperationTasksClearLoginStatePostData, SubmitClearLoginStateTaskApiV1RpaBrowserControlOperationTasksClearLoginStatePostErrors, SubmitClearLoginStateTaskApiV1RpaBrowserControlOperationTasksClearLoginStatePostResponses, SubmitImportCookiesTaskApiV1RpaBrowserControlOperationTasksImportCookiesPostData, SubmitImportCookiesTaskApiV1RpaBrowserControlOperationTasksImportCookiesPostErrors, SubmitImportCookiesTaskApiV1RpaBrowserControlOperationTasksImportCookiesPostResponses, SwitchPageApiV1RpaBrowserControlOperationSwitchPagePostData, SwitchPageApiV1RpaBrowserControlOperationSwitchPagePostErrors, SwitchPageApiV1RpaBrowserControlOperationSwitchPagePostResponses } from '../types.gen';
 
 export class 自动化控制Service {
     /**
@@ -77,23 +77,224 @@ export class 自动化控制Service {
     /**
      * 清空登录态（换号）
      *
-     * 清空该浏览器的登录态，用于「换号」——**不关闭、不重建浏览器**。
+     * 清空该浏览器的登录态，用于「换号」或「多站点隔离」——**不关闭、不重建浏览器**。
      *
-     * 只做两件事：
-     * 1. 清 cookie（全部站点，含 HttpOnly）+ 权限授权：登录态的真正载体，B 站的
-     * SESSDATA 就是 HttpOnly cookie，页面 JS 清不掉，只能在这里做；
-     * 2. 清已打开页面的 localStorage / sessionStorage：否则 cookie 没了、
-     * 前端缓存的用户信息还在，页面会继续显示旧账号；再按需刷新页面让站点回到未登录态。
+     * - 不传 `domains` = 清空全部站点（换号）；传了则只清「访问这些站点会携带的
+     * cookie」（含子域与父域）以及 origin 匹配页面的 localStorage / sessionStorage；
+     * - 清 cookie（含 HttpOnly）+ 权限授权：B 站的 SESSDATA 就是 HttpOnly cookie，
+     * 页面 JS 清不掉，只能在这里做；
+     * - ⚠️ 权限授权没有按站点清理的能力（Playwright 只有整体 `clear_permissions`），
+     * 指定站点时仍会整体重置，响应 message 会明确说明；
+     * - ⚠️ 明确不做：HTTP 磁盘缓存 / Service Worker / IndexedDB / 扩展数据 / 浏览历史。
+     * 因此按站点清空**不等于「彻底退出该站点」**：站点若把凭证存在 IndexedDB / SW，
+     * 清完仍可能是登录态，那类只能走「删除浏览器重建」。
      *
-     * ⚠️ 明确不做：HTTP 磁盘缓存 / Service Worker / IndexedDB / 扩展数据 / 浏览历史。
-     * 正因为不动这些，才不需要删 profile 重建浏览器 —— 会话 ID 不变、不断 WebRTC 流、
-     * 不重排启动队列。反过来，若站点把凭证存在 IndexedDB / SW 里（不靠 cookie），
-     * 本接口对它无效，那类只能走「删除浏览器重建」。
+     * 工作流执行中的浏览器会被拒绝（清登录态会打断其登录流程）；浏览器已关闭
+     * （僵尸会话）时会被自动清理并按 `1007` 处理。
      */
     public static clearLoginStateApiV1RpaBrowserControlOperationClearLoginStatePost<ThrowOnError extends boolean = false>(options: Options<ClearLoginStateApiV1RpaBrowserControlOperationClearLoginStatePostData, ThrowOnError>): RequestResult<ClearLoginStateApiV1RpaBrowserControlOperationClearLoginStatePostResponses, ClearLoginStateApiV1RpaBrowserControlOperationClearLoginStatePostErrors, ThrowOnError, 'data'> {
         return (options.client ?? client).post<ClearLoginStateApiV1RpaBrowserControlOperationClearLoginStatePostResponses, ClearLoginStateApiV1RpaBrowserControlOperationClearLoginStatePostErrors, ThrowOnError, 'data'>({
             responseStyle: 'data',
             url: '/api/v1/rpa/browser/control/operation/clear_login_state',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    /**
+     * 导出 cookie（按站点 / 全部）
+     *
+     * 把当前浏览器 profile 里的 cookie 原样导出（**只读**）。
+     *
+     * - 不传 `domains` = 导出全部；传了则按「访问该站点时实际会携带的 cookie」过滤
+     * （含子域与父域，例如 `bilibili.com` 会带出 `.bilibili.com` 与 `api.bilibili.com`）。
+     * - cookie 只能从运行中的 context 读取：未启动默认返回 `1007`；
+     * 置 `launch_if_not_running=true` 会先启动浏览器再导出（占启动队列与时长配额）。
+     * - 只读操作，工作流运行中同样可导出，不做执行期互斥。
+     * - 出口是明文凭证（含 HttpOnly）：服务端只审计条数与域名，**不记录 cookie 值**。
+     * - 数据源只能是 profile：站点会随请求轮换 cookie，导出结果仅供排查 / 人工迁移，
+     * 不得做成「启动时注入」—— 那会让旧快照覆盖浏览器刷新后的新值。
+     */
+    public static exportCookiesApiV1RpaBrowserControlOperationExportCookiesPost<ThrowOnError extends boolean = false>(options: Options<ExportCookiesApiV1RpaBrowserControlOperationExportCookiesPostData, ThrowOnError>): RequestResult<ExportCookiesApiV1RpaBrowserControlOperationExportCookiesPostResponses, ExportCookiesApiV1RpaBrowserControlOperationExportCookiesPostErrors, ThrowOnError, 'data'> {
+        return (options.client ?? client).post<ExportCookiesApiV1RpaBrowserControlOperationExportCookiesPostResponses, ExportCookiesApiV1RpaBrowserControlOperationExportCookiesPostErrors, ThrowOnError, 'data'>({
+            responseStyle: 'data',
+            url: '/api/v1/rpa/browser/control/operation/export_cookies',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    /**
+     * 导入 cookie（单个浏览器）
+     *
+     * 把 cookie 写入当前浏览器（**一次性**，写后服务端不再持有副本）。
+     *
+     * - 浏览器必须处于运行状态：cookie 只能通过运行中的 context 写入，
+     * 未启动返回 `1007`；确需本次启动可置 `launch_if_not_running=true`。
+     * - 写入是 **upsert**：同 domain/path/name 覆盖旧值，未提及的旧 cookie 保留，
+     * 要彻底换号请先调 `clear_login_state` 再导入。
+     * - 工作流执行期拒绝（注入会打乱其登录态）。
+     * - 写入后刷新与落盘全部交给浏览器，服务端不缓存、不落库、不做启动期注入。
+     */
+    public static importCookiesApiV1RpaBrowserControlOperationImportCookiesPost<ThrowOnError extends boolean = false>(options: Options<ImportCookiesApiV1RpaBrowserControlOperationImportCookiesPostData, ThrowOnError>): RequestResult<ImportCookiesApiV1RpaBrowserControlOperationImportCookiesPostResponses, ImportCookiesApiV1RpaBrowserControlOperationImportCookiesPostErrors, ThrowOnError, 'data'> {
+        return (options.client ?? client).post<ImportCookiesApiV1RpaBrowserControlOperationImportCookiesPostResponses, ImportCookiesApiV1RpaBrowserControlOperationImportCookiesPostErrors, ThrowOnError, 'data'>({
+            responseStyle: 'data',
+            url: '/api/v1/rpa/browser/control/operation/import_cookies',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    /**
+     * 批量导入 cookie
+     *
+     * 给多个浏览器按顺序批量写入 cookie（逐项隔离，单项失败不影响其它项）。
+     *
+     * 配对规则：`cookie_groups[i]` 写入 `browser_ids[i]`，**按索引顺序**。
+     *
+     * - 每项都重新校验 `browser_id` 归属，不信任请求体；
+     * - 组数多于浏览器：多出的组整体忽略，响应给出未使用组数与条数（「尽力导入」，不报错）；
+     * - 浏览器多于组数：多出的浏览器状态为 `unassigned`，并在 `unassigned_browser_ids` 中列出；
+     * - 默认只处理**运行中**的浏览器，未启动的项返回 `not_running`；
+     * 置 `launch_if_not_running=true` 会逐项串行启动（受启动队列影响，耗时可能较长）；
+     * - 单次上限 50 个浏览器；工作流执行中的浏览器返回 `workflow_running` 并跳过。
+     */
+    public static importCookiesBatchApiV1RpaBrowserControlOperationImportCookiesBatchPost<ThrowOnError extends boolean = false>(options: Options<ImportCookiesBatchApiV1RpaBrowserControlOperationImportCookiesBatchPostData, ThrowOnError>): RequestResult<ImportCookiesBatchApiV1RpaBrowserControlOperationImportCookiesBatchPostResponses, ImportCookiesBatchApiV1RpaBrowserControlOperationImportCookiesBatchPostErrors, ThrowOnError, 'data'> {
+        return (options.client ?? client).post<ImportCookiesBatchApiV1RpaBrowserControlOperationImportCookiesBatchPostResponses, ImportCookiesBatchApiV1RpaBrowserControlOperationImportCookiesBatchPostErrors, ThrowOnError, 'data'>({
+            responseStyle: 'data',
+            url: '/api/v1/rpa/browser/control/operation/import_cookies/batch',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    /**
+     * 批量导出 cookie（逐项只读）
+     *
+     * 批量导出多个浏览器的 cookie（**只读**，逐项隔离）。
+     *
+     * 契约与单浏览器导出一致（`domains` 语义、`CookieData` 结构），区别只有：
+     *
+     * - **纯只读、不启动浏览器**：cookie 只能从活跃 context 里读，未启动项返回
+     * `not_running`。批量场景不能在一个请求里串行启动 —— N 个未启动浏览器会跑成
+     * 分钟级长请求，撞上网关读超时后前端显示失败、后端仍在继续执行（最难排查的
+     * 不一致）。需要启动时由调用方**逐项**调用 `POST /browser/control/create`，
+     * 单项请求天然隔离超时与失败，前端也能展示进度；
+     * - 逐项校验归属、逐项执行，单项失败不影响其它项；
+     * - `domains` 非法是请求级参数错误：循环前一次性校验并直接报错，
+     * 不退化成「每个浏览器各返回一条 invalid」。
+     *
+     * 出口是明文凭证（含 HttpOnly）：服务端只审计条数与域名，**不记录 cookie 值**。
+     */
+    public static exportCookiesBatchApiV1RpaBrowserControlOperationExportCookiesBatchPost<ThrowOnError extends boolean = false>(options: Options<ExportCookiesBatchApiV1RpaBrowserControlOperationExportCookiesBatchPostData, ThrowOnError>): RequestResult<ExportCookiesBatchApiV1RpaBrowserControlOperationExportCookiesBatchPostResponses, ExportCookiesBatchApiV1RpaBrowserControlOperationExportCookiesBatchPostErrors, ThrowOnError, 'data'> {
+        return (options.client ?? client).post<ExportCookiesBatchApiV1RpaBrowserControlOperationExportCookiesBatchPostResponses, ExportCookiesBatchApiV1RpaBrowserControlOperationExportCookiesBatchPostErrors, ThrowOnError, 'data'>({
+            responseStyle: 'data',
+            url: '/api/v1/rpa/browser/control/operation/export_cookies/batch',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    /**
+     * 批量清空登录态（换号）
+     *
+     * 批量清空多个浏览器的登录态（cookie + 权限 + 页面 web storage）。
+     *
+     * 语义与单浏览器 `clear_login_state` 完全一致（**不关闭、不重建浏览器**），
+     * 区别只有：
+     *
+     * - 只处理**运行中**的浏览器，未启动项返回 `not_running`；
+     * - `domains` 为空 = 清空全部（换号）；指定站点时只清匹配的 cookie 与 origin
+     * 匹配页面的 web storage，权限授权仍整体重置（Playwright 无按站点能力）。
+     * `domains` 非法是请求级错误：循环前一次性校验，整批 400；
+     * - 工作流执行中的项返回 `workflow_running` 并**跳过而不是排队**：清登录态会把
+     * 正在跑的工作流打成「莫名其妙的登录失败」，与单接口的 `reject_workflow_running`
+     * 同口径；
+     * - 逐项校验归属、逐项执行，单项失败不影响其它项。
+     */
+    public static clearLoginStateBatchApiV1RpaBrowserControlOperationClearLoginStateBatchPost<ThrowOnError extends boolean = false>(options: Options<ClearLoginStateBatchApiV1RpaBrowserControlOperationClearLoginStateBatchPostData, ThrowOnError>): RequestResult<ClearLoginStateBatchApiV1RpaBrowserControlOperationClearLoginStateBatchPostResponses, ClearLoginStateBatchApiV1RpaBrowserControlOperationClearLoginStateBatchPostErrors, ThrowOnError, 'data'> {
+        return (options.client ?? client).post<ClearLoginStateBatchApiV1RpaBrowserControlOperationClearLoginStateBatchPostResponses, ClearLoginStateBatchApiV1RpaBrowserControlOperationClearLoginStateBatchPostErrors, ThrowOnError, 'data'>({
+            responseStyle: 'data',
+            url: '/api/v1/rpa/browser/control/operation/clear_login_state/batch',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    /**
+     * 提交批量导入 cookie 任务
+     *
+     * 把批量导入提交为后台任务，立即返回 `task_id`。
+     *
+     * 为什么要任务化：慢站点 / 多页面时刷新与串行启动能跑几十秒，超过 nginx 默认
+     * 60s 读超时 → 前端 504，但 cookie 其实已写入。任务化后长耗时不再占用 HTTP 请求，
+     * 前端轮询 `/operation/tasks/status` 拿进度与逐项结果。
+     *
+     * 归属校验在**提交阶段**同步完成（快）：校验失败的项直接作为 `forbidden` 结果，
+     * 后台只做浏览器操作，不需要再持有 DB 会话。
+     */
+    public static submitImportCookiesTaskApiV1RpaBrowserControlOperationTasksImportCookiesPost<ThrowOnError extends boolean = false>(options: Options<SubmitImportCookiesTaskApiV1RpaBrowserControlOperationTasksImportCookiesPostData, ThrowOnError>): RequestResult<SubmitImportCookiesTaskApiV1RpaBrowserControlOperationTasksImportCookiesPostResponses, SubmitImportCookiesTaskApiV1RpaBrowserControlOperationTasksImportCookiesPostErrors, ThrowOnError, 'data'> {
+        return (options.client ?? client).post<SubmitImportCookiesTaskApiV1RpaBrowserControlOperationTasksImportCookiesPostResponses, SubmitImportCookiesTaskApiV1RpaBrowserControlOperationTasksImportCookiesPostErrors, ThrowOnError, 'data'>({
+            responseStyle: 'data',
+            url: '/api/v1/rpa/browser/control/operation/tasks/import_cookies',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    /**
+     * 提交批量清空登录态任务
+     *
+     * 把批量清空提交为后台任务，立即返回 `task_id`。
+     *
+     * `domains` 非法在提交阶段直接 400（不退化成清空全部）；归属校验同导入，
+     * 失败的项作为 `forbidden` 结果，后台只做浏览器操作。
+     */
+    public static submitClearLoginStateTaskApiV1RpaBrowserControlOperationTasksClearLoginStatePost<ThrowOnError extends boolean = false>(options: Options<SubmitClearLoginStateTaskApiV1RpaBrowserControlOperationTasksClearLoginStatePostData, ThrowOnError>): RequestResult<SubmitClearLoginStateTaskApiV1RpaBrowserControlOperationTasksClearLoginStatePostResponses, SubmitClearLoginStateTaskApiV1RpaBrowserControlOperationTasksClearLoginStatePostErrors, ThrowOnError, 'data'> {
+        return (options.client ?? client).post<SubmitClearLoginStateTaskApiV1RpaBrowserControlOperationTasksClearLoginStatePostResponses, SubmitClearLoginStateTaskApiV1RpaBrowserControlOperationTasksClearLoginStatePostErrors, ThrowOnError, 'data'>({
+            responseStyle: 'data',
+            url: '/api/v1/rpa/browser/control/operation/tasks/clear_login_state',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    /**
+     * 查询操作任务状态
+     *
+     * 前端按 1~2s 轮询；`success` / `failed` 后停止。
+     *
+     * 任务只存在进程内存：服务重启会丢任务（操作本身要么已完成、要么被中断），
+     * 这里返回 `404` 让前端提示「任务不存在或已过期」，不能当成成功。
+     */
+    public static getOperationTaskStatusApiV1RpaBrowserControlOperationTasksStatusPost<ThrowOnError extends boolean = false>(options: Options<GetOperationTaskStatusApiV1RpaBrowserControlOperationTasksStatusPostData, ThrowOnError>): RequestResult<GetOperationTaskStatusApiV1RpaBrowserControlOperationTasksStatusPostResponses, GetOperationTaskStatusApiV1RpaBrowserControlOperationTasksStatusPostErrors, ThrowOnError, 'data'> {
+        return (options.client ?? client).post<GetOperationTaskStatusApiV1RpaBrowserControlOperationTasksStatusPostResponses, GetOperationTaskStatusApiV1RpaBrowserControlOperationTasksStatusPostErrors, ThrowOnError, 'data'>({
+            responseStyle: 'data',
+            url: '/api/v1/rpa/browser/control/operation/tasks/status',
             ...options,
             headers: {
                 'Content-Type': 'application/json',

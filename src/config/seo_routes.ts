@@ -13,7 +13,8 @@ export const SITE_URL = 'https://serena.dynv6.net'
 export const SITE_NAME = '爆破哔哩哔哩弹幕视频网'
 /**
  * 站点分享图（`public/og-image.png`）。
- * `og:image` / `twitter:image` 由 seo-utils 从 public 文件自动生成；
+ * `og:image` 系列（url / 尺寸 / alt）在 `nuxt.config.ts` 的 `app.head` 里显式声明，
+ * 不再让 seo-utils 推断（推断会顺带补已弃用的 `twitter:image`）；
  * 这里只用于补 `og:image:secure_url`（与 `og:image` 同址）。
  */
 export const OG_IMAGE = `${SITE_URL}/og-image.png`

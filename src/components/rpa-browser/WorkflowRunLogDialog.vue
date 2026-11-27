@@ -509,7 +509,7 @@ onBeforeUnmount(closeAllSubscriptions)
               <el-link
                 class="workflow-run-log__execution-link font-mono"
                 type="primary"
-                :underline="false"
+                underline="never"
                 @click="openResourceRecords(row as RunItem)"
               >
                 {{ String(row.execution_id).slice(0, 8) }}

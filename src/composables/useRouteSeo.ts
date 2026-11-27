@@ -4,8 +4,9 @@
  *
  * 全家桶负责（配置见 `nuxt.config.ts`）：
  * - `site` / `seo`：站点名、标题模板 `%s - 站点名`、`<html lang>` / `og:locale`、
- *   canonical 默认规则（query 白名单）、`og:site_name` / OG-Twitter 默认标签，
- *   `public/og-image.png` 自动转成绝对 `og:image` / `twitter:image`；
+ *   canonical 默认规则（query 白名单）、`og:site_name` / OG 默认标签；
+ *   `og:image`（含尺寸 / alt）声明在 `nuxt.config.ts` 的 `app.head`，twitter:* 一律不输出
+ *   （unhead v3 已弃用，见 `seo.automaticTwitterTags`）；
  *   canonical / og:url 另由本文件按路由显式维护一份（模块默认只在 SSR 注入，SPA 导航不更新）；
  * - `robots` / `sitemap`：robots.txt、sitemap.xml、`<meta name="robots">`；
  * - `schemaOrg`：`WebSite` / `WebPage` / `Organization` 默认图，以及 `@graph` / `@context` / `@id`；
@@ -162,7 +163,8 @@ export function useRouteSeo() {
   })
 
   // 标题、描述、关键词、og:type / og:url 用站点级默认值兜底；
-  // og:title / og:description / twitter:card / OG 图等由模块自动推断。
+  // og:title / og:description 由 seo-utils 的 inferSeoMetaPlugin 自动推断，
+  // og:image 系列来自 nuxt.config 的 app.head；twitter:* 已关闭（unhead v3 弃用）。
   useSeoMeta({
     title: () => seo.value.title,
     titleTemplate: () => seo.value.titleTemplate,
@@ -170,8 +172,8 @@ export function useRouteSeo() {
     keywords: () => seo.value.keywords,
     ogType: () => seo.value.ogType,
     ogUrl: () => seo.value.canonical,
-    // seo-utils 会从 public/og-image.png 自动生成 og:image / twitter:image，
-    // 但不会补 secure_url；HTTPS 站点补上可让部分抓取器直接走安全地址。
+    // og:image 本身声明在 nuxt.config 的 app.head，但那里补不了 secure_url；
+    // HTTPS 站点补上可让部分抓取器直接走安全地址。
     ogImageSecureUrl: () => OG_IMAGE,
     // robots meta 由这里统一输出：SSR 写进 HTML，SPA 导航时也会跟着更新。
     // robots.txt 仍由 @nuxtjs/robots 生成（nuxt.config 里 metaTag: false，避免两条 meta）。

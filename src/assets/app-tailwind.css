@@ -589,11 +589,12 @@ elementDark放到theme后面是为了确保暗色状态下直接用elementDark�
     margin-left: var(--spacing-2);
   }
 
-  /* fingerprint cyber theme */
+  /* fingerprint cyber theme
+     高度链由 BiliSideNavLayout 的 BiliScrollbar 接管（view 是 h-full + flex 列）：
+     这里必须保持自然高度 —— 写成 min-height:100vh 会把页面撑到视口以上，
+     再叠 overflow:hidden 就会把超出的卡片直接裁掉（表现为「内容显示不全」且无法滚动）。 */
   .fingerprint-cyber-container {
-    min-height: 100vh;
     position: relative;
-    overflow: hidden;
   }
 
   .fingerprint-cyber-content {
@@ -665,6 +666,19 @@ elementDark放到theme后面是为了确保暗色状态下直接用elementDark�
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: var(--spacing-4);
+  }
+
+  /* 窄屏降级：卡片区与表单内两列网格改单列，避免横向溢出被裁 */
+  @media (max-width: 1024px) {
+    .cyber-cards-container {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .cyber-grid {
+      grid-template-columns: 1fr;
+    }
   }
 
   .cyber-form .el-form-item__label {

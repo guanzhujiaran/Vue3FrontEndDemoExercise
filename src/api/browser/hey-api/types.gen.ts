@@ -1456,7 +1456,7 @@ export type BaseFingerprintBrowserInitParams = {
     /**
      * Chrome, Edge, Opera, Vivaldi (default is Chrome)
      */
-    '--fingerprint-browser'?: BrowserEnum | null;
+    '--fingerprint-brand'?: BrowserEnum | null;
     /**
      * --Fingerprint-Brand-Version
      *
@@ -1470,13 +1470,13 @@ export type BaseFingerprintBrowserInitParams = {
     /**
      * --Fingerprint-Gpu-Vendor
      *
-     * Vendor string (e.g., Intel Inc., NVIDIA Corporation). If not specified, uses fingerprint seed
+     * Vendor string (e.g., Intel Inc., NVIDIA Corporation). 仅 Chrome 143 及以下内核生效（144 起该开关已被移除，实际 GPU 由指纹种子决定）
      */
     '--fingerprint-gpu-vendor'?: string | null;
     /**
      * --Fingerprint-Gpu-Renderer
      *
-     * Renderer string (e.g., Intel Iris OpenGL Engine, NVIDIA GeForce GTX 1060). If not specified, uses fingerprint seed
+     * Renderer string (e.g., Intel Iris OpenGL Engine, NVIDIA GeForce GTX 1060). 仅 Chrome 143 及以下内核生效（144 起该开关已被移除，实际 GPU 由指纹种子决定）
      */
     '--fingerprint-gpu-renderer'?: string | null;
     /**
@@ -1525,6 +1525,12 @@ export type BaseFingerprintBrowserInitParams = {
      * Patchright Viewport Height
      */
     patchright_viewport_height?: number;
+    /**
+     * Fingerprint Real Version
+     *
+     * 真实浏览器版本（来自 browser_exec_info.json，决定实际启动的 chromium 二进制）；模拟版本 fingerprint_brand_version 由它派生
+     */
+    fingerprint_real_version?: string | null;
     /**
      * Patchright Fingerprint Dict
      */
@@ -2085,6 +2091,47 @@ export const BrowserEnum = {
 export type BrowserEnum = typeof BrowserEnum[keyof typeof BrowserEnum];
 
 /**
+ * BrowserExecVersionInfo
+ *
+ * 可选浏览器真实版本（数据源：browser_exec_info.json）
+ *
+ * 前端「真实版本」下拉直接消费该模型；``full_version`` 是唯一可选值，
+ * ``major_version`` 供展示，``is_installed`` 用于提示二进制是否已落盘。
+ */
+export type BrowserExecVersionInfo = {
+    /**
+     * Full Version
+     *
+     * 真实版本（完整版本号，唯一可选值）
+     */
+    full_version: string;
+    /**
+     * Major Version
+     *
+     * 主版本号
+     */
+    major_version: string;
+    /**
+     * Browser Ua
+     *
+     * 与该版本二进制的 User-Agent
+     */
+    browser_ua: string;
+    /**
+     * Exec Name
+     *
+     * AppImage 文件名
+     */
+    exec_name: string;
+    /**
+     * Is Installed
+     *
+     * 二进制是否已落盘
+     */
+    is_installed: boolean;
+};
+
+/**
  * BrowserFingerprintCreateParams
  *
  * 创建浏览器指纹参数
@@ -2098,6 +2145,12 @@ export type BrowserFingerprintCreateParams = {
      * Is Desktop
      */
     is_desktop?: boolean;
+    /**
+     * Fingerprint Real Version
+     *
+     * 指定真实浏览器版本（须在 browser_exec_info 清单内）；不传则随机挑一条
+     */
+    fingerprint_real_version?: string | null;
 };
 
 /**
@@ -2192,7 +2245,7 @@ export type BrowserFingerprintQueryResp = {
     /**
      * Chrome, Edge, Opera, Vivaldi (default is Chrome)
      */
-    '--fingerprint-browser'?: BrowserEnum | null;
+    '--fingerprint-brand'?: BrowserEnum | null;
     /**
      * --Fingerprint-Brand-Version
      *
@@ -2206,13 +2259,13 @@ export type BrowserFingerprintQueryResp = {
     /**
      * --Fingerprint-Gpu-Vendor
      *
-     * Vendor string (e.g., Intel Inc., NVIDIA Corporation). If not specified, uses fingerprint seed
+     * Vendor string (e.g., Intel Inc., NVIDIA Corporation). 仅 Chrome 143 及以下内核生效（144 起该开关已被移除，实际 GPU 由指纹种子决定）
      */
     '--fingerprint-gpu-vendor'?: string | null;
     /**
      * --Fingerprint-Gpu-Renderer
      *
-     * Renderer string (e.g., Intel Iris OpenGL Engine, NVIDIA GeForce GTX 1060). If not specified, uses fingerprint seed
+     * Renderer string (e.g., Intel Iris OpenGL Engine, NVIDIA GeForce GTX 1060). 仅 Chrome 143 及以下内核生效（144 起该开关已被移除，实际 GPU 由指纹种子决定）
      */
     '--fingerprint-gpu-renderer'?: string | null;
     /**
@@ -2261,6 +2314,12 @@ export type BrowserFingerprintQueryResp = {
      * Patchright Viewport Height
      */
     patchright_viewport_height?: number;
+    /**
+     * Fingerprint Real Version
+     *
+     * 真实浏览器版本（来自 browser_exec_info.json，决定实际启动的 chromium 二进制）；模拟版本 fingerprint_brand_version 由它派生
+     */
+    fingerprint_real_version?: string | null;
     /**
      * Patchright Fingerprint Dict
      */
@@ -2380,15 +2439,23 @@ export type BrowserFingerprintUpsertParams = {
      */
     fingerprint_brand_version?: string | null;
     /**
+     * Fingerprint Real Version
+     */
+    fingerprint_real_version?: string | null;
+    /**
      * Fingerprint Hardware Concurrency
      */
     fingerprint_hardware_concurrency?: number | null;
     /**
      * Fingerprint Gpu Vendor
+     *
+     * GPU 厂商；仅 Chrome 143 及以下内核生效，更高版本由指纹种子决定实际 GPU
      */
     fingerprint_gpu_vendor?: string | null;
     /**
      * Fingerprint Gpu Renderer
+     *
+     * GPU 渲染器；仅 Chrome 143 及以下内核生效，更高版本由指纹种子决定实际 GPU
      */
     fingerprint_gpu_renderer?: string | null;
     /**
@@ -2462,9 +2529,15 @@ export type BrowserInfoResponse = {
     /**
      * Version
      *
-     * 浏览器版本
+     * 模拟版本（下发给页面的报告版本）
      */
     version?: string;
+    /**
+     * Real Version
+     *
+     * 真实版本（实际启动的 chromium 二进制版本）
+     */
+    real_version?: string;
     /**
      * User Agent
      *
@@ -3474,11 +3547,143 @@ export type CertifyRequest = {
 };
 
 /**
+ * ClearLoginStateBatchItemResult
+ *
+ * 批量清空中单个浏览器的执行结果
+ */
+export type ClearLoginStateBatchItemResult = {
+    /**
+     * Browser Id
+     *
+     * 目标浏览器 id
+     */
+    browser_id: string;
+    /**
+     * Status
+     *
+     * 单项状态
+     */
+    status: 'success' | 'not_running' | 'workflow_running' | 'forbidden' | 'invalid' | 'failed';
+    /**
+     * Cleared Cookie Count
+     *
+     * 已清理的 cookie 条数
+     */
+    cleared_cookie_count?: number;
+    /**
+     * Matched Domains
+     *
+     * 实际清理的 cookie 域名（去重排序）
+     */
+    matched_domains?: Array<string>;
+    /**
+     * Cleared Pages
+     *
+     * 已清空 web storage 的页面数
+     */
+    cleared_pages?: number;
+    /**
+     * Reloaded Pages
+     *
+     * 已提交后台刷新的页面数（响应不等待刷新完成）
+     */
+    reloaded_pages?: number;
+    /**
+     * Affected Domains
+     *
+     * 清理范围内 cookie 覆盖的站点数（供前端提示影响范围）
+     */
+    affected_domains?: number;
+    /**
+     * Message
+     *
+     * 该项结果说明
+     */
+    message?: string;
+};
+
+/**
+ * ClearLoginStateBatchRequest
+ *
+ * 批量清空登录态请求（语义与单浏览器 ``clear_login_state`` 完全一致）
+ */
+export type ClearLoginStateBatchRequest = {
+    /**
+     * Browser Ids
+     *
+     * 目标浏览器 id（必须是当前用户自己的浏览器）
+     */
+    browser_ids: Array<string>;
+    /**
+     * Domains
+     *
+     * 只清空这些站点；不传或空列表 = 清空全部。匹配语义与单浏览器清空一致，非法域名属请求级参数错误（整批 400）
+     */
+    domains?: Array<string> | null;
+    /**
+     * Reload Pages
+     *
+     * 清空后是否刷新已打开页面：不刷新的话页面上仍是旧账号的 DOM，用户会以为没生效
+     */
+    reload_pages?: boolean;
+};
+
+/**
+ * ClearLoginStateBatchResponse
+ *
+ * 批量清空登录态响应（逐项状态，不因单项失败整体失败）
+ */
+export type ClearLoginStateBatchResponse = {
+    /**
+     * Total Browsers
+     *
+     * 提交的浏览器数
+     */
+    total_browsers?: number;
+    /**
+     * Succeeded
+     *
+     * 清空成功的浏览器数
+     */
+    succeeded?: number;
+    /**
+     * Failed
+     *
+     * 未成功清空的浏览器数（未启动 / 工作流执行中 / 无权 / 失败）
+     */
+    failed?: number;
+    /**
+     * Total Affected Domains
+     *
+     * 成功项清理前覆盖的站点数之和（供前端提示影响范围）
+     */
+    total_affected_domains?: number;
+    /**
+     * Total Cleared Cookie Count
+     *
+     * 成功项清理的 cookie 总条数
+     */
+    total_cleared_cookie_count?: number;
+    /**
+     * Results
+     *
+     * 逐项结果，顺序与请求 browser_ids 一致
+     */
+    results?: Array<ClearLoginStateBatchItemResult>;
+};
+
+/**
  * ClearLoginStateRequest
  *
  * 清空登录态（换号）请求
  */
 export type ClearLoginStateRequest = {
+    /**
+     * Domains
+     *
+     * 只清空这些站点的登录态；不传或空列表 = 清空全部（换号）。可传域名（bilibili.com / .bilibili.com）或 URL，带协议/端口/路径会被归一化。匹配语义是「访问该站点时实际会携带的 cookie」：包含其子域与父域。⚠️ 权限授权（摄像头 / 通知等）没有按站点清理的能力，指定站点时仍会整体重置
+     */
+    domains?: Array<string> | null;
     /**
      * Reload Pages
      *
@@ -3496,9 +3701,21 @@ export type ClearLoginStateResponse = {
     /**
      * Cleared Cookies
      *
-     * 是否已清空全部站点的 cookie（含 HttpOnly）
+     * 是否已清空目标范围内的 cookie（含 HttpOnly）
      */
     cleared_cookies: boolean;
+    /**
+     * Cleared Cookie Count
+     *
+     * 已清理的 cookie 条数
+     */
+    cleared_cookie_count?: number;
+    /**
+     * Matched Domains
+     *
+     * 实际清理的 cookie 域名（去重排序；指定站点时为匹配到的域名）
+     */
+    matched_domains?: Array<string>;
     /**
      * Cleared Pages
      *
@@ -3508,13 +3725,13 @@ export type ClearLoginStateResponse = {
     /**
      * Reloaded Pages
      *
-     * 已刷新的页面数
+     * 已提交后台刷新的页面数（响应不等待刷新完成）
      */
     reloaded_pages?: number;
     /**
      * Affected Domains
      *
-     * 清理前 cookie 覆盖的站点数（供前端提示影响范围）
+     * 清理范围内 cookie 覆盖的站点数（供前端提示影响范围）
      */
     affected_domains?: number;
     /**
@@ -4439,6 +4656,62 @@ export const ConditionValueType = {
 export type ConditionValueType = typeof ConditionValueType[keyof typeof ConditionValueType];
 
 /**
+ * CookieData
+ *
+ * 单条 cookie，字段与 Playwright `BrowserContext.cookies()` 返回一一对应
+ */
+export type CookieData = {
+    /**
+     * Name
+     *
+     * cookie 名
+     */
+    name: string;
+    /**
+     * Value
+     *
+     * cookie 值（HttpOnly 也会带出，属敏感凭证）
+     */
+    value: string;
+    /**
+     * Domain
+     *
+     * 作用域域名，可能带前导点（.bilibili.com）
+     */
+    domain: string;
+    /**
+     * Path
+     *
+     * 作用路径
+     */
+    path?: string;
+    /**
+     * Expires
+     *
+     * 过期时间（秒级时间戳）；-1 = 会话 cookie，关闭浏览器即失效。允许 null（扩展导出的会话 cookie 常见），归一化为 -1；13 位毫秒时间戳会自动换算成秒
+     */
+    expires?: number | null;
+    /**
+     * Httponly
+     *
+     * 是否 HttpOnly（页面 JS 读不到）
+     */
+    httpOnly?: boolean;
+    /**
+     * Secure
+     *
+     * 是否仅 HTTPS 下发送
+     */
+    secure?: boolean;
+    /**
+     * Samesite
+     *
+     * SameSite 策略：Strict / Lax / None
+     */
+    sameSite?: string;
+};
+
+/**
  * CreateSessionResponse
  *
  * 创建会话响应
@@ -5059,6 +5332,176 @@ export type ExecuteStepResponse = {
      */
     action_name: string;
     result: ActionResultResponse;
+};
+
+/**
+ * ExportCookiesBatchItemResult
+ *
+ * 批量导出中单个浏览器的执行结果
+ */
+export type ExportCookiesBatchItemResult = {
+    /**
+     * Browser Id
+     *
+     * 目标浏览器 id
+     */
+    browser_id: string;
+    /**
+     * Status
+     *
+     * 单项状态
+     */
+    status: 'success' | 'not_running' | 'forbidden' | 'invalid' | 'launch_failed' | 'failed';
+    /**
+     * Launched
+     *
+     * 该项是否顺带启动了浏览器
+     */
+    launched?: boolean;
+    /**
+     * Cookie Count
+     *
+     * 该项导出的 cookie 条数
+     */
+    cookie_count?: number;
+    /**
+     * Matched Domains
+     *
+     * 该项实际覆盖的域名（去重排序）
+     */
+    matched_domains?: Array<string>;
+    /**
+     * Cookies
+     *
+     * cookie 明细，结构同单浏览器导出；非 success 时为空
+     */
+    cookies?: Array<CookieData>;
+    /**
+     * Message
+     *
+     * 该项结果说明
+     */
+    message?: string;
+};
+
+/**
+ * ExportCookiesBatchRequest
+ *
+ * 批量导出 cookie 请求
+ *
+ * 逐项只读，顺序与响应 ``results`` 一一对应。只处理**运行中**的浏览器：
+ * cookie 的唯一可读来源是活跃 ``BrowserContext``（profile 里的 SQLite 是加密的），
+ * 未启动项返回 ``not_running``，本接口不提供「顺带启动」。
+ */
+export type ExportCookiesBatchRequest = {
+    /**
+     * Browser Ids
+     *
+     * 目标浏览器 id（必须是当前用户自己的浏览器）
+     */
+    browser_ids: Array<string>;
+    /**
+     * Domains
+     *
+     * 站点过滤，语义与单浏览器导出完全一致；不传或空列表 = 导出全部
+     */
+    domains?: Array<string> | null;
+};
+
+/**
+ * ExportCookiesBatchResponse
+ *
+ * 批量导出 cookie 响应（逐项状态，不因单项失败整体失败）
+ */
+export type ExportCookiesBatchResponse = {
+    /**
+     * Total Browsers
+     *
+     * 提交的浏览器数
+     */
+    total_browsers?: number;
+    /**
+     * Succeeded
+     *
+     * 导出成功的浏览器数
+     */
+    succeeded?: number;
+    /**
+     * Failed
+     *
+     * 未成功导出的浏览器数（未启动 / 无权 / 失败）
+     */
+    failed?: number;
+    /**
+     * Total Cookie Count
+     *
+     * 所有成功项导出的 cookie 总条数
+     */
+    total_cookie_count?: number;
+    /**
+     * Results
+     *
+     * 逐项结果，顺序与请求 browser_ids 一致
+     */
+    results?: Array<ExportCookiesBatchItemResult>;
+};
+
+/**
+ * ExportCookiesRequest
+ *
+ * 导出 cookie 请求
+ */
+export type ExportCookiesRequest = {
+    /**
+     * Domains
+     *
+     * 只导出这些站点的 cookie；不传或空列表 = 导出全部。可传域名（bilibili.com / .bilibili.com）或 URL，带协议/端口/路径会被归一化。匹配语义是「访问该站点时实际会携带的 cookie」：包含其子域与父域
+     */
+    domains?: Array<string> | null;
+    /**
+     * Launch If Not Running
+     *
+     * 浏览器未运行时是否顺带启动再导出。cookie 只能从运行中的 context 读取，未启动时默认返回 1007；启动会占启动队列与时长配额，由调用方显式决定
+     */
+    launch_if_not_running?: boolean;
+};
+
+/**
+ * ExportCookiesResponse
+ *
+ * 导出 cookie 响应
+ */
+export type ExportCookiesResponse = {
+    /**
+     * Cookie Count
+     *
+     * 导出的 cookie 条数
+     */
+    cookie_count?: number;
+    /**
+     * Matched Domains
+     *
+     * 结果实际覆盖的域名（去重排序）
+     */
+    matched_domains?: Array<string>;
+    /**
+     * Cookies
+     *
+     * cookie 明细，结构可直接用于 Playwright add_cookies
+     */
+    cookies?: Array<CookieData>;
+    /**
+     * Launched
+     *
+     * 本次调用是否顺带启动了浏览器
+     */
+    launched?: boolean;
+    /**
+     * Message
+     *
+     * 结果说明
+     */
+    message?: string;
 };
 
 /**
@@ -5885,6 +6328,220 @@ export type HttpValidationError = {
      * Detail
      */
     detail?: Array<ValidationError>;
+};
+
+/**
+ * ImportCookiesBatchItemResult
+ *
+ * 批量导入中单个浏览器的执行结果
+ */
+export type ImportCookiesBatchItemResult = {
+    /**
+     * Browser Id
+     *
+     * 目标浏览器 id
+     */
+    browser_id: string;
+    /**
+     * Status
+     *
+     * 单项状态
+     */
+    status: 'success' | 'not_running' | 'workflow_running' | 'forbidden' | 'invalid' | 'launch_failed' | 'injection_failed' | 'unassigned';
+    /**
+     * Launched
+     *
+     * 该项是否顺带启动了浏览器
+     */
+    launched?: boolean;
+    /**
+     * Imported Count
+     *
+     * 写入的 cookie 条数
+     */
+    imported_count?: number;
+    /**
+     * Reloaded Pages
+     *
+     * 已提交后台刷新的页面数（响应不等待刷新完成）
+     */
+    reloaded_pages?: number;
+    /**
+     * Session Cookie Count
+     *
+     * 其中会话 cookie（expires = -1）的条数：浏览器重启后失效
+     */
+    session_cookie_count?: number;
+    /**
+     * Message
+     *
+     * 该项结果说明
+     */
+    message?: string;
+};
+
+/**
+ * ImportCookiesBatchRequest
+ *
+ * 批量导入 cookie 请求
+ *
+ * 按索引配对：``cookie_groups[i]`` 写入 ``browser_ids[i]``。
+ * 两侧数量不一致时「尽力导入」，不整体报错：
+ *
+ * - 组数多于浏览器 → 多出的组整体忽略，响应给出未使用的组数与 cookie 条数；
+ * - 浏览器多于组数 → 多出的浏览器标记为 ``unassigned``，不写入任何 cookie。
+ */
+export type ImportCookiesBatchRequest = {
+    /**
+     * Browser Ids
+     *
+     * 按顺序参与导入的浏览器 id（必须是当前用户自己的浏览器）
+     */
+    browser_ids: Array<string>;
+    /**
+     * Cookie Groups
+     *
+     * 第 i 组写入第 i 个浏览器；每组至少 1 条 cookie
+     */
+    cookie_groups: Array<Array<CookieData>>;
+    /**
+     * Launch If Not Running
+     *
+     * 批次内浏览器未运行时是否顺带启动（逐项串行，失败不影响其它项）
+     */
+    launch_if_not_running?: boolean;
+    /**
+     * Reload Pages
+     *
+     * 导入后是否刷新已打开页面
+     */
+    reload_pages?: boolean;
+};
+
+/**
+ * ImportCookiesBatchResponse
+ *
+ * 批量导入 cookie 响应（逐项状态，不因单项失败整体失败）
+ */
+export type ImportCookiesBatchResponse = {
+    /**
+     * Total Browsers
+     *
+     * 提交的浏览器数
+     */
+    total_browsers?: number;
+    /**
+     * Assigned
+     *
+     * 实际分配到 cookie 的浏览器数（= 浏览器数与组数的较小值）
+     */
+    assigned?: number;
+    /**
+     * Succeeded
+     *
+     * 已分配项中成功的数量
+     */
+    succeeded?: number;
+    /**
+     * Failed
+     *
+     * 已分配项中失败的数量
+     */
+    failed?: number;
+    /**
+     * Unassigned Browser Ids
+     *
+     * 分不到 cookie 的浏览器（组数不足）
+     */
+    unassigned_browser_ids?: Array<string>;
+    /**
+     * Unused Cookie Group Count
+     *
+     * 多出而未使用的 cookie 组数（浏览器数不足）
+     */
+    unused_cookie_group_count?: number;
+    /**
+     * Unused Cookie Count
+     *
+     * 未使用的 cookie 总条数（多出各组的条数之和）
+     */
+    unused_cookie_count?: number;
+    /**
+     * Results
+     *
+     * 逐项结果：已分配项按配对顺序在前，unassigned 项在后
+     */
+    results?: Array<ImportCookiesBatchItemResult>;
+};
+
+/**
+ * ImportCookiesRequest
+ *
+ * 导入 cookie 请求（单个浏览器）
+ */
+export type ImportCookiesRequest = {
+    /**
+     * Cookies
+     *
+     * 要写入的 cookie；name / value / domain 必填，结构同导出结果
+     */
+    cookies: Array<CookieData>;
+    /**
+     * Launch If Not Running
+     *
+     * 浏览器未运行时是否顺带启动再导入。默认 False：未启动直接返回 1007，由调用方决定是否启动（启动会占启动队列与时长配额，不做隐式副作用）
+     */
+    launch_if_not_running?: boolean;
+    /**
+     * Reload Pages
+     *
+     * 导入后是否刷新已打开页面（否则页面上仍是旧账号的 DOM / 未登录态）
+     */
+    reload_pages?: boolean;
+};
+
+/**
+ * ImportCookiesResponse
+ *
+ * 导入 cookie 响应（成功路径；失败按统一业务异常抛出）
+ */
+export type ImportCookiesResponse = {
+    /**
+     * Browser Id
+     *
+     * 目标浏览器 id
+     */
+    browser_id: string;
+    /**
+     * Launched
+     *
+     * 本次调用是否顺带启动了浏览器
+     */
+    launched?: boolean;
+    /**
+     * Imported Count
+     *
+     * 写入的 cookie 条数
+     */
+    imported_count?: number;
+    /**
+     * Reloaded Pages
+     *
+     * 已提交后台刷新的页面数（响应不等待刷新完成）
+     */
+    reloaded_pages?: number;
+    /**
+     * Session Cookie Count
+     *
+     * 其中会话 cookie（expires = -1）的条数：Chromium 重启时会丢弃，前端应提示「这 N 条重启后失效」
+     */
+    session_cookie_count?: number;
+    /**
+     * Message
+     *
+     * 结果说明
+     */
+    message?: string;
 };
 
 /**
@@ -7046,6 +7703,122 @@ export type OpenPageRequest = {
      * 页面索引，-1表示新建页面
      */
     page_index?: number;
+};
+
+/**
+ * OperationTaskCreatedResponse
+ *
+ * 任务提交响应：前端拿 task_id 轮询
+ */
+export type OperationTaskCreatedResponse = {
+    /**
+     * Task Id
+     *
+     * 任务 id
+     */
+    task_id: string;
+    /**
+     * Task Type
+     *
+     * 任务类型
+     */
+    task_type: 'import_cookies' | 'clear_login_state';
+    /**
+     * Status
+     *
+     * 初始状态
+     */
+    status?: 'pending' | 'running' | 'success' | 'failed';
+    /**
+     * Total
+     *
+     * 总项数（按浏览器计）
+     */
+    total?: number;
+};
+
+/**
+ * OperationTaskStatusRequest
+ *
+ * 任务状态查询请求
+ */
+export type OperationTaskStatusRequest = {
+    /**
+     * Task Id
+     *
+     * 提交任务时返回的 task_id
+     */
+    task_id: string;
+};
+
+/**
+ * OperationTaskStatusResponse
+ *
+ * 任务状态（前端按 1~2s 轮询，success / failed 后可停止）
+ */
+export type OperationTaskStatusResponse = {
+    /**
+     * Task Id
+     *
+     * 任务 id
+     */
+    task_id: string;
+    /**
+     * Task Type
+     *
+     * 任务类型
+     */
+    task_type: 'import_cookies' | 'clear_login_state';
+    /**
+     * Status
+     *
+     * 任务状态
+     */
+    status: 'pending' | 'running' | 'success' | 'failed';
+    /**
+     * Progress
+     *
+     * 已完成项数
+     */
+    progress?: number;
+    /**
+     * Total
+     *
+     * 总项数
+     */
+    total?: number;
+    /**
+     * Message
+     *
+     * 进度说明
+     */
+    message?: string;
+    /**
+     * Error
+     *
+     * 失败原因（status=failed 时）
+     */
+    error?: string;
+    /**
+     * 导入任务的逐项结果（status=success 时）
+     */
+    import_result?: ImportCookiesBatchResponse | null;
+    /**
+     * 清空任务的逐项结果（status=success 时）
+     */
+    clear_result?: ClearLoginStateBatchResponse | null;
+    /**
+     * Created At
+     *
+     * 创建时间（秒级时间戳）
+     */
+    created_at?: number;
+    /**
+     * Updated At
+     *
+     * 最后更新时间（秒级时间戳）
+     */
+    updated_at?: number;
 };
 
 /**
@@ -9196,6 +9969,21 @@ export type StandardResponseCertificationListResponse = {
 };
 
 /**
+ * StandardResponse[ClearLoginStateBatchResponse]
+ */
+export type StandardResponseClearLoginStateBatchResponse = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: ClearLoginStateBatchResponse | null;
+};
+
+/**
  * StandardResponse[ClearLoginStateResponse]
  */
 export type StandardResponseClearLoginStateResponse = {
@@ -9376,6 +10164,36 @@ export type StandardResponseExecuteStepResponse = {
 };
 
 /**
+ * StandardResponse[ExportCookiesBatchResponse]
+ */
+export type StandardResponseExportCookiesBatchResponse = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: ExportCookiesBatchResponse | null;
+};
+
+/**
+ * StandardResponse[ExportCookiesResponse]
+ */
+export type StandardResponseExportCookiesResponse = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: ExportCookiesResponse | null;
+};
+
+/**
  * StandardResponse[FeedbackAdminDeleteResp]
  */
 export type StandardResponseFeedbackAdminDeleteResp = {
@@ -9448,6 +10266,36 @@ export type StandardResponseGenerateCodesResponse = {
      */
     msg?: string;
     data?: GenerateCodesResponse | null;
+};
+
+/**
+ * StandardResponse[ImportCookiesBatchResponse]
+ */
+export type StandardResponseImportCookiesBatchResponse = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: ImportCookiesBatchResponse | null;
+};
+
+/**
+ * StandardResponse[ImportCookiesResponse]
+ */
+export type StandardResponseImportCookiesResponse = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: ImportCookiesResponse | null;
 };
 
 /**
@@ -9565,6 +10413,36 @@ export type StandardResponseNotificationConfigUpsertResp = {
      */
     msg?: string;
     data?: NotificationConfigUpsertResp | null;
+};
+
+/**
+ * StandardResponse[OperationTaskCreatedResponse]
+ */
+export type StandardResponseOperationTaskCreatedResponse = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: OperationTaskCreatedResponse | null;
+};
+
+/**
+ * StandardResponse[OperationTaskStatusResponse]
+ */
+export type StandardResponseOperationTaskStatusResponse = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    data?: OperationTaskStatusResponse | null;
 };
 
 /**
@@ -10146,6 +11024,24 @@ export type StandardResponseInt = {
      * Data
      */
     data?: number | null;
+};
+
+/**
+ * StandardResponse[list[BrowserExecVersionInfo]]
+ */
+export type StandardResponseListBrowserExecVersionInfo = {
+    /**
+     * Code
+     */
+    code?: number;
+    /**
+     * Msg
+     */
+    msg?: string;
+    /**
+     * Data
+     */
+    data?: Array<BrowserExecVersionInfo> | null;
 };
 
 /**
@@ -10735,7 +11631,7 @@ export type UserBrowserInfo = {
     /**
      * Chrome, Edge, Opera, Vivaldi (default is Chrome)
      */
-    '--fingerprint-browser'?: BrowserEnum | null;
+    '--fingerprint-brand'?: BrowserEnum | null;
     /**
      * --Fingerprint-Brand-Version
      *
@@ -10749,13 +11645,13 @@ export type UserBrowserInfo = {
     /**
      * --Fingerprint-Gpu-Vendor
      *
-     * Vendor string (e.g., Intel Inc., NVIDIA Corporation). If not specified, uses fingerprint seed
+     * Vendor string (e.g., Intel Inc., NVIDIA Corporation). 仅 Chrome 143 及以下内核生效（144 起该开关已被移除，实际 GPU 由指纹种子决定）
      */
     '--fingerprint-gpu-vendor'?: string | null;
     /**
      * --Fingerprint-Gpu-Renderer
      *
-     * Renderer string (e.g., Intel Iris OpenGL Engine, NVIDIA GeForce GTX 1060). If not specified, uses fingerprint seed
+     * Renderer string (e.g., Intel Iris OpenGL Engine, NVIDIA GeForce GTX 1060). 仅 Chrome 143 及以下内核生效（144 起该开关已被移除，实际 GPU 由指纹种子决定）
      */
     '--fingerprint-gpu-renderer'?: string | null;
     /**
@@ -10804,6 +11700,12 @@ export type UserBrowserInfo = {
      * Patchright Viewport Height
      */
     patchright_viewport_height?: number;
+    /**
+     * Fingerprint Real Version
+     *
+     * 真实浏览器版本（来自 browser_exec_info.json，决定实际启动的 chromium 二进制）；模拟版本 fingerprint_brand_version 由它派生
+     */
+    fingerprint_real_version?: string | null;
     /**
      * Patchright Fingerprint Dict
      */
@@ -13528,7 +14430,7 @@ export type BaseFingerprintBrowserInitParamsWritable = {
     /**
      * Chrome, Edge, Opera, Vivaldi (default is Chrome)
      */
-    '--fingerprint-browser'?: BrowserEnum | null;
+    '--fingerprint-brand'?: BrowserEnum | null;
     /**
      * --Fingerprint-Brand-Version
      *
@@ -13542,13 +14444,13 @@ export type BaseFingerprintBrowserInitParamsWritable = {
     /**
      * --Fingerprint-Gpu-Vendor
      *
-     * Vendor string (e.g., Intel Inc., NVIDIA Corporation). If not specified, uses fingerprint seed
+     * Vendor string (e.g., Intel Inc., NVIDIA Corporation). 仅 Chrome 143 及以下内核生效（144 起该开关已被移除，实际 GPU 由指纹种子决定）
      */
     '--fingerprint-gpu-vendor'?: string | null;
     /**
      * --Fingerprint-Gpu-Renderer
      *
-     * Renderer string (e.g., Intel Iris OpenGL Engine, NVIDIA GeForce GTX 1060). If not specified, uses fingerprint seed
+     * Renderer string (e.g., Intel Iris OpenGL Engine, NVIDIA GeForce GTX 1060). 仅 Chrome 143 及以下内核生效（144 起该开关已被移除，实际 GPU 由指纹种子决定）
      */
     '--fingerprint-gpu-renderer'?: string | null;
     /**
@@ -13597,6 +14499,12 @@ export type BaseFingerprintBrowserInitParamsWritable = {
      * Patchright Viewport Height
      */
     patchright_viewport_height?: number;
+    /**
+     * Fingerprint Real Version
+     *
+     * 真实浏览器版本（来自 browser_exec_info.json，决定实际启动的 chromium 二进制）；模拟版本 fingerprint_brand_version 由它派生
+     */
+    fingerprint_real_version?: string | null;
     /**
      * Patchright Fingerprint Dict
      */
@@ -13965,7 +14873,7 @@ export type BrowserFingerprintQueryRespWritable = {
     /**
      * Chrome, Edge, Opera, Vivaldi (default is Chrome)
      */
-    '--fingerprint-browser'?: BrowserEnum | null;
+    '--fingerprint-brand'?: BrowserEnum | null;
     /**
      * --Fingerprint-Brand-Version
      *
@@ -13979,13 +14887,13 @@ export type BrowserFingerprintQueryRespWritable = {
     /**
      * --Fingerprint-Gpu-Vendor
      *
-     * Vendor string (e.g., Intel Inc., NVIDIA Corporation). If not specified, uses fingerprint seed
+     * Vendor string (e.g., Intel Inc., NVIDIA Corporation). 仅 Chrome 143 及以下内核生效（144 起该开关已被移除，实际 GPU 由指纹种子决定）
      */
     '--fingerprint-gpu-vendor'?: string | null;
     /**
      * --Fingerprint-Gpu-Renderer
      *
-     * Renderer string (e.g., Intel Iris OpenGL Engine, NVIDIA GeForce GTX 1060). If not specified, uses fingerprint seed
+     * Renderer string (e.g., Intel Iris OpenGL Engine, NVIDIA GeForce GTX 1060). 仅 Chrome 143 及以下内核生效（144 起该开关已被移除，实际 GPU 由指纹种子决定）
      */
     '--fingerprint-gpu-renderer'?: string | null;
     /**
@@ -14034,6 +14942,12 @@ export type BrowserFingerprintQueryRespWritable = {
      * Patchright Viewport Height
      */
     patchright_viewport_height?: number;
+    /**
+     * Fingerprint Real Version
+     *
+     * 真实浏览器版本（来自 browser_exec_info.json，决定实际启动的 chromium 二进制）；模拟版本 fingerprint_brand_version 由它派生
+     */
+    fingerprint_real_version?: string | null;
     /**
      * Patchright Fingerprint Dict
      */
@@ -14527,7 +15441,7 @@ export type UserBrowserInfoWritable = {
     /**
      * Chrome, Edge, Opera, Vivaldi (default is Chrome)
      */
-    '--fingerprint-browser'?: BrowserEnum | null;
+    '--fingerprint-brand'?: BrowserEnum | null;
     /**
      * --Fingerprint-Brand-Version
      *
@@ -14541,13 +15455,13 @@ export type UserBrowserInfoWritable = {
     /**
      * --Fingerprint-Gpu-Vendor
      *
-     * Vendor string (e.g., Intel Inc., NVIDIA Corporation). If not specified, uses fingerprint seed
+     * Vendor string (e.g., Intel Inc., NVIDIA Corporation). 仅 Chrome 143 及以下内核生效（144 起该开关已被移除，实际 GPU 由指纹种子决定）
      */
     '--fingerprint-gpu-vendor'?: string | null;
     /**
      * --Fingerprint-Gpu-Renderer
      *
-     * Renderer string (e.g., Intel Iris OpenGL Engine, NVIDIA GeForce GTX 1060). If not specified, uses fingerprint seed
+     * Renderer string (e.g., Intel Iris OpenGL Engine, NVIDIA GeForce GTX 1060). 仅 Chrome 143 及以下内核生效（144 起该开关已被移除，实际 GPU 由指纹种子决定）
      */
     '--fingerprint-gpu-renderer'?: string | null;
     /**
@@ -14596,6 +15510,12 @@ export type UserBrowserInfoWritable = {
      * Patchright Viewport Height
      */
     patchright_viewport_height?: number;
+    /**
+     * Fingerprint Real Version
+     *
+     * 真实浏览器版本（来自 browser_exec_info.json，决定实际启动的 chromium 二进制）；模拟版本 fingerprint_brand_version 由它派生
+     */
+    fingerprint_real_version?: string | null;
     /**
      * Patchright Fingerprint Dict
      */
@@ -14658,6 +15578,22 @@ export type GenRandFingerprintRouterApiV1RpaBrowserGenRandFingerprintPostRespons
 };
 
 export type GenRandFingerprintRouterApiV1RpaBrowserGenRandFingerprintPostResponse = GenRandFingerprintRouterApiV1RpaBrowserGenRandFingerprintPostResponses[keyof GenRandFingerprintRouterApiV1RpaBrowserGenRandFingerprintPostResponses];
+
+export type ListExecVersionsRouterApiV1RpaBrowserListExecVersionsPostData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/rpa/browser/list_exec_versions';
+};
+
+export type ListExecVersionsRouterApiV1RpaBrowserListExecVersionsPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseListBrowserExecVersionInfo;
+};
+
+export type ListExecVersionsRouterApiV1RpaBrowserListExecVersionsPostResponse = ListExecVersionsRouterApiV1RpaBrowserListExecVersionsPostResponses[keyof ListExecVersionsRouterApiV1RpaBrowserListExecVersionsPostResponses];
 
 export type UpsertFingerprintRouterApiV1RpaBrowserUpsertFingerprintPostData = {
     body: BrowserFingerprintUpsertParams;
@@ -20845,6 +21781,588 @@ export type ClearLoginStateApiV1RpaBrowserControlOperationClearLoginStatePostRes
 };
 
 export type ClearLoginStateApiV1RpaBrowserControlOperationClearLoginStatePostResponse = ClearLoginStateApiV1RpaBrowserControlOperationClearLoginStatePostResponses[keyof ClearLoginStateApiV1RpaBrowserControlOperationClearLoginStatePostResponses];
+
+export type ExportCookiesApiV1RpaBrowserControlOperationExportCookiesPostData = {
+    body: ExportCookiesRequest;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string;
+    };
+    path?: never;
+    query: {
+        /**
+         * Browser Id
+         *
+         * 目标浏览器 id（雪花 id，纯数字；字符串形式也接受）。必须是当前用户自己的浏览器，否则报「浏览器不属于该用户」。
+         */
+        browser_id: number | string;
+    };
+    url: '/api/v1/rpa/browser/control/operation/export_cookies';
+};
+
+export type ExportCookiesApiV1RpaBrowserControlOperationExportCookiesPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ExportCookiesApiV1RpaBrowserControlOperationExportCookiesPostError = ExportCookiesApiV1RpaBrowserControlOperationExportCookiesPostErrors[keyof ExportCookiesApiV1RpaBrowserControlOperationExportCookiesPostErrors];
+
+export type ExportCookiesApiV1RpaBrowserControlOperationExportCookiesPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseExportCookiesResponse;
+};
+
+export type ExportCookiesApiV1RpaBrowserControlOperationExportCookiesPostResponse = ExportCookiesApiV1RpaBrowserControlOperationExportCookiesPostResponses[keyof ExportCookiesApiV1RpaBrowserControlOperationExportCookiesPostResponses];
+
+export type ImportCookiesApiV1RpaBrowserControlOperationImportCookiesPostData = {
+    body: ImportCookiesRequest;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string;
+    };
+    path?: never;
+    query: {
+        /**
+         * Browser Id
+         *
+         * 目标浏览器 id（雪花 id，纯数字；字符串形式也接受）。必须是当前用户自己的浏览器，否则报「浏览器不属于该用户」。
+         */
+        browser_id: number | string;
+    };
+    url: '/api/v1/rpa/browser/control/operation/import_cookies';
+};
+
+export type ImportCookiesApiV1RpaBrowserControlOperationImportCookiesPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ImportCookiesApiV1RpaBrowserControlOperationImportCookiesPostError = ImportCookiesApiV1RpaBrowserControlOperationImportCookiesPostErrors[keyof ImportCookiesApiV1RpaBrowserControlOperationImportCookiesPostErrors];
+
+export type ImportCookiesApiV1RpaBrowserControlOperationImportCookiesPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseImportCookiesResponse;
+};
+
+export type ImportCookiesApiV1RpaBrowserControlOperationImportCookiesPostResponse = ImportCookiesApiV1RpaBrowserControlOperationImportCookiesPostResponses[keyof ImportCookiesApiV1RpaBrowserControlOperationImportCookiesPostResponses];
+
+export type ImportCookiesBatchApiV1RpaBrowserControlOperationImportCookiesBatchPostData = {
+    body: ImportCookiesBatchRequest;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/rpa/browser/control/operation/import_cookies/batch';
+};
+
+export type ImportCookiesBatchApiV1RpaBrowserControlOperationImportCookiesBatchPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ImportCookiesBatchApiV1RpaBrowserControlOperationImportCookiesBatchPostError = ImportCookiesBatchApiV1RpaBrowserControlOperationImportCookiesBatchPostErrors[keyof ImportCookiesBatchApiV1RpaBrowserControlOperationImportCookiesBatchPostErrors];
+
+export type ImportCookiesBatchApiV1RpaBrowserControlOperationImportCookiesBatchPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseImportCookiesBatchResponse;
+};
+
+export type ImportCookiesBatchApiV1RpaBrowserControlOperationImportCookiesBatchPostResponse = ImportCookiesBatchApiV1RpaBrowserControlOperationImportCookiesBatchPostResponses[keyof ImportCookiesBatchApiV1RpaBrowserControlOperationImportCookiesBatchPostResponses];
+
+export type ExportCookiesBatchApiV1RpaBrowserControlOperationExportCookiesBatchPostData = {
+    body: ExportCookiesBatchRequest;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/rpa/browser/control/operation/export_cookies/batch';
+};
+
+export type ExportCookiesBatchApiV1RpaBrowserControlOperationExportCookiesBatchPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ExportCookiesBatchApiV1RpaBrowserControlOperationExportCookiesBatchPostError = ExportCookiesBatchApiV1RpaBrowserControlOperationExportCookiesBatchPostErrors[keyof ExportCookiesBatchApiV1RpaBrowserControlOperationExportCookiesBatchPostErrors];
+
+export type ExportCookiesBatchApiV1RpaBrowserControlOperationExportCookiesBatchPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseExportCookiesBatchResponse;
+};
+
+export type ExportCookiesBatchApiV1RpaBrowserControlOperationExportCookiesBatchPostResponse = ExportCookiesBatchApiV1RpaBrowserControlOperationExportCookiesBatchPostResponses[keyof ExportCookiesBatchApiV1RpaBrowserControlOperationExportCookiesBatchPostResponses];
+
+export type ClearLoginStateBatchApiV1RpaBrowserControlOperationClearLoginStateBatchPostData = {
+    body: ClearLoginStateBatchRequest;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/rpa/browser/control/operation/clear_login_state/batch';
+};
+
+export type ClearLoginStateBatchApiV1RpaBrowserControlOperationClearLoginStateBatchPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ClearLoginStateBatchApiV1RpaBrowserControlOperationClearLoginStateBatchPostError = ClearLoginStateBatchApiV1RpaBrowserControlOperationClearLoginStateBatchPostErrors[keyof ClearLoginStateBatchApiV1RpaBrowserControlOperationClearLoginStateBatchPostErrors];
+
+export type ClearLoginStateBatchApiV1RpaBrowserControlOperationClearLoginStateBatchPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseClearLoginStateBatchResponse;
+};
+
+export type ClearLoginStateBatchApiV1RpaBrowserControlOperationClearLoginStateBatchPostResponse = ClearLoginStateBatchApiV1RpaBrowserControlOperationClearLoginStateBatchPostResponses[keyof ClearLoginStateBatchApiV1RpaBrowserControlOperationClearLoginStateBatchPostResponses];
+
+export type SubmitImportCookiesTaskApiV1RpaBrowserControlOperationTasksImportCookiesPostData = {
+    body: ImportCookiesBatchRequest;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/rpa/browser/control/operation/tasks/import_cookies';
+};
+
+export type SubmitImportCookiesTaskApiV1RpaBrowserControlOperationTasksImportCookiesPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type SubmitImportCookiesTaskApiV1RpaBrowserControlOperationTasksImportCookiesPostError = SubmitImportCookiesTaskApiV1RpaBrowserControlOperationTasksImportCookiesPostErrors[keyof SubmitImportCookiesTaskApiV1RpaBrowserControlOperationTasksImportCookiesPostErrors];
+
+export type SubmitImportCookiesTaskApiV1RpaBrowserControlOperationTasksImportCookiesPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseOperationTaskCreatedResponse;
+};
+
+export type SubmitImportCookiesTaskApiV1RpaBrowserControlOperationTasksImportCookiesPostResponse = SubmitImportCookiesTaskApiV1RpaBrowserControlOperationTasksImportCookiesPostResponses[keyof SubmitImportCookiesTaskApiV1RpaBrowserControlOperationTasksImportCookiesPostResponses];
+
+export type SubmitClearLoginStateTaskApiV1RpaBrowserControlOperationTasksClearLoginStatePostData = {
+    body: ClearLoginStateBatchRequest;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/rpa/browser/control/operation/tasks/clear_login_state';
+};
+
+export type SubmitClearLoginStateTaskApiV1RpaBrowserControlOperationTasksClearLoginStatePostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type SubmitClearLoginStateTaskApiV1RpaBrowserControlOperationTasksClearLoginStatePostError = SubmitClearLoginStateTaskApiV1RpaBrowserControlOperationTasksClearLoginStatePostErrors[keyof SubmitClearLoginStateTaskApiV1RpaBrowserControlOperationTasksClearLoginStatePostErrors];
+
+export type SubmitClearLoginStateTaskApiV1RpaBrowserControlOperationTasksClearLoginStatePostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseOperationTaskCreatedResponse;
+};
+
+export type SubmitClearLoginStateTaskApiV1RpaBrowserControlOperationTasksClearLoginStatePostResponse = SubmitClearLoginStateTaskApiV1RpaBrowserControlOperationTasksClearLoginStatePostResponses[keyof SubmitClearLoginStateTaskApiV1RpaBrowserControlOperationTasksClearLoginStatePostResponses];
+
+export type GetOperationTaskStatusApiV1RpaBrowserControlOperationTasksStatusPostData = {
+    body: OperationTaskStatusRequest;
+    headers?: {
+        /**
+         * X-Bili-Mid
+         */
+        'x-bili-mid'?: string | null;
+        /**
+         * X-Bili-Level
+         */
+        'x-bili-level'?: string | null;
+        /**
+         * X-Bili-Role
+         */
+        'x-bili-role'?: string;
+        /**
+         * X-Bili-Permissions
+         */
+        'x-bili-permissions'?: string | null;
+        /**
+         * X-Bili-User-Name
+         */
+        'x-bili-user-name'?: string;
+        /**
+         * X-Bili-Uname
+         */
+        'x-bili-uname'?: string;
+        /**
+         * X-Bili-Sign
+         */
+        'x-bili-sign'?: string;
+        /**
+         * X-Bili-Sex
+         */
+        'x-bili-sex'?: string;
+        /**
+         * X-Bili-Email
+         */
+        'x-bili-email'?: string;
+        /**
+         * X-Bili-Vip-Status
+         */
+        'x-bili-vip-status'?: string;
+        /**
+         * X-Bili-Vip-Type
+         */
+        'x-bili-vip-type'?: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/rpa/browser/control/operation/tasks/status';
+};
+
+export type GetOperationTaskStatusApiV1RpaBrowserControlOperationTasksStatusPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetOperationTaskStatusApiV1RpaBrowserControlOperationTasksStatusPostError = GetOperationTaskStatusApiV1RpaBrowserControlOperationTasksStatusPostErrors[keyof GetOperationTaskStatusApiV1RpaBrowserControlOperationTasksStatusPostErrors];
+
+export type GetOperationTaskStatusApiV1RpaBrowserControlOperationTasksStatusPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: StandardResponseOperationTaskStatusResponse;
+};
+
+export type GetOperationTaskStatusApiV1RpaBrowserControlOperationTasksStatusPostResponse = GetOperationTaskStatusApiV1RpaBrowserControlOperationTasksStatusPostResponses[keyof GetOperationTaskStatusApiV1RpaBrowserControlOperationTasksStatusPostResponses];
 
 export type GetBrowserInfoApiV1RpaBrowserControlBrowserInfoPostData = {
     body?: never;

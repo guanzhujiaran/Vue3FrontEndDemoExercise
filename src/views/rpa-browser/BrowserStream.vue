@@ -34,6 +34,7 @@ interface BrowserInfo {
   fingerprint_platform?: string | null
   fingerprint_browser?: string | null
   fingerprint_brand_version?: string | null
+  fingerprint_real_version?: string | null
   fingerprint_hardware_concurrency?: number | null
   fingerprint_gpu_vendor?: string | null
   fingerprint_gpu_renderer?: string | null

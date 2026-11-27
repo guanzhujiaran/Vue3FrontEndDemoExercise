@@ -1,17 +1,24 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { Plus, SetUp } from '@element-plus/icons-vue'
+import { Delete, Download, Plus, SetUp, Upload } from '@element-plus/icons-vue'
 import { ElMessageBox } from 'element-plus'
 import FlexContainer from '@/components/CommonCompo/Bili-Container-Compo/FlexContainer.vue'
 import CenteredContainer from '@/components/CommonCompo/Bili-Container-Compo/CenteredContainer.vue'
 import BiliPageHeader from '@/components/CommonCompo/Bili-Container-Compo/BiliPageHeader.vue'
 import FingerprintCard from '@/components/rpa-browser/FingerprintCard.vue'
+import BatchImportCookieDialog from '@/components/rpa-browser/BatchImportCookieDialog.vue'
+import BatchExportCookieDialog from '@/components/rpa-browser/BatchExportCookieDialog.vue'
+import BatchClearLoginStateDialog from '@/components/rpa-browser/BatchClearLoginStateDialog.vue'
+import { formatProxyServer } from '@/utils/rpa/proxy'
 import { 浏览器指纹管理Service } from '@/api/browser/hey-api'
 import { useUserNavStore } from '@/stores/user_nav'
 import { businessHandler } from '@/utils/businessHandler'
 import type { BrowserFingerprintListParams } from '@/api/browser/hey-api'
-import type { UserBrowserInfo } from '@/models/rpa_browser'
+import {
+  GPU_OVERRIDE_LAST_SUPPORTED_MAJOR,
+  type UserBrowserInfo,
+} from '@/models/rpa_browser'
 import { RouteName } from '@/models/router/index.ts'
 
 /** 浏览器 ID：优先取字符串形式，避免大整数精度丢失 */
@@ -25,6 +32,11 @@ const total = ref(0)
 const currentPage = ref(1)
 const pageSize = ref(10)
 const loading = ref(false)
+
+/** 批量 Cookie 操作：浏览器由弹窗内自行拉取并多选，列表页只负责开入口 */
+const batchImportVisible = ref(false)
+const batchExportVisible = ref(false)
+const batchClearVisible = ref(false)
 
 const loadFingerprintList = async () => {
   loading.value = true
@@ -127,6 +139,16 @@ const handleOpenStream = (item: UserBrowserInfo) => {
   })
 }
 
+/** GPU 覆盖在 Chrome 144 起被内核移除：旧版本生效，新版本由指纹种子决定 */
+const gpuOverrideNote = (item: UserBrowserInfo): string => {
+  const real = item.fingerprint_real_version || ''
+  const major = Number(real.split('.')[0])
+  if (!major) return 'GPU 覆盖仅对 Chrome 143 及以下内核生效'
+  return major <= GPU_OVERRIDE_LAST_SUPPORTED_MAJOR
+    ? `GPU 覆盖对当前版本（${real}）生效`
+    : `当前版本 ${real}（≥${GPU_OVERRIDE_LAST_SUPPORTED_MAJOR + 1}）已移除 GPU 覆盖开关，实际 GPU 由指纹种子决定`
+}
+
 const showBrowserIdDetail = (item: UserBrowserInfo) => {
   const browserId = getBrowserId(item)?.toString() || 'N/A'
 
@@ -163,7 +185,15 @@ const showBrowserIdDetail = (item: UserBrowserInfo) => {
               <span class="text-white">${item.fingerprint_platform_version || 'Unknown'}</span>
             </div>
             <div>
-              <span class="text-gray-400 text-sm">浏览器版本：</span>
+              <span class="text-gray-400 text-sm">指纹种子：</span>
+              <code class="text-purple-300 font-mono text-sm">${item.fingerprint ?? 'Unknown'}</code>
+            </div>
+            <div>
+              <span class="text-gray-400 text-sm">真实版本：</span>
+              <span class="text-white">${item.fingerprint_real_version || 'Unknown'}</span>
+            </div>
+            <div>
+              <span class="text-gray-400 text-sm">模拟版本：</span>
               <span class="text-white">${item.fingerprint_brand_version || 'Unknown'}</span>
             </div>
           </div>
@@ -184,6 +214,9 @@ const showBrowserIdDetail = (item: UserBrowserInfo) => {
               <span class="text-gray-400 text-sm">GPU渲染器：</span>
               <span class="text-white">${item.fingerprint_gpu_renderer || 'Unknown'}</span>
             </div>
+          </div>
+          <div class="mt-2 text-xs text-gray-500 fingerprint-detail__gpu-override-note">
+            ${gpuOverrideNote(item)}
           </div>
         </div>
 
@@ -209,7 +242,7 @@ const showBrowserIdDetail = (item: UserBrowserInfo) => {
           <h3 class="text-lg font-bold text-green-400 mb-3">网络配置</h3>
           <div>
             <span class="text-gray-400 text-sm">代理服务器：</span>
-            <span class="text-white">${item.proxy_server || '未配置'}</span>
+            <span class="text-white">${formatProxyServer(item.proxy_server)}</span>
           </div>
           ${item.proxy_bypass ? `<div>
             <span class="text-gray-400 text-sm">代理绕过：</span>
@@ -270,6 +303,15 @@ onMounted(() => {
           <el-button :icon="SetUp" @click="router.push({ name: RouteName.RPA_BROWSER_WORKFLOW_MANAGEMENT })">
             工作流管理
           </el-button>
+          <el-button :icon="Download" @click="batchImportVisible = true">
+            批量导入 Cookie
+          </el-button>
+          <el-button :icon="Upload" @click="batchExportVisible = true">
+            批量导出 Cookie
+          </el-button>
+          <el-button type="danger" plain :icon="Delete" @click="batchClearVisible = true">
+            批量清空登录态
+          </el-button>
           <el-button type="primary" :icon="Plus" @click="handleCreateFingerprint">
             创建指纹
           </el-button>
@@ -309,5 +351,9 @@ onMounted(() => {
         </el-empty>
       </CenteredContainer>
     </FlexContainer>
+
+    <BatchImportCookieDialog v-model:visible="batchImportVisible" />
+    <BatchExportCookieDialog v-model:visible="batchExportVisible" />
+    <BatchClearLoginStateDialog v-model:visible="batchClearVisible" />
   </FlexContainer>
 </template>

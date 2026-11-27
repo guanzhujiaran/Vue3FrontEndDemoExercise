@@ -51,6 +51,14 @@ const browserTagClass = computed(
 
 /** 日期格式化：无值或非法值统一显示「未知」 */
 const formatDate = (value?: string | null): string => (value ? new Date(value).toLocaleDateString() : '未知')
+
+/** 模拟版本与真实版本的主版本是否不一致（不一致属于非法数据，需要标红） */
+const isMajorVersionMismatch = computed(() => {
+  const real = props.item.fingerprint_real_version
+  const brand = props.item.fingerprint_brand_version
+  if (!real || !brand) return false
+  return real.split('.')[0] !== brand.split('.')[0]
+})
 </script>
 
 <template>
@@ -82,6 +90,17 @@ const formatDate = (value?: string | null): string => (value ? new Date(value).t
         <div class="text-sm text-gray-200 font-mono break-all hover:text-cyan-300 transition-colors cursor-pointer"
           @click="emit('detail', item)">
           {{ browserId?.toString() || 'N/A' }}
+        </div>
+        <div class="fingerprint-card__version mt-2 text-xs text-gray-400">
+          真实版本
+          <span class="fingerprint-card__version-value text-cyan-300 font-mono">
+            {{ item.fingerprint_real_version || '未知' }}
+          </span>
+          <span v-if="item.fingerprint_brand_version && item.fingerprint_brand_version !== item.fingerprint_real_version"
+            class="fingerprint-card__version-drift ml-2"
+            :class="isMajorVersionMismatch ? 'text-red-400' : 'text-gray-400'">
+            （模拟 {{ item.fingerprint_brand_version }}{{ isMajorVersionMismatch ? '，主版本异常' : '' }}）
+          </span>
         </div>
       </div>
 

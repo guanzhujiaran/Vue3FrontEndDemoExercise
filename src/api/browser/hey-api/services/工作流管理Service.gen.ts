@@ -33,7 +33,12 @@ export class 工作流管理Service {
      *
      * 请求体即「导出 JSON」内容（可携带 id / workflow_id / created_at / likes_count
      * 等数据库冗余字段，自动忽略）。导入会在**当前用户名下新建**一份工作流，
-     * workflow_id 重新生成；引用的自定义动作必须已存在。
+     * workflow_id 重新生成。
+     *
+     * 校验口径：
+     * - ``custom_action_id`` 必须存在且当前用户可见（本人或已公开）；
+     * - ``browser_id`` / ``browser_ids`` 不做归属校验（分享 JSON 可能携带
+     * 原作者的浏览器），仅在运行时执行前校验。
      */
     public static importWorkflowApiV1RpaBrowserControlWorkflowsImportPost<ThrowOnError extends boolean = false>(options: Options<ImportWorkflowApiV1RpaBrowserControlWorkflowsImportPostData, ThrowOnError>): RequestResult<ImportWorkflowApiV1RpaBrowserControlWorkflowsImportPostResponses, ImportWorkflowApiV1RpaBrowserControlWorkflowsImportPostErrors, ThrowOnError, 'data'> {
         return (options.client ?? client).post<ImportWorkflowApiV1RpaBrowserControlWorkflowsImportPostResponses, ImportWorkflowApiV1RpaBrowserControlWorkflowsImportPostErrors, ThrowOnError, 'data'>({
@@ -173,6 +178,10 @@ export class 工作流管理Service {
      *
      * - 如果是自己的工作流：允许无条件 Fork（类似“创建副本”）
      * - 如果是别人的工作流：仅允许 Fork 公开的工作流（类似 GitHub）
+     *
+     * 实现上复用「导出 → 导入」的字段口径（``_workflow_to_create_request`` +
+     * ``_create_workflow_model``）：外壳参数原样复制，仅覆盖名称 / 公开状态 /
+     * Fork 来源等归属字段，避免 Fork 漏拷字段。
      *
      * Args:
      * request: {"id": <工作流ID>, "new_name": <新名称（可选）>,

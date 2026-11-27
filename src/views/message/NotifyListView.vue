@@ -49,7 +49,7 @@
                 :href="item.jump_url ?? undefined"
                 :rel="LINK_REL"
                 :referrerpolicy="LINK_REFERRER_POLICY"
-                :underline="false"
+                underline="never"
                 @click="openJump($event, item.jump_url)"
               >
                 {{ t('message.viewLink') }}

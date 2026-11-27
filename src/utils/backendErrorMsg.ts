@@ -10,7 +10,7 @@
  *
  * 全项目约定：错误提示「尽量直接使用后端返回的 msg 字段」；
  * 仅当无 msg、或为后端默认 500 兜底文案（未知异常，msg 含错误ID与内部异常信息，不透出）时，
- * 才使用前端自己的文案。
+ * 才使用前端自己的文案。导入分享等需要用户排查原始错误的场景可放开该过滤。
  */
 
 /** 后端默认 500（未知异常兜底）msg 前缀，见 RPA-Browser app/exceptions/handlers.py global_exception_handler */
@@ -39,9 +39,14 @@ export function isDefaultServerErrorMsg(msg: string): boolean {
  * - axios 风格错误 `error.response.data = { code, msg }`。
  *
  * @param error catch 到的错误
- * @returns 后端 msg；无 msg 或为默认 500 兜底文案时返回 null（调用方应使用自己的兜底文案）
+ * @param options.allowDefaultServerError 为 true 时不再过滤后端默认 500 文案
+ *   （导入分享等场景需要原样展示响应 msg 供用户排查）
+ * @returns 后端 msg；无 msg 或（未放开时）为默认 500 兜底文案时返回 null（调用方应使用自己的兜底文案）
  */
-export function pickBackendMsg(error: unknown): string | null {
+export function pickBackendMsg(
+  error: unknown,
+  options?: { allowDefaultServerError?: boolean }
+): string | null {
   if (!error || typeof error !== 'object') return null
   const err = error as Record<string, unknown>
   const candidates: unknown[] = [err.msg]
@@ -53,7 +58,7 @@ export function pickBackendMsg(error: unknown): string | null {
     if (typeof msg !== 'string') continue
     const trimmed = msg.trim()
     if (!trimmed) continue
-    if (isDefaultServerErrorMsg(trimmed)) continue
+    if (!options?.allowDefaultServerError && isDefaultServerErrorMsg(trimmed)) continue
     return trimmed
   }
   return null

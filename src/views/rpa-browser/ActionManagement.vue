@@ -174,8 +174,8 @@ const handleImportSubmit = async (data: Record<string, unknown>) => {
       ElMessage.error(res?.msg || '导入失败')
     }
   } catch (e) {
-    // 优先直接展示后端 msg；无 msg 或默认 500 才用兜底文案
-    const backendMsg = pickBackendMsg(e)
+    // 导入分享失败时原样展示后端响应 msg（含默认 500 兜底文案），便于用户定位问题
+    const backendMsg = pickBackendMsg(e, { allowDefaultServerError: true })
     console.error('[ActionManagement] 导入动作异常:', e)
     ElMessage.error(backendMsg || `导入失败：${errMsg(e)}`)
   } finally {

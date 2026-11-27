@@ -13,9 +13,19 @@ import { genItemId, defaultLoopConfig } from '@/components/rpa-browser/debugbox-
 /** 分享对象类型：动作 / 工作流的导入请求体结构不同，校验规则也不同 */
 export type ShareJsonKind = 'action' | 'workflow'
 
-/** 错误信息转字符串 */
+/** 错误信息转字符串（后端 `{ code, msg, data }` 错误体优先取 msg，避免显示 [object Object]） */
 export function errMsg(e: unknown): string {
-  return e instanceof Error ? e.message : String(e)
+  if (e instanceof Error) return e.message
+  if (e && typeof e === 'object') {
+    const msg = (e as { msg?: unknown }).msg
+    if (typeof msg === 'string' && msg.trim()) return msg.trim()
+    try {
+      return JSON.stringify(e)
+    } catch {
+      return String(e)
+    }
+  }
+  return String(e)
 }
 
 /**
