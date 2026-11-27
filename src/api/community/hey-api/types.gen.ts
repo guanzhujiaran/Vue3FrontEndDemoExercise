@@ -4914,23 +4914,29 @@ export type HttpValidationError = {
 /**
  * HotLotteryItem
  *
- * 热门抽奖榜单单项（热度计数 + 卡片数据，2.67.0）。
+ * 热门抽奖榜单单项（热度计数 + 卡片数据，2.67.0；2.71.0 支持第三方动态）。
  *
- * ``card`` 为 be-bilibili-crawler 经 RPC 一次批量回捞的抽奖卡片
- * （``raw`` + ``extra_info``，形态与 ``GetLotteryDetail`` 的 data 完全一致），
- * 前端可直接 ``normalizeLotteryData`` 渲染，首页无需再调 detail 域接口。
+ * ``card`` 为 be-bilibili-crawler 经只读查询服务一次批量回捞的卡片，
+ * 前端可直接 ``normalizeLotteryData`` 渲染，首页无需再调 detail 域接口：
+ *
+ * - ``rank_by=site`` / ``bili``：``LotteryCard``（``raw`` + ``extra_info``，
+ * 形态与 ``GetLotteryDetail`` 的 data 一致）；
+ * - ``rank_by=site_third``：``OthersLotDynCard``（形态与 ``GetOthersLotDynDetail``
+ * 的 data 一致，前端识别为 ``THIRD_PARTY``）。
+ *
+ * 两者不会出现在同一次响应里。
  */
 export type HotLotteryItem = {
     /**
      * Bizid
      *
-     * 抽奖卡片 id（lottery_id，字符串承载）
+     * 资源 id（site/bili=lottery_id，site_third=B站动态 dynId；字符串承载）
      */
     bizId: string;
     /**
      * Recentviewcount
      *
-     * 统计窗口内的去重浏览人数（仅 rank_by=site；bili 口径恒 0）
+     * 统计窗口内的去重浏览人数（site / site_third；bili 口径恒 0）
      */
     recentViewCount?: number;
     /**
@@ -4958,9 +4964,11 @@ export type HotLotteryItem = {
      */
     commentCount?: number;
     /**
-     * 抽奖卡片（raw + extra_info；卡片缺失的项服务端已剔除，字段保留供前端防御）
+     * Card
+     *
+     * 卡片数据（site/bili=抽奖卡片 raw+extra_info，site_third=第三方动态 item；卡片缺失的项服务端已剔除，字段保留供前端防御）
      */
-    card?: LotteryCard | null;
+    card?: LotteryCard | OthersLotDynCard | null;
 };
 
 /**
@@ -4972,7 +4980,7 @@ export type HotLotteryResp = {
     /**
      * Items
      *
-     * 热门抽奖（site 按窗口内浏览人数 / bili 按抓取时参与人数降序）
+     * 热门榜（site / site_third 按窗口内浏览人数，bili 按抓取时参与人数降序）
      */
     items?: Array<HotLotteryItem>;
     /**
@@ -8295,6 +8303,174 @@ export type NotifyUpdateReq = {
      */
     expire_at?: string | null;
     status?: NotifyStatusEnum | null;
+};
+
+/**
+ * OthersLotDynCard
+ *
+ * 第三方抽奖动态卡片（形态与 crawler ``GetOthersLotDynDetail`` 的 data 一致）。
+ *
+ * 供「本站第三方动态热门榜」（``rank_by=site_third``）经 HTTP 回捞卡片：
+ * 前端 ``normalizeLotteryData`` 以 ``dynId`` + ``dynamicUrl`` 两个字段识别
+ * ``THIRD_PARTY``，因此二者必须始终出现在 JSON 中（为 None 也不可被剔除）。
+ */
+export type OthersLotDynCard = {
+    /**
+     * Dynid
+     *
+     * 第三方抽奖动态 dynId（雪花 ID）
+     */
+    dynId: number;
+    /**
+     * Dynid Str
+     *
+     * dynId 的字符串副本（JS 精度安全）
+     */
+    dynId_str?: string;
+    /**
+     * Dynamicurl
+     *
+     * B 站动态链接
+     */
+    dynamicUrl?: string | null;
+    /**
+     * Authorname
+     *
+     * 作者昵称
+     */
+    authorName?: string | null;
+    /**
+     * Up Uid
+     *
+     * 作者 mid
+     */
+    up_uid?: number | null;
+    /**
+     * Up Uid Str
+     *
+     * 作者 mid 的字符串副本
+     */
+    up_uid_str?: string | null;
+    /**
+     * Pubtime
+     *
+     * 发布时间
+     */
+    pubTime?: string | null;
+    /**
+     * Dyncontent
+     *
+     * 动态正文（前端解析参与要求）
+     */
+    dynContent?: string | null;
+    /**
+     * Commentcount
+     *
+     * 评论数
+     */
+    commentCount?: number | null;
+    /**
+     * Repostcount
+     *
+     * 转发数
+     */
+    repostCount?: number | null;
+    /**
+     * Likecount
+     *
+     * 点赞数
+     */
+    likeCount?: number | null;
+    /**
+     * Officiallottype
+     *
+     * 官方抽奖类型
+     */
+    officialLotType?: string | null;
+    /**
+     * Isofficialaccount
+     *
+     * 是否官方账号
+     */
+    isOfficialAccount?: number | null;
+    /**
+     * Created At
+     *
+     * 收录时间
+     */
+    created_at?: string | null;
+    /**
+     * Ismanualreply
+     *
+     * 是否人工判定
+     */
+    isManualReply?: boolean | null;
+    /**
+     * 附加信息（奖品名 / 开奖时间，无记录时为 None）
+     */
+    extra_info?: OthersLotDynCardExtraInfo | null;
+};
+
+/**
+ * OthersLotDynCardExtraInfo
+ *
+ * 第三方抽奖动态卡片附加信息（crawler ``CommonLotExtraInfoResp`` 的渲染子集）。
+ */
+export type OthersLotDynCardExtraInfo = {
+    /**
+     * Is Lot
+     *
+     * LLM 判断是否为抽奖
+     */
+    is_lot?: boolean | null;
+    /**
+     * Is Grand Prize
+     *
+     * 大奖标志
+     */
+    is_grand_prize?: boolean | null;
+    /**
+     * Need Comment
+     *
+     * 是否需要评论
+     */
+    need_comment?: boolean | null;
+    /**
+     * Need Repost
+     *
+     * 是否需要转发
+     */
+    need_repost?: boolean | null;
+    /**
+     * Required Topic Text
+     *
+     * 转发 / 评论所需携带的话题文本
+     */
+    required_topic_text?: string | null;
+    /**
+     * Prize Names
+     *
+     * LLM 提取的奖品名称列表
+     */
+    prize_names?: Array<string> | null;
+    /**
+     * Lottery Time
+     *
+     * LLM 提取的开奖时间字符串
+     */
+    lottery_time?: string | null;
+    /**
+     * Lot Type
+     *
+     * 抽奖类型（common）
+     */
+    lot_type?: string | null;
+    /**
+     * Predicted At
+     *
+     * LLM 判断时间
+     */
+    predicted_at?: string | null;
 };
 
 /**
@@ -20897,9 +21073,9 @@ export type InteractionHotLotteriesApiV1CommunityInteractionHotLotteriesGetData 
         /**
          * Rank By
          *
-         * 榜单口径：site=本站近 N 天去重浏览人数；bili=B站抓取时参与人数（仅进行中）
+         * 榜单口径：site=本站抽奖浏览人数；site_third=本站第三方抽奖动态浏览人数；bili=B站抓取时参与人数（仅进行中）
          */
-        rank_by?: 'site' | 'bili';
+        rank_by?: 'site' | 'site_third' | 'bili';
     };
     url: '/api/v1/community/interaction/hot-lotteries';
 };

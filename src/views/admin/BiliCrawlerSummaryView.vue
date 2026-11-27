@@ -11,7 +11,7 @@
           </h2>
           <p class="bili-crawler-summary__desc m-0 text-sm text-text-secondary">
             按抽奖类型统计<strong>还没到开奖时间</strong>的未开奖数据、昨日 / 本周 / 本月新增，
-            并汇总累计总量、即将开奖、待抓结果积压、大奖数量、参与人数分布与近 14 天新增 / 开奖趋势。
+            并汇总累计总量、即将开奖、待抓结果积压、大奖数量、参与人数分布，以及近 14 天新增趋势与今天起 14 天开奖趋势。
           </p>
         </div>
         <div class="bili-crawler-summary__actions flex flex-wrap items-center gap-3">
@@ -109,7 +109,7 @@
           </el-table-column>
         </el-table>
 
-        <!-- 近 14 天新增趋势 / 开奖趋势（纯 CSS 柱状图，共用趋势图组件） -->
+        <!-- 近 14 天新增趋势 / 今天起 14 天开奖趋势（纯 CSS 柱状图，共用趋势图组件） -->
         <div class="bili-crawler-summary__trends mt-4 grid grid-cols-1 gap-6 lg:grid-cols-2">
           <LotteryTrendChart
             title="近 14 天新增趋势"
@@ -117,7 +117,7 @@
             :legend="trendLegend"
           />
           <LotteryTrendChart
-            title="近 14 天开奖趋势"
+            title="今天起 14 天开奖趋势"
             :trend="drawTrend"
             :legend="drawTrendLegend"
           />

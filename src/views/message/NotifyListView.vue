@@ -67,7 +67,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onActivated, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { hasNotifyInlineLink, isExternalUrl, renderNotifySegments } from '@/utils/notifyContent'
@@ -121,8 +121,10 @@ async function handleLoad() {
     page.value += 1
     // 空页兜底：防止 total 与实际条数不一致时反复触发触底加载
     isMore.value = pageItems.length > 0 && items.value.length < total.value
-    // 后端「读取即已读」：本页通知返回时已落库为已读，通知父层刷新红点
-    if (pageItems.length > 0) emit('refreshUnread')
+    // 后端「读取即已读」：`/notify/list` 会把该用户全部可见未读一并置为已读（进入即全清，
+    // 不受 20 条分页限制），因此这里刷新未读汇总即可让红点归零。
+    // 空列表同样刷新：本地红点可能来自上一次缓存/心跳，不刷新会一直残留。
+    emit('refreshUnread')
   } catch (e) {
     console.error('加载系统通知失败:', e)
     isError.value = true
@@ -161,4 +163,23 @@ function levelText(level: NotifyLevel | undefined): string {
 }
 
 onMounted(handleLoad)
+
+/**
+ * keep-alive 首次挂载同样会触发 activated：用标记跳过首次，避免与 onMounted 重复请求。
+ *
+ * 本页被 MessageLayout 的 <keep-alive> 缓存，二次进入不会再走 onMounted —— 期间新到的
+ * 通知已由 MessageLayout 的心跳把红点刷出来，但列表不重新拉取，服务端「读取即已读」
+ * 也就不会执行，红点会一直残留。因此激活时只要有未读就重拉首页（新通知出现在顶部）。
+ */
+let firstActivated = true
+onActivated(() => {
+  if (firstActivated) {
+    firstActivated = false
+    return
+  }
+  if (notifyUnread.value <= 0) return
+  page.value = 1
+  isMore.value = true
+  void handleLoad()
+})
 </script>

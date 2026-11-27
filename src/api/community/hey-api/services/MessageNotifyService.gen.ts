@@ -32,6 +32,9 @@ export class MessageNotifyService {
      * 分页查看历史通知（不推进拉取游标），返回前本页通知自动置为已读。
      *
      * 出参 `is_read` 是本次读取前的快照，可据此高亮「本次新到」的通知。
+     *
+     * 2.71.0：本页之外，该用户**全部可见未读**也一并置为已读（`mark_all_read`），
+     * 使「进入通知页」即可清空红点，不受 `page_size` 分页限制。
      */
     public static listNotifyApiV1MessageNotifyListGet<ThrowOnError extends boolean = false>(options?: Options<ListNotifyApiV1MessageNotifyListGetData, ThrowOnError>): RequestResult<ListNotifyApiV1MessageNotifyListGetResponses, ListNotifyApiV1MessageNotifyListGetErrors, ThrowOnError, 'data'> {
         return (options?.client ?? client).get<ListNotifyApiV1MessageNotifyListGetResponses, ListNotifyApiV1MessageNotifyListGetErrors, ThrowOnError, 'data'>({

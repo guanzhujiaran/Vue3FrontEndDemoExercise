@@ -70,6 +70,7 @@ import type {
   HotLotteryItem,
   LotteryCard,
   LotteryCardRaw,
+  OthersLotDynCard,
   FolderCoverAuditListResp,
   FolderCoverAuditItem,
   FolderCoverAuditApproveReq,
@@ -345,15 +346,20 @@ export async function fetchInteractionStatusOne(
 /**
  * 热门抽奖榜：`GET /api/v1/community/interaction/hot-lotteries`。
  *
- * `rankBy`：
- * - `site`（默认）本站口径：窗口内浏览记录按资源统计去重浏览人数（COUNT）降序；
+ * `rankBy`（2.71.0 三口径，官方抽奖与第三方动态**不合榜**）：
+ * - `site`（默认）本站抽奖：窗口内 `lottery` 浏览记录按资源统计去重浏览人数降序；
+ * - `site_third` 本站第三方动态：同一口径，但只统计 `others_lot_dyn`（bizId = 动态 dynId）；
  * - `bili` B站口径：crawler 抓取时参与人数降序，仅统计进行中的抽奖。
  *
- * 2.67.0 起后端一次带回卡片数据（`items[].card` = `{raw, extra_info}`，
- * 与 GetLotteryDetail 的 data 同形态），前端直接交给卡片列表渲染，
- * **不再**二次调用抽奖 detail 域接口。
+ * 2.67.0 起后端一次带回卡片数据，前端直接交给卡片列表渲染，
+ * **不再**二次调用抽奖 detail 域接口：`site` / `bili` 是 `{raw, extra_info}`，
+ * `site_third` 是第三方动态 item（`dynId` / `dynamicUrl` 等，`normalizeLotteryData`
+ * 会识别为 `THIRD_PARTY`）。
  */
-export type HotLotteryRankBy = 'site' | 'bili'
+export type HotLotteryRankBy = 'site' | 'site_third' | 'bili'
+
+/** 热门榜单项卡片：抽奖卡片或第三方动态卡片（由 `rankBy` 决定，不会混在同一次响应里） */
+export type HotLotteryCard = LotteryCard | OthersLotDynCard
 
 export async function fetchHotLotteries(
   params: {
@@ -1523,6 +1529,7 @@ export type {
   HotLotteryItem,
   LotteryCard,
   LotteryCardRaw,
+  OthersLotDynCard,
   SpaceInfoResp,
   MomentLikerListResp,
   MomentForwardListResp,

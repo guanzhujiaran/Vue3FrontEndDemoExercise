@@ -8,7 +8,7 @@
           抽奖数据概览
         </el-text>
         <el-text class="mt-1 block text-sm text-text-regular" tag="p">
-          按抽奖类型统计累计与未开奖数据，并展示近 14 天新增 / 开奖趋势
+          按抽奖类型统计累计与未开奖数据，并展示近 14 天新增趋势与今天起 14 天开奖趋势
         </el-text>
       </div>
       <span class="home-lottery-stats__fresh text-xs text-text-placeholder">
@@ -78,7 +78,7 @@
         </el-table-column>
       </el-table>
 
-      <!-- 近 14 天新增 / 开奖趋势（与管理后台共用同一趋势图组件） -->
+      <!-- 近 14 天新增趋势 / 今天起 14 天开奖趋势（与管理后台共用同一趋势图组件） -->
       <div class="home-lottery-stats__trends mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
         <LotteryTrendChart
           title="近 14 天新增趋势"
@@ -86,7 +86,7 @@
           :legend="TREND_LEGEND"
         />
         <LotteryTrendChart
-          title="近 14 天开奖趋势"
+          title="今天起 14 天开奖趋势"
           :trend="drawTrend"
           :legend="DRAW_TREND_LEGEND"
         />

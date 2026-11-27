@@ -82,9 +82,14 @@ const navGroups = computed(() => [
   }
 ])
 
+// 未读汇总请求序号：心跳与子页面（如通知页读取即已读）会并发刷新，
+// 只接受「最后发出」的那次响应，避免先发后到的旧结果把已清零的红点又写回来。
+let unreadSeq = 0
+
 async function refreshUnread() {
+  const seq = ++unreadSeq
   const s = await fetchUnreadSummary()
-  if (!s) return
+  if (!s || seq !== unreadSeq) return
   unreadStore.applySummary(s)
   unread.like = s.like ?? 0
   unread.reply = s.reply ?? 0

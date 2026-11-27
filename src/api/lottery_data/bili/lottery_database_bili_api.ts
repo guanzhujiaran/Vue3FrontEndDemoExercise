@@ -293,7 +293,10 @@ export interface LotteryDataSummaryResp {
   rows: LotterySummaryRow[]
   /** 近 14 天每日新增趋势（official/reserve/charge/others_dyn） */
   trend: LotteryTrendPoint[]
-  /** 近 14 天每日开奖趋势（仅 official/reserve/charge，按开奖时间所在自然日统计） */
+  /**
+   * 今天起未来 14 天每日开奖趋势（仅 official/reserve/charge）：
+   * 按 `lottery_time` 所在自然日统计排期场次，含今天已开奖 / 待开奖，排除已取消 / 已删除。
+   */
   draw_trend: LotteryTrendPoint[]
 }
 
@@ -586,8 +589,8 @@ class LotteryDataBaseApi {
 
   /**
    * 管理端「bili-crawler 数据汇总」：按抽奖类型统计未开奖数、昨日/本周/本月新增、
-   * 累计总量、24h 内即将开奖、待抓结果积压、大奖数、参与人数分布、近 14 天新增/开奖趋势，
-   * 并额外汇总话题 / 直播 / 第三方动态抽奖。
+   * 累计总量、24h 内即将开奖、待抓结果积压、大奖数、参与人数分布、近 14 天新增趋势、
+   * 今天起未来 14 天开奖趋势，并额外汇总话题 / 直播 / 第三方动态抽奖。
    *
    * 该接口尚未纳入 hey-api 生成的 SDK，故直接用生成的底层 client 发请求；
    * `runtime_config.ts` 已设置 `responseStyle: 'data'`，promise 直接 resolve 响应体。
